@@ -9,11 +9,20 @@ RUN apt-get update && apt-get install -y \
 # Habilita o mod_rewrite do Apache
 RUN a2enmod rewrite
 
-# Copia arquivos do projeto
-COPY . /var/www/html/
+# Copia o projeto
+COPY . /var/www/html
 
 # Define o diretório de trabalho
-WORKDIR /var/www/html/
+WORKDIR /var/www/html
+
+# Configura o Apache para servir a pasta 'public'
+RUN sed -i 's|DocumentRoot /var/www/html|DocumentRoot /var/www/html/public|' /etc/apache2/sites-available/000-default.conf
+RUN echo "<Directory /var/www/html/public>\n\
+    AllowOverride All\n\
+    Require all granted\n\
+</Directory>" > /etc/apache2/conf-available/laravel.conf \
+    && a2enconf laravel
+
 
 # Instala o Composer
 COPY --from=composer:2.7 /usr/bin/composer /usr/bin/composer
