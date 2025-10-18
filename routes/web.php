@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Webhook\AsaasWebhookController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Platform\TenantController;
 use App\Http\Controllers\Platform\PlanController;
@@ -21,6 +22,8 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', function () {
     return view('welcome');
 });
+
+Route::post('/webhook/asaas', [AsaasWebhookController::class, 'handle'])->name('webhook.asaas');
 
 Route::get('/dashboard', function () {
     return view('platform.dashboard');
