@@ -6,7 +6,10 @@ use App\Http\Controllers\Controller;
 use App\Models\Platform\Subscription;
 use App\Models\Platform\Tenant;
 use App\Models\Platform\Plan;
+use App\Models\Platform\Invoices;
+use App\Services\AsaasService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
 
 class SubscriptionController extends Controller
@@ -98,5 +101,33 @@ class SubscriptionController extends Controller
     {
         $subscription->delete();
         return redirect()->route('Platform.subscriptions.index')->with('success', 'Assinatura excluída com sucesso!');
+    }
+
+    public function renew($id)
+    {
+        try {
+            $subscription = Subscription::findOrFail($id);
+
+            // Verifica se já há fatura pendente ou vencida
+            $hasInvoice = Invoices::where('subscription_id', $subscription->id)
+                ->whereIn('status', ['pending', 'overdue'])
+                ->exists();
+
+            if ($hasInvoice) {
+                return back()->with('error', 'Já existe uma fatura pendente ou vencida para esta assinatura.');
+            }
+
+            $asaas = new AsaasService();
+            $invoice = $asaas->createInvoiceForSubscription($subscription);
+
+            if ($invoice) {
+                return back()->with('success', 'Nova fatura gerada com sucesso!');
+            }
+
+            return back()->with('error', 'Falha ao gerar nova fatura. Verifique o log para mais detalhes.');
+        } catch (\Exception $e) {
+            Log::error("Erro ao renovar assinatura {$id}: {$e->getMessage()}");
+            return back()->with('error', 'Erro inesperado ao tentar gerar nova fatura.');
+        }
     }
 }

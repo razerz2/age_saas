@@ -13,7 +13,7 @@
     <div class="dropdown-menu dropdown-menu-end dropdown-menu-right user-dd animated flipInY">
         <a class="dropdown-item" href="{{ route('profile.edit') }}"> <i class="fas fa-user"></i> - My Profile</a>
         <div class="dropdown-divider"></div>
-        <a class="dropdown-item" href="javascript:void(0)"> <i class="fas fa-cog"></i> - Settings</a>
+        <a class="dropdown-item" href="{{ route('Platform.settings.index') }}"> <i class="fas fa-cog"></i> - Settings</a>
         <div class="dropdown-divider"></div>
         <!-- Logout -->
         <form method="POST" action="{{ route('logout') }}">

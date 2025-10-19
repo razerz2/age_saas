@@ -71,17 +71,47 @@
             </ul>
         </li>
 
+        <li class="sidebar-item"> <a class="sidebar-link has-arrow" href="javascript:void(0)" aria-expanded="false">
+            <i class="fas fa-stethoscope"></i><span class="hide-menu"> Especialidade Médica </span></a>
+            <ul aria-expanded="false" class="collapse first-level base-level-line">
+                <li class="sidebar-item"><a href="{{ route('Platform.medical_specialties_catalog.index') }}" class="sidebar-link"><span
+                            class="hide-menu">
+                            <i class="fas fa-list-alt"></i> Especialidades
+                        </span></a>
+                </li>
+                <li class="sidebar-item"><a href="{{ route('Platform.medical_specialties_catalog.create') }}" class="sidebar-link"><span
+                            class="hide-menu"> <i class="fas fa-plus-circle"></i> Nova Especialidade
+                        </span></a>
+                </li>
+            </ul>
+        </li>
+
         <li class="nav-small-cap"><span class="hide-menu"> Sistema </span></li>
+
+        <li class="sidebar-item"> <a class="sidebar-link has-arrow" href="javascript:void(0)" aria-expanded="false">
+            <i class="fas fa-bell"></i><span class="hide-menu"> Notificações </span></a>
+            <ul aria-expanded="false" class="collapse first-level base-level-line">
+                <li class="sidebar-item"><a href="{{ route('Platform.notifications_outbox.index') }}" class="sidebar-link"><span
+                            class="hide-menu">
+                            <i class="fas fa-list-alt"></i> Notificações
+                        </span></a>
+                </li>
+                <li class="sidebar-item"><a href="{{ route('Platform.notifications_outbox.create') }}" class="sidebar-link"><span
+                            class="hide-menu"> <i class="fas fa-plus-circle"></i> Nova Notificação
+                        </span></a>
+                </li>
+            </ul>
+        </li>
 
         <li class="sidebar-item"> <a class="sidebar-link has-arrow" href="javascript:void(0)" aria-expanded="false">
             <i class="fas fa-user"></i><span class="hide-menu"> Usuário </span></a>
             <ul aria-expanded="false" class="collapse first-level base-level-line">
-                <li class="sidebar-item"><a href="javascript:void(0)" class="sidebar-link"><span
+                <li class="sidebar-item"><a href="{{ route('Platform.users.index') }}" class="sidebar-link"><span
                             class="hide-menu">
                             <i class="fas fa-list-alt"></i> Usuários
                         </span></a>
                 </li>
-                <li class="sidebar-item"><a href="javascript:void(0)" class="sidebar-link"><span
+                <li class="sidebar-item"><a href="{{ route('Platform.users.create') }}" class="sidebar-link"><span
                             class="hide-menu"> <i class="fas fa-plus-circle"></i> Novo Usuário
                         </span></a>
                 </li>
@@ -91,19 +121,19 @@
         <li class="sidebar-item"> <a class="sidebar-link has-arrow" href="javascript:void(0)" aria-expanded="false">
             <i class="fas fa-map"></i><span class="hide-menu"> Locais </span></a>
             <ul aria-expanded="false" class="collapse first-level base-level-line">
-                <li class="sidebar-item"><a href="javascript:void(0)" class="sidebar-link"><span
+                <li class="sidebar-item"><a href="{{ route('Platform.paises.index') }}" class="sidebar-link"><span
                             class="hide-menu">
                             <i class="fas fa-list-alt"></i> 
                             Paises
                         </span></a>
                 </li>
-                <li class="sidebar-item"><a href="javascript:void(0)" class="sidebar-link"><span
+                <li class="sidebar-item"><a href="{{ route('Platform.estados.index') }}" class="sidebar-link"><span
                             class="hide-menu"> 
                             <i class="fas fa-list-alt"></i> 
                             Estados
                         </span></a>
                 </li>
-                <li class="sidebar-item"><a href="javascript:void(0)" class="sidebar-link"><span
+                <li class="sidebar-item"><a href="{{ route('Platform.cidades.index') }}" class="sidebar-link"><span
                             class="hide-menu"> 
                             <i class="fas fa-list-alt"></i> 
                             Cidades

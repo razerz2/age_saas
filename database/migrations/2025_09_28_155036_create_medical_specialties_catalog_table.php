@@ -10,6 +10,7 @@ return new class extends Migration {
             $table->uuid('id')->primary();
             $table->string('name')->unique();
             $table->string('code')->nullable(); // CBO opcional
+            $table->enum('type', ['medical_specialty', 'health_profession'])->default('medical_specialty');
             $table->timestamps();
         });
     }

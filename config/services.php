@@ -30,10 +30,10 @@ return [
         'secret' => env('AWS_SECRET_ACCESS_KEY'),
         'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
     ],
-    
+
     'asaas' => [
-    'base_url' => env('ASAAS_BASE_URL'),
-    'api_key'  => env('ASAAS_API_KEY'),
+        'key' => env('ASAAS_API_KEY'),
+        'url' => env('ASAAS_API_URL', 'https://sandbox.asaas.com/api/v3/'),
     ],
 
 ];

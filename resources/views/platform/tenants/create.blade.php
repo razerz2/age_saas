@@ -34,10 +34,11 @@
                                 </ul>
                             </div>
                         @endif
-                        
+
                         <form method="POST" action="{{ route('Platform.tenants.store') }}">
                             @csrf
 
+                            {{-- Dados Principais --}}
                             <div class="row g-3">
                                 <div class="col-md-6">
                                     <label class="form-label">Razão Social *</label>
@@ -84,6 +85,65 @@
                                     <input type="date" name="trial_ends_at" class="form-control">
                                 </div>
 
+                                {{-- Localização --}}
+                                <div class="col-12 mt-4">
+                                    <h5 class="text-primary fw-bold mb-2">
+                                        <i class="fas fa-map-marker-alt me-2"></i> Localização da Empresa
+                                    </h5>
+                                </div>
+
+                                <div class="col-md-4">
+                                    <label class="form-label">País</label>
+                                    <select id="pais" name="pais_id" class="form-select">
+                                        @foreach ($paises as $pais)
+                                            <option value="{{ $pais->id_pais }}"
+                                                {{ $defaultCountryId == $pais->id_pais ? 'selected' : '' }}>
+                                                {{ $pais->nome }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                </div>
+
+                                <div class="col-md-4">
+                                    <label class="form-label">Estado</label>
+                                    <select id="estado" name="estado_id" class="form-select">
+                                        <option value="">Selecione o país primeiro</option>
+                                    </select>
+                                </div>
+
+                                <div class="col-md-4">
+                                    <label class="form-label">Cidade</label>
+                                    <select id="cidade" name="cidade_id" class="form-select">
+                                        <option value="">Selecione o estado primeiro</option>
+                                    </select>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <label class="form-label">Endereço</label>
+                                    <input type="text" name="endereco" class="form-control">
+                                </div>
+
+                                <div class="col-md-2">
+                                    <label class="form-label">Número</label>
+                                    <input type="text" name="n_endereco" class="form-control">
+                                </div>
+
+                                <div class="col-md-4">
+                                    <label class="form-label">Complemento</label>
+                                    <input type="text" name="complemento" class="form-control">
+                                </div>
+
+                                <div class="col-md-6">
+                                    <label class="form-label">Bairro</label>
+                                    <input type="text" name="bairro" class="form-control">
+                                </div>
+
+                                <div class="col-md-3">
+                                    <label class="form-label">CEP</label>
+                                    <input type="text" name="cep" class="form-control">
+                                </div>
+
+                                {{-- Banco de Dados --}}
                                 <div class="col-12 mt-4">
                                     <h5 class="text-primary fw-bold mb-2">
                                         <i class="fas fa-database me-2"></i> Configuração do Banco de Dados
@@ -123,5 +183,41 @@
             </div>
         </div>
     </div>
+
+    @push('scripts')
+        <script>
+            const pais = document.getElementById('pais');
+            const estado = document.getElementById('estado');
+            const cidade = document.getElementById('cidade');
+
+            if (pais && estado && cidade) {
+                pais.addEventListener('change', function() {
+                    const urlEstados = "{{ route('Platform.api.estados', ['pais' => '__ID__']) }}".replace('__ID__',
+                        this.value);
+                    fetch(urlEstados)
+                        .then(r => r.json())
+                        .then(data => {
+                            estado.innerHTML = '<option value="">Selecione...</option>';
+                            data.forEach(e => estado.innerHTML +=
+                                `<option value="${e.id_estado}">${e.nome_estado}</option>`);
+                            cidade.innerHTML = '<option value="">Selecione o estado primeiro</option>';
+                        });
+                });
+
+                estado.addEventListener('change', function() {
+                    const urlCidades = "{{ route('Platform.api.cidades', ['estado' => '__ID__']) }}".replace('__ID__',
+                        this.value);
+                    fetch(urlCidades)
+                        .then(r => r.json())
+                        .then(data => {
+                            cidade.innerHTML = '<option value="">Selecione...</option>';
+                            data.forEach(c => cidade.innerHTML +=
+                                `<option value="${c.id_cidade}">${c.nome_cidade}</option>`);
+                        });
+                });
+            }
+        </script>
+    @endpush
+
     @include('layouts.freedash.footer')
 @endsection

@@ -22,6 +22,7 @@ return new class extends Migration {
             $table->string('db_password');
             $table->enum('status', ['active', 'suspended', 'trial', 'cancelled'])->default('trial');
             $table->date('trial_ends_at')->nullable();
+            $table->string('asaas_customer_id')->nullable();
             $table->timestamps();
         });
     }

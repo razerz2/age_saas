@@ -36,6 +36,12 @@ class Subscription extends Model
         return $this->belongsTo(Tenant::class, 'tenant_id');
     }
 
+    public function invoices()
+    {
+        return $this->hasMany(\App\Models\Platform\Invoices::class, 'subscription_id');
+    }
+
+
     public function plan()
     {
         return $this->belongsTo(Plan::class, 'plan_id');
@@ -56,5 +62,15 @@ class Subscription extends Model
             'trialing' => 'Em teste',
             default => ucfirst($this->status),
         };
+    }
+
+    public function getIsExpiredAttribute()
+    {
+        return $this->ends_at && $this->ends_at->isPast();
+    }
+
+    public function getHasPendingInvoiceAttribute()
+    {
+        return $this->invoices()->whereIn('status', ['pending', 'overdue'])->exists();
     }
 }

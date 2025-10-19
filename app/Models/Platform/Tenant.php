@@ -2,6 +2,7 @@
 
 namespace App\Models\Platform;
 
+use App\Models\Platform\TenantLocalizacao;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Support\Str;
@@ -27,6 +28,7 @@ class Tenant extends Model
         'db_password',
         'status',
         'trial_ends_at',
+        'asaas_customer_id'
     ];
 
     protected $casts = [
@@ -42,5 +44,10 @@ class Tenant extends Model
                 $model->id = (string) Str::uuid();
             }
         });
+    }
+
+    public function localizacao()
+    {
+        return $this->hasOne(TenantLocalizacao::class, 'tenant_id', 'id');
     }
 }
