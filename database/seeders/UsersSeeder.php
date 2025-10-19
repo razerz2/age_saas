@@ -17,7 +17,6 @@ class UsersSeeder extends Seeder
         User::updateOrCreate(
             ['email' => 'admin@plataforma.com'],
             [
-                'id' => 1,
                 'name' => 'Administrador',
                 'email_verified_at' => now(),
                 'password' => Hash::make($plainPassword),
