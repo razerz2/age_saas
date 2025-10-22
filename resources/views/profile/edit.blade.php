@@ -12,7 +12,7 @@
                     <div class="d-flex align-items-center">
                         <nav aria-label="breadcrumb">
                             <ol class="breadcrumb m-0 p-0">
-                                <li class="breadcrumb-item"><a href="{{ route('dashboard') }}"
+                                <li class="breadcrumb-item"><a href="{{ route('Platform.dashboard') }}"
                                         class="text-muted">Dashboard</a>
                                 </li>
                                 <li class="breadcrumb-item text-muted active" aria-current="page">Perfil</li>

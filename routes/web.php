@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Webhook\AsaasWebhookController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\Platform\DashboardController;
 use App\Http\Controllers\Platform\TenantController;
 use App\Http\Controllers\Platform\PlanController;
 use App\Http\Controllers\Platform\SubscriptionController;
@@ -15,6 +16,8 @@ use App\Http\Controllers\Platform\EstadoController;
 use App\Http\Controllers\Platform\CidadeController;
 use App\Http\Controllers\Platform\LocationController;
 use App\Http\Controllers\Platform\SystemSettingsController;
+use App\Models\Platform\SystemNotification;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -29,14 +32,16 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::get('/', function () {
-    return view('welcome');
+    if (Auth::check()) {
+        // Usuário autenticado → vai para o dashboard
+        return redirect()->route('Platform.dashboard');
+    }
+
+    // Não autenticado → vai para o login
+    return redirect()->route('login');
 });
 
 Route::post('/webhook/asaas', [AsaasWebhookController::class, 'handle'])->name('webhook.asaas');
-
-Route::get('/dashboard', function () {
-    return view('platform.dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
@@ -45,6 +50,7 @@ Route::middleware('auth')->group(function () {
 });
 
 Route::middleware(['auth'])->prefix('Platform')->name('Platform.')->group(function () {
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::resource('tenants', TenantController::class);
     Route::resource('plans', PlanController::class);
     Route::resource('subscriptions', SubscriptionController::class);
@@ -70,8 +76,8 @@ Route::middleware(['auth'])->prefix('Platform')->name('Platform.')->group(functi
     Route::get('/api/cidades/{estado}', [LocationController::class, 'getCidades'])->name('api.cidades');
     //Rota para carregar notificações...
     Route::get('system_notifications/json', function () {
-        $notifications = \App\Models\Platform\SystemNotification::latest('created_at')->take(5)->get();
-        $unreadCount = \App\Models\Platform\SystemNotification::where('status', 'new')->count();
+        $notifications = SystemNotification::latest('created_at')->take(5)->get();
+        $unreadCount = SystemNotification::where('status', 'new')->count();
 
         return response()->json([
             'unread_count' => $unreadCount,

@@ -1,7 +1,7 @@
 <!-- Sidebar navigation-->
 <nav class="sidebar-nav">
     <ul id="sidebarnav" class="in">
-        <li class="sidebar-item selected"> <a class="sidebar-link sidebar-link" href="{{ route('dashboard') }}" aria-expanded="false"><svg
+        <li class="sidebar-item selected"> <a class="sidebar-link sidebar-link" href="{{ route('Platform.dashboard') }}" aria-expanded="false"><svg
                     xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
                     stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
                     class="feather feather-home feather-icon">
@@ -26,8 +26,8 @@
             </ul>
         </li>
 
-        <li class="sidebar-item"> <a class="sidebar-link has-arrow" href="javascript:void(0)" aria-expanded="false"><i
-                    class="fas fa-briefcase"></i><span class="hide-menu"> Plano </span></a>
+        <li class="sidebar-item"> <a class="sidebar-link has-arrow" href="javascript:void(0)" aria-expanded="false">
+            <i class="fas fa-sync"></i><span class="hide-menu"> Plano </span></a>
             <ul aria-expanded="false" class="collapse first-level base-level-line">
                 <li class="sidebar-item"><a href="{{ route('Platform.plans.index') }}" class="sidebar-link"><span
                             class="hide-menu">
@@ -42,7 +42,7 @@
         </li>
 
         <li class="sidebar-item"> <a class="sidebar-link has-arrow" href="javascript:void(0)" aria-expanded="false">
-            <i class="fas fa-sync"></i><span class="hide-menu"> Assinaturas </span></a>
+            <i class="fas fa-pencil-alt"></i><span class="hide-menu"> Assinaturas </span></a>
             <ul aria-expanded="false" class="collapse first-level base-level-line">
                 <li class="sidebar-item"><a href="{{ route('Platform.subscriptions.index') }}" class="sidebar-link"><span
                             class="hide-menu">

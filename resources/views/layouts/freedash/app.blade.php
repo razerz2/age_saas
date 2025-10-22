@@ -58,7 +58,7 @@
                     <!-- ============================================================== -->
                     <div class="navbar-brand">
                         <!-- Logo icon -->
-                        <a href="{{ route('dashboard') }}">
+                        <a href="{{ route('Platform.dashboard') }}">
                             <img src="{{ asset('freedash/assets/images/freedashDark.svg') }}" alt=""
                                 class="img-fluid">
                         </a>
