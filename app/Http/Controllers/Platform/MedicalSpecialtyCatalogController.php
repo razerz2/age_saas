@@ -33,33 +33,33 @@ class MedicalSpecialtyCatalogController extends Controller
             ->with('success', 'Especialidade cadastrada com sucesso.');
     }
 
-    public function show(MedicalSpecialtyCatalog $medicalSpecialtyCatalog)
+    public function show(MedicalSpecialtyCatalog $medical_specialties_catalog)
     {
-        return view('platform.medical_specialties_catalog.show', compact('medicalSpecialtyCatalog'));
+        return view('platform.medical_specialties_catalog.show', compact('medical_specialties_catalog'));
     }
 
-    public function edit(MedicalSpecialtyCatalog $medicalSpecialtyCatalog)
+    public function edit(MedicalSpecialtyCatalog $medical_specialties_catalog)
     {
-        return view('platform.medical_specialties_catalog.create', compact('medicalSpecialtyCatalog'));
+        return view('platform.medical_specialties_catalog.create', compact('medical_specialties_catalog'));
     }
 
-    public function update(Request $request, MedicalSpecialtyCatalog $medicalSpecialtyCatalog)
+    public function update(Request $request, MedicalSpecialtyCatalog $medical_specialties_catalog)
     {
         $validated = $request->validate([
-            'name' => 'required|string|max:150|unique:medical_specialties_catalog,name,' . $medicalSpecialtyCatalog->id . ',id',
+            'name' => 'required|string|max:150|unique:medical_specialties_catalog,name,' . $medical_specialties_catalog->id . ',id',
             'code' => 'nullable|string|max:20',
         ]);
 
-        $medicalSpecialtyCatalog->update($validated);
+        $medical_specialties_catalog->update($validated);
 
         return redirect()
             ->route('Platform.medical_specialties_catalog.index')
             ->with('success', 'Especialidade atualizada com sucesso.');
     }
 
-    public function destroy(MedicalSpecialtyCatalog $medicalSpecialtyCatalog)
+    public function destroy(MedicalSpecialtyCatalog $medical_specialties_catalog)
     {
-        $medicalSpecialtyCatalog->delete();
+        $medical_specialties_catalog->delete();
 
         return redirect()
             ->route('Platform.medical_specialties_catalog.index')

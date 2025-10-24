@@ -38,18 +38,18 @@
                                 <tbody>
                                     <tr>
                                         <th style="width: 25%;">Nome</th>
-                                        <td>{{ $medicalSpecialtyCatalog->name }}</td>
+                                        <td>{{ $medical_specialties_catalog->name }}</td>
                                     </tr>
                                     <tr>
                                         <th>Código CBO</th>
-                                        <td>{{ $medicalSpecialtyCatalog->code ?? '-' }}</td>
+                                        <td>{{ $medical_specialties_catalog->code ?? '-' }}</td>
                                     </tr>
                                     <tr>
                                         <th>Tipo</th>
                                         <td>
-                                            @if ($medicalSpecialtyCatalog->type === 'medical_specialty')
+                                            @if ($medical_specialties_catalog->type === 'medical_specialty')
                                                 <span class="badge bg-primary">Especialidade Médica</span>
-                                            @elseif ($medicalSpecialtyCatalog->type === 'health_profession')
+                                            @elseif ($medical_specialties_catalog->type === 'health_profession')
                                                 <span class="badge bg-success">Profissão da Saúde</span>
                                             @else
                                                 <span class="badge bg-secondary">Outro</span>
@@ -58,18 +58,18 @@
                                     </tr>
                                     <tr>
                                         <th>Criada em</th>
-                                        <td>{{ $medicalSpecialtyCatalog->created_at->format('d/m/Y H:i') }}</td>
+                                        <td>{{ $medical_specialties_catalog->created_at->format('d/m/Y H:i') }}</td>
                                     </tr>
                                     <tr>
                                         <th>Última Atualização</th>
-                                        <td>{{ $medicalSpecialtyCatalog->updated_at->format('d/m/Y H:i') }}</td>
+                                        <td>{{ $medical_specialties_catalog->updated_at->format('d/m/Y H:i') }}</td>
                                     </tr>
                                 </tbody>
                             </table>
                         </div>
 
                         <div class="text-end mt-3">
-                            <a href="{{ route('Platform.medical_specialties_catalog.edit', $medicalSpecialtyCatalog->id) }}"
+                            <a href="{{ route('Platform.medical_specialties_catalog.edit', $medical_specialties_catalog) }}"
                                 class="btn btn-warning text-white shadow-sm">
                                 <i class="fa fa-edit me-1"></i> Editar
                             </a>

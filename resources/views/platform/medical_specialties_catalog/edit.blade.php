@@ -37,7 +37,7 @@
                         <h4 class="card-title mb-4">Editar Especialidade</h4>
 
                         <form method="POST"
-                            action="{{ route('Platform.medical_specialties_catalog.update', $medicalSpecialtyCatalog->id) }}">
+                            action="{{ route('Platform.medical_specialties_catalog.update', $medical_specialties_catalog) }}">
                             @csrf
                             @method('PUT')
 
@@ -45,24 +45,24 @@
                                 <div class="col-md-8 mb-3">
                                     <label class="form-label">Nome da Especialidade</label>
                                     <input type="text" name="name" class="form-control"
-                                        value="{{ old('name', $medicalSpecialtyCatalog->name) }}" required>
+                                        value="{{ old('name', $medical_specialties_catalog->name) }}" required>
                                 </div>
 
                                 <div class="col-md-4 mb-3">
                                     <label class="form-label">Código CBO (opcional)</label>
                                     <input type="text" name="code" class="form-control"
-                                        value="{{ old('code', $medicalSpecialtyCatalog->code) }}">
+                                        value="{{ old('code', $medical_specialties_catalog->code) }}">
                                 </div>
 
                                 <div class="col-md-4 mb-3">
                                     <label class="form-label">Tipo</label>
                                     <select name="type" class="form-select" required>
                                         <option value="medical_specialty"
-                                            {{ old('type', $medicalSpecialtyCatalog->type ?? '') == 'medical_specialty' ? 'selected' : '' }}>
+                                            {{ old('type', $medical_specialties_catalog->type ?? '') == 'medical_specialty' ? 'selected' : '' }}>
                                             Especialidade Médica
                                         </option>
                                         <option value="health_profession"
-                                            {{ old('type', $medicalSpecialtyCatalog->type ?? '') == 'health_profession' ? 'selected' : '' }}>
+                                            {{ old('type', $medical_specialties_catalog->type ?? '') == 'health_profession' ? 'selected' : '' }}>
                                             Profissão da Saúde
                                         </option>
                                     </select>
