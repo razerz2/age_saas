@@ -67,7 +67,7 @@ class SubscriptionController extends Controller
     public function show(Subscription $subscription)
     {
         $subscription->load(['tenant', 'plan']);
-        return view('Platform.subscriptions.show', compact('subscription'));
+        return view('platform.subscriptions.show', compact('subscription'));
     }
 
     public function edit(Subscription $subscription)
@@ -75,7 +75,7 @@ class SubscriptionController extends Controller
         $tenants = Tenant::orderBy('trade_name')->get();
         $plans = Plan::orderBy('name')->get();
 
-        return view('Platform.subscriptions.edit', compact('subscription', 'tenants', 'plans'));
+        return view('platform.subscriptions.edit', compact('subscription', 'tenants', 'plans'));
     }
 
     public function update(Request $request, Subscription $subscription)

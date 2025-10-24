@@ -1,3 +1,14 @@
+@php
+    $hora = now()->format('H');
+    if ($hora < 12) {
+        $saudacao = 'Bom dia';
+    } elseif ($hora < 18) {
+        $saudacao = 'Boa tarde';
+    } else {
+        $saudacao = 'Boa noite';
+    }
+@endphp
+
 @extends('layouts.freedash.app')
 
 @section('content')
@@ -7,7 +18,7 @@
     <div class="page-breadcrumb">
         <div class="row">
             <div class="col-7 align-self-center">
-                <h3 class="page-title text-truncate text-dark font-weight-medium mb-1">Good Morning Jason!</h3>
+                <h3 class="page-title text-truncate text-dark font-weight-medium mb-1">{{ $saudacao }}, {{ Auth::user()->name }}!</h3>
                 <div class="d-flex align-items-center">
                     <nav aria-label="breadcrumb">
                         <ol class="breadcrumb m-0 p-0">

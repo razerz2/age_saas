@@ -35,7 +35,7 @@
                         </div>
                     @endif
 
-                    <form method="POST" action="{{ route('platform.tenants.update', $tenant->id) }}">
+                    <form method="POST" action="{{ route('Platform.tenants.update', $tenant->id) }}">
                         @csrf
                         @method('PUT')
 

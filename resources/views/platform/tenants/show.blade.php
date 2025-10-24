@@ -153,7 +153,7 @@
                     </div>
 
                     <div class="d-flex justify-content-end mt-4">
-                        <a href="{{ route('platform.tenants.edit', $tenant->id) }}" class="btn btn-primary">
+                        <a href="{{ route('Platform.tenants.edit', $tenant->id) }}" class="btn btn-primary">
                             <i class="fas fa-edit me-2"></i> Editar Tenant
                         </a>
                     </div>

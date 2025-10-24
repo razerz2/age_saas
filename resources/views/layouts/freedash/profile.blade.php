@@ -3,7 +3,7 @@
     <a class="nav-link dropdown-toggle" href="javascript:void(0)" data-bs-toggle="dropdown" aria-haspopup="true"
         aria-expanded="false">
         <img src="{{ asset('freedash/assets/images/users/profile-pic.jpg') }}" alt="user" class="rounded-circle" width="40">
-        <span class="ms-2 d-none d-lg-inline-block"><span class="text-dark"> {{ __('Profile') }} </span> <svg
+        <span class="ms-2 d-none d-lg-inline-block"><span class="text-dark"> {{ Auth::user()->name }} </span> <svg
                 xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
                 stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
                 class="feather feather-chevron-down svg-icon">
