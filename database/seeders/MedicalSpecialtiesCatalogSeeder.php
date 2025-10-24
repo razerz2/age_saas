@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use Illuminate\Database\Seeder;
 use App\Models\Platform\MedicalSpecialtyCatalog;
 use Illuminate\Support\Str;
+use Carbon\Carbon;
 
 class MedicalSpecialtiesCatalogSeeder extends Seeder
 {
@@ -83,9 +84,11 @@ class MedicalSpecialtiesCatalogSeeder extends Seeder
             MedicalSpecialtyCatalog::updateOrCreate(
                 ['name' => $specialty['name']],
                 [
-                    'id' => (string) Str::uuid(),
-                    'code' => $specialty['code'] ?? null,
-                    'type' => $specialty['type'] ?? 'medical_specialty',
+                    'id'         => (string) Str::uuid(),
+                    'code'       => $specialty['code'] ?? null,
+                    'type'       => $specialty['type'] ?? 'medical_specialty',
+                    'created_at' => Carbon::now(),
+                    'updated_at' => Carbon::now(),
                 ]
             );
         }

@@ -65,12 +65,12 @@
                                                 @endif
                                             </td>
                                             <td class="text-center">
-                                                <a href="{{ route('Platform.medical_specialties_catalog.show', $specialty->id) }}"
+                                                <a href="{{ route('Platform.medical_specialties_catalog.show', $specialty) }}"
                                                     class="btn btn-sm btn-info text-white"><i class="fas fa-eye"></i></a>
-                                                <a href="{{ route('Platform.medical_specialties_catalog.edit', $specialty->id) }}"
+                                                <a href="{{ route('Platform.medical_specialties_catalog.edit', $specialty) }}"
                                                     class="btn btn-sm btn-warning text-white"><i class="fa fa-edit"></i></a>
                                                 <form
-                                                    action="{{ route('Platform.medical_specialties_catalog.destroy', $specialty->id) }}"
+                                                    action="{{ route('Platform.medical_specialties_catalog.destroy', $specialty) }}"
                                                     method="POST" class="d-inline">
                                                     @csrf
                                                     @method('DELETE')
