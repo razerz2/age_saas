@@ -20,7 +20,7 @@ class SubscriptionController extends Controller
             ->orderBy('created_at', 'desc')
             ->get();
 
-        return view('Platform.subscriptions.index', compact('subscriptions'));
+        return view('platform.subscriptions.index', compact('subscriptions'));
     }
 
     public function create()
@@ -28,7 +28,7 @@ class SubscriptionController extends Controller
         $tenants = Tenant::orderBy('trade_name')->get();
         $plans = Plan::orderBy('name')->get();
 
-        return view('Platform.subscriptions.create', compact('tenants', 'plans'));
+        return view('platform.subscriptions.create', compact('tenants', 'plans'));
     }
 
     public function store(Request $request)

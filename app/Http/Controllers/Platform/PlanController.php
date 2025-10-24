@@ -11,12 +11,12 @@ class PlanController extends Controller
     public function index()
     {
         $plans = Plan::orderBy('created_at', 'desc')->get();
-        return view('Platform.plans.index', compact('plans'));
+        return view('platform.plans.index', compact('plans'));
     }
 
     public function create()
     {
-        return view('Platform.plans.create');
+        return view('platform.plans.create');
     }
 
     public function store(Request $request)
@@ -47,12 +47,12 @@ class PlanController extends Controller
 
     public function show(Plan $plan)
     {
-        return view('Platform.plans.show', compact('plan'));
+        return view('platform.plans.show', compact('plan'));
     }
 
     public function edit(Plan $plan)
     {
-        return view('Platform.plans.edit', compact('plan'));
+        return view('platform.plans.edit', compact('plan'));
     }
 
     public function update(Request $request, Plan $plan)
