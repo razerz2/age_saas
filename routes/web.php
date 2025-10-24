@@ -74,6 +74,7 @@ Route::middleware(['auth'])->prefix('Platform')->name('Platform.')->group(functi
     //Rotas para ferramentas do sistema consulta e etc...
     Route::get('/api/estados/{pais}', [LocationController::class, 'getEstados'])->name('api.estados');
     Route::get('/api/cidades/{estado}', [LocationController::class, 'getCidades'])->name('api.cidades');
+    Route::get('tenants/{tenant}/subscriptions', [SubscriptionController::class, 'getByTenant'])->name('subscriptions.getByTenant');
     //Rota para carregar notificações...
     Route::get('system_notifications/json', function () {
         $notifications = SystemNotification::latest('created_at')->take(5)->get();

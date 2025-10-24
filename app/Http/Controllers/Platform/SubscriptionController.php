@@ -130,4 +130,21 @@ class SubscriptionController extends Controller
             return back()->with('error', 'Erro inesperado ao tentar gerar nova fatura.');
         }
     }
+
+    public function getByTenant($tenantId)
+    {
+        $subscriptions = Subscription::query()
+            ->with(['plan:id,name,price_cents'])
+            ->where('tenant_id', $tenantId)
+            ->latest()
+            ->get(['id', 'plan_id', 'status'])
+            ->map(fn($sub) => [
+                'id'     => $sub->id,
+                'name'   => $sub->plan?->name ?? 'Plano não identificado',
+                'value'  => $sub->plan?->price_cents ? $sub->plan->price_cents / 100 : 0, // 💰 conversão para reais
+                'status' => ucfirst($sub->status),
+            ]);
+
+        return response()->json($subscriptions);
+    }
 }

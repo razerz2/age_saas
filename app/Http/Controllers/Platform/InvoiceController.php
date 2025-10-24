@@ -43,9 +43,9 @@ class InvoiceController extends Controller
 
     public function edit(Invoices $invoice)
     {
-        $subscriptions = Subscription::with('tenant')->get();
-        $tenants = Tenant::all();
-        return view('platform.invoices.edit', compact('invoice', 'subscriptions', 'tenants'));
+        $invoice->load(['tenant', 'subscription.plan']);
+        
+        return view('platform.invoices.edit', compact('invoice'));
     }
 
     public function update(Request $request, Invoices $invoice)

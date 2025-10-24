@@ -7,7 +7,8 @@
                 <div class="d-flex align-items-center">
                     <nav aria-label="breadcrumb">
                         <ol class="breadcrumb m-0 p-0">
-                            <li class="breadcrumb-item"><a href="{{ route('Platform.dashboard') }}" class="text-muted">Dashboard</a>
+                            <li class="breadcrumb-item"><a href="{{ route('Platform.dashboard') }}"
+                                    class="text-muted">Dashboard</a>
                             </li>
                             <li class="breadcrumb-item"><a href="{{ route('Platform.invoices.index') }}"
                                     class="text-muted">Faturas</a></li>
@@ -43,7 +44,7 @@
                     <div class="row mb-3">
                         <div class="col-md-6">
                             <label class="form-label">Tenant</label>
-                            <select name="tenant_id" class="form-control" required>
+                            <select id="tenant_id" name="tenant_id" class="form-control" required>
                                 <option value="">Selecione o tenant</option>
                                 @foreach ($tenants as $tenant)
                                     <option value="{{ $tenant->id }}"
@@ -56,14 +57,8 @@
 
                         <div class="col-md-6">
                             <label class="form-label">Assinatura</label>
-                            <select name="subscription_id" class="form-control" required>
+                            <select id="subscription_id" name="subscription_id" class="form-control" required>
                                 <option value="">Selecione a assinatura</option>
-                                @foreach ($subscriptions as $sub)
-                                    <option value="{{ $sub->id }}"
-                                        {{ old('subscription_id') == $sub->id ? 'selected' : '' }}>
-                                        {{ $sub->tenant->trade_name ?? 'Tenant removido' }} - {{ ucfirst($sub->status) }}
-                                    </option>
-                                @endforeach
                             </select>
                         </div>
                     </div>
@@ -120,30 +115,110 @@
         </div>
     </div>
 
-@include('layouts.freedash.footer')
+    @include('layouts.freedash.footer')
 @endsection
 
 @push('scripts')
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const amountDisplay = document.getElementById('amount_display');
-            const amountCents = document.getElementById('amount_cents');
+        $(function() {
 
-            amountDisplay.addEventListener('input', function() {
-                let value = amountDisplay.value.replace(/[^\d]/g, '');
-                if (value === '') {
-                    amountCents.value = '';
+            console.log('💡 Script carregado.');
+
+            const routeTemplate =
+                "{{ route('Platform.subscriptions.getByTenant', ['tenant' => 'TENANT_ID_PLACEHOLDER']) }}";
+
+            const $tenantSelect = $('#tenant_id');
+            const $subscriptionSelect = $('#subscription_id');
+            const $amountDisplay = $('#amount_display');
+            const $amountCents = $('#amount_cents');
+
+            // Quando o tenant mudar
+            $tenantSelect.on('change', function() {
+                const tenantId = $(this).val();
+
+                console.log('➡️ Tenant selecionado:', tenantId);
+
+                $subscriptionSelect.html('<option value="">Carregando assinaturas...</option>');
+                $amountDisplay.val('');
+                $amountCents.val('');
+
+                if (!tenantId) {
+                    $subscriptionSelect.html('<option value="">Selecione a assinatura</option>');
                     return;
                 }
 
-                // Formata como moeda
-                let numericValue = parseInt(value);
-                let formatted = (numericValue / 100).toFixed(2).replace('.', ',');
-                formatted = 'R$ ' + formatted.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
-                amountDisplay.value = formatted;
+                const routeUrl = routeTemplate.replace('TENANT_ID_PLACEHOLDER', tenantId);
 
-                amountCents.value = numericValue;
+                $.ajax({
+                    url: routeUrl,
+                    type: 'GET',
+                    dataType: 'json',
+                    success: function(data) {
+                        console.log('✅ Dados recebidos:', data);
+
+                        $subscriptionSelect.empty();
+
+                        if (!Array.isArray(data) || data.length === 0) {
+                            $subscriptionSelect.append(
+                                '<option value="">Nenhuma assinatura encontrada</option>');
+                            return;
+                        }
+
+                        $subscriptionSelect.append(
+                            '<option value="">Selecione a assinatura</option>');
+
+                        // Preenche o select com todas
+                        data.forEach(sub => {
+                            $subscriptionSelect.append(
+                                $('<option>', {
+                                    value: sub.id,
+                                    text: `${sub.name} (${sub.status})`,
+                                    'data-value': sub.value * 100
+                                })
+                            );
+                        });
+
+                        // ✅ Se só existir 1 assinatura, seleciona e preenche automaticamente
+                        if (data.length === 1) {
+                            const sub = data[0];
+                            console.log('🎯 Selecionando assinatura automaticamente:', sub
+                            .name);
+
+                            $subscriptionSelect.val(sub.id); // seleciona a assinatura
+                            preencherValor(sub.value * 100); // preenche o valor
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        console.error('❌ Erro AJAX:', xhr.status, error, xhr.responseText);
+                        $subscriptionSelect.html(
+                            '<option value="">Erro ao carregar assinaturas</option>');
+                    }
+                });
             });
+
+            // Função reutilizável para preencher os campos de valor
+            function preencherValor(valueCents) {
+                if (valueCents) {
+                    const valueReais = valueCents / 100;
+                    const formatted = new Intl.NumberFormat('pt-BR', {
+                        style: 'currency',
+                        currency: 'BRL'
+                    }).format(valueReais);
+
+                    $amountDisplay.val(formatted);
+                    $amountCents.val(valueCents);
+                } else {
+                    $amountDisplay.val('');
+                    $amountCents.val('');
+                }
+            }
+
+            // Quando o usuário mudar a assinatura manualmente
+            $subscriptionSelect.on('change', function() {
+                const valueCents = $(this).find(':selected').data('value');
+                preencherValor(valueCents);
+            });
+
         });
     </script>
 @endpush
