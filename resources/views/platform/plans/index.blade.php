@@ -64,11 +64,11 @@
                                                 </span>
                                             </td>
                                             <td class="text-center">
-                                                <a href="{{ route('Platform.plans.show', $plan->id) }}"
+                                                <a title="Visualizar" href="{{ route('Platform.plans.show', $plan->id) }}"
                                                     class="btn btn-sm btn-info text-white">
                                                     <i class="fas fa-eye"></i>
                                                 </a>
-                                                <a href="{{ route('Platform.plans.edit', $plan->id) }}"
+                                                <a title="Editar" href="{{ route('Platform.plans.edit', $plan->id) }}"
                                                     class="btn btn-sm btn-warning text-white">
                                                     <i class="fa fa-edit"></i>
                                                 </a>
@@ -76,7 +76,7 @@
                                                     method="POST" class="d-inline">
                                                     @csrf
                                                     @method('DELETE')
-                                                    <button type="submit" class="btn btn-sm btn-danger"
+                                                    <button title="Exclusão" type="submit" class="btn btn-sm btn-danger"
                                                         onclick="return confirm('Deseja realmente excluir este plano?')">
                                                         <i class="fa fa-trash"></i>
                                                     </button>

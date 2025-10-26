@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Platform;
 
 use App\Http\Controllers\Controller;
 use App\Models\Platform\Plan;
-use Illuminate\Http\Request;
+use App\Http\Requests\PlanRequest;
 
 class PlanController extends Controller
 {
@@ -19,29 +19,31 @@ class PlanController extends Controller
         return view('platform.plans.create');
     }
 
-    public function store(Request $request)
+    public function store(PlanRequest $request)
     {
-        $data = $request->validate([
-            'name' => 'required|string|max:255',
-            'periodicity' => 'required|in:monthly,yearly',
-            'period_months' => 'required|integer|min:1|max:12',
-            'price_cents' => 'required|numeric|min:0',
-            'features_json' => 'nullable|string',
-            'is_active' => 'boolean',
-        ]);
+        // ✅ Dados validados via PlanRequest
+        $data = $request->validated();
 
-
-        // Converte reais para centavos
+        // 🔹 Se o form envia preço em reais (ex: 89.90), converte para centavos
+        //    Caso já venha em centavos, basta remover esta linha.
         $data['price_cents'] = (int) round($data['price_cents'] * 100);
 
-        $data['features'] = array_filter(preg_split('/\r\n|\r|\n/', $data['features_json'] ?? ''));
-        unset($data['features_json']);
+        // 🔹 Converte o campo de texto "features_json" em array (se existir)
+        if ($request->filled('features_json')) {
+            $data['features'] = array_filter(
+                preg_split('/\r\n|\r|\n/', $request->features_json)
+            );
+        }
 
+        // 🔹 Garante boolean no campo is_active (checkbox)
         $data['is_active'] = $request->has('is_active');
 
+        // 🔹 Cria o plano
         Plan::create($data);
 
-        return redirect()->route('Platform.plans.index')->with('success', 'Plano criado com sucesso!');
+        return redirect()
+            ->route('Platform.plans.index')
+            ->with('success', 'Plano criado com sucesso!');
     }
 
 
@@ -55,26 +57,30 @@ class PlanController extends Controller
         return view('platform.plans.edit', compact('plan'));
     }
 
-    public function update(Request $request, Plan $plan)
+    public function update(PlanRequest $request, Plan $plan)
     {
-        $data = $request->validate([
-            'name' => 'required|string|max:255',
-            'periodicity' => 'required|in:monthly,yearly',
-            'period_months' => 'required|integer|min:1|max:12',
-            'price_cents' => 'required|numeric|min:0',
-            'features_json' => 'nullable|string',
-            'is_active' => 'boolean',
-        ]);
+        // ✅ Usa apenas os dados validados
+        $data = $request->validated();
 
-
-        $data['features'] = array_filter(preg_split('/\r\n|\r|\n/', $data['features_json'] ?? ''));
-        unset($data['features_json']);
+        // 🔹 Converte preço de reais → centavos (se necessário)
         $data['price_cents'] = (int) round($data['price_cents'] * 100);
+
+        // 🔹 Converte texto de features (multilinha) para array
+        if ($request->filled('features_json')) {
+            $data['features'] = array_filter(
+                preg_split('/\r\n|\r|\n/', $request->features_json)
+            );
+        }
+
+        // 🔹 Garante boolean correto
         $data['is_active'] = $request->has('is_active');
 
+        // 🔹 Atualiza o plano
         $plan->update($data);
 
-        return redirect()->route('Platform.plans.index')->with('success', 'Plano atualizado com sucesso!');
+        return redirect()
+            ->route('Platform.plans.index')
+            ->with('success', 'Plano atualizado com sucesso!');
     }
 
     public function destroy(Plan $plan)

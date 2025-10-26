@@ -9,7 +9,7 @@ use App\Services\SystemNotificationService;
 
 class CheckOverdueInvoices extends Command
 {
-    protected $signature = 'app:check-overdue-invoices';
+    protected $signature = 'invoices:invoices-check-overdue';
     protected $description = 'Verifica faturas vencidas e suspende tenants em atraso.';
 
     public function handle()

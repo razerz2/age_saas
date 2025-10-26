@@ -5,7 +5,7 @@ namespace App\Http\Controllers\Platform;
 use App\Http\Controllers\Controller;
 use App\Models\Platform\NotificationOutbox;
 use App\Models\Platform\Tenant;
-use Illuminate\Http\Request;
+use App\Http\Requests\NotificationOutboxRequest;
 
 class NotificationOutboxController extends Controller
 {
@@ -22,17 +22,9 @@ class NotificationOutboxController extends Controller
         return view('platform.notifications_outbox.create', compact('tenants'));
     }
 
-    public function store(Request $request)
+    public function store(NotificationOutboxRequest $request)
     {
-        $validated = $request->validate([
-            'tenant_id' => 'nullable|exists:tenants,id',
-            'channel' => 'required|in:email,whatsapp,sms,inapp',
-            'subject' => 'nullable|string|max:255',
-            'body' => 'required|string',
-            'meta' => 'nullable|array',
-            'scheduled_at' => 'nullable|date',
-            'status' => 'required|in:queued,sent,error',
-        ]);
+        $validated = $request->validate();
 
         $validated['meta'] = $validated['meta'] ?? [];
 
@@ -52,17 +44,9 @@ class NotificationOutboxController extends Controller
         return view('platform.notifications_outbox.edit', compact('notificationOutbox', 'tenants'));
     }
 
-    public function update(Request $request, NotificationOutbox $notificationOutbox)
+    public function update(NotificationOutboxRequest $request, NotificationOutbox $notificationOutbox)
     {
-        $validated = $request->validate([
-            'tenant_id' => 'nullable|exists:tenants,id',
-            'channel' => 'required|in:email,whatsapp,sms,inapp',
-            'subject' => 'nullable|string|max:255',
-            'body' => 'required|string',
-            'meta' => 'nullable|array',
-            'scheduled_at' => 'nullable|date',
-            'status' => 'required|in:queued,sent,error',
-        ]);
+        $validated = $request->validate();
 
         $notificationOutbox->update($validated);
 

@@ -186,10 +186,10 @@ $(function() {
                     searchable: false,
                     render: function (data, type, row) {
                         return `
-                            <a href="/Platform/estados/${row.id_estado}" class="btn btn-sm btn-outline-info me-1">
+                            <a title="Visualizar" href="/Platform/estados/${row.id_estado}" class="btn btn-sm btn-outline-info me-1">
                                 <i class="fas fa-eye"></i>
                             </a>
-                            <button class="btn btn-sm btn-outline-warning me-1 btn-edit"
+                            <button title="Editar" class="btn btn-sm btn-outline-warning me-1 btn-edit"
                                     data-id="${row.id_estado}"
                                     data-nome="${row.nome_estado}"
                                     data-uf="${row.uf}"
@@ -199,7 +199,7 @@ $(function() {
                             <form action="/Platform/estados/${row.id_estado}" method="POST" class="d-inline" onsubmit="return confirm('Excluir estado?')">
                                 @csrf
                                 @method('DELETE')
-                                <button class="btn btn-sm btn-outline-danger">
+                                <button title="Exclusão" class="btn btn-sm btn-outline-danger">
                                     <i class="fas fa-trash-alt"></i>
                                 </button>
                             </form>`;

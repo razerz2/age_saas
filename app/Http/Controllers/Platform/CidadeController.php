@@ -6,7 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Platform\Cidade;
 use App\Models\Platform\Estado;
 use App\Models\Platform\Pais;
-use Illuminate\Http\Request;
+use App\Http\Requests\CidadeRequest;
 
 class CidadeController extends Controller
 {
@@ -27,29 +27,18 @@ class CidadeController extends Controller
         return view('platform.cidades.show', compact('cidade', 'estados'));
     }
 
-    public function store(Request $request)
+    public function store(CidadeRequest $request)
     {
-        $data = $request->validate([
-            'nome_cidade' => 'required|string|max:255',
-            'uf'          => 'nullable|string|max:2',
-            'estado_id'   => 'required|integer|exists:estados,id_estado',
-        ]);
-
+        $data = $request->validate();
         Cidade::create($data);
 
         return redirect()->route('Platform.cidades.index')->with('success', 'Cidade criada com sucesso.');
     }
 
-    public function update(Request $request, $id)
+    public function update(CidadeRequest $request, $id)
     {
         $cidade = Cidade::findOrFail($id);
-
-        $data = $request->validate([
-            'nome_cidade' => 'required|string|max:255',
-            'uf'          => 'nullable|string|max:2',
-            'estado_id'   => 'required|integer|exists:estados,id_estado',
-        ]);
-
+        $data = $request->validate();
         $cidade->update($data);
 
         return redirect()->route('Platformcidades.index')->with('success', 'Cidade atualizada com sucesso.');

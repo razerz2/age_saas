@@ -23,15 +23,17 @@
                     </div>
 
                     <div class="card-body">
-                        {{-- Exibe erros de validação --}}
+                        {{-- 🔹 Exibição de erros de validação --}}
                         @if ($errors->any())
-                            <div class="alert alert-danger">
-                                <strong>Ops!</strong> Verifique os campos abaixo:
-                                <ul class="mb-0">
+                            <div class="alert alert-danger alert-dismissible fade show shadow-sm" role="alert">
+                                <strong>Ops!</strong> Verifique os erros abaixo:
+                                <ul class="mt-2 mb-0">
                                     @foreach ($errors->all() as $error)
                                         <li>{{ $error }}</li>
                                     @endforeach
                                 </ul>
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"
+                                    aria-label="Fechar"></button>
                             </div>
                         @endif
 
@@ -51,8 +53,21 @@
                                 </div>
 
                                 <div class="col-md-6">
-                                    <label class="form-label">Documento</label>
-                                    <input type="text" name="document" class="form-control">
+                                    <label class="form-label">Documento:</label>
+                                    <div class="input-group">
+                                        <select id="tipoDocumento" class="form-select" style="max-width: 100px;">
+                                            <option value="cpf" selected>CPF</option>
+                                            <option value="cnpj">CNPJ</option>
+                                        </select>
+
+                                        <input type="text" id="document" name="document" class="form-control"
+                                            placeholder="Digite o CPF ou CNPJ">
+
+                                        <button type="button" id="btnBuscarCnpj" class="btn btn-outline-info"
+                                            style="display: none;">
+                                            <i class="fas fa-search"></i> Buscar
+                                        </button>
+                                    </div>
                                 </div>
 
                                 <div class="col-md-6">
@@ -72,11 +87,11 @@
 
                                 <div class="col-md-6">
                                     <label class="form-label">Status *</label>
-                                    <select name="status" class="form-select">
-                                        <option value="trial">Trial</option>
+                                    <select name="status" class="form-select" required>
+                                        <option value="">Selecione...</option>
                                         <option value="active">Ativo</option>
-                                        <option value="suspended">Suspenso</option>
-                                        <option value="cancelled">Cancelado</option>
+                                        <option value="inactive">Inativo</option>
+                                        <option value="pending">Pendente</option>
                                     </select>
                                 </div>
 
@@ -150,24 +165,30 @@
                                     </h5>
                                 </div>
 
-                                <div class="col-md-6">
+                                <div class="col-md-4">
                                     <label class="form-label">DB Host *</label>
-                                    <input type="text" name="db_host" class="form-control" required>
+                                    <input type="text" name="db_host" class="form-control" placeholder="localhost"
+                                        required>
                                 </div>
 
-                                <div class="col-md-6">
+                                <input type="hidden" name="db_port" value="5432">
+
+                                <div class="col-md-3">
                                     <label class="form-label">DB Name *</label>
-                                    <input type="text" name="db_name" class="form-control" required>
+                                    <input type="text" name="db_name" class="form-control"
+                                        placeholder="ex: tenant_db" required>
                                 </div>
 
-                                <div class="col-md-6">
+                                <div class="col-md-3">
                                     <label class="form-label">DB User *</label>
-                                    <input type="text" name="db_username" class="form-control" required>
+                                    <input type="text" name="db_username" class="form-control"
+                                        placeholder="ex: tenant_user" required>
                                 </div>
 
                                 <div class="col-md-6">
                                     <label class="form-label">DB Password *</label>
-                                    <input type="password" name="db_password" class="form-control" required>
+                                    <input type="password" name="db_password" class="form-control"
+                                        placeholder="••••••••••" required>
                                 </div>
                             </div>
 
@@ -186,6 +207,9 @@
 
     @push('scripts')
         <script>
+            // -----------------------------
+            //  🌎 País / Estado / Cidade
+            // -----------------------------
             const pais = document.getElementById('pais');
             const estado = document.getElementById('estado');
             const cidade = document.getElementById('cidade');
@@ -216,8 +240,103 @@
                         });
                 });
             }
+
+            document.addEventListener('DOMContentLoaded', function() {
+                // Se houver país selecionado ao carregar a página, dispara a mudança automaticamente
+                if (pais && pais.value) {
+                    const urlEstados = "{{ route('Platform.api.estados', ['pais' => '__ID__']) }}".replace('__ID__',
+                        pais.value);
+                    fetch(urlEstados)
+                        .then(r => r.json())
+                        .then(data => {
+                            estado.innerHTML = '<option value="">Selecione...</option>';
+                            data.forEach(e => estado.innerHTML +=
+                                `<option value="${e.id_estado}">${e.nome_estado}</option>`);
+                            cidade.innerHTML = '<option value="">Selecione o estado primeiro</option>';
+                        });
+                }
+            });
+
+            // -----------------------------
+            // 🧾 CPF / CNPJ - select e busca
+            // -----------------------------
+            $(document).ready(function() {
+                const $tipo = $('#tipoDocumento');
+                const $document = $('#document');
+                const $btnBuscar = $('#btnBuscarCnpj');
+
+                function aplicarMascara() {
+                    let tipo = $tipo.val();
+                    $document.val('');
+
+                    if (tipo === 'cpf') {
+                        $btnBuscar.hide();
+                        $document.attr('placeholder', 'Digite o CPF');
+                        $document.attr('maxlength', 14);
+                    } else {
+                        $btnBuscar.show();
+                        $document.attr('placeholder', 'Digite o CNPJ');
+                        $document.attr('maxlength', 18);
+                    }
+                }
+
+                // Aplica máscara dinamicamente enquanto digita
+                $document.on('input', function() {
+                    let valor = $(this).val().replace(/\D/g, '');
+                    let tipo = $tipo.val();
+
+                    if (tipo === 'cpf') {
+                        if (valor.length > 11) valor = valor.substring(0, 11);
+                        valor = valor.replace(/(\d{3})(\d)/, '$1.$2');
+                        valor = valor.replace(/(\d{3})(\d)/, '$1.$2');
+                        valor = valor.replace(/(\d{3})(\d{1,2})$/, '$1-$2');
+                    } else {
+                        if (valor.length > 14) valor = valor.substring(0, 14);
+                        valor = valor.replace(/^(\d{2})(\d)/, '$1.$2');
+                        valor = valor.replace(/^(\d{2})\.(\d{3})(\d)/, '$1.$2.$3');
+                        valor = valor.replace(/\.(\d{3})(\d)/, '.$1/$2');
+                        valor = valor.replace(/(\d{4})(\d)/, '$1-$2');
+                    }
+
+                    $(this).val(valor);
+                });
+
+                // Evento ao mudar tipo (cpf/cnpj)
+                $tipo.on('change', aplicarMascara);
+                aplicarMascara();
+
+                // Botão buscar CNPJ
+                $btnBuscar.on('click', function() {
+                    let cnpj = $document.val().replace(/\D/g, '');
+                    if (cnpj.length !== 14) {
+                        alert('Informe um CNPJ válido com 14 dígitos.');
+                        return;
+                    }
+
+                    const btn = $(this);
+                    btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Buscando...');
+
+                    $.getJSON(`https://brasilapi.com.br/api/cnpj/v1/${cnpj}`)
+                        .done(function(data) {
+                            $('input[name="legal_name"]').val(data.razao_social || '');
+                            $('input[name="trade_name"]').val(data.nome_fantasia || '');
+                            $('input[name="email"]').val(data.email || '');
+                            $('input[name="phone"]').val(data.ddd_telefone_1 || '');
+                            $('input[name="endereco"]').val(data.logradouro || '');
+                            $('input[name="n_endereco"]').val(data.numero || '');
+                            $('input[name="bairro"]').val(data.bairro || '');
+                            $('input[name="cep"]').val(data.cep || '');
+                            $('input[name="complemento"]').val(data.complemento || '');
+                        })
+                        .fail(function() {
+                            alert('❌ Não foi possível localizar o CNPJ informado.');
+                        })
+                        .always(function() {
+                            btn.prop('disabled', false).html('<i class="fas fa-search"></i> Buscar');
+                        });
+                });
+            });
         </script>
     @endpush
-
     @include('layouts.freedash.footer')
 @endsection

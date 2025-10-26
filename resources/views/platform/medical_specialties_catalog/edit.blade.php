@@ -34,6 +34,19 @@
             <div class="col-12">
                 <div class="card shadow-sm">
                     <div class="card-body">
+                        {{-- 🔹 Exibição de erros de validação --}}
+                        @if ($errors->any())
+                            <div class="alert alert-danger alert-dismissible fade show shadow-sm" role="alert">
+                                <strong>Ops!</strong> Verifique os erros abaixo:
+                                <ul class="mt-2 mb-0">
+                                    @foreach ($errors->all() as $error)
+                                        <li>{{ $error }}</li>
+                                    @endforeach
+                                </ul>
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"
+                                    aria-label="Fechar"></button>
+                            </div>
+                        @endif
                         <h4 class="card-title mb-4">Editar Especialidade</h4>
 
                         <form method="POST"

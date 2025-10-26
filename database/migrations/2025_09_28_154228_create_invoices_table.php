@@ -16,6 +16,11 @@ return new class extends Migration {
             $table->string('payment_link')->nullable();
             $table->string('provider')->nullable();    // ex: asaas, pagarme
             $table->string('provider_id')->nullable(); // id no gateway
+            $table->string('asaas_payment_id')->nullable();
+            $table->boolean('asaas_synced')->default(false);
+            $table->string('asaas_sync_status')->default('pending');
+            $table->timestamp('asaas_last_sync_at')->nullable();
+            $table->text('asaas_last_error')->nullable();
             $table->timestamps();
         });
     }

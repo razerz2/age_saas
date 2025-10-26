@@ -6,7 +6,8 @@
                 <div class="d-flex align-items-center">
                     <nav aria-label="breadcrumb">
                         <ol class="breadcrumb m-0 p-0">
-                            <li class="breadcrumb-item"> <a href="{{ route('Platform.dashboard') }}" class="text-muted">Dashboard</a>
+                            <li class="breadcrumb-item"> <a href="{{ route('Platform.dashboard') }}"
+                                    class="text-muted">Dashboard</a>
                             </li>
                             <li class="breadcrumb-item text-muted active" aria-current="page">Tenants</li>
                         </ol>
@@ -47,13 +48,14 @@
                                             <td>{{ $tenant->subdomain }}</td>
                                             <td>{{ $tenant->db_name ?? '-' }}</td>
                                             <td>{{ $tenant->created_at->format('d/m/Y') }}</td>
-                                            <td class="text-center"> <a
-                                                    href="{{ route('Platform.tenants.show', $tenant->id) }}"
-                                                    class="btn btn-sm btn-info"> <i class="fas fa-eye"></i> </a> <a
-                                                    href="{{ route('Platform.tenants.edit', $tenant->id) }}"
+                                            <td class="text-center">
+                                                <a title="Visualizar"
+                                                    href="{{ route('Platform.tenants.show', $tenant->id) }}"class="btn btn-sm btn-info">
+                                                    <i class="fas fa-eye"></i> </a>
+                                                <a title="Editar" href="{{ route('Platform.tenants.edit', $tenant->id) }}"
                                                     class="btn btn-sm btn-warning"> <i class="fa fa-edit"></i> </a>
                                                 <form action="{{ route('Platform.tenants.destroy', $tenant->id) }}"
-                                                    method="POST" class="d-inline"> @csrf @method('DELETE') <button
+                                                    method="POST" class="d-inline"> @csrf @method('DELETE') <button title="Exclusão"
                                                         class="btn btn-sm btn-danger"
                                                         onclick="return confirm('Deseja realmente excluir este tenant?')">
                                                         <i class="fa fa-trash"></i> </button> </form>
@@ -68,7 +70,7 @@
             </div>
         </div>
     </div>
-@include("layouts.freedash.footer")   
+    @include('layouts.freedash.footer')
 @endsection
 @push('scripts')
     <script>

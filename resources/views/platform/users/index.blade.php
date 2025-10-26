@@ -72,19 +72,19 @@
                                                 @endif
                                             </td>
                                             <td class="text-center">
-                                                <a href="{{ route('Platform.users.show', $user->id) }}"
+                                                <a title="Visualizar" href="{{ route('Platform.users.show', $user->id) }}"
                                                     class="btn btn-sm btn-info text-white">
                                                     <i class="fas fa-eye"></i>
                                                 </a>
-                                                <a href="{{ route('Platform.users.edit', $user->id) }}"
+                                                <a title="Editar" href="{{ route('Platform.users.edit', $user->id) }}"
                                                     class="btn btn-sm btn-warning text-white">
                                                     <i class="fa fa-edit"></i>
                                                 </a>
 
-                                                <form action="{{ route('Platform.users.toggle-status', $user->id) }}"
+                                                <form  action="{{ route('Platform.users.toggle-status', $user->id) }}"
                                                     method="POST" class="d-inline">
                                                     @csrf
-                                                    <button
+                                                    <button title="Status"
                                                         class="btn btn-sm {{ $user->status === 'active' ? 'btn-secondary' : 'btn-success' }}"
                                                         onclick="return confirm('{{ $user->status === 'active' ? 'Bloquear' : 'Reativar' }} este usuário?')">
                                                         <i
@@ -95,7 +95,7 @@
                                                 <form action="{{ route('Platform.users.reset-password', $user->id) }}"
                                                     method="POST" class="d-inline">
                                                     @csrf
-                                                    <button class="btn btn-sm btn-info text-white"
+                                                    <button title="Reset Password" class="btn btn-sm btn-info text-white"
                                                         onclick="return confirm('Deseja realmente redefinir a senha deste usuário?')">
                                                         <i class="fa fa-key"></i>
                                                     </button>
@@ -105,7 +105,7 @@
                                                     method="POST" class="d-inline">
                                                     @csrf
                                                     @method('DELETE')
-                                                    <button type="submit" class="btn btn-sm btn-danger"
+                                                    <button title="Exclusão" type="submit" class="btn btn-sm btn-danger"
                                                         onclick="return confirm('Deseja realmente excluir este usuário?')">
                                                         <i class="fa fa-trash"></i>
                                                     </button>

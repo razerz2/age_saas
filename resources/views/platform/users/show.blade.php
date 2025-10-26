@@ -7,10 +7,12 @@
                 <div class="d-flex align-items-center">
                     <nav aria-label="breadcrumb">
                         <ol class="breadcrumb m-0 p-0">
-                            <li class="breadcrumb-item"><a href="{{ route('Platform.dashboard') }}" class="text-muted">Dashboard</a>
+                            <li class="breadcrumb-item">
+                                <a href="{{ route('Platform.dashboard') }}" class="text-muted">Dashboard</a>
                             </li>
-                            <li class="breadcrumb-item"><a href="{{ route('Platform.users.index') }}"
-                                    class="text-muted">Usuários</a></li>
+                            <li class="breadcrumb-item">
+                                <a href="{{ route('Platform.users.index') }}" class="text-muted">Usuários</a>
+                            </li>
                             <li class="breadcrumb-item text-muted active" aria-current="page">Visualizar</li>
                         </ol>
                     </nav>
@@ -74,7 +76,45 @@
                             </tbody>
                         </table>
 
-                        <div class="text-end mt-3">
+                        {{-- 🔹 Módulos Permitidos --}}
+                        <h5 class="fw-semibold text-dark mt-4 mb-3">
+                            <i class="fa fa-layer-group text-primary me-2"></i> Módulos Permitidos
+                        </h5>
+
+                        @php
+                            $allModules = \App\Models\Platform\Module::all();
+                            $modulesMap = [];
+                            foreach ($allModules as $m) {
+                                $modulesMap[$m['key']] = $m;
+                            }
+                        @endphp
+
+                        @if (!empty($user->modules))
+                            <div class="d-flex flex-wrap gap-2">
+                                @foreach ($user->modules as $key)
+                                    @php $m = $modulesMap[$key] ?? null; @endphp
+
+                                    @if ($m)
+                                        <span class="badge bg-primary bg-opacity-75 px-3 py-2">
+                                            <i class="fa {{ $m['icon'] ?? 'fa-check-circle' }} me-1"></i>
+                                            {{ $m['name'] }}
+                                        </span>
+                                    @else
+                                        <span class="badge bg-secondary px-3 py-2">
+                                            <i class="fa fa-question-circle me-1"></i>
+                                            {{ ucfirst($key) }}
+                                        </span>
+                                    @endif
+                                @endforeach
+                            </div>
+                        @else
+                            <p class="text-muted fst-italic mt-2">
+                                <i class="fa fa-info-circle me-1"></i>
+                                Nenhum módulo atribuído a este usuário.
+                            </p>
+                        @endif
+
+                        <div class="text-end mt-4">
                             <a href="{{ route('Platform.users.edit', $user->id) }}"
                                 class="btn btn-warning text-white shadow-sm">
                                 <i class="fa fa-edit me-1"></i> Editar

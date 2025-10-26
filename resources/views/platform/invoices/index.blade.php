@@ -55,12 +55,12 @@
                                     </span>
                                 </td>
                                 <td class="text-center">
-                                    <a href="{{ route('Platform.invoices.show', $invoice->id) }}" class="btn btn-sm btn-info"><i class="fa fa-eye"></i></a>
-                                    <a href="{{ route('Platform.invoices.edit', $invoice->id) }}" class="btn btn-sm btn-warning"><i class="fa fa-edit"></i></a>
+                                    <a title="Visualizar" href="{{ route('Platform.invoices.show', $invoice->id) }}" class="btn btn-sm btn-info"><i class="fa fa-eye"></i></a>
+                                    <a title="Editar" href="{{ route('Platform.invoices.edit', $invoice->id) }}" class="btn btn-sm btn-warning"><i class="fa fa-edit"></i></a>
                                     <form action="{{ route('Platform.invoices.destroy', $invoice->id) }}" method="POST" class="d-inline">
                                         @csrf
                                         @method('DELETE')
-                                        <button class="btn btn-sm btn-danger" onclick="return confirm('Deseja realmente excluir esta fatura?')">
+                                        <button title="Exclusão" class="btn btn-sm btn-danger" onclick="return confirm('Deseja realmente excluir esta fatura?')">
                                             <i class="fa fa-trash"></i>
                                         </button>
                                     </form>

@@ -70,7 +70,7 @@
                                         </td>
                                         <td>{{ \Carbon\Carbon::parse($notification->created_at)->format('d/m/Y H:i') }}</td>
                                         <td class="text-center">
-                                            <a href="{{ route('Platform.system_notifications.show', $notification->id) }}"
+                                            <a title="Visualizar" href="{{ route('Platform.system_notifications.show', $notification->id) }}"
                                                class="btn btn-sm btn-info text-white">
                                                 <i class="fas fa-eye"></i>
                                             </a>

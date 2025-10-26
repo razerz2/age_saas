@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Platform;
 
 use App\Http\Controllers\Controller;
 use App\Models\Platform\MedicalSpecialtyCatalog;
-use Illuminate\Http\Request;
+use App\Http\Requests\MedicalSpecialtyCatalogRequest;
 
 class MedicalSpecialtyCatalogController extends Controller
 {
@@ -19,12 +19,9 @@ class MedicalSpecialtyCatalogController extends Controller
         return view('platform.medical_specialties_catalog.create');
     }
 
-    public function store(Request $request)
+    public function store(MedicalSpecialtyCatalogRequest $request)
     {
-        $validated = $request->validate([
-            'name' => 'required|string|max:150|unique:medical_specialties_catalog,name',
-            'code' => 'nullable|string|max:20',
-        ]);
+        $validated = $request->validate();
 
         MedicalSpecialtyCatalog::create($validated);
 
@@ -43,12 +40,9 @@ class MedicalSpecialtyCatalogController extends Controller
         return view('platform.medical_specialties_catalog.create', compact('medical_specialties_catalog'));
     }
 
-    public function update(Request $request, MedicalSpecialtyCatalog $medical_specialties_catalog)
+    public function update(MedicalSpecialtyCatalogRequest $request, MedicalSpecialtyCatalog $medical_specialties_catalog)
     {
-        $validated = $request->validate([
-            'name' => 'required|string|max:150|unique:medical_specialties_catalog,name,' . $medical_specialties_catalog->id . ',id',
-            'code' => 'nullable|string|max:20',
-        ]);
+        $validated = $request->validate();
 
         $medical_specialties_catalog->update($validated);
 

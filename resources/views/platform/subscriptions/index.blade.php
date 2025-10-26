@@ -72,11 +72,11 @@
                                             </td>
                                             <td>{{ $subscription->auto_renew ? 'Sim' : 'Não' }}</td>
                                             <td class="text-center">
-                                                <a href="{{ route('Platform.subscriptions.show', $subscription->id) }}"
+                                                <a title="Visualizar" href="{{ route('Platform.subscriptions.show', $subscription->id) }}"
                                                     class="btn btn-sm btn-info text-white">
                                                     <i class="fas fa-eye"></i>
                                                 </a>
-                                                <a href="{{ route('Platform.subscriptions.edit', $subscription->id) }}"
+                                                <a title="Editar" href="{{ route('Platform.subscriptions.edit', $subscription->id) }}"
                                                     class="btn btn-sm btn-warning text-white">
                                                     <i class="fa fa-edit"></i>
                                                 </a>
@@ -87,7 +87,7 @@
                                                         action="{{ route('Platform.subscriptions.renew', $subscription->id) }}"
                                                         method="POST" class="d-inline">
                                                         @csrf
-                                                        <button class="btn btn-sm btn-success"
+                                                        <button title="Nova Fatura" class="btn btn-sm btn-success"
                                                             onclick="return confirm('Deseja gerar uma nova fatura para esta assinatura?')">
                                                             <i class="fas fa-dollar-sign"></i>
                                                         </button>
@@ -99,7 +99,7 @@
                                                     method="POST" class="d-inline">
                                                     @csrf
                                                     @method('DELETE')
-                                                    <button type="submit" class="btn btn-sm btn-danger"
+                                                    <button title="Exclusão" type="submit" class="btn btn-sm btn-danger"
                                                         onclick="return confirm('Deseja realmente excluir esta assinatura?')">
                                                         <i class="fa fa-trash"></i>
                                                     </button>

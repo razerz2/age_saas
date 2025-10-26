@@ -40,42 +40,89 @@ Route::get('/', function () {
     // Não autenticado → vai para o login
     return redirect()->route('login');
 });
+//Rota do Webhook do asaas...
+Route::post('/webhook/asaas', [AsaasWebhookController::class, 'handle'])->middleware('verify.asaas.token');
 
-Route::post('/webhook/asaas', [AsaasWebhookController::class, 'handle'])->name('webhook.asaas');
-
-Route::middleware('auth')->group(function () {
-    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
-    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
-    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
-});
 
 Route::middleware(['auth'])->prefix('Platform')->name('Platform.')->group(function () {
+
+    // 🔹 Perfil do usuário autenticado (acesso sempre permitido)
+    Route::get('profile', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::patch('profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::delete('profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+
+    // 🔹 Dashboard (acesso sempre permitido)
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
-    Route::resource('tenants', TenantController::class);
-    Route::resource('plans', PlanController::class);
-    Route::resource('subscriptions', SubscriptionController::class);
-    Route::post('/Platform/subscriptions/{id}/renew', [SubscriptionController::class, 'renew'])->name('subscriptions.renew');
-    Route::resource('invoices', InvoiceController::class);
-    Route::resource('medical_specialties_catalog', MedicalSpecialtyCatalogController::class);
-    Route::resource('notifications_outbox', NotificationOutboxController::class);
-    Route::resource('system_notifications', SystemNotificationController::class)->except(['create', 'edit', 'update', 'store', 'destroy'])->whereUuid('system_notification');
-    Route::resource('paises', PaisController::class)->except(['create', 'edit']);
-    Route::resource('estados', EstadoController::class)->except(['create', 'edit']);
-    Route::resource('cidades', CidadeController::class)->except(['create', 'edit']);
-    //Rotas para usuários...
-    Route::resource('users', UserController::class);
-    Route::post('users/{user}/reset-password', [UserController::class, 'resetPassword'])->name('users.reset-password');
-    Route::post('users/{user}/toggle-status', [UserController::class, 'toggleStatus'])->name('users.toggle-status');
-    //Rotas para Settings...
-    Route::get('settings/', [SystemSettingsController::class, 'index'])->name('settings.index');
-    Route::post('settings/update/general', [SystemSettingsController::class, 'updateGeneral'])->name('settings.update.general');
-    Route::post('settings/update/integrations', [SystemSettingsController::class, 'updateIntegrations'])->name('settings.update.integrations');
-    Route::get('settings/test/{service}', [SystemSettingsController::class, 'testConnection'])->name('settings.test');
-    //Rotas para ferramentas do sistema consulta e etc...
+
+    // =======================================================
+    // 🔸 Módulo: Tenants
+    // =======================================================
+    Route::middleware('module.access:tenants')->group(function () {
+        Route::resource('tenants', TenantController::class);
+    });
+
+    // 🔸 Módulo: Planos
+    Route::middleware('module.access:plans')->group(function () {
+        Route::resource('plans', PlanController::class);
+    });
+
+    // 🔸 Módulo: Assinaturas
+    Route::middleware('module.access:subscriptions')->group(function () {
+        Route::resource('subscriptions', SubscriptionController::class);
+        Route::post('subscriptions/{id}/renew', [SubscriptionController::class, 'renew'])->name('subscriptions.renew');
+        Route::get('tenants/{tenant}/subscriptions', [SubscriptionController::class, 'getByTenant'])->name('subscriptions.getByTenant');
+    });
+
+    // 🔸 Módulo: Faturas
+    Route::middleware('module.access:invoices')->group(function () {
+        Route::resource('invoices', InvoiceController::class);
+    });
+
+    // 🔸 Módulo: Catálogo de Especialidades Médicas
+    Route::middleware('module.access:medical_specialties_catalog')->group(function () {
+        Route::resource('medical_specialties_catalog', MedicalSpecialtyCatalogController::class);
+    });
+
+    // 🔸 Módulo: Notificações Enviadas
+    Route::middleware('module.access:notifications_outbox')->group(function () {
+        Route::resource('notifications_outbox', NotificationOutboxController::class);
+    });
+
+    // 🔸 Módulo: Notificações do Sistema
+    Route::middleware('module.access:system_notifications')->group(function () {
+        Route::resource('system_notifications', SystemNotificationController::class)
+            ->except(['create', 'edit', 'update', 'store', 'destroy'])
+            ->whereUuid('system_notification');
+    });
+
+    // 🔸 Módulo: Localização (Países, Estados, Cidades)
+    Route::middleware('module.access:locations')->group(function () {
+        Route::resource('paises', PaisController::class)->except(['create', 'edit']);
+        Route::resource('estados', EstadoController::class)->except(['create', 'edit']);
+        Route::resource('cidades', CidadeController::class)->except(['create', 'edit']);
+    });
+
+    // 🔸 Módulo: Usuários
+    Route::middleware('module.access:users')->group(function () {
+        Route::resource('users', UserController::class);
+        Route::post('users/{user}/reset-password', [UserController::class, 'resetPassword'])->name('users.reset-password');
+        Route::post('users/{user}/toggle-status', [UserController::class, 'toggleStatus'])->name('users.toggle-status');
+    });
+
+    // 🔸 Módulo: Configurações do Sistema
+    Route::middleware('module.access:settings')->group(function () {
+        Route::get('settings/', [SystemSettingsController::class, 'index'])->name('settings.index');
+        Route::post('settings/update/general', [SystemSettingsController::class, 'updateGeneral'])->name('settings.update.general');
+        Route::post('settings/update/integrations', [SystemSettingsController::class, 'updateIntegrations'])->name('settings.update.integrations');
+        Route::get('settings/test/{service}', [SystemSettingsController::class, 'testConnection'])->name('settings.test');
+    });
+
+    // =======================================================
+    // 🔸 Rotas auxiliares (sem restrição de módulo)
+    // =======================================================
     Route::get('/api/estados/{pais}', [LocationController::class, 'getEstados'])->name('api.estados');
     Route::get('/api/cidades/{estado}', [LocationController::class, 'getCidades'])->name('api.cidades');
-    Route::get('tenants/{tenant}/subscriptions', [SubscriptionController::class, 'getByTenant'])->name('subscriptions.getByTenant');
-    //Rota para carregar notificações...
+
     Route::get('system_notifications/json', function () {
         $notifications = SystemNotification::latest('created_at')->take(5)->get();
         $unreadCount = SystemNotification::where('status', 'new')->count();
@@ -85,7 +132,7 @@ Route::middleware(['auth'])->prefix('Platform')->name('Platform.')->group(functi
             'notifications' => $notifications,
         ]);
     })->name('system_notifications.json');
-
 });
+
 
 require __DIR__ . '/auth.php';

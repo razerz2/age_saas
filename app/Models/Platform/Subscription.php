@@ -22,12 +22,21 @@ class Subscription extends Model
         'due_day',
         'status',
         'auto_renew',
+        'payment_method',
+
+        // 🔹 Campos de sincronização com Asaas
+        'asaas_subscription_id',
+        'asaas_synced',
+        'asaas_sync_status',
+        'asaas_last_sync_at',
+        'asaas_last_error',
     ];
 
     protected $casts = [
         'starts_at' => 'datetime',
         'ends_at' => 'datetime',
         'auto_renew' => 'boolean',
+        'asaas_last_sync_at' => 'datetime',
     ];
 
     // 🔗 Relações
@@ -38,9 +47,8 @@ class Subscription extends Model
 
     public function invoices()
     {
-        return $this->hasMany(\App\Models\Platform\Invoices::class, 'subscription_id');
+        return $this->hasMany(Invoices::class, 'subscription_id');
     }
-
 
     public function plan()
     {
@@ -72,5 +80,16 @@ class Subscription extends Model
     public function getHasPendingInvoiceAttribute()
     {
         return $this->invoices()->whereIn('status', ['pending', 'overdue'])->exists();
+    }
+
+    public function getPaymentMethodLabelAttribute(): string
+    {
+        return match ($this->payment_method) {
+            'PIX' => 'PIX',
+            'BOLETO' => 'Boleto Bancário',
+            'CREDIT_CARD' => 'Cartão de Crédito',
+            'DEBIT_CARD' => 'Cartão de Débito',
+            default => 'Desconhecido',
+        };
     }
 }

@@ -12,13 +12,21 @@
 @extends('layouts.freedash.app')
 
 @section('content')
+     @if (session('error'))
+            <div class="text-center alert alert-danger alert-dismissible fade show shadow-sm" role="alert">
+                <i class="fa fa-exclamation-triangle me-2"></i>
+                {{ session('error') }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+            </div>
+    @endif
     <!-- ============================================================== -->
     <!-- Bread crumb and right sidebar toggle -->
     <!-- ============================================================== -->
     <div class="page-breadcrumb">
         <div class="row">
             <div class="col-7 align-self-center">
-                <h3 class="page-title text-truncate text-dark font-weight-medium mb-1">{{ $saudacao }}, {{ Auth::user()->name }}!</h3>
+                <h3 class="page-title text-truncate text-dark font-weight-medium mb-1">{{ $saudacao }},
+                    {{ Auth::user()->name }}!</h3>
                 <div class="d-flex align-items-center">
                     <nav aria-label="breadcrumb">
                         <ol class="breadcrumb m-0 p-0">

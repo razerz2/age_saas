@@ -23,6 +23,11 @@ class Invoices extends Model
         'payment_link',
         'provider',
         'provider_id',
+        'asaas_payment_id',
+        'asaas_synced',
+        'asaas_sync_status',
+        'asaas_last_sync_at',
+        'asaas_last_error',
     ];
 
     protected $casts = [

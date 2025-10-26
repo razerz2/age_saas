@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Platform;
 
 use App\Http\Controllers\Controller;
 use App\Models\Platform\Pais;
-use Illuminate\Http\Request;
+use App\Http\Requests\PaisRequest;
 use Illuminate\Support\Facades\Log;
 
 class PaisController extends Controller
@@ -15,30 +15,20 @@ class PaisController extends Controller
         return view('platform.paises.index', compact('paises'));
     }
 
-    public function store(Request $request)
+    public function store(PaisRequest $request)
     {
-        $request->validate([
-            'nome'   => 'required|string|max:100',
-            'sigla2' => 'nullable|string|max:2',
-            'sigla3' => 'nullable|string|max:3',
-            'codigo' => 'nullable|string|max:10',
-        ]);
-
+        $request->validate();
         Pais::create($request->all());
+
         return redirect()->back()->with('success', 'País cadastrado com sucesso!');
     }
 
-    public function update(Request $request, $id)
+    public function update(PaisRequest $request, $id)
     {
-        $request->validate([
-            'nome'   => 'required|string|max:100',
-            'sigla2' => 'nullable|string|max:2',
-            'sigla3' => 'nullable|string|max:3',
-            'codigo' => 'nullable|string|max:10',
-        ]);
-
+        $request->validate();
         $pais = Pais::findOrFail($id);
         $pais->update($request->all());
+        
         return redirect()->back()->with('success', 'País atualizado com sucesso!');
     }
 

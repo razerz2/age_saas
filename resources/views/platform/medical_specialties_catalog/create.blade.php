@@ -9,7 +9,8 @@
                 <div class="d-flex align-items-center">
                     <nav aria-label="breadcrumb">
                         <ol class="breadcrumb m-0 p-0">
-                            <li class="breadcrumb-item"><a href="{{ route('Platform.dashboard') }}" class="text-muted">Dashboard</a>
+                            <li class="breadcrumb-item"><a href="{{ route('Platform.dashboard') }}"
+                                    class="text-muted">Dashboard</a>
                             </li>
                             <li class="breadcrumb-item"><a href="{{ route('Platform.medical_specialties_catalog.index') }}"
                                     class="text-muted">Especialidades</a></li>
@@ -34,6 +35,19 @@
             <div class="col-12">
                 <div class="card shadow-sm">
                     <div class="card-body">
+                        {{-- 🔹 Exibição de erros de validação --}}
+                        @if ($errors->any())
+                            <div class="alert alert-danger alert-dismissible fade show shadow-sm" role="alert">
+                                <strong>Ops!</strong> Verifique os erros abaixo:
+                                <ul class="mt-2 mb-0">
+                                    @foreach ($errors->all() as $error)
+                                        <li>{{ $error }}</li>
+                                    @endforeach
+                                </ul>
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"
+                                    aria-label="Fechar"></button>
+                            </div>
+                        @endif
                         <h4 class="card-title mb-4">
                             {{ isset($medicalSpecialtyCatalog) ? 'Editar Especialidade' : 'Cadastrar Nova Especialidade' }}
                         </h4>

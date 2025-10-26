@@ -186,10 +186,10 @@
                             searchable: false,
                             render: function(data, type, row) {
                                 return `
-            <a href="/Platform/cidades/${row.id_cidade}" class="btn btn-sm btn-outline-info me-1">
+            <a title="Visualizar" href="/Platform/cidades/${row.id_cidade}" class="btn btn-sm btn-outline-info me-1">
                 <i class="fas fa-eye"></i>
             </a>
-            <button class="btn btn-sm btn-outline-warning me-1 btn-edit" 
+            <button title="Editar" class="btn btn-sm btn-outline-warning me-1 btn-edit" 
                     data-id="${row.id_cidade}" 
                     data-nome="${row.nome_cidade}"
                     data-uf="${row.uf ?? ''}"
@@ -199,7 +199,7 @@
             <form action="/Platform/cidades/${row.id_cidade}" method="POST" class="d-inline" onsubmit="return confirm('Excluir cidade?')">
                 @csrf
                 @method('DELETE')
-                <button class="btn btn-sm btn-outline-danger">
+                <button title="Exclusão" class="btn btn-sm btn-outline-danger">
                     <i class="fas fa-trash-alt"></i>
                 </button>
             </form>`;

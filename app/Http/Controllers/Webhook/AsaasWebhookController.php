@@ -7,8 +7,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use App\Models\Platform\Invoices;
 use App\Models\Platform\WebhookLog;
-use App\Models\Platform\Subscription;
 use App\Models\Platform\Tenant;
+use App\Models\Platform\Subscription;
 use App\Services\SystemNotificationService;
 use Carbon\Carbon;
 
@@ -20,91 +20,180 @@ class AsaasWebhookController extends Controller
             $payload = $request->all();
             $event = $payload['event'] ?? 'UNKNOWN';
 
-            Log::info("📩 Webhook recebido do Asaas: {$event}", $payload);
+            Log::info("📩 Webhook recebido do Asaas: {$event}", ['payload' => $payload]);
 
-            // 🔹 1. Registrar log para auditoria
+            // 🔹 1. Registrar log de auditoria
             WebhookLog::create([
                 'event' => $event,
                 'payload' => json_encode($payload),
             ]);
 
-            // 🔹 2. Pegar ID da fatura (payment)
-            $paymentId = $payload['payment']['id'] ?? null;
-            if (!$paymentId) {
-                Log::warning("⚠️ Webhook sem ID de pagamento recebido");
-                return response()->json(['message' => 'Missing payment ID'], 400);
+            // 🔹 2. IDs relevantes
+            $paymentId      = $payload['payment']['id'] ?? null;
+            $customerId     = $payload['customer']['id'] ?? null;
+            $subscriptionId = $payload['subscription']['id'] ?? ($payload['payment']['subscription'] ?? null);
+
+            if (!$paymentId && !$customerId && !$subscriptionId) {
+                Log::warning("⚠️ Webhook sem ID de pagamento, cliente ou assinatura", $payload);
+                return response()->json(['message' => 'Missing resource ID'], 400);
             }
 
-            // 🔹 3. Localizar fatura correspondente
-            $invoice = Invoices::where('provider_id', $paymentId)->first();
-            if (!$invoice) {
-                Log::warning("⚠️ Fatura {$paymentId} não encontrada no sistema");
-                return response()->json(['message' => 'Invoice not found'], 404);
-            }
+            // 🔹 3. Busca de entidades locais
+            $invoice      = $paymentId ? Invoices::where('provider_id', $paymentId)->first() : null;
+            $tenant       = $invoice?->tenant ?? Tenant::where('asaas_customer_id', $customerId)->first();
+            $subscription = $subscriptionId ? Subscription::where('asaas_subscription_id', $subscriptionId)->first() : null;
 
-            // 🔹 4. Atualizar status da fatura e tenant
+            // 🔹 4. Processamento dos eventos
             switch ($event) {
-                case 'PAYMENT_RECEIVED':
-                    $paymentId = $payload['payment']['id'] ?? null;
-                    if (!$paymentId) break;
+                /**
+                 * 🔄 ASSINATURAS
+                 */
+                case 'SUBSCRIPTION_CREATED':
+                    Log::info("🧾 Assinatura automática criada no Asaas: {$subscriptionId}");
 
-                    $invoice = Invoices::where('provider_id', $paymentId)->first();
-                    if ($invoice) {
-                        $invoice->update(['status' => 'paid']);
-                        $tenant = $invoice->tenant;
+                    if ($tenant && !$subscription) {
+                        $subscription = $tenant->subscriptions()->latest()->first();
+                        if ($subscription && empty($subscription->asaas_subscription_id)) {
+                            $subscription->update([
+                                'asaas_subscription_id' => $subscriptionId,
+                                'status' => 'active',
+                            ]);
+                            Log::info("🔗 Vinculado subscription Asaas {$subscriptionId} à assinatura local {$subscription->id}");
 
-                        if ($tenant && $tenant->status === 'suspended') {
-                            $tenant->update(['status' => 'active']);
-                            Log::info("✅ Tenant {$tenant->trade_name} reativado após pagamento da fatura {$paymentId}.");
+                            SystemNotificationService::notify(
+                                'Nova assinatura automática criada',
+                                "Assinatura #{$subscription->id} vinculada ao Asaas ({$subscriptionId}) para o tenant {$tenant->trade_name}.",
+                                'subscription',
+                                'info'
+                            );
                         }
+                    }
+                    break;
 
-                        // 🔔 Notificação Platform
+                case 'SUBSCRIPTION_UPDATED':
+                    if ($subscription) {
+                        Log::info("🔄 Assinatura {$subscriptionId} atualizada no Asaas.");
                         SystemNotificationService::notify(
-                            'Pagamento recebido',
-                            "Fatura #{$invoice->id} do tenant {$tenant->trade_name} foi paga com sucesso.",
-                            'invoice',
+                            'Assinatura atualizada',
+                            "A assinatura #{$subscription->id} vinculada ao tenant {$tenant->trade_name} foi atualizada no Asaas.",
+                            'subscription',
                             'info'
                         );
                     }
                     break;
 
+                case 'SUBSCRIPTION_INACTIVATED':
+                    if ($subscription) {
+                        $subscription->update(['status' => 'inactive']);
+                        Log::warning("⏸️ Assinatura {$subscription->id} inativada no Asaas.");
+
+                        SystemNotificationService::notify(
+                            'Assinatura inativada',
+                            "A assinatura #{$subscription->id} do tenant {$tenant->trade_name} foi inativada no Asaas.",
+                            'subscription',
+                            'warning'
+                        );
+                    }
+                    break;
+
+                case 'SUBSCRIPTION_DELETED':
+                    if ($subscription) {
+                        $subscription->update(['status' => 'canceled']);
+                        Log::warning("🚫 Assinatura {$subscription->id} cancelada no Asaas.");
+
+                        SystemNotificationService::notify(
+                            'Assinatura cancelada',
+                            "A assinatura #{$subscription->id} do tenant {$tenant->trade_name} foi cancelada no Asaas.",
+                            'subscription',
+                            'warning'
+                        );
+                    }
+                    break;
+
+                /**
+                 * 💳 PAGAMENTOS
+                 */
+                case 'PAYMENT_CREATED':
+                    $subscriptionIdFromAsaas = $payload['payment']['subscription'] ?? null;
+                    Log::info("🧾 Pagamento criado no Asaas: {$paymentId}");
+
+                    // Cria fatura local para pagamento automático de assinatura
+                    if ($subscriptionIdFromAsaas) {
+                        $subscription = Subscription::where('asaas_subscription_id', $subscriptionIdFromAsaas)->first();
+                        if ($subscription) {
+                            $exists = Invoices::where('provider_id', $paymentId)->exists();
+                            if (!$exists) {
+                                Invoices::create([
+                                    'subscription_id' => $subscription->id,
+                                    'tenant_id'       => $subscription->tenant_id,
+                                    'amount_cents'    => (int) (($payload['payment']['value'] ?? 0) * 100),
+                                    'due_date'        => $payload['payment']['dueDate'] ?? now(),
+                                    'status'          => 'pending',
+                                    'provider'        => 'asaas',
+                                    'provider_id'     => $paymentId,
+                                    'payment_link'    => $payload['payment']['invoiceUrl'] ?? null,
+                                ]);
+
+                                Log::info("✅ Fatura local criada para pagamento automático {$paymentId} (assinatura {$subscription->id})");
+
+                                SystemNotificationService::notify(
+                                    'Fatura automática criada',
+                                    "Nova fatura gerada automaticamente pela assinatura #{$subscription->id} do tenant {$subscription->tenant->trade_name}.",
+                                    'invoice',
+                                    'info'
+                                );
+                            }
+                        }
+                    }
+                    break;
+
+                case 'PAYMENT_RECEIVED':
                 case 'PAYMENT_CONFIRMED':
+                    if (!$invoice) {
+                        Log::warning("⚠️ Fatura {$paymentId} não encontrada para evento {$event}");
+                        break;
+                    }
+
                     $invoice->update([
                         'status' => 'paid',
-                        'paid_at' => Carbon::now(),
+                        'asaas_synced' => true,
+                        'asaas_sync_status' => 'success',
+                        'asaas_last_sync_at' => now(),
+                        'asaas_last_error' => null,
                     ]);
-                    $invoice->tenant->update(['status' => 'active']);
-                    Log::info("✅ Fatura {$invoice->id} marcada como PAGA.");
 
-                    // 🔔 Notificação Platform
+                    if ($tenant && $tenant->status === 'suspended') {
+                        $tenant->update(['status' => 'active']);
+                        Log::info("✅ Tenant {$tenant->trade_name} reativado após pagamento da fatura {$paymentId}.");
+                    }
+
                     SystemNotificationService::notify(
                         'Pagamento confirmado',
-                        "Fatura #{$invoice->id} do tenant {$invoice->tenant->trade_name} foi confirmada como paga.",
+                        "Fatura #{$invoice->id} do tenant {$tenant->trade_name} foi marcada como paga.",
                         'invoice',
                         'info'
                     );
                     break;
 
                 case 'PAYMENT_OVERDUE':
-                    $paymentId = $payload['payment']['id'] ?? null;
-                    if (!$paymentId) break;
+                    if (!$invoice) break;
 
-                    $invoice = Invoices::where('provider_id', $paymentId)->first();
-                    if ($invoice) {
-                        $invoice->update(['status' => 'overdue']);
-                        Log::info("⚠️ Fatura {$paymentId} marcada como vencida.");
+                    $invoice->update([
+                        'status' => 'overdue',
+                        'asaas_synced' => true,
+                        'asaas_sync_status' => 'success',
+                        'asaas_last_sync_at' => now(),
+                    ]);
 
-                        // Suspender tenant após 5 dias
-                        $tenant = $invoice->tenant;
-                        if ($tenant) {
-                            $diffDays = now()->diffInDays($invoice->due_date);
-                            if ($diffDays >= 5 && $tenant->status !== 'suspended') {
-                                $tenant->update(['status' => 'suspended']);
-                                Log::warning("⛔ Tenant {$tenant->trade_name} suspenso (atraso de {$diffDays} dias).");
-                            }
+                    Log::warning("⚠️ Fatura {$invoice->id} marcada como vencida.");
+
+                    if ($tenant) {
+                        $diffDays = now()->diffInDays($invoice->due_date);
+                        if ($diffDays >= 5 && $tenant->status !== 'suspended') {
+                            $tenant->update(['status' => 'suspended']);
+                            Log::warning("⛔ Tenant {$tenant->trade_name} suspenso (atraso de {$diffDays} dias).");
                         }
 
-                        // 🔔 Notificação Platform
                         SystemNotificationService::notify(
                             'Fatura vencida',
                             "Fatura #{$invoice->id} do tenant {$tenant->trade_name} está vencida há {$diffDays} dias.",
@@ -115,58 +204,63 @@ class AsaasWebhookController extends Controller
                     break;
 
                 case 'PAYMENT_REFUNDED':
-                    $invoice->update(['status' => 'cancelled']);
-                    Log::warning("🚫 Fatura {$invoice->id} cancelada.");
+                    if ($invoice) {
+                        $invoice->update([
+                            'status' => 'canceled',
+                            'asaas_synced' => true,
+                            'asaas_sync_status' => 'success',
+                            'asaas_last_sync_at' => now(),
+                        ]);
 
-                    // 🔔 Notificação Platform
-                    SystemNotificationService::notify(
-                        'Pagamento estornado',
-                        "Fatura #{$invoice->id} do tenant {$invoice->tenant->trade_name} foi estornada.",
-                        'invoice',
-                        'warning'
-                    );
+                        Log::warning("🚫 Fatura {$invoice->id} estornada no Asaas.");
+
+                        SystemNotificationService::notify(
+                            'Pagamento estornado',
+                            "Fatura #{$invoice->id} do tenant {$tenant->trade_name} foi estornada.",
+                            'invoice',
+                            'warning'
+                        );
+                    }
                     break;
 
                 case 'PAYMENT_DELETED':
-                    $paymentId = $payload['payment']['id'] ?? null;
-                    if ($paymentId) {
-                        $invoice = Invoices::where('provider_id', $paymentId)->first();
-                        if ($invoice) {
-                            $invoice->delete();
-                            Log::info("🗑️ Fatura {$paymentId} removida pois foi excluída no Asaas.");
+                    if ($invoice) {
+                        $invoice->delete();
+                        Log::info("🗑️ Fatura {$invoice->id} removida pois foi excluída no Asaas.");
 
-                            // 🔔 Notificação Platform
-                            SystemNotificationService::notify(
-                                'Fatura removida',
-                                "Fatura #{$paymentId} foi excluída no Asaas e removida do sistema.",
-                                'invoice',
-                                'warning'
-                            );
-                        }
+                        SystemNotificationService::notify(
+                            'Fatura removida',
+                            "Fatura #{$invoice->id} foi excluída no Asaas e removida do sistema.",
+                            'invoice',
+                            'warning'
+                        );
                     }
                     break;
 
                 case 'CUSTOMER_DELETED':
-                    $customerId = $payload['customer']['id'] ?? null;
-                    if ($customerId) {
-                        $tenant = Tenant::where('asaas_customer_id', $customerId)->first();
-                        if ($tenant) {
-                            $tenant->update(['asaas_customer_id' => null]);
-                            Log::info("👤 Cliente {$customerId} excluído no Asaas — campo asaas_customer_id resetado no Tenant {$tenant->trade_name}");
+                    $tenant = Tenant::where('asaas_customer_id', $customerId)->first();
+                    if ($tenant) {
+                        $tenant->update([
+                            'asaas_customer_id' => null,
+                            'asaas_synced' => false,
+                            'asaas_sync_status' => 'deleted',
+                            'asaas_last_sync_at' => now(),
+                            'asaas_last_error' => 'Cliente excluído via webhook Asaas',
+                        ]);
 
-                            // 🔔 Notificação Platform
-                            SystemNotificationService::notify(
-                                'Cliente removido no Asaas',
-                                "O cliente vinculado ao tenant {$tenant->trade_name} foi excluído no Asaas.",
-                                'customer',
-                                'warning'
-                            );
-                        }
+                        Log::info("👤 Cliente {$customerId} excluído no Asaas — removido do Tenant {$tenant->trade_name}");
+
+                        SystemNotificationService::notify(
+                            'Cliente removido no Asaas',
+                            "O cliente vinculado ao tenant {$tenant->trade_name} foi excluído no Asaas.",
+                            'customer',
+                            'warning'
+                        );
                     }
                     break;
 
                 default:
-                    Log::info("ℹ️ Evento {$event} recebido, sem ação direta.");
+                    Log::info("ℹ️ Evento {$event} recebido, sem ação específica.");
                     SystemNotificationService::notify(
                         'Evento Asaas recebido',
                         "O evento {$event} foi recebido do Asaas e registrado no log.",
@@ -176,17 +270,19 @@ class AsaasWebhookController extends Controller
                     break;
             }
 
-
             return response()->json(['message' => 'OK'], 200);
         } catch (\Throwable $e) {
-            Log::error("❌ Erro no Webhook Asaas: {$e->getMessage()}");
+            Log::error("❌ Erro no Webhook Asaas: {$e->getMessage()}", [
+                'trace' => $e->getTraceAsString(),
+                'payload' => $request->all(),
+            ]);
+
             return response()->json(['error' => 'Internal Server Error'], 500);
         }
     }
 
     /**
-     * 🕐 Comando auxiliar para verificar e suspender tenants com faturas atrasadas > 5 dias.
-     * Pode ser chamado via cron ou scheduler diário.
+     * 🕐 Suspende tenants com faturas vencidas há mais de 5 dias.
      */
     public static function suspendOverdueTenants()
     {
@@ -194,13 +290,14 @@ class AsaasWebhookController extends Controller
 
         $overdueInvoices = Invoices::where('status', 'overdue')
             ->where('due_date', '<=', $limitDate)
+            ->with('tenant')
             ->get();
 
         foreach ($overdueInvoices as $invoice) {
             $tenant = $invoice->tenant;
             if ($tenant && $tenant->status !== 'suspended') {
                 $tenant->update(['status' => 'suspended']);
-                Log::warning("⛔ Tenant {$tenant->trade_name} suspenso por fatura em atraso há mais de 5 dias.");
+                Log::warning("⛔ Tenant {$tenant->trade_name} suspenso por fatura atrasada ({$invoice->id}).");
             }
         }
 

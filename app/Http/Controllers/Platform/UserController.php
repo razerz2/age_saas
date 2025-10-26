@@ -3,10 +3,9 @@
 namespace App\Http\Controllers\Platform;
 
 use App\Http\Controllers\Controller;
-use App\Models\User;
-use Illuminate\Http\Request;
+use App\Models\Platform\User;
+use App\Http\Requests\UserRequest;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Hash;
 
 class UserController extends Controller
 {
@@ -21,15 +20,11 @@ class UserController extends Controller
         return view('platform.users.create');
     }
 
-    public function store(Request $request)
+    public function store(UserRequest $request)
     {
-        $validated = $request->validate([
-            'name' => 'required|string|max:100',
-            'email' => 'required|email|unique:users,email',
-            'password' => 'required|min:6|confirmed',
-        ]);
-
-        User::create($validated);
+        $data = $request->validate();
+        $data['modules'] = $data['modules'] ?? [];
+        User::create($data);
 
         return redirect()->route('Platform.users.index')->with('success', 'Usuário criado com sucesso.');
     }
@@ -44,21 +39,26 @@ class UserController extends Controller
         return view('platform.users.edit', compact('user'));
     }
 
-    public function update(Request $request, User $user)
+    public function update(UserRequest $request, User $user)
     {
-        $validated = $request->validate([
-            'name' => 'required|string|max:100',
-            'email' => "required|email|unique:users,email,{$user->id}",
-            'password' => 'nullable|min:6|confirmed',
-        ]);
+        // Já validado automaticamente pela FormRequest
+        $data = $request->validated();
 
-        if (empty($validated['password'])) {
-            unset($validated['password']);
+        // Garante que sempre seja array (mesmo se nada vier marcado)
+        $data['modules'] = $data['modules'] ?? [];
+
+        // Se a senha veio vazia, não altera
+        if (empty($data['password'])) {
+            unset($data['password']);
+        } else {
+            $data['password'] = bcrypt($data['password']);
         }
 
-        $user->update($validated);
+        $user->update($data);
 
-        return redirect()->route('Platform.users.index')->with('success', 'Usuário atualizado com sucesso.');
+        return redirect()
+            ->route('Platform.users.index')
+            ->with('success', 'Usuário atualizado com sucesso.');
     }
 
     public function destroy(User $user)

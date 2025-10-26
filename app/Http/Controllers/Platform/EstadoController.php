@@ -5,7 +5,7 @@ namespace App\Http\Controllers\Platform;
 use App\Http\Controllers\Controller;
 use App\Models\Platform\Estado;
 use App\Models\Platform\Pais;
-use Illuminate\Http\Request;
+use App\Http\Requests\EstadoRequest;
 
 class EstadoController extends Controller
 {
@@ -17,28 +17,20 @@ class EstadoController extends Controller
         return view('platform.estados.index', compact('estados', 'paises'));
     }
 
-    public function store(Request $request)
+    public function store(EstadoRequest $request)
     {
-        $request->validate([
-            'nome_estado' => 'required|string|max:100',
-            'uf'          => 'required|string|max:2',
-            'pais_id'     => 'required|integer|exists:paises,id_pais',
-        ]);
-
+        $request->validate();
         Estado::create($request->all());
+
         return redirect()->back()->with('success', 'Estado cadastrado com sucesso!');
     }
 
-    public function update(Request $request, $id)
+    public function update(EstadoRequest $request, $id)
     {
-        $request->validate([
-            'nome_estado' => 'required|string|max:100',
-            'uf'          => 'required|string|max:2',
-            'pais_id'     => 'required|integer|exists:paises,id_pais',
-        ]);
-
+        $request->validate();
         $estado = Estado::findOrFail($id);
         $estado->update($request->all());
+        
         return redirect()->back()->with('success', 'Estado atualizado com sucesso!');
     }
 

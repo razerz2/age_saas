@@ -43,11 +43,11 @@
                                         <td>{{ $pais->sigla3 ?? '-' }}</td>
                                         <td>{{ $pais->codigo ?? '-' }}</td>
                                         <td class="text-end">
-                                            <a href="{{ route('Platform.paises.show', $pais->id_pais) }}"
+                                            <a title="Visualizar" href="{{ route('Platform.paises.show', $pais->id_pais) }}"
                                                 class="btn btn-sm btn-outline-info me-1">
                                                 <i class="fas fa-eye"></i>
                                             </a>
-                                            <button class="btn btn-sm btn-outline-warning me-1" data-bs-toggle="modal"
+                                            <button title="Editar" class="btn btn-sm btn-outline-warning me-1" data-bs-toggle="modal"
                                                 data-bs-target="#modalEdit{{ $pais->id_pais }}">
                                                 <i class="fas fa-edit"></i>
                                             </button>
@@ -55,7 +55,7 @@
                                                 method="POST" class="d-inline"
                                                 onsubmit="return confirm('Tem certeza que deseja excluir este país?')">
                                                 @csrf @method('DELETE')
-                                                <button class="btn btn-sm btn-outline-danger">
+                                                <button title="Exclusão" class="btn btn-sm btn-outline-danger">
                                                     <i class="fas fa-trash-alt"></i>
                                                 </button>
                                             </form>

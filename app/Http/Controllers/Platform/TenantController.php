@@ -12,7 +12,8 @@ use App\Models\Platform\Estado;
 use App\Models\Platform\Cidade;
 use App\Models\Platform\SystemSetting;
 use App\Services\TenantProvisioner;
-use Illuminate\Http\Request;
+use App\Services\AsaasService;
+use App\Http\Requests\TenantRequest;
 
 class TenantController extends Controller
 {
@@ -35,17 +36,15 @@ class TenantController extends Controller
         return view('platform.tenants.show', compact('tenant'));
     }
 
-    public function store(Request $request)
+    public function store(TenantRequest $request, AsaasService $asaas)
     {
-        $data = $request->all();
+        DB::beginTransaction();
 
         try {
-            DB::beginTransaction();
+            $validated = $request->validated();
+            $tenant = Tenant::create($validated);
 
-            // 🔹 Cria o tenant base
-            $tenant = Tenant::create($data);
-
-            // 🔹 Cria a localização (opcional)
+            // 🔹 Cria localização, se informada
             if ($request->filled('endereco')) {
                 TenantLocalizacao::create([
                     'tenant_id'   => $tenant->id,
@@ -60,28 +59,57 @@ class TenantController extends Controller
                 ]);
             }
 
+            // 🔹 Cria cliente no Asaas
+            $asaasResponse = $asaas->createCustomer($tenant->toArray());
+
+            if (isset($asaasResponse['id'])) {
+                // ✅ Sucesso
+                $tenant->update([
+                    'asaas_customer_id' => $asaasResponse['id'],
+                    'asaas_synced' => true,
+                    'asaas_sync_status' => 'success',
+                    'asaas_last_sync_at' => now(),
+                    'asaas_last_error' => null,
+                ]);
+            } else {
+                // ⚠️ Falha na resposta
+                $tenant->update([
+                    'asaas_synced' => false,
+                    'asaas_sync_status' => 'failed',
+                    'asaas_last_sync_at' => now(),
+                    'asaas_last_error' => json_encode($asaasResponse),
+                ]);
+            }
+
             DB::commit();
 
-            // 🔹 Provisiona o banco do tenant
+            // 🔹 Cria banco do tenant
             TenantProvisioner::createDatabase($tenant);
 
             return redirect()
                 ->route('Platform.tenants.index')
-                ->with('success', 'Tenant criado com sucesso.');
+                ->with('success', 'Tenant criado e sincronizado com o Asaas.');
         } catch (\Throwable $e) {
             DB::rollBack();
 
-            Log::error('Erro ao criar tenant', [
-                'error' => $e->getMessage(),
+            if (isset($tenant)) {
+                $tenant->update([
+                    'asaas_synced' => false,
+                    'asaas_sync_status' => 'failed',
+                    'asaas_last_sync_at' => now(),
+                    'asaas_last_error' => $e->getMessage(),
+                ]);
+            }
+
+            Log::error('❌ Erro ao criar tenant no Asaas', [
+                'message' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
-                'input' => $request->all(),
             ]);
 
-            return back()
-                ->withInput()
-                ->withErrors(['general' => 'Ocorreu um erro ao criar o tenant.']);
+            return back()->withInput()->withErrors(['general' => 'Erro ao criar tenant.']);
         }
     }
+
 
     public function edit(Tenant $tenant)
     {
@@ -99,15 +127,17 @@ class TenantController extends Controller
         return view('platform.tenants.edit', compact('tenant', 'paises', 'estados', 'cidades', 'localizacao'));
     }
 
-    public function update(Request $request, Tenant $tenant)
+    public function update(TenantRequest $request, Tenant $tenant, AsaasService $asaas)
     {
+        DB::beginTransaction();
+
         try {
-            DB::beginTransaction();
+            $validated = $request->validated();
 
-            // 🔹 Atualiza dados principais do tenant
-            TenantProvisioner::updateTenant($tenant, $request->all());
+            // 🔹 Atualiza dados locais (tabela principal)
+            TenantProvisioner::updateTenant($tenant, $validated);
 
-            // 🔹 Atualiza/cria localização
+            // 🔹 Atualiza ou cria localização
             $dadosLocalizacao = [
                 'endereco'    => $request->endereco,
                 'n_endereco'  => $request->n_endereco,
@@ -119,23 +149,59 @@ class TenantController extends Controller
                 'cidade_id'   => $request->cidade_id,
             ];
 
-            if ($tenant->localizacao) {
-                $tenant->localizacao->update($dadosLocalizacao);
-            } elseif ($request->filled('endereco')) {
-                $tenant->localizacao()->create($dadosLocalizacao);
+            $tenant->localizacao
+                ? $tenant->localizacao->update($dadosLocalizacao)
+                : $tenant->localizacao()->create($dadosLocalizacao);
+
+            // 🔹 Sincroniza com o Asaas
+            if ($tenant->asaas_customer_id) {
+                $asaasResponse = $asaas->updateCustomer($tenant->asaas_customer_id, $tenant->toArray());
+            } else {
+                $asaasResponse = $asaas->createCustomer($tenant->toArray());
+                if (isset($asaasResponse['id'])) {
+                    $tenant->asaas_customer_id = $asaasResponse['id'];
+                }
+            }
+
+            // 🔹 Atualiza status da sincronização
+            if (isset($asaasResponse['id']) && empty($asaasResponse['error'])) {
+                // ✅ Sucesso
+                $tenant->update([
+                    'asaas_synced' => true,
+                    'asaas_sync_status' => 'success',
+                    'asaas_last_sync_at' => now(),
+                    'asaas_last_error' => null,
+                ]);
+            } else {
+                // ⚠️ Falha (mantém dados locais e loga erro)
+                $tenant->update([
+                    'asaas_synced' => false,
+                    'asaas_sync_status' => 'failed',
+                    'asaas_last_sync_at' => now(),
+                    'asaas_last_error' => json_encode($asaasResponse, JSON_UNESCAPED_UNICODE),
+                ]);
             }
 
             DB::commit();
 
             return redirect()
-                ->route('platform.tenants.index')
-                ->with('success', 'Tenant atualizado com sucesso.');
+                ->route('Platform.tenants.index')
+                ->with('success', 'Tenant atualizado e sincronizado com o Asaas.');
         } catch (\Throwable $e) {
             DB::rollBack();
 
-            Log::error('Erro ao atualizar tenant', [
-                'tenant' => $tenant->id,
-                'erro'   => $e->getMessage(),
+            // 🔹 Marca falha da sincronização
+            $tenant->update([
+                'asaas_synced' => false,
+                'asaas_sync_status' => 'failed',
+                'asaas_last_sync_at' => now(),
+                'asaas_last_error' => $e->getMessage(),
+            ]);
+
+            Log::error('❌ Erro ao atualizar tenant', [
+                'tenant_id' => $tenant->id,
+                'erro' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
             ]);
 
             return back()
@@ -144,18 +210,56 @@ class TenantController extends Controller
         }
     }
 
-    public function destroy(Tenant $tenant)
+    public function destroy(Tenant $tenant, AsaasService $asaas)
     {
         try {
+            // 🔹 Exclui cliente no Asaas, se existir
+            if ($tenant->asaas_customer_id) {
+                $asaasResponse = $asaas->deleteCustomer($tenant->asaas_customer_id);
+
+                if ((isset($asaasResponse['deleted']) && $asaasResponse['deleted'] === true) || empty($asaasResponse['error'])) {
+                    // ✅ Exclusão bem-sucedida
+                    $tenant->update([
+                        'asaas_synced' => true,
+                        'asaas_sync_status' => 'success',
+                        'asaas_last_sync_at' => now(),
+                        'asaas_last_error' => null,
+                    ]);
+                } else {
+                    // ⚠️ Falha na exclusão (API respondeu erro)
+                    $tenant->update([
+                        'asaas_synced' => false,
+                        'asaas_sync_status' => 'failed',
+                        'asaas_last_sync_at' => now(),
+                        'asaas_last_error' => json_encode($asaasResponse, JSON_UNESCAPED_UNICODE),
+                    ]);
+
+                    Log::warning('⚠️ Falha ao excluir cliente no Asaas', [
+                        'tenant_id' => $tenant->id,
+                        'asaas_response' => $asaasResponse,
+                    ]);
+                }
+            }
+
+            // 🔹 Remove banco de dados e registros locais
             TenantProvisioner::destroyTenant($tenant);
 
             return redirect()
                 ->route('Platform.tenants.index')
-                ->with('success', 'Tenant removido com sucesso, incluindo banco e usuário.');
+                ->with('success', 'Tenant removido e sincronizado com o Asaas.');
         } catch (\Throwable $e) {
-            Log::error('Erro ao excluir tenant', [
-                'tenant' => $tenant->id,
-                'erro'   => $e->getMessage(),
+            // ❌ Falha geral (ex: timeout, exceção interna)
+            $tenant->update([
+                'asaas_synced' => false,
+                'asaas_sync_status' => 'failed',
+                'asaas_last_sync_at' => now(),
+                'asaas_last_error' => $e->getMessage(),
+            ]);
+
+            Log::error('❌ Erro ao excluir tenant', [
+                'tenant_id' => $tenant->id,
+                'erro' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
             ]);
 
             return back()

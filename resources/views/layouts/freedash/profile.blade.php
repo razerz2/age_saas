@@ -11,7 +11,7 @@
             </svg></span>
     </a>
     <div class="dropdown-menu dropdown-menu-end dropdown-menu-right user-dd animated flipInY">
-        <a class="dropdown-item" href="{{ route('profile.edit') }}"> <i class="fas fa-user"></i> - My Profile</a>
+        <a class="dropdown-item" href="{{ route('Platform.profile.edit') }}"> <i class="fas fa-user"></i> - My Profile</a>
         <div class="dropdown-divider"></div>
         <a class="dropdown-item" href="{{ route('Platform.settings.index') }}"> <i class="fas fa-cog"></i> - Settings</a>
         <div class="dropdown-divider"></div>

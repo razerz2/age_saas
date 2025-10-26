@@ -69,11 +69,11 @@
                                         <td>{{ $notification->scheduled_at ? $notification->scheduled_at->format('d/m/Y H:i') : '-' }}</td>
                                         <td>{{ $notification->sent_at ? $notification->sent_at->format('d/m/Y H:i') : '-' }}</td>
                                         <td class="text-center">
-                                            <a href="{{ route('platform.notifications_outbox.show', $notification->id) }}"
+                                            <a title="Visualizar" href="{{ route('platform.notifications_outbox.show', $notification->id) }}"
                                                 class="btn btn-sm btn-info text-white">
                                                 <i class="fas fa-eye"></i>
                                             </a>
-                                            <a href="{{ route('platform.notifications_outbox.edit', $notification->id) }}"
+                                            <a title="Editar" href="{{ route('platform.notifications_outbox.edit', $notification->id) }}"
                                                 class="btn btn-sm btn-warning text-white">
                                                 <i class="fa fa-edit"></i>
                                             </a>
@@ -81,7 +81,7 @@
                                                 method="POST" class="d-inline">
                                                 @csrf
                                                 @method('DELETE')
-                                                <button type="submit" class="btn btn-sm btn-danger"
+                                                <button title="Exclusão" type="submit" class="btn btn-sm btn-danger"
                                                     onclick="return confirm('Deseja realmente excluir esta notificação?')">
                                                     <i class="fa fa-trash"></i>
                                                 </button>

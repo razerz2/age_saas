@@ -5,6 +5,7 @@ namespace App\Models\Platform;
 use App\Models\Platform\TenantLocalizacao;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Support\Str;
 
 class Tenant extends Model
@@ -28,11 +29,17 @@ class Tenant extends Model
         'db_password',
         'status',
         'trial_ends_at',
-        'asaas_customer_id'
+        'asaas_customer_id',
+        'asaas_synced',
+        'asaas_last_sync_at',
+        'asaas_last_error',
     ];
 
     protected $casts = [
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
         'trial_ends_at' => 'datetime',
+        'asaas_last_sync_at' => 'datetime',
     ];
 
     protected static function boot()

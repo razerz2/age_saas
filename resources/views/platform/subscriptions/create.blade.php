@@ -33,15 +33,16 @@
             <div class="card-body">
                 <h4 class="card-title mb-4">Cadastrar Assinatura</h4>
 
-                {{-- Exibe erros de validação --}}
+                {{-- 🔹 Exibição de erros de validação --}}
                 @if ($errors->any())
-                    <div class="alert alert-danger">
-                        <strong>Ops!</strong> Verifique os campos abaixo:
-                        <ul class="mb-0">
+                    <div class="alert alert-danger alert-dismissible fade show shadow-sm" role="alert">
+                        <strong>Ops!</strong> Verifique os erros abaixo:
+                        <ul class="mt-2 mb-0">
                             @foreach ($errors->all() as $error)
                                 <li>{{ $error }}</li>
                             @endforeach
                         </ul>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
                     </div>
                 @endif
 
@@ -102,12 +103,34 @@
                     <div class="row mb-3">
                         <div class="col-md-4">
                             <label class="form-label">Status</label>
-                            <select name="status" class="form-select" required>
+                            <select name="status" class="form-select @error('status') is-invalid @enderror" required>
                                 <option value="active" @selected(old('status') == 'active')>Ativa</option>
                                 <option value="trialing" @selected(old('status') == 'trialing')>Em teste</option>
                                 <option value="past_due" @selected(old('status') == 'past_due')>Atrasada</option>
                                 <option value="canceled" @selected(old('status') == 'canceled')>Cancelada</option>
                             </select>
+                            @error('status')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+
+                        {{-- 🔹 Novo campo: Método de Pagamento --}}
+                        <div class="col-md-4">
+                            <label class="form-label">Método de Pagamento</label>
+                            <select name="payment_method" class="form-select @error('payment_method') is-invalid @enderror"
+                                required>
+                                <option value="">Selecione...</option>
+                                <option value="PIX" {{ old('payment_method') == 'PIX' ? 'selected' : '' }}>PIX</option>
+                                <option value="BOLETO" {{ old('payment_method') == 'BOLETO' ? 'selected' : '' }}>Boleto
+                                    Bancário</option>
+                                <option value="CREDIT_CARD" {{ old('payment_method') == 'CREDIT_CARD' ? 'selected' : '' }}>
+                                    Cartão de Crédito</option>
+                                <option value="DEBIT_CARD" {{ old('payment_method') == 'DEBIT_CARD' ? 'selected' : '' }}>
+                                    Cartão de Débito</option>
+                            </select>
+                            @error('payment_method')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
                         </div>
 
                         <div class="col-md-4">
@@ -118,6 +141,7 @@
                             </div>
                         </div>
                     </div>
+
 
                     <div class="text-end">
                         <button type="submit" class="btn btn-success px-4">

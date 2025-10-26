@@ -24,13 +24,16 @@
         <div class="card shadow-sm border-0">
             <div class="card-body">
 
+                {{-- 🔹 Exibição de erros de validação --}}
                 @if ($errors->any())
-                    <div class="alert alert-danger">
-                        <ul class="mb-0">
+                    <div class="alert alert-danger alert-dismissible fade show shadow-sm" role="alert">
+                        <strong>Ops!</strong> Verifique os erros abaixo:
+                        <ul class="mt-2 mb-0">
                             @foreach ($errors->all() as $error)
                                 <li>{{ $error }}</li>
                             @endforeach
                         </ul>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
                     </div>
                 @endif
 
@@ -89,28 +92,17 @@
                         </div>
                     </div>
 
-                    <div class="row mb-3">
-                        <div class="col-md-6">
-                            <label class="form-label">Link de Pagamento</label>
-                            <input type="url" name="payment_link" value="{{ old('payment_link') }}"
-                                class="form-control" placeholder="https://...">
-                        </div>
-                        <div class="col-md-3">
-                            <label class="form-label">Provedor</label>
-                            <input type="text" name="provider" value="{{ old('provider') }}" class="form-control"
-                                placeholder="Asaas, Pagar.me...">
-                        </div>
-                        <div class="col-md-3">
-                            <label class="form-label">ID no Gateway</label>
-                            <input type="text" name="provider_id" value="{{ old('provider_id') }}" class="form-control">
-                        </div>
-                    </div>
+                    {{-- Sincronismo automático com Asaas --}}
+                    <input type="hidden" name="provider" value="asaas">
+                    <input type="hidden" name="provider_id">
+                    <input type="hidden" name="payment_link">
 
                     <div class="text-end">
                         <button type="submit" class="btn btn-success px-4">Salvar Fatura</button>
                         <a href="{{ route('Platform.invoices.index') }}" class="btn btn-secondary">Cancelar</a>
                     </div>
                 </form>
+
             </div>
         </div>
     </div>
@@ -182,7 +174,7 @@
                         if (data.length === 1) {
                             const sub = data[0];
                             console.log('🎯 Selecionando assinatura automaticamente:', sub
-                            .name);
+                                .name);
 
                             $subscriptionSelect.val(sub.id); // seleciona a assinatura
                             preencherValor(sub.value * 100); // preenche o valor
