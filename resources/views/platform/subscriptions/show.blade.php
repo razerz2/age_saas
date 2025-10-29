@@ -83,6 +83,58 @@
                 </div>
             </div>
         </div>
+        <div class="card shadow-sm border-0 mt-4">
+            <div class="card-body">
+                <h4 class="card-title mb-4">Informações do Asaas</h4>
+
+                <div class="row mb-3">
+                    <div class="col-md-4">
+                        <label class="fw-bold">ID Asaas</label>
+                        <p>{{ $subscription->asaas_subscription_id ?? '—' }}</p>
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="fw-bold">Status Sincronização</label>
+                        <p>
+                            <span
+                                class="badge 
+                        @if ($subscription->asaas_synced) bg-success 
+                        @else bg-danger @endif">
+                                {{ $subscription->asaas_synced ? 'Sincronizado' : 'Não sincronizado' }}
+                            </span>
+                        </p>
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="fw-bold">Status Asaas</label>
+                        <p>{{ strtoupper($subscription->asaas_sync_status ?? '—') }}</p>
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-md-4">
+                        <label class="fw-bold">Última Sincronização</label>
+                        <p>{{ $subscription->asaas_last_sync_at ? $subscription->asaas_last_sync_at->format('d/m/Y H:i') : '—' }}
+                        </p>
+                    </div>
+
+                    <div class="col-md-8">
+                        <label class="fw-bold">Último Erro</label>
+                        <p class="text-danger">{{ $subscription->asaas_last_error ?? '—' }}</p>
+                    </div>
+                </div>
+                <div class="d-flex justify-content-end mt-4">
+                            <form action="{{ route('Platform.subscriptions.sync', $subscription) }}" method="POST"
+                                class="m-0 p-0">
+                                @csrf
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-sync-alt me-1"></i> Sincronizar com Asaas
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+            </div>
+        </div>
     </div>
 
     @include('layouts.freedash.footer')

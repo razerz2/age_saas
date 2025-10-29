@@ -3,13 +3,23 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Facades\Log;
 
 class PlanRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        // ✅ Permite que qualquer usuário autenticado acesse (ajuste se necessário)
         return true;
+    }
+
+    protected function prepareForValidation(): void
+    {
+        if ($this->filled('price_cents')) {
+            $valor = str_replace(',', '.', $this->price_cents);
+            $float = floatval($valor);
+            $centavos = (int) round($float * 100);
+            $this->merge(['price_cents' => $centavos]);
+        }
     }
 
     public function rules(): array
@@ -17,7 +27,7 @@ class PlanRequest extends FormRequest
         $planId = $this->route('plan'); // usado no update
 
         return [
-            'name' => ['required', 'string', 'max:255', 'unique:plans,name,' . $planId],
+            'name' => ['required', 'string', 'max:255', 'unique:plans,name,' . ($planId ?: 'NULL') . ',id'],
             'periodicity' => ['required', 'in:monthly,yearly,custom'],
             'period_months' => ['required', 'integer', 'min:1'],
             'price_cents' => ['required', 'integer', 'min:0'],
@@ -36,7 +46,7 @@ class PlanRequest extends FormRequest
             'period_months.required' => 'Informe a duração em meses do plano.',
             'period_months.integer' => 'O campo de duração deve ser um número inteiro.',
             'price_cents.required' => 'O preço é obrigatório.',
-            'price_cents.integer' => 'O preço deve ser informado em centavos (inteiro).',
+            'price_cents.integer' => 'O preço deve ser informado corretamente.',
             'features.array' => 'As funcionalidades devem estar no formato de lista (array).',
         ];
     }

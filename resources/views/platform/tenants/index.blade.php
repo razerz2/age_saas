@@ -25,6 +25,37 @@
             <div class="col-12">
                 <div class="card shadow-sm">
                     <div class="card-body">
+                        {{-- ✅ Alertas de sucesso --}}
+                        @if (session('success'))
+                            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                                <i class="fas fa-check-circle me-1"></i> {{ session('success') }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"
+                                    aria-label="Close"></button>
+                            </div>
+                        @endif
+
+                        {{-- ⚠️ Alertas de aviso --}}
+                        @if (session('warning'))
+                            <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                                <i class="fas fa-exclamation-triangle me-1"></i> {{ session('warning') }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"
+                                    aria-label="Close"></button>
+                            </div>
+                        @endif
+
+                        {{-- 🔹 Exibição de erros de validação --}}
+                        @if ($errors->any())
+                            <div class="alert alert-danger alert-dismissible fade show shadow-sm" role="alert">
+                                <strong>Ops!</strong> Verifique os erros abaixo:
+                                <ul class="mt-2 mb-0">
+                                    @foreach ($errors->all() as $error)
+                                        <li>{{ $error }}</li>
+                                    @endforeach
+                                </ul>
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"
+                                    aria-label="Fechar"></button>
+                            </div>
+                        @endif
                         <h4 class="card-title mb-3">Lista de Tenants</h4>
                         <div class="table-responsive">
                             <table id="tenants_table" class="table table-striped table-bordered text-nowrap align-middle">
@@ -54,9 +85,19 @@
                                                     <i class="fas fa-eye"></i> </a>
                                                 <a title="Editar" href="{{ route('Platform.tenants.edit', $tenant->id) }}"
                                                     class="btn btn-sm btn-warning"> <i class="fa fa-edit"></i> </a>
+                                                @if (in_array($tenant->asaas_sync_status, ['failed', 'pending']))
+                                                    <form action="{{ route('Platform.tenants.sync', $tenant->id) }}"
+                                                        method="POST" class="d-inline">
+                                                        @csrf
+                                                        <button type="submit" class="btn btn-sm btn-warning"
+                                                            title="Tentar sincronizar novamente com Asaas">
+                                                            <i class="fas fa-sync-alt"></i>
+                                                        </button>
+                                                    </form>
+                                                @endif
                                                 <form action="{{ route('Platform.tenants.destroy', $tenant->id) }}"
-                                                    method="POST" class="d-inline"> @csrf @method('DELETE') <button title="Exclusão"
-                                                        class="btn btn-sm btn-danger"
+                                                    method="POST" class="d-inline"> @csrf @method('DELETE') <button
+                                                        title="Exclusão" class="btn btn-sm btn-danger"
                                                         onclick="return confirm('Deseja realmente excluir este tenant?')">
                                                         <i class="fa fa-trash"></i> </button> </form>
                                             </td>

@@ -17,6 +17,7 @@ use App\Http\Controllers\Platform\CidadeController;
 use App\Http\Controllers\Platform\LocationController;
 use App\Http\Controllers\Platform\SystemSettingsController;
 use App\Models\Platform\SystemNotification;
+use App\Http\Controllers\Platform\WhatsAppController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
@@ -59,6 +60,8 @@ Route::middleware(['auth'])->prefix('Platform')->name('Platform.')->group(functi
     // =======================================================
     Route::middleware('module.access:tenants')->group(function () {
         Route::resource('tenants', TenantController::class);
+        Route::post('/tenants/{tenant}/sync', [TenantController::class, 'syncWithAsaas'])->name('tenants.sync');
+
     });
 
     // 🔸 Módulo: Planos
@@ -71,11 +74,14 @@ Route::middleware(['auth'])->prefix('Platform')->name('Platform.')->group(functi
         Route::resource('subscriptions', SubscriptionController::class);
         Route::post('subscriptions/{id}/renew', [SubscriptionController::class, 'renew'])->name('subscriptions.renew');
         Route::get('tenants/{tenant}/subscriptions', [SubscriptionController::class, 'getByTenant'])->name('subscriptions.getByTenant');
+        Route::post('/subscriptions/{subscription}/sync', [SubscriptionController::class, 'syncWithAsaas'])->name('subscriptions.sync');
+
     });
 
     // 🔸 Módulo: Faturas
     Route::middleware('module.access:invoices')->group(function () {
         Route::resource('invoices', InvoiceController::class);
+        Route::post('/invoices/{invoice}/sync', [InvoiceController::class, 'syncManual'])->name('invoices.sync');
     });
 
     // 🔸 Módulo: Catálogo de Especialidades Médicas
@@ -122,6 +128,9 @@ Route::middleware(['auth'])->prefix('Platform')->name('Platform.')->group(functi
     // =======================================================
     Route::get('/api/estados/{pais}', [LocationController::class, 'getEstados'])->name('api.estados');
     Route::get('/api/cidades/{estado}', [LocationController::class, 'getCidades'])->name('api.cidades');
+
+    Route::post('whatsapp/send', [WhatsAppController::class, 'sendMessage'])->name('whatsapp.send');
+    Route::post('whatsapp/invoice/{invoice}', [WhatsAppController::class, 'sendInvoiceNotification'])->name('whatsapp.invoice');
 
     Route::get('system_notifications/json', function () {
         $notifications = SystemNotification::latest('created_at')->take(5)->get();

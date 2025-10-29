@@ -4,6 +4,7 @@ namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 use App\Models\Platform\Subscription;
+use App\Models\Platform\Tenant;
 
 class SubscriptionRequest extends FormRequest
 {
@@ -22,7 +23,7 @@ class SubscriptionRequest extends FormRequest
             'due_day'        => ['required', 'integer', 'min:1', 'max:31'],
             'status'         => ['required', 'in:active,past_due,canceled,trialing,pending'],
             'auto_renew'     => ['boolean'],
-            'payment_method' => ['required', 'in:PIX,BOLETO,CREDIT_CARD,DEBIT_CARD'], // ✅ novo campo
+            'payment_method' => ['required', 'in:PIX,BOLETO,CREDIT_CARD,DEBIT_CARD'],
         ];
     }
 
@@ -56,6 +57,7 @@ class SubscriptionRequest extends FormRequest
             $tenantId = $this->tenant_id;
 
             if ($tenantId) {
+                // 🔍 1️⃣ Impede criação se já tiver assinatura ativa
                 $alreadyHasActive = Subscription::where('tenant_id', $tenantId)
                     ->whereIn('status', ['active', 'trialing'])
                     ->exists();
@@ -64,6 +66,21 @@ class SubscriptionRequest extends FormRequest
                     $validator->errors()->add(
                         'tenant_id',
                         'Este tenant já possui uma assinatura ativa ou em teste.'
+                    );
+                    return; // não precisa seguir se já deu erro
+                }
+
+                // 🔍 2️⃣ Verifica se o tenant tem erro de sincronização com o Asaas
+                $tenant = Tenant::find($tenantId);
+
+                if (
+                    $tenant &&
+                    in_array($tenant->asaas_sync_status, ['failed', 'pending'], true)
+                ) {
+                    $validator->errors()->add(
+                        'tenant_id',
+                        'Não é possível criar a assinatura: o tenant está pendente ou com erro de sincronização no Asaas. '
+                            . 'Corrija o sincronismo antes de prosseguir.'
                     );
                 }
             }

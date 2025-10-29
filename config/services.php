@@ -37,4 +37,10 @@ return [
         'webhook_secret' => env('ASAAS_WEBHOOK_SECRET'),
     ],
 
+    'whatsapp' => [
+        'api_url' => env('WHATSAPP_API_URL'),
+        'token' => env('WHATSAPP_TOKEN'),
+        'phone_id' => env('WHATSAPP_PHONE_ID'),
+    ],
+
 ];

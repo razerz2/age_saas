@@ -64,6 +64,7 @@ class Subscription extends Model
     public function statusLabel(): string
     {
         return match ($this->status) {
+            'pending' => 'Pendente',
             'active' => 'Ativa',
             'past_due' => 'Atrasada',
             'canceled' => 'Cancelada',
@@ -71,6 +72,7 @@ class Subscription extends Model
             default => ucfirst($this->status),
         };
     }
+
 
     public function getIsExpiredAttribute()
     {

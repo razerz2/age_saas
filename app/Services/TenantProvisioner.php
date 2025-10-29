@@ -5,6 +5,7 @@ namespace App\Services;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 use PDO;
 
 class TenantProvisioner
@@ -15,38 +16,24 @@ class TenantProvisioner
     public static function createDatabase($tenant)
     {
         try {
-            Log::info("Criando banco: {$tenant->db_name}");
+            Log::info("🔧 Criando banco para tenant {$tenant->id}: {$tenant->db_name}");
 
-            // Criar banco e usuário no Postgres principal
             DB::connection('pgsql')->statement("CREATE DATABASE \"{$tenant->db_name}\"");
-            DB::connection('pgsql')->statement("CREATE USER {$tenant->db_user} WITH PASSWORD '{$tenant->db_password_enc}'");
-            DB::connection('pgsql')->statement("GRANT ALL PRIVILEGES ON DATABASE \"{$tenant->db_name}\" TO {$tenant->db_user}");
+            DB::connection('pgsql')->statement("CREATE USER {$tenant->db_username} WITH PASSWORD '{$tenant->db_password}'");
+            DB::connection('pgsql')->statement("GRANT ALL PRIVILEGES ON DATABASE \"{$tenant->db_name}\" TO {$tenant->db_username}");
+            DB::connection('pgsql')->statement("ALTER DATABASE \"{$tenant->db_name}\" OWNER TO {$tenant->db_username}");
 
-            // Tornar o usuário do tenant dono do banco
-            DB::connection('pgsql')->statement("ALTER DATABASE \"{$tenant->db_name}\" OWNER TO {$tenant->db_user}");
+            $dsn = "pgsql:host={$tenant->db_host};port={$tenant->db_port};dbname={$tenant->db_name}";
+            $pdo = new \PDO($dsn, env('DB_USERNAME', 'postgres'), env('DB_PASSWORD', 'secret'));
+            $pdo->exec("ALTER SCHEMA public OWNER TO {$tenant->db_username}");
 
-            // DSN seguro (port opcional)
-            $port = $tenant->db_port ?: 5432;
-            $dsn = "pgsql:host={$tenant->db_host};port={$port};dbname={$tenant->db_name}";
-
-            // Conectar no DB recém-criado como admin e alterar schema
-            $pdo = new PDO(
-                $dsn,
-                env('DB_USERNAME', 'postgres'), // admin do .env
-                env('DB_PASSWORD', 'secret')
-            );
-            $pdo->exec("ALTER SCHEMA public OWNER TO {$tenant->db_user}");
-
-            // Configurar conexão dinâmica
             config([
-                'database.connections.tenant.host' => $tenant->db_host,
-                'database.connections.tenant.port' => $port,
+                'database.connections.tenant.host'     => $tenant->db_host,
+                'database.connections.tenant.port'     => $tenant->db_port,
                 'database.connections.tenant.database' => $tenant->db_name,
-                'database.connections.tenant.username' => $tenant->db_user,
-                'database.connections.tenant.password' => $tenant->db_password_enc,
+                'database.connections.tenant.username' => $tenant->db_username,
+                'database.connections.tenant.password' => $tenant->db_password,
             ]);
-
-            Log::info("Rodando migrations no banco {$tenant->db_name}");
 
             Artisan::call('migrate', [
                 '--path' => 'database/migrations/tenant',
@@ -54,9 +41,15 @@ class TenantProvisioner
                 '--force' => true,
             ]);
 
-            Log::info("✅ Banco {$tenant->db_name}, usuário {$tenant->db_user} e migrations criados com sucesso!");
+            Log::info("✅ Banco {$tenant->db_name} criado com sucesso!", [
+                'tenant_id' => $tenant->id,
+                'db_user'   => $tenant->db_username,
+                'db_pass'   => $tenant->db_password,
+                'db_host'   => $tenant->db_host,
+                'db_port'   => $tenant->db_port,
+            ]);
         } catch (\Throwable $e) {
-            Log::error("Erro ao criar banco do tenant", [
+            Log::error("❌ Erro ao criar banco do tenant", [
                 'tenant' => $tenant->id,
                 'erro'   => $e->getMessage(),
             ]);
@@ -65,87 +58,87 @@ class TenantProvisioner
     }
 
     /**
-     * Exclui o banco, usuário e registro do tenant.
+     * Gera os dados de conexão (db_name, db_username, db_password, etc)
+     * sem salvar no banco.
+     */
+    public static function prepareDatabaseConfig(string $legalName, ?string $tradeName = null): array
+    {
+        $slug = Str::slug($tradeName ?: $legalName, '_');
+
+        return [
+            'db_host'     => env('DB_HOST', '127.0.0.1'),
+            'db_port'     => env('DB_PORT', 5432),
+            'db_name'     => 'db_' . $slug,
+            'db_username' => 'usr_' . $slug,
+            'db_password' => Str::random(16), // senha em texto puro, conforme definido
+        ];
+    }
+
+    /**
+     * Remove banco e usuário do tenant.
      */
     public static function destroyTenant($tenant)
     {
         try {
-            Log::info("🔹 Removendo tenant {$tenant->id}");
+            Log::info("🧹 Removendo tenant {$tenant->id}");
 
-            // 1. Derrubar conexões e excluir banco
             DB::connection('pgsql')->statement("
                 SELECT pg_terminate_backend(pid)
                 FROM pg_stat_activity
                 WHERE datname = '{$tenant->db_name}'
             ");
             DB::connection('pgsql')->statement("DROP DATABASE IF EXISTS \"{$tenant->db_name}\"");
+            DB::connection('pgsql')->statement("DROP ROLE IF EXISTS {$tenant->db_username}");
 
-            // 2. Revogar privilégios globais
-            DB::connection('pgsql')->statement("REVOKE ALL PRIVILEGES ON SCHEMA public FROM {$tenant->db_user}");
-            DB::connection('pgsql')->statement("REVOKE ALL PRIVILEGES ON ALL TABLES IN SCHEMA public FROM {$tenant->db_user}");
-            DB::connection('pgsql')->statement("REVOKE ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public FROM {$tenant->db_user}");
-            DB::connection('pgsql')->statement("ALTER DEFAULT PRIVILEGES IN SCHEMA public REVOKE ALL ON TABLES FROM {$tenant->db_user}");
-            DB::connection('pgsql')->statement("ALTER DEFAULT PRIVILEGES IN SCHEMA public REVOKE ALL ON SEQUENCES FROM {$tenant->db_user}");
-
-            // 3. Excluir usuário
-            DB::connection('pgsql')->statement("DROP ROLE IF EXISTS {$tenant->db_user}");
-
-            // 4. Excluir registro do tenant
             $tenant->delete();
 
             Log::info("✅ Tenant {$tenant->id} removido com sucesso (DB + User + Registro).");
         } catch (\Throwable $e) {
             Log::error("❌ Erro ao excluir tenant", [
-                'tenant' => $tenant->id,
+                'tenant' => $tenant->id ?? 'sem_id',
                 'erro'   => $e->getMessage(),
             ]);
             throw $e;
         }
     }
+
     /**
-     * Edita o banco, usuário e registro do tenant.
+     * Atualiza dados do tenant (alterar senha ou renomear banco/usuário).
      */
     public static function updateTenant($tenant, array $data)
     {
         try {
             Log::info("🔹 Atualizando tenant {$tenant->id}");
 
-            // 1. Alterar senha do usuário do banco
-            if (!empty($data['db_password_enc']) && $data['db_password_enc'] !== $tenant->db_password_enc) {
-                DB::connection('pgsql')->statement("ALTER USER {$tenant->db_user} WITH PASSWORD '{$data['db_password_enc']}'");
-                $tenant->db_password_enc = $data['db_password_enc'];
-                Log::info("Senha do usuário {$tenant->db_user} alterada.");
+            if (!empty($data['db_password']) && $data['db_password'] !== $tenant->db_password) {
+                DB::connection('pgsql')->statement("ALTER USER {$tenant->db_username} WITH PASSWORD '{$data['db_password']}'");
+                $tenant->db_password = $data['db_password'];
+                Log::info("🔑 Senha do usuário {$tenant->db_username} alterada.");
             }
 
-            // 2. Renomear banco de dados
             if (!empty($data['db_name']) && $data['db_name'] !== $tenant->db_name) {
                 DB::connection('pgsql')->statement("ALTER DATABASE \"{$tenant->db_name}\" RENAME TO \"{$data['db_name']}\"");
                 $tenant->db_name = $data['db_name'];
-                Log::info("Banco renomeado para {$data['db_name']}.");
+                Log::info("🏷️ Banco renomeado para {$data['db_name']}.");
             }
 
-            // 3. Renomear usuário do banco
-            if (!empty($data['db_user']) && $data['db_user'] !== $tenant->db_user) {
-                // Criar novo usuário
-                DB::connection('pgsql')->statement("CREATE USER {$data['db_user']} WITH PASSWORD '{$tenant->db_password_enc}'");
-                DB::connection('pgsql')->statement("GRANT ALL PRIVILEGES ON DATABASE \"{$tenant->db_name}\" TO {$data['db_user']}");
-                DB::connection('pgsql')->statement("ALTER DATABASE \"{$tenant->db_name}\" OWNER TO {$data['db_user']}");
+            if (!empty($data['db_username']) && $data['db_username'] !== $tenant->db_username) {
+                DB::connection('pgsql')->statement("CREATE USER {$data['db_username']} WITH PASSWORD '{$tenant->db_password}'");
+                DB::connection('pgsql')->statement("GRANT ALL PRIVILEGES ON DATABASE \"{$tenant->db_name}\" TO {$data['db_username']}");
+                DB::connection('pgsql')->statement("ALTER DATABASE \"{$tenant->db_name}\" OWNER TO {$data['db_username']}");
+                DB::connection('pgsql')->statement("DROP ROLE IF EXISTS {$tenant->db_username}");
 
-                // Dropar usuário antigo
-                DB::connection('pgsql')->statement("DROP ROLE IF EXISTS {$tenant->db_user}");
-
-                $tenant->db_user = $data['db_user'];
-                Log::info("Usuário do banco renomeado para {$data['db_user']}.");
+                $tenant->db_username = $data['db_username'];
+                Log::info("👤 Usuário do banco renomeado para {$data['db_username']}.");
             }
 
-            // 4. Atualizar demais campos do tenant
             $tenant->fill($data);
             $tenant->save();
 
             Log::info("✅ Tenant {$tenant->id} atualizado com sucesso!");
         } catch (\Throwable $e) {
             Log::error("❌ Erro ao atualizar tenant", [
-                'tenant' => $tenant->id,
+                'tenant' => $tenant->id ?? 'sem_id',
                 'erro'   => $e->getMessage(),
             ]);
             throw $e;

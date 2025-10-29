@@ -34,6 +34,24 @@
             <div class="col-12">
                 <div class="card shadow-sm">
                     <div class="card-body">
+                        {{-- ✅ Alertas de sucesso --}}
+                        @if (session('success'))
+                            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                                <i class="fas fa-check-circle me-1"></i> {{ session('success') }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"
+                                    aria-label="Close"></button>
+                            </div>
+                        @endif
+
+                        {{-- ⚠️ Alertas de aviso --}}
+                        @if (session('warning'))
+                            <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                                <i class="fas fa-exclamation-triangle me-1"></i> {{ session('warning') }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"
+                                    aria-label="Close"></button>
+                            </div>
+                        @endif
+
                         {{-- 🔹 Exibição de erros de validação --}}
                         @if ($errors->any())
                             <div class="alert alert-danger alert-dismissible fade show shadow-sm" role="alert">
@@ -48,7 +66,6 @@
                             </div>
                         @endif
                         <h4 class="card-title mb-4">Editar Especialidade</h4>
-
                         <form method="POST"
                             action="{{ route('Platform.medical_specialties_catalog.update', $medical_specialties_catalog) }}">
                             @csrf

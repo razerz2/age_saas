@@ -71,11 +71,6 @@ class TenantRequest extends FormRequest
             ],
 
             'phone' => ['nullable', 'string', 'max:20'],
-            'db_host' => ['required', 'string', 'max:100'],
-            'db_port' => ['required', 'numeric'],
-            'db_name' => ['required', 'string', 'max:100'],
-            'db_username' => ['required', 'string', 'max:100'],
-            'db_password' => ['required', 'string', 'max:255'],
             'status' => ['required', 'in:active,inactive,pending'],
             'trial_ends_at' => ['nullable', 'date'],
             'asaas_customer_id' => ['nullable', 'string', 'max:100'],

@@ -21,12 +21,11 @@ class PlanController extends Controller
 
     public function store(PlanRequest $request)
     {
-        // ✅ Dados validados via PlanRequest
+        // ✅ Dados já validados e com price_cents convertido corretamente
         $data = $request->validated();
 
-        // 🔹 Se o form envia preço em reais (ex: 89.90), converte para centavos
-        //    Caso já venha em centavos, basta remover esta linha.
-        $data['price_cents'] = (int) round($data['price_cents'] * 100);
+        // ❌ Remover esta linha — já convertemos na Request
+        // $data['price_cents'] = (int) round($data['price_cents'] * 100);
 
         // 🔹 Converte o campo de texto "features_json" em array (se existir)
         if ($request->filled('features_json')) {
@@ -45,6 +44,7 @@ class PlanController extends Controller
             ->route('Platform.plans.index')
             ->with('success', 'Plano criado com sucesso!');
     }
+
 
 
     public function show(Plan $plan)

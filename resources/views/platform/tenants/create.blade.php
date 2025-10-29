@@ -23,6 +23,24 @@
                     </div>
 
                     <div class="card-body">
+                        {{-- ✅ Alertas de sucesso --}}
+                        @if (session('success'))
+                            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                                <i class="fas fa-check-circle me-1"></i> {{ session('success') }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"
+                                    aria-label="Close"></button>
+                            </div>
+                        @endif
+
+                        {{-- ⚠️ Alertas de aviso --}}
+                        @if (session('warning'))
+                            <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                                <i class="fas fa-exclamation-triangle me-1"></i> {{ session('warning') }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"
+                                    aria-label="Close"></button>
+                            </div>
+                        @endif
+
                         {{-- 🔹 Exibição de erros de validação --}}
                         @if ($errors->any())
                             <div class="alert alert-danger alert-dismissible fade show shadow-sm" role="alert">
@@ -88,7 +106,6 @@
                                 <div class="col-md-6">
                                     <label class="form-label">Status *</label>
                                     <select name="status" class="form-select" required>
-                                        <option value="">Selecione...</option>
                                         <option value="active">Ativo</option>
                                         <option value="inactive">Inativo</option>
                                         <option value="pending">Pendente</option>
@@ -158,38 +175,6 @@
                                     <input type="text" name="cep" class="form-control">
                                 </div>
 
-                                {{-- Banco de Dados --}}
-                                <div class="col-12 mt-4">
-                                    <h5 class="text-primary fw-bold mb-2">
-                                        <i class="fas fa-database me-2"></i> Configuração do Banco de Dados
-                                    </h5>
-                                </div>
-
-                                <div class="col-md-4">
-                                    <label class="form-label">DB Host *</label>
-                                    <input type="text" name="db_host" class="form-control" placeholder="localhost"
-                                        required>
-                                </div>
-
-                                <input type="hidden" name="db_port" value="5432">
-
-                                <div class="col-md-3">
-                                    <label class="form-label">DB Name *</label>
-                                    <input type="text" name="db_name" class="form-control"
-                                        placeholder="ex: tenant_db" required>
-                                </div>
-
-                                <div class="col-md-3">
-                                    <label class="form-label">DB User *</label>
-                                    <input type="text" name="db_username" class="form-control"
-                                        placeholder="ex: tenant_user" required>
-                                </div>
-
-                                <div class="col-md-6">
-                                    <label class="form-label">DB Password *</label>
-                                    <input type="password" name="db_password" class="form-control"
-                                        placeholder="••••••••••" required>
-                                </div>
                             </div>
 
                             <div class="d-flex justify-content-end mt-4">

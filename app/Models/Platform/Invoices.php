@@ -21,6 +21,7 @@ class Invoices extends Model
         'due_date',
         'status',
         'payment_link',
+        'payment_method',
         'provider',
         'provider_id',
         'asaas_payment_id',
@@ -31,7 +32,10 @@ class Invoices extends Model
     ];
 
     protected $casts = [
-        'due_date' => 'date',
+        'due_date'            => 'datetime',
+        'created_at'          => 'datetime',
+        'updated_at'          => 'datetime',
+        'asaas_last_sync_at'  => 'datetime',
     ];
 
     // 💰 Accessor para valor formatado

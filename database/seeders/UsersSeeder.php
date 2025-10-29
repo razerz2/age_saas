@@ -3,7 +3,7 @@
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
-use App\Models\Platform\User; // ajuste o namespace conforme o seu modelo real
+use App\Models\Platform\User;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 
@@ -14,7 +14,7 @@ class UsersSeeder extends Seeder
         // 🔐 Senha padrão
         $plainPassword = '10203040';
 
-        // 📦 Módulos padrão (JSON codificado)
+        // 📦 Módulos padrão (array real)
         $defaultModules = [
             "tenants",
             "plans",
@@ -32,9 +32,10 @@ class UsersSeeder extends Seeder
             ['email' => 'admin@plataforma.com'],
             [
                 'name' => 'Administrador',
+                'name_full' => 'Administrador',
                 'email_verified_at' => now(),
                 'password' => Hash::make($plainPassword),
-                'modules' => json_encode($defaultModules, JSON_UNESCAPED_UNICODE), // ✅ novo campo
+                'modules' => $defaultModules, // ✅ salva como array
                 'remember_token' => Str::random(60),
                 'created_at' => now(),
                 'updated_at' => now(),

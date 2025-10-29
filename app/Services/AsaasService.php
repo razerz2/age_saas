@@ -37,8 +37,6 @@ class AsaasService
         }
     }
 
-
-
     /**
      * Cria um cliente no Asaas.
      */
@@ -172,30 +170,78 @@ class AsaasService
     public function createSubscription(array $data)
     {
         try {
-            $payload = [
-                'customer'      => $data['customer'],
-                'billingType'   => 'CREDIT_CARD',
-                'value'         => $data['value'],
-                'cycle'         => $data['cycle'] ?? 'MONTHLY',
-                'nextDueDate'   => $data['nextDueDate'] ?? now()->addDay()->toDateString(),
-                'description'   => $data['description'] ?? 'Assinatura recorrente SaaS',
+            /**
+             * 1️⃣ Cria a assinatura no Asaas
+             */
+            $subscriptionPayload = [
+                'customer'     => $data['customer'],
+                'billingType'  => 'CREDIT_CARD',
+                'value'        => $data['value'],
+                'cycle'        => $data['cycle'] ?? 'MONTHLY',
+                'nextDueDate'  => $data['nextDueDate'] ?? now()->addDay()->toDateString(),
+                'description'  => $data['description'] ?? 'Assinatura SaaS',
             ];
 
-            $response = Http::withHeaders([
-                'accept' => 'application/json',
+            $subscriptionResponse = Http::withHeaders([
+                'accept'       => 'application/json',
                 'content-type' => 'application/json',
                 'access_token' => $this->apiKey,
-            ])
-                ->post($this->baseUrl . 'subscriptions', $payload)
-                ->json();
+            ])->post($this->baseUrl . 'subscriptions', $subscriptionPayload)->json();
 
-            Log::info('📡 Asaas createSubscription resposta:', $response);
-            return $response;
-        } catch (\Exception $e) {
-            Log::error('❌ Erro ao criar assinatura Asaas: ' . $e->getMessage());
-            return ['error' => $e->getMessage()];
+            Log::info('📡 Asaas createSubscription resposta:', is_array($subscriptionResponse) ? $subscriptionResponse : ['response' => $subscriptionResponse]);
+
+            if (empty($subscriptionResponse['id'])) {
+                return [
+                    'error'    => true,
+                    'message'  => 'Falha ao criar assinatura no Asaas.',
+                    'response' => $subscriptionResponse,
+                ];
+            }
+
+            $subscriptionId = $subscriptionResponse['id'];
+
+            /**
+             * 2️⃣ Cria um Payment Link (checkout hospedado no Asaas)
+             */
+            $paymentLinkPayload = [
+                'name'           => 'Assinatura SaaS - ' . ($data['description'] ?? 'Plano'),
+                'description'    => 'Pagamento inicial da assinatura SaaS.',
+                'billingType'    => 'CREDIT_CARD',
+                'chargeType'     => 'RECURRENT', // 👈 recorrente
+                'endDate'        => now()->addYears(1)->toDateString(),
+                'value'          => $data['value'],
+                'subscription'   => $subscriptionId,
+                'dueDateLimitDays' => 5,
+            ];
+
+            $paymentLinkResponse = Http::withHeaders([
+                'accept'       => 'application/json',
+                'content-type' => 'application/json',
+                'access_token' => $this->apiKey,
+            ])->post($this->baseUrl . 'paymentLinks', $paymentLinkPayload)->json();
+
+            Log::info('💳 Asaas createPaymentLink resposta:', is_array($paymentLinkResponse) ? $paymentLinkResponse : ['response' => $paymentLinkResponse]);
+
+            /**
+             * 3️⃣ Retorna os dados estruturados
+             */
+            return [
+                'subscription' => $subscriptionResponse,
+                'payment'      => $paymentLinkResponse ?? [],
+                'payment_link' => $paymentLinkResponse['url'] ?? null,
+            ];
+        } catch (\Throwable $e) {
+            Log::error('❌ Erro ao criar assinatura Asaas: ' . $e->getMessage(), [
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            return [
+                'error'   => true,
+                'message' => $e->getMessage(),
+            ];
         }
     }
+
 
     /**
      * Atualiza assinatura existente.
@@ -247,31 +293,57 @@ class AsaasService
         try {
             $payload = [
                 'customer'          => $data['customer'],
-                // define billingType de forma segura (padrão PIX)
                 'billingType'       => $data['billingType'] ?? 'PIX',
-                // aceita tanto dueDate quanto due_date
-                'dueDate'           => $data['dueDate'] ?? ($data['due_date'] ?? now()->addDays(5)->toDateString()),
-                // aceita tanto value quanto amount
-                'value'             => $data['value'] ?? ($data['amount'] ?? 0),
+                'dueDate'           => $data['dueDate'] ?? now()->addDays(5)->toDateString(),
+                'value'             => $data['value'] ?? 0,
                 'description'       => $data['description'] ?? 'Cobrança SaaS',
-                'externalReference' => $data['externalReference'] ?? ($data['external_reference'] ?? null),
+                'externalReference' => $data['externalReference'] ?? null,
             ];
 
             $response = Http::withHeaders([
-                'accept'        => 'application/json',
-                'content-type'  => 'application/json',
-                'access_token'  => $this->apiKey,
+                'accept'       => 'application/json',
+                'content-type' => 'application/json',
+                'access_token' => $this->apiKey,
             ])
                 ->post($this->baseUrl . 'payments', $payload)
                 ->json();
 
-            Log::info("📡 Asaas createPayment ({$payload['billingType']}) resposta:", $response);
+            Log::info('📡 Asaas createPayment resposta:', $response);
             return $response;
-        } catch (\Exception $e) {
-            Log::error('❌ Erro ao criar pagamento Asaas: ' . $e->getMessage());
+        } catch (\Throwable $e) {
+            Log::error('❌ Erro ao criar pagamento Asaas: ' . $e->getMessage(), [
+                'trace' => $e->getTraceAsString(),
+            ]);
             return ['error' => $e->getMessage()];
         }
     }
+
+    /**
+     * Atualiza uma cobrança existente (fatura).
+     */
+    public function updatePayment(string $paymentId, array $data)
+    {
+        try {
+            $response = Http::withHeaders([
+                'accept'       => 'application/json',
+                'content-type' => 'application/json',
+                'access_token' => $this->apiKey,
+            ])
+                ->put($this->baseUrl . 'payments/' . $paymentId, $data)
+                ->json();
+
+            Log::info('🔄 Asaas updatePayment resposta:', is_array($response) ? $response : ['response' => $response]);
+            return $response;
+            
+        } catch (\Throwable $e) {
+            Log::error('❌ Erro ao atualizar pagamento Asaas: ' . $e->getMessage(), [
+                'paymentId' => $paymentId,
+                'trace'     => $e->getTraceAsString(),
+            ]);
+            return ['error' => $e->getMessage()];
+        }
+    }
+
 
     /**
      * Busca o status de uma cobrança.
@@ -375,16 +447,24 @@ class AsaasService
         try {
             $response = Http::withHeaders([
                 'accept' => 'application/json',
+                'content-type' => 'application/json',
                 'access_token' => $this->apiKey,
-            ])->delete($this->baseUrl . 'payments/' . $paymentId)
+            ])->delete($this->baseUrl . "payments/{$paymentId}")
                 ->json();
 
-            Log::info("🗑️ Pagamento {$paymentId} excluído do Asaas:", $response);
+            Log::info('🗑️ Pagamento excluído no Asaas.', [
+                'payment_id' => $paymentId,
+                'response'   => $response ?? [],
+            ]);
+
             return $response;
-        } catch (\Exception $e) {
-            Log::error("❌ Erro ao excluir pagamento {$paymentId}: " . $e->getMessage());
-            return ['error' => $e->getMessage()];
+        } catch (\Throwable $e) {
+            Log::error("❌ Erro ao excluir pagamento no Asaas: {$e->getMessage()}", [
+                'payment_id' => $paymentId,
+                'trace'      => $e->getTraceAsString(),
+            ]);
+
+            throw $e;
         }
     }
-
 }

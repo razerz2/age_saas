@@ -31,12 +31,38 @@
             <div class="col-12">
                 <div class="card shadow-sm">
                     <div class="card-body">
-                        <h4 class="card-title mb-3">Lista de Especialidades</h4>
-
+                        {{-- ✅ Alertas de sucesso --}}
                         @if (session('success'))
-                            <div class="alert alert-success">{{ session('success') }}</div>
+                            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                                <i class="fas fa-check-circle me-1"></i> {{ session('success') }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"
+                                    aria-label="Close"></button>
+                            </div>
                         @endif
 
+                        {{-- ⚠️ Alertas de aviso --}}
+                        @if (session('warning'))
+                            <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                                <i class="fas fa-exclamation-triangle me-1"></i> {{ session('warning') }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"
+                                    aria-label="Close"></button>
+                            </div>
+                        @endif
+
+                        {{-- 🔹 Exibição de erros de validação --}}
+                        @if ($errors->any())
+                            <div class="alert alert-danger alert-dismissible fade show shadow-sm" role="alert">
+                                <strong>Ops!</strong> Verifique os erros abaixo:
+                                <ul class="mt-2 mb-0">
+                                    @foreach ($errors->all() as $error)
+                                        <li>{{ $error }}</li>
+                                    @endforeach
+                                </ul>
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"
+                                    aria-label="Fechar"></button>
+                            </div>
+                        @endif
+                        <h4 class="card-title mb-3">Lista de Especialidades</h4>
                         <div class="table-responsive">
                             <table id="specialties_table"
                                 class="table table-striped table-bordered text-nowrap align-middle">
@@ -65,9 +91,11 @@
                                                 @endif
                                             </td>
                                             <td class="text-center">
-                                                <a title="Visualizar" href="{{ route('Platform.medical_specialties_catalog.show', $specialty) }}"
+                                                <a title="Visualizar"
+                                                    href="{{ route('Platform.medical_specialties_catalog.show', $specialty) }}"
                                                     class="btn btn-sm btn-info text-white"><i class="fas fa-eye"></i></a>
-                                                <a title="Editar" href="{{ route('Platform.medical_specialties_catalog.edit', $specialty) }}"
+                                                <a title="Editar"
+                                                    href="{{ route('Platform.medical_specialties_catalog.edit', $specialty) }}"
                                                     class="btn btn-sm btn-warning text-white"><i class="fa fa-edit"></i></a>
                                                 <form
                                                     action="{{ route('Platform.medical_specialties_catalog.destroy', $specialty) }}"

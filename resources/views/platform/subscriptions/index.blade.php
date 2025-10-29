@@ -32,9 +32,37 @@
                     <div class="card-body">
                         <h4 class="card-title mb-3">Lista de Assinaturas</h4>
 
+                        {{-- ✅ Alertas de sucesso --}}
                         @if (session('success'))
-                            <div class="alert alert-success">{{ session('success') }}</div>
+                            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                                <i class="fas fa-check-circle me-1"></i> {{ session('success') }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"
+                                    aria-label="Close"></button>
+                            </div>
                         @endif
+
+                        {{-- ⚠️ Alertas de aviso --}}
+                        @if (session('warning'))
+                            <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                                <i class="fas fa-exclamation-triangle me-1"></i> {{ session('warning') }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"
+                                    aria-label="Close"></button>
+                            </div>
+                        @endif
+
+                        {{-- ❌ Erros gerais (via withErrors ou validação) --}}
+                        @if ($errors->any())
+                            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                                <i class="fas fa-times-circle me-1"></i>
+                                <strong>Ops!</strong> Verifique os erros abaixo.<br>
+                                @foreach ($errors->all() as $error)
+                                    <span class="d-block">• {{ $error }}</span>
+                                @endforeach
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"
+                                    aria-label="Close"></button>
+                            </div>
+                        @endif
+
 
                         <div class="table-responsive">
                             <table id="subscriptions_table"
@@ -72,15 +100,30 @@
                                             </td>
                                             <td>{{ $subscription->auto_renew ? 'Sim' : 'Não' }}</td>
                                             <td class="text-center">
-                                                <a title="Visualizar" href="{{ route('Platform.subscriptions.show', $subscription->id) }}"
+                                                <a title="Visualizar"
+                                                    href="{{ route('Platform.subscriptions.show', $subscription->id) }}"
                                                     class="btn btn-sm btn-info text-white">
                                                     <i class="fas fa-eye"></i>
                                                 </a>
-                                                <a title="Editar" href="{{ route('Platform.subscriptions.edit', $subscription->id) }}"
+                                                <a title="Editar"
+                                                    href="{{ route('Platform.subscriptions.edit', $subscription->id) }}"
                                                     class="btn btn-sm btn-warning text-white">
                                                     <i class="fa fa-edit"></i>
                                                 </a>
-                                                
+
+                                                {{-- 🔄 Botão de sincronização só aparece se houver erro ou pendência --}}
+                                                @if (in_array($subscription->asaas_sync_status, ['failed', 'pending']))
+                                                    <form
+                                                        action="{{ route('Platform.subscriptions.sync', $subscription) }}"
+                                                        method="POST" class="d-inline">
+                                                        @csrf
+                                                        <button type="submit" class="btn btn-sm btn-warning"
+                                                            title="Tentar sincronizar novamente com Asaas">
+                                                            <i class="fas fa-sync-alt"></i>
+                                                        </button>
+                                                    </form>
+                                                @endif
+
                                                 {{-- 🧾 Novo botão para gerar fatura --}}
                                                 @if ($subscription->is_expired && !$subscription->has_pending_invoice)
                                                     <form

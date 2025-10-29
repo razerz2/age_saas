@@ -68,54 +68,6 @@
                             </div>
                         </div>
 
-                        {{-- Integração Asaas --}}
-                        <div class="mt-5">
-                            
-                            <h5 class="text-primary fw-bold mb-3">
-                                <i class="fas fa-link me-2"></i> Integração Asaas
-                            </h5>
-
-                            <div class="row g-3">
-                                <div class="col-md-4">
-                                    <label class="fw-semibold text-muted">ID do Cliente Asaas:</label>
-                                    <p class="mb-0">
-                                        {{ $tenant->asaas_customer_id ?? '-' }}
-                                    </p>
-                                </div>
-
-                                <div class="col-md-4">
-                                    <label class="fw-semibold text-muted">Status de Sincronização:</label>
-                                    @php
-                                        $status = $tenant->asaas_sync_status;
-                                        $statusLabel = match ($status) {
-                                            'success' => ['Sucesso', 'success', 'fa-check-circle'],
-                                            'failed' => ['Falha', 'danger', 'fa-exclamation-circle'],
-                                            default => ['Pendente', 'secondary', 'fa-hourglass-half'],
-                                        };
-                                    @endphp
-                                    <span class="badge bg-{{ $statusLabel[1] }}">
-                                        <i class="fas {{ $statusLabel[2] }} me-1"></i>
-                                        {{ $statusLabel[0] }}
-                                    </span>
-                                </div>
-
-                                <div class="col-md-4">
-                                    <label class="fw-semibold text-muted">Última Sincronização:</label>
-                                    <p class="mb-0">
-                                        {{ $tenant->asaas_last_sync_at ? \Carbon\Carbon::parse($tenant->asaas_last_sync_at)->format('d/m/Y H:i') : '-' }}
-                                    </p>
-                                </div>
-                            </div>
-
-                            {{-- Exibe erro, se houver --}}
-                            @if ($tenant->asaas_last_error)
-                                <div class="alert alert-warning mt-3 mb-0">
-                                    <strong><i class="fas fa-exclamation-triangle me-2"></i>Último Erro:</strong>
-                                    <pre class="mb-0 small text-dark bg-light border rounded p-2">{{ $tenant->asaas_last_error }}</pre>
-                                </div>
-                            @endif
-                        </div>
-
                         {{-- Localização --}}
                         <div class="mt-5">
                             <h5 class="text-primary fw-bold mb-3">
@@ -205,6 +157,57 @@
                             <a href="{{ route('Platform.tenants.edit', $tenant->id) }}" class="btn btn-primary">
                                 <i class="fas fa-edit me-2"></i> Editar Tenant
                             </a>
+                        </div>
+                    </div>
+                </div>
+                <div class="card shadow-sm border-0 mt-4">
+                    <div class="card-body">
+                        <h4 class="card-title mb-4">Informações do Asaas</h4>
+
+                        <div class="row mb-3">
+                            <div class="col-md-4">
+                                <label class="fw-bold">ID Asaas</label>
+                                <p>{{ $tenant->asaas_customer_id ?? '—' }}</p>
+                            </div>
+
+                            <div class="col-md-4">
+                                <label class="fw-bold">Status Sincronização</label>
+                                <p>
+                                    <span
+                                        class="badge 
+                        @if ($tenant->asaas_synced) bg-success 
+                        @else bg-danger @endif">
+                                        {{ $tenant->asaas_synced ? 'Sincronizado' : 'Não sincronizado' }}
+                                    </span>
+                                </p>
+                            </div>
+
+                            <div class="col-md-4">
+                                <label class="fw-bold">Status Asaas</label>
+                                <p>{{ strtoupper($tenant->asaas_sync_status ?? '—') }}</p>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-4">
+                                <label class="fw-bold">Última Sincronização</label>
+                                <p>{{ $tenant->asaas_last_sync_at ? $tenant->asaas_last_sync_at->format('d/m/Y H:i') : '—' }}
+                                </p>
+                            </div>
+
+                            <div class="col-md-8">
+                                <label class="fw-bold">Último Erro</label>
+                                <p class="text-danger">{{ $tenant->asaas_last_error ?? '—' }}</p>
+                            </div>
+                        </div>
+                        <div class="d-flex justify-content-end mt-4">
+                            <form action="{{ route('Platform.tenants.sync', $tenant) }}" method="POST"
+                                class="m-0 p-0">
+                                @csrf
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-sync-alt me-1"></i> Sincronizar com Asaas
+                                </button>
+                            </form>
                         </div>
                     </div>
                 </div>

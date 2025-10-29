@@ -14,6 +14,7 @@ return new class extends Migration {
             $table->date('due_date');
             $table->enum('status', ['pending','paid','overdue','canceled'])->default('pending');
             $table->string('payment_link')->nullable();
+            $table->enum('payment_method', ['PIX', 'BOLETO', 'CREDIT_CARD', 'DEBIT_CARD'])->default('PIX');
             $table->string('provider')->nullable();    // ex: asaas, pagarme
             $table->string('provider_id')->nullable(); // id no gateway
             $table->string('asaas_payment_id')->nullable();
