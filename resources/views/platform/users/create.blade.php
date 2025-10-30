@@ -57,15 +57,27 @@
 
                             <div class="row">
                                 <div class="col-md-6 mb-3">
-                                    <label class="form-label">Nome</label>
+                                    <label class="form-label">Apelido</label>
                                     <input type="text" name="name" class="form-control"
                                         value="{{ old('name', $user->name ?? '') }}" required>
+                                </div>
+
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Nome Completo:</label>
+                                    <input type="text" name="name_full" class="form-control"
+                                        value="{{ old('name', $user->name_full ?? '') }}" required>
                                 </div>
 
                                 <div class="col-md-6 mb-3">
                                     <label class="form-label">Email</label>
                                     <input type="email" name="email" class="form-control"
                                         value="{{ old('email', $user->email ?? '') }}" required>
+                                </div>
+
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Status:</label>
+                                    <input type="text" name="status" class="form-control"
+                                        value="active" required readonly>   
                                 </div>
 
                                 <div class="col-md-6 mb-3">
@@ -77,6 +89,7 @@
                                     <label class="form-label">Confirmar Senha</label>
                                     <input type="password" name="password_confirmation" class="form-control">
                                 </div>
+                                
                             </div>
 
                             {{-- 🔹 Seleção de Módulos --}}

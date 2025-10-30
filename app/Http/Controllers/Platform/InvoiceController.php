@@ -43,7 +43,7 @@ class InvoiceController extends Controller
     {
         $data = $request->validated();
         $invoice = Invoices::create($data);
-
+        app(WhatsAppController::class)->sendInvoiceNotification($invoice);
         // 🔹 Tenta sincronizar com Asaas (não retorna, só executa)
         $this->syncWithAsaas($invoice, silent: true);
 

@@ -22,7 +22,8 @@ class UserController extends Controller
 
     public function store(UserRequest $request)
     {
-        $data = $request->validate();
+        $data = $request->validated();
+        $data['status'] = "active";
         $data['modules'] = $data['modules'] ?? [];
         User::create($data);
 
