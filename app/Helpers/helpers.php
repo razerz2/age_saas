@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\Platform\SystemSetting;
+use App\Models\Platform\Tenant;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Http;
@@ -178,5 +179,12 @@ if (!function_exists('systemVersion')) {
     function systemVersion(): string
     {
         return config('app.version', '1.0.0');
+    }
+}
+
+if (! function_exists('tenant')) {
+    function tenant()
+    {
+        return Tenant::current();
     }
 }

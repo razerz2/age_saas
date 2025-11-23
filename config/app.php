@@ -61,6 +61,19 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Application Base Domain
+    |--------------------------------------------------------------------------
+    |
+    |    Base principal usado para os subdomínios das tenants.
+    | Exemplo:
+    | - APP_DOMAIN=agepro.com
+    | - Tenant: clinicaabc.agepro.com
+    |
+    */
+    'domain' => env('APP_DOMAIN', 'agepro.com'),
+
+    /*
+    |--------------------------------------------------------------------------
     | Application Timezone
     |--------------------------------------------------------------------------
     |
@@ -157,17 +170,18 @@ return [
 
     'providers' => ServiceProvider::defaultProviders()->merge([
         /*
-         * Package Service Providers...
-         */
+     * Package Service Providers
+     */
+        Spatie\Multitenancy\MultitenancyServiceProvider::class,
 
         /*
-         * Application Service Providers...
-         */
+     * Application Service Providers
+     */
         App\Providers\AppServiceProvider::class,
         App\Providers\AuthServiceProvider::class,
-        // App\Providers\BroadcastServiceProvider::class,
         App\Providers\EventServiceProvider::class,
         App\Providers\RouteServiceProvider::class,
+        App\Providers\TenantOverrideProvider::class,
     ])->toArray(),
 
     /*

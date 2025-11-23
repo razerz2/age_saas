@@ -16,6 +16,7 @@ use App\Http\Controllers\Platform\EstadoController;
 use App\Http\Controllers\Platform\CidadeController;
 use App\Http\Controllers\Platform\LocationController;
 use App\Http\Controllers\Platform\SystemSettingsController;
+use App\Http\Controllers\Platform\KioskMonitorController;
 use App\Models\Platform\SystemNotification;
 use App\Http\Controllers\Platform\WhatsAppController;
 use Illuminate\Support\Facades\Auth;
@@ -41,6 +42,10 @@ Route::get('/', function () {
     // Não autenticado → vai para o login
     return redirect()->route('login');
 });
+
+Route::get('/kiosk/monitor', [KioskMonitorController::class, 'index'])->name('platform.kiosk.monitor');
+Route::get('/kiosk/monitor/data', [KioskMonitorController::class, 'data'])->name('platform.kiosk.monitor.data');
+
 //Rota do Webhook do asaas...
 Route::post('/webhook/asaas', [AsaasWebhookController::class, 'handle'])->middleware('verify.asaas.token');
 
@@ -61,7 +66,6 @@ Route::middleware(['auth'])->prefix('Platform')->name('Platform.')->group(functi
     Route::middleware('module.access:tenants')->group(function () {
         Route::resource('tenants', TenantController::class);
         Route::post('/tenants/{tenant}/sync', [TenantController::class, 'syncWithAsaas'])->name('tenants.sync');
-
     });
 
     // 🔸 Módulo: Planos
@@ -75,7 +79,6 @@ Route::middleware(['auth'])->prefix('Platform')->name('Platform.')->group(functi
         Route::post('subscriptions/{id}/renew', [SubscriptionController::class, 'renew'])->name('subscriptions.renew');
         Route::get('tenants/{tenant}/subscriptions', [SubscriptionController::class, 'getByTenant'])->name('subscriptions.getByTenant');
         Route::post('/subscriptions/{subscription}/sync', [SubscriptionController::class, 'syncWithAsaas'])->name('subscriptions.sync');
-
     });
 
     // 🔸 Módulo: Faturas
@@ -142,6 +145,5 @@ Route::middleware(['auth'])->prefix('Platform')->name('Platform.')->group(functi
         ]);
     })->name('system_notifications.json');
 });
-
 
 require __DIR__ . '/auth.php';

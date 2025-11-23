@@ -94,16 +94,16 @@ return [
         ],
 
         'tenant' => [
-            'driver'   => 'pgsql',
-            'host'     => env('TENANT_DB_HOST', '127.0.0.1'),
-            'port'     => env('TENANT_DB_PORT', '5432'),
-            'database' => '', // vamos sobrescrever em runtime
-            'username' => env('TENANT_DB_USER', 'postgres'),
-            'password' => env('TENANT_DB_PASSWORD', 'secret'),
-            'charset'  => 'utf8',
-            'prefix'   => '',
-            'schema'   => 'public',
-            'sslmode'  => 'prefer',
+            'driver' => 'pgsql',
+            'host' => env('DB_TENANT_HOST', '127.0.0.1'),  // Corrigido para usar .env
+            'port' => env('DB_TENANT_PORT', '5432'),       // Corrigido para usar .env
+            'database' => null,                             // Será preenchido dinamicamente
+            'username' => null,                             // Será preenchido dinamicamente
+            'password' => null,                             // Será preenchido dinamicamente
+            'charset' => 'utf8',
+            'prefix' => '',
+            'schema' => 'public',
+            'sslmode' => 'prefer',
         ],
 
     ],

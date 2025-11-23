@@ -22,10 +22,11 @@ return new class extends Migration
         Schema::create('oauth_accounts', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->foreignUuid('integration_id')->constrained('integrations')->cascadeOnDelete();
-            $table->foreignUuid('user_id')->nullable()->constrained('users')->nullOnDelete();
+            $table->unsignedBigInteger('user_id');
             $table->text('access_token');
             $table->text('refresh_token')->nullable();
             $table->timestamp('expires_at')->nullable();
+            $table->foreign('user_id')->references('id')->on('users')->cascadeOnDelete();
         });
 
         Schema::create('calendar_sync_state', function (Blueprint $table) {

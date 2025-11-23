@@ -75,7 +75,7 @@ class SubscriptionRequest extends FormRequest
 
                 if (
                     $tenant &&
-                    in_array($tenant->asaas_sync_status, ['failed', 'pending'], true)
+                    in_array($tenant->asaas_sync_status, ['failed'], true)
                 ) {
                     $validator->errors()->add(
                         'tenant_id',

@@ -1,0 +1,95 @@
+<?php
+
+namespace App\Http\Controllers\Tenant;
+
+use App\Http\Controllers\Controller;
+use App\Models\Tenant\Doctor;
+use App\Models\Tenant\User;
+use App\Models\Tenant\MedicalSpecialty;
+use App\Http\Requests\Tenant\StoreDoctorRequest;
+use App\Http\Requests\Tenant\UpdateDoctorRequest;
+
+class DoctorController extends Controller
+{
+    public function index()
+    {
+        $doctors = Doctor::with(['user', 'specialties'])
+            ->orderBy('created_at', 'desc')
+            ->paginate(15);
+
+        return view('tenant.doctors.index', compact('doctors'));
+    }
+
+    public function create()
+    {
+        $users = User::orderBy('name')->get();
+        $specialties = MedicalSpecialty::orderBy('name')->get();
+
+        return view('tenant.doctors.create', compact('users', 'specialties'));
+    }
+
+    public function store(StoreDoctorRequest $request)
+    {
+        $data = $request->validated();
+
+        /** @var Doctor $doctor */
+        $doctor = Doctor::create([
+            'id'        => \Str::uuid(),
+            'user_id'   => $data['user_id'],
+            'crm_number' => $data['crm_number'] ?? null,
+            'crm_state' => $data['crm_state'] ?? null,
+            'signature' => $data['signature'] ?? null,
+        ]);
+
+        if (!empty($data['specialties'])) {
+            $doctor->specialties()->sync($data['specialties']);
+        }
+
+        return redirect()->route('tenant.doctors.index')
+            ->with('success', 'Médico cadastrado com sucesso.');
+    }
+
+    public function show(Doctor $doctor)
+    {
+        $doctor->load(['user', 'specialties']);
+        return view('tenant.doctors.show', compact('doctor'));
+    }
+
+    public function edit(Doctor $doctor)
+    {
+        $users = User::orderBy('name')->get();
+        $specialties = MedicalSpecialty::orderBy('name')->get();
+        $doctor->load('specialties');
+
+        return view('tenant.doctors.edit', compact('doctor', 'users', 'specialties'));
+    }
+
+    public function update(UpdateDoctorRequest $request, Doctor $doctor)
+    {
+        $data = $request->validated();
+
+        $doctor->update([
+            'user_id'   => $data['user_id'],
+            'crm_number' => $data['crm_number'] ?? null,
+            'crm_state' => $data['crm_state'] ?? null,
+            'signature' => $data['signature'] ?? null,
+        ]);
+
+        if (!empty($data['specialties'])) {
+            $doctor->specialties()->sync($data['specialties']);
+        } else {
+            $doctor->specialties()->detach();
+        }
+
+        return redirect()->route('tenant.doctors.index')
+            ->with('success', 'Médico atualizado com sucesso.');
+    }
+
+    public function destroy(Doctor $doctor)
+    {
+        $doctor->delete();
+
+        return redirect()->route('tenant.doctors.index')
+            ->with('success', 'Médico removido.');
+    }
+}
