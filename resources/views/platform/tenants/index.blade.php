@@ -85,6 +85,12 @@
                                                     <i class="fas fa-eye"></i> </a>
                                                 <a title="Editar" href="{{ route('Platform.tenants.edit', $tenant->id) }}"
                                                     class="btn btn-sm btn-warning"> <i class="fa fa-edit"></i> </a>
+                                                <a title="Acessar Login do Tenant" 
+                                                    href="{{ route('tenant.login', ['tenant' => $tenant->subdomain]) }}"
+                                                    target="_blank"
+                                                    class="btn btn-sm btn-success">
+                                                    <i class="fas fa-sign-in-alt"></i>
+                                                </a>
                                                 @if (in_array($tenant->asaas_sync_status, ['failed', 'pending']))
                                                     <form action="{{ route('Platform.tenants.sync', $tenant->id) }}"
                                                         method="POST" class="d-inline">
