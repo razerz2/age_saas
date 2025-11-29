@@ -78,7 +78,7 @@
                     <p><strong>Módulos:</strong>
                         @if (!empty($user->modules))
                             <ul>
-                                @foreach (json_decode($user->modules) as $module)
+                                @foreach ($user->modules as $module)
                                     <li>{{ ucfirst($module) }}</li>
                                 @endforeach
                             </ul>

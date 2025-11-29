@@ -270,7 +270,10 @@ agendamento-saas/
 └── resources/views/                # Views Blade
 ```
 
-Para mais detalhes sobre a arquitetura, consulte [ARQUITETURA.md](ARQUITETURA.md).
+Para mais detalhes sobre a arquitetura, consulte:
+- [PLATFORM.md](PLATFORM.md) - Documentação da área Platform
+- [TENANT.md](TENANT.md) - Documentação da área Tenant
+- [ARQUITETURA.md](ARQUITETURA.md) - Documentação técnica da arquitetura
 
 ## 🎯 Uso
 
@@ -322,7 +325,10 @@ O sistema utiliza **multitenancy com banco de dados separado** (database-per-ten
 - **Guard `web`**: Usuários da platform (`App\Models\Platform\User`)
 - **Guard `tenant`**: Usuários dos tenants (`App\Models\Tenant\User`)
 
-Para mais detalhes técnicos, consulte [ARQUITETURA.md](ARQUITETURA.md).
+Para mais detalhes técnicos, consulte:
+- [PLATFORM.md](PLATFORM.md) - Documentação da área Platform
+- [TENANT.md](TENANT.md) - Documentação da área Tenant
+- [ARQUITETURA.md](ARQUITETURA.md) - Documentação técnica da arquitetura
 
 ## 🔌 Integrações
 
@@ -389,8 +395,24 @@ O projeto utiliza Laravel Pint para formatação:
 
 ## 📚 Documentação Adicional
 
+### Documentação por Área
+
+- [PLATFORM.md](PLATFORM.md) - Documentação completa da área Platform (Administrativa)
+- [TENANT.md](TENANT.md) - Documentação completa da área Tenant (Clínicas)
+
+### Documentação Técnica
+
 - [ARQUITETURA.md](ARQUITETURA.md) - Documentação técnica detalhada da arquitetura
 - [ENV.md](ENV.md) - Guia completo de variáveis de ambiente
+
+### Guias Específicos
+
+- [GUIA_CRIAR_FORMULARIO.md](GUIA_CRIAR_FORMULARIO.md) - Guia passo a passo para criar formulários
+- [GUIA_TESTE_PUBLICO.md](GUIA_TESTE_PUBLICO.md) - Guia de teste da área pública de agendamento
+- [INSTRUCOES_MIGRATION.md](INSTRUCOES_MIGRATION.md) - Instruções para migrações manuais
+
+### Documentação Externa
+
 - [Laravel Documentation](https://laravel.com/docs/10.x)
 - [Spatie Multitenancy](https://spatie.be/docs/laravel-multitenancy)
 
