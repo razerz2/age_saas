@@ -5,12 +5,20 @@ namespace Database\Seeders;
 use Illuminate\Database\Seeder;
 use App\Models\Platform\User;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 
 class UsersSeeder extends Seeder
 {
     public function run(): void
     {
+        // ✅ Verifica se a tabela existe antes de tentar inserir dados
+        if (!Schema::hasTable('users')) {
+            $this->command->error("❌ A tabela 'users' não existe no banco de dados.");
+            $this->command->warn("💡 Execute primeiro as migrations: php artisan migrate");
+            return;
+        }
+
         // 🔐 Senha padrão
         $plainPassword = '10203040';
 
