@@ -76,7 +76,9 @@ Route::middleware(['auth'])->prefix('Platform')->name('Platform.')->group(functi
     // 🔸 Módulo: Assinaturas
     Route::middleware('module.access:subscriptions')->group(function () {
         Route::resource('subscriptions', SubscriptionController::class);
-        Route::post('subscriptions/{id}/renew', [SubscriptionController::class, 'renew'])->name('subscriptions.renew');
+        Route::post('subscriptions/{id}/renew', [SubscriptionController::class, 'renew'])
+            ->where('id', '[0-9]+')
+            ->name('subscriptions.renew');
         Route::get('tenants/{tenant}/subscriptions', [SubscriptionController::class, 'getByTenant'])->name('subscriptions.getByTenant');
         Route::post('/subscriptions/{subscription}/sync', [SubscriptionController::class, 'syncWithAsaas'])->name('subscriptions.sync');
     });
@@ -123,6 +125,7 @@ Route::middleware(['auth'])->prefix('Platform')->name('Platform.')->group(functi
         Route::get('settings/', [SystemSettingsController::class, 'index'])->name('settings.index');
         Route::post('settings/update/general', [SystemSettingsController::class, 'updateGeneral'])->name('settings.update.general');
         Route::post('settings/update/integrations', [SystemSettingsController::class, 'updateIntegrations'])->name('settings.update.integrations');
+        // Service pode ser uma string, então não precisa restrição numérica
         Route::get('settings/test/{service}', [SystemSettingsController::class, 'testConnection'])->name('settings.test');
     });
 

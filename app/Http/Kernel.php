@@ -89,15 +89,30 @@ class Kernel extends HttpKernel
          * 🔐 Autenticação exclusiva do tenant
          */
         'tenant.auth' => \App\Http\Middleware\RedirectIfTenantUnauthenticated::class,
+        
+        /**
+         * 🏥 Autenticação exclusiva do paciente
+         */
+        'patient.auth' => \App\Http\Middleware\RedirectIfPatientUnauthenticated::class,
 
         /**
          * ⭐ Setar tenant automaticamente após login
          */
         'tenant.from.guard' => \App\Http\Middleware\EnsureTenantFromGuard::class,
+        
+        /**
+         * 🏥 Setar tenant automaticamente do paciente autenticado
+         */
+        'patient.tenant.from.guard' => \App\Http\Middleware\EnsureTenantFromPatientGuard::class,
 
         /**
          * 🧠 Persistência do tenant entre requests
          */
         'persist.tenant' => \App\Http\Middleware\PersistTenantInSession::class,
+
+        /**
+         * 🏥 Detecta tenant para rotas do portal do paciente
+         */
+        'detect.tenant.patient' => \App\Http\Middleware\DetectTenantForPatientPortal::class,
     ];
 }

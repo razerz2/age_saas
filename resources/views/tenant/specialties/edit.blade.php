@@ -20,34 +20,74 @@
         </nav>
     </div>
 
-    <div class="row justify-content-center">
-        <div class="col-lg-8">
+    <div class="row">
+        <div class="col-12 grid-margin stretch-card">
             <div class="card">
                 <div class="card-body">
-                    <h4 class="card-title">Editar Dados</h4>
-                    <p class="card-description"> Atualize as informações abaixo </p>
+                    <div class="d-flex align-items-center justify-content-between mb-4">
+                        <div>
+                            <h4 class="card-title mb-1">
+                                <i class="mdi mdi-stethoscope text-primary me-2"></i>
+                                Editar Especialidade
+                            </h4>
+                            <p class="card-description mb-0 text-muted">Atualize as informações da especialidade abaixo</p>
+                        </div>
+                    </div>
 
-                    <form method="POST" action="{{ route('tenant.specialties.update', $specialty->id) }}" class="forms-sample">
+                    <form class="forms-sample" action="{{ route('tenant.specialties.update', $specialty->id) }}" method="POST">
                         @csrf
                         @method('PUT')
 
-                        <div class="form-group mb-3">
-                            <label for="name">Nome *</label>
-                            <input id="name" type="text" name="name" class="form-control"
-                                value="{{ $specialty->name }}" placeholder="Digite o nome" required>
+                        {{-- Seção: Dados da Especialidade --}}
+                        <div class="mb-4">
+                            <h5 class="mb-3 text-primary">
+                                <i class="mdi mdi-information-outline me-2"></i>
+                                Informações da Especialidade
+                            </h5>
+                            <div class="row">
+                                <div class="col-md-8">
+                                    <div class="form-group">
+                                        <label class="fw-semibold">
+                                            <i class="mdi mdi-tag me-1"></i>
+                                            Nome <span class="text-danger">*</span>
+                                        </label>
+                                        <input type="text" class="form-control @error('name') is-invalid @enderror" 
+                                               name="name" value="{{ old('name', $specialty->name) }}" 
+                                               placeholder="Ex: Cardiologia, Pediatria, etc." required>
+                                        @error('name')
+                                            <div class="invalid-feedback d-block">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label class="fw-semibold">
+                                            <i class="mdi mdi-barcode me-1"></i>
+                                            Código
+                                        </label>
+                                        <input type="text" class="form-control @error('code') is-invalid @enderror" 
+                                               name="code" value="{{ old('code', $specialty->code) }}" 
+                                               maxlength="50" placeholder="Código CBO (opcional)">
+                                        <small class="form-text text-muted">Código CBO da especialidade</small>
+                                        @error('code')
+                                            <div class="invalid-feedback d-block">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+                                </div>
+                            </div>
                         </div>
 
-                        <div class="form-group mb-3">
-                            <label for="code">Código</label>
-                            <input id="code" type="text" name="code" class="form-control"
-                                value="{{ $specialty->code }}" placeholder="Digite o código">
+                        {{-- Botões de Ação --}}
+                        <div class="d-flex justify-content-between align-items-center pt-3 border-top">
+                            <a href="{{ route('tenant.specialties.index') }}" class="btn btn-light">
+                                <i class="mdi mdi-arrow-left me-1"></i>
+                                Cancelar
+                            </a>
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="mdi mdi-content-save me-1"></i>
+                                Atualizar Especialidade
+                            </button>
                         </div>
-
-                        <div class="text-end mt-4">
-                            <button type="submit" class="btn btn-primary btn-lg">Salvar</button>
-                            <a href="{{ route('tenant.specialties.index') }}" class="btn btn-light btn-lg">Cancelar</a>
-                        </div>
-
                     </form>
 
                 </div>
@@ -55,5 +95,26 @@
         </div>
     </div>
 
-@endsection
+@push('styles')
+<style>
+    .form-group label {
+        font-weight: 600;
+        color: #2c3e50;
+        margin-bottom: 0.5rem;
+    }
+    .card-title {
+        font-weight: 600;
+    }
+    h5.text-primary {
+        font-weight: 600;
+        padding-bottom: 0.5rem;
+        border-bottom: 2px solid #e9ecef;
+    }
+    .btn-lg {
+        padding: 0.75rem 2rem;
+        font-weight: 600;
+    }
+</style>
+@endpush
 
+@endsection

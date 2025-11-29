@@ -15,11 +15,11 @@ class CalendarSyncStateController extends Controller
 {
     public function index()
     {
-        $syncs = CalendarSyncState::with(['appointment.patient', 'appointment.calendar.doctor.user'])
+        $syncStates = CalendarSyncState::with(['appointment.patient', 'appointment.calendar.doctor.user'])
             ->orderBy('last_sync_at', 'desc')
             ->paginate(20);
 
-        return view('tenant.calendar_sync.index', compact('syncs'));
+        return view('tenant.calendar-sync.index', compact('syncStates'));
     }
 
     public function create()
@@ -28,7 +28,7 @@ class CalendarSyncStateController extends Controller
             ->orderBy('starts_at', 'desc')
             ->get();
 
-        return view('tenant.calendar_sync.create', compact('appointments'));
+        return view('tenant.calendar-sync.create', compact('appointments'));
     }
 
     public function store(StoreCalendarSyncStateRequest $request)
@@ -42,35 +42,39 @@ class CalendarSyncStateController extends Controller
             ->with('success', 'Estado de sincronização criado com sucesso.');
     }
 
-    public function show(CalendarSyncState $calendarSyncState)
+    public function show($id)
     {
+        $calendarSyncState = CalendarSyncState::findOrFail($id);
         $calendarSyncState->load([
             'appointment.patient',
             'appointment.calendar.doctor.user'
         ]);
 
-        return view('tenant.calendar_sync.show', compact('calendarSyncState'));
+        return view('tenant.calendar-sync.show', compact('calendarSyncState'));
     }
 
-    public function edit(CalendarSyncState $calendarSyncState)
+    public function edit($id)
     {
+        $calendarSyncState = CalendarSyncState::findOrFail($id);
         $calendarSyncState->load(['appointment']);
 
         $appointments = Appointment::orderBy('starts_at', 'desc')->get();
 
-        return view('tenant.calendar_sync.edit', compact('calendarSyncState', 'appointments'));
+        return view('tenant.calendar-sync.edit', compact('calendarSyncState', 'appointments'));
     }
 
-    public function update(UpdateCalendarSyncStateRequest $request, CalendarSyncState $calendarSyncState)
+    public function update(UpdateCalendarSyncStateRequest $request, $id)
     {
+        $calendarSyncState = CalendarSyncState::findOrFail($id);
         $calendarSyncState->update($request->validated());
 
         return redirect()->route('tenant.calendar-sync.index')
             ->with('success', 'Estado de sincronização atualizado.');
     }
 
-    public function destroy(CalendarSyncState $calendarSyncState)
+    public function destroy($id)
     {
+        $calendarSyncState = CalendarSyncState::findOrFail($id);
         $calendarSyncState->delete();
 
         return redirect()->route('tenant.calendar-sync.index')

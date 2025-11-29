@@ -515,4 +515,5 @@ O middleware `CheckModuleAccess` verifica se o usuário possui acesso ao módulo
 ---
 
 **Documentação gerada em:** 2025-01-27
+**Última atualização:** 2025-01-27
 

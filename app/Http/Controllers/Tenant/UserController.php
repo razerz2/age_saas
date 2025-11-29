@@ -6,8 +6,10 @@ use App\Models\Tenant\User;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Tenant\StoreUserRequest;
 use App\Http\Requests\Tenant\UpdateUserRequest;
-use App\Http\Requests\Tenant\ChangePasswordRequest;
+use App\Http\Requests\Tenant\ChangePasswordUserRequest;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class UserController extends Controller
 {
@@ -25,7 +27,27 @@ class UserController extends Controller
     public function store(StoreUserRequest $request)
     {
         $data = $request->validated();
+        
+        // Se a senha não foi informada, gera uma senha aleatória
+        if (empty($data['password'])) {
+            $data['password'] = Str::random(12);
+        }
+        
         $data['password'] = Hash::make($data['password']);
+        
+        // Remove password_confirmation dos dados antes de salvar
+        unset($data['password_confirmation']);
+
+        // Garante que modules seja um array (vazio se não informado)
+        $data['modules'] = $data['modules'] ?? [];
+
+        // Upload do avatar se fornecido
+        if ($request->hasFile('avatar')) {
+            $avatar = $request->file('avatar');
+            $avatarName = 'avatars/' . time() . '_' . Str::random(10) . '.' . $avatar->getClientOriginalExtension();
+            $avatar->storeAs('public', $avatarName);
+            $data['avatar'] = $avatarName;
+        }
 
         User::create($data);
 
@@ -39,7 +61,7 @@ class UserController extends Controller
      */
     public function show($id)
     {
-        $user = User::findOrFail($id);  // Utilizando o ID passado na rota
+        $user = User::with(['allowedDoctors.user'])->findOrFail($id);  // Utilizando o ID passado na rota
 
         return view('tenant.users.show', compact('user'));
     }
@@ -69,6 +91,19 @@ class UserController extends Controller
         // Se o campo 'modules' for enviado, tratamos os módulos
         if (isset($data['modules'])) {
             $data['modules'] = json_encode($data['modules']);
+        }
+
+        // Upload do novo avatar se fornecido
+        if ($request->hasFile('avatar')) {
+            // Remove avatar antigo se existir
+            if ($user->avatar && Storage::disk('public')->exists($user->avatar)) {
+                Storage::disk('public')->delete($user->avatar);
+            }
+            
+            $avatar = $request->file('avatar');
+            $avatarName = 'avatars/' . time() . '_' . Str::random(10) . '.' . $avatar->getClientOriginalExtension();
+            $avatar->storeAs('public', $avatarName);
+            $data['avatar'] = $avatarName;
         }
 
         // Atualiza os dados do usuário (sem a senha)
@@ -102,7 +137,7 @@ class UserController extends Controller
         return view('tenant.users.change-password', compact('user'));
     }
 
-    public function changePassword(ChangePasswordRequest $request, $id)
+    public function changePassword(ChangePasswordUserRequest $request, $id)
     {
         // Valida os dados com a ChangePasswordRequest
         $validated = $request->validated();

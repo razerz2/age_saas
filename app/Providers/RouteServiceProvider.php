@@ -44,6 +44,10 @@ class RouteServiceProvider extends ServiceProvider
             // Tenants
             Route::middleware(['web'])
                 ->group(base_path('routes/tenant.php'));
+
+            // Portal do Paciente
+            Route::middleware(['web'])
+                ->group(base_path('routes/patient_portal.php'));
         });
 
         /**

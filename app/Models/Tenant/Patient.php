@@ -7,11 +7,16 @@ use Illuminate\Database\Eloquent\Model;
 
 class Patient extends Model
 {
+    use HasFactory;
+
+    protected $connection = 'tenant';
+    protected $table = 'patients';
+
     public $incrementing = false;
     protected $keyType = 'uuid';
 
     protected $fillable = [
-        'id','full_name','cpf','birth_date','email','phone','is_active'
+        'id', 'full_name', 'cpf', 'birth_date', 'email', 'phone', 'is_active'
     ];
 
     protected $casts = [
@@ -19,8 +24,20 @@ class Patient extends Model
         'is_active' => 'boolean',
     ];
 
+    public $timestamps = true;
+
     public function responses()
     {
         return $this->hasMany(FormResponse::class);
+    }
+
+    public function appointments()
+    {
+        return $this->hasMany(Appointment::class);
+    }
+
+    public function login()
+    {
+        return $this->hasOne(PatientLogin::class, 'patient_id', 'id');
     }
 }

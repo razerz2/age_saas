@@ -1,0 +1,181 @@
+@extends('layouts.connect_plus.app')
+
+@section('title', 'Editar Estado de Sincronização')
+
+@section('content')
+
+    <div class="page-header">
+        <h3 class="page-title"> Editar Estado de Sincronização </h3>
+
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item">
+                    <a href="{{ route('tenant.dashboard') }}">Dashboard</a>
+                </li>
+                <li class="breadcrumb-item">
+                    <a href="{{ route('tenant.calendar-sync.index') }}">Sincronização de Calendário</a>
+                </li>
+                <li class="breadcrumb-item active" aria-current="page">Editar</li>
+            </ol>
+        </nav>
+    </div>
+
+    <div class="row">
+        <div class="col-12 grid-margin stretch-card">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex align-items-center justify-content-between mb-4">
+                        <div>
+                            <h4 class="card-title mb-1">
+                                <i class="mdi mdi-sync-alert text-primary me-2"></i>
+                                Editar Estado de Sincronização
+                            </h4>
+                            <p class="card-description mb-0 text-muted">Atualize as informações do estado de sincronização abaixo</p>
+                        </div>
+                    </div>
+
+                    @if ($errors->any())
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            <strong>Ops!</strong> Verifique os erros abaixo:
+                            <ul class="mt-2 mb-0">
+                                @foreach ($errors->all() as $error)
+                                    <li>{{ $error }}</li>
+                                @endforeach
+                            </ul>
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+                        </div>
+                    @endif
+
+                    <form class="forms-sample" action="{{ route('tenant.calendar-sync.update', $calendarSyncState->id) }}" method="POST">
+                        @csrf
+                        @method('PUT')
+
+                        {{-- Seção: Informações Básicas --}}
+                        <div class="mb-4">
+                            <h5 class="mb-3 text-primary">
+                                <i class="mdi mdi-information-outline me-2"></i>
+                                Informações Básicas
+                            </h5>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label class="fw-semibold">
+                                            <i class="mdi mdi-calendar-check me-1"></i>
+                                            Agendamento
+                                        </label>
+                                        <select name="appointment_id" class="form-control" disabled>
+                                            <option value="{{ $calendarSyncState->appointment_id }}">
+                                                @if($calendarSyncState->appointment)
+                                                    {{ $calendarSyncState->appointment->patient->full_name ?? 'N/A' }} - 
+                                                    {{ $calendarSyncState->appointment->starts_at ? $calendarSyncState->appointment->starts_at->format('d/m/Y H:i') : 'N/A' }}
+                                                @else
+                                                    Agendamento #{{ $calendarSyncState->appointment_id }}
+                                                @endif
+                                            </option>
+                                        </select>
+                                        <small class="form-text text-muted">O agendamento não pode ser alterado após a criação.</small>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label class="fw-semibold">
+                                            <i class="mdi mdi-cloud me-1"></i>
+                                            Provedor <span class="text-danger">*</span>
+                                        </label>
+                                        <select name="provider" class="form-control @error('provider') is-invalid @enderror" required>
+                                            <option value="">Selecione um provedor</option>
+                                            <option value="google" {{ old('provider', $calendarSyncState->provider) == 'google' ? 'selected' : '' }}>Google Calendar</option>
+                                            <option value="apple" {{ old('provider', $calendarSyncState->provider) == 'apple' ? 'selected' : '' }}>Apple Calendar</option>
+                                        </select>
+                                        @error('provider')
+                                            <div class="invalid-feedback d-block">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {{-- Seção: Sincronização --}}
+                        <div class="mb-4">
+                            <h5 class="mb-3 text-primary">
+                                <i class="mdi mdi-sync me-2"></i>
+                                Dados de Sincronização
+                            </h5>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label class="fw-semibold">
+                                            <i class="mdi mdi-identifier me-1"></i>
+                                            ID Evento Externo
+                                        </label>
+                                        <input type="text" 
+                                               class="form-control @error('external_event_id') is-invalid @enderror" 
+                                               name="external_event_id" 
+                                               value="{{ old('external_event_id', $calendarSyncState->external_event_id) }}"
+                                               placeholder="ID do evento no calendário externo">
+                                        <small class="form-text text-muted">ID do evento no calendário do provedor</small>
+                                        @error('external_event_id')
+                                            <div class="invalid-feedback d-block">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label class="fw-semibold">
+                                            <i class="mdi mdi-clock-outline me-1"></i>
+                                            Última Sincronização
+                                        </label>
+                                        <input type="datetime-local" 
+                                               class="form-control @error('last_sync_at') is-invalid @enderror" 
+                                               name="last_sync_at" 
+                                               value="{{ old('last_sync_at', $calendarSyncState->last_sync_at ? $calendarSyncState->last_sync_at->format('Y-m-d\TH:i') : '') }}">
+                                        <small class="form-text text-muted">Data e hora da última sincronização</small>
+                                        @error('last_sync_at')
+                                            <div class="invalid-feedback d-block">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {{-- Botões de Ação --}}
+                        <div class="d-flex justify-content-between align-items-center pt-3 border-top">
+                            <a href="{{ route('tenant.calendar-sync.index') }}" class="btn btn-light">
+                                <i class="mdi mdi-arrow-left me-1"></i>
+                                Cancelar
+                            </a>
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="mdi mdi-content-save me-1"></i>
+                                Atualizar Estado de Sincronização
+                            </button>
+                        </div>
+                    </form>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+@push('styles')
+<style>
+    .form-group label {
+        font-weight: 600;
+        color: #2c3e50;
+        margin-bottom: 0.5rem;
+    }
+    .card-title {
+        font-weight: 600;
+    }
+    h5.text-primary {
+        font-weight: 600;
+        padding-bottom: 0.5rem;
+        border-bottom: 2px solid #e9ecef;
+    }
+    .btn-lg {
+        padding: 0.75rem 2rem;
+        font-weight: 600;
+    }
+</style>
+@endpush
+
+@endsection

@@ -6,23 +6,36 @@ use Illuminate\Foundation\Http\FormRequest;
 
 class UpdateOptionRequest extends FormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     */
-    public function authorize(): bool
+    public function authorize()
     {
-        return false;
+        return true;
+    }
+
+    public function rules()
+    {
+        return [
+            'label'    => ['required', 'string', 'max:255'],
+            'value'    => ['required', 'string', 'max:255'],
+            'position' => ['nullable', 'integer', 'min:0'],
+        ];
     }
 
     /**
-     * Get the validation rules that apply to the request.
-     *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
+     * Personaliza as mensagens de erro de validação.
      */
-    public function rules(): array
+    public function messages()
     {
         return [
-            //
+            'label.required' => 'O rótulo da opção é obrigatório.',
+            'label.string' => 'O rótulo da opção deve ser uma string válida.',
+            'label.max' => 'O rótulo da opção não pode ter mais que 255 caracteres.',
+
+            'value.required' => 'O valor da opção é obrigatório.',
+            'value.string' => 'O valor da opção deve ser uma string válida.',
+            'value.max' => 'O valor da opção não pode ter mais que 255 caracteres.',
+
+            'position.integer' => 'A posição deve ser um número inteiro.',
+            'position.min' => 'A posição deve ser no mínimo 0.',
         ];
     }
 }

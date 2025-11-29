@@ -20,51 +20,32 @@
         </nav>
     </div>
 
-    <div class="row justify-content-center">
-        <div class="col-lg-8">
+    <div class="row">
+        <div class="col-12 grid-margin stretch-card">
             <div class="card">
                 <div class="card-body">
-                    <h5 class="card-title">Informações Pessoais</h5>
-                    <div class="row mb-3">
-                        <div class="col-md-6">
-                            <p><i class="mdi mdi-identifier"></i> <strong>ID:</strong> {{ $patient->id }}</p>
-                            <p><i class="mdi mdi-account-circle"></i> <strong>Nome Completo:</strong>
-                                {{ $patient->full_name }}</p>
-                            <p><i class="mdi mdi-card-account-details"></i> <strong>CPF:</strong>
-                                {{ $patient->cpf ?? '-' }}</p>
-                        </div>
-                        <div class="col-md-6">
-                            <p><i class="mdi mdi-calendar"></i> <strong>Data de Nascimento:</strong>
-                                {{ $patient->birth_date ? $patient->birth_date->format('d/m/Y') : '-' }}</p>
-                            <p><i class="mdi mdi-email-outline"></i> <strong>E-mail:</strong>
-                                {{ $patient->email ?? '-' }}</p>
-                            <p><i class="mdi mdi-phone"></i> <strong>Telefone:</strong>
-                                {{ $patient->phone ?? '-' }}</p>
-                        </div>
-                    </div>
+                    <h4 class="card-title">Detalhes</h4>
 
-                    <div class="row mb-3">
-                        <div class="col-md-6">
-                            <p><i class="mdi mdi-check-circle-outline"></i> <strong>Status:</strong>
-                                @if ($patient->is_active)
-                                    <span class="badge bg-success">Ativo</span>
-                                @else
-                                    <span class="badge bg-danger">Inativo</span>
-                                @endif
-                            </p>
-                        </div>
-                    </div>
+                    <p><strong>ID:</strong> {{ $patient->id }}</p>
+                    <p><strong>Nome Completo:</strong> {{ $patient->full_name }}</p>
+                    <p><strong>CPF:</strong> {{ $patient->cpf ?? 'N/A' }}</p>
+                    <p><strong>Data de Nascimento:</strong> {{ $patient->birth_date ? $patient->birth_date->format('d/m/Y') : 'N/A' }}</p>
+                    <p><strong>E-mail:</strong> {{ $patient->email ?? 'N/A' }}</p>
+                    <p><strong>Telefone:</strong> {{ $patient->phone ?? 'N/A' }}</p>
+                    <p><strong>Status:</strong> 
+                        @if ($patient->is_active)
+                            <span class="badge bg-success">Ativo</span>
+                        @else
+                            <span class="badge bg-danger">Inativo</span>
+                        @endif
+                    </p>
+                    <p><strong>Criado em:</strong> {{ $patient->created_at }}</p>
 
-                    <!-- Botão de Edição dentro do card e alinhado à direita -->
-                    <div class="text-end mt-4">
-                        <a href="{{ route('tenant.patients.edit', $patient->id) }}" class="btn btn-warning btn-small">
-                            <i class="mdi mdi-pencil"></i> Editar
-                        </a>
-                    </div>
+                    <a href="{{ route('tenant.patients.edit', $patient->id) }}" class="btn btn-warning">Editar</a>
+                    <a href="{{ route('tenant.patients.index') }}" class="btn btn-light">Voltar</a>
                 </div>
             </div>
         </div>
     </div>
 
 @endsection
-

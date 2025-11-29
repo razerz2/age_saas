@@ -21,37 +21,99 @@
     </div>
 
     <div class="row">
-
         <div class="col-12 grid-margin stretch-card">
             <div class="card">
                 <div class="card-body">
+                    <div class="d-flex align-items-center justify-content-between mb-4">
+                        <div>
+                            <h4 class="card-title mb-1">
+                                <i class="mdi mdi-stethoscope text-primary me-2"></i>
+                                Nova Especialidade
+                            </h4>
+                            <p class="card-description mb-0 text-muted">Preencha os dados abaixo para cadastrar uma nova especialidade médica</p>
+                        </div>
+                    </div>
 
-                    <h4 class="card-title">Nova Especialidade</h4>
-                    <p class="card-description"> Preencha os dados abaixo </p>
-
-                    <form method="POST" action="{{ route('tenant.specialties.store') }}" class="forms-sample">
+                    <form class="forms-sample" action="{{ route('tenant.specialties.store') }}" method="POST">
                         @csrf
 
-                        <div class="form-group">
-                            <label>Nome *</label>
-                            <input type="text" name="name" class="form-control" required>
+                        {{-- Seção: Dados da Especialidade --}}
+                        <div class="mb-4">
+                            <h5 class="mb-3 text-primary">
+                                <i class="mdi mdi-information-outline me-2"></i>
+                                Informações da Especialidade
+                            </h5>
+                            <div class="row">
+                                <div class="col-md-8">
+                                    <div class="form-group">
+                                        <label class="fw-semibold">
+                                            <i class="mdi mdi-tag me-1"></i>
+                                            Nome <span class="text-danger">*</span>
+                                        </label>
+                                        <input type="text" class="form-control @error('name') is-invalid @enderror" 
+                                               name="name" value="{{ old('name') }}" 
+                                               placeholder="Ex: Cardiologia, Pediatria, etc." required>
+                                        @error('name')
+                                            <div class="invalid-feedback d-block">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label class="fw-semibold">
+                                            <i class="mdi mdi-barcode me-1"></i>
+                                            Código
+                                        </label>
+                                        <input type="text" class="form-control @error('code') is-invalid @enderror" 
+                                               name="code" value="{{ old('code') }}" 
+                                               maxlength="50" placeholder="Código CBO (opcional)">
+                                        <small class="form-text text-muted">Código CBO da especialidade</small>
+                                        @error('code')
+                                            <div class="invalid-feedback d-block">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+                                </div>
+                            </div>
                         </div>
 
-                        <div class="form-group">
-                            <label>Código</label>
-                            <input type="text" name="code" class="form-control" placeholder="Digite o código">
+                        {{-- Botões de Ação --}}
+                        <div class="d-flex justify-content-between align-items-center pt-3 border-top">
+                            <a href="{{ route('tenant.specialties.index') }}" class="btn btn-light">
+                                <i class="mdi mdi-arrow-left me-1"></i>
+                                Cancelar
+                            </a>
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="mdi mdi-content-save me-1"></i>
+                                Salvar Especialidade
+                            </button>
                         </div>
-
-                        <button type="submit" class="btn btn-primary me-2">Salvar</button>
-                        <a href="{{ route('tenant.specialties.index') }}" class="btn btn-light">Cancelar</a>
-
                     </form>
 
                 </div>
             </div>
         </div>
-
     </div>
 
-@endsection
+@push('styles')
+<style>
+    .form-group label {
+        font-weight: 600;
+        color: #2c3e50;
+        margin-bottom: 0.5rem;
+    }
+    .card-title {
+        font-weight: 600;
+    }
+    h5.text-primary {
+        font-weight: 600;
+        padding-bottom: 0.5rem;
+        border-bottom: 2px solid #e9ecef;
+    }
+    .btn-lg {
+        padding: 0.75rem 2rem;
+        font-weight: 600;
+    }
+</style>
+@endpush
 
+@endsection

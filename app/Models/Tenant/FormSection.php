@@ -7,10 +7,21 @@ use Illuminate\Database\Eloquent\Model;
 
 class FormSection extends Model
 {
+    use HasFactory;
+
+    protected $connection = 'tenant';
+    protected $table = 'form_sections';
+
     public $incrementing = false;
     protected $keyType = 'uuid';
 
-    protected $fillable = ['id','form_id','title','position'];
+    protected $fillable = ['id', 'form_id', 'title', 'position'];
+
+    protected $casts = [
+        'position' => 'integer',
+    ];
+
+    public $timestamps = false;
 
     public function form()
     {

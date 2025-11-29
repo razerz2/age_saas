@@ -17,4 +17,14 @@ class UpdateResponseAnswerRequest extends FormRequest
             'value' => ['nullable'],
         ];
     }
+
+    /**
+     * Personaliza as mensagens de erro de validação.
+     */
+    public function messages()
+    {
+        return [
+            // Esta request não possui validações obrigatórias, mas mantém o padrão de mensagens
+        ];
+    }
 }

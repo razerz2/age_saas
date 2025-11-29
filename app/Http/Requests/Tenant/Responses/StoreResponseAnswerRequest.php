@@ -14,8 +14,19 @@ class StoreResponseAnswerRequest extends FormRequest
     public function rules()
     {
         return [
-            'question_id' => ['required', 'exists:form_questions,id'],
+            'question_id' => ['required', 'exists:tenant.form_questions,id'],
             'value'       => ['nullable'],
+        ];
+    }
+
+    /**
+     * Personaliza as mensagens de erro de validação.
+     */
+    public function messages()
+    {
+        return [
+            'question_id.required' => 'A pergunta é obrigatória.',
+            'question_id.exists' => 'A pergunta selecionada não existe.',
         ];
     }
 }

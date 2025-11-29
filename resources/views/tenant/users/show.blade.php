@@ -24,6 +24,22 @@
         <div class="col-lg-8">
             <div class="card">
                 <div class="card-body">
+                    {{-- ✅ Alertas de sucesso --}}
+                    @if (session('success'))
+                        <div class="alert alert-success alert-dismissible fade show" role="alert">
+                            <i class="mdi mdi-check-circle me-1"></i> {{ session('success') }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    @endif
+
+                    {{-- ❌ Alertas de erro --}}
+                    @if (session('error'))
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            <i class="mdi mdi-alert-circle me-1"></i> {{ session('error') }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    @endif
+
                     <h5 class="card-title">Informações Pessoais</h5>
                     <div class="row mb-3">
                         <div class="col-md-6">
@@ -70,6 +86,40 @@
                             <span>Nenhum módulo atribuído</span>
                         @endif
                     </p>
+
+                    @if (!$user->is_doctor)
+                        <h5 class="card-title mt-4">Permissões de Médicos</h5>
+                        <p><strong>Médicos com acesso:</strong>
+                            @if ($user->allowedDoctors->count() > 0)
+                                <ul class="list-group list-group-flush">
+                                    @foreach ($user->allowedDoctors as $doctor)
+                                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                                            <span>
+                                                <i class="mdi mdi-account-doctor"></i>
+                                                {{ $doctor->user->name ?? 'Médico sem usuário' }}
+                                                @if ($doctor->crm_number)
+                                                    <span class="text-muted">(CRM: {{ $doctor->crm_number }}/{{ $doctor->crm_state }})</span>
+                                                @endif
+                                            </span>
+                                        </li>
+                                    @endforeach
+                                </ul>
+                            @else
+                                <span class="text-muted">Nenhum médico específico atribuído. 
+                                    @if ($user->canViewAllDoctors())
+                                        <span class="badge bg-info">Pode visualizar todos os médicos</span>
+                                    @else
+                                        <span class="badge bg-warning">Sem acesso a médicos</span>
+                                    @endif
+                                </span>
+                            @endif
+                        </p>
+                        <div class="mt-2">
+                            <a href="{{ route('tenant.users.doctor-permissions', $user->id) }}" class="btn btn-sm btn-primary">
+                                <i class="mdi mdi-account-key"></i> Gerenciar Permissões de Médicos
+                            </a>
+                        </div>
+                    @endif
 
                     <!-- Botão de Edição dentro do card e alinhado à direita -->
                     <div class="text-end mt-4">

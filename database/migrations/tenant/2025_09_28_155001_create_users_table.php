@@ -17,6 +17,7 @@ return new class extends Migration
             $table->string('name_full');
             $table->string('telefone');
             $table->string('email')->unique()->nullable();
+            $table->string('avatar')->nullable();
             $table->string('password')->nullable();
             $table->boolean('is_doctor')->default(false);
             $table->enum('status', ['active', 'blocked'])->default('active');

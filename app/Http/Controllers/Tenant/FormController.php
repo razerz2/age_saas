@@ -38,10 +38,17 @@ class FormController extends Controller
 
     public function create()
     {
-        $specialties = MedicalSpecialty::orderBy('name')->get();
         $doctors = Doctor::with('user')->orderBy('id')->get();
 
-        return view('tenant.forms.create', compact('specialties', 'doctors'));
+        return view('tenant.forms.create', compact('doctors'));
+    }
+
+    public function getSpecialtiesByDoctor($doctorId)
+    {
+        $doctor = Doctor::with('specialties')->findOrFail($doctorId);
+        $specialties = $doctor->specialties()->orderBy('name')->get();
+
+        return response()->json($specialties);
     }
 
     public function store(StoreFormRequest $request)
@@ -55,33 +62,85 @@ class FormController extends Controller
             ->with('success', 'Formulário criado com sucesso.');
     }
 
-    public function edit(Form $form)
+    public function show($id)
     {
+        $form = Form::with(['specialty', 'doctor.user'])->findOrFail($id);
+        $sectionsCount = $form->sections()->count();
+        $questionsCount = $form->questions()->count();
+
+        return view('tenant.forms.show', compact('form', 'sectionsCount', 'questionsCount'));
+    }
+
+    public function preview($id)
+    {
+        $form = Form::findOrFail($id);
         $form->load([
             'sections.questions.options',
             'specialty',
             'doctor.user'
         ]);
 
-        $specialties = MedicalSpecialty::orderBy('name')->get();
-        $doctors = Doctor::with('user')->orderBy('id')->get();
-
-        return view('tenant.forms.edit', compact('form', 'specialties', 'doctors'));
+        return view('tenant.forms.preview', compact('form'));
     }
 
-    public function update(UpdateFormRequest $request, Form $form)
+    public function builder($id)
     {
+        $form = Form::findOrFail($id);
+        $form->load([
+            'sections.questions.options',
+            'specialty',
+            'doctor.user'
+        ]);
+
+        return view('tenant.forms.builder', compact('form'));
+    }
+
+    public function edit($id)
+    {
+        $form = Form::findOrFail($id);
+        $form->load([
+            'sections.questions.options',
+            'specialty',
+            'doctor.user',
+            'doctor.specialties'
+        ]);
+
+        $doctors = Doctor::with('user')->orderBy('id')->get();
+
+        return view('tenant.forms.edit', compact('form', 'doctors'));
+    }
+
+    public function update(UpdateFormRequest $request, $id)
+    {
+        $form = Form::findOrFail($id);
         $form->update($request->validated());
 
         return back()->with('success', 'Formulário atualizado com sucesso.');
     }
 
-    public function destroy(Form $form)
+    public function destroy($id)
     {
+        $form = Form::findOrFail($id);
+        $formName = $form->name;
         $form->delete();
 
         return redirect()->route('tenant.forms.index')
-            ->with('success', 'Formulário removido.');
+            ->with('success', "Formulário '{$formName}' removido com sucesso.");
+    }
+
+    public function clearContent($id)
+    {
+        $form = Form::findOrFail($id);
+        
+        // Deletar todas as perguntas do formulário (isso deleta automaticamente as opções via cascade)
+        // Isso inclui perguntas com e sem seção
+        $form->questions()->delete();
+        
+        // Deletar todas as seções (agora que não há mais perguntas relacionadas)
+        $form->sections()->delete();
+
+        return redirect()->route('tenant.forms.index')
+            ->with('success', "Conteúdo do formulário '{$form->name}' removido com sucesso. O formulário foi mantido.");
     }
 
 
@@ -90,8 +149,9 @@ class FormController extends Controller
      *            SECTIONS
      * ------------------------------ */
 
-    public function addSection(AddSectionRequest $request, Form $form)
+    public function addSection(AddSectionRequest $request, $id)
     {
+        $form = Form::findOrFail($id);
         $data = $request->validated();
 
         $section = FormSection::create([
@@ -104,15 +164,17 @@ class FormController extends Controller
         return response()->json(['section' => $section], 201);
     }
 
-    public function updateSection(UpdateSectionRequest $request, FormSection $section)
+    public function updateSection(UpdateSectionRequest $request, $id)
     {
+        $section = FormSection::findOrFail($id);
         $section->update($request->validated());
 
         return response()->json(['section' => $section]);
     }
 
-    public function deleteSection(FormSection $section)
+    public function deleteSection($id)
     {
+        $section = FormSection::findOrFail($id);
         $section->delete();
 
         return response()->json(['message' => 'Section removida com sucesso.']);
@@ -124,14 +186,31 @@ class FormController extends Controller
      *            QUESTIONS
      * ------------------------------ */
 
-    public function addQuestion(AddQuestionRequest $request, Form $form)
+    public function addQuestion(AddQuestionRequest $request, $id)
     {
+        $form = Form::findOrFail($id);
         $data = $request->validated();
+
+        // Garantir que section_id seja null se estiver vazio
+        $sectionId = !empty($data['section_id']) ? $data['section_id'] : null;
+        
+        // Se section_id foi fornecido, verificar se a seção pertence ao formulário
+        if ($sectionId) {
+            $section = FormSection::where('id', $sectionId)
+                ->where('form_id', $form->id)
+                ->first();
+            
+            if (!$section) {
+                return response()->json([
+                    'message' => 'A seção selecionada não pertence a este formulário.'
+                ], 422);
+            }
+        }
 
         $question = FormQuestion::create([
             'id'        => Str::uuid(),
             'form_id'   => $form->id,
-            'section_id' => $data['section_id'] ?? null,
+            'section_id' => $sectionId,
             'label'     => $data['label'],
             'help_text' => $data['help_text'] ?? null,
             'type'      => $data['type'],
@@ -142,15 +221,17 @@ class FormController extends Controller
         return response()->json(['question' => $question], 201);
     }
 
-    public function updateQuestion(UpdateQuestionRequest $request, FormQuestion $question)
+    public function updateQuestion(UpdateQuestionRequest $request, $id)
     {
+        $question = FormQuestion::findOrFail($id);
         $question->update($request->validated());
 
         return response()->json(['question' => $question]);
     }
 
-    public function deleteQuestion(FormQuestion $question)
+    public function deleteQuestion($id)
     {
+        $question = FormQuestion::findOrFail($id);
         $question->delete();
 
         return response()->json(['message' => 'Pergunta removida com sucesso.']);
@@ -162,8 +243,9 @@ class FormController extends Controller
      *            OPTIONS
      * ------------------------------ */
 
-    public function addOption(AddOptionRequest $request, FormQuestion $question)
+    public function addOption(AddOptionRequest $request, $id)
     {
+        $question = FormQuestion::findOrFail($id);
         $data = $request->validated();
 
         $option = QuestionOption::create([
@@ -177,15 +259,17 @@ class FormController extends Controller
         return response()->json(['option' => $option], 201);
     }
 
-    public function updateOption(UpdateOptionRequest $request, QuestionOption $option)
+    public function updateOption(UpdateOptionRequest $request, $id)
     {
+        $option = QuestionOption::findOrFail($id);
         $option->update($request->validated());
 
         return response()->json(['option' => $option]);
     }
 
-    public function deleteOption(QuestionOption $option)
+    public function deleteOption($id)
     {
+        $option = QuestionOption::findOrFail($id);
         $option->delete();
 
         return response()->json(['message' => 'Opção removida com sucesso.']);

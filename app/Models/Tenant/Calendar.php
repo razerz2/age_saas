@@ -7,10 +7,17 @@ use Illuminate\Database\Eloquent\Model;
 
 class Calendar extends Model
 {
+    use HasFactory;
+
+    protected $connection = 'tenant';
+    protected $table = 'calendars';
+
     public $incrementing = false;
     protected $keyType = 'uuid';
 
-    protected $fillable = ['id','doctor_id','name','external_id'];
+    protected $fillable = ['id', 'doctor_id', 'name', 'external_id'];
+
+    public $timestamps = true;
 
     public function doctor()
     {

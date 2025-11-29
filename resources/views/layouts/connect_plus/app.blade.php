@@ -17,6 +17,8 @@
     <link rel="shortcut icon" href="{{ asset('connect_plus/assets/images/favicon.png') }}">
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.5/css/dataTables.bootstrap5.min.css">
 
+    @stack('styles')
+
 </head>
 
 <body>

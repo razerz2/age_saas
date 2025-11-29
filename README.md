@@ -1,66 +1,422 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# 🏥 Sistema de Agendamento SaaS
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Sistema SaaS (Software as a Service) de agendamento médico construído com Laravel 10, utilizando arquitetura multitenancy com banco de dados separado por tenant. Cada clínica possui seu próprio banco de dados PostgreSQL isolado, garantindo total separação de dados.
 
-## About Laravel
+## 📋 Índice
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+- [Características](#-características)
+- [Tecnologias](#-tecnologias)
+- [Requisitos](#-requisitos)
+- [Instalação](#-instalação)
+- [Configuração](#-configuração)
+- [Estrutura do Projeto](#-estrutura-do-projeto)
+- [Uso](#-uso)
+- [Arquitetura Multitenant](#-arquitetura-multitenant)
+- [Integrações](#-integrações)
+- [Desenvolvimento](#-desenvolvimento)
+- [Documentação Adicional](#-documentação-adicional)
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## ✨ Características
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+### Área Platform (Administrativa)
+- ✅ Gerenciamento de tenants (clínicas)
+- ✅ Gestão de planos de assinatura
+- ✅ Controle de assinaturas e renovações
+- ✅ Gerenciamento de faturas
+- ✅ Sistema de notificações
+- ✅ Catálogo de especialidades médicas
+- ✅ Gestão de usuários administrativos
+- ✅ Configurações do sistema
+- ✅ Integração com gateway de pagamento (Asaas)
+- ✅ Envio de mensagens WhatsApp
+- ✅ Monitor de kiosk
 
-## Learning Laravel
+### Área Tenant (Clínicas)
+- ✅ Dashboard com estatísticas
+- ✅ Gerenciamento de usuários
+- ✅ Cadastro de médicos e especialidades
+- ✅ Cadastro de pacientes
+- ✅ Calendários de agendamento
+- ✅ Horários comerciais
+- ✅ Tipos de consulta
+- ✅ Agendamentos
+- ✅ Formulários personalizados
+- ✅ Respostas de formulários
+- ✅ Integrações (Google Calendar, etc.)
+- ✅ Sincronização de calendário
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+## 🛠 Tecnologias
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+- **Backend**: PHP 8.1+, Laravel 10
+- **Banco de Dados**: PostgreSQL
+- **Multitenancy**: Spatie Laravel Multitenancy 3.2
+- **Autenticação**: Laravel Breeze + Laravel Sanctum
+- **Frontend**: Blade Templates, TailwindCSS, Alpine.js
+- **Build Tools**: Vite
+- **Testes**: Pest PHP
+- **Integrações**: 
+  - Asaas (Gateway de pagamento)
+  - WhatsApp Business API (Meta)
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+## 📦 Requisitos
 
-## Laravel Sponsors
+- PHP >= 8.1
+- Composer
+- Node.js >= 18 e npm
+- PostgreSQL >= 12
+- Extensões PHP:
+  - BCMath
+  - Ctype
+  - Fileinfo
+  - JSON
+  - Mbstring
+  - OpenSSL
+  - PDO
+  - PDO_PGSQL
+  - Tokenizer
+  - XML
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+## 🚀 Instalação
 
-### Premium Partners
+### 1. Clone o repositório
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[WebReinvent](https://webreinvent.com/)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Jump24](https://jump24.co.uk)**
-- **[Redberry](https://redberry.international/laravel/)**
-- **[Active Logic](https://activelogic.com)**
-- **[byte5](https://byte5.de)**
-- **[OP.GG](https://op.gg)**
+```bash
+git clone <url-do-repositorio>
+cd agendamento-saas
+```
 
-## Contributing
+### 2. Instale as dependências PHP
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+```bash
+composer install
+```
 
-## Code of Conduct
+### 3. Instale as dependências Node.js
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+```bash
+npm install
+```
 
-## Security Vulnerabilities
+### 4. Configure o ambiente
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+Copie o arquivo `.env.example` para `.env` (se existir) ou crie um novo:
 
-## License
+```bash
+cp .env.example .env
+```
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+Gere a chave da aplicação:
+
+```bash
+php artisan key:generate
+```
+
+### 5. Configure o banco de dados
+
+Edite o arquivo `.env` e configure as variáveis de banco de dados (veja seção [Configuração](#-configuração)).
+
+### 6. Execute as migrações
+
+```bash
+php artisan migrate
+```
+
+### 7. Execute os seeders (opcional)
+
+```bash
+php artisan db:seed
+```
+
+### 8. Compile os assets
+
+Para desenvolvimento:
+
+```bash
+npm run dev
+```
+
+Para produção:
+
+```bash
+npm run build
+```
+
+### 9. Inicie o servidor
+
+```bash
+php artisan serve
+```
+
+## ⚙️ Configuração
+
+### Variáveis de Ambiente
+
+Crie ou edite o arquivo `.env` com as seguintes configurações:
+
+#### Aplicação
+
+```env
+APP_NAME="Agendamento SaaS"
+APP_ENV=local
+APP_KEY=base64:...
+APP_DEBUG=true
+APP_URL=http://localhost
+```
+
+#### Banco de Dados (Landlord - Central)
+
+```env
+DB_CONNECTION=pgsql
+DB_HOST=127.0.0.1
+DB_PORT=5432
+DB_DATABASE=agendamento_landlord
+DB_USERNAME=postgres
+DB_PASSWORD=sua_senha
+```
+
+#### Banco de Dados (Tenants)
+
+```env
+DB_TENANT_HOST=127.0.0.1
+DB_TENANT_PORT=5432
+```
+
+**Nota**: O nome do banco, usuário e senha de cada tenant são gerados automaticamente durante a criação do tenant.
+
+#### Integração Asaas (Gateway de Pagamento)
+
+```env
+ASAAS_API_URL=https://sandbox.asaas.com/api/v3/
+ASAAS_API_KEY=sua_chave_api
+ASAAS_WEBHOOK_SECRET=seu_secret_webhook
+ASAAS_ENV=sandbox
+```
+
+#### Integração WhatsApp (Meta)
+
+```env
+WHATSAPP_API_URL=https://graph.facebook.com/v18.0
+WHATSAPP_TOKEN=seu_token
+WHATSAPP_PHONE_ID=seu_phone_id
+META_ACCESS_TOKEN=seu_token_meta
+META_PHONE_NUMBER_ID=seu_phone_number_id
+```
+
+#### Email
+
+```env
+MAIL_MAILER=smtp
+MAIL_HOST=smtp.mailtrap.io
+MAIL_PORT=2525
+MAIL_USERNAME=seu_usuario
+MAIL_PASSWORD=sua_senha
+MAIL_ENCRYPTION=tls
+MAIL_FROM_ADDRESS=noreply@exemplo.com
+MAIL_FROM_NAME="${APP_NAME}"
+```
+
+#### Multitenancy
+
+```env
+APP_DOMAIN=app.exemplo.com
+```
+
+### Configuração de Webhook Asaas
+
+Para receber notificações do Asaas, configure o webhook apontando para:
+
+```
+POST https://seu-dominio.com/webhook/asaas
+```
+
+O webhook valida o token usando o middleware `verify.asaas.token`. Gere um token seguro:
+
+```bash
+php artisan asaas:webhook-token
+```
+
+## 📁 Estrutura do Projeto
+
+```
+agendamento-saas/
+├── app/
+│   ├── Console/Commands/          # Comandos Artisan
+│   ├── Http/
+│   │   ├── Controllers/
+│   │   │   ├── Platform/          # Controllers da área administrativa
+│   │   │   ├── Tenant/            # Controllers da área do tenant
+│   │   │   └── Webhook/           # Controllers de webhooks
+│   │   ├── Middleware/            # Middlewares customizados
+│   │   └── Requests/              # Form Requests (validação)
+│   ├── Models/
+│   │   ├── Platform/              # Models do banco central
+│   │   └── Tenant/                # Models do banco do tenant
+│   ├── Services/                  # Serviços de negócio
+│   │   ├── AsaasService.php       # Integração Asaas
+│   │   ├── TenantProvisioner.php  # Criação/remoção de tenants
+│   │   └── WhatsAppService.php    # Integração WhatsApp
+│   └── TenantFinder/               # Identificação de tenant
+├── config/
+│   ├── multitenancy.php           # Configuração multitenancy
+│   └── database.php               # Conexões de banco
+├── database/
+│   ├── migrations/                # Migrações do banco central
+│   │   └── tenant/                # Migrações dos tenants
+│   └── seeders/                   # Seeders
+├── routes/
+│   ├── web.php                    # Rotas da Platform
+│   ├── tenant.php                 # Rotas dos Tenants
+│   └── api.php                    # Rotas da API
+└── resources/views/                # Views Blade
+```
+
+Para mais detalhes sobre a arquitetura, consulte [ARQUITETURA.md](ARQUITETURA.md).
+
+## 🎯 Uso
+
+### Acessando a Platform
+
+1. Acesse: `http://localhost/Platform/dashboard`
+2. Faça login com um usuário administrativo
+3. Gerencie tenants, planos, assinaturas e faturas
+
+### Criando um Tenant
+
+1. Na área Platform, acesse **Tenants** → **Criar**
+2. Preencha os dados da clínica
+3. O sistema criará automaticamente:
+   - Banco de dados PostgreSQL
+   - Usuário do banco
+   - Estrutura de tabelas (migrations)
+   - Usuário admin padrão
+
+### Acessando um Tenant
+
+1. Acesse: `http://localhost/t/{subdomain}/login`
+2. Faça login com as credenciais do tenant
+3. Após o login, você será redirecionado para `/tenant/dashboard`
+
+### Primeiro Acesso
+
+Após criar um tenant, use as credenciais padrão:
+- **Email**: admin@{subdomain}
+- **Senha**: Verifique o seeder `TenantAdminSeeder`
+
+## 🏢 Arquitetura Multitenant
+
+O sistema utiliza **multitenancy com banco de dados separado** (database-per-tenant):
+
+- **Banco Central (Landlord)**: PostgreSQL com dados da plataforma
+- **Bancos dos Tenants**: Cada tenant possui seu próprio banco PostgreSQL isolado
+
+### Fluxo de Detecção do Tenant
+
+1. Request chega em `/t/{tenant}/login`
+2. `PathTenantFinder` detecta o tenant pelo path
+3. `SwitchTenantTask` configura a conexão dinâmica
+4. Middleware persiste o tenant na sessão
+5. Request continua com tenant ativo
+
+### Autenticação Dual
+
+- **Guard `web`**: Usuários da platform (`App\Models\Platform\User`)
+- **Guard `tenant`**: Usuários dos tenants (`App\Models\Tenant\User`)
+
+Para mais detalhes técnicos, consulte [ARQUITETURA.md](ARQUITETURA.md).
+
+## 🔌 Integrações
+
+### Asaas (Gateway de Pagamento)
+
+O sistema integra com o Asaas para:
+- Criação de clientes
+- Gerenciamento de assinaturas
+- Geração de faturas
+- Recebimento de webhooks de pagamento
+
+### WhatsApp Business API
+
+Integração com Meta para envio de:
+- Notificações de agendamento
+- Lembretes
+- Notificações de faturas
+
+### Google Calendar (Futuro)
+
+Sincronização de calendários com Google Calendar.
+
+## 💻 Desenvolvimento
+
+### Comandos Úteis
+
+```bash
+# Executar testes
+php artisan test
+
+# Formatar código
+./vendor/bin/pest --testdox
+
+# Limpar cache
+php artisan cache:clear
+php artisan config:clear
+php artisan route:clear
+php artisan view:clear
+
+# Executar migrations
+php artisan migrate
+
+# Criar um tenant manualmente (via tinker)
+php artisan tinker
+>>> $tenant = App\Models\Platform\Tenant::create([...]);
+>>> App\Services\TenantProvisioner::createDatabase($tenant);
+```
+
+### Estrutura de Testes
+
+Os testes estão em `tests/` usando Pest PHP:
+
+```bash
+php artisan test
+```
+
+### Code Style
+
+O projeto utiliza Laravel Pint para formatação:
+
+```bash
+./vendor/bin/pint
+```
+
+## 📚 Documentação Adicional
+
+- [ARQUITETURA.md](ARQUITETURA.md) - Documentação técnica detalhada da arquitetura
+- [ENV.md](ENV.md) - Guia completo de variáveis de ambiente
+- [Laravel Documentation](https://laravel.com/docs/10.x)
+- [Spatie Multitenancy](https://spatie.be/docs/laravel-multitenancy)
+
+## 🔐 Segurança
+
+- Isolamento de dados por tenant (banco separado)
+- Autenticação separada para platform e tenant
+- Validação de tenant em cada request
+- Controle de acesso por módulos
+- Webhook seguro com validação de token
+
+## 📝 Licença
+
+Este projeto é proprietário. Todos os direitos reservados.
+
+## 👥 Contribuindo
+
+1. Crie uma branch para sua feature (`git checkout -b feature/nova-feature`)
+2. Commit suas mudanças (`git commit -m 'Adiciona nova feature'`)
+3. Push para a branch (`git push origin feature/nova-feature`)
+4. Abra um Pull Request
+
+## 🐛 Suporte
+
+Para suporte, entre em contato com a equipe de desenvolvimento.
+
+---
+
+**Desenvolvido com ❤️ usando Laravel**

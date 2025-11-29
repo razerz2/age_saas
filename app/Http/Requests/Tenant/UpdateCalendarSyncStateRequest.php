@@ -19,4 +19,20 @@ class UpdateCalendarSyncStateRequest extends FormRequest
             'last_sync_at'     => ['nullable', 'date'],
         ];
     }
+
+    /**
+     * Personaliza as mensagens de erro de validação.
+     */
+    public function messages()
+    {
+        return [
+            'external_event_id.string' => 'O ID do evento externo deve ser uma string válida.',
+            'external_event_id.max' => 'O ID do evento externo não pode ter mais que 255 caracteres.',
+
+            'provider.required' => 'O provedor é obrigatório.',
+            'provider.in' => 'O provedor deve ser "google" ou "apple".',
+
+            'last_sync_at.date' => 'A data da última sincronização deve ser uma data válida.',
+        ];
+    }
 }

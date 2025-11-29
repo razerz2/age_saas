@@ -101,7 +101,20 @@ class TenantProvisioner
             Log::info("🟢 Usuário admin criado para tenant {$tenant->id}");
 
             // --------------------------------------------------------------------
-            // 6. Finalização
+            // 6. Copiar especialidades médicas do catálogo da platform
+            // --------------------------------------------------------------------
+            Log::info("🏥 Copiando especialidades médicas do catálogo...");
+
+            Artisan::call('db:seed', [
+                '--database' => 'tenant',
+                '--class'    => 'Database\\Seeders\\Tenant\\TenantMedicalSpecialtiesSeeder',
+                '--force'    => true,
+            ]);
+
+            Log::info("🟢 Especialidades médicas copiadas para tenant {$tenant->id}");
+
+            // --------------------------------------------------------------------
+            // 7. Finalização
             // --------------------------------------------------------------------
             Log::info("🏁 Banco do tenant criado com sucesso!", [
                 'tenant_id' => $tenant->id,

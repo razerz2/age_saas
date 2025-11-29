@@ -13,6 +13,7 @@ class EnsureCorrectGuard
     {
         $isTenantLogin = $request->segment(1) === 't';
         $isTenantArea  = $request->segment(1) === 'tenant';
+        $isPatientPortal = $request->segment(1) === 'paciente';
 
         /**
          * LOGIN TENANT
@@ -26,6 +27,25 @@ class EnsureCorrectGuard
             }
 
             Auth::shouldUse('tenant');
+
+            return $next($request);
+        }
+
+        /**
+         * PORTAL DO PACIENTE
+         * /paciente/...
+         */
+        if ($isPatientPortal) {
+
+            // Impede conflito com outros guards
+            if (Auth::guard('web')->check()) {
+                Auth::guard('web')->logout();
+            }
+            if (Auth::guard('tenant')->check()) {
+                Auth::guard('tenant')->logout();
+            }
+
+            Auth::shouldUse('patient');
 
             return $next($request);
         }

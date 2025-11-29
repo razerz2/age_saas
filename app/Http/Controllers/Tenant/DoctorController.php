@@ -22,7 +22,11 @@ class DoctorController extends Controller
 
     public function create()
     {
-        $users = User::orderBy('name')->get();
+        // Buscar apenas usuários que não possuem vínculo com médico
+        $users = User::whereDoesntHave('doctor')
+            ->orderBy('name')
+            ->get();
+        
         $specialties = MedicalSpecialty::orderBy('name')->get();
 
         return view('tenant.doctors.create', compact('users', 'specialties'));
@@ -49,23 +53,33 @@ class DoctorController extends Controller
             ->with('success', 'Médico cadastrado com sucesso.');
     }
 
-    public function show(Doctor $doctor)
+    public function show($id)
     {
+        $doctor = Doctor::findOrFail($id);
         $doctor->load(['user', 'specialties']);
         return view('tenant.doctors.show', compact('doctor'));
     }
 
-    public function edit(Doctor $doctor)
+    public function edit($id)
     {
-        $users = User::orderBy('name')->get();
+        $doctor = Doctor::findOrFail($id);
+        
+        // Buscar usuários que não possuem vínculo com médico, 
+        // OU o usuário atual deste médico (para permitir manter o mesmo usuário)
+        $users = User::where(function ($query) use ($doctor) {
+            $query->whereDoesntHave('doctor')
+                  ->orWhere('id', $doctor->user_id);
+        })->orderBy('name')->get();
+        
         $specialties = MedicalSpecialty::orderBy('name')->get();
         $doctor->load('specialties');
 
         return view('tenant.doctors.edit', compact('doctor', 'users', 'specialties'));
     }
 
-    public function update(UpdateDoctorRequest $request, Doctor $doctor)
+    public function update(UpdateDoctorRequest $request, $id)
     {
+        $doctor = Doctor::findOrFail($id);
         $data = $request->validated();
 
         $doctor->update([
@@ -85,11 +99,19 @@ class DoctorController extends Controller
             ->with('success', 'Médico atualizado com sucesso.');
     }
 
-    public function destroy(Doctor $doctor)
+    public function destroy($id)
     {
+        $doctor = Doctor::findOrFail($id);
+
+        // Verificar se o médico possui atendimentos
+        if ($doctor->hasAppointments()) {
+            return redirect()->route('tenant.doctors.index')
+                ->with('error', 'Não é possível excluir o médico pois ele possui atendimentos cadastrados.');
+        }
+
         $doctor->delete();
 
         return redirect()->route('tenant.doctors.index')
-            ->with('success', 'Médico removido.');
+            ->with('success', 'Médico removido com sucesso.');
     }
 }

@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Tenant;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class StoreUserRequest extends FormRequest
 {
@@ -16,10 +17,67 @@ class StoreUserRequest extends FormRequest
         return [
             'name'       => ['required', 'string', 'max:255'],
             'name_full'  => ['required', 'string', 'max:255'],
-            'email'      => ['required', 'email', 'unique:users,email'],
-            'password'   => ['required', 'min:6'],
+            'telefone'   => ['required', 'string', 'max:255'],
+            'email'      => ['nullable', 'email', Rule::unique('tenant.users', 'email')],
+            'password'   => ['nullable', 'string', 'min:6'],
+            'password_confirmation' => ['nullable', 'string'],
+            'avatar'     => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif', 'max:2048'],
+            'is_doctor' => ['nullable', 'boolean'],
             'status'     => ['required', 'in:active,blocked'],
             'modules'    => ['nullable', 'array'],
+        ];
+    }
+
+    /**
+     * Validação adicional para confirmação de senha.
+     */
+    public function withValidator($validator)
+    {
+        $validator->after(function ($validator) {
+            $password = $this->input('password');
+            
+            // Se a senha foi informada, valida a confirmação
+            if (!empty($password)) {
+                if ($password !== $this->input('password_confirmation')) {
+                    $validator->errors()->add('password_confirmation', 'A confirmação da senha não coincide.');
+                }
+            }
+        });
+    }
+
+    /**
+     * Personaliza as mensagens de erro de validação.
+     */
+    public function messages()
+    {
+        return [
+            'name.required' => 'O nome de exibição é obrigatório.',
+            'name.string' => 'O nome de exibição deve ser uma string válida.',
+            'name.max' => 'O nome de exibição não pode ter mais que 255 caracteres.',
+
+            'name_full.required' => 'O nome completo é obrigatório.',
+            'name_full.string' => 'O nome completo deve ser uma string válida.',
+            'name_full.max' => 'O nome completo não pode ter mais que 255 caracteres.',
+
+            'telefone.required' => 'O telefone é obrigatório.',
+            'telefone.string' => 'O telefone deve ser uma string válida.',
+            'telefone.max' => 'O telefone não pode ter mais que 255 caracteres.',
+
+            'email.email' => 'Por favor, insira um e-mail válido.',
+            'email.unique' => 'Este e-mail já está em uso.',
+
+            'password.min' => 'A senha deve ter pelo menos 6 caracteres.',
+
+            'avatar.image' => 'O arquivo deve ser uma imagem.',
+            'avatar.mimes' => 'A imagem deve ser do tipo: jpeg, png, jpg ou gif.',
+            'avatar.max' => 'A imagem não pode ter mais de 2MB.',
+
+            'is_doctor.boolean' => 'O campo "É médico?" deve ser verdadeiro ou falso.',
+
+            'status.required' => 'O status é obrigatório.',
+            'status.in' => 'O status deve ser "ativo" ou "bloqueado".',
+
+            'modules.array' => 'Os módulos devem ser passados como um array.',
         ];
     }
 }

@@ -45,6 +45,10 @@ return [
             'provider' => 'tenant_users',
             'login' => '/t/{tenant}/login',
         ],
+        'patient' => [
+            'driver' => 'session',
+            'provider' => 'patient_logins',
+        ],
 
     ],
 
@@ -74,6 +78,11 @@ return [
         'tenant_users' => [
             'driver' => 'eloquent',
             'model' => App\Models\Tenant\User::class, // ✅ modelo da tenant
+        ],
+
+        'patient_logins' => [
+            'driver' => 'eloquent',
+            'model' => App\Models\Tenant\PatientLogin::class,
         ],
 
         // 'users' => [

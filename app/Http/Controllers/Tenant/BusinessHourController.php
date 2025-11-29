@@ -13,60 +13,90 @@ class BusinessHourController extends Controller
 {
     public function index()
     {
-        $hours = BusinessHour::with('doctor.user')
+        $businessHours = BusinessHour::with('doctor.user')
             ->orderBy('weekday')
             ->orderBy('start_time')
             ->paginate(20);
 
-        return view('tenant.business_hours.index', compact('hours'));
+        return view('tenant.business-hours.index', compact('businessHours'));
     }
 
     public function create()
     {
         $doctors = Doctor::with('user')->orderBy('id')->get();
 
-        return view('tenant.business_hours.create', compact('doctors'));
+        return view('tenant.business-hours.create', compact('doctors'));
     }
 
     public function store(StoreBusinessHourRequest $request)
     {
         $data = $request->validated();
-        $data['id'] = Str::uuid();
+        $weekdays = $data['weekdays'];
+        $doctorId = $data['doctor_id'];
+        $startTime = $data['start_time'];
+        $endTime = $data['end_time'];
 
-        BusinessHour::create($data);
+        $createdCount = 0;
+        foreach ($weekdays as $weekday) {
+            // Verificar se já existe um horário para este médico, dia e horário
+            $exists = BusinessHour::where('doctor_id', $doctorId)
+                ->where('weekday', $weekday)
+                ->where('start_time', $startTime)
+                ->where('end_time', $endTime)
+                ->exists();
 
-        return redirect()->route('tenant.business_hours.index')
-            ->with('success', 'Horário de atendimento criado com sucesso.');
+            if (!$exists) {
+                BusinessHour::create([
+                    'id' => Str::uuid(),
+                    'doctor_id' => $doctorId,
+                    'weekday' => $weekday,
+                    'start_time' => $startTime,
+                    'end_time' => $endTime,
+                ]);
+                $createdCount++;
+            }
+        }
+
+        $message = $createdCount > 0 
+            ? "Horário de atendimento criado com sucesso para {$createdCount} dia(s)."
+            : "Nenhum horário foi criado. Os horários selecionados já existem.";
+
+        return redirect()->route('tenant.business-hours.index')
+            ->with('success', $message);
     }
 
-    public function show(BusinessHour $businessHour)
+    public function show($id)
     {
+        $businessHour = BusinessHour::findOrFail($id);
         $businessHour->load('doctor.user');
 
-        return view('tenant.business_hours.show', compact('businessHour'));
+        return view('tenant.business-hours.show', compact('businessHour'));
     }
 
-    public function edit(BusinessHour $businessHour)
+    public function edit($id)
     {
+        $businessHour = BusinessHour::findOrFail($id);
         $doctors = Doctor::with('user')->orderBy('id')->get();
         $businessHour->load('doctor');
 
-        return view('tenant.business_hours.edit', compact('businessHour', 'doctors'));
+        return view('tenant.business-hours.edit', compact('businessHour', 'doctors'));
     }
 
-    public function update(UpdateBusinessHourRequest $request, BusinessHour $businessHour)
+    public function update(UpdateBusinessHourRequest $request, $id)
     {
+        $businessHour = BusinessHour::findOrFail($id);
         $businessHour->update($request->validated());
 
-        return redirect()->route('tenant.business_hours.index')
+        return redirect()->route('tenant.business-hours.index')
             ->with('success', 'Horário atualizado com sucesso.');
     }
 
-    public function destroy(BusinessHour $businessHour)
+    public function destroy($id)
     {
+        $businessHour = BusinessHour::findOrFail($id);
         $businessHour->delete();
 
-        return redirect()->route('tenant.business_hours.index')
+        return redirect()->route('tenant.business-hours.index')
             ->with('success', 'Horário removido.');
     }
 }

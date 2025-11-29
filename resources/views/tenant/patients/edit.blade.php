@@ -20,60 +20,151 @@
         </nav>
     </div>
 
-    <div class="row justify-content-center">
-        <div class="col-lg-8">
+    <div class="row">
+        <div class="col-12 grid-margin stretch-card">
             <div class="card">
                 <div class="card-body">
-                    <h4 class="card-title">Editar Dados</h4>
-                    <p class="card-description"> Atualize as informações abaixo </p>
+                    <div class="d-flex align-items-center justify-content-between mb-4">
+                        <div>
+                            <h4 class="card-title mb-1">
+                                <i class="mdi mdi-account-edit text-primary me-2"></i>
+                                Editar Paciente
+                            </h4>
+                            <p class="card-description mb-0 text-muted">Atualize as informações do paciente abaixo</p>
+                        </div>
+                    </div>
 
-                    <form method="POST" action="{{ route('tenant.patients.update', $patient->id) }}" class="forms-sample">
+                    <form class="forms-sample" action="{{ route('tenant.patients.update', $patient->id) }}" method="POST">
                         @csrf
                         @method('PUT')
 
-                        <div class="form-group mb-3">
-                            <label for="full_name">Nome Completo *</label>
-                            <input id="full_name" type="text" name="full_name" class="form-control"
-                                value="{{ $patient->full_name }}" placeholder="Digite o nome completo" required>
+                        {{-- Seção: Dados Pessoais --}}
+                        <div class="mb-4">
+                            <h5 class="mb-3 text-primary">
+                                <i class="mdi mdi-account-outline me-2"></i>
+                                Dados Pessoais
+                            </h5>
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <div class="form-group">
+                                        <label class="fw-semibold">
+                                            <i class="mdi mdi-account me-1"></i>
+                                            Nome Completo <span class="text-danger">*</span>
+                                        </label>
+                                        <input type="text" class="form-control @error('full_name') is-invalid @enderror" 
+                                               name="full_name" value="{{ old('full_name', $patient->full_name) }}" 
+                                               placeholder="Digite o nome completo do paciente" required>
+                                        @error('full_name')
+                                            <div class="invalid-feedback d-block">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label class="fw-semibold">
+                                            <i class="mdi mdi-card-account-details me-1"></i>
+                                            CPF <span class="text-danger">*</span>
+                                        </label>
+                                        <input type="text" class="form-control @error('cpf') is-invalid @enderror" 
+                                               name="cpf" value="{{ old('cpf', $patient->cpf) }}" 
+                                               maxlength="14" placeholder="000.000.000-00" required>
+                                        @error('cpf')
+                                            <div class="invalid-feedback d-block">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label class="fw-semibold">
+                                            <i class="mdi mdi-calendar me-1"></i>
+                                            Data de Nascimento
+                                        </label>
+                                        <input type="date" class="form-control @error('birth_date') is-invalid @enderror" 
+                                               name="birth_date" value="{{ old('birth_date', $patient->birth_date ? $patient->birth_date->format('Y-m-d') : '') }}">
+                                        @error('birth_date')
+                                            <div class="invalid-feedback d-block">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+                                </div>
+                            </div>
                         </div>
 
-                        <div class="form-group mb-3">
-                            <label for="cpf">CPF *</label>
-                            <input id="cpf" type="text" name="cpf" class="form-control"
-                                value="{{ $patient->cpf }}" placeholder="Digite o CPF" required>
+                        {{-- Seção: Contato --}}
+                        <div class="mb-4">
+                            <h5 class="mb-3 text-primary">
+                                <i class="mdi mdi-phone me-2"></i>
+                                Informações de Contato
+                            </h5>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label class="fw-semibold">
+                                            <i class="mdi mdi-email me-1"></i>
+                                            E-mail
+                                        </label>
+                                        <input type="email" class="form-control @error('email') is-invalid @enderror" 
+                                               name="email" value="{{ old('email', $patient->email) }}" 
+                                               placeholder="exemplo@email.com">
+                                        @error('email')
+                                            <div class="invalid-feedback d-block">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label class="fw-semibold">
+                                            <i class="mdi mdi-phone me-1"></i>
+                                            Telefone
+                                        </label>
+                                        <input type="text" class="form-control @error('phone') is-invalid @enderror" 
+                                               name="phone" value="{{ old('phone', $patient->phone) }}" 
+                                               maxlength="20" placeholder="(00) 00000-0000">
+                                        @error('phone')
+                                            <div class="invalid-feedback d-block">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+                                </div>
+                            </div>
                         </div>
 
-                        <div class="form-group mb-3">
-                            <label for="birth_date">Data de Nascimento</label>
-                            <input id="birth_date" type="date" name="birth_date" class="form-control"
-                                value="{{ $patient->birth_date ? $patient->birth_date->format('Y-m-d') : '' }}">
+                        {{-- Seção: Status --}}
+                        <div class="mb-4">
+                            <h5 class="mb-3 text-primary">
+                                <i class="mdi mdi-toggle-switch me-2"></i>
+                                Status
+                            </h5>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label class="fw-semibold">
+                                            <i class="mdi mdi-check-circle me-1"></i>
+                                            Status do Paciente
+                                        </label>
+                                        <select name="is_active" class="form-control @error('is_active') is-invalid @enderror">
+                                            <option value="1" {{ old('is_active', $patient->is_active) == 1 ? 'selected' : '' }}>Ativo</option>
+                                            <option value="0" {{ old('is_active', $patient->is_active) == 0 ? 'selected' : '' }}>Inativo</option>
+                                        </select>
+                                        @error('is_active')
+                                            <div class="invalid-feedback d-block">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+                                </div>
+                            </div>
                         </div>
 
-                        <div class="form-group mb-3">
-                            <label for="email">E-mail</label>
-                            <input id="email" type="email" name="email" class="form-control"
-                                value="{{ $patient->email }}" placeholder="Digite o e-mail">
+                        {{-- Botões de Ação --}}
+                        <div class="d-flex justify-content-between align-items-center pt-3 border-top">
+                            <a href="{{ route('tenant.patients.index') }}" class="btn btn-light">
+                                <i class="mdi mdi-arrow-left me-1"></i>
+                                Cancelar
+                            </a>
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="mdi mdi-content-save me-1"></i>
+                                Atualizar Paciente
+                            </button>
                         </div>
-
-                        <div class="form-group mb-3">
-                            <label for="phone">Telefone</label>
-                            <input id="phone" type="text" name="phone" class="form-control"
-                                value="{{ $patient->phone }}" placeholder="Digite o telefone">
-                        </div>
-
-                        <div class="form-group mb-3">
-                            <label for="is_active">Status</label>
-                            <select name="is_active" class="form-control">
-                                <option value="1" {{ $patient->is_active ? 'selected' : '' }}>Ativo</option>
-                                <option value="0" {{ !$patient->is_active ? 'selected' : '' }}>Inativo</option>
-                            </select>
-                        </div>
-
-                        <div class="text-end mt-4">
-                            <button type="submit" class="btn btn-primary btn-lg">Salvar</button>
-                            <a href="{{ route('tenant.patients.index') }}" class="btn btn-light btn-lg">Cancelar</a>
-                        </div>
-
                     </form>
 
                 </div>
@@ -81,5 +172,26 @@
         </div>
     </div>
 
-@endsection
+@push('styles')
+<style>
+    .form-group label {
+        font-weight: 600;
+        color: #2c3e50;
+        margin-bottom: 0.5rem;
+    }
+    .card-title {
+        font-weight: 600;
+    }
+    h5.text-primary {
+        font-weight: 600;
+        padding-bottom: 0.5rem;
+        border-bottom: 2px solid #e9ecef;
+    }
+    .btn-lg {
+        padding: 0.75rem 2rem;
+        font-weight: 600;
+    }
+</style>
+@endpush
 
+@endsection

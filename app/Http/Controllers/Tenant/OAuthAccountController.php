@@ -3,8 +3,9 @@
 namespace App\Http\Controllers\Tenant;
 
 use App\Http\Controllers\Controller;
-use App\Models\Tenant\Integrations as Integration;
+use App\Models\Tenant\Integrations;
 use App\Models\Tenant\OauthAccount;
+use App\Models\Tenant\User;
 
 use App\Http\Requests\Tenant\Integrations\StoreOAuthAccountRequest;
 use App\Http\Requests\Tenant\Integrations\UpdateOAuthAccountRequest;
@@ -15,18 +16,19 @@ class OAuthAccountController extends Controller
 {
     public function index()
     {
-        $accounts = OauthAccount::with(['integration', 'user'])
+        $oauthAccounts = OauthAccount::with(['integration', 'user'])
             ->orderBy('expires_at', 'desc')
             ->paginate(20);
 
-        return view('tenant.oauth_accounts.index', compact('accounts'));
+        return view('tenant.oauth-accounts.index', compact('oauthAccounts'));
     }
 
     public function create()
     {
-        $integrations = Integration::where('is_enabled', true)->get();
+        $integrations = Integrations::where('is_enabled', true)->get();
+        $users = User::orderBy('name')->get();
 
-        return view('tenant.oauth_accounts.create', compact('integrations'));
+        return view('tenant.oauth-accounts.create', compact('integrations', 'users'));
     }
 
     public function store(StoreOAuthAccountRequest $request)
@@ -40,23 +42,34 @@ class OAuthAccountController extends Controller
             ->with('success', 'Conta OAuth criada com sucesso.');
     }
 
-    public function edit(OauthAccount $oauthAccount)
+    public function show($id)
     {
-        $integrations = Integration::where('is_enabled', true)->get();
+        $oauthAccount = OauthAccount::with(['integration', 'user'])->findOrFail($id);
 
-        return view('tenant.oauth_accounts.edit', compact('oauthAccount', 'integrations'));
+        return view('tenant.oauth-accounts.show', compact('oauthAccount'));
     }
 
-    public function update(UpdateOAuthAccountRequest $request, OauthAccount $oauthAccount)
+    public function edit($id)
     {
+        $oauthAccount = OauthAccount::findOrFail($id);
+        $integrations = Integrations::where('is_enabled', true)->get();
+        $users = User::orderBy('name')->get();
+
+        return view('tenant.oauth-accounts.edit', compact('oauthAccount', 'integrations', 'users'));
+    }
+
+    public function update(UpdateOAuthAccountRequest $request, $id)
+    {
+        $oauthAccount = OauthAccount::findOrFail($id);
         $oauthAccount->update($request->validated());
 
         return redirect()->route('tenant.oauth-accounts.index')
             ->with('success', 'Conta OAuth atualizada com sucesso.');
     }
 
-    public function destroy(OauthAccount $oauthAccount)
+    public function destroy($id)
     {
+        $oauthAccount = OauthAccount::findOrFail($id);
         $oauthAccount->delete();
 
         return redirect()->route('tenant.oauth-accounts.index')

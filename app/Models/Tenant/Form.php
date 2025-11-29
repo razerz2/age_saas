@@ -7,16 +7,23 @@ use Illuminate\Database\Eloquent\Model;
 
 class Form extends Model
 {
+    use HasFactory;
+
+    protected $connection = 'tenant';
+    protected $table = 'forms';
+
     public $incrementing = false;
     protected $keyType = 'uuid';
 
     protected $fillable = [
-        'id','name','description','specialty_id','doctor_id','is_active'
+        'id', 'name', 'description', 'specialty_id', 'doctor_id', 'is_active'
     ];
 
     protected $casts = [
         'is_active' => 'boolean',
     ];
+
+    public $timestamps = true;
 
     public function sections()
     {

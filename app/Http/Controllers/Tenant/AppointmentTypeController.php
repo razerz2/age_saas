@@ -12,14 +12,14 @@ class AppointmentTypeController extends Controller
 {
     public function index()
     {
-        $types = AppointmentType::orderBy('name')->paginate(20);
+        $appointmentTypes = AppointmentType::orderBy('name')->paginate(20);
 
-        return view('tenant.appointment_types.index', compact('types'));
+        return view('tenant.appointment-types.index', compact('appointmentTypes'));
     }
 
     public function create()
     {
-        return view('tenant.appointment_types.create');
+        return view('tenant.appointment-types.create');
     }
 
     public function store(StoreAppointmentTypeRequest $request)
@@ -29,33 +29,37 @@ class AppointmentTypeController extends Controller
 
         AppointmentType::create($data);
 
-        return redirect()->route('tenant.appointment_types.index')
+        return redirect()->route('tenant.appointment-types.index')
             ->with('success', 'Tipo de atendimento criado com sucesso.');
     }
 
-    public function show(AppointmentType $appointmentType)
+    public function show($id)
     {
-        return view('tenant.appointment_types.show', compact('appointmentType'));
+        $appointmentType = AppointmentType::findOrFail($id);
+        return view('tenant.appointment-types.show', compact('appointmentType'));
     }
 
-    public function edit(AppointmentType $appointmentType)
+    public function edit($id)
     {
-        return view('tenant.appointment_types.edit', compact('appointmentType'));
+        $appointmentType = AppointmentType::findOrFail($id);
+        return view('tenant.appointment-types.edit', compact('appointmentType'));
     }
 
-    public function update(UpdateAppointmentTypeRequest $request, AppointmentType $appointmentType)
+    public function update(UpdateAppointmentTypeRequest $request, $id)
     {
+        $appointmentType = AppointmentType::findOrFail($id);
         $appointmentType->update($request->validated());
 
-        return redirect()->route('tenant.appointment_types.index')
+        return redirect()->route('tenant.appointment-types.index')
             ->with('success', 'Tipo de atendimento atualizado com sucesso.');
     }
 
-    public function destroy(AppointmentType $appointmentType)
+    public function destroy($id)
     {
+        $appointmentType = AppointmentType::findOrFail($id);
         $appointmentType->delete();
 
-        return redirect()->route('tenant.appointment_types.index')
+        return redirect()->route('tenant.appointment-types.index')
             ->with('success', 'Tipo removido.');
     }
 }

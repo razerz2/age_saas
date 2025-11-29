@@ -19,13 +19,12 @@
 
     <div class="row">
         <div class="col-lg-12 grid-margin stretch-card">
-
             <div class="card">
                 <div class="card-body">
                     <h4 class="card-title">Lista de Especialidades</h4>
 
                     <a href="{{ route('tenant.specialties.create') }}" class="btn btn-primary mb-3">
-                        + Nova Especialidade
+                        + Novo
                     </a>
 
                     <div class="table-responsive">
@@ -44,41 +43,28 @@
                                     <tr>
                                         <td>{{ $specialty->id }}</td>
                                         <td>{{ $specialty->name }}</td>
-                                        <td>{{ $specialty->code ?? '-' }}</td>
+                                        <td>{{ $specialty->code ?? 'N/A' }}</td>
                                         <td>
-                                            <!-- Botão de Ver com ícone -->
-                                            <a href="{{ route('tenant.specialties.show', $specialty->id) }}"
-                                                class="btn btn-info btn-sm">
-                                                <i class="mdi mdi-eye"></i> Ver
-                                            </a>
-
-                                            <!-- Botão de Editar com ícone -->
-                                            <a href="{{ route('tenant.specialties.edit', $specialty->id) }}"
-                                                class="btn btn-warning btn-sm">
-                                                <i class="mdi mdi-pencil"></i> Editar
-                                            </a>
+                                            <a href="{{ route('tenant.specialties.show', $specialty->id) }}" class="btn btn-info btn-sm">Ver</a>
+                                            <a href="{{ route('tenant.specialties.edit', $specialty->id) }}" class="btn btn-warning btn-sm">Editar</a>
                                         </td>
-
                                     </tr>
                                 @endforeach
                             </tbody>
-
                         </table>
                     </div>
 
                 </div>
             </div>
-
         </div>
     </div>
 
 @endsection
 
 @push('scripts')
-    <script>
-        $(document).ready(function() {
-            $('#datatable-list').DataTable();
-        });
-    </script>
+<script>
+    $(document).ready(function() {
+        $('#datatable-list').DataTable();
+    });
+</script>
 @endpush
-

@@ -33,26 +33,30 @@ class MedicalSpecialtyController extends Controller
             ->with('success', 'Especialidade cadastrada com sucesso.');
     }
 
-    public function show(MedicalSpecialty $specialty)
+    public function show($id)
     {
+        $specialty = MedicalSpecialty::findOrFail($id);
         return view('tenant.specialties.show', compact('specialty'));
     }
 
-    public function edit(MedicalSpecialty $specialty)
+    public function edit($id)
     {
+        $specialty = MedicalSpecialty::findOrFail($id);
         return view('tenant.specialties.edit', compact('specialty'));
     }
 
-    public function update(UpdateMedicalSpecialtyRequest $request, MedicalSpecialty $specialty)
+    public function update(UpdateMedicalSpecialtyRequest $request, $id)
     {
+        $specialty = MedicalSpecialty::findOrFail($id);
         $specialty->update($request->validated());
 
         return redirect()->route('tenant.specialties.index')
             ->with('success', 'Especialidade atualizada com sucesso.');
     }
 
-    public function destroy(MedicalSpecialty $specialty)
+    public function destroy($id)
     {
+        $specialty = MedicalSpecialty::findOrFail($id);
         $specialty->delete();
 
         return redirect()->route('tenant.specialties.index')

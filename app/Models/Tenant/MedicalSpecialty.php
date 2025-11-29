@@ -7,13 +7,20 @@ use Illuminate\Database\Eloquent\Model;
 
 class MedicalSpecialty extends Model
 {
+    use HasFactory;
+
+    protected $connection = 'tenant';
+    protected $table = 'medical_specialties';
+
     public $incrementing = false;
     protected $keyType = 'uuid';
 
-    protected $fillable = ['id','name','code'];
+    protected $fillable = ['id', 'name', 'code'];
+
+    public $timestamps = true;
 
     public function doctors()
     {
-        return $this->belongsToMany(Doctor::class, 'doctor_specialty');
+        return $this->belongsToMany(Doctor::class, 'doctor_specialty', 'specialty_id', 'doctor_id');
     }
 }

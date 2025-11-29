@@ -35,21 +35,30 @@ class IntegrationController extends Controller
             ->with('success', 'Integração criada com sucesso.');
     }
 
-    public function edit(Integrations $integration)
+    public function show($id)
     {
+        $integration = Integrations::findOrFail($id);
+        return view('tenant.integrations.show', compact('integration'));
+    }
+
+    public function edit($id)
+    {
+        $integration = Integrations::findOrFail($id);
         return view('tenant.integrations.edit', compact('integration'));
     }
 
-    public function update(UpdateIntegrationRequest $request, Integrations $integration)
+    public function update(UpdateIntegrationRequest $request, $id)
     {
+        $integration = Integrations::findOrFail($id);
         $integration->update($request->validated());
 
         return redirect()->route('tenant.integrations.index')
             ->with('success', 'Integração atualizada com sucesso.');
     }
 
-    public function destroy(Integrations $integration)
+    public function destroy($id)
     {
+        $integration = Integrations::findOrFail($id);
         $integration->delete();
 
         return redirect()->route('tenant.integrations.index')

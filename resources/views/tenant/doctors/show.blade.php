@@ -20,50 +20,24 @@
         </nav>
     </div>
 
-    <div class="row justify-content-center">
-        <div class="col-lg-8">
+    <div class="row">
+        <div class="col-12 grid-margin stretch-card">
             <div class="card">
                 <div class="card-body">
-                    <h5 class="card-title">Informações do Médico</h5>
-                    <div class="row mb-3">
-                        <div class="col-md-6">
-                            <p><i class="mdi mdi-identifier"></i> <strong>ID:</strong> {{ $doctor->id }}</p>
-                            <p><i class="mdi mdi-account-circle"></i> <strong>Usuário:</strong>
-                                {{ $doctor->user->name_full ?? '-' }}</p>
-                            <p><i class="mdi mdi-email-outline"></i> <strong>E-mail:</strong>
-                                {{ $doctor->user->email ?? '-' }}</p>
-                        </div>
-                        <div class="col-md-6">
-                            <p><i class="mdi mdi-card-account-details"></i> <strong>CRM:</strong>
-                                {{ $doctor->crm_number ?? '-' }}</p>
-                            <p><i class="mdi mdi-map-marker"></i> <strong>Estado CRM:</strong>
-                                {{ $doctor->crm_state ?? '-' }}</p>
-                            <p><i class="mdi mdi-pen"></i> <strong>Assinatura:</strong>
-                                {{ $doctor->signature ?? '-' }}</p>
-                        </div>
-                    </div>
+                    <h4 class="card-title">Detalhes</h4>
 
-                    <h5 class="card-title mt-4">Especialidades</h5>
-                    <div class="mb-3">
-                        @if ($doctor->specialties->count() > 0)
-                            @foreach ($doctor->specialties as $specialty)
-                                <span class="badge bg-info me-2">{{ $specialty->name }}</span>
-                            @endforeach
-                        @else
-                            <p class="text-muted">Nenhuma especialidade cadastrada</p>
-                        @endif
-                    </div>
+                    <p><strong>ID:</strong> {{ $doctor->id }}</p>
+                    <p><strong>Usuário:</strong> {{ $doctor->user->name ?? 'N/A' }}</p>
+                    <p><strong>Número CRM:</strong> {{ $doctor->crm_number ?? 'N/A' }}</p>
+                    <p><strong>Estado CRM:</strong> {{ $doctor->crm_state ?? 'N/A' }}</p>
+                    <p><strong>Assinatura:</strong> {{ $doctor->signature ?? 'N/A' }}</p>
+                    <p><strong>Criado em:</strong> {{ $doctor->created_at }}</p>
 
-                    <!-- Botão de Edição dentro do card e alinhado à direita -->
-                    <div class="text-end mt-4">
-                        <a href="{{ route('tenant.doctors.edit', $doctor->id) }}" class="btn btn-warning btn-small">
-                            <i class="mdi mdi-pencil"></i> Editar
-                        </a>
-                    </div>
+                    <a href="{{ route('tenant.doctors.edit', $doctor->id) }}" class="btn btn-warning">Editar</a>
+                    <a href="{{ route('tenant.doctors.index') }}" class="btn btn-light">Voltar</a>
                 </div>
             </div>
         </div>
     </div>
 
 @endsection
-
