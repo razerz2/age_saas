@@ -27,7 +27,8 @@ class TenantAdminSeeder extends Seeder
         // gera email dinâmico
         $email = $this->generateAdminEmail($domain);
 
-        DB::table('users')->insert([
+        // Usar explicitamente a conexão 'tenant' para garantir que está usando o banco correto
+        DB::connection('tenant')->table('users')->insert([
             'tenant_id'  => $tenantId, // <-- obrigatório
             'name'       => 'Administrador',
             'name_full'  => 'Administrador do Sistema',
@@ -39,6 +40,11 @@ class TenantAdminSeeder extends Seeder
             'modules'    => json_encode([]),
             'created_at' => now(),
             'updated_at' => now(),
+        ]);
+        
+        Log::info("✅ Usuário admin criado", [
+            'email' => $email,
+            'tenant_id' => $tenantId
         ]);
     }
 

@@ -4,6 +4,7 @@ namespace App\Services;
 
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Throwable;
@@ -81,37 +82,101 @@ class TenantProvisioner
             ]);
 
             // --------------------------------------------------------------------
-            // 5. Criar usuário admin do tenant via seeder
+            // 5. Criar usuário admin do tenant diretamente
             // --------------------------------------------------------------------
             Log::info("👤 Criando usuário admin padrão...");
 
-            // Envia o subdomínio para a seeder via config()
-            // Envia o subdomínio e o TENANT ID real para a seeder
-            config([
-                'tenant.current_subdomain' => $tenant->subdomain,
-                'tenant.current_id'        => $tenant->id,  // <-- ADICIONADO
-            ]);
+            try {
+                // Limpar subdomínio para formato válido de domínio
+                $domain = Str::slug($tenant->subdomain);
+                $domain = preg_replace('/[^a-z0-9\-]/', '', $domain);
+                $domain = !empty($domain) ? $domain : 'tenant';
 
-            Artisan::call('db:seed', [
-                '--database' => 'tenant',
-                '--class'    => 'Database\\Seeders\\Tenant\\TenantAdminSeeder',
-                '--force'    => true,
-            ]);
+                // Gerar email dinâmico
+                $email = "admin@{$domain}.com";
 
-            Log::info("🟢 Usuário admin criado para tenant {$tenant->id}");
+                // Inserir usuário admin diretamente no banco do tenant
+                DB::connection('tenant')->table('users')->insert([
+                    'tenant_id'  => $tenant->id,
+                    'name'       => 'Administrador',
+                    'name_full'  => 'Administrador do Sistema',
+                    'telefone'   => '00000000000',
+                    'email'      => $email,
+                    'password'   => Hash::make('admin123'),
+                    'is_doctor'  => false,
+                    'status'     => 'active',
+                    'modules'    => json_encode([]),
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+
+                Log::info("🟢 Usuário admin criado para tenant {$tenant->id}", [
+                    'email' => $email
+                ]);
+            } catch (\Throwable $e) {
+                Log::error("❌ Erro ao criar usuário admin", [
+                    'erro' => $e->getMessage(),
+                    'trace' => $e->getTraceAsString()
+                ]);
+                throw $e;
+            }
 
             // --------------------------------------------------------------------
             // 6. Copiar especialidades médicas do catálogo da platform
             // --------------------------------------------------------------------
             Log::info("🏥 Copiando especialidades médicas do catálogo...");
 
-            Artisan::call('db:seed', [
-                '--database' => 'tenant',
-                '--class'    => 'Database\\Seeders\\Tenant\\TenantMedicalSpecialtiesSeeder',
-                '--force'    => true,
-            ]);
+            try {
+                // Buscar todas as especialidades médicas do catálogo da platform
+                $catalogSpecialties = DB::connection('pgsql')
+                    ->table('medical_specialties_catalog')
+                    ->where('type', 'medical_specialty')
+                    ->orderBy('name')
+                    ->get();
 
-            Log::info("🟢 Especialidades médicas copiadas para tenant {$tenant->id}");
+                if ($catalogSpecialties->isEmpty()) {
+                    Log::warning("⚠️ Nenhuma especialidade médica encontrada no catálogo da platform.");
+                } else {
+                    $inserted = 0;
+                    $skipped = 0;
+
+                    foreach ($catalogSpecialties as $catalog) {
+                        // Verificar se já existe (evita duplicatas)
+                        $exists = DB::connection('tenant')
+                            ->table('medical_specialties')
+                            ->where('id', $catalog->id)
+                            ->exists();
+
+                        if ($exists) {
+                            $skipped++;
+                            continue;
+                        }
+
+                        // Inserir no banco do tenant
+                        DB::connection('tenant')->table('medical_specialties')->insert([
+                            'id'         => $catalog->id,
+                            'name'       => $catalog->name,
+                            'code'       => $catalog->code,
+                            'created_at' => $catalog->created_at ?? now(),
+                            'updated_at' => $catalog->updated_at ?? now(),
+                        ]);
+
+                        $inserted++;
+                    }
+
+                    Log::info("🟢 Especialidades médicas copiadas para tenant {$tenant->id}", [
+                        'inseridas' => $inserted,
+                        'ignoradas' => $skipped,
+                        'total_no_catalogo' => $catalogSpecialties->count(),
+                    ]);
+                }
+            } catch (\Throwable $e) {
+                Log::error("❌ Erro ao copiar especialidades médicas", [
+                    'erro' => $e->getMessage(),
+                    'trace' => $e->getTraceAsString()
+                ]);
+                throw $e;
+            }
 
             // --------------------------------------------------------------------
             // 7. Finalização

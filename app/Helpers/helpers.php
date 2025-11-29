@@ -57,31 +57,40 @@ if (!function_exists('updateEnv')) {
         $envPath = base_path('.env');
 
         if (!File::exists($envPath)) {
-            throw new \Exception(".env file not found.");
+            // Em produção, o .env pode não existir ou não ser editável
+            // Nesse caso, apenas logamos um aviso e continuamos
+            Log::warning("Arquivo .env não encontrado em: {$envPath}. As configurações serão salvas apenas no banco de dados.");
+            return;
         }
 
-        $content = File::get($envPath);
-
-        foreach ($data as $key => $value) {
-            $pattern = "/^{$key}=.*/m";
-            $replacement = "{$key}=\"{$value}\"";
-
-            if (preg_match($pattern, $content)) {
-                $content = preg_replace($pattern, $replacement, $content);
-            } else {
-                // adiciona no final do arquivo caso não exista
-                $content .= "\n{$key}=\"{$value}\"";
-            }
-        }
-
-        File::put($envPath, $content);
-
-        // limpa cache de configuração
         try {
-            Artisan::call('config:clear');
-            Artisan::call('cache:clear');
+            $content = File::get($envPath);
+
+            foreach ($data as $key => $value) {
+                $pattern = "/^{$key}=.*/m";
+                $replacement = "{$key}=\"{$value}\"";
+
+                if (preg_match($pattern, $content)) {
+                    $content = preg_replace($pattern, $replacement, $content);
+                } else {
+                    // adiciona no final do arquivo caso não exista
+                    $content .= "\n{$key}=\"{$value}\"";
+                }
+            }
+
+            File::put($envPath, $content);
+
+            // limpa cache de configuração
+            try {
+                Artisan::call('config:clear');
+                Artisan::call('cache:clear');
+            } catch (\Exception $e) {
+                Log::warning("Não foi possível limpar cache automaticamente: " . $e->getMessage());
+            }
         } catch (\Exception $e) {
-            Log::warning("Não foi possível limpar cache automaticamente: " . $e->getMessage());
+            // Se houver erro ao escrever no .env, apenas logamos
+            // As configurações já foram salvas no banco de dados
+            Log::warning("Não foi possível atualizar o arquivo .env: " . $e->getMessage());
         }
     }
 }
