@@ -5,7 +5,10 @@
 @section('content')
 
     <div class="page-header">
-        <h3 class="page-title"> Detalhes do Agendamento </h3>
+        <h3 class="page-title">
+            <i class="mdi mdi-calendar-clock text-primary me-2"></i>
+            Detalhes do Agendamento
+        </h3>
 
         <nav aria-label="breadcrumb">
             <ol class="breadcrumb">
@@ -24,21 +27,156 @@
         <div class="col-12 grid-margin stretch-card">
             <div class="card">
                 <div class="card-body">
-                    <h4 class="card-title">Detalhes</h4>
+                    {{-- Header do Card --}}
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h4 class="card-title mb-0">
+                            <i class="mdi mdi-calendar-check text-primary me-2"></i>
+                            Informações do Agendamento
+                        </h4>
+                        <div>
+                            <a href="{{ route('tenant.appointments.edit', $appointment->id) }}" class="btn btn-warning btn-sm">
+                                <i class="mdi mdi-pencil me-1"></i> Editar
+                            </a>
+                            <a href="{{ route('tenant.appointments.index') }}" class="btn btn-secondary btn-sm">
+                                <i class="mdi mdi-arrow-left me-1"></i> Voltar
+                            </a>
+                        </div>
+                    </div>
 
-                    <p><strong>ID:</strong> {{ $appointment->id }}</p>
-                    <p><strong>Calendário:</strong> {{ $appointment->calendar->name ?? 'N/A' }}</p>
-                    <p><strong>Tipo de Consulta:</strong> {{ $appointment->type->name ?? 'N/A' }}</p>
-                    <p><strong>Paciente:</strong> {{ $appointment->patient->full_name ?? 'N/A' }}</p>
-                    <p><strong>Especialidade:</strong> {{ $appointment->specialty->name ?? 'N/A' }}</p>
-                    <p><strong>Data e Hora de Início:</strong> {{ $appointment->starts_at ? $appointment->starts_at->format('d/m/Y H:i') : 'N/A' }}</p>
-                    <p><strong>Data e Hora de Fim:</strong> {{ $appointment->ends_at ? $appointment->ends_at->format('d/m/Y H:i') : 'N/A' }}</p>
-                    <p><strong>Status:</strong> {{ $appointment->status_translated }}</p>
-                    <p><strong>Observações:</strong> {{ $appointment->notes ?? 'N/A' }}</p>
-                    <p><strong>Criado em:</strong> {{ $appointment->created_at }}</p>
+                    {{-- Status Badge --}}
+                    <div class="mb-4">
+                        @php
+                            $statusBadges = [
+                                'pending' => ['bg-warning', 'mdi-clock-outline'],
+                                'confirmed' => ['bg-success', 'mdi-check-circle'],
+                                'cancelled' => ['bg-danger', 'mdi-cancel'],
+                                'completed' => ['bg-info', 'mdi-check-all'],
+                            ];
+                            $statusInfo = $statusBadges[$appointment->status] ?? ['bg-secondary', 'mdi-help-circle'];
+                        @endphp
+                        <span class="badge {{ $statusInfo[0] }} px-3 py-2">
+                            <i class="mdi {{ $statusInfo[1] }} me-1"></i>
+                            {{ $appointment->status_translated }}
+                        </span>
+                    </div>
 
-                    <a href="{{ route('tenant.appointments.edit', $appointment->id) }}" class="btn btn-warning">Editar</a>
-                    <a href="{{ route('tenant.appointments.index') }}" class="btn btn-light">Voltar</a>
+                    {{-- Informações do Agendamento --}}
+                    <div class="row mb-4">
+                        <div class="col-md-6 mb-3">
+                            <div class="border rounded p-3 h-100">
+                                <label class="text-muted small mb-1 d-block">
+                                    <i class="mdi mdi-identifier me-1"></i> ID
+                                </label>
+                                <p class="mb-0 fw-semibold">{{ $appointment->id }}</p>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <div class="border rounded p-3 h-100">
+                                <label class="text-muted small mb-1 d-block">
+                                    <i class="mdi mdi-account-heart me-1"></i> Paciente
+                                </label>
+                                @if($appointment->patient)
+                                    <p class="mb-0 fw-semibold">
+                                        <a href="{{ route('tenant.patients.show', $appointment->patient->id) }}" class="text-decoration-none">
+                                            {{ $appointment->patient->full_name }}
+                                        </a>
+                                    </p>
+                                @else
+                                    <p class="mb-0 text-muted">N/A</p>
+                                @endif
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <div class="border rounded p-3 h-100">
+                                <label class="text-muted small mb-1 d-block">
+                                    <i class="mdi mdi-calendar-text me-1"></i> Calendário
+                                </label>
+                                <p class="mb-0 fw-semibold">{{ $appointment->calendar->name ?? 'N/A' }}</p>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <div class="border rounded p-3 h-100">
+                                <label class="text-muted small mb-1 d-block">
+                                    <i class="mdi mdi-file-document-edit me-1"></i> Tipo de Consulta
+                                </label>
+                                <p class="mb-0 fw-semibold">{{ $appointment->type->name ?? 'N/A' }}</p>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <div class="border rounded p-3 h-100">
+                                <label class="text-muted small mb-1 d-block">
+                                    <i class="mdi mdi-medical-bag me-1"></i> Especialidade
+                                </label>
+                                <p class="mb-0 fw-semibold">{{ $appointment->specialty->name ?? 'N/A' }}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    {{-- Data e Hora --}}
+                    <h5 class="text-primary mb-3">
+                        <i class="mdi mdi-clock-outline me-2"></i>
+                        Data e Hora
+                    </h5>
+                    <div class="row mb-4">
+                        <div class="col-md-6 mb-3">
+                            <div class="border rounded p-3 bg-light">
+                                <label class="text-muted small mb-1 d-block">
+                                    <i class="mdi mdi-calendar-start me-1"></i> Início
+                                </label>
+                                <p class="mb-0 fw-semibold fs-6">
+                                    {{ $appointment->starts_at ? $appointment->starts_at->format('d/m/Y H:i') : 'N/A' }}
+                                </p>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <div class="border rounded p-3 bg-light">
+                                <label class="text-muted small mb-1 d-block">
+                                    <i class="mdi mdi-calendar-end me-1"></i> Fim
+                                </label>
+                                <p class="mb-0 fw-semibold fs-6">
+                                    {{ $appointment->ends_at ? $appointment->ends_at->format('d/m/Y H:i') : 'N/A' }}
+                                </p>
+                            </div>
+                        </div>
+                        @if($appointment->starts_at && $appointment->ends_at)
+                            <div class="col-md-12">
+                                <div class="alert alert-info mb-0">
+                                    <i class="mdi mdi-timer me-2"></i>
+                                    <strong>Duração:</strong> {{ $appointment->starts_at->diffInMinutes($appointment->ends_at) }} minutos
+                                </div>
+                            </div>
+                        @endif
+                    </div>
+
+                    {{-- Observações --}}
+                    @if($appointment->notes)
+                        <div class="mb-4">
+                            <label class="text-muted small mb-2 d-block">
+                                <i class="mdi mdi-note-text me-1"></i> Observações
+                            </label>
+                            <div class="border rounded p-3 bg-light">
+                                <p class="mb-0">{{ $appointment->notes }}</p>
+                            </div>
+                        </div>
+                    @endif
+
+                    {{-- Informações Adicionais --}}
+                    <div class="border-top pt-3">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <label class="text-muted small mb-1 d-block">
+                                    <i class="mdi mdi-calendar-plus me-1"></i> Criado em
+                                </label>
+                                <p class="mb-0">{{ $appointment->created_at->format('d/m/Y H:i') }}</p>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="text-muted small mb-1 d-block">
+                                    <i class="mdi mdi-calendar-edit me-1"></i> Atualizado em
+                                </label>
+                                <p class="mb-0">{{ $appointment->updated_at->format('d/m/Y H:i') }}</p>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

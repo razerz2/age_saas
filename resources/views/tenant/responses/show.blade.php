@@ -5,7 +5,10 @@
 @section('content')
 
     <div class="page-header">
-        <h3 class="page-title"> Detalhes da Resposta </h3>
+        <h3 class="page-title">
+            <i class="mdi mdi-file-document-check text-primary me-2"></i>
+            Detalhes da Resposta
+        </h3>
 
         <nav aria-label="breadcrumb">
             <ol class="breadcrumb">
@@ -24,73 +27,148 @@
         <div class="col-12 grid-margin stretch-card">
             <div class="card">
                 <div class="card-body">
-                    <h4 class="card-title">Informações Gerais</h4>
-
-                    <div class="row mb-3">
-                        <div class="col-md-6">
-                            <p><strong>ID:</strong> {{ $response->id }}</p>
-                            <p><strong>Formulário:</strong> {{ $response->form->name ?? 'N/A' }}</p>
-                            <p><strong>Paciente:</strong> {{ $response->patient->full_name ?? 'N/A' }}</p>
-                        </div>
-                        <div class="col-md-6">
-                            <p><strong>Agendamento:</strong> {{ $response->appointment_id ?? 'N/A' }}</p>
-                            <p><strong>Data de Envio:</strong> {{ $response->submitted_at ? $response->submitted_at->format('d/m/Y H:i') : 'N/A' }}</p>
-                            <p><strong>Status:</strong> 
-                                @if($response->status == 'submitted')
-                                    <span class="badge bg-success">Enviado</span>
-                                @else
-                                    <span class="badge bg-warning">Pendente</span>
-                                @endif
-                            </p>
+                    {{-- Header do Card --}}
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h4 class="card-title mb-0">
+                            <i class="mdi mdi-file-document text-primary me-2"></i>
+                            Informações da Resposta
+                        </h4>
+                        <div>
+                            <a href="{{ route('tenant.responses.edit', $response->id) }}" class="btn btn-warning btn-sm">
+                                <i class="mdi mdi-pencil me-1"></i> Editar
+                            </a>
+                            <a href="{{ route('tenant.responses.index') }}" class="btn btn-secondary btn-sm">
+                                <i class="mdi mdi-arrow-left me-1"></i> Voltar
+                            </a>
                         </div>
                     </div>
 
-                    <hr class="my-4">
+                    {{-- Status Badge --}}
+                    <div class="mb-4">
+                        @if($response->status == 'submitted')
+                            <span class="badge bg-success px-3 py-2">
+                                <i class="mdi mdi-check-circle me-1"></i> Enviado
+                            </span>
+                        @else
+                            <span class="badge bg-warning px-3 py-2">
+                                <i class="mdi mdi-clock-outline me-1"></i> Pendente
+                            </span>
+                        @endif
+                    </div>
 
-                    <h5 class="mb-3">Respostas</h5>
+                    {{-- Informações Gerais --}}
+                    <h5 class="text-primary mb-3">
+                        <i class="mdi mdi-information-outline me-2"></i>
+                        Informações Gerais
+                    </h5>
+                    <div class="row mb-4">
+                        <div class="col-md-6 mb-3">
+                            <div class="border rounded p-3 h-100">
+                                <label class="text-muted small mb-1 d-block">
+                                    <i class="mdi mdi-identifier me-1"></i> ID
+                                </label>
+                                <p class="mb-0 fw-semibold">{{ $response->id }}</p>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <div class="border rounded p-3 h-100">
+                                <label class="text-muted small mb-1 d-block">
+                                    <i class="mdi mdi-file-document-edit me-1"></i> Formulário
+                                </label>
+                                <p class="mb-0 fw-semibold">{{ $response->form->name ?? 'N/A' }}</p>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <div class="border rounded p-3 h-100">
+                                <label class="text-muted small mb-1 d-block">
+                                    <i class="mdi mdi-account-heart me-1"></i> Paciente
+                                </label>
+                                <p class="mb-0 fw-semibold">{{ $response->patient->full_name ?? 'N/A' }}</p>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <div class="border rounded p-3 h-100">
+                                <label class="text-muted small mb-1 d-block">
+                                    <i class="mdi mdi-calendar-clock me-1"></i> Agendamento
+                                </label>
+                                <p class="mb-0 fw-semibold">{{ $response->appointment_id ?? 'N/A' }}</p>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <div class="border rounded p-3 h-100">
+                                <label class="text-muted small mb-1 d-block">
+                                    <i class="mdi mdi-calendar-check me-1"></i> Data de Envio
+                                </label>
+                                <p class="mb-0 fw-semibold">
+                                    {{ $response->submitted_at ? $response->submitted_at->format('d/m/Y H:i') : 'N/A' }}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    {{-- Respostas --}}
+                    <h5 class="text-primary mb-3">
+                        <i class="mdi mdi-text-box me-2"></i>
+                        Respostas
+                    </h5>
                     
                     @if($response->answers && $response->answers->count() > 0)
                         @if($response->form->sections && $response->form->sections->count() > 0)
                             @foreach($response->form->sections->sortBy('position') as $section)
-                                <h6 class="mt-4 mb-3">{{ $section->title ?? 'Seção sem título' }}</h6>
-                                
-                                @foreach($section->questions->sortBy('position') as $question)
+                                <div class="border rounded p-3 mb-3">
+                                    <h6 class="text-primary mb-3">
+                                        <i class="mdi mdi-folder-outline me-1"></i>
+                                        {{ $section->title ?? 'Seção sem título' }}
+                                    </h6>
+                                    
+                                    @foreach($section->questions->sortBy('position') as $question)
+                                        @php
+                                            $answer = $response->answers->firstWhere('question_id', $question->id);
+                                        @endphp
+                                        <div class="mb-3 pb-3 border-bottom">
+                                            <label class="text-muted small d-block mb-1">
+                                                <strong>{{ $question->label }}</strong>
+                                            </label>
+                                            @if($answer)
+                                                <p class="mb-0">{{ $answer->value ?? 'N/A' }}</p>
+                                            @else
+                                                <p class="mb-0 text-muted">
+                                                    <i class="mdi mdi-minus-circle me-1"></i>
+                                                    Não respondido
+                                                </p>
+                                            @endif
+                                        </div>
+                                    @endforeach
+                                </div>
+                            @endforeach
+                        @else
+                            <div class="border rounded p-3">
+                                @foreach($response->form->questions->sortBy('position') as $question)
                                     @php
                                         $answer = $response->answers->firstWhere('question_id', $question->id);
                                     @endphp
-                                    <div class="mb-3">
-                                        <strong>{{ $question->label }}:</strong>
+                                    <div class="mb-3 pb-3 border-bottom">
+                                        <label class="text-muted small d-block mb-1">
+                                            <strong>{{ $question->label }}</strong>
+                                        </label>
                                         @if($answer)
-                                            <span>{{ $answer->value ?? 'N/A' }}</span>
+                                            <p class="mb-0">{{ $answer->value ?? 'N/A' }}</p>
                                         @else
-                                            <span class="text-muted">Não respondido</span>
+                                            <p class="mb-0 text-muted">
+                                                <i class="mdi mdi-minus-circle me-1"></i>
+                                                Não respondido
+                                            </p>
                                         @endif
                                     </div>
                                 @endforeach
-                            @endforeach
-                        @else
-                            @foreach($response->form->questions->sortBy('position') as $question)
-                                @php
-                                    $answer = $response->answers->firstWhere('question_id', $question->id);
-                                @endphp
-                                <div class="mb-3">
-                                    <strong>{{ $question->label }}:</strong>
-                                    @if($answer)
-                                        <span>{{ $answer->value ?? 'N/A' }}</span>
-                                    @else
-                                        <span class="text-muted">Não respondido</span>
-                                    @endif
-                                </div>
-                            @endforeach
+                            </div>
                         @endif
                     @else
-                        <p class="text-muted">Nenhuma resposta encontrada.</p>
+                        <div class="alert alert-info">
+                            <i class="mdi mdi-information-outline me-2"></i>
+                            Nenhuma resposta encontrada.
+                        </div>
                     @endif
-
-                    <div class="mt-4">
-                        <a href="{{ route('tenant.responses.edit', $response->id) }}" class="btn btn-warning">Editar</a>
-                        <a href="{{ route('tenant.responses.index') }}" class="btn btn-light">Voltar</a>
-                    </div>
                 </div>
             </div>
         </div>

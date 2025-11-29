@@ -5,7 +5,10 @@
 @section('content')
 
     <div class="page-header">
-        <h3 class="page-title"> Detalhes do Usuário </h3>
+        <h3 class="page-title">
+            <i class="mdi mdi-account text-primary me-2"></i>
+            Detalhes do Usuário
+        </h3>
 
         <nav aria-label="breadcrumb">
             <ol class="breadcrumb">
@@ -21,7 +24,7 @@
     </div>
 
     <div class="row justify-content-center">
-        <div class="col-lg-8">
+        <div class="col-lg-10">
             <div class="card">
                 <div class="card-body">
                     {{-- ✅ Alertas de sucesso --}}
@@ -40,92 +43,165 @@
                         </div>
                     @endif
 
-                    <h5 class="card-title">Informações Pessoais</h5>
-                    <div class="row mb-3">
-                        <div class="col-md-6">
-                            <p><i class="mdi mdi-account-outline"></i> <strong>ID:</strong> {{ $user->id }}</p>
-                            <p><i class="mdi mdi-account-circle"></i> <strong>Nome de Exibição:</strong> {{ $user->name }}
-                            </p>
-                        </div>
-                        <div class="col-md-6">
-                            <p><i class="mdi mdi-email-outline"></i> <strong>E-mail:</strong> {{ $user->email }}</p>
-                            <p><i class="mdi mdi-phone"></i> <strong>Telefone:</strong> {{ $user->telefone }}</p>
-                        </div>
+                    {{-- Header do Card --}}
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h4 class="card-title mb-0">
+                            <i class="mdi mdi-account-circle text-primary me-2"></i>
+                            Informações do Usuário
+                        </h4>
                     </div>
 
-                    <div class="row mb-3">
-                        <div class="col-md-6">
-                            <p><i class="mdi mdi-check-circle-outline"></i> <strong>Status:</strong>
-                                @if ($user->status === 'active')
-                                    <span class="badge bg-success">Ativo</span>
-                                @else
-                                    <span class="badge bg-danger">Bloqueado</span>
-                                @endif
-                            </p>
-                        </div>
-                        <div class="col-md-6">
-                            <p><i class="mdi mdi-account-key"></i> <strong>Tipo de Usuário:</strong>
-                                @if ($user->is_doctor)
-                                    <span class="badge bg-primary">Médico</span>
-                                @else
-                                    <span class="badge bg-secondary">Não Médico</span>
-                                @endif
-                            </p>
-                        </div>
-                    </div>
-
-                    <h5 class="card-title">Módulos Atribuídos</h5>
-                    <p><strong>Módulos:</strong>
-                        @if (!empty($user->modules))
-                            <ul>
-                                @foreach ($user->modules as $module)
-                                    <li>{{ ucfirst($module) }}</li>
-                                @endforeach
-                            </ul>
+                    {{-- Status Badges --}}
+                    <div class="mb-4 d-flex gap-2 flex-wrap">
+                        @if ($user->status === 'active')
+                            <span class="badge bg-success px-3 py-2">
+                                <i class="mdi mdi-check-circle me-1"></i> Ativo
+                            </span>
                         @else
-                            <span>Nenhum módulo atribuído</span>
+                            <span class="badge bg-danger px-3 py-2">
+                                <i class="mdi mdi-close-circle me-1"></i> Bloqueado
+                            </span>
                         @endif
-                    </p>
+                        @if ($user->is_doctor)
+                            <span class="badge bg-primary px-3 py-2">
+                                <i class="mdi mdi-doctor me-1"></i> Médico
+                            </span>
+                        @else
+                            <span class="badge bg-secondary px-3 py-2">
+                                <i class="mdi mdi-account me-1"></i> Não Médico
+                            </span>
+                        @endif
+                    </div>
 
-                    @if (!$user->is_doctor)
-                        <h5 class="card-title mt-4">Permissões de Médicos</h5>
-                        <p><strong>Médicos com acesso:</strong>
-                            @if ($user->allowedDoctors->count() > 0)
-                                <ul class="list-group list-group-flush">
-                                    @foreach ($user->allowedDoctors as $doctor)
-                                        <li class="list-group-item d-flex justify-content-between align-items-center">
-                                            <span>
-                                                <i class="mdi mdi-account-doctor"></i>
-                                                {{ $doctor->user->name ?? 'Médico sem usuário' }}
-                                                @if ($doctor->crm_number)
-                                                    <span class="text-muted">(CRM: {{ $doctor->crm_number }}/{{ $doctor->crm_state }})</span>
-                                                @endif
-                                            </span>
-                                        </li>
-                                    @endforeach
-                                </ul>
-                            @else
-                                <span class="text-muted">Nenhum médico específico atribuído. 
-                                    @if ($user->canViewAllDoctors())
-                                        <span class="badge bg-info">Pode visualizar todos os médicos</span>
+                    {{-- Informações Pessoais --}}
+                    <h5 class="text-primary mb-3">
+                        <i class="mdi mdi-information-outline me-2"></i>
+                        Informações Pessoais
+                    </h5>
+                    <div class="row mb-4">
+                        <div class="col-md-6 mb-3">
+                            <div class="border rounded p-3 h-100">
+                                <label class="text-muted small mb-1 d-block">
+                                    <i class="mdi mdi-identifier me-1"></i> ID
+                                </label>
+                                <p class="mb-0 fw-semibold">{{ $user->id }}</p>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <div class="border rounded p-3 h-100">
+                                <label class="text-muted small mb-1 d-block">
+                                    <i class="mdi mdi-account-circle me-1"></i> Nome de Exibição
+                                </label>
+                                <p class="mb-0 fw-semibold">{{ $user->name }}</p>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <div class="border rounded p-3 h-100">
+                                <label class="text-muted small mb-1 d-block">
+                                    <i class="mdi mdi-email-outline me-1"></i> E-mail
+                                </label>
+                                <p class="mb-0 fw-semibold">
+                                    <a href="mailto:{{ $user->email }}" class="text-decoration-none">
+                                        {{ $user->email }}
+                                    </a>
+                                </p>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <div class="border rounded p-3 h-100">
+                                <label class="text-muted small mb-1 d-block">
+                                    <i class="mdi mdi-phone me-1"></i> Telefone
+                                </label>
+                                <p class="mb-0 fw-semibold">
+                                    @if($user->telefone)
+                                        <a href="tel:{{ $user->telefone }}" class="text-decoration-none">
+                                            {{ $user->telefone }}
+                                        </a>
                                     @else
-                                        <span class="badge bg-warning">Sem acesso a médicos</span>
+                                        <span class="text-muted">N/A</span>
                                     @endif
-                                </span>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    {{-- Módulos Atribuídos --}}
+                    <h5 class="text-primary mb-3">
+                        <i class="mdi mdi-view-module me-2"></i>
+                        Módulos Atribuídos
+                    </h5>
+                    <div class="mb-4">
+                        @if (!empty($user->modules))
+                            <div class="d-flex flex-wrap gap-2">
+                                @foreach ($user->modules as $module)
+                                    <span class="badge bg-info-subtle text-info px-3 py-2">
+                                        <i class="mdi mdi-package-variant me-1"></i>
+                                        {{ ucfirst($module) }}
+                                    </span>
+                                @endforeach
+                            </div>
+                        @else
+                            <div class="alert alert-warning mb-0">
+                                <i class="mdi mdi-information-outline me-2"></i>
+                                Nenhum módulo atribuído
+                            </div>
+                        @endif
+                    </div>
+
+                    {{-- Permissões de Médicos --}}
+                    @if (!$user->is_doctor)
+                        <h5 class="text-primary mb-3">
+                            <i class="mdi mdi-account-key me-2"></i>
+                            Permissões de Médicos
+                        </h5>
+                        <div class="mb-4">
+                            @if ($user->allowedDoctors->count() > 0)
+                                <div class="list-group">
+                                    @foreach ($user->allowedDoctors as $doctor)
+                                        <div class="list-group-item">
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <div>
+                                                    <i class="mdi mdi-account-doctor text-primary me-2"></i>
+                                                    <strong>{{ $doctor->user->name ?? 'Médico sem usuário' }}</strong>
+                                                    @if ($doctor->crm_number)
+                                                        <span class="text-muted ms-2">
+                                                            (CRM: {{ $doctor->crm_number }}/{{ $doctor->crm_state }})
+                                                        </span>
+                                                    @endif
+                                                </div>
+                                            </div>
+                                        </div>
+                                    @endforeach
+                                </div>
+                            @else
+                                <div class="alert alert-info">
+                                    <i class="mdi mdi-information-outline me-2"></i>
+                                    Nenhum médico específico atribuído.
+                                    @if ($user->canViewAllDoctors())
+                                        <span class="badge bg-info ms-2">Pode visualizar todos os médicos</span>
+                                    @else
+                                        <span class="badge bg-warning ms-2">Sem acesso a médicos</span>
+                                    @endif
+                                </div>
                             @endif
-                        </p>
-                        <div class="mt-2">
-                            <a href="{{ route('tenant.users.doctor-permissions', $user->id) }}" class="btn btn-sm btn-primary">
-                                <i class="mdi mdi-account-key"></i> Gerenciar Permissões de Médicos
-                            </a>
+                            <div class="mt-3">
+                                <a href="{{ route('tenant.users.doctor-permissions', $user->id) }}" class="btn btn-primary">
+                                    <i class="mdi mdi-account-key me-1"></i> Gerenciar Permissões de Médicos
+                                </a>
+                            </div>
                         </div>
                     @endif
 
-                    <!-- Botão de Edição dentro do card e alinhado à direita -->
-                    <div class="text-end mt-4">
-                        <a href="{{ route('tenant.users.edit', $user->id) }}" class="btn btn-warning btn-small">
-                            <i class="mdi mdi-pencil"></i> Editar
-                        </a>
+                    {{-- Botões de Ação --}}
+                    <div class="border-top pt-3 mt-4">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <a href="{{ route('tenant.users.index') }}" class="btn btn-secondary">
+                                <i class="mdi mdi-arrow-left me-1"></i> Voltar
+                            </a>
+                            <a href="{{ route('tenant.users.edit', $user->id) }}" class="btn btn-warning">
+                                <i class="mdi mdi-pencil me-1"></i> Editar
+                            </a>
+                        </div>
                     </div>
                 </div>
             </div>

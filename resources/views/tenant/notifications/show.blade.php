@@ -67,7 +67,7 @@
 
                 <div class="mt-4">
                     <a href="{{ route('tenant.notifications.index') }}" class="btn btn-secondary">
-                        <i class="mdi mdi-arrow-left me-2"></i>Voltar
+                        <i class="mdi mdi-arrow-left me-1"></i> Voltar
                     </a>
                 </div>
             </div>
