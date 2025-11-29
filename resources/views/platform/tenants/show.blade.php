@@ -129,6 +129,50 @@
                             @endif
                         </div>
 
+                        {{-- Informações de Acesso do Admin --}}
+                        <div class="mt-5">
+                            <h5 class="text-primary fw-bold mb-3">
+                                <i class="fas fa-key me-2"></i> Informações de Acesso do Administrador
+                            </h5>
+
+                            <div class="row g-3">
+                                <div class="col-md-12">
+                                    <label class="fw-semibold text-muted">Link de Acesso:</label>
+                                    <p class="mb-0">
+                                        <a href="{{ $loginUrl }}" target="_blank" class="text-primary text-decoration-none">
+                                            <i class="fas fa-external-link-alt me-1"></i>{{ $loginUrl }}
+                                        </a>
+                                    </p>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <label class="fw-semibold text-muted">Usuário (Email):</label>
+                                    <p class="mb-0">
+                                        @if($adminUser)
+                                            <code class="bg-light px-2 py-1 rounded">{{ $adminUser->email }}</code>
+                                        @else
+                                            <span class="text-muted">Usuário admin não encontrado</span>
+                                        @endif
+                                    </p>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <label class="fw-semibold text-muted">Senha:</label>
+                                    <p class="mb-0">
+                                        <code class="bg-light px-2 py-1 rounded">{{ $adminPassword }}</code>
+                                    </p>
+                                </div>
+                            </div>
+
+                            @if(!$adminUser)
+                                <div class="alert alert-warning mt-3">
+                                    <i class="fas fa-exclamation-triangle me-2"></i>
+                                    <strong>Atenção:</strong> O usuário administrador não foi encontrado no banco de dados do tenant. 
+                                    Isso pode indicar que o tenant ainda não foi totalmente provisionado.
+                                </div>
+                            @endif
+                        </div>
+
                         {{-- Banco de Dados --}}
                         <div class="mt-5">
                             <h5 class="text-primary fw-bold mb-3">

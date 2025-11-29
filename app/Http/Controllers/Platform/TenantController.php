@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Platform;
 
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 use App\Http\Controllers\Controller;
 use App\Models\Platform\Tenant;
 use App\Models\Platform\TenantLocalizacao;
@@ -33,7 +34,46 @@ class TenantController extends Controller
     public function show($id)
     {
         $tenant = Tenant::with('localizacao.pais', 'localizacao.estado', 'localizacao.cidade')->findOrFail($id);
-        return view('platform.tenants.show', compact('tenant'));
+        
+        // Buscar informações do usuário admin do tenant
+        $adminUser = null;
+        $adminPassword = 'admin123'; // Senha padrão conforme TenantProvisioner
+        
+        try {
+            // Configurar conexão do tenant temporariamente
+            config([
+                'database.connections.tenant.host'     => $tenant->db_host,
+                'database.connections.tenant.port'     => $tenant->db_port,
+                'database.connections.tenant.database' => $tenant->db_name,
+                'database.connections.tenant.username' => $tenant->db_username,
+                'database.connections.tenant.password' => $tenant->db_password,
+            ]);
+            
+            DB::purge('tenant');
+            DB::reconnect('tenant');
+            
+            // Buscar usuário admin (geralmente o primeiro usuário criado ou com email admin@{subdomain}.com)
+            $sanitizedSubdomain = preg_replace('/[^a-z0-9\-]/', '', Str::slug($tenant->subdomain));
+            $sanitizedSubdomain = !empty($sanitizedSubdomain) ? $sanitizedSubdomain : 'tenant';
+            $adminEmail = "admin@{$sanitizedSubdomain}.com";
+            
+            $adminUser = DB::connection('tenant')
+                ->table('users')
+                ->where('email', $adminEmail)
+                ->orWhere('name', 'Administrador')
+                ->first();
+                
+        } catch (\Throwable $e) {
+            Log::warning('Não foi possível buscar usuário admin do tenant', [
+                'tenant_id' => $tenant->id,
+                'error' => $e->getMessage()
+            ]);
+        }
+        
+        // Gerar link de acesso
+        $loginUrl = url("/t/{$tenant->subdomain}/login");
+        
+        return view('platform.tenants.show', compact('tenant', 'adminUser', 'adminPassword', 'loginUrl'));
     }
 
     public function store(TenantRequest $request)
