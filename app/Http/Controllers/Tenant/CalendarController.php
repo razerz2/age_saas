@@ -18,17 +18,16 @@ class CalendarController extends Controller
         
         $query = Calendar::with('doctor.user');
         
-        // Se o usuário é médico, só mostra seus próprios calendários
-        if ($user && $user->is_doctor && $user->doctor) {
+        // Aplicar filtros baseado no role
+        if ($user->role === 'doctor' && $user->doctor) {
             $query->where('doctor_id', $user->doctor->id);
-        } elseif ($user && !$user->is_doctor) {
-            // Se não é médico, verifica permissões
-            if (!$user->canViewAllDoctors()) {
-                // Se tem permissões específicas, filtra apenas os médicos permitidos
-                $allowedDoctorIds = $user->doctorPermissions()->pluck('doctor_id')->toArray();
+        } elseif ($user->role === 'user') {
+            $allowedDoctorIds = $user->allowedDoctors()->pluck('doctors.id')->toArray();
+            if (!empty($allowedDoctorIds)) {
                 $query->whereIn('doctor_id', $allowedDoctorIds);
+            } else {
+                $query->whereRaw('1 = 0');
             }
-            // Se pode ver todos os médicos, não aplica filtro
         }
         
         $calendars = $query->orderBy('name')->paginate(20);
@@ -46,14 +45,20 @@ class CalendarController extends Controller
             ->orderBy('id')
             ->get();
         
-        // Se o usuário é médico e já tem calendário, redireciona
-        if ($user && $user->is_doctor && $user->doctor) {
+        // Aplicar filtros baseado no role
+        if ($user->role === 'doctor' && $user->doctor) {
             if ($user->doctor->calendars()->exists()) {
                 return redirect()->route('tenant.calendars.index')
                     ->with('error', 'Você já possui um calendário cadastrado. Cada médico pode ter apenas um calendário.');
             }
-            // Se não tem calendário, filtra para mostrar apenas ele mesmo
             $doctors = $doctors->where('id', $user->doctor->id);
+        } elseif ($user->role === 'user') {
+            $allowedDoctorIds = $user->allowedDoctors()->pluck('doctors.id')->toArray();
+            if (!empty($allowedDoctorIds)) {
+                $doctors = $doctors->whereIn('id', $allowedDoctorIds);
+            } else {
+                $doctors = collect();
+            }
         }
 
         return view('tenant.calendars.create', compact('doctors'));
@@ -73,7 +78,7 @@ class CalendarController extends Controller
         }
         
         // Se o usuário é médico, verifica se está tentando criar para outro médico
-        if ($user && $user->is_doctor && $user->doctor) {
+        if ($user->role === 'doctor' && $user->doctor) {
             if ($data['doctor_id'] !== $user->doctor->id) {
                 abort(403, 'Você só pode criar calendário para si mesmo.');
             }
@@ -99,14 +104,12 @@ class CalendarController extends Controller
         $user = Auth::guard('tenant')->user();
         
         // Verifica permissão para visualizar o calendário
-        if ($user && $user->is_doctor && $user->doctor) {
-            // Médico só pode ver seu próprio calendário
+        if ($user->role === 'doctor' && $user->doctor) {
             if ($calendar->doctor_id !== $user->doctor->id) {
                 abort(403, 'Você não tem permissão para visualizar este calendário.');
             }
-        } elseif ($user && !$user->is_doctor) {
-            // Usuário não médico precisa ter permissão para ver o médico
-            if (!$user->canViewAllDoctors() && !$user->canViewDoctor($calendar->doctor_id)) {
+        } elseif ($user->role === 'user') {
+            if (!$user->belongsToUser($calendar->doctor_id)) {
                 abort(403, 'Você não tem permissão para visualizar este calendário.');
             }
         }
@@ -122,14 +125,12 @@ class CalendarController extends Controller
         $user = Auth::guard('tenant')->user();
         
         // Verifica permissão para editar o calendário
-        if ($user && $user->is_doctor && $user->doctor) {
-            // Médico só pode editar seu próprio calendário
+        if ($user->role === 'doctor' && $user->doctor) {
             if ($calendar->doctor_id !== $user->doctor->id) {
                 abort(403, 'Você não tem permissão para editar este calendário.');
             }
-        } elseif ($user && !$user->is_doctor) {
-            // Usuário não médico precisa ter permissão para ver o médico
-            if (!$user->canViewAllDoctors() && !$user->canViewDoctor($calendar->doctor_id)) {
+        } elseif ($user->role === 'user') {
+            if (!$user->belongsToUser($calendar->doctor_id)) {
                 abort(403, 'Você não tem permissão para editar este calendário.');
             }
         }
@@ -154,8 +155,7 @@ class CalendarController extends Controller
         $data = $request->validated();
         
         // Verifica permissão para atualizar o calendário
-        if ($user && $user->is_doctor && $user->doctor) {
-            // Médico só pode atualizar seu próprio calendário
+        if ($user->role === 'doctor' && $user->doctor) {
             if ($calendar->doctor_id !== $user->doctor->id) {
                 abort(403, 'Você não tem permissão para atualizar este calendário.');
             }
@@ -165,9 +165,8 @@ class CalendarController extends Controller
                     ->with('error', 'Você não pode alterar o médico do calendário.')
                     ->withInput();
             }
-        } elseif ($user && !$user->is_doctor) {
-            // Usuário não médico precisa ter permissão para ver o médico
-            if (!$user->canViewAllDoctors() && !$user->canViewDoctor($calendar->doctor_id)) {
+        } elseif ($user->role === 'user') {
+            if (!$user->belongsToUser($calendar->doctor_id)) {
                 abort(403, 'Você não tem permissão para atualizar este calendário.');
             }
         }
@@ -195,14 +194,12 @@ class CalendarController extends Controller
         $user = Auth::guard('tenant')->user();
         
         // Verifica permissão para remover o calendário
-        if ($user && $user->is_doctor && $user->doctor) {
-            // Médico só pode remover seu próprio calendário
+        if ($user->role === 'doctor' && $user->doctor) {
             if ($calendar->doctor_id !== $user->doctor->id) {
                 abort(403, 'Você não tem permissão para remover este calendário.');
             }
-        } elseif ($user && !$user->is_doctor) {
-            // Usuário não médico precisa ter permissão para ver o médico
-            if (!$user->canViewAllDoctors() && !$user->canViewDoctor($calendar->doctor_id)) {
+        } elseif ($user->role === 'user') {
+            if (!$user->belongsToUser($calendar->doctor_id)) {
                 abort(403, 'Você não tem permissão para remover este calendário.');
             }
         }
@@ -219,18 +216,13 @@ class CalendarController extends Controller
         
         $query = Calendar::orderBy('name');
         
-        // Se o usuário é médico, redireciona para seu próprio calendário
-        if ($user && $user->is_doctor && $user->doctor) {
+        // Aplicar filtros baseado no role
+        if ($user->role === 'doctor' && $user->doctor) {
             $calendar = $query->where('doctor_id', $user->doctor->id)->first();
-        } elseif ($user && !$user->is_doctor) {
-            // Se não é médico, verifica permissões
-            if (!$user->canViewAllDoctors()) {
-                // Se tem permissões específicas, filtra apenas os médicos permitidos
-                $allowedDoctorIds = $user->doctorPermissions()->pluck('doctor_id')->toArray();
+        } elseif ($user->role === 'user') {
+            $allowedDoctorIds = $user->allowedDoctors()->pluck('doctors.id')->toArray();
+            if (!empty($allowedDoctorIds)) {
                 $calendar = $query->whereIn('doctor_id', $allowedDoctorIds)->first();
-            } else {
-                // Se pode ver todos os médicos, pega o primeiro disponível
-                $calendar = $query->first();
             }
         } else {
             $calendar = $query->first();

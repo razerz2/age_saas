@@ -57,6 +57,11 @@ class CheckModuleAccess
             $user = Auth::guard($guard)->user();
         }
 
+        // Para rotas tenant, verifica se é admin (admin tem acesso a todos os módulos)
+        if ($isTenantRoute && isset($user->role) && $user->role === 'admin') {
+            return $next($request);
+        }
+
         // Verifica se o usuário não tem acesso ao módulo solicitado
         if (!in_array($module, $user->modules ?? [])) {
             // Busca o nome do módulo

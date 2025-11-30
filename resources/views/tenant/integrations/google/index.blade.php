@@ -182,32 +182,41 @@
                                             @endif
                                         </td>
                                         <td class="text-end">
-                                            @if ($doctor->googleCalendarToken)
-                                                <div class="btn-group" role="group">
-                                                    <button type="button" class="btn btn-info btn-sm" 
-                                                            data-bs-toggle="tooltip" 
-                                                            data-bs-placement="top" 
-                                                            title="Status da integração">
-                                                        <i class="mdi mdi-information-outline"></i>
-                                                    </button>
-                                                    <form action="{{ route('tenant.integrations.google.disconnect', $doctor->id) }}" 
-                                                          method="POST" 
-                                                          class="d-inline"
-                                                          onsubmit="return confirm('Tem certeza que deseja desconectar a integração do Google Calendar para este médico?\n\nOs eventos já criados no Google Calendar não serão removidos automaticamente.');">
-                                                        @csrf
-                                                        @method('DELETE')
-                                                        <button type="submit" class="btn btn-danger btn-sm">
-                                                            <i class="mdi mdi-link-variant-off me-1"></i>
-                                                            Desconectar
+                                            @if ($user->role === 'admin' || ($user->role === 'doctor' && $user->doctor && $user->doctor->id === $doctor->id))
+                                                {{-- Admin e médico (para si mesmo) podem conectar/desconectar --}}
+                                                @if ($doctor->googleCalendarToken)
+                                                    <div class="btn-group" role="group">
+                                                        <button type="button" class="btn btn-info btn-sm" 
+                                                                data-bs-toggle="tooltip" 
+                                                                data-bs-placement="top" 
+                                                                title="Status da integração">
+                                                            <i class="mdi mdi-information-outline"></i>
                                                         </button>
-                                                    </form>
-                                                </div>
+                                                        <form action="{{ route('tenant.integrations.google.disconnect', $doctor->id) }}" 
+                                                              method="POST" 
+                                                              class="d-inline"
+                                                              onsubmit="return confirm('Tem certeza que deseja desconectar a integração do Google Calendar para este médico?\n\nOs eventos já criados no Google Calendar não serão removidos automaticamente.');">
+                                                            @csrf
+                                                            @method('DELETE')
+                                                            <button type="submit" class="btn btn-danger btn-sm">
+                                                                <i class="mdi mdi-link-variant-off me-1"></i>
+                                                                Desconectar
+                                                            </button>
+                                                        </form>
+                                                    </div>
+                                                @else
+                                                    <a href="{{ route('tenant.integrations.google.connect', $doctor->id) }}" 
+                                                       class="btn btn-primary btn-sm">
+                                                        <i class="mdi mdi-google me-1"></i>
+                                                        Conectar Google
+                                                    </a>
+                                                @endif
                                             @else
-                                                <a href="{{ route('tenant.integrations.google.connect', $doctor->id) }}" 
-                                                   class="btn btn-primary btn-sm">
-                                                    <i class="mdi mdi-google me-1"></i>
-                                                    Conectar Google
-                                                </a>
+                                                {{-- Usuário comum: apenas visualiza status --}}
+                                                <span class="text-muted">
+                                                    <i class="mdi mdi-eye me-1"></i>
+                                                    Apenas visualização
+                                                </span>
                                             @endif
                                         </td>
                                     </tr>

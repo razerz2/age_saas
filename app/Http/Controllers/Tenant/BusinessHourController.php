@@ -8,13 +8,28 @@ use App\Models\Tenant\Doctor;
 use App\Http\Requests\Tenant\StoreBusinessHourRequest;
 use App\Http\Requests\Tenant\UpdateBusinessHourRequest;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Auth;
 
 class BusinessHourController extends Controller
 {
     public function index()
     {
-        $businessHours = BusinessHour::with('doctor.user')
-            ->orderBy('weekday')
+        $user = Auth::guard('tenant')->user();
+        $query = BusinessHour::with('doctor.user');
+
+        // Aplicar filtros baseado no role
+        if ($user->role === 'doctor' && $user->doctor) {
+            $query->where('doctor_id', $user->doctor->id);
+        } elseif ($user->role === 'user') {
+            $allowedDoctorIds = $user->allowedDoctors()->pluck('doctors.id')->toArray();
+            if (!empty($allowedDoctorIds)) {
+                $query->whereIn('doctor_id', $allowedDoctorIds);
+            } else {
+                $query->whereRaw('1 = 0');
+            }
+        }
+
+        $businessHours = $query->orderBy('weekday')
             ->orderBy('start_time')
             ->paginate(20);
 
@@ -23,7 +38,22 @@ class BusinessHourController extends Controller
 
     public function create()
     {
-        $doctors = Doctor::with('user')->orderBy('id')->get();
+        $user = Auth::guard('tenant')->user();
+        $doctorsQuery = Doctor::with('user');
+
+        // Aplicar filtros baseado no role
+        if ($user->role === 'doctor' && $user->doctor) {
+            $doctorsQuery->where('id', $user->doctor->id);
+        } elseif ($user->role === 'user') {
+            $allowedDoctorIds = $user->allowedDoctors()->pluck('doctors.id')->toArray();
+            if (!empty($allowedDoctorIds)) {
+                $doctorsQuery->whereIn('id', $allowedDoctorIds);
+            } else {
+                $doctorsQuery->whereRaw('1 = 0');
+            }
+        }
+
+        $doctors = $doctorsQuery->orderBy('id')->get();
 
         return view('tenant.business-hours.create', compact('doctors'));
     }

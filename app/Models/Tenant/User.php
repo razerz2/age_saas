@@ -25,6 +25,7 @@ class User extends Authenticatable
         'is_doctor',
         'status',
         'modules',
+        'role',
     ];
 
     protected $hidden = ['password', 'remember_token'];
@@ -61,7 +62,7 @@ class User extends Authenticatable
         if ($this->avatar) {
             return asset('storage/' . $this->avatar);
         }
-        return asset('connect_plus/assets/images/faces/face28.png');
+        return asset('connect_plus/assets/images/faces/default.jpg');
     }
 
     public function scopeActive($query)
@@ -119,12 +120,72 @@ class User extends Authenticatable
      */
     public function canViewAllDoctors(): bool
     {
+        // Admin pode ver todos
+        if ($this->role === 'admin') {
+            return true;
+        }
+
         // Se o usuário é médico, não pode ver todos
-        if ($this->is_doctor) {
+        if ($this->role === 'doctor' || $this->is_doctor) {
             return false;
         }
 
         // Se não tem permissões específicas, pode ver todos
         return $this->doctorPermissions()->count() === 0;
+    }
+
+    /**
+     * Verifica se o usuário é administrador
+     */
+    public function isAdmin(): bool
+    {
+        return $this->role === 'admin';
+    }
+
+    /**
+     * Verifica se o usuário é médico
+     */
+    public function isDoctor(): bool
+    {
+        return $this->role === 'doctor';
+    }
+
+    /**
+     * Verifica se o usuário é comum
+     */
+    public function isCommonUser(): bool
+    {
+        return $this->role === 'user';
+    }
+
+    /**
+     * Retorna o ID do médico associado ao usuário (se for role doctor)
+     */
+    public function getDoctorIdAttribute()
+    {
+        if ($this->role === 'doctor' && $this->doctor) {
+            return $this->doctor->id;
+        }
+        return null;
+    }
+
+    /**
+     * Verifica se o usuário tem acesso a um médico específico
+     * Baseado no role e nas permissões
+     */
+    public function belongsToUser($doctorId): bool
+    {
+        // Admin pode acessar qualquer médico
+        if ($this->role === 'admin') {
+            return true;
+        }
+
+        // Se for role doctor, só pode acessar seu próprio médico
+        if ($this->role === 'doctor') {
+            return $this->doctor && (string) $this->doctor->id === (string) $doctorId;
+        }
+
+        // Usuário comum: verifica permissões
+        return $this->allowedDoctors()->where('doctors.id', $doctorId)->exists();
     }
 }

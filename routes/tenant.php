@@ -17,6 +17,7 @@ use App\Http\Controllers\Tenant\DashboardController;
 use App\Http\Controllers\Tenant\UserController;
 use App\Http\Controllers\Tenant\DoctorController;
 use App\Http\Controllers\Tenant\UserDoctorPermissionController;
+use App\Http\Controllers\Tenant\ProfileController;
 
 // Medical
 use App\Http\Controllers\Tenant\MedicalSpecialtyController;
@@ -119,6 +120,10 @@ Route::prefix('tenant')
         // Dashboard
         Route::get('/dashboard', [DashboardController::class, 'index'])
             ->name('dashboard');
+
+        // Profile
+        Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
+        Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
 
 
         // =====================================================================

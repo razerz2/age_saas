@@ -2,9 +2,19 @@
     // Sempre usar o guard tenant na área tenant
     $user = auth('tenant')->user();
     $userName = $user->name ?? 'Usuário';
+    $userNameFull = $user->name_full ?? $user->name ?? 'Usuário';
     $userEmail = $user->email ?? null;
-    $userAvatar = $user->avatar_url ?? asset('connect_plus/assets/images/faces/face28.png');
+    // Usar o accessor avatar_url que já trata a URL corretamente
+    $userAvatar = $user ? $user->avatar_url : asset('connect_plus/assets/images/faces/default.jpg');
     $isDoctor = $user->is_doctor ?? false;
+    $userRole = $user->role ?? 'user';
+    
+    // Determinar o texto do role para exibição
+    $roleText = match($userRole) {
+        'admin' => 'Administrador',
+        'doctor' => 'Médico',
+        default => 'Usuário'
+    };
 @endphp
 
 <li class="nav-item nav-profile dropdown">
@@ -47,12 +57,16 @@
                     </span>
                 @endif
             </div>
-            <h6 class="mt-3 mb-1 fw-bold" style="font-size: 1.1rem;">{{ $userName }}</h6>
-            @if($isDoctor)
-                <span class="badge mt-2 px-3 py-1" style="font-size: 0.75rem; background: rgba(68, 206, 66, 0.2); color: #44ce42; border: 1px solid rgba(68, 206, 66, 0.3);">
+            <h6 class="mt-3 mb-1 fw-bold" style="font-size: 1.1rem;">{{ $userNameFull }}</h6>
+            <span class="badge mt-2 px-3 py-1" style="font-size: 0.75rem; background: rgba(255, 255, 255, 0.2); color: #fff; border: 1px solid rgba(255, 255, 255, 0.3);">
+                @if($userRole === 'admin')
+                    <i class="mdi mdi-shield-account me-1"></i>Administrador
+                @elseif($userRole === 'doctor' || $isDoctor)
                     <i class="mdi mdi-stethoscope me-1"></i>Médico
-                </span>
-            @endif
+                @else
+                    <i class="mdi mdi-account me-1"></i>Usuário
+                @endif
+            </span>
         </div>
 
         {{-- Menu Items --}}
@@ -64,7 +78,7 @@
             </h6>
 
             <a class="dropdown-item d-flex align-items-center py-3 px-3 rounded-2 mb-1" 
-               href="#" 
+               href="{{ route('tenant.profile.edit') }}" 
                style="transition: all 0.2s ease; border-left: 3px solid transparent;"
                onmouseover="this.style.backgroundColor='#f8f9fa'; this.style.borderLeftColor='#0062ff';"
                onmouseout="this.style.backgroundColor='transparent'; this.style.borderLeftColor='transparent';">

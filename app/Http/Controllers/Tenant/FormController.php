@@ -20,6 +20,7 @@ use App\Http\Requests\Tenant\Forms\AddOptionRequest;
 use App\Http\Requests\Tenant\Forms\UpdateOptionRequest;
 
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Auth;
 
 class FormController extends Controller
 {
@@ -29,16 +30,44 @@ class FormController extends Controller
 
     public function index()
     {
-        $forms = Form::with(['specialty', 'doctor'])
-            ->orderBy('name')
-            ->paginate(20);
+        $user = Auth::guard('tenant')->user();
+        $query = Form::with(['specialty', 'doctor']);
+
+        // Aplicar filtros baseado no role
+        if ($user->role === 'doctor' && $user->doctor) {
+            $query->where('doctor_id', $user->doctor->id);
+        } elseif ($user->role === 'user') {
+            $allowedDoctorIds = $user->allowedDoctors()->pluck('doctors.id')->toArray();
+            if (!empty($allowedDoctorIds)) {
+                $query->whereIn('doctor_id', $allowedDoctorIds);
+            } else {
+                $query->whereRaw('1 = 0');
+            }
+        }
+
+        $forms = $query->orderBy('name')->paginate(20);
 
         return view('tenant.forms.index', compact('forms'));
     }
 
     public function create()
     {
-        $doctors = Doctor::with('user')->orderBy('id')->get();
+        $user = Auth::guard('tenant')->user();
+        $doctorsQuery = Doctor::with('user');
+
+        // Aplicar filtros baseado no role
+        if ($user->role === 'doctor' && $user->doctor) {
+            $doctorsQuery->where('id', $user->doctor->id);
+        } elseif ($user->role === 'user') {
+            $allowedDoctorIds = $user->allowedDoctors()->pluck('doctors.id')->toArray();
+            if (!empty($allowedDoctorIds)) {
+                $doctorsQuery->whereIn('id', $allowedDoctorIds);
+            } else {
+                $doctorsQuery->whereRaw('1 = 0');
+            }
+        }
+
+        $doctors = $doctorsQuery->orderBy('id')->get();
 
         return view('tenant.forms.create', compact('doctors'));
     }

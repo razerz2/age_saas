@@ -30,23 +30,61 @@ class AppointmentController extends Controller
     }
     public function index()
     {
-        $appointments = Appointment::with(['calendar.doctor.user', 'patient', 'type', 'specialty'])
-            ->orderBy('starts_at')
-            ->paginate(30);
+        $user = Auth::guard('tenant')->user();
+        $query = Appointment::with(['calendar.doctor.user', 'patient', 'type', 'specialty']);
+
+        // Aplicar filtros baseado no role
+        if ($user->role === 'doctor' && $user->doctor) {
+            // Médico só vê seus próprios agendamentos
+            $query->whereHas('calendar', function($q) use ($user) {
+                $q->where('doctor_id', $user->doctor->id);
+            });
+        } elseif ($user->role === 'user') {
+            // Usuário comum só vê médicos relacionados
+            $allowedDoctorIds = $user->allowedDoctors()->pluck('doctors.id')->toArray();
+            if (!empty($allowedDoctorIds)) {
+                $query->whereHas('calendar', function($q) use ($allowedDoctorIds) {
+                    $q->whereIn('doctor_id', $allowedDoctorIds);
+                });
+            } else {
+                // Se não tem médicos permitidos, não mostra nada
+                $query->whereRaw('1 = 0');
+            }
+        }
+        // Admin vê tudo (sem filtro)
+
+        $appointments = $query->orderBy('starts_at')->paginate(30);
 
         return view('tenant.appointments.index', compact('appointments'));
     }
 
     public function create()
     {
+        $user = Auth::guard('tenant')->user();
+        
         // Listar médicos ativos (com status active)
-        $doctors = Doctor::with('user')
+        $doctorsQuery = Doctor::with('user')
             ->whereHas('user', function($query) {
                 $query->where('status', 'active');
-            })
-            ->orderBy('id')
-            ->get();
-        
+            });
+
+        // Aplicar filtros baseado no role
+        if ($user->role === 'doctor' && $user->doctor) {
+            // Médico só pode criar para si mesmo
+            $doctorsQuery->where('id', $user->doctor->id);
+        } elseif ($user->role === 'user') {
+            // Usuário comum só vê médicos relacionados
+            $allowedDoctorIds = $user->allowedDoctors()->pluck('doctors.id')->toArray();
+            if (!empty($allowedDoctorIds)) {
+                $doctorsQuery->whereIn('id', $allowedDoctorIds);
+            } else {
+                // Se não tem médicos permitidos, não mostra nada
+                $doctorsQuery->whereRaw('1 = 0');
+            }
+        }
+        // Admin vê todos (sem filtro)
+
+        $doctors = $doctorsQuery->orderBy('id')->get();
         $patients = Patient::orderBy('full_name')->get();
 
         return view('tenant.appointments.create', compact(
@@ -174,14 +212,14 @@ class AppointmentController extends Controller
                 ->with(['patient', 'type', 'specialty']);
             
             // Verifica permissão para visualizar os eventos
-            if ($user && $user->is_doctor && $user->doctor) {
+            if ($user->role === 'doctor' && $user->doctor) {
                 // Médico só pode ver eventos do seu próprio calendário
                 if ($calendar->doctor_id !== $user->doctor->id) {
                     return response()->json([]);
                 }
-            } elseif ($user && !$user->is_doctor) {
-                // Usuário não médico precisa ter permissão para ver o médico
-                if (!$user->canViewAllDoctors() && !$user->canViewDoctor($calendar->doctor_id)) {
+            } elseif ($user->role === 'user') {
+                // Usuário comum precisa ter permissão para ver o médico
+                if (!$user->belongsToUser($calendar->doctor_id)) {
                     return response()->json([]);
                 }
             }
@@ -223,18 +261,18 @@ class AppointmentController extends Controller
         $user = Auth::guard('tenant')->user();
         
         // Verifica permissão para visualizar o calendário
-        if ($user && $user->is_doctor && $user->doctor) {
+        if ($user->role === 'doctor' && $user->doctor) {
             // Médico só pode ver seu próprio calendário
             if ($calendar->doctor_id !== $user->doctor->id) {
                 abort(403, 'Você não tem permissão para visualizar este calendário.');
             }
-        } elseif ($user && !$user->is_doctor) {
-            // Usuário não médico precisa ter permissão para ver o médico
-            if (!$user->canViewAllDoctors() && !$user->canViewDoctor($calendar->doctor_id)) {
+        } elseif ($user->role === 'user') {
+            // Usuário comum precisa ter permissão para ver o médico
+            if (!$user->belongsToUser($calendar->doctor_id)) {
                 abort(403, 'Você não tem permissão para visualizar este calendário.');
             }
         } else {
-            // Usuário não autenticado
+            // Usuário não autenticado ou role inválido
             abort(403, 'Você precisa estar autenticado para visualizar este calendário.');
         }
         

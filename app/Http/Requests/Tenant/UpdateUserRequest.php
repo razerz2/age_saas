@@ -15,8 +15,9 @@ class UpdateUserRequest extends FormRequest
     public function rules()
     {
         $userId = $this->route('id'); // Obtém o ID do usuário da rota
+        $user = auth()->guard('tenant')->user();
 
-        return [
+        $rules = [
             'name'       => ['required', 'string', 'max:255'],
             'name_full'  => ['required', 'string', 'max:255'],
             'email'      => ['required', 'email', Rule::unique('tenant.users', 'email')->ignore($userId)],
@@ -24,9 +25,23 @@ class UpdateUserRequest extends FormRequest
             'password'   => ['nullable', 'min:6'],
             'avatar'     => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif', 'max:2048'],
             'is_doctor' => ['nullable', 'boolean'],
+            'role'       => ['required', 'in:admin,user,doctor'],
             'status'     => ['required', 'in:active,blocked'],
-            'modules'    => ['nullable', 'array'], // Valida que os módulos sejam um array
+            'doctor_id'  => ['nullable', 'exists:tenant.doctors,id'],
         ];
+
+        // Se o usuário logado não é médico nem admin, permite validar doctor_ids
+        if ($user && $user->role !== 'doctor' && $user->role !== 'admin') {
+            $rules['doctor_ids'] = ['nullable', 'array'];
+            $rules['doctor_ids.*'] = ['exists:tenant.doctors,id'];
+        }
+
+        // Se o usuário logado não é admin, permite validar modules
+        if ($user && $user->role !== 'admin') {
+            $rules['modules'] = ['nullable', 'array'];
+        }
+
+        return $rules;
     }
 
     /**

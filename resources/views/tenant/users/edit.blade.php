@@ -79,8 +79,14 @@
                                             <i class="mdi mdi-image me-1"></i>
                                             Foto de Perfil
                                         </label>
-                                        <input type="file" name="avatar" id="avatar-input" class="form-control @error('avatar') is-invalid @enderror" 
-                                               accept="image/*">
+                                        <div class="d-flex gap-2 mb-2">
+                                            <input type="file" name="avatar" id="avatar-input" class="form-control @error('avatar') is-invalid @enderror" 
+                                                   accept="image/*">
+                                            <button type="button" id="webcam-btn" class="btn btn-outline-primary">
+                                                <i class="mdi mdi-camera me-1"></i>
+                                                Webcam
+                                            </button>
+                                        </div>
                                         <small class="form-text text-muted">Formatos aceitos: JPG, PNG, GIF. Tamanho máximo: 2MB</small>
                                         @error('avatar')
                                             <div class="invalid-feedback d-block">{{ $message }}</div>
@@ -90,7 +96,7 @@
                                         <div id="avatar-preview-container" class="mt-3" style="{{ old('avatar') || $user->avatar ? '' : 'display: none;' }}">
                                             <div class="d-flex align-items-center gap-3">
                                                 <div class="avatar-preview-wrapper">
-                                                    <img id="avatar-preview" src="{{ $user->avatar ? asset('storage/' . $user->avatar) : asset('connect_plus/assets/images/faces/face28.png') }}" alt="Preview" 
+                                                    <img id="avatar-preview" src="{{ $user->avatar ? asset('storage/' . $user->avatar) : asset('connect_plus/assets/images/faces/default.jpg') }}" alt="Preview" 
                                                          class="rounded-circle border" 
                                                          style="width: 120px; height: 120px; object-fit: cover; border: 3px solid #e9ecef !important;">
                                                 </div>
@@ -103,6 +109,44 @@
                                                         <i class="mdi mdi-delete me-1"></i>
                                                         Remover imagem
                                                     </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    {{-- Modal da Webcam --}}
+                                    <div class="modal fade" id="webcam-modal" tabindex="-1" aria-hidden="true">
+                                        <div class="modal-dialog modal-dialog-centered">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <h5 class="modal-title">
+                                                        <i class="mdi mdi-camera me-2"></i>
+                                                        Capturar Foto
+                                                    </h5>
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                                                </div>
+                                                <div class="modal-body text-center">
+                                                    <video id="webcam-video" autoplay playsinline style="width: 100%; max-width: 500px; border-radius: 8px; display: none;"></video>
+                                                    <canvas id="webcam-canvas" style="display: none;"></canvas>
+                                                    <div id="webcam-placeholder" class="p-4">
+                                                        <i class="mdi mdi-camera-outline" style="font-size: 48px; color: #ccc;"></i>
+                                                        <p class="text-muted mt-2">Clique em "Iniciar Webcam" para começar</p>
+                                                    </div>
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" id="webcam-start" class="btn btn-primary">
+                                                        <i class="mdi mdi-video me-1"></i>
+                                                        Iniciar Webcam
+                                                    </button>
+                                                    <button type="button" id="webcam-capture" class="btn btn-success" style="display: none;">
+                                                        <i class="mdi mdi-camera me-1"></i>
+                                                        Capturar Foto
+                                                    </button>
+                                                    <button type="button" id="webcam-stop" class="btn btn-secondary" style="display: none;">
+                                                        <i class="mdi mdi-stop me-1"></i>
+                                                        Parar
+                                                    </button>
+                                                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancelar</button>
                                                 </div>
                                             </div>
                                         </div>
@@ -154,13 +198,29 @@
                                 Configurações
                             </h5>
                             <div class="row">
-                                <div class="col-md-6">
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label class="fw-semibold">
+                                            <i class="mdi mdi-account-key me-1"></i>
+                                            Perfil <span class="text-danger">*</span>
+                                        </label>
+                                        <select name="role" id="role-select" class="form-control @error('role') is-invalid @enderror" required>
+                                            <option value="user" {{ old('role', $user->role ?? 'user') == 'user' ? 'selected' : '' }}>Usuário Comum</option>
+                                            <option value="doctor" {{ old('role', $user->role ?? 'user') == 'doctor' ? 'selected' : '' }}>Usuário Médico</option>
+                                            <option value="admin" {{ old('role', $user->role ?? 'user') == 'admin' ? 'selected' : '' }}>Administrador</option>
+                                        </select>
+                                        @error('role')
+                                            <div class="invalid-feedback d-block">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
                                     <div class="form-group">
                                         <label class="fw-semibold">
                                             <i class="mdi mdi-doctor me-1"></i>
                                             É Médico?
                                         </label>
-                                        <select name="is_doctor" class="form-control @error('is_doctor') is-invalid @enderror">
+                                        <select name="is_doctor" id="is-doctor-select" class="form-control @error('is_doctor') is-invalid @enderror">
                                             <option value="0" {{ old('is_doctor', $user->is_doctor) == 0 ? 'selected' : '' }}>Não</option>
                                             <option value="1" {{ old('is_doctor', $user->is_doctor) == 1 ? 'selected' : '' }}>Sim</option>
                                         </select>
@@ -169,7 +229,7 @@
                                         @enderror
                                     </div>
                                 </div>
-                                <div class="col-md-6">
+                                <div class="col-md-4">
                                     <div class="form-group">
                                         <label class="fw-semibold">
                                             <i class="mdi mdi-toggle-switch me-1"></i>
@@ -187,8 +247,46 @@
                             </div>
                         </div>
 
+                        {{-- Seção: Permissões de Médicos (para usuário comum) --}}
+                        <div class="mb-4" id="doctor-permissions-section" style="display: none;">
+                            <h5 class="mb-3 text-primary">
+                                <i class="mdi mdi-doctor me-2"></i>
+                                Médicos Permitidos
+                            </h5>
+                            <div class="form-group">
+                                <label class="fw-semibold mb-2">Selecione os médicos que este usuário pode visualizar:</label>
+                                @php
+                                    $doctors = \App\Models\Tenant\Doctor::with('user')->get();
+                                    $userDoctorIds = $user->allowedDoctors()->pluck('doctors.id')->toArray();
+                                    $oldDoctorIds = old('doctor_ids', $userDoctorIds);
+                                @endphp
+                                <div class="border rounded p-3 bg-light">
+                                    <div class="d-flex flex-wrap gap-3">
+                                        @foreach($doctors as $doctor)
+                                            <div class="form-check">
+                                                <label class="form-check-label">
+                                                    <input type="checkbox" 
+                                                        class="form-check-input" 
+                                                        name="doctor_ids[]"
+                                                        value="{{ $doctor->id }}" 
+                                                        {{ in_array($doctor->id, $oldDoctorIds) ? 'checked' : '' }}>
+                                                    {{ $doctor->user->name_full ?? $doctor->user->name }}
+                                                    <i class="input-helper"></i>
+                                                </label>
+                                            </div>
+                                        @endforeach
+                                    </div>
+                                </div>
+                                @error('doctor_ids')
+                                    <div class="invalid-feedback d-block">{{ $message }}</div>
+                                @enderror
+                            </div>
+                        </div>
+
+                        {{-- Seção: Seleção de Médico (removida - médico não representa outro médico) --}}
+
                         {{-- Seção: Módulos --}}
-                        <div class="mb-4">
+                        <div class="mb-4" id="modules-section">
                             <h5 class="mb-3 text-primary">
                                 <i class="mdi mdi-view-module me-2"></i>
                                 Módulos
@@ -196,7 +294,11 @@
                             <div class="form-group">
                                 <label class="fw-semibold mb-2">Selecione os módulos disponíveis para este usuário:</label>
                                 @php
-                                    $modules = App\Models\Tenant\Module::all();
+                                    $allModules = App\Models\Tenant\Module::all();
+                                    // Sempre remover módulo "usuários" - apenas admins têm acesso, mas não podem atribuir a outros
+                                    $modules = collect($allModules)->reject(function($module) {
+                                        return $module['key'] === 'users';
+                                    })->values()->all();
                                     $userModules = is_array($user->modules) ? $user->modules : (json_decode($user->modules, true) ?: []);
                                 @endphp
                                 <div class="border rounded p-3 bg-light">
@@ -250,8 +352,13 @@
         const avatarPreview = document.getElementById('avatar-preview');
         const avatarFilename = document.getElementById('avatar-filename');
         const avatarRemove = document.getElementById('avatar-remove');
-        const originalAvatar = '{{ $user->avatar ? asset("storage/" . $user->avatar) : asset("connect_plus/assets/images/faces/face28.png") }}';
+        const originalAvatar = '{{ $user->avatar ? asset("storage/" . $user->avatar) : asset("connect_plus/assets/images/faces/default.jpg") }}';
         const hasOriginalAvatar = {{ $user->avatar ? 'true' : 'false' }};
+        const roleSelect = document.getElementById('role-select');
+        const isDoctorSelect = document.getElementById('is-doctor-select');
+        const doctorPermissionsSection = document.getElementById('doctor-permissions-section');
+        const modulesSection = document.getElementById('modules-section');
+        const loggedUserRole = '{{ Auth::guard("tenant")->user()->role ?? "" }}';
 
         // Função para exibir pré-visualização
         function showPreview(file) {
@@ -297,6 +404,139 @@
                 avatarPreviewContainer.style.display = 'none';
             }
         });
+
+        // Webcam functionality
+        const webcamBtn = document.getElementById('webcam-btn');
+        const webcamModal = new bootstrap.Modal(document.getElementById('webcam-modal'));
+        const webcamVideo = document.getElementById('webcam-video');
+        const webcamCanvas = document.getElementById('webcam-canvas');
+        const webcamPlaceholder = document.getElementById('webcam-placeholder');
+        const webcamStart = document.getElementById('webcam-start');
+        const webcamCapture = document.getElementById('webcam-capture');
+        const webcamStop = document.getElementById('webcam-stop');
+        let stream = null;
+
+        // Abrir modal da webcam
+        webcamBtn.addEventListener('click', function() {
+            webcamModal.show();
+        });
+
+        // Iniciar webcam
+        webcamStart.addEventListener('click', async function() {
+            try {
+                stream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { 
+                        width: { ideal: 640 },
+                        height: { ideal: 480 },
+                        facingMode: 'user'
+                    } 
+                });
+                webcamVideo.srcObject = stream;
+                webcamVideo.style.display = 'block';
+                webcamPlaceholder.style.display = 'none';
+                webcamStart.style.display = 'none';
+                webcamCapture.style.display = 'inline-block';
+                webcamStop.style.display = 'inline-block';
+            } catch (err) {
+                alert('Erro ao acessar a webcam: ' + err.message);
+                console.error('Erro ao acessar webcam:', err);
+            }
+        });
+
+        // Capturar foto
+        webcamCapture.addEventListener('click', function() {
+            const context = webcamCanvas.getContext('2d');
+            webcamCanvas.width = webcamVideo.videoWidth;
+            webcamCanvas.height = webcamVideo.videoHeight;
+            context.drawImage(webcamVideo, 0, 0);
+            
+            // Converter canvas para blob
+            webcamCanvas.toBlob(function(blob) {
+                if (blob) {
+                    // Criar arquivo a partir do blob
+                    const file = new File([blob], 'webcam-photo.jpg', { type: 'image/jpeg' });
+                    
+                    // Criar DataTransfer para adicionar ao input
+                    const dataTransfer = new DataTransfer();
+                    dataTransfer.items.add(file);
+                    avatarInput.files = dataTransfer.files;
+                    
+                    // Mostrar preview
+                    showPreview(file);
+                    
+                    // Parar webcam e fechar modal
+                    stopWebcam();
+                    webcamModal.hide();
+                }
+            }, 'image/jpeg', 0.9);
+        });
+
+        // Parar webcam
+        webcamStop.addEventListener('click', function() {
+            stopWebcam();
+        });
+
+        function stopWebcam() {
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+                stream = null;
+            }
+            webcamVideo.srcObject = null;
+            webcamVideo.style.display = 'none';
+            webcamPlaceholder.style.display = 'block';
+            webcamStart.style.display = 'inline-block';
+            webcamCapture.style.display = 'none';
+            webcamStop.style.display = 'none';
+        }
+
+        // Parar webcam quando modal fechar
+        document.getElementById('webcam-modal').addEventListener('hidden.bs.modal', function() {
+            stopWebcam();
+        });
+
+        // Controlar exibição de seções baseado no role
+        function toggleRoleSections() {
+            const role = roleSelect.value;
+            
+            // Ajustar campo "é médico" automaticamente
+            if (isDoctorSelect) {
+                if (role === 'doctor') {
+                    isDoctorSelect.value = '1'; // Marca como "Sim"
+                } else if (role === 'user' || role === 'admin') {
+                    isDoctorSelect.value = '0'; // Marca como "Não"
+                }
+            }
+            
+            // Controlar exibição de "Médicos Permitidos"
+            // Aparece se: role selecionado é "user" E usuário logado não é médico
+            // (admin pode ver e configurar para outros usuários)
+            if (doctorPermissionsSection) {
+                if (role === 'user' && loggedUserRole !== 'doctor') {
+                    doctorPermissionsSection.style.display = 'block';
+                } else {
+                    doctorPermissionsSection.style.display = 'none';
+                }
+            }
+            
+            // Controlar exibição de "Módulos"
+            // Aparece se: role selecionado não é "admin"
+            // (admin pode ver e configurar módulos para outros usuários, mas não para admin)
+            if (modulesSection) {
+                if (role === 'admin') {
+                    modulesSection.style.display = 'none';
+                } else {
+                    modulesSection.style.display = 'block';
+                }
+            }
+        }
+
+        if (roleSelect) {
+            roleSelect.addEventListener('change', toggleRoleSections);
+            // Executar na carga inicial
+            toggleRoleSections();
+        } else {
+            console.error('roleSelect não encontrado');
+        }
     });
 </script>
 @endpush

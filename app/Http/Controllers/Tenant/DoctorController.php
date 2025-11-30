@@ -8,14 +8,32 @@ use App\Models\Tenant\User;
 use App\Models\Tenant\MedicalSpecialty;
 use App\Http\Requests\Tenant\StoreDoctorRequest;
 use App\Http\Requests\Tenant\UpdateDoctorRequest;
+use Illuminate\Support\Facades\Auth;
 
 class DoctorController extends Controller
 {
     public function index()
     {
-        $doctors = Doctor::with(['user', 'specialties'])
-            ->orderBy('created_at', 'desc')
-            ->paginate(15);
+        $user = Auth::guard('tenant')->user();
+        $query = Doctor::with(['user', 'specialties']);
+
+        // Aplicar filtros baseado no role
+        if ($user->role === 'doctor' && $user->doctor) {
+            // Médico só vê a si mesmo
+            $query->where('id', $user->doctor->id);
+        } elseif ($user->role === 'user') {
+            // Usuário comum só vê médicos relacionados
+            $allowedDoctorIds = $user->allowedDoctors()->pluck('doctors.id')->toArray();
+            if (!empty($allowedDoctorIds)) {
+                $query->whereIn('id', $allowedDoctorIds);
+            } else {
+                // Se não tem médicos permitidos, não mostra nada
+                $query->whereRaw('1 = 0');
+            }
+        }
+        // Admin vê tudo (sem filtro)
+
+        $doctors = $query->orderBy('created_at', 'desc')->paginate(15);
 
         return view('tenant.doctors.index', compact('doctors'));
     }
@@ -35,6 +53,7 @@ class DoctorController extends Controller
     public function store(StoreDoctorRequest $request)
     {
         $data = $request->validated();
+        $user = Auth::guard('tenant')->user();
 
         /** @var Doctor $doctor */
         $doctor = Doctor::create([
@@ -47,6 +66,14 @@ class DoctorController extends Controller
 
         if (!empty($data['specialties'])) {
             $doctor->specialties()->sync($data['specialties']);
+        }
+
+        // Se o usuário que cadastrou é role 'user', vincular automaticamente
+        if ($user->role === 'user') {
+            \App\Models\Tenant\UserDoctorPermission::create([
+                'user_id' => $user->id,
+                'doctor_id' => $doctor->id,
+            ]);
         }
 
         return redirect()->route('tenant.doctors.index')

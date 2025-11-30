@@ -18,7 +18,7 @@
         @php
             $user = auth('tenant')->user();
         @endphp
-        @if ($user && $user->is_doctor)
+        @if ($user && ($user->role === 'doctor' || ($user->role === 'admin')))
             <li class="nav-item {{ request()->routeIs('tenant.calendars.events.*') ? 'active' : '' }}">
                 <a class="nav-link" href="{{ route('tenant.calendars.events.redirect') }}">
                     <span class="icon-bg"><i class="mdi mdi-calendar-check menu-icon"></i></span>
@@ -112,26 +112,28 @@
             </div>
         </li>
 
-        {{-- USUÁRIOS --}}
-        <li class="nav-item {{ request()->routeIs('tenant.users.*') ? 'active' : '' }}">
-            <a class="nav-link" data-bs-toggle="collapse" href="#users-menu"
-                aria-expanded="{{ request()->routeIs('tenant.users.*') ? 'true' : 'false' }}">
-                <span class="icon-bg"><i class="mdi mdi-account-multiple menu-icon"></i></span>
-                <span class="menu-title">Usuários</span>
-                <i class="menu-arrow"></i>
-            </a>
+        {{-- USUÁRIOS -- Apenas para admin --}}
+        @if ($user && $user->role === 'admin')
+            <li class="nav-item {{ request()->routeIs('tenant.users.*') ? 'active' : '' }}">
+                <a class="nav-link" data-bs-toggle="collapse" href="#users-menu"
+                    aria-expanded="{{ request()->routeIs('tenant.users.*') ? 'true' : 'false' }}">
+                    <span class="icon-bg"><i class="mdi mdi-account-multiple menu-icon"></i></span>
+                    <span class="menu-title">Usuários</span>
+                    <i class="menu-arrow"></i>
+                </a>
 
-            <div class="collapse {{ request()->routeIs('tenant.users.*') ? 'show' : '' }}" id="users-menu">
-                <ul class="nav flex-column sub-menu">
-                    <li class="nav-item">
-                        <a class="nav-link {{ request()->routeIs('tenant.users.index') ? 'active' : '' }}" href="{{ route('tenant.users.index') }}">Listar</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link {{ request()->routeIs('tenant.users.create') ? 'active' : '' }}" href="{{ route('tenant.users.create') }}">Novo Usuário</a>
-                    </li>
-                </ul>
-            </div>
-        </li>
+                <div class="collapse {{ request()->routeIs('tenant.users.*') ? 'show' : '' }}" id="users-menu">
+                    <ul class="nav flex-column sub-menu">
+                        <li class="nav-item">
+                            <a class="nav-link {{ request()->routeIs('tenant.users.index') ? 'active' : '' }}" href="{{ route('tenant.users.index') }}">Listar</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {{ request()->routeIs('tenant.users.create') ? 'active' : '' }}" href="{{ route('tenant.users.create') }}">Novo Usuário</a>
+                        </li>
+                    </ul>
+                </div>
+            </li>
+        @endif
 
         {{-- ============================================================
             CONFIGURAÇÕES DE AGENDAMENTO
@@ -271,15 +273,9 @@
             <div class="collapse {{ request()->routeIs('tenant.integrations.*') || request()->routeIs('tenant.integrations.google.*') ? 'show' : '' }}" id="integrations-menu">
                 <ul class="nav flex-column sub-menu">
                     <li class="nav-item">
-                        <a class="nav-link {{ request()->routeIs('tenant.integrations.index') ? 'active' : '' }}" href="{{ route('tenant.integrations.index') }}">Listar</a>
-                    </li>
-                    <li class="nav-item">
                         <a class="nav-link {{ request()->routeIs('tenant.integrations.google.*') ? 'active' : '' }}" href="{{ route('tenant.integrations.google.index') }}">
                             <i class="mdi mdi-google me-1"></i> Google Calendar
                         </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link {{ request()->routeIs('tenant.integrations.create') ? 'active' : '' }}" href="{{ route('tenant.integrations.create') }}">Nova Integração</a>
                     </li>
                 </ul>
             </div>

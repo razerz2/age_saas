@@ -17,10 +17,10 @@ class UserDoctorPermissionController extends Controller
     {
         $user = User::findOrFail($userId);
         
-        // Não permite gerenciar permissões para médicos
-        if ($user->is_doctor) {
+        // Não permite gerenciar permissões para médicos e admins
+        if ($user->role === 'doctor' || $user->role === 'admin') {
             return redirect()->route('tenant.users.index')
-                ->with('error', 'Médicos não precisam de permissões. Eles só visualizam suas próprias agendas.');
+                ->with('error', 'Médicos e administradores não precisam de permissões. Eles têm acesso completo às suas próprias agendas.');
         }
         
         $doctors = Doctor::with('user')->orderBy('id')->get();
@@ -36,10 +36,10 @@ class UserDoctorPermissionController extends Controller
     {
         $user = User::findOrFail($userId);
         
-        // Não permite gerenciar permissões para médicos
-        if ($user->is_doctor) {
+        // Não permite gerenciar permissões para médicos e admins
+        if ($user->role === 'doctor' || $user->role === 'admin') {
             return redirect()->route('tenant.users.index')
-                ->with('error', 'Médicos não precisam de permissões.');
+                ->with('error', 'Médicos e administradores não precisam de permissões.');
         }
         
         $request->validate([
@@ -71,9 +71,15 @@ class UserDoctorPermissionController extends Controller
     {
         $user = User::findOrFail($userId);
         
-        if ($user->is_doctor && $user->doctor) {
+        if ($user->role === 'doctor' && $user->doctor) {
             // Médico só pode ver a si mesmo
             return response()->json([$user->doctor->id]);
+        }
+        
+        if ($user->role === 'admin') {
+            // Admin pode ver todos os médicos
+            $doctors = Doctor::pluck('id')->toArray();
+            return response()->json($doctors);
         }
         
         if ($user->canViewAllDoctors()) {

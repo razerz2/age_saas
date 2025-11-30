@@ -15,6 +15,7 @@ use App\Http\Requests\Tenant\Responses\StoreResponseAnswerRequest;
 use App\Http\Requests\Tenant\Responses\UpdateResponseAnswerRequest;
 
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
 
 class FormResponseController extends Controller
@@ -24,9 +25,26 @@ class FormResponseController extends Controller
      * -----------------------------------------*/
     public function index()
     {
-        $responses = FormResponse::with(['form', 'patient'])
-            ->orderBy('submitted_at', 'desc')
-            ->paginate(20);
+        $user = Auth::guard('tenant')->user();
+        $query = FormResponse::with(['form.doctor', 'patient']);
+
+        // Aplicar filtros baseado no role
+        if ($user->role === 'doctor' && $user->doctor) {
+            $query->whereHas('form', function($q) use ($user) {
+                $q->where('doctor_id', $user->doctor->id);
+            });
+        } elseif ($user->role === 'user') {
+            $allowedDoctorIds = $user->allowedDoctors()->pluck('doctors.id')->toArray();
+            if (!empty($allowedDoctorIds)) {
+                $query->whereHas('form', function($q) use ($allowedDoctorIds) {
+                    $q->whereIn('doctor_id', $allowedDoctorIds);
+                });
+            } else {
+                $query->whereRaw('1 = 0');
+            }
+        }
+
+        $responses = $query->orderBy('submitted_at', 'desc')->paginate(20);
 
         return view('tenant.responses.index', compact('responses'));
     }

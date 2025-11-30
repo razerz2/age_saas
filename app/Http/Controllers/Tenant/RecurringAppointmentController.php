@@ -15,6 +15,7 @@ use App\Http\Requests\Tenant\StoreRecurringAppointmentRequest;
 use App\Http\Requests\Tenant\UpdateRecurringAppointmentRequest;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
 
@@ -22,22 +23,47 @@ class RecurringAppointmentController extends Controller
 {
     public function index()
     {
-        $recurringAppointments = RecurringAppointment::with(['patient', 'doctor.user', 'appointmentType', 'rules'])
-            ->orderBy('created_at', 'desc')
-            ->paginate(30);
+        $user = Auth::guard('tenant')->user();
+        $query = RecurringAppointment::with(['patient', 'doctor.user', 'appointmentType', 'rules']);
+
+        // Aplicar filtros baseado no role
+        if ($user->role === 'doctor' && $user->doctor) {
+            $query->where('doctor_id', $user->doctor->id);
+        } elseif ($user->role === 'user') {
+            $allowedDoctorIds = $user->allowedDoctors()->pluck('doctors.id')->toArray();
+            if (!empty($allowedDoctorIds)) {
+                $query->whereIn('doctor_id', $allowedDoctorIds);
+            } else {
+                $query->whereRaw('1 = 0');
+            }
+        }
+
+        $recurringAppointments = $query->orderBy('created_at', 'desc')->paginate(30);
 
         return view('tenant.appointments.recurring.index', compact('recurringAppointments'));
     }
 
     public function create()
     {
-        $doctors = Doctor::with('user')
+        $user = Auth::guard('tenant')->user();
+        $doctorsQuery = Doctor::with('user')
             ->whereHas('user', function($query) {
                 $query->where('status', 'active');
-            })
-            ->orderBy('id')
-            ->get();
-        
+            });
+
+        // Aplicar filtros baseado no role
+        if ($user->role === 'doctor' && $user->doctor) {
+            $doctorsQuery->where('id', $user->doctor->id);
+        } elseif ($user->role === 'user') {
+            $allowedDoctorIds = $user->allowedDoctors()->pluck('doctors.id')->toArray();
+            if (!empty($allowedDoctorIds)) {
+                $doctorsQuery->whereIn('id', $allowedDoctorIds);
+            } else {
+                $doctorsQuery->whereRaw('1 = 0');
+            }
+        }
+
+        $doctors = $doctorsQuery->orderBy('id')->get();
         $patients = Patient::orderBy('full_name')->get();
 
         return view('tenant.appointments.recurring.create', compact(

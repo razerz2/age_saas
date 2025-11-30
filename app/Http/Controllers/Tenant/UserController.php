@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Tenant\StoreUserRequest;
 use App\Http\Requests\Tenant\UpdateUserRequest;
 use App\Http\Requests\Tenant\ChangePasswordUserRequest;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -38,8 +39,19 @@ class UserController extends Controller
         // Remove password_confirmation dos dados antes de salvar
         unset($data['password_confirmation']);
 
-        // Garante que modules seja um array (vazio se não informado)
-        $data['modules'] = $data['modules'] ?? [];
+        // Verifica o role do usuário logado
+        $loggedUser = Auth::guard('tenant')->user();
+
+        // Se o usuário logado é admin, não permite alterar modules (admin tem acesso a tudo)
+        if ($loggedUser && $loggedUser->role === 'admin') {
+            unset($data['modules']);
+        } else {
+            // Garante que modules seja um array (vazio se não informado)
+            $data['modules'] = $data['modules'] ?? [];
+        }
+
+        // Garante que role tenha um valor padrão
+        $data['role'] = $data['role'] ?? 'user';
 
         // Upload do avatar se fornecido
         if ($request->hasFile('avatar')) {
@@ -49,7 +61,36 @@ class UserController extends Controller
             $data['avatar'] = $avatarName;
         }
 
-        User::create($data);
+        // Extrair doctor_ids e doctor_id antes de criar o usuário
+        // Se o usuário logado é médico ou admin, ignora doctor_ids
+        $doctorIds = [];
+        if ($loggedUser && $loggedUser->role !== 'doctor' && $loggedUser->role !== 'admin') {
+            $doctorIds = $request->input('doctor_ids', []);
+        }
+        $doctorId = $request->input('doctor_id');
+        unset($data['doctor_ids'], $data['doctor_id']);
+
+        $user = User::create($data);
+
+        // Se for role 'user', salvar permissões de médicos
+        if ($user->role === 'user' && !empty($doctorIds)) {
+            foreach ($doctorIds as $docId) {
+                \App\Models\Tenant\UserDoctorPermission::create([
+                    'user_id' => $user->id,
+                    'doctor_id' => $docId,
+                ]);
+            }
+        }
+
+        // Se for role 'doctor', vincular ao médico selecionado
+        if ($user->role === 'doctor' && $doctorId) {
+            // O médico já deve estar vinculado ao usuário através do campo user_id na tabela doctors
+            // Mas podemos verificar se precisa criar o vínculo
+            $doctor = \App\Models\Tenant\Doctor::find($doctorId);
+            if ($doctor && $doctor->user_id !== $user->id) {
+                $doctor->update(['user_id' => $user->id]);
+            }
+        }
 
         return redirect()->route('tenant.users.index')
             ->with('success', 'Usuário criado com sucesso.');
@@ -88,9 +129,20 @@ class UserController extends Controller
         // Valida os dados da requisição
         $data = $request->validated();
 
-        // Se o campo 'modules' for enviado, tratamos os módulos
-        if (isset($data['modules'])) {
+        // Verifica o role do usuário logado
+        $loggedUser = Auth::guard('tenant')->user();
+
+        // Se o usuário logado é admin, não permite alterar modules (admin tem acesso a tudo)
+        if ($loggedUser && $loggedUser->role === 'admin') {
+            unset($data['modules']);
+        } elseif (isset($data['modules'])) {
+            // Se o campo 'modules' for enviado, tratamos os módulos
             $data['modules'] = json_encode($data['modules']);
+        }
+
+        // Garante que role tenha um valor padrão
+        if (!isset($data['role'])) {
+            $data['role'] = $user->role ?? 'user';
         }
 
         // Upload do novo avatar se fornecido
@@ -106,8 +158,40 @@ class UserController extends Controller
             $data['avatar'] = $avatarName;
         }
 
+        // Extrair doctor_ids e doctor_id antes de atualizar o usuário
+        // Se o usuário logado é médico ou admin, ignora doctor_ids
+        $doctorIds = [];
+        if ($loggedUser && $loggedUser->role !== 'doctor' && $loggedUser->role !== 'admin') {
+            $doctorIds = $request->input('doctor_ids', []);
+        }
+        $doctorId = $request->input('doctor_id');
+        unset($data['doctor_ids'], $data['doctor_id']);
+
         // Atualiza os dados do usuário (sem a senha)
         $user->update($data);
+
+        // Atualizar permissões de médicos se for role 'user'
+        if ($user->role === 'user') {
+            // Remove todas as permissões existentes
+            $user->doctorPermissions()->delete();
+            // Adiciona as novas permissões
+            if (!empty($doctorIds)) {
+                foreach ($doctorIds as $docId) {
+                    \App\Models\Tenant\UserDoctorPermission::create([
+                        'user_id' => $user->id,
+                        'doctor_id' => $docId,
+                    ]);
+                }
+            }
+        }
+
+        // Se for role 'doctor', vincular ao médico selecionado
+        if ($user->role === 'doctor' && $doctorId) {
+            $doctor = \App\Models\Tenant\Doctor::find($doctorId);
+            if ($doctor) {
+                $doctor->update(['user_id' => $user->id]);
+            }
+        }
 
         return redirect()->route('tenant.users.index')
             ->with('success', 'Usuário atualizado com sucesso!');

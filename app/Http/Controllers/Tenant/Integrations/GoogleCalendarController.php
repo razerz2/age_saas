@@ -11,6 +11,7 @@ use Google_Service_Calendar;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
 
 class GoogleCalendarController extends Controller
@@ -357,14 +358,30 @@ class GoogleCalendarController extends Controller
      */
     public function index()
     {
-        $doctors = Doctor::with(['user', 'googleCalendarToken'])
+        $user = Auth::guard('tenant')->user();
+        $doctorsQuery = Doctor::with(['user', 'googleCalendarToken'])
             ->whereHas('user', function($query) {
                 $query->where('status', 'active');
-            })
-            ->orderBy('id')
-            ->get();
+            });
 
-        return view('tenant.integrations.google.index', compact('doctors'));
+        // Aplicar filtros baseado no role
+        if ($user->role === 'doctor' && $user->doctor) {
+            // Médico só vê a si mesmo
+            $doctorsQuery->where('id', $user->doctor->id);
+        } elseif ($user->role === 'user') {
+            // Usuário comum só vê médicos relacionados
+            $allowedDoctorIds = $user->allowedDoctors()->pluck('doctors.id')->toArray();
+            if (!empty($allowedDoctorIds)) {
+                $doctorsQuery->whereIn('id', $allowedDoctorIds);
+            } else {
+                $doctorsQuery->whereRaw('1 = 0');
+            }
+        }
+        // Admin vê tudo (sem filtro)
+
+        $doctors = $doctorsQuery->orderBy('id')->get();
+
+        return view('tenant.integrations.google.index', compact('doctors', 'user'));
     }
 }
 
