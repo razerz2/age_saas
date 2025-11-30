@@ -50,18 +50,34 @@ class SwitchTenantTask extends SwitchTenantDatabaseTask
             'port' => env('DB_TENANT_PORT', '5432'),       // Porta fixa no .env
             'database' => $platformTenant->db_name,        // Banco dinâmico
             'username' => $platformTenant->db_username,    // Usuário dinâmico
-            'password' => $platformTenant->db_password,    // Senha dinâmica
+            'password_set' => !empty($platformTenant->db_password),    // Verifica se senha está definida
         ]);
+
+        // Valida se as credenciais essenciais estão presentes
+        if (empty($platformTenant->db_name)) {
+            Log::error("❗ Nome do banco de dados do tenant está vazio", [
+                'tenant_id' => $platformTenant->id
+            ]);
+            return;
+        }
+
+        if (empty($platformTenant->db_username)) {
+            Log::error("❗ Usuário do banco de dados do tenant está vazio", [
+                'tenant_id' => $platformTenant->id
+            ]);
+            return;
+        }
 
         // Primeiro purga a conexão
         DB::purge('tenant');
 
         // Agora, configura os parâmetros corretamente
-        Config::set('database.connections.tenant.host', env('DB_TENANT_HOST'));  // Fixo no .env
-        Config::set('database.connections.tenant.port', env('DB_TENANT_PORT'));  // Fixo no .env
+        Config::set('database.connections.tenant.host', env('DB_TENANT_HOST', '127.0.0.1'));  // Fixo no .env
+        Config::set('database.connections.tenant.port', env('DB_TENANT_PORT', '5432'));  // Fixo no .env
         Config::set('database.connections.tenant.database', $platformTenant->db_name);  // Dinâmico
         Config::set('database.connections.tenant.username', $platformTenant->db_username);  // Dinâmico
-        Config::set('database.connections.tenant.password', $platformTenant->db_password);  // Dinâmico
+        // Garante que a senha seja uma string (mesmo que vazia, mas não null)
+        Config::set('database.connections.tenant.password', $platformTenant->db_password ?? '');  // Dinâmico
 
 
         Log::info("🔧 Conexão configurada para tenant", [

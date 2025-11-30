@@ -204,42 +204,8 @@
     </div>
 
 @push('styles')
-<style>
-    .specialty-badge {
-        transition: all 0.3s ease;
-        cursor: default;
-    }
-    .specialty-badge:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 8px rgba(0,0,0,0.15);
-    }
-    .specialty-badge .btn-close {
-        transition: opacity 0.2s ease;
-    }
-    .specialty-badge:hover .btn-close {
-        opacity: 1 !important;
-    }
-    #selected-specialties {
-        transition: all 0.3s ease;
-    }
-    .form-group label {
-        font-weight: 600;
-        color: #2c3e50;
-        margin-bottom: 0.5rem;
-    }
-    .card-title {
-        font-weight: 600;
-    }
-    h5.text-primary {
-        font-weight: 600;
-        padding-bottom: 0.5rem;
-        border-bottom: 2px solid #e9ecef;
-    }
-    .btn-lg {
-        padding: 0.75rem 2rem;
-        font-weight: 600;
-    }
-</style>
+    <link href="{{ asset('css/tenant-common.css') }}" rel="stylesheet">
+    <link href="{{ asset('css/tenant-doctors.css') }}" rel="stylesheet">
 @endpush
 
 @push('scripts')

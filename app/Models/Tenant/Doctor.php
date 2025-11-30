@@ -40,6 +40,15 @@ class Doctor extends Model
         return $this->hasMany(Calendar::class);
     }
 
+    /**
+     * Retorna o calendário principal do médico (primeiro calendário)
+     * Como cada médico só pode ter um calendário, este é sempre o principal
+     */
+    public function getPrimaryCalendar()
+    {
+        return $this->calendars()->first();
+    }
+
     public function businessHours()
     {
         return $this->hasMany(BusinessHour::class);
@@ -87,5 +96,13 @@ class Doctor extends Model
     public function permissions()
     {
         return $this->hasMany(UserDoctorPermission::class);
+    }
+
+    /**
+     * Relacionamento com Google Calendar Token
+     */
+    public function googleCalendarToken()
+    {
+        return $this->hasOne(\App\Models\Tenant\GoogleCalendarToken::class);
     }
 }

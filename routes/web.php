@@ -19,6 +19,7 @@ use App\Http\Controllers\Platform\SystemSettingsController;
 use App\Http\Controllers\Platform\KioskMonitorController;
 use App\Models\Platform\SystemNotification;
 use App\Http\Controllers\Platform\WhatsAppController;
+use App\Http\Controllers\Tenant\Integrations\GoogleCalendarController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
@@ -48,6 +49,9 @@ Route::get('/kiosk/monitor/data', [KioskMonitorController::class, 'data'])->name
 
 //Rota do Webhook do asaas...
 Route::post('/webhook/asaas', [AsaasWebhookController::class, 'handle'])->middleware('verify.asaas.token');
+
+// Callback global do Google Calendar (não fica no grupo /t/{tenant})
+Route::get('/google/callback', [GoogleCalendarController::class, 'callback'])->name('google.callback');
 
 
 Route::middleware(['auth'])->prefix('Platform')->name('Platform.')->group(function () {

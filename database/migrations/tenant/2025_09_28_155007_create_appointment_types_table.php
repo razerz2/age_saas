@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('appointment_types', function (Blueprint $table) {
             $table->uuid('id')->primary();
-            $table->foreignUuid('doctor_id')->nullable()->after('id')->constrained('doctors')->cascadeOnDelete();
+            $table->foreignUuid('doctor_id')->after('id')->constrained('doctors')->cascadeOnDelete();
             $table->string('name');
             $table->integer('duration_min');
             $table->boolean('is_active')->default(true);

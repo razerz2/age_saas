@@ -188,42 +188,8 @@
     </div>
 
 @push('styles')
-<style>
-    .form-group label {
-        font-weight: 600;
-        color: #2c3e50;
-        margin-bottom: 0.5rem;
-    }
-    .card-title {
-        font-weight: 600;
-    }
-    h5.text-primary {
-        font-weight: 600;
-        padding-bottom: 0.5rem;
-        border-bottom: 2px solid #e9ecef;
-    }
-    .btn-lg {
-        padding: 0.75rem 2rem;
-        font-weight: 600;
-    }
-    .weekday-badge {
-        transition: all 0.3s ease;
-        cursor: default;
-    }
-    .weekday-badge:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 8px rgba(0,0,0,0.15);
-    }
-    .weekday-badge .btn-close {
-        transition: opacity 0.2s ease;
-    }
-    .weekday-badge:hover .btn-close {
-        opacity: 1 !important;
-    }
-    #selected-weekdays {
-        transition: all 0.3s ease;
-    }
-</style>
+    <link href="{{ asset('css/tenant-common.css') }}" rel="stylesheet">
+    <link href="{{ asset('css/tenant-business-hours.css') }}" rel="stylesheet">
 @endpush
 
 @push('scripts')

@@ -44,51 +44,62 @@
                                 Informações do Tipo de Consulta
                             </h5>
                             <div class="row">
-                                <div class="col-md-8">
-                                    <div class="form-group">
-                                        <label class="fw-semibold">
-                                            <i class="mdi mdi-tag me-1"></i>
-                                            Nome <span class="text-danger">*</span>
-                                        </label>
-                                        <input type="text" class="form-control @error('name') is-invalid @enderror" 
-                                               name="name" value="{{ old('name') }}" 
-                                               placeholder="Ex: Consulta Médica, Retorno, etc." required>
-                                        @error('name')
-                                            <div class="invalid-feedback d-block">{{ $message }}</div>
-                                        @enderror
-                                    </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label fw-semibold">
+                                        <i class="mdi mdi-account-doctor me-1"></i>
+                                        Médico <span class="text-danger">*</span>
+                                    </label>
+                                    <select name="doctor_id" class="form-select @error('doctor_id') is-invalid @enderror" required>
+                                        <option value="">Selecione um médico...</option>
+                                        @foreach($doctors as $doctor)
+                                            <option value="{{ $doctor->id }}" {{ old('doctor_id') == $doctor->id ? 'selected' : '' }}>
+                                                {{ $doctor->user->display_name ?? $doctor->user->name }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                    @error('doctor_id')
+                                        <div class="invalid-feedback d-block">{{ $message }}</div>
+                                    @enderror
                                 </div>
-                                <div class="col-md-4">
-                                    <div class="form-group">
-                                        <label class="fw-semibold">
-                                            <i class="mdi mdi-clock-outline me-1"></i>
-                                            Duração (minutos) <span class="text-danger">*</span>
-                                        </label>
-                                        <input type="number" class="form-control @error('duration_min') is-invalid @enderror" 
-                                               name="duration_min" value="{{ old('duration_min') }}" 
-                                               min="1" placeholder="30" required>
-                                        <small class="form-text text-muted">Tempo de duração da consulta</small>
-                                        @error('duration_min')
-                                            <div class="invalid-feedback d-block">{{ $message }}</div>
-                                        @enderror
-                                    </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label fw-semibold">
+                                        <i class="mdi mdi-tag me-1"></i>
+                                        Nome <span class="text-danger">*</span>
+                                    </label>
+                                    <input type="text" class="form-control @error('name') is-invalid @enderror" 
+                                           name="name" value="{{ old('name') }}" 
+                                           placeholder="Ex: Consulta Médica, Retorno, etc." required>
+                                    @error('name')
+                                        <div class="invalid-feedback d-block">{{ $message }}</div>
+                                    @enderror
                                 </div>
                             </div>
                             <div class="row">
-                                <div class="col-md-6">
-                                    <div class="form-group">
-                                        <label class="fw-semibold">
-                                            <i class="mdi mdi-toggle-switch me-1"></i>
-                                            Status
-                                        </label>
-                                        <select name="is_active" class="form-control @error('is_active') is-invalid @enderror">
-                                            <option value="1" {{ old('is_active', '1') == '1' ? 'selected' : '' }}>Ativo</option>
-                                            <option value="0" {{ old('is_active') == '0' ? 'selected' : '' }}>Inativo</option>
-                                        </select>
-                                        @error('is_active')
-                                            <div class="invalid-feedback d-block">{{ $message }}</div>
-                                        @enderror
-                                    </div>
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label fw-semibold">
+                                        <i class="mdi mdi-clock-outline me-1"></i>
+                                        Duração (minutos) <span class="text-danger">*</span>
+                                    </label>
+                                    <input type="number" class="form-control @error('duration_min') is-invalid @enderror" 
+                                           name="duration_min" value="{{ old('duration_min', 30) }}" 
+                                           min="1" placeholder="30" required>
+                                    <small class="form-text text-muted">Tempo de duração da consulta</small>
+                                    @error('duration_min')
+                                        <div class="invalid-feedback d-block">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label fw-semibold">
+                                        <i class="mdi mdi-eye me-1"></i>
+                                        Status
+                                    </label>
+                                    <select name="is_active" class="form-select @error('is_active') is-invalid @enderror">
+                                        <option value="1" {{ old('is_active', '1') == '1' ? 'selected' : '' }}>Ativo</option>
+                                        <option value="0" {{ old('is_active') == '0' ? 'selected' : '' }}>Inativo</option>
+                                    </select>
+                                    @error('is_active')
+                                        <div class="invalid-feedback d-block">{{ $message }}</div>
+                                    @enderror
                                 </div>
                             </div>
                         </div>
@@ -112,25 +123,7 @@
     </div>
 
 @push('styles')
-<style>
-    .form-group label {
-        font-weight: 600;
-        color: #2c3e50;
-        margin-bottom: 0.5rem;
-    }
-    .card-title {
-        font-weight: 600;
-    }
-    h5.text-primary {
-        font-weight: 600;
-        padding-bottom: 0.5rem;
-        border-bottom: 2px solid #e9ecef;
-    }
-    .btn-lg {
-        padding: 0.75rem 2rem;
-        font-weight: 600;
-    }
-</style>
+    <link href="{{ asset('css/tenant-common.css') }}" rel="stylesheet">
 @endpush
 
 @endsection

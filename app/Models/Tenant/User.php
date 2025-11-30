@@ -5,6 +5,7 @@ namespace App\Models\Tenant;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Support\Facades\Hash;
 
 class User extends Authenticatable
 {
@@ -38,8 +39,12 @@ class User extends Authenticatable
 
     public function setPasswordAttribute($value)
     {
-        if (!empty($value) && strlen($value) < 60) {
-            $this->attributes['password'] = bcrypt($value);
+        // Só aplica hash se o valor não estiver vazio e ainda não estiver criptografado
+        // Verifica se já está no formato Bcrypt (começa com $2y$, $2a$ ou $2b$)
+        if (!empty($value) && !str_starts_with($value, '$2y$') && !str_starts_with($value, '$2a$') && !str_starts_with($value, '$2b$')) {
+            $this->attributes['password'] = Hash::make($value);
+        } else {
+            $this->attributes['password'] = $value;
         }
     }
 

@@ -37,6 +37,7 @@ use App\Http\Controllers\Tenant\FormResponseController;
 // Integrations
 use App\Http\Controllers\Tenant\IntegrationController;
 use App\Http\Controllers\Tenant\OAuthAccountController;
+use App\Http\Controllers\Tenant\Integrations\GoogleCalendarController;
 
 // Calendar Sync
 use App\Http\Controllers\Tenant\CalendarSyncStateController;
@@ -46,6 +47,9 @@ use App\Http\Controllers\Tenant\NotificationController;
 
 // Settings
 use App\Http\Controllers\Tenant\SettingsController;
+
+// Recurring Appointments
+use App\Http\Controllers\Tenant\RecurringAppointmentController;
 
 
 /**
@@ -319,6 +323,40 @@ Route::prefix('tenant')
 
 
         // =====================================================================
+        // RECURRING APPOINTMENTS
+        // =====================================================================
+        Route::get('agendamentos/recorrentes', [RecurringAppointmentController::class, 'index'])
+            ->name('recurring-appointments.index');
+        Route::get('agendamentos/recorrentes/criar', [RecurringAppointmentController::class, 'create'])
+            ->name('recurring-appointments.create');
+        Route::post('agendamentos/recorrentes', [RecurringAppointmentController::class, 'store'])
+            ->name('recurring-appointments.store');
+        Route::get('agendamentos/recorrentes/{id}', [RecurringAppointmentController::class, 'show'])
+            ->where('id', '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}')
+            ->name('recurring-appointments.show');
+        Route::get('agendamentos/recorrentes/{id}/editar', [RecurringAppointmentController::class, 'edit'])
+            ->where('id', '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}')
+            ->name('recurring-appointments.edit');
+        Route::put('agendamentos/recorrentes/{id}', [RecurringAppointmentController::class, 'update'])
+            ->where('id', '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}')
+            ->name('recurring-appointments.update');
+        Route::get('agendamentos/recorrentes/{id}/cancelar', [RecurringAppointmentController::class, 'cancel'])
+            ->where('id', '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}')
+            ->name('recurring-appointments.cancel');
+        Route::delete('agendamentos/recorrentes/{id}', [RecurringAppointmentController::class, 'destroy'])
+            ->where('id', '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}')
+            ->name('recurring-appointments.destroy');
+
+        // API endpoints para agendamentos recorrentes
+        Route::get('api/doctors/{doctorId}/business-hours', [RecurringAppointmentController::class, 'getBusinessHoursByDoctor'])
+            ->where('doctorId', '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}')
+            ->name('recurring-appointments.api.business-hours');
+        Route::get('api/doctors/{doctorId}/available-slots-recurring', [RecurringAppointmentController::class, 'getAvailableSlotsForRecurring'])
+            ->where('doctorId', '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}')
+            ->name('recurring-appointments.api.available-slots');
+
+
+        // =====================================================================
         // FORMS (muitos binds automáticos)
         // =====================================================================
         Route::resource('forms', FormController::class);
@@ -414,6 +452,41 @@ Route::prefix('tenant')
         // =====================================================================
         // INTEGRATIONS
         // =====================================================================
+        // IMPORTANTE: Rotas específicas (Google Calendar) devem vir ANTES do resource
+        // para evitar que "google" seja interpretado como um ID UUID
+        
+        // =====================================================================
+        // GOOGLE CALENDAR INTEGRATION
+        // =====================================================================
+        Route::prefix('integrations/google')
+            ->name('integrations.google.')
+            ->middleware(['module.access:integrations'])
+            ->group(function () {
+                // Página principal
+                Route::get('/', [GoogleCalendarController::class, 'index'])->name('index');
+                
+                // Conectar conta Google do médico
+                Route::get('/{doctor}/connect', [GoogleCalendarController::class, 'connect'])
+                    ->where('doctor', '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}')
+                    ->name('connect');
+                
+                // Desconectar
+                Route::delete('/{doctor}/disconnect', [GoogleCalendarController::class, 'disconnect'])
+                    ->where('doctor', '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}')
+                    ->name('disconnect');
+                
+                // Status JSON
+                Route::get('/{doctor}/status', [GoogleCalendarController::class, 'status'])
+                    ->where('doctor', '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}')
+                    ->name('status');
+                
+                // API: Eventos do Google Calendar para FullCalendar
+                Route::get('/api/{doctor}/events', [GoogleCalendarController::class, 'getEvents'])
+                    ->where('doctor', '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}')
+                    ->name('api.events');
+            });
+
+        // Resource de integrations (deve vir DEPOIS das rotas específicas)
         Route::resource('integrations', IntegrationController::class);
 
 

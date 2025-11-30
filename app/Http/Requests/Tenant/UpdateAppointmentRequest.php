@@ -39,6 +39,20 @@ class UpdateAppointmentRequest extends FormRequest
             $endsAt = Carbon::parse($this->ends_at);
             $calendarId = $this->calendar_id;
 
+            // Verificar se o paciente já possui outro agendamento no mesmo dia (excluindo o atual)
+            if ($this->patient_id) {
+                $existingAppointmentSameDay = Appointment::where('patient_id', $this->patient_id)
+                    ->where('id', '!=', $appointmentId) // Excluir o próprio agendamento
+                    ->whereDate('starts_at', $startsAt->format('Y-m-d'))
+                    ->whereIn('status', ['scheduled', 'rescheduled'])
+                    ->first();
+
+                if ($existingAppointmentSameDay) {
+                    $validator->errors()->add('starts_at', 'Este paciente já possui outro agendamento neste dia. Um paciente não pode ter dois agendamentos no mesmo dia.');
+                    return;
+                }
+            }
+
             // Verificar se há conflito com agendamentos existentes (scheduled ou rescheduled)
             // Excluindo o próprio agendamento que está sendo editado
             $conflictingAppointment = Appointment::where('calendar_id', $calendarId)

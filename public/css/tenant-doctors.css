@@ -1,0 +1,26 @@
+/* ============================================
+   DOCTORS - Estilos para Create e Edit
+   ============================================ */
+
+.specialty-badge {
+    transition: all 0.3s ease;
+    cursor: default;
+}
+
+.specialty-badge:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+}
+
+.specialty-badge .btn-close {
+    transition: opacity 0.2s ease;
+}
+
+.specialty-badge:hover .btn-close {
+    opacity: 1 !important;
+}
+
+#selected-specialties {
+    transition: all 0.3s ease;
+}
+

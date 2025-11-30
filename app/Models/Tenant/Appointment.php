@@ -18,7 +18,7 @@ class Appointment extends Model
     protected $fillable = [
         'id', 'calendar_id', 'appointment_type', 'patient_id',
         'specialty_id', 'starts_at', 'ends_at',
-        'status', 'notes'
+        'status', 'notes', 'recurring_appointment_id', 'google_event_id'
     ];
 
     protected $casts = [
@@ -46,6 +46,11 @@ class Appointment extends Model
     public function specialty()
     {
         return $this->belongsTo(MedicalSpecialty::class);
+    }
+
+    public function recurringAppointment()
+    {
+        return $this->belongsTo(RecurringAppointment::class);
     }
 
     public function syncState()

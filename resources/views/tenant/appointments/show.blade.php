@@ -89,6 +89,22 @@
                         <div class="col-md-6 mb-3">
                             <div class="border rounded p-3 h-100">
                                 <label class="text-muted small mb-1 d-block">
+                                    <i class="mdi mdi-doctor me-1"></i> Médico
+                                </label>
+                                @if($appointment->calendar && $appointment->calendar->doctor && $appointment->calendar->doctor->user)
+                                    <p class="mb-0 fw-semibold">
+                                        <a href="{{ route('tenant.doctors.show', $appointment->calendar->doctor->id) }}" class="text-decoration-none">
+                                            {{ $appointment->calendar->doctor->user->name }}
+                                        </a>
+                                    </p>
+                                @else
+                                    <p class="mb-0 text-muted">N/A</p>
+                                @endif
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <div class="border rounded p-3 h-100">
+                                <label class="text-muted small mb-1 d-block">
                                     <i class="mdi mdi-calendar-text me-1"></i> Calendário
                                 </label>
                                 <p class="mb-0 fw-semibold">{{ $appointment->calendar->name ?? 'N/A' }}</p>

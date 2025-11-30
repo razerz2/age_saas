@@ -347,9 +347,23 @@ Integração com Meta para envio de:
 - Lembretes
 - Notificações de faturas
 
-### Google Calendar (Futuro)
+### Google Calendar
 
-Sincronização de calendários com Google Calendar.
+Sincronização automática de agendamentos com Google Calendar por médico.
+
+**Configuração:**
+
+1. Configure as credenciais OAuth no Google Cloud Console
+2. Adicione no arquivo `.env`:
+   ```
+   GOOGLE_CLIENT_ID=seu_client_id
+   GOOGLE_CLIENT_SECRET=seu_client_secret
+   GOOGLE_REDIRECT_URI=http://localhost:8000/tenant/integrations/google/callback
+   ```
+3. Cada médico pode conectar sua própria conta Google Calendar
+4. Os agendamentos são sincronizados automaticamente
+
+Para mais detalhes, consulte a documentação em [TENANT.md](TENANT.md#10-integrações).
 
 ## 💻 Desenvolvimento
 
@@ -403,13 +417,13 @@ O projeto utiliza Laravel Pint para formatação:
 ### Documentação Técnica
 
 - [ARQUITETURA.md](ARQUITETURA.md) - Documentação técnica detalhada da arquitetura
-- [ENV.md](ENV.md) - Guia completo de variáveis de ambiente
+- [docs/ENV.md](docs/ENV.md) - Guia completo de variáveis de ambiente
 
 ### Guias Específicos
 
-- [GUIA_CRIAR_FORMULARIO.md](GUIA_CRIAR_FORMULARIO.md) - Guia passo a passo para criar formulários
-- [GUIA_TESTE_PUBLICO.md](GUIA_TESTE_PUBLICO.md) - Guia de teste da área pública de agendamento
-- [INSTRUCOES_MIGRATION.md](INSTRUCOES_MIGRATION.md) - Instruções para migrações manuais
+- [docs/GUIA_CRIAR_FORMULARIO.md](docs/GUIA_CRIAR_FORMULARIO.md) - Guia passo a passo para criar formulários
+- [docs/GUIA_TESTE_PUBLICO.md](docs/GUIA_TESTE_PUBLICO.md) - Guia de teste da área pública de agendamento
+- [docs/INSTRUCOES_MIGRATION.md](docs/INSTRUCOES_MIGRATION.md) - Instruções para migrações manuais
 
 ### Documentação Externa
 

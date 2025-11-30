@@ -35,6 +35,22 @@ class StorePublicAppointmentRequest extends FormRequest
             $endsAt = Carbon::parse($this->ends_at);
             $calendarId = $this->calendar_id;
 
+            // Obter patient_id da sessão (para agendamentos públicos)
+            $patientId = \Illuminate\Support\Facades\Session::get('public_patient_id');
+
+            // Verificar se o paciente já possui um agendamento no mesmo dia
+            if ($patientId) {
+                $existingAppointmentSameDay = Appointment::where('patient_id', $patientId)
+                    ->whereDate('starts_at', $startsAt->format('Y-m-d'))
+                    ->whereIn('status', ['scheduled', 'rescheduled'])
+                    ->first();
+
+                if ($existingAppointmentSameDay) {
+                    $validator->errors()->add('starts_at', 'Você já possui um agendamento neste dia. Um paciente não pode ter dois agendamentos no mesmo dia.');
+                    return;
+                }
+            }
+
             // Verificar se há conflito com agendamentos existentes (scheduled ou rescheduled)
             $conflictingAppointment = Appointment::where('calendar_id', $calendarId)
                 ->whereIn('status', ['scheduled', 'rescheduled'])

@@ -23,15 +23,34 @@
                 <div class="card-body">
                     <h4 class="card-title">Lista de Tipos de Consulta</h4>
 
-                    <a href="{{ route('tenant.appointment-types.create') }}" class="btn btn-primary mb-3">
-                        + Novo
-                    </a>
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div class="d-flex gap-2 align-items-center">
+                            <form method="GET" action="{{ route('tenant.appointment-types.index') }}" class="d-flex gap-2">
+                                <select name="doctor_id" class="form-select" style="width: 250px;" onchange="this.form.submit()">
+                                    <option value="">Todos os médicos</option>
+                                    @foreach($doctors as $doctor)
+                                        <option value="{{ $doctor->id }}" {{ request('doctor_id') == $doctor->id ? 'selected' : '' }}>
+                                            {{ $doctor->user->display_name ?? $doctor->user->name }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                                @if(request('doctor_id'))
+                                    <a href="{{ route('tenant.appointment-types.index') }}" class="btn btn-outline-secondary">
+                                        <i class="mdi mdi-close"></i> Limpar
+                                    </a>
+                                @endif
+                            </form>
+                        </div>
+                        <a href="{{ route('tenant.appointment-types.create') }}" class="btn btn-primary">
+                            <i class="mdi mdi-plus"></i> Novo
+                        </a>
+                    </div>
 
                     <div class="table-responsive">
                         <table class="table table-hover" id="datatable-list">
                             <thead>
                                 <tr>
-                                    <th>ID</th>
+                                    <th>Médico</th>
                                     <th>Nome</th>
                                     <th>Duração (min)</th>
                                     <th>Status</th>
@@ -42,7 +61,16 @@
                             <tbody>
                                 @foreach ($appointmentTypes as $appointmentType)
                                     <tr>
-                                        <td>{{ $appointmentType->id }}</td>
+                                        <td>
+                                            @if($appointmentType->doctor)
+                                                <span class="text-primary">
+                                                    <i class="mdi mdi-account-doctor me-1"></i>
+                                                    {{ $appointmentType->doctor->user->display_name ?? $appointmentType->doctor->user->name }}
+                                                </span>
+                                            @else
+                                                <span class="text-muted">N/A</span>
+                                            @endif
+                                        </td>
                                         <td>{{ $appointmentType->name }}</td>
                                         <td>{{ $appointmentType->duration_min ?? 'N/A' }}</td>
                                         <td>
@@ -53,8 +81,12 @@
                                             @endif
                                         </td>
                                         <td>
-                                            <a href="{{ route('tenant.appointment-types.show', $appointmentType->id) }}" class="btn btn-info btn-sm">Ver</a>
-                                            <a href="{{ route('tenant.appointment-types.edit', $appointmentType->id) }}" class="btn btn-warning btn-sm">Editar</a>
+                                            <a href="{{ route('tenant.appointment-types.show', $appointmentType->id) }}" class="btn btn-info btn-sm">
+                                                <i class="mdi mdi-eye"></i>
+                                            </a>
+                                            <a href="{{ route('tenant.appointment-types.edit', $appointmentType->id) }}" class="btn btn-warning btn-sm">
+                                                <i class="mdi mdi-pencil"></i>
+                                            </a>
                                         </td>
                                     </tr>
                                 @endforeach
@@ -72,7 +104,11 @@
 @push('scripts')
 <script>
     $(document).ready(function() {
-        $('#datatable-list').DataTable();
+        $('#datatable-list').DataTable({
+            "language": {
+                "url": "//cdn.datatables.net/plug-ins/1.11.5/i18n/pt-BR.json"
+            }
+        });
     });
 </script>
 @endpush

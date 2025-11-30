@@ -34,6 +34,19 @@
                         </div>
                     </div>
 
+                    {{-- Exibição de erros de validação --}}
+                    @if ($errors->any())
+                        <div class="alert alert-danger alert-dismissible fade show shadow-sm" role="alert">
+                            <strong><i class="mdi mdi-alert-circle me-1"></i> Erro de Validação!</strong>
+                            <ul class="mt-2 mb-0">
+                                @foreach ($errors->all() as $error)
+                                    <li>{{ $error }}</li>
+                                @endforeach
+                            </ul>
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+                        </div>
+                    @endif
+
                     <form class="forms-sample" action="{{ route('tenant.appointments.store') }}" method="POST">
                         @csrf
 
@@ -61,20 +74,7 @@
                                         @error('doctor_id')
                                             <div class="invalid-feedback d-block">{{ $message }}</div>
                                         @enderror
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="form-group">
-                                        <label class="fw-semibold">
-                                            <i class="mdi mdi-calendar me-1"></i>
-                                            Calendário <span class="text-danger">*</span>
-                                        </label>
-                                        <select name="calendar_id" id="calendar_id" class="form-control @error('calendar_id') is-invalid @enderror" required disabled>
-                                            <option value="">Primeiro selecione um médico</option>
-                                        </select>
-                                        @error('calendar_id')
-                                            <div class="invalid-feedback d-block">{{ $message }}</div>
-                                        @enderror
+                                        <small class="form-text text-muted">O calendário do médico será selecionado automaticamente</small>
                                     </div>
                                 </div>
                             </div>
@@ -142,9 +142,12 @@
                                             <i class="mdi mdi-calendar-start me-1"></i>
                                             Data <span class="text-danger">*</span>
                                         </label>
-                                        <input type="date" id="appointment_date" class="form-control @error('appointment_date') is-invalid @enderror" 
+                                        <input type="date" id="appointment_date" class="form-control @error('appointment_date') is-invalid @enderror @error('starts_at') is-invalid @enderror" 
                                                name="appointment_date" value="{{ old('appointment_date') }}" required>
                                         @error('appointment_date')
+                                            <div class="invalid-feedback d-block">{{ $message }}</div>
+                                        @enderror
+                                        @error('starts_at')
                                             <div class="invalid-feedback d-block">{{ $message }}</div>
                                         @enderror
                                     </div>
@@ -169,32 +172,12 @@
                             <input type="hidden" name="ends_at" id="ends_at">
                         </div>
 
-                        {{-- Seção: Status e Observações --}}
+                        {{-- Seção: Observações --}}
                         <div class="mb-4">
                             <h5 class="mb-3 text-primary">
-                                <i class="mdi mdi-information me-2"></i>
-                                Status e Observações
+                                <i class="mdi mdi-note-text me-2"></i>
+                                Observações
                             </h5>
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <div class="form-group">
-                                        <label class="fw-semibold">
-                                            <i class="mdi mdi-toggle-switch me-1"></i>
-                                            Status <span class="text-danger">*</span>
-                                        </label>
-                                        <select name="status" class="form-control @error('status') is-invalid @enderror" required>
-                                            <option value="scheduled" {{ old('status', 'scheduled') == 'scheduled' ? 'selected' : '' }}>Agendado</option>
-                                            <option value="rescheduled" {{ old('status') == 'rescheduled' ? 'selected' : '' }}>Reagendado</option>
-                                            <option value="canceled" {{ old('status') == 'canceled' ? 'selected' : '' }}>Cancelado</option>
-                                            <option value="attended" {{ old('status') == 'attended' ? 'selected' : '' }}>Atendido</option>
-                                            <option value="no_show" {{ old('status') == 'no_show' ? 'selected' : '' }}>Não Compareceu</option>
-                                        </select>
-                                        @error('status')
-                                            <div class="invalid-feedback d-block">{{ $message }}</div>
-                                        @enderror
-                                    </div>
-                                </div>
-                            </div>
                             <div class="row">
                                 <div class="col-md-12">
                                     <div class="form-group">
@@ -232,36 +215,14 @@
     </div>
 
 @push('styles')
-<style>
-    .form-group label {
-        font-weight: 600;
-        color: #2c3e50;
-        margin-bottom: 0.5rem;
-    }
-    .card-title {
-        font-weight: 600;
-    }
-    h5.text-primary {
-        font-weight: 600;
-        padding-bottom: 0.5rem;
-        border-bottom: 2px solid #e9ecef;
-    }
-    .btn-lg {
-        padding: 0.75rem 2rem;
-        font-weight: 600;
-    }
-    #appointment_time:disabled {
-        background-color: #e9ecef;
-        cursor: not-allowed;
-    }
-</style>
+    <link href="{{ asset('css/tenant-common.css') }}" rel="stylesheet">
+    <link href="{{ asset('css/tenant-appointments.css') }}" rel="stylesheet">
 @endpush
 
 @push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const doctorSelect = document.getElementById('doctor_id');
-    const calendarSelect = document.getElementById('calendar_id');
     const appointmentTypeSelect = document.getElementById('appointment_type');
     const specialtySelect = document.getElementById('specialty_id');
     const dateInput = document.getElementById('appointment_date');
@@ -269,7 +230,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const startsAtInput = document.getElementById('starts_at');
     const endsAtInput = document.getElementById('ends_at');
 
-    // Carregar calendários, tipos e especialidades quando médico for selecionado
+    // Carregar tipos e especialidades quando médico for selecionado
     doctorSelect.addEventListener('change', function() {
         const doctorId = this.value;
         
@@ -279,9 +240,6 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
 
-        // Carregar calendários
-        loadCalendars(doctorId);
-        
         // Carregar tipos de consulta
         loadAppointmentTypes(doctorId);
         
@@ -320,9 +278,6 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     function resetDependentFields() {
-        calendarSelect.innerHTML = '<option value="">Primeiro selecione um médico</option>';
-        calendarSelect.disabled = true;
-        
         appointmentTypeSelect.innerHTML = '<option value="">Primeiro selecione um médico</option>';
         appointmentTypeSelect.disabled = true;
         
@@ -331,25 +286,6 @@ document.addEventListener('DOMContentLoaded', function() {
         
         timeSelect.innerHTML = '<option value="">Primeiro selecione a data</option>';
         timeSelect.disabled = true;
-    }
-
-    function loadCalendars(doctorId) {
-        fetch(`/tenant/api/doctors/${doctorId}/calendars`)
-            .then(response => response.json())
-            .then(data => {
-                calendarSelect.innerHTML = '<option value="">Selecione um calendário</option>';
-                data.forEach(calendar => {
-                    const option = document.createElement('option');
-                    option.value = calendar.id;
-                    option.textContent = calendar.name;
-                    calendarSelect.appendChild(option);
-                });
-                calendarSelect.disabled = false;
-            })
-            .catch(error => {
-                console.error('Erro ao carregar calendários:', error);
-                calendarSelect.innerHTML = '<option value="">Erro ao carregar calendários</option>';
-            });
     }
 
     function loadAppointmentTypes(doctorId) {

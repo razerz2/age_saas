@@ -28,24 +28,19 @@
         @endif
 
         {{-- AGENDAMENTOS --}}
-        <li class="nav-item {{ request()->routeIs('tenant.appointments.*') ? 'active' : '' }}">
-            <a class="nav-link" data-bs-toggle="collapse" href="#appointments-menu"
-                aria-expanded="{{ request()->routeIs('tenant.appointments.*') ? 'true' : 'false' }}">
+        <li class="nav-item {{ request()->routeIs('tenant.appointments.*') && !request()->routeIs('tenant.recurring-appointments.*') ? 'active' : '' }}">
+            <a class="nav-link" href="{{ route('tenant.appointments.index') }}">
                 <span class="icon-bg"><i class="mdi mdi-calendar-clock menu-icon"></i></span>
                 <span class="menu-title">Agendamentos</span>
-                <i class="menu-arrow"></i>
             </a>
+        </li>
 
-            <div class="collapse {{ request()->routeIs('tenant.appointments.*') ? 'show' : '' }}" id="appointments-menu">
-                <ul class="nav flex-column sub-menu">
-                    <li class="nav-item">
-                        <a class="nav-link {{ request()->routeIs('tenant.appointments.index') ? 'active' : '' }}" href="{{ route('tenant.appointments.index') }}">Listar</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link {{ request()->routeIs('tenant.appointments.create') ? 'active' : '' }}" href="{{ route('tenant.appointments.create') }}">Novo Agendamento</a>
-                    </li>
-                </ul>
-            </div>
+        {{-- AGENDAMENTOS RECORRENTES --}}
+        <li class="nav-item {{ request()->routeIs('tenant.recurring-appointments.*') ? 'active' : '' }}">
+            <a class="nav-link" href="{{ route('tenant.recurring-appointments.index') }}">
+                <span class="icon-bg"><i class="mdi mdi-calendar-repeat menu-icon"></i></span>
+                <span class="menu-title">Agend. Recorrentes</span>
+            </a>
         </li>
 
         {{-- ============================================================
@@ -90,6 +85,28 @@
                     </li>
                     <li class="nav-item">
                         <a class="nav-link {{ request()->routeIs('tenant.doctors.create') ? 'active' : '' }}" href="{{ route('tenant.doctors.create') }}">Novo Médico</a>
+                    </li>
+                </ul>
+            </div>
+        </li>
+
+        {{-- ESPECIALIDADES --}}
+        <li class="nav-item {{ request()->routeIs('tenant.specialties.*') ? 'active' : '' }}">
+            <a class="nav-link" data-bs-toggle="collapse" href="#specialties-menu"
+                aria-expanded="{{ request()->routeIs('tenant.specialties.*') ? 'true' : 'false' }}"
+                title="Especialidades Médicas">
+                <span class="icon-bg"><i class="mdi mdi-pulse menu-icon"></i></span>
+                <span class="menu-title">Especialidades</span>
+                <i class="menu-arrow"></i>
+            </a>
+
+            <div class="collapse {{ request()->routeIs('tenant.specialties.*') ? 'show' : '' }}" id="specialties-menu">
+                <ul class="nav flex-column sub-menu">
+                    <li class="nav-item">
+                        <a class="nav-link {{ request()->routeIs('tenant.specialties.index') ? 'active' : '' }}" href="{{ route('tenant.specialties.index') }}">Listar</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {{ request()->routeIs('tenant.specialties.create') ? 'active' : '' }}" href="{{ route('tenant.specialties.create') }}">Nova Especialidade</a>
                     </li>
                 </ul>
             </div>
@@ -192,28 +209,6 @@
             </div>
         </li>
 
-        {{-- ESPECIALIDADES --}}
-        <li class="nav-item {{ request()->routeIs('tenant.specialties.*') ? 'active' : '' }}">
-            <a class="nav-link" data-bs-toggle="collapse" href="#specialties-menu"
-                aria-expanded="{{ request()->routeIs('tenant.specialties.*') ? 'true' : 'false' }}"
-                title="Especialidades Médicas">
-                <span class="icon-bg"><i class="mdi mdi-pulse menu-icon"></i></span>
-                <span class="menu-title">Especialidades</span>
-                <i class="menu-arrow"></i>
-            </a>
-
-            <div class="collapse {{ request()->routeIs('tenant.specialties.*') ? 'show' : '' }}" id="specialties-menu">
-                <ul class="nav flex-column sub-menu">
-                    <li class="nav-item">
-                        <a class="nav-link {{ request()->routeIs('tenant.specialties.index') ? 'active' : '' }}" href="{{ route('tenant.specialties.index') }}">Listar</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link {{ request()->routeIs('tenant.specialties.create') ? 'active' : '' }}" href="{{ route('tenant.specialties.create') }}">Nova Especialidade</a>
-                    </li>
-                </ul>
-            </div>
-        </li>
-
         {{-- ============================================================
             FORMULÁRIOS
         ============================================================ --}}
@@ -265,18 +260,23 @@
         <li class="nav-item nav-category">Integrações</li>
 
         {{-- INTEGRAÇÕES --}}
-        <li class="nav-item {{ request()->routeIs('tenant.integrations.*') ? 'active' : '' }}">
+        <li class="nav-item {{ request()->routeIs('tenant.integrations.*') || request()->routeIs('tenant.integrations.google.*') ? 'active' : '' }}">
             <a class="nav-link" data-bs-toggle="collapse" href="#integrations-menu"
-                aria-expanded="{{ request()->routeIs('tenant.integrations.*') ? 'true' : 'false' }}">
+                aria-expanded="{{ request()->routeIs('tenant.integrations.*') || request()->routeIs('tenant.integrations.google.*') ? 'true' : 'false' }}">
                 <span class="icon-bg"><i class="mdi mdi-puzzle menu-icon"></i></span>
                 <span class="menu-title">Integrações</span>
                 <i class="menu-arrow"></i>
             </a>
 
-            <div class="collapse {{ request()->routeIs('tenant.integrations.*') ? 'show' : '' }}" id="integrations-menu">
+            <div class="collapse {{ request()->routeIs('tenant.integrations.*') || request()->routeIs('tenant.integrations.google.*') ? 'show' : '' }}" id="integrations-menu">
                 <ul class="nav flex-column sub-menu">
                     <li class="nav-item">
                         <a class="nav-link {{ request()->routeIs('tenant.integrations.index') ? 'active' : '' }}" href="{{ route('tenant.integrations.index') }}">Listar</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {{ request()->routeIs('tenant.integrations.google.*') ? 'active' : '' }}" href="{{ route('tenant.integrations.google.index') }}">
+                            <i class="mdi mdi-google me-1"></i> Google Calendar
+                        </a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link {{ request()->routeIs('tenant.integrations.create') ? 'active' : '' }}" href="{{ route('tenant.integrations.create') }}">Nova Integração</a>
@@ -285,48 +285,12 @@
             </div>
         </li>
 
-        {{-- CONTAS OAUTH --}}
-        <li class="nav-item {{ request()->routeIs('tenant.oauth-accounts.*') ? 'active' : '' }}">
-            <a class="nav-link" data-bs-toggle="collapse" href="#oauth-accounts-menu"
-                aria-expanded="{{ request()->routeIs('tenant.oauth-accounts.*') ? 'true' : 'false' }}">
-                <span class="icon-bg"><i class="mdi mdi-key-variant menu-icon"></i></span>
-                <span class="menu-title">Contas OAuth</span>
-                <i class="menu-arrow"></i>
-            </a>
-
-            <div class="collapse {{ request()->routeIs('tenant.oauth-accounts.*') ? 'show' : '' }}" id="oauth-accounts-menu">
-                <ul class="nav flex-column sub-menu">
-                    <li class="nav-item">
-                        <a class="nav-link {{ request()->routeIs('tenant.oauth-accounts.index') ? 'active' : '' }}" href="{{ route('tenant.oauth-accounts.index') }}">Listar</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link {{ request()->routeIs('tenant.oauth-accounts.create') ? 'active' : '' }}" href="{{ route('tenant.oauth-accounts.create') }}">Nova Conta</a>
-                    </li>
-                </ul>
-            </div>
-        </li>
-
-        {{-- SINCRONIZAÇÃO DE CALENDÁRIO --}}
-        <li class="nav-item {{ request()->routeIs('tenant.calendar-sync.*') ? 'active' : '' }}">
-            <a class="nav-link" data-bs-toggle="collapse" href="#calendar-sync-menu"
-                aria-expanded="{{ request()->routeIs('tenant.calendar-sync.*') ? 'true' : 'false' }}"
-                title="Sincronização de Calendário">
-                <span class="icon-bg"><i class="mdi mdi-sync menu-icon"></i></span>
-                <span class="menu-title">Sync Calendário</span>
-                <i class="menu-arrow"></i>
-            </a>
-
-            <div class="collapse {{ request()->routeIs('tenant.calendar-sync.*') ? 'show' : '' }}" id="calendar-sync-menu">
-                <ul class="nav flex-column sub-menu">
-                    <li class="nav-item">
-                        <a class="nav-link {{ request()->routeIs('tenant.calendar-sync.index') ? 'active' : '' }}" href="{{ route('tenant.calendar-sync.index') }}">Listar</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link {{ request()->routeIs('tenant.calendar-sync.create') ? 'active' : '' }}" href="{{ route('tenant.calendar-sync.create') }}">Nova Sincronização</a>
-                    </li>
-                </ul>
-            </div>
-        </li>
+        {{-- 
+            NOTA: Contas OAuth e Sync Calendário foram removidos do menu pois:
+            - Google Calendar usa sua própria estrutura (google_calendar_tokens vinculado a doctor_id)
+            - Essas estruturas genéricas (oauth_accounts vinculado a user_id) não são usadas atualmente
+            - Mantidas no banco de dados para possível uso futuro com Apple Calendar ou outras integrações
+        --}}
 
     </ul>
 </nav>

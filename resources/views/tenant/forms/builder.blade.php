@@ -339,47 +339,7 @@
 @endsection
 
 @push('styles')
-<style>
-    .section-container {
-        margin-bottom: 1.5rem;
-    }
-    .question-item {
-        border: 1px solid #e0e0e0;
-        border-radius: 8px;
-        padding: 1rem;
-        margin-bottom: 1rem;
-        background: #f9f9f9;
-    }
-    .question-item:hover {
-        background: #f0f0f0;
-    }
-    .question-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: start;
-        margin-bottom: 0.5rem;
-    }
-    .question-label {
-        font-weight: 600;
-        color: #2c3e50;
-    }
-    .question-type-badge {
-        font-size: 0.75rem;
-    }
-    .options-list {
-        margin-top: 0.5rem;
-        padding-left: 1.5rem;
-    }
-    .option-item {
-        padding: 0.25rem 0;
-        color: #666;
-    }
-    .option-input-group {
-        display: flex;
-        gap: 0.5rem;
-        margin-bottom: 0.5rem;
-    }
-</style>
+    <link href="{{ asset('css/tenant-forms.css') }}" rel="stylesheet">
 @endpush
 
 @push('scripts')

@@ -10,8 +10,11 @@ use App\Models\Tenant\MedicalSpecialty;
 use App\Models\Tenant\AppointmentType;
 use App\Models\Tenant\Doctor;
 use App\Models\Tenant\BusinessHour;
+use App\Models\Tenant\RecurringAppointment;
+use App\Models\Tenant\RecurringAppointmentRule;
 use App\Http\Requests\Tenant\StoreAppointmentRequest;
 use App\Http\Requests\Tenant\UpdateAppointmentRequest;
+use App\Services\Tenant\GoogleCalendarService;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
@@ -19,6 +22,12 @@ use Carbon\Carbon;
 
 class AppointmentController extends Controller
 {
+    protected GoogleCalendarService $googleCalendarService;
+
+    public function __construct(GoogleCalendarService $googleCalendarService)
+    {
+        $this->googleCalendarService = $googleCalendarService;
+    }
     public function index()
     {
         $appointments = Appointment::with(['calendar.doctor.user', 'patient', 'type', 'specialty'])
@@ -50,8 +59,35 @@ class AppointmentController extends Controller
     {
         $data = $request->validated();
         $data['id'] = Str::uuid();
+        
+        // Sempre definir status como "scheduled" ao criar um novo agendamento
+        $data['status'] = 'scheduled';
 
-        Appointment::create($data);
+        // Buscar o calendário principal do médico automaticamente
+        if (isset($data['doctor_id'])) {
+            $doctor = Doctor::findOrFail($data['doctor_id']);
+            $calendar = $doctor->getPrimaryCalendar();
+            
+            if (!$calendar) {
+                return redirect()->back()
+                    ->withInput()
+                    ->with('error', 'O médico selecionado não possui um calendário cadastrado. Por favor, cadastre um calendário para este médico primeiro.');
+            }
+            
+            $data['calendar_id'] = $calendar->id;
+        }
+
+        $appointment = Appointment::create($data);
+
+        // Sincronizar com Google Calendar se o médico tiver token
+        try {
+            $this->googleCalendarService->syncEvent($appointment);
+        } catch (\Exception $e) {
+            \Log::error('Erro ao sincronizar agendamento com Google Calendar', [
+                'appointment_id' => $appointment->id,
+                'error' => $e->getMessage(),
+            ]);
+        }
 
         return redirect()->route('tenant.appointments.index')
             ->with('success', 'Agendamento criado com sucesso.');
@@ -70,16 +106,14 @@ class AppointmentController extends Controller
         $calendars      = Calendar::with('doctor.user')->orderBy('name')->get();
         $patients       = Patient::orderBy('full_name')->get();
         $specialties    = MedicalSpecialty::orderBy('name')->get();
-        $appointmentTypes = AppointmentType::orderBy('name')->get();
 
-        $appointment->load(['calendar', 'patient', 'specialty', 'type']);
+        $appointment->load(['calendar', 'patient', 'specialty', 'type', 'calendar.doctor']);
 
         return view('tenant.appointments.edit', compact(
             'appointment',
             'calendars',
             'patients',
-            'specialties',
-            'appointmentTypes'
+            'specialties'
         ));
     }
 
@@ -88,6 +122,16 @@ class AppointmentController extends Controller
         $appointment = Appointment::findOrFail($id);
         $appointment->update($request->validated());
 
+        // Sincronizar com Google Calendar se o médico tiver token
+        try {
+            $this->googleCalendarService->syncEvent($appointment);
+        } catch (\Exception $e) {
+            \Log::error('Erro ao sincronizar agendamento com Google Calendar', [
+                'appointment_id' => $appointment->id,
+                'error' => $e->getMessage(),
+            ]);
+        }
+
         return redirect()->route('tenant.appointments.index')
             ->with('success', 'Agendamento atualizado com sucesso.');
     }
@@ -95,6 +139,17 @@ class AppointmentController extends Controller
     public function destroy($id)
     {
         $appointment = Appointment::findOrFail($id);
+
+        // Remover do Google Calendar se existir
+        try {
+            $this->googleCalendarService->deleteEvent($appointment);
+        } catch (\Exception $e) {
+            \Log::error('Erro ao remover agendamento do Google Calendar', [
+                'appointment_id' => $appointment->id,
+                'error' => $e->getMessage(),
+            ]);
+        }
+
         $appointment->delete();
 
         return redirect()->route('tenant.appointments.index')
@@ -131,6 +186,10 @@ class AppointmentController extends Controller
                 }
             }
             
+            // Obter parâmetros de data do FullCalendar (se disponíveis)
+            $startDate = $request->has('start') ? Carbon::parse($request->start) : Carbon::now()->startOfMonth();
+            $endDate = $request->has('end') ? Carbon::parse($request->end) : Carbon::now()->endOfMonth();
+            
             $appointments = $query->get();
             
             // Formata os eventos para o FullCalendar
@@ -148,9 +207,14 @@ class AppointmentController extends Controller
                         'specialty' => $appointment->specialty ? $appointment->specialty->name : null,
                         'status' => $appointment->status ?? 'scheduled',
                         'notes' => $appointment->notes ?? null,
+                        'is_recurring' => false,
                     ]
                 ];
             });
+            
+            // Adicionar agendamentos recorrentes que ainda não foram gerados
+            $recurringEvents = $this->getRecurringAppointmentEvents($calendar->doctor_id, $startDate, $endDate);
+            $events = $events->merge($recurringEvents);
             
             return response()->json($events);
         }
@@ -192,6 +256,111 @@ class AppointmentController extends Controller
     }
 
     /**
+     * Gera eventos de agendamentos recorrentes para exibição no calendário
+     */
+    private function getRecurringAppointmentEvents($doctorId, Carbon $startDate, Carbon $endDate): \Illuminate\Support\Collection
+    {
+        $events = collect();
+
+        // Buscar recorrências ativas do médico
+        $recurringAppointments = RecurringAppointment::where('doctor_id', $doctorId)
+            ->where('active', true)
+            ->where('start_date', '<=', $endDate->format('Y-m-d'))
+            ->where(function($query) use ($startDate) {
+                $query->where('end_type', 'none')
+                      ->orWhere(function($q) use ($startDate) {
+                          $q->where('end_type', 'date')
+                            ->where('end_date', '>=', $startDate->format('Y-m-d'));
+                      })
+                      ->orWhere(function($q) {
+                          $q->where('end_type', 'total_sessions');
+                      });
+            })
+            ->with(['rules', 'patient', 'appointmentType'])
+            ->get();
+
+        foreach ($recurringAppointments as $recurring) {
+            if (!$recurring->isActive()) {
+                continue;
+            }
+
+            // Processar cada regra da recorrência
+            foreach ($recurring->rules as $rule) {
+                $weekdayNumber = $rule->getWeekdayNumber();
+                
+                // Gerar eventos para cada ocorrência no período
+                $currentDate = $startDate->copy();
+                
+                // Encontrar primeira ocorrência do dia da semana no período
+                $daysUntilWeekday = ($weekdayNumber - $currentDate->dayOfWeek + 7) % 7;
+                if ($daysUntilWeekday > 0) {
+                    $currentDate->addDays($daysUntilWeekday);
+                }
+                
+                // Garantir que a data não seja anterior à data inicial da recorrência
+                if ($currentDate->lt($recurring->start_date)) {
+                    $currentDate = $recurring->start_date->copy();
+                    $daysToAdd = ($weekdayNumber - $currentDate->dayOfWeek + 7) % 7;
+                    if ($daysToAdd > 0) {
+                        $currentDate->addDays($daysToAdd);
+                    }
+                }
+
+                // Gerar eventos até o final do período ou até a data final da recorrência
+                while ($currentDate->lte($endDate)) {
+                    // Verificar limites da recorrência
+                    if ($recurring->end_type === 'date' && $recurring->end_date && $currentDate->gt($recurring->end_date)) {
+                        break;
+                    }
+
+                    if ($recurring->end_type === 'total_sessions' && $recurring->total_sessions) {
+                        $generatedCount = $recurring->getGeneratedSessionsCount();
+                        if ($generatedCount >= $recurring->total_sessions) {
+                            break;
+                        }
+                    }
+
+                    // Verificar se já existe um agendamento gerado para esta data e horário
+                    $startDateTime = Carbon::parse($currentDate->format('Y-m-d') . ' ' . $rule->start_time);
+                    $endDateTime = Carbon::parse($currentDate->format('Y-m-d') . ' ' . $rule->end_time);
+                    
+                    $existingAppointment = Appointment::where('recurring_appointment_id', $recurring->id)
+                        ->whereDate('starts_at', $currentDate->format('Y-m-d'))
+                        ->whereTime('starts_at', $rule->start_time)
+                        ->whereTime('ends_at', $rule->end_time)
+                        ->first();
+
+                    // Se não existe, criar evento virtual para exibição
+                    if (!$existingAppointment) {
+                        $events->push([
+                            'id' => 'recurring_' . $recurring->id . '_' . $currentDate->format('Y-m-d') . '_' . $rule->id,
+                            'title' => $recurring->patient ? $recurring->patient->full_name : 'Agendamento Recorrente',
+                            'start' => $startDateTime->toIso8601String(),
+                            'end' => $endDateTime->toIso8601String(),
+                            'backgroundColor' => '#17a2b8', // Cor diferente para agendamentos recorrentes
+                            'borderColor' => '#17a2b8',
+                            'extendedProps' => [
+                                'patient' => $recurring->patient ? $recurring->patient->full_name : null,
+                                'type' => $recurring->appointmentType ? $recurring->appointmentType->name : null,
+                                'specialty' => null,
+                                'status' => 'scheduled',
+                                'notes' => 'Agendamento recorrente',
+                                'is_recurring' => true,
+                                'recurring_appointment_id' => $recurring->id,
+                            ]
+                        ]);
+                    }
+
+                    // Avançar para a próxima semana
+                    $currentDate->addWeek();
+                }
+            }
+        }
+
+        return $events;
+    }
+
+    /**
      * API: Buscar calendários por médico
      */
     public function getCalendarsByDoctor($doctorId)
@@ -215,40 +384,18 @@ class AppointmentController extends Controller
     public function getAppointmentTypesByDoctor($doctorId)
     {
         try {
-            // Verificar se a coluna doctor_id existe
-            $columns = \DB::connection('tenant')
-                ->select("SELECT column_name FROM information_schema.columns WHERE table_name = 'appointment_types' AND column_name = 'doctor_id'");
-            
-            if (empty($columns)) {
-                // Se a coluna não existe, retornar todos os tipos ativos (compatibilidade temporária)
-                $types = AppointmentType::where('is_active', true)
-                    ->orderBy('name')
-                    ->get()
-                    ->map(function($type) {
-                        return [
-                            'id' => $type->id,
-                            'name' => $type->name,
-                            'duration_min' => $type->duration_min,
-                        ];
-                    });
-            } else {
-                // Se a coluna existe, filtrar por médico
-                // Retorna tipos do médico OU tipos sem médico atribuído (doctor_id IS NULL)
-                $types = AppointmentType::where(function($query) use ($doctorId) {
-                        $query->where('doctor_id', $doctorId)
-                              ->orWhereNull('doctor_id');
-                    })
-                    ->where('is_active', true)
-                    ->orderBy('name')
-                    ->get()
-                    ->map(function($type) {
-                        return [
-                            'id' => $type->id,
-                            'name' => $type->name,
-                            'duration_min' => $type->duration_min,
-                        ];
-                    });
-            }
+            // Retorna apenas os tipos de consulta do médico específico
+            $types = AppointmentType::where('doctor_id', $doctorId)
+                ->where('is_active', true)
+                ->orderBy('name')
+                ->get()
+                ->map(function($type) {
+                    return [
+                        'id' => $type->id,
+                        'name' => $type->name,
+                        'duration_min' => $type->duration_min,
+                    ];
+                });
 
             return response()->json($types);
         } catch (\Exception $e) {
@@ -372,6 +519,11 @@ class AppointmentController extends Controller
                     return $slotStart->lt($apptEnd) && $slotEnd->gt($apptStart);
                 })->isNotEmpty();
 
+                // Verificar se o slot está bloqueado por uma recorrência ativa
+                if (!$hasConflict) {
+                    $hasConflict = $this->isSlotBlockedByRecurring($doctorId, $date, $slotStart, $slotEnd);
+                }
+
                 if (!$hasConflict) {
                     $availableSlots[] = [
                         'start' => $slotStart->format('H:i'),
@@ -386,5 +538,113 @@ class AppointmentController extends Controller
         }
 
         return response()->json($availableSlots);
+    }
+
+    /**
+     * Verifica se um slot está bloqueado por uma recorrência ativa
+     */
+    private function isSlotBlockedByRecurring($doctorId, Carbon $date, Carbon $slotStart, Carbon $slotEnd): bool
+    {
+        $weekday = $date->dayOfWeek;
+        $weekdayString = RecurringAppointmentRule::weekdayFromNumber($weekday);
+        $slotStartTime = $slotStart->format('H:i');
+        $slotEndTime = $slotEnd->format('H:i');
+
+        // Buscar recorrências ativas do médico que têm regras para este dia da semana
+        $recurringAppointments = RecurringAppointment::where('doctor_id', $doctorId)
+            ->where('active', true)
+            ->where('start_date', '<=', $date->format('Y-m-d'))
+            ->where(function($query) use ($date) {
+                $query->where('end_type', 'none')
+                      ->orWhere(function($q) use ($date) {
+                          $q->where('end_type', 'date')
+                            ->where('end_date', '>=', $date->format('Y-m-d'));
+                      })
+                      ->orWhere(function($q) {
+                          $q->where('end_type', 'total_sessions');
+                      });
+            })
+            ->whereHas('rules', function($q) use ($weekdayString) {
+                $q->where('weekday', $weekdayString);
+            })
+            ->with('rules')
+            ->get();
+
+        if ($recurringAppointments->isEmpty()) {
+            return false;
+        }
+
+        // Verificar se alguma recorrência ainda está dentro dos limites e bloqueia o slot
+        foreach ($recurringAppointments as $recurring) {
+            if (!$recurring->isActive()) {
+                continue;
+            }
+
+            // Verificar se ainda não atingiu o limite de sessões
+            if ($recurring->end_type === 'total_sessions' && $recurring->total_sessions) {
+                $generatedCount = $recurring->getGeneratedSessionsCount();
+                if ($generatedCount >= $recurring->total_sessions) {
+                    continue; // Já atingiu o limite
+                }
+            }
+
+            // Verificar se a data está dentro do período válido
+            if ($recurring->end_type === 'date' && $recurring->end_date && $date->gt($recurring->end_date)) {
+                continue; // Data fora do período
+            }
+
+            // Verificar se alguma regra desta recorrência bloqueia o slot (verifica sobreposição)
+            foreach ($recurring->rules as $rule) {
+                if ($rule->weekday !== $weekdayString) {
+                    continue;
+                }
+
+                // Converter horários para Carbon para comparação precisa
+                // Normalizar o formato do horário (pode vir como "HH:MM:SS" ou "HH:MM")
+                $ruleStartTime = $rule->start_time;
+                $ruleEndTime = $rule->end_time;
+                
+                // Normalizar para formato HH:MM:SS se necessário
+                if (strlen($ruleStartTime) === 5) {
+                    $ruleStartTime .= ':00';
+                }
+                if (strlen($ruleEndTime) === 5) {
+                    $ruleEndTime .= ':00';
+                }
+                
+                // Criar objetos Carbon com a data e horário, zerando segundos e microsegundos para comparação precisa
+                try {
+                    $ruleStart = Carbon::createFromFormat('Y-m-d H:i:s', $date->format('Y-m-d') . ' ' . $ruleStartTime)->startOfMinute();
+                    $ruleEnd = Carbon::createFromFormat('Y-m-d H:i:s', $date->format('Y-m-d') . ' ' . $ruleEndTime)->startOfMinute();
+                } catch (\Exception $e) {
+                    // Fallback: usar parse se createFromFormat falhar
+                    $ruleStart = Carbon::parse($date->format('Y-m-d') . ' ' . $ruleStartTime)->startOfMinute();
+                    $ruleEnd = Carbon::parse($date->format('Y-m-d') . ' ' . $ruleEndTime)->startOfMinute();
+                }
+                
+                // Garantir que os slots também estão normalizados
+                $normalizedSlotStart = $slotStart->copy()->startOfMinute();
+                $normalizedSlotEnd = $slotEnd->copy()->startOfMinute();
+
+                // Verifica sobreposição de intervalos de tempo:
+                // Dois intervalos [a, b) e [c, d) se sobrepõem se: a < d && b > c
+                // Onde o fim do intervalo é exclusivo (um agendamento 08:00-09:00 termina em 09:00:00, mas não inclui 09:00:00)
+                // Então o próximo slot pode começar exatamente em 09:00:00
+                // IMPORTANTE: Se a regra termina às 09:00:00 e o slot começa às 09:00:00, NÃO há sobreposição
+                // Por isso usamos > (maior que) e não >= (maior ou igual)
+                // 
+                // Exemplo:
+                // - Regra: 08:00:00 - 09:00:00
+                // - Slot: 09:00:00 - 10:00:00
+                // - Verificação: 08:00:00 < 10:00:00 (true) && 09:00:00 > 09:00:00 (false) = false (não bloqueia) ✓
+                $hasOverlap = $ruleStart->lt($normalizedSlotEnd) && $ruleEnd->gt($normalizedSlotStart);
+                
+                if ($hasOverlap) {
+                    return true; // Há sobreposição, o slot está bloqueado
+                }
+            }
+        }
+
+        return false;
     }
 }

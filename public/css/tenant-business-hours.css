@@ -1,0 +1,26 @@
+/* ============================================
+   BUSINESS HOURS - Estilos para Create e Edit
+   ============================================ */
+
+.weekday-badge {
+    transition: all 0.3s ease;
+    cursor: default;
+}
+
+.weekday-badge:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+}
+
+.weekday-badge .btn-close {
+    transition: opacity 0.2s ease;
+}
+
+.weekday-badge:hover .btn-close {
+    opacity: 1 !important;
+}
+
+#selected-weekdays {
+    transition: all 0.3s ease;
+}
+

@@ -21,10 +21,54 @@
         <div class="col-lg-12 grid-margin stretch-card">
             <div class="card">
                 <div class="card-body">
-                    <h4 class="card-title">Lista de Integrações</h4>
+                    <h4 class="card-title">Integrações Disponíveis</h4>
 
-                    <a href="{{ route('tenant.integrations.create') }}" class="btn btn-primary mb-3">
-                        + Novo
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <div class="card border-primary shadow-sm">
+                                <div class="card-body">
+                                    <div class="d-flex align-items-center mb-3">
+                                        <div class="me-3">
+                                            <i class="mdi mdi-google text-primary" style="font-size: 3rem;"></i>
+                                        </div>
+                                        <div>
+                                            <h5 class="card-title mb-0">Google Calendar</h5>
+                                            <small class="text-muted">Sincronização Automática</small>
+                                        </div>
+                                    </div>
+                                    <p class="card-text text-muted mb-3">
+                                        Sincronize automaticamente os agendamentos com o Google Calendar. 
+                                        Cada médico pode conectar sua própria conta do Google.
+                                    </p>
+                                    <ul class="list-unstyled mb-3">
+                                        <li class="mb-2">
+                                            <i class="mdi mdi-check-circle text-success me-2"></i>
+                                            Sincronização automática de agendamentos
+                                        </li>
+                                        <li class="mb-2">
+                                            <i class="mdi mdi-check-circle text-success me-2"></i>
+                                            Suporte a agendamentos recorrentes
+                                        </li>
+                                        <li class="mb-2">
+                                            <i class="mdi mdi-check-circle text-success me-2"></i>
+                                            Conta individual por médico
+                                        </li>
+                                    </ul>
+                                    <a href="{{ route('tenant.integrations.google.index') }}" class="btn btn-primary">
+                                        <i class="mdi mdi-google me-1"></i>
+                                        Configurar Google Calendar
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <hr class="my-4">
+
+                    <h5 class="mb-3">Outras Integrações</h5>
+
+                    <a href="{{ route('tenant.integrations.create') }}" class="btn btn-secondary mb-3">
+                        + Nova Integração
                     </a>
 
                     <div class="table-responsive">
@@ -70,7 +114,11 @@
 @push('scripts')
 <script>
     $(document).ready(function() {
-        $('#datatable-list').DataTable();
+        $('#datatable-list').DataTable({
+            "language": {
+                "url": "//cdn.datatables.net/plug-ins/1.11.5/i18n/pt-BR.json"
+            }
+        });
     });
 </script>
 @endpush

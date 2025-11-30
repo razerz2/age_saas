@@ -238,34 +238,8 @@
     </div>
 
 @push('styles')
-<style>
-    .form-group label {
-        font-weight: 600;
-        color: #2c3e50;
-        margin-bottom: 0.5rem;
-    }
-    .card-title {
-        font-weight: 600;
-    }
-    h5.text-primary {
-        font-weight: 600;
-        padding-bottom: 0.5rem;
-        border-bottom: 2px solid #e9ecef;
-    }
-    .btn-lg {
-        padding: 0.75rem 2rem;
-        font-weight: 600;
-    }
-    #avatar-preview-container {
-        padding: 1rem;
-        background-color: #f8f9fa;
-        border-radius: 0.5rem;
-        border: 1px solid #dee2e6;
-    }
-    .avatar-preview-wrapper {
-        flex-shrink: 0;
-    }
-</style>
+    <link href="{{ asset('css/tenant-common.css') }}" rel="stylesheet">
+    <link href="{{ asset('css/tenant-users.css') }}" rel="stylesheet">
 @endpush
 
 @push('scripts')

@@ -67,7 +67,10 @@ Os usuários da Platform possuem um campo `modules` (JSON) que define quais mód
 - `users` - Gerenciamento de usuários
 - `settings` - Configurações do sistema
 - `notifications` - Notificações
-- `catalog` - Catálogo de especialidades
+- `medical_specialties_catalog` - Catálogo de especialidades
+- `notifications_outbox` - Histórico de notificações enviadas
+- `system_notifications` - Notificações do sistema
+- `locations` - Gerenciamento de localização (países, estados, cidades)
 
 O middleware `module.access:{modulo}` verifica o acesso antes de permitir a rota.
 
@@ -86,21 +89,31 @@ Todas as rotas da Platform utilizam o prefixo `/Platform`:
 /Platform/users                        # CRUD de usuários da platform
 /Platform/settings                     # Configurações do sistema
 /Platform/profile                      # Perfil do usuário logado
-/Platform/notifications                # Notificações do sistema
-/Platform/catalog                      # Catálogo de especialidades
-/Platform/kiosk/monitor                # Monitor de kiosk
+/Platform/system_notifications         # Notificações do sistema
+/Platform/notifications_outbox         # Histórico de notificações enviadas
+/Platform/medical_specialties_catalog   # Catálogo de especialidades
+/kiosk/monitor                         # Monitor de kiosk (sem prefixo Platform)
 ```
 
 ### Rotas Especiais
 
 ```php
-POST /Platform/tenants/{tenant}/sync           # Sincronizar tenant com Asaas
-POST /Platform/subscriptions/{id}/renew        # Renovar assinatura
-POST /Platform/invoices/{invoice}/sync         # Sincronizar fatura manualmente
-POST /Platform/whatsapp/send                   # Enviar mensagem WhatsApp
-POST /Platform/whatsapp/invoice/{invoice}      # Enviar notificação de fatura
-GET  /Platform/api/estados/{pais}              # API: Estados por país
-GET  /Platform/api/cidades/{estado}           # API: Cidades por estado
+POST /Platform/tenants/{tenant}/sync                    # Sincronizar tenant com Asaas
+POST /Platform/subscriptions/{id}/renew                 # Renovar assinatura
+POST /Platform/subscriptions/{subscription}/sync        # Sincronizar assinatura com Asaas
+GET  /Platform/tenants/{tenant}/subscriptions          # Listar assinaturas de um tenant
+POST /Platform/invoices/{invoice}/sync                 # Sincronizar fatura manualmente
+POST /Platform/whatsapp/send                           # Enviar mensagem WhatsApp
+POST /Platform/whatsapp/invoice/{invoice}              # Enviar notificação de fatura
+GET  /Platform/api/estados/{pais}                      # API: Estados por país
+GET  /Platform/api/cidades/{estado}                    # API: Cidades por estado
+GET  /Platform/system_notifications/json                # API: Notificações em JSON
+POST /Platform/users/{user}/reset-password              # Resetar senha de usuário
+POST /Platform/users/{user}/toggle-status               # Ativar/desativar usuário
+GET  /Platform/settings/test/{service}                 # Testar conexão de serviço
+GET  /kiosk/monitor                                     # Monitor de kiosk
+GET  /kiosk/monitor/data                               # Dados do monitor (API)
+POST /webhook/asaas                                    # Webhook do Asaas (sem prefixo)
 ```
 
 ---
@@ -117,14 +130,14 @@ GET  /Platform/api/cidades/{estado}           # API: Cidades por estado
 | `SubscriptionController` | CRUD de assinaturas + renovação | `/Platform/subscriptions` |
 | `InvoiceController` | CRUD de faturas + sincronização manual | `/Platform/invoices` |
 | `UserController` | CRUD de usuários da platform + reset de senha | `/Platform/users` |
-| `MedicalSpecialtyCatalogController` | Catálogo de especialidades médicas | `/Platform/catalog` |
-| `NotificationOutboxController` | Histórico de notificações enviadas | `/Platform/notifications/outbox` |
-| `SystemNotificationController` | Notificações do sistema | `/Platform/notifications` |
+| `MedicalSpecialtyCatalogController` | Catálogo de especialidades médicas | `/Platform/medical_specialties_catalog` |
+| `NotificationOutboxController` | Histórico de notificações enviadas | `/Platform/notifications_outbox` |
+| `SystemNotificationController` | Notificações do sistema | `/Platform/system_notifications` |
 | `SystemSettingsController` | Configurações gerais e integrações | `/Platform/settings` |
 | `PaisController`, `EstadoController`, `CidadeController` | CRUD de localização | `/Platform/paises`, `/Platform/estados`, `/Platform/cidades` |
 | `LocationController` | API de localização (estados/cidades) | `/Platform/api/estados/{pais}`, `/Platform/api/cidades/{estado}` |
 | `WhatsAppController` | Envio de mensagens WhatsApp | `/Platform/whatsapp/send` |
-| `KioskMonitorController` | Monitor de kiosk | `/Platform/kiosk/monitor` |
+| `KioskMonitorController` | Monitor de kiosk | `/kiosk/monitor` |
 
 ---
 
@@ -235,9 +248,16 @@ Armazenados no **banco central (landlord)**:
 ### 6. Catálogo de Especialidades Médicas
 
 **Gerenciar Especialidades:**
-1. Acesse `/Platform/catalog`
+1. Acesse `/Platform/medical_specialties_catalog`
 2. Crie, edite ou remova especialidades médicas
 3. As especialidades ficam disponíveis para todos os tenants
+
+### 7. Monitor de Kiosk
+
+**Acessar Monitor:**
+1. Acesse `/kiosk/monitor` (sem prefixo Platform)
+2. Visualize status e informações dos kiosks conectados
+3. Monitore atividades em tempo real
 
 ---
 
@@ -391,7 +411,7 @@ php artisan migrate
 - [README.md](README.md) - Documentação geral do projeto
 - [TENANT.md](TENANT.md) - Documentação da área Tenant
 - [ARQUITETURA.md](ARQUITETURA.md) - Documentação técnica da arquitetura
-- [ENV.md](ENV.md) - Guia de variáveis de ambiente
+- [docs/ENV.md](docs/ENV.md) - Guia de variáveis de ambiente
 
 ---
 

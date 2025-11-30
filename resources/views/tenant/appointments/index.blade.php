@@ -24,7 +24,7 @@
                     <h4 class="card-title">Lista de Agendamentos</h4>
 
                     <a href="{{ route('tenant.appointments.create') }}" class="btn btn-primary mb-3">
-                        + Novo
+                        <i class="mdi mdi-plus"></i> Novo Agendamento
                     </a>
 
                     <div class="table-responsive">
@@ -72,7 +72,11 @@
 @push('scripts')
 <script>
     $(document).ready(function() {
-        $('#datatable-list').DataTable();
+        $('#datatable-list').DataTable({
+            "language": {
+                "url": "//cdn.datatables.net/plug-ins/1.11.5/i18n/pt-BR.json"
+            }
+        });
     });
 </script>
 @endpush

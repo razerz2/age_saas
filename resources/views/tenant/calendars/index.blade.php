@@ -72,7 +72,11 @@
 @push('scripts')
 <script>
     $(document).ready(function() {
-        $('#datatable-list').DataTable();
+        $('#datatable-list').DataTable({
+            "language": {
+                "url": "//cdn.datatables.net/plug-ins/1.11.5/i18n/pt-BR.json"
+            }
+        });
     });
 </script>
 @endpush

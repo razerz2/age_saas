@@ -61,9 +61,15 @@
                         <div class="col-md-6 mb-3">
                             <div class="border rounded p-3 h-100">
                                 <label class="text-muted small mb-1 d-block">
-                                    <i class="mdi mdi-identifier me-1"></i> ID
+                                    <i class="mdi mdi-account-doctor me-1"></i> Médico
                                 </label>
-                                <p class="mb-0 fw-semibold">{{ $appointmentType->id }}</p>
+                                <p class="mb-0 fw-semibold text-primary">
+                                    @if($appointmentType->doctor)
+                                        {{ $appointmentType->doctor->user->display_name ?? $appointmentType->doctor->user->name }}
+                                    @else
+                                        <span class="text-muted">N/A</span>
+                                    @endif
+                                </p>
                             </div>
                         </div>
                         <div class="col-md-6 mb-3">

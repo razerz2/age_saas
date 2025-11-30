@@ -21,6 +21,7 @@ return new class extends Migration
             $table->timestamp('ends_at');
             $table->enum('status', ['scheduled', 'rescheduled', 'canceled', 'attended', 'no_show'])->default('scheduled');
             $table->text('notes')->nullable();
+            $table->string('google_event_id')->nullable();
             $table->timestamps();
         });
     }

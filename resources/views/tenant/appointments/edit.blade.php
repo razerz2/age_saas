@@ -51,10 +51,14 @@
                                             <i class="mdi mdi-calendar me-1"></i>
                                             Calendário <span class="text-danger">*</span>
                                         </label>
-                                        <select name="calendar_id" class="form-control @error('calendar_id') is-invalid @enderror" required>
+                                        <select name="calendar_id" id="calendar_id" class="form-control @error('calendar_id') is-invalid @enderror" required>
                                             <option value="">Selecione um calendário</option>
                                             @foreach($calendars as $calendar)
-                                                <option value="{{ $calendar->id }}" {{ old('calendar_id', $appointment->calendar_id) == $calendar->id ? 'selected' : '' }}>{{ $calendar->name }}</option>
+                                                <option value="{{ $calendar->id }}" 
+                                                        data-doctor-id="{{ $calendar->doctor_id }}"
+                                                        {{ old('calendar_id', $appointment->calendar_id) == $calendar->id ? 'selected' : '' }}>
+                                                    {{ $calendar->name }}
+                                                </option>
                                             @endforeach
                                         </select>
                                         @error('calendar_id')
@@ -87,11 +91,8 @@
                                             <i class="mdi mdi-calendar-clock me-1"></i>
                                             Tipo de Consulta
                                         </label>
-                                        <select name="appointment_type" class="form-control @error('appointment_type') is-invalid @enderror">
-                                            <option value="">Selecione um tipo</option>
-                                            @foreach($appointmentTypes as $appointmentType)
-                                                <option value="{{ $appointmentType->id }}" {{ old('appointment_type', $appointment->appointment_type) == $appointmentType->id ? 'selected' : '' }}>{{ $appointmentType->name }}</option>
-                                            @endforeach
+                                        <select name="appointment_type" id="appointment_type" class="form-control @error('appointment_type') is-invalid @enderror" disabled>
+                                            <option value="">Primeiro selecione um calendário</option>
                                         </select>
                                         @error('appointment_type')
                                             <div class="invalid-feedback d-block">{{ $message }}</div>
@@ -217,25 +218,78 @@
     </div>
 
 @push('styles')
-<style>
-    .form-group label {
-        font-weight: 600;
-        color: #2c3e50;
-        margin-bottom: 0.5rem;
+    <link href="{{ asset('css/tenant-common.css') }}" rel="stylesheet">
+@endpush
+
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const calendarSelect = document.getElementById('calendar_id');
+    const appointmentTypeSelect = document.getElementById('appointment_type');
+    const currentAppointmentTypeId = '{{ old("appointment_type", $appointment->appointment_type) }}';
+
+    // Carregar tipos quando calendário mudar
+    calendarSelect.addEventListener('change', function() {
+        const selectedOption = this.options[this.selectedIndex];
+        const doctorId = selectedOption.dataset.doctorId;
+
+        if (!doctorId) {
+            appointmentTypeSelect.innerHTML = '<option value="">Primeiro selecione um calendário</option>';
+            appointmentTypeSelect.disabled = true;
+            return;
+        }
+
+        // Carregar tipos de consulta do médico
+        loadAppointmentTypes(doctorId);
+    });
+
+    // Carregar tipos no carregamento inicial se já houver calendário selecionado
+    if (calendarSelect.value) {
+        const selectedOption = calendarSelect.options[calendarSelect.selectedIndex];
+        const doctorId = selectedOption.dataset.doctorId;
+        if (doctorId) {
+            loadAppointmentTypes(doctorId);
+        }
     }
-    .card-title {
-        font-weight: 600;
+
+    function loadAppointmentTypes(doctorId) {
+        appointmentTypeSelect.disabled = true;
+        appointmentTypeSelect.innerHTML = '<option value="">Carregando tipos...</option>';
+
+        fetch(`/tenant/api/doctors/${doctorId}/appointment-types`)
+            .then(response => response.json())
+            .then(data => {
+                appointmentTypeSelect.innerHTML = '<option value="">Selecione um tipo</option>';
+                
+                let currentTypeFound = false;
+                data.forEach(type => {
+                    const option = document.createElement('option');
+                    option.value = type.id;
+                    option.textContent = `${type.name} (${type.duration_min} min)`;
+                    
+                    // Preservar seleção atual se o tipo pertencer a este médico
+                    if (currentAppointmentTypeId && type.id === currentAppointmentTypeId) {
+                        option.selected = true;
+                        currentTypeFound = true;
+                    }
+                    
+                    appointmentTypeSelect.appendChild(option);
+                });
+                
+                appointmentTypeSelect.disabled = false;
+                
+                // Se o tipo atual não foi encontrado, limpar seleção
+                if (currentAppointmentTypeId && !currentTypeFound) {
+                    appointmentTypeSelect.value = '';
+                }
+            })
+            .catch(error => {
+                console.error('Erro ao carregar tipos de consulta:', error);
+                appointmentTypeSelect.innerHTML = '<option value="">Erro ao carregar tipos</option>';
+            });
     }
-    h5.text-primary {
-        font-weight: 600;
-        padding-bottom: 0.5rem;
-        border-bottom: 2px solid #e9ecef;
-    }
-    .btn-lg {
-        padding: 0.75rem 2rem;
-        font-weight: 600;
-    }
-</style>
+});
+</script>
 @endpush
 
 @endsection

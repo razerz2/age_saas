@@ -1,0 +1,9 @@
+/* ============================================
+   APPOINTMENTS - Estilos para Create e Edit
+   ============================================ */
+
+#appointment_time:disabled {
+    background-color: #e9ecef;
+    cursor: not-allowed;
+}
+

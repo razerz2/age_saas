@@ -3,6 +3,8 @@
 namespace App\Http\Requests\Tenant;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Validator;
+use App\Models\Tenant\AppointmentType;
 
 class StoreAppointmentTypeRequest extends FormRequest
 {
@@ -14,10 +16,32 @@ class StoreAppointmentTypeRequest extends FormRequest
     public function rules()
     {
         return [
+            'doctor_id'   => ['required', 'uuid', 'exists:tenant.doctors,id'],
             'name'         => ['required', 'string', 'max:255'],
             'duration_min' => ['required', 'integer', 'min:1'],
             'is_active'    => ['required', 'boolean'],
         ];
+    }
+
+    /**
+     * Configure the validator instance.
+     */
+    public function withValidator(Validator $validator)
+    {
+        $validator->after(function ($validator) {
+            $doctorId = $this->input('doctor_id');
+            
+            if ($doctorId) {
+                $existingAppointmentType = AppointmentType::where('doctor_id', $doctorId)->first();
+                
+                if ($existingAppointmentType) {
+                    $validator->errors()->add(
+                        'doctor_id',
+                        'Este médico já possui um tipo de consulta registrado. Cada médico só pode ter um tipo de consulta.'
+                    );
+                }
+            }
+        });
     }
 
     /**
@@ -26,6 +50,11 @@ class StoreAppointmentTypeRequest extends FormRequest
     public function messages()
     {
         return [
+            'doctor_id.required' => 'O médico é obrigatório.',
+            'doctor_id.uuid' => 'O ID do médico deve ser um UUID válido.',
+            'doctor_id.exists' => 'O médico selecionado não existe.',
+            'doctor_id.custom' => 'Este médico já possui um tipo de consulta registrado. Cada médico só pode ter um tipo de consulta.',
+
             'name.required' => 'O nome do tipo de agendamento é obrigatório.',
             'name.string' => 'O nome do tipo de agendamento deve ser uma string válida.',
             'name.max' => 'O nome do tipo de agendamento não pode ter mais que 255 caracteres.',
