@@ -35,10 +35,8 @@ class StoreUserRequest extends FormRequest
             $rules['doctor_ids.*'] = ['exists:tenant.doctors,id'];
         }
 
-        // Se o usuário logado não é admin, permite validar modules
-        if ($user && $user->role !== 'admin') {
-            $rules['modules'] = ['nullable', 'array'];
-        }
+        // Permite validar modules para todos os usuários
+        $rules['modules'] = ['nullable', 'array'];
 
         return $rules;
     }

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Tenant;
 
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\Tenant\Concerns\HasDoctorFilter;
 use App\Models\Tenant\AppointmentType;
 use App\Models\Tenant\Doctor;
 use App\Http\Requests\Tenant\StoreAppointmentTypeRequest;
@@ -13,25 +14,17 @@ use Illuminate\Support\Facades\Auth;
 
 class AppointmentTypeController extends Controller
 {
+    use HasDoctorFilter;
     public function index(Request $request)
     {
-        $user = Auth::guard('tenant')->user();
         $query = AppointmentType::with(['doctor.user']);
 
-        // Aplicar filtros baseado no role
-        if ($user->role === 'doctor' && $user->doctor) {
-            $query->where('doctor_id', $user->doctor->id);
-        } elseif ($user->role === 'user') {
-            $allowedDoctorIds = $user->allowedDoctors()->pluck('doctors.id')->toArray();
-            if (!empty($allowedDoctorIds)) {
-                $query->whereIn('doctor_id', $allowedDoctorIds);
-            } else {
-                $query->whereRaw('1 = 0');
-            }
-        }
+        // Aplicar filtro de médico
+        $this->applyDoctorFilter($query, 'doctor_id');
 
-        // Filtro opcional por médico
-        if ($request->has('doctor_id') && $request->doctor_id) {
+        // Filtro opcional por médico (apenas se admin)
+        $user = Auth::guard('tenant')->user();
+        if ($user->role === 'admin' && $request->has('doctor_id') && $request->doctor_id) {
             $query->where('doctor_id', $request->doctor_id);
         }
 
@@ -43,17 +36,8 @@ class AppointmentTypeController extends Controller
                 $q->where('status', 'active');
             });
 
-        // Aplicar filtros baseado no role para o filtro de médicos
-        if ($user->role === 'doctor' && $user->doctor) {
-            $doctorsQuery->where('id', $user->doctor->id);
-        } elseif ($user->role === 'user') {
-            $allowedDoctorIds = $user->allowedDoctors()->pluck('doctors.id')->toArray();
-            if (!empty($allowedDoctorIds)) {
-                $doctorsQuery->whereIn('id', $allowedDoctorIds);
-            } else {
-                $doctorsQuery->whereRaw('1 = 0');
-            }
-        }
+        // Aplicar filtro de médico
+        $this->applyDoctorFilter($doctorsQuery);
 
         $doctors = $doctorsQuery->orderBy('id')->get();
 
@@ -62,24 +46,14 @@ class AppointmentTypeController extends Controller
 
     public function create()
     {
-        $user = Auth::guard('tenant')->user();
         $doctorsQuery = Doctor::with('user')
             ->whereHas('user', function($query) {
                 $query->where('status', 'active');
             })
             ->whereDoesntHave('appointmentTypes');
 
-        // Aplicar filtros baseado no role
-        if ($user->role === 'doctor' && $user->doctor) {
-            $doctorsQuery->where('id', $user->doctor->id);
-        } elseif ($user->role === 'user') {
-            $allowedDoctorIds = $user->allowedDoctors()->pluck('doctors.id')->toArray();
-            if (!empty($allowedDoctorIds)) {
-                $doctorsQuery->whereIn('id', $allowedDoctorIds);
-            } else {
-                $doctorsQuery->whereRaw('1 = 0');
-            }
-        }
+        // Aplicar filtro de médico
+        $this->applyDoctorFilter($doctorsQuery);
 
         $doctors = $doctorsQuery->orderBy('id')->get();
 
@@ -109,16 +83,19 @@ class AppointmentTypeController extends Controller
 
         // Listar médicos ativos (com status active) que ainda não possuem tipo de consulta
         // ou o médico atual deste tipo de consulta (para permitir edição)
-        $doctors = Doctor::with('user')
+        $doctorsQuery = Doctor::with('user')
             ->whereHas('user', function($query) {
                 $query->where('status', 'active');
             })
             ->where(function($query) use ($appointmentType) {
                 $query->whereDoesntHave('appointmentTypes')
                       ->orWhere('id', $appointmentType->doctor_id);
-            })
-            ->orderBy('id')
-            ->get();
+            });
+        
+        // Aplicar filtro de médico
+        $this->applyDoctorFilter($doctorsQuery);
+        
+        $doctors = $doctorsQuery->orderBy('id')->get();
 
         return view('tenant.appointment-types.edit', compact('appointmentType', 'doctors'));
     }

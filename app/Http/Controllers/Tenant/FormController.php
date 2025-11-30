@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Tenant;
 
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\Tenant\Concerns\HasDoctorFilter;
 use App\Models\Tenant\Form;
 use App\Models\Tenant\FormSection;
 use App\Models\Tenant\FormQuestion;
@@ -24,26 +25,17 @@ use Illuminate\Support\Facades\Auth;
 
 class FormController extends Controller
 {
+    use HasDoctorFilter;
     /** ------------------------------
      *       LIST / CREATE / EDIT
      * ------------------------------ */
 
     public function index()
     {
-        $user = Auth::guard('tenant')->user();
         $query = Form::with(['specialty', 'doctor']);
 
-        // Aplicar filtros baseado no role
-        if ($user->role === 'doctor' && $user->doctor) {
-            $query->where('doctor_id', $user->doctor->id);
-        } elseif ($user->role === 'user') {
-            $allowedDoctorIds = $user->allowedDoctors()->pluck('doctors.id')->toArray();
-            if (!empty($allowedDoctorIds)) {
-                $query->whereIn('doctor_id', $allowedDoctorIds);
-            } else {
-                $query->whereRaw('1 = 0');
-            }
-        }
+        // Aplicar filtro de médico
+        $this->applyDoctorFilter($query, 'doctor_id');
 
         $forms = $query->orderBy('name')->paginate(20);
 
@@ -52,20 +44,10 @@ class FormController extends Controller
 
     public function create()
     {
-        $user = Auth::guard('tenant')->user();
         $doctorsQuery = Doctor::with('user');
 
-        // Aplicar filtros baseado no role
-        if ($user->role === 'doctor' && $user->doctor) {
-            $doctorsQuery->where('id', $user->doctor->id);
-        } elseif ($user->role === 'user') {
-            $allowedDoctorIds = $user->allowedDoctors()->pluck('doctors.id')->toArray();
-            if (!empty($allowedDoctorIds)) {
-                $doctorsQuery->whereIn('id', $allowedDoctorIds);
-            } else {
-                $doctorsQuery->whereRaw('1 = 0');
-            }
-        }
+        // Aplicar filtro de médico
+        $this->applyDoctorFilter($doctorsQuery);
 
         $doctors = $doctorsQuery->orderBy('id')->get();
 
@@ -134,7 +116,12 @@ class FormController extends Controller
             'doctor.specialties'
         ]);
 
-        $doctors = Doctor::with('user')->orderBy('id')->get();
+        $doctorsQuery = Doctor::with('user');
+        
+        // Aplicar filtro de médico
+        $this->applyDoctorFilter($doctorsQuery);
+
+        $doctors = $doctorsQuery->orderBy('id')->get();
 
         return view('tenant.forms.edit', compact('form', 'doctors'));
     }

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Tenant;
 
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\Tenant\Concerns\HasDoctorFilter;
 use App\Models\Tenant\BusinessHour;
 use App\Models\Tenant\Doctor;
 use App\Http\Requests\Tenant\StoreBusinessHourRequest;
@@ -12,22 +13,13 @@ use Illuminate\Support\Facades\Auth;
 
 class BusinessHourController extends Controller
 {
+    use HasDoctorFilter;
     public function index()
     {
-        $user = Auth::guard('tenant')->user();
         $query = BusinessHour::with('doctor.user');
 
-        // Aplicar filtros baseado no role
-        if ($user->role === 'doctor' && $user->doctor) {
-            $query->where('doctor_id', $user->doctor->id);
-        } elseif ($user->role === 'user') {
-            $allowedDoctorIds = $user->allowedDoctors()->pluck('doctors.id')->toArray();
-            if (!empty($allowedDoctorIds)) {
-                $query->whereIn('doctor_id', $allowedDoctorIds);
-            } else {
-                $query->whereRaw('1 = 0');
-            }
-        }
+        // Aplicar filtro de médico
+        $this->applyDoctorFilter($query, 'doctor_id');
 
         $businessHours = $query->orderBy('weekday')
             ->orderBy('start_time')
@@ -38,20 +30,10 @@ class BusinessHourController extends Controller
 
     public function create()
     {
-        $user = Auth::guard('tenant')->user();
         $doctorsQuery = Doctor::with('user');
 
-        // Aplicar filtros baseado no role
-        if ($user->role === 'doctor' && $user->doctor) {
-            $doctorsQuery->where('id', $user->doctor->id);
-        } elseif ($user->role === 'user') {
-            $allowedDoctorIds = $user->allowedDoctors()->pluck('doctors.id')->toArray();
-            if (!empty($allowedDoctorIds)) {
-                $doctorsQuery->whereIn('id', $allowedDoctorIds);
-            } else {
-                $doctorsQuery->whereRaw('1 = 0');
-            }
-        }
+        // Aplicar filtro de médico
+        $this->applyDoctorFilter($doctorsQuery);
 
         $doctors = $doctorsQuery->orderBy('id')->get();
 
@@ -106,7 +88,13 @@ class BusinessHourController extends Controller
     public function edit($id)
     {
         $businessHour = BusinessHour::findOrFail($id);
-        $doctors = Doctor::with('user')->orderBy('id')->get();
+        
+        $doctorsQuery = Doctor::with('user');
+        
+        // Aplicar filtro de médico
+        $this->applyDoctorFilter($doctorsQuery);
+        
+        $doctors = $doctorsQuery->orderBy('id')->get();
         $businessHour->load('doctor');
 
         return view('tenant.business-hours.edit', compact('businessHour', 'doctors'));

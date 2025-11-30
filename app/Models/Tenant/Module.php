@@ -12,6 +12,8 @@ class Module
     {
         return [
             ['key' => 'appointments', 'name' => 'Atendimentos', 'icon' => 'fa-calendar-check'],
+            ['key' => 'online_appointments', 'name' => 'Consultas Online', 'icon' => 'fa-video'],
+            ['key' => 'medical_appointments', 'name' => 'Atendimento Médico', 'icon' => 'fa-user-md'],
             ['key' => 'patients', 'name' => 'Pacientes', 'icon' => 'fa-users'],
             ['key' => 'doctors', 'name' => 'Médicos', 'icon' => 'fa-stethoscope'],
             ['key' => 'calendar', 'name' => 'Agenda', 'icon' => 'fa-calendar'],
@@ -19,7 +21,9 @@ class Module
             ['key' => 'users', 'name' => 'Usuários', 'icon' => 'fa-user-circle'],
             ['key' => 'business_hours', 'name' => 'Horários Médicos', 'icon' => 'fa-clock'],
             ['key' => 'forms', 'name' => 'Formulários', 'icon' => 'fa-file-alt'],
+            ['key' => 'reports', 'name' => 'Relatórios', 'icon' => 'fa-chart-bar'],
             ['key' => 'integrations', 'name' => 'Integrações', 'icon' => 'fa-plug'],
+            ['key' => 'settings', 'name' => 'Configurações', 'icon' => 'fa-cog'],
         ];
     }
 

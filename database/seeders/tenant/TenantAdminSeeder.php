@@ -27,6 +27,9 @@ class TenantAdminSeeder extends Seeder
         // gera email dinâmico
         $email = $this->generateAdminEmail($domain);
 
+        // Usar senha da config se disponível, senão usar senha padrão (fallback)
+        $adminPassword = config('tenant.admin_password', 'admin123');
+
         // Usar explicitamente a conexão 'tenant' para garantir que está usando o banco correto
         DB::connection('tenant')->table('users')->insert([
             'tenant_id'  => $tenantId, // <-- obrigatório
@@ -34,7 +37,7 @@ class TenantAdminSeeder extends Seeder
             'name_full'  => 'Administrador do Sistema',
             'telefone'   => '00000000000',
             'email'      => $email,
-            'password'   => Hash::make('admin123'),
+            'password'   => Hash::make($adminPassword),
             'is_doctor'  => false,
             'status'     => 'active',
             'modules'    => json_encode([]),

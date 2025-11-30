@@ -197,3 +197,52 @@ if (! function_exists('tenant')) {
         return Tenant::current();
     }
 }
+
+/**
+ * 🧩 Gera URL de rota pública do tenant
+ */
+if (! function_exists('tenant_route')) {
+    function tenant_route($tenant, string $routeName, array $parameters = [])
+    {
+        // Se $tenant for um objeto Tenant, pega o subdomain
+        $tenantSlug = is_object($tenant) ? $tenant->subdomain : $tenant;
+        
+        // Adiciona o tenant aos parâmetros
+        $parameters['tenant'] = $tenantSlug;
+        
+        // Gera a rota
+        return route($routeName, $parameters);
+    }
+}
+
+/**
+ * 🔹 Verifica se o usuário tem acesso a um módulo específico
+ */
+if (! function_exists('has_module')) {
+    function has_module(string $module): bool
+    {
+        $user = auth('tenant')->user();
+        
+        if (!$user) {
+            return false;
+        }
+        
+        // Admin tem acesso a todos os módulos
+        if ($user->role === 'admin') {
+            return true;
+        }
+        
+        // Garantir que modules seja sempre um array
+        $userModules = [];
+        if ($user->modules) {
+            if (is_array($user->modules)) {
+                $userModules = $user->modules;
+            } elseif (is_string($user->modules)) {
+                $decoded = json_decode($user->modules, true);
+                $userModules = is_array($decoded) ? $decoded : [];
+            }
+        }
+        
+        return in_array($module, $userModules);
+    }
+}

@@ -180,6 +180,13 @@
                                         @enderror
                                     </div>
                                 </div>
+                                @php
+                                    $settings = \App\Models\Tenant\TenantSetting::getAll();
+                                    $defaultMode = $settings['appointments.default_appointment_mode'] ?? 'user_choice';
+                                @endphp
+                                @if($defaultMode === 'user_choice')
+                                    @include('tenant.appointments.partials.appointment_mode_select', ['appointment' => $appointment])
+                                @endif
                             </div>
                             <div class="row">
                                 <div class="col-md-12">

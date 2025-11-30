@@ -62,6 +62,10 @@ class DoctorController extends Controller
             'crm_number' => $data['crm_number'] ?? null,
             'crm_state' => $data['crm_state'] ?? null,
             'signature' => $data['signature'] ?? null,
+            'label_singular' => $data['label_singular'] ?? null,
+            'label_plural' => $data['label_plural'] ?? null,
+            'registration_label' => $data['registration_label'] ?? null,
+            'registration_value' => $data['registration_value'] ?? null,
         ]);
 
         if (!empty($data['specialties'])) {
@@ -114,6 +118,10 @@ class DoctorController extends Controller
             'crm_number' => $data['crm_number'] ?? null,
             'crm_state' => $data['crm_state'] ?? null,
             'signature' => $data['signature'] ?? null,
+            'label_singular' => $data['label_singular'] ?? null,
+            'label_plural' => $data['label_plural'] ?? null,
+            'registration_label' => $data['registration_label'] ?? null,
+            'registration_value' => $data['registration_value'] ?? null,
         ]);
 
         if (!empty($data['specialties'])) {

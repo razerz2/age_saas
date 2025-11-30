@@ -43,6 +43,46 @@
             </a>
         </li>
 
+        {{-- CONSULTAS ONLINE --}}
+        @php
+            $user = auth('tenant')->user();
+            // Garantir que modules seja sempre um array
+            $userModules = [];
+            if ($user && $user->modules) {
+                if (is_array($user->modules)) {
+                    $userModules = $user->modules;
+                } elseif (is_string($user->modules)) {
+                    $decoded = json_decode($user->modules, true);
+                    $userModules = is_array($decoded) ? $decoded : [];
+                }
+            }
+            $settings = \App\Models\Tenant\TenantSetting::getAll();
+            $defaultMode = $settings['appointments.default_appointment_mode'] ?? 'user_choice';
+            // Admin tem acesso a todos os módulos (mesma lógica do middleware CheckModuleAccess)
+            $hasAccess = ($user && $user->role === 'admin') || in_array('online_appointments', $userModules);
+        @endphp
+        @if(
+            $hasAccess &&
+            $defaultMode !== 'presencial'
+        )
+            <li class="nav-item {{ request()->routeIs('tenant.online-appointments.*') ? 'active' : '' }}">
+                <a class="nav-link" href="{{ route('tenant.online-appointments.index') }}">
+                    <span class="icon-bg"><i class="mdi mdi-video-account menu-icon"></i></span>
+                    <span class="menu-title">Consultas Online</span>
+                </a>
+            </li>
+        @endif
+
+        {{-- ATENDIMENTO MÉDICO --}}
+        @if(has_module('medical_appointments'))
+            <li class="nav-item {{ request()->routeIs('tenant.medical-appointments.*') ? 'active' : '' }}">
+                <a class="nav-link" href="{{ route('tenant.medical-appointments.index') }}">
+                    <span class="icon-bg"><i class="mdi mdi-account-heart menu-icon"></i></span>
+                    <span class="menu-title">Atendimento</span>
+                </a>
+            </li>
+        @endif
+
         {{-- ============================================================
             CADASTROS
         ============================================================ --}}
@@ -69,12 +109,12 @@
             </div>
         </li>
 
-        {{-- MÉDICOS --}}
+        {{-- MÉDICOS / PROFISSIONAIS --}}
         <li class="nav-item {{ request()->routeIs('tenant.doctors.*') ? 'active' : '' }}">
             <a class="nav-link" data-bs-toggle="collapse" href="#doctors-menu"
                 aria-expanded="{{ request()->routeIs('tenant.doctors.*') ? 'true' : 'false' }}">
                 <span class="icon-bg"><i class="mdi mdi-stethoscope menu-icon"></i></span>
-                <span class="menu-title">Médicos</span>
+                <span class="menu-title">{{ professional_label_plural() }}</span>
                 <i class="menu-arrow"></i>
             </a>
 
@@ -84,7 +124,7 @@
                         <a class="nav-link {{ request()->routeIs('tenant.doctors.index') ? 'active' : '' }}" href="{{ route('tenant.doctors.index') }}">Listar</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link {{ request()->routeIs('tenant.doctors.create') ? 'active' : '' }}" href="{{ route('tenant.doctors.create') }}">Novo Médico</a>
+                        <a class="nav-link {{ request()->routeIs('tenant.doctors.create') ? 'active' : '' }}" href="{{ route('tenant.doctors.create') }}">Novo {{ professional_label_singular() }}</a>
                     </li>
                 </ul>
             </div>
@@ -257,6 +297,36 @@
         </li>
 
         {{-- ============================================================
+            CONFIGURAÇÕES DO SISTEMA
+        ============================================================ --}}
+        @php
+            $user = auth('tenant')->user();
+            // Garantir que modules seja sempre um array
+            $userModules = [];
+            if ($user && $user->modules) {
+                if (is_array($user->modules)) {
+                    $userModules = $user->modules;
+                } elseif (is_string($user->modules)) {
+                    $decoded = json_decode($user->modules, true);
+                    $userModules = is_array($decoded) ? $decoded : [];
+                }
+            }
+            // Admin tem acesso a todos os módulos (mesma lógica do middleware CheckModuleAccess)
+            $hasSettingsAccess = ($user && $user->role === 'admin') || in_array('settings', $userModules);
+        @endphp
+        @if($hasSettingsAccess)
+            <li class="nav-item nav-category">Sistema</li>
+
+            {{-- CONFIGURAÇÕES --}}
+            <li class="nav-item {{ request()->routeIs('tenant.settings.*') ? 'active' : '' }}">
+                <a class="nav-link" href="{{ route('tenant.settings.index') }}">
+                    <span class="icon-bg"><i class="mdi mdi-settings menu-icon"></i></span>
+                    <span class="menu-title">Configurações</span>
+                </a>
+            </li>
+        @endif
+
+        {{-- ============================================================
             INTEGRAÇÕES
         ============================================================ --}}
         <li class="nav-item nav-category">Integrações</li>
@@ -287,6 +357,31 @@
             - Essas estruturas genéricas (oauth_accounts vinculado a user_id) não são usadas atualmente
             - Mantidas no banco de dados para possível uso futuro com Apple Calendar ou outras integrações
         --}}
+
+        {{-- ============================================================
+            RELATÓRIOS
+        ============================================================ --}}
+        <li class="nav-item nav-category">Relatórios</li>
+
+        <li class="nav-item {{ request()->routeIs('tenant.reports.*') ? 'active' : '' }}">
+            <a class="nav-link" data-bs-toggle="collapse" href="#reports-menu"
+               aria-expanded="{{ request()->routeIs('tenant.reports.*') ? 'true' : 'false' }}">
+                <span class="icon-bg"><i class="mdi mdi-chart-bar menu-icon"></i></span>
+                <span class="menu-title">Relatórios</span>
+                <i class="menu-arrow"></i>
+            </a>
+            <div class="collapse {{ request()->routeIs('tenant.reports.*') ? 'show' : '' }}" id="reports-menu">
+                <ul class="nav flex-column sub-menu">
+                    <li><a class="nav-link" href="{{ route('tenant.reports.appointments') }}">Agendamentos</a></li>
+                    <li><a class="nav-link" href="{{ route('tenant.reports.patients') }}">Pacientes</a></li>
+                    <li><a class="nav-link" href="{{ route('tenant.reports.doctors') }}">Médicos</a></li>
+                    <li><a class="nav-link" href="{{ route('tenant.reports.recurring') }}">Recorrências</a></li>
+                    <li><a class="nav-link" href="{{ route('tenant.reports.forms') }}">Formulários</a></li>
+                    <li><a class="nav-link" href="{{ route('tenant.reports.portal') }}">Portal do Paciente</a></li>
+                    <li><a class="nav-link" href="{{ route('tenant.reports.notifications') }}">Notificações</a></li>
+                </ul>
+            </div>
+        </li>
 
     </ul>
 </nav>

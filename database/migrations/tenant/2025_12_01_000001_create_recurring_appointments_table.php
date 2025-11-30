@@ -21,6 +21,7 @@ return new class extends Migration
             $table->integer('total_sessions')->nullable();
             $table->date('end_date')->nullable();
             $table->boolean('active')->default(true);
+            $table->enum('appointment_mode', ['presencial', 'online'])->default('presencial')->after('active');
             $table->text('google_recurring_event_ids')->nullable(); // Armazena JSON com os IDs dos eventos recorrentes criados no Google Calendar
             $table->timestamps();
         });

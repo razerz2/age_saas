@@ -8,7 +8,8 @@
 .tab-pane#appointments .form-check.form-switch,
 .tab-pane#calendar .form-check.form-switch,
 .tab-pane#notifications .form-check.form-switch,
-.tab-pane#integrations .form-check.form-switch {
+.tab-pane#integrations .form-check.form-switch,
+.tab-pane#professionals .form-check.form-switch {
     padding-left: 2.5em !important;
     margin-top: 0 !important;
     margin-bottom: 0 !important;
@@ -18,7 +19,8 @@
 .tab-pane#appointments .form-check.form-switch .form-check-input,
 .tab-pane#calendar .form-check.form-switch .form-check-input,
 .tab-pane#notifications .form-check.form-switch .form-check-input,
-.tab-pane#integrations .form-check.form-switch .form-check-input {
+.tab-pane#integrations .form-check.form-switch .form-check-input,
+.tab-pane#professionals .form-check.form-switch .form-check-input {
     width: 2em !important;
     margin-left: -2.5em !important;
     margin-top: 0 !important;
@@ -38,7 +40,8 @@
 .tab-pane#appointments .form-check.form-switch .form-check-input:checked,
 .tab-pane#calendar .form-check.form-switch .form-check-input:checked,
 .tab-pane#notifications .form-check.form-switch .form-check-input:checked,
-.tab-pane#integrations .form-check.form-switch .form-check-input:checked {
+.tab-pane#integrations .form-check.form-switch .form-check-input:checked,
+.tab-pane#professionals .form-check.form-switch .form-check-input:checked {
     background-position: right center !important;
     background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='%23fff'/%3e%3c/svg%3e") !important;
     background-color: #0d6efd !important;
@@ -48,7 +51,8 @@
 .tab-pane#appointments .form-check.form-switch .form-check-input:focus,
 .tab-pane#calendar .form-check.form-switch .form-check-input:focus,
 .tab-pane#notifications .form-check.form-switch .form-check-input:focus,
-.tab-pane#integrations .form-check.form-switch .form-check-input:focus {
+.tab-pane#integrations .form-check.form-switch .form-check-input:focus,
+.tab-pane#professionals .form-check.form-switch .form-check-input:focus {
     border-color: #86b7fe !important;
     outline: 0 !important;
     box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25) !important;
@@ -58,7 +62,8 @@
 .tab-pane#appointments .form-check.form-switch .form-check-label,
 .tab-pane#calendar .form-check.form-switch .form-check-label,
 .tab-pane#notifications .form-check.form-switch .form-check-label,
-.tab-pane#integrations .form-check.form-switch .form-check-label {
+.tab-pane#integrations .form-check.form-switch .form-check-label,
+.tab-pane#professionals .form-check.form-switch .form-check-label {
     margin-left: 0 !important;
     margin-top: 0 !important;
     padding-left: 0.5em !important;
@@ -72,7 +77,8 @@
 .tab-pane#appointments .form-check.form-switch .form-check-label .input-helper,
 .tab-pane#calendar .form-check.form-switch .form-check-label .input-helper,
 .tab-pane#notifications .form-check.form-switch .form-check-label .input-helper,
-.tab-pane#integrations .form-check.form-switch .form-check-label .input-helper {
+.tab-pane#integrations .form-check.form-switch .form-check-label .input-helper,
+.tab-pane#professionals .form-check.form-switch .form-check-label .input-helper {
     display: none !important;
 }
 
@@ -131,6 +137,87 @@
 
 /* Garantir que estilos do connect_plus não interfiram */
 .tab-pane#calendar .form-check:not(.form-switch) .form-check-label input {
+    display: none !important;
+}
+
+/* ============================================
+   ABA USUÁRIOS & PERMISSÕES - Checkboxes de Módulos
+   Estilos específicos para alinhamento perfeito das checkboxes
+   ============================================ */
+
+/* Container do form-check - resetar estilos do connect_plus */
+.tab-pane#users .form-check {
+    margin-top: 0 !important;
+    margin-bottom: 0.75rem !important;
+    padding-left: 0 !important;
+    position: relative !important;
+    display: flex !important;
+    align-items: center !important;
+    min-height: 1.5rem !important;
+}
+
+/* Input checkbox - estilo padrão Bootstrap */
+.tab-pane#users .form-check-input {
+    position: relative !important;
+    opacity: 1 !important;
+    margin-top: 0 !important;
+    margin-left: 0 !important;
+    margin-right: 0.5rem !important;
+    width: 1.25em !important;
+    height: 1.25em !important;
+    cursor: pointer !important;
+    border: 1px solid rgba(0, 0, 0, 0.25) !important;
+    border-radius: 0.25em !important;
+    background-color: #fff !important;
+    background-image: none !important;
+    flex-shrink: 0 !important;
+    float: none !important;
+    vertical-align: middle !important;
+}
+
+/* Checkbox marcada */
+.tab-pane#users .form-check-input:checked {
+    background-color: #0d6efd !important;
+    border-color: #0d6efd !important;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3e%3cpath fill='none' stroke='%23fff' stroke-linecap='round' stroke-linejoin='round' stroke-width='3' d='M6 10l3 3l6-6'/%3e%3c/svg%3e") !important;
+    background-position: center !important;
+    background-repeat: no-repeat !important;
+    background-size: 100% 100% !important;
+}
+
+/* Focus state */
+.tab-pane#users .form-check-input:focus {
+    border-color: #86b7fe !important;
+    outline: 0 !important;
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25) !important;
+}
+
+/* Label do checkbox */
+.tab-pane#users .form-check-label {
+    margin-left: 0 !important;
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
+    padding-left: 0 !important;
+    display: block !important;
+    cursor: pointer !important;
+    font-size: inherit !important;
+    line-height: 1.5 !important;
+    flex-grow: 1 !important;
+    user-select: none !important;
+}
+
+/* Esconder input-helper se existir */
+.tab-pane#users .form-check-label .input-helper {
+    display: none !important;
+}
+
+/* Container com scroll - garantir espaçamento adequado */
+.tab-pane#users .border.rounded.p-3.bg-light {
+    padding: 1rem !important;
+}
+
+/* Garantir que estilos do connect_plus não interfiram */
+.tab-pane#users .form-check-label input {
     display: none !important;
 }
 

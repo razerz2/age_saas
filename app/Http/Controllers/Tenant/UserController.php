@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Tenant;
 
 use App\Models\Tenant\User;
+use App\Models\Tenant\TenantSetting;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Tenant\StoreUserRequest;
 use App\Http\Requests\Tenant\UpdateUserRequest;
@@ -42,16 +43,34 @@ class UserController extends Controller
         // Verifica o role do usuário logado
         $loggedUser = Auth::guard('tenant')->user();
 
-        // Se o usuário logado é admin, não permite alterar modules (admin tem acesso a tudo)
-        if ($loggedUser && $loggedUser->role === 'admin') {
-            unset($data['modules']);
-        } else {
-            // Garante que modules seja um array (vazio se não informado)
-            $data['modules'] = $data['modules'] ?? [];
-        }
-
         // Garante que role tenha um valor padrão
         $data['role'] = $data['role'] ?? 'user';
+
+        // Processar módulos: se foram selecionados manualmente, usar esses
+        // Caso contrário, aplicar módulos padrão baseado no role
+        // O model User tem cast 'array' para modules, então passamos arrays diretamente
+        if (isset($data['modules']) && is_array($data['modules'])) {
+            // Se módulos foram selecionados manualmente (mesmo que vazio), usar esses
+            // O cast do model converte automaticamente para JSON
+            $data['modules'] = $data['modules'];
+        } else {
+            // Se não foram selecionados, aplicar padrões baseado no role
+            if ($data['role'] === 'admin') {
+                // Admin não precisa de módulos (tem acesso total)
+                unset($data['modules']);
+            } elseif ($data['role'] === 'doctor') {
+                // Aplicar módulos padrão para médico
+                $defaultDoctorModules = json_decode(TenantSetting::get('user_defaults.modules_doctor', '[]'), true) ?? [];
+                $data['modules'] = $defaultDoctorModules;
+            } elseif ($data['role'] === 'user') {
+                // Aplicar módulos padrão para usuário comum
+                $defaultCommonModules = json_decode(TenantSetting::get('user_defaults.modules_common_user', '[]'), true) ?? [];
+                $data['modules'] = $defaultCommonModules;
+            } else {
+                // Fallback: garantir que modules seja um array vazio
+                $data['modules'] = [];
+            }
+        }
 
         // Upload do avatar se fornecido
         if ($request->hasFile('avatar')) {
@@ -132,17 +151,39 @@ class UserController extends Controller
         // Verifica o role do usuário logado
         $loggedUser = Auth::guard('tenant')->user();
 
-        // Se o usuário logado é admin, não permite alterar modules (admin tem acesso a tudo)
-        if ($loggedUser && $loggedUser->role === 'admin') {
-            unset($data['modules']);
-        } elseif (isset($data['modules'])) {
-            // Se o campo 'modules' for enviado, tratamos os módulos
-            $data['modules'] = json_encode($data['modules']);
-        }
-
         // Garante que role tenha um valor padrão
         if (!isset($data['role'])) {
             $data['role'] = $user->role ?? 'user';
+        }
+
+        // Processar módulos: se foram selecionados manualmente, usar esses
+        // Caso contrário, aplicar módulos padrão baseado no role
+        // O model User tem cast 'array' para modules, então passamos arrays diretamente
+        if (isset($data['modules']) && is_array($data['modules'])) {
+            // Se módulos foram selecionados manualmente (mesmo que vazio), usar esses
+            // O cast do model converte automaticamente para JSON
+            $data['modules'] = $data['modules'];
+        } else {
+            // Se não foram selecionados, aplicar padrões baseado no role (apenas se role mudou)
+            $newRole = $data['role'];
+            $oldRole = $user->role;
+            
+            // Se o role mudou, aplicar módulos padrão do novo role
+            if ($newRole !== $oldRole) {
+                if ($newRole === 'admin') {
+                    // Admin não precisa de módulos (tem acesso total)
+                    unset($data['modules']);
+                } elseif ($newRole === 'doctor') {
+                    // Aplicar módulos padrão para médico
+                    $defaultDoctorModules = json_decode(TenantSetting::get('user_defaults.modules_doctor', '[]'), true) ?? [];
+                    $data['modules'] = $defaultDoctorModules;
+                } elseif ($newRole === 'user') {
+                    // Aplicar módulos padrão para usuário comum
+                    $defaultCommonModules = json_decode(TenantSetting::get('user_defaults.modules_common_user', '[]'), true) ?? [];
+                    $data['modules'] = $defaultCommonModules;
+                }
+            }
+            // Se o role não mudou e não foram selecionados módulos, manter os existentes
         }
 
         // Upload do novo avatar se fornecido

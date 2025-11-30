@@ -131,12 +131,20 @@
                         Módulos Atribuídos
                     </h5>
                     <div class="mb-4">
+                        @php
+                            $allModules = App\Models\Tenant\Module::all();
+                            $modulesMap = [];
+                            foreach ($allModules as $m) {
+                                $modulesMap[$m['key']] = $m;
+                            }
+                        @endphp
                         @if (!empty($user->modules))
                             <div class="d-flex flex-wrap gap-2">
-                                @foreach ($user->modules as $module)
+                                @foreach ($user->modules as $moduleKey)
+                                    @php $module = $modulesMap[$moduleKey] ?? null; @endphp
                                     <span class="badge bg-info-subtle text-info px-3 py-2">
                                         <i class="mdi mdi-package-variant me-1"></i>
-                                        {{ ucfirst($module) }}
+                                        {{ $module ? $module['name'] : ucfirst($moduleKey) }}
                                     </span>
                                 @endforeach
                             </div>

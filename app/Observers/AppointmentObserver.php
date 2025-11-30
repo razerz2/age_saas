@@ -3,9 +3,16 @@
 namespace App\Observers;
 
 use App\Models\Tenant\Appointment;
+use App\Models\Tenant\Form;
+use App\Models\Tenant\TenantSetting;
+use App\Models\Tenant\OnlineAppointmentInstruction;
+use App\Models\Platform\Tenant;
 use App\Services\TenantNotificationService;
+use App\Services\NotificationService;
 use App\Services\Tenant\GoogleCalendarService;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\URL;
+use Illuminate\Support\Str;
 
 class AppointmentObserver
 {
@@ -22,9 +29,68 @@ class AppointmentObserver
     public function created(Appointment $appointment): void
     {
         // Carrega os relacionamentos necessários
-        $appointment->load(['patient', 'calendar.doctor.user']);
+        $appointment->load(['patient', 'calendar.doctor.user', 'specialty']);
+        
+        // Criar instruções vazias automaticamente se for consulta online
+        if ($appointment->appointment_mode === 'online') {
+            try {
+                OnlineAppointmentInstruction::create([
+                    'id' => Str::uuid(),
+                    'appointment_id' => $appointment->id,
+                ]);
+            } catch (\Exception $e) {
+                Log::error('Erro ao criar instruções online automaticamente', [
+                    'appointment_id' => $appointment->id,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+        }
         
         TenantNotificationService::notifyAppointment('created', $appointment);
+
+        // Enviar link do formulário se existir formulário ativo
+        $form = Form::getFormForAppointment($appointment);
+        if ($form) {
+            try {
+                // Obtém o tenant atual
+                $tenant = Tenant::current();
+                if (!$tenant) {
+                    Log::warning('Não foi possível obter tenant atual para enviar link do formulário', [
+                        'appointment_id' => $appointment->id
+                    ]);
+                } else {
+                    // Gera URL do formulário usando tenant_route
+                    $url = tenant_route(
+                        $tenant,
+                        'public.form.response.create',
+                        [
+                            'form' => $form->id,
+                            'appointment' => $appointment->id
+                        ]
+                    );
+
+                    // Verifica configurações do tenant
+                    $settings = TenantSetting::getAll();
+
+                    // Envia email se configurado
+                    if (($settings['notifications.form_send_email'] ?? false) === 'true' || 
+                        ($settings['notifications.form_send_email'] ?? false) === true) {
+                        NotificationService::sendEmailFormLink($appointment->patient, $appointment, $url);
+                    }
+
+                    // Envia WhatsApp se configurado
+                    if (($settings['notifications.form_send_whatsapp'] ?? false) === 'true' || 
+                        ($settings['notifications.form_send_whatsapp'] ?? false) === true) {
+                        NotificationService::sendWhatsappFormLink($appointment->patient, $appointment, $url);
+                    }
+                }
+            } catch (\Exception $e) {
+                Log::error('Erro ao enviar link do formulário após criar agendamento', [
+                    'appointment_id' => $appointment->id,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+        }
 
         // IMPORTANTE: Agendamentos de recorrência NÃO devem ser sincronizados individualmente
         // A recorrência em si deve ser sincronizada como um evento recorrente no Google Calendar

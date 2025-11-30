@@ -165,6 +165,15 @@
                                         @enderror
                                     </div>
                                 </div>
+                                @php
+                                    $settings = \App\Models\Tenant\TenantSetting::getAll();
+                                    $defaultMode = $settings['appointments.default_appointment_mode'] ?? 'user_choice';
+                                @endphp
+                                @if($defaultMode === 'user_choice')
+                                    <div class="col-md-4">
+                                        @include('tenant.appointments.partials.appointment_mode_select', ['appointment' => $recurringAppointment])
+                                    </div>
+                                @endif
                             </div>
                         </div>
 

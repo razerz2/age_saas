@@ -77,6 +77,72 @@
                             </div>
                         </div>
 
+                        @if(tenant_setting('professional.customization_enabled'))
+                            {{-- Seção: Personalização de Rótulos --}}
+                            <div class="mb-4">
+                                <h5 class="mb-3 text-primary">
+                                    <i class="mdi mdi-tag-text-outline me-2"></i>
+                                    Personalização de Rótulos
+                                </h5>
+                                <div class="alert alert-info d-flex align-items-start mb-3" role="alert">
+                                    <i class="mdi mdi-information-outline me-2"></i>
+                                    <div>
+                                        <small>Configure rótulos personalizados para esta especialidade. Estes valores sobrescrevem os rótulos globais.</small>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <div class="form-group">
+                                            <label class="fw-semibold">
+                                                <i class="mdi mdi-tag me-1"></i>
+                                                Rótulo Singular
+                                            </label>
+                                            <input type="text" class="form-control @error('label_singular') is-invalid @enderror" 
+                                                   name="label_singular" value="{{ old('label_singular', $specialty->label_singular ?? '') }}" 
+                                                   placeholder="Ex: Psicólogo, Dentista"
+                                                   maxlength="50">
+                                            <small class="form-text text-muted">Exemplo: "Psicólogo" ou "Dentista"</small>
+                                            @error('label_singular')
+                                                <div class="invalid-feedback d-block">{{ $message }}</div>
+                                            @enderror
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="form-group">
+                                            <label class="fw-semibold">
+                                                <i class="mdi mdi-tag-multiple me-1"></i>
+                                                Rótulo Plural
+                                            </label>
+                                            <input type="text" class="form-control @error('label_plural') is-invalid @enderror" 
+                                                   name="label_plural" value="{{ old('label_plural', $specialty->label_plural ?? '') }}" 
+                                                   placeholder="Ex: Psicólogos, Dentistas"
+                                                   maxlength="50">
+                                            <small class="form-text text-muted">Exemplo: "Psicólogos" ou "Dentistas"</small>
+                                            @error('label_plural')
+                                                <div class="invalid-feedback d-block">{{ $message }}</div>
+                                            @enderror
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="form-group">
+                                            <label class="fw-semibold">
+                                                <i class="mdi mdi-card-account-details me-1"></i>
+                                                Rótulo de Registro
+                                            </label>
+                                            <input type="text" class="form-control @error('registration_label') is-invalid @enderror" 
+                                                   name="registration_label" value="{{ old('registration_label', $specialty->registration_label ?? '') }}" 
+                                                   placeholder="Ex: CRP, CRO"
+                                                   maxlength="50">
+                                            <small class="form-text text-muted">Exemplo: "CRP" ou "CRO"</small>
+                                            @error('registration_label')
+                                                <div class="invalid-feedback d-block">{{ $message }}</div>
+                                            @enderror
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        @endif
+
                         {{-- Botões de Ação --}}
                         <div class="d-flex justify-content-between align-items-center pt-3 border-top">
                             <a href="{{ route('tenant.specialties.index') }}" class="btn btn-light">

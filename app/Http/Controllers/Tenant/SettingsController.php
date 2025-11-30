@@ -28,6 +28,7 @@ class SettingsController extends Controller
             'appointments.allow_cancellation' => TenantSetting::isEnabled('appointments.allow_cancellation'),
             'appointments.cancellation_hours' => TenantSetting::get('appointments.cancellation_hours', '24'),
             'appointments.reminder_hours' => TenantSetting::get('appointments.reminder_hours', '24'),
+            'appointments.default_appointment_mode' => TenantSetting::get('appointments.default_appointment_mode', 'user_choice'),
             
             // Calendário
             'calendar.default_start_time' => TenantSetting::get('calendar.default_start_time', '08:00'),
@@ -36,14 +37,37 @@ class SettingsController extends Controller
             'calendar.show_weekends' => TenantSetting::isEnabled('calendar.show_weekends'),
             
             // Notificações
-            'notifications.appointments.enabled' => TenantSetting::isEnabled('notifications.appointments.enabled'),
-            'notifications.form_responses.enabled' => TenantSetting::isEnabled('notifications.form_responses.enabled'),
-            'notifications.email.enabled' => TenantSetting::isEnabled('notifications.email.enabled'),
-            'notifications.whatsapp.enabled' => TenantSetting::isEnabled('notifications.whatsapp.enabled'),
+            // Verifica explicitamente se o valor é 'true' para garantir que desabilitados retornem false
+            'notifications.appointments.enabled' => TenantSetting::get('notifications.appointments.enabled') === 'true',
+            'notifications.form_responses.enabled' => TenantSetting::get('notifications.form_responses.enabled') === 'true',
+            // Para notificações aos pacientes, verifica explicitamente se é 'true' (opt-in)
+            'notifications.send_email_to_patients' => TenantSetting::get('notifications.send_email_to_patients') === 'true',
+            'notifications.send_whatsapp_to_patients' => TenantSetting::get('notifications.send_whatsapp_to_patients') === 'true',
+            
+            // Email
+            'email.driver' => TenantSetting::get('email.driver', 'global'),
+            'email.host' => TenantSetting::get('email.host', ''),
+            'email.port' => TenantSetting::get('email.port', ''),
+            'email.username' => TenantSetting::get('email.username', ''),
+            'email.password' => TenantSetting::get('email.password', ''),
+            'email.from_name' => TenantSetting::get('email.from_name', ''),
+            'email.from_address' => TenantSetting::get('email.from_address', ''),
+            
+            // WhatsApp
+            'whatsapp.driver' => TenantSetting::get('whatsapp.driver', 'global'),
+            'whatsapp.api_url' => TenantSetting::get('whatsapp.api_url', ''),
+            'whatsapp.api_token' => TenantSetting::get('whatsapp.api_token', ''),
+            'whatsapp.sender' => TenantSetting::get('whatsapp.sender', ''),
             
             // Integrações
             'integrations.google_calendar.enabled' => TenantSetting::isEnabled('integrations.google_calendar.enabled'),
             'integrations.google_calendar.auto_sync' => TenantSetting::isEnabled('integrations.google_calendar.auto_sync'),
+            
+            // Profissionais
+            'professional.customization_enabled' => TenantSetting::get('professional.customization_enabled') === 'true',
+            'professional.label_singular' => TenantSetting::get('professional.label_singular', ''),
+            'professional.label_plural' => TenantSetting::get('professional.label_plural', ''),
+            'professional.registration_label' => TenantSetting::get('professional.registration_label', ''),
         ];
 
         // Buscar integrações ativas
@@ -107,6 +131,7 @@ class SettingsController extends Controller
             'appointments_allow_cancellation' => 'boolean',
             'appointments_cancellation_hours' => 'nullable|integer|min:1',
             'appointments_reminder_hours' => 'nullable|integer|min:1|max:168',
+            'appointments_default_appointment_mode' => 'required|in:presencial,online,user_choice',
         ]);
 
         TenantSetting::set('appointments.default_duration', $request->appointments_default_duration);
@@ -126,6 +151,7 @@ class SettingsController extends Controller
         }
 
         TenantSetting::set('appointments.reminder_hours', $request->appointments_reminder_hours ?? 24);
+        TenantSetting::set('appointments.default_appointment_mode', $request->appointments_default_appointment_mode);
 
         return redirect()->route('tenant.settings.index')
             ->with('success', 'Configurações de agendamentos atualizadas com sucesso.');
@@ -169,34 +195,62 @@ class SettingsController extends Controller
     public function updateNotifications(Request $request)
     {
         $request->validate([
-            'notifications_appointments_enabled' => 'boolean',
-            'notifications_form_responses_enabled' => 'boolean',
-            'notifications_email_enabled' => 'boolean',
-            'notifications_whatsapp_enabled' => 'boolean',
+            'notifications_appointments_enabled' => 'nullable|boolean',
+            'notifications_form_responses_enabled' => 'nullable|boolean',
+            'notifications_send_email_to_patients' => 'nullable|boolean',
+            'notifications_send_whatsapp_to_patients' => 'nullable|boolean',
+            
+            'email_driver' => 'required|in:global,tenancy',
+            'email_host' => 'required_if:email_driver,tenancy',
+            'email_port' => 'required_if:email_driver,tenancy',
+            'email_username' => 'required_if:email_driver,tenancy',
+            'email_password' => 'required_if:email_driver,tenancy',
+            'email_from_name' => 'nullable|string',
+            'email_from_address' => 'nullable|email',
+            
+            'whatsapp_driver' => 'required|in:global,tenancy',
+            'whatsapp_api_url' => 'required_if:whatsapp_driver,tenancy|url',
+            'whatsapp_api_token' => 'required_if:whatsapp_driver,tenancy',
+            'whatsapp_sender' => 'required_if:whatsapp_driver,tenancy',
         ]);
 
-        if ($request->has('notifications_appointments_enabled')) {
-            TenantSetting::enable('notifications.appointments.enabled');
+        // Notificações internas
+        // Checkboxes não marcados não são enviados no request, então verificamos explicitamente
+        TenantSetting::set('notifications.appointments.enabled', $request->has('notifications_appointments_enabled') ? 'true' : 'false');
+        TenantSetting::set('notifications.form_responses.enabled', $request->has('notifications_form_responses_enabled') ? 'true' : 'false');
+
+        // Notificações aos pacientes
+        TenantSetting::set('notifications.send_email_to_patients', $request->has('notifications_send_email_to_patients') ? 'true' : 'false');
+        TenantSetting::set('notifications.send_whatsapp_to_patients', $request->has('notifications_send_whatsapp_to_patients') ? 'true' : 'false');
+
+        // Configurações de Email
+        TenantSetting::set('email.driver', $request->email_driver);
+        if ($request->email_driver === 'tenancy') {
+            TenantSetting::set('email.host', $request->email_host);
+            TenantSetting::set('email.port', $request->email_port);
+            TenantSetting::set('email.username', $request->email_username);
+            TenantSetting::set('email.password', $request->email_password);
+            TenantSetting::set('email.from_name', $request->email_from_name ?? '');
+            TenantSetting::set('email.from_address', $request->email_from_address ?? '');
         } else {
-            TenantSetting::disable('notifications.appointments.enabled');
+            // Limpar configurações quando usar global
+            TenantSetting::set('email.host', '');
+            TenantSetting::set('email.port', '');
+            TenantSetting::set('email.username', '');
+            TenantSetting::set('email.password', '');
         }
 
-        if ($request->has('notifications_form_responses_enabled')) {
-            TenantSetting::enable('notifications.form_responses.enabled');
+        // Configurações de WhatsApp
+        TenantSetting::set('whatsapp.driver', $request->whatsapp_driver);
+        if ($request->whatsapp_driver === 'tenancy') {
+            TenantSetting::set('whatsapp.api_url', $request->whatsapp_api_url);
+            TenantSetting::set('whatsapp.api_token', $request->whatsapp_api_token);
+            TenantSetting::set('whatsapp.sender', $request->whatsapp_sender);
         } else {
-            TenantSetting::disable('notifications.form_responses.enabled');
-        }
-
-        if ($request->has('notifications_email_enabled')) {
-            TenantSetting::enable('notifications.email.enabled');
-        } else {
-            TenantSetting::disable('notifications.email.enabled');
-        }
-
-        if ($request->has('notifications_whatsapp_enabled')) {
-            TenantSetting::enable('notifications.whatsapp.enabled');
-        } else {
-            TenantSetting::disable('notifications.whatsapp.enabled');
+            // Limpar configurações quando usar global
+            TenantSetting::set('whatsapp.api_url', '');
+            TenantSetting::set('whatsapp.api_token', '');
+            TenantSetting::set('whatsapp.sender', '');
         }
 
         return redirect()->route('tenant.settings.index')
@@ -237,6 +291,74 @@ class SettingsController extends Controller
 
         return redirect()->route('tenant.settings.index')
             ->with('success', 'Configurações de integrações atualizadas com sucesso.');
+    }
+
+    /**
+     * Atualiza as configurações de módulos padrão por perfil de usuário
+     */
+    public function updateUserDefaults(Request $request)
+    {
+        $request->validate([
+            'user_defaults' => 'nullable|array',
+            'user_defaults.modules_common_user' => 'nullable|array',
+            'user_defaults.modules_common_user.*' => 'string',
+            'user_defaults.modules_doctor' => 'nullable|array',
+            'user_defaults.modules_doctor.*' => 'string',
+        ]);
+
+        // Salvar módulos padrão para usuário comum
+        // O formulário envia como user_defaults[modules_common_user][], então acessamos via dot notation
+        $commonUserModules = $request->input('user_defaults.modules_common_user', []);
+        // Se não vier nada, garantir que seja array vazio
+        if (empty($commonUserModules)) {
+            $commonUserModules = [];
+        }
+        TenantSetting::set('user_defaults.modules_common_user', json_encode($commonUserModules));
+
+        // Salvar módulos padrão para médico
+        $doctorModules = $request->input('user_defaults.modules_doctor', []);
+        // Se não vier nada, garantir que seja array vazio
+        if (empty($doctorModules)) {
+            $doctorModules = [];
+        }
+        TenantSetting::set('user_defaults.modules_doctor', json_encode($doctorModules));
+
+        return redirect()->route('tenant.settings.index')
+            ->with('success', 'Configurações de usuários e permissões atualizadas com sucesso.');
+    }
+
+    /**
+     * Atualiza as configurações de profissionais
+     */
+    public function updateProfessionals(Request $request)
+    {
+        $request->validate([
+            'professional_customization_enabled' => 'nullable|boolean',
+            'professional_label_singular' => 'nullable|string|max:50',
+            'professional_label_plural' => 'nullable|string|max:50',
+            'professional_registration_label' => 'nullable|string|max:50',
+        ]);
+
+        // Habilitar/desabilitar personalização
+        // Checkbox não marcado não é enviado no request, então verificamos explicitamente
+        if ($request->filled('professional_customization_enabled') || $request->has('professional_customization_enabled')) {
+            TenantSetting::enable('professional.customization_enabled');
+            
+            // Salvar rótulos globais quando personalização está habilitada
+            TenantSetting::set('professional.label_singular', $request->professional_label_singular ?? '');
+            TenantSetting::set('professional.label_plural', $request->professional_label_plural ?? '');
+            TenantSetting::set('professional.registration_label', $request->professional_registration_label ?? '');
+        } else {
+            TenantSetting::disable('professional.customization_enabled');
+            
+            // Limpar rótulos quando desabilitado
+            TenantSetting::set('professional.label_singular', '');
+            TenantSetting::set('professional.label_plural', '');
+            TenantSetting::set('professional.registration_label', '');
+        }
+
+        return redirect()->route('tenant.settings.index')
+            ->with('success', 'Configurações de profissionais atualizadas com sucesso.');
     }
 }
 

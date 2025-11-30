@@ -9,6 +9,7 @@ use App\Models\Tenant\RecurringAppointmentRule;
 use App\Models\Tenant\Appointment;
 use App\Models\Tenant\Calendar;
 use App\Models\Tenant\BusinessHour;
+use App\Models\Tenant\OnlineAppointmentInstruction;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Carbon\Carbon;
@@ -252,7 +253,23 @@ class ProcessRecurringAppointmentsCommand extends Command
                 'ends_at' => $endDateTime,
                 'status' => 'scheduled',
                 'recurring_appointment_id' => $recurring->id,
+                'appointment_mode' => $recurring->appointment_mode ?? 'presencial',
             ]);
+
+            // Criar instruções vazias automaticamente se for consulta online
+            if ($appointment->appointment_mode === 'online') {
+                try {
+                    OnlineAppointmentInstruction::create([
+                        'id' => Str::uuid(),
+                        'appointment_id' => $appointment->id,
+                    ]);
+                } catch (\Exception $e) {
+                    Log::error('Erro ao criar instruções online automaticamente para recorrência', [
+                        'appointment_id' => $appointment->id,
+                        'error' => $e->getMessage(),
+                    ]);
+                }
+            }
 
             return $appointment;
 

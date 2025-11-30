@@ -16,6 +16,9 @@ class StoreMedicalSpecialtyRequest extends FormRequest
         return [
             'name' => ['required', 'string', 'max:255', 'unique:tenant.medical_specialties,name'],
             'code' => ['nullable', 'string', 'max:50'],
+            'label_singular' => ['nullable', 'string', 'max:50'],
+            'label_plural' => ['nullable', 'string', 'max:50'],
+            'registration_label' => ['nullable', 'string', 'max:50'],
         ];
     }
 

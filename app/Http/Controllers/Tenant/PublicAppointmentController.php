@@ -99,6 +99,16 @@ class PublicAppointmentController extends Controller
         $data['patient_id'] = $patientId; // Usa o paciente da sessão
         $data['status'] = 'scheduled'; // Status padrão para agendamentos públicos
 
+        // Aplicar lógica de appointment_mode baseado na configuração
+        $mode = \App\Models\Tenant\TenantSetting::get('appointments.default_appointment_mode', 'user_choice');
+        if ($mode === 'presencial') {
+            $data['appointment_mode'] = 'presencial';
+        } elseif ($mode === 'online') {
+            $data['appointment_mode'] = 'online';
+        } else { // user_choice
+            $data['appointment_mode'] = $request->appointment_mode ?? 'presencial';
+        }
+
         $appointment = Appointment::create($data);
 
         // Salva o ID do agendamento na sessão para permitir visualização
@@ -109,7 +119,8 @@ class PublicAppointmentController extends Controller
         Session::forget('public_patient_id');
         Session::forget('public_patient_name');
 
-        return redirect()->route('public.appointment.success', [
+        // Redireciona para a página de detalhes do agendamento
+        return redirect()->route('public.appointment.show', [
             'tenant' => $tenant,
             'appointment_id' => $appointment->id
         ])->with('success', 'Agendamento realizado com sucesso!');

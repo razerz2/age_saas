@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Tenant;
 
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\Tenant\Concerns\HasDoctorFilter;
 use App\Models\Tenant\RecurringAppointment;
 use App\Models\Tenant\RecurringAppointmentRule;
 use App\Models\Tenant\Patient;
@@ -21,22 +22,13 @@ use Carbon\Carbon;
 
 class RecurringAppointmentController extends Controller
 {
+    use HasDoctorFilter;
     public function index()
     {
-        $user = Auth::guard('tenant')->user();
         $query = RecurringAppointment::with(['patient', 'doctor.user', 'appointmentType', 'rules']);
 
-        // Aplicar filtros baseado no role
-        if ($user->role === 'doctor' && $user->doctor) {
-            $query->where('doctor_id', $user->doctor->id);
-        } elseif ($user->role === 'user') {
-            $allowedDoctorIds = $user->allowedDoctors()->pluck('doctors.id')->toArray();
-            if (!empty($allowedDoctorIds)) {
-                $query->whereIn('doctor_id', $allowedDoctorIds);
-            } else {
-                $query->whereRaw('1 = 0');
-            }
-        }
+        // Aplicar filtro de médico
+        $this->applyDoctorFilter($query, 'doctor_id');
 
         $recurringAppointments = $query->orderBy('created_at', 'desc')->paginate(30);
 
@@ -45,23 +37,13 @@ class RecurringAppointmentController extends Controller
 
     public function create()
     {
-        $user = Auth::guard('tenant')->user();
         $doctorsQuery = Doctor::with('user')
             ->whereHas('user', function($query) {
                 $query->where('status', 'active');
             });
 
-        // Aplicar filtros baseado no role
-        if ($user->role === 'doctor' && $user->doctor) {
-            $doctorsQuery->where('id', $user->doctor->id);
-        } elseif ($user->role === 'user') {
-            $allowedDoctorIds = $user->allowedDoctors()->pluck('doctors.id')->toArray();
-            if (!empty($allowedDoctorIds)) {
-                $doctorsQuery->whereIn('id', $allowedDoctorIds);
-            } else {
-                $doctorsQuery->whereRaw('1 = 0');
-            }
-        }
+        // Aplicar filtro de médico
+        $this->applyDoctorFilter($doctorsQuery);
 
         $doctors = $doctorsQuery->orderBy('id')->get();
         $patients = Patient::orderBy('full_name')->get();
@@ -102,6 +84,16 @@ class RecurringAppointmentController extends Controller
             
             $data['id'] = Str::uuid();
             $data['active'] = true;
+
+            // Aplicar lógica de appointment_mode baseado na configuração
+            $mode = \App\Models\Tenant\TenantSetting::get('appointments.default_appointment_mode', 'user_choice');
+            if ($mode === 'presencial') {
+                $data['appointment_mode'] = 'presencial';
+            } elseif ($mode === 'online') {
+                $data['appointment_mode'] = 'online';
+            } else { // user_choice
+                $data['appointment_mode'] = $request->appointment_mode ?? 'presencial';
+            }
             
             $recurringAppointment = RecurringAppointment::create($data);
 
@@ -187,13 +179,15 @@ class RecurringAppointmentController extends Controller
     {
         $recurringAppointment = RecurringAppointment::with('rules')->findOrFail($id);
         
-        $doctors = Doctor::with('user')
+        $doctorsQuery = Doctor::with('user')
             ->whereHas('user', function($query) {
                 $query->where('status', 'active');
-            })
-            ->orderBy('id')
-            ->get();
+            });
         
+        // Aplicar filtro de médico
+        $this->applyDoctorFilter($doctorsQuery);
+        
+        $doctors = $doctorsQuery->orderBy('id')->get();
         $patients = Patient::orderBy('full_name')->get();
 
         return view('tenant.appointments.recurring.edit', compact(
@@ -210,6 +204,16 @@ class RecurringAppointmentController extends Controller
         $data = $request->validated();
         $rules = $data['rules'];
         unset($data['rules']);
+
+        // Aplicar lógica de appointment_mode baseado na configuração
+        $mode = \App\Models\Tenant\TenantSetting::get('appointments.default_appointment_mode', 'user_choice');
+        if ($mode === 'presencial') {
+            $data['appointment_mode'] = 'presencial';
+        } elseif ($mode === 'online') {
+            $data['appointment_mode'] = 'online';
+        } else { // user_choice
+            $data['appointment_mode'] = $request->appointment_mode ?? $recurringAppointment->appointment_mode ?? 'presencial';
+        }
 
         $recurringAppointment->update($data);
 

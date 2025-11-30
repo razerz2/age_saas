@@ -55,7 +55,10 @@ agendamento-saas/
 │   │   ├── AsaasService.php       # Integração com gateway de pagamento
 │   │   ├── SystemNotificationService.php
 │   │   ├── TenantProvisioner.php  # Criação/remoção de tenants
-│   │   └── WhatsAppService.php
+│   │   ├── WhatsAppService.php    # Integração WhatsApp (global)
+│   │   ├── MailTenantService.php   # Envio de emails (tenant ou global)
+│   │   ├── NotificationService.php # Notificações centralizadas
+│   │   └── WhatsappTenantService.php # Envio WhatsApp (tenant ou global)
 │   ├── TenantFinder/
 │   │   └── PathTenantFinder.php   # Identifica tenant pelo path (/t/{tenant})
 │   └── View/Components/            # Blade Components
@@ -102,6 +105,10 @@ POST /Platform/whatsapp/send                   # Enviar mensagem WhatsApp
 POST /Platform/whatsapp/invoice/{invoice}      # Enviar notificação de fatura
 GET  /Platform/api/estados/{pais}              # API: Estados por país
 GET  /Platform/api/cidades/{estado}            # API: Cidades por estado
+GET  /kiosk/monitor                             # Monitor de kiosk
+GET  /kiosk/monitor/data                        # Dados do monitor (API)
+POST /webhook/asaas                            # Webhook do Asaas
+GET  /google/callback                           # Callback do Google Calendar OAuth (rota global)
 ```
 
 **Middleware aplicado:**
@@ -135,8 +142,65 @@ POST /t/{tenant}/logout             # Logout
 /tenant/forms                       # CRUD de formulários
 /tenant/responses                   # CRUD de respostas de formulários
 /tenant/integrations                # CRUD de integrações
+/tenant/integrations/google         # Integração Google Calendar
 /tenant/oauth-accounts              # CRUD de contas OAuth
 /tenant/calendar-sync               # Sincronização de calendário
+/tenant/notifications               # Notificações do tenant
+/tenant/settings                    # Configurações do tenant
+/tenant/agendamentos/recorrentes    # Agendamentos recorrentes
+```
+
+#### 3. **Área Pública de Agendamento** (`/t/{tenant}/agendamento/*`)
+
+**Rotas Públicas (sem autenticação):**
+```php
+GET  /t/{tenant}/agendamento/identificar    # Identificar paciente
+POST /t/{tenant}/agendamento/identificar    # Processar identificação
+GET  /t/{tenant}/agendamento/cadastro      # Cadastro de paciente
+POST /t/{tenant}/agendamento/cadastro      # Processar cadastro
+GET  /t/{tenant}/agendamento/criar         # Criar agendamento
+POST /t/{tenant}/agendamento/criar         # Processar agendamento
+GET  /t/{tenant}/agendamento/sucesso/{appointment_id?}  # Página de sucesso
+GET  /t/{tenant}/agendamento/{appointment_id} # Visualizar agendamento
+
+# APIs públicas para agendamento
+GET  /t/{tenant}/agendamento/api/doctors/{doctorId}/calendars
+GET  /t/{tenant}/agendamento/api/doctors/{doctorId}/appointment-types
+GET  /t/{tenant}/agendamento/api/doctors/{doctorId}/specialties
+GET  /t/{tenant}/agendamento/api/doctors/{doctorId}/available-slots
+
+# Formulários públicos
+GET  /t/{tenant}/formulario/{form}/responder                    # Responder formulário
+POST /t/{tenant}/formulario/{form}/responder                    # Salvar resposta
+GET  /t/{tenant}/formulario/{form}/resposta/{response}/sucesso   # Página de sucesso
+```
+
+**Middleware:** `tenant-web` (detecta tenant pelo path)
+
+#### 4. **Portal do Paciente** (`routes/patient_portal.php`)
+
+**Rotas Públicas (com tenant na URL):**
+```php
+GET  /t/{tenant}/paciente/login              # Formulário de login
+POST /t/{tenant}/paciente/login              # Processar login
+GET  /t/{tenant}/paciente/esqueci-senha       # Formulário de recuperação de senha
+GET  /t/{tenant}/paciente/resetar-senha/{token} # Formulário de resetar senha
+```
+
+**Rotas Autenticadas (sem tenant na URL):**
+```php
+GET  /paciente/dashboard                      # Dashboard do paciente
+GET  /paciente/agendamentos                    # Lista de agendamentos
+GET  /paciente/agendamentos/criar              # Criar agendamento
+POST /paciente/agendamentos                    # Processar criação
+GET  /paciente/agendamentos/{id}/editar        # Editar agendamento
+PUT  /paciente/agendamentos/{id}               # Atualizar agendamento
+POST /paciente/agendamentos/{id}/cancelar      # Cancelar agendamento
+GET  /paciente/notificacoes                    # Notificações do paciente
+GET  /paciente/perfil                          # Perfil do paciente
+POST /paciente/perfil                           # Atualizar perfil
+POST /paciente/logout                           # Logout
+GET  /paciente/logout                           # Logout (GET)
 ```
 
 **Middleware aplicado (em ordem):**
@@ -184,6 +248,7 @@ POST /t/{tenant}/logout             # Logout
 | `AppointmentController` | CRUD de agendamentos + eventos do calendário |
 | `FormController` | CRUD de formulários + seções/perguntas/opções |
 | `FormResponseController` | Respostas de formulários + respostas individuais |
+| `PublicFormController` | Formulários públicos para pacientes responderem |
 | `IntegrationController` | Integrações (Google Calendar, etc.) |
 | `OAuthAccountController` | Contas OAuth conectadas |
 | `CalendarSyncStateController` | Estado de sincronização de calendário |
@@ -511,9 +576,20 @@ O middleware `CheckModuleAccess` verifica se o usuário possui acesso ao módulo
 3. **Persistência na Sessão**: O tenant é persistido na sessão para evitar re-detecção a cada request
 4. **Logs Extensivos**: O sistema possui logs detalhados para debug do fluxo multitenant
 5. **Integração Asaas**: Sistema de pagamento integrado com sincronização de clientes e faturas
+6. **Formulários Públicos**: Sistema de envio automático de links de formulários aos pacientes quando agendamentos são criados
+7. **Notificações Flexíveis**: Sistema de notificações com suporte a provedores globais ou específicos por tenant (email e WhatsApp)
+8. **Envio Automático**: O `AppointmentObserver` envia automaticamente links de formulários quando um agendamento é criado e existe formulário ativo correspondente
 
 ---
 
 **Documentação gerada em:** 2025-01-27
 **Última atualização:** 2025-01-27
+
+**Nota:** Esta documentação foi revisada e atualizada para refletir todas as rotas e funcionalidades atuais do sistema, incluindo:
+- Rotas do Portal do Paciente
+- Rota global do Google Calendar callback (`/google/callback`)
+- Rotas de agendamentos recorrentes
+- Rotas de permissões de médicos para usuários
+- Formulários públicos e envio automático de links
+- Serviços de notificação (MailTenantService, NotificationService, WhatsappTenantService)
 

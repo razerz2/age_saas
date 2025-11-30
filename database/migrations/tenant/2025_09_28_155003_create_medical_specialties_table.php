@@ -15,6 +15,9 @@ return new class extends Migration
             $table->uuid('id')->primary();
             $table->string('name')->unique();
             $table->string('code')->nullable(); // opcional CBO
+            $table->string('label_singular', 50)->nullable()->after('code');
+            $table->string('label_plural', 50)->nullable()->after('label_singular');
+            $table->string('registration_label', 50)->nullable()->after('label_plural');
             $table->timestamps();
         });
     }

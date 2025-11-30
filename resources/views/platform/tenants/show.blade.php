@@ -159,7 +159,11 @@
                                 <div class="col-md-6">
                                     <label class="fw-semibold text-muted">Senha:</label>
                                     <p class="mb-0">
-                                        <code class="bg-light px-2 py-1 rounded">{{ $adminPassword }}</code>
+                                        @if($adminPassword)
+                                            <code class="bg-light px-2 py-1 rounded">{{ $adminPassword }}</code>
+                                        @else
+                                            <span class="text-muted">Senha não disponível (já foi gerada anteriormente)</span>
+                                        @endif
                                     </p>
                                 </div>
                             </div>

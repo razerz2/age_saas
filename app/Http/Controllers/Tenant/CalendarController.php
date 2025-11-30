@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Tenant;
 
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\Tenant\Concerns\HasDoctorFilter;
 use App\Models\Tenant\Calendar;
 use App\Models\Tenant\Doctor;
 use App\Http\Requests\Tenant\StoreCalendarRequest;
@@ -12,23 +13,20 @@ use Illuminate\Support\Facades\Auth;
 
 class CalendarController extends Controller
 {
+    use HasDoctorFilter;
     public function index()
     {
         $user = Auth::guard('tenant')->user();
         
+        // Administradores não têm acesso a agendas (apenas médicos têm)
+        if ($user->role === 'admin') {
+            abort(403, 'Apenas médicos têm acesso a agendas. Administradores não possuem agendas individuais.');
+        }
+        
         $query = Calendar::with('doctor.user');
         
-        // Aplicar filtros baseado no role
-        if ($user->role === 'doctor' && $user->doctor) {
-            $query->where('doctor_id', $user->doctor->id);
-        } elseif ($user->role === 'user') {
-            $allowedDoctorIds = $user->allowedDoctors()->pluck('doctors.id')->toArray();
-            if (!empty($allowedDoctorIds)) {
-                $query->whereIn('doctor_id', $allowedDoctorIds);
-            } else {
-                $query->whereRaw('1 = 0');
-            }
-        }
+        // Aplicar filtro de médico
+        $this->applyDoctorFilter($query, 'doctor_id');
         
         $calendars = $query->orderBy('name')->paginate(20);
 
@@ -40,24 +38,20 @@ class CalendarController extends Controller
         $user = Auth::guard('tenant')->user();
         
         // Busca médicos que ainda não possuem calendário
-        $doctors = Doctor::with('user')
-            ->whereDoesntHave('calendars')
-            ->orderBy('id')
-            ->get();
+        $doctorsQuery = Doctor::with('user')
+            ->whereDoesntHave('calendars');
         
-        // Aplicar filtros baseado no role
-        if ($user->role === 'doctor' && $user->doctor) {
-            if ($user->doctor->calendars()->exists()) {
+        // Aplicar filtro de médico
+        $this->applyDoctorFilter($doctorsQuery);
+        
+        $doctors = $doctorsQuery->orderBy('id')->get();
+        
+        // Verificar se médico já tem calendário
+        if ($user->role === 'doctor') {
+            $doctor = Doctor::where('user_id', $user->id)->first();
+            if ($doctor && $doctor->calendars()->exists()) {
                 return redirect()->route('tenant.calendars.index')
                     ->with('error', 'Você já possui um calendário cadastrado. Cada médico pode ter apenas um calendário.');
-            }
-            $doctors = $doctors->where('id', $user->doctor->id);
-        } elseif ($user->role === 'user') {
-            $allowedDoctorIds = $user->allowedDoctors()->pluck('doctors.id')->toArray();
-            if (!empty($allowedDoctorIds)) {
-                $doctors = $doctors->whereIn('id', $allowedDoctorIds);
-            } else {
-                $doctors = collect();
             }
         }
 
@@ -102,6 +96,11 @@ class CalendarController extends Controller
         $calendar->load('doctor.user');
         
         $user = Auth::guard('tenant')->user();
+        
+        // Administradores não têm acesso a agendas (apenas médicos têm)
+        if ($user->role === 'admin') {
+            abort(403, 'Apenas médicos têm acesso a agendas. Administradores não possuem agendas individuais.');
+        }
         
         // Verifica permissão para visualizar o calendário
         if ($user->role === 'doctor' && $user->doctor) {
@@ -213,6 +212,11 @@ class CalendarController extends Controller
     public function eventsRedirect()
     {
         $user = Auth::guard('tenant')->user();
+        
+        // Administradores não têm acesso a agendas (apenas médicos têm)
+        if ($user->role === 'admin') {
+            abort(403, 'Apenas médicos têm acesso a agendas. Administradores não possuem agendas individuais.');
+        }
         
         $query = Calendar::orderBy('name');
         

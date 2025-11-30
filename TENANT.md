@@ -27,11 +27,15 @@ A **Tenant** é a área específica de cada cliente (clínica) do sistema SaaS d
 - ✅ Calendários de agendamento
 - ✅ Horários comerciais
 - ✅ Tipos de consulta
-- ✅ Agendamentos
+- ✅ Agendamentos (presencial e online)
+- ✅ Agendamentos online com instruções e links de reunião
+- ✅ Agendamentos recorrentes
+- ✅ Atendimento Médico (sessão de atendimento do dia)
 - ✅ Formulários personalizados
 - ✅ Respostas de formulários
 - ✅ Integrações (Google Calendar, etc.)
 - ✅ Sincronização de calendário
+- ✅ Relatórios completos (agendamentos, pacientes, médicos, etc.)
 - ✅ Área pública de agendamento
 - ✅ Portal do paciente
 
@@ -73,23 +77,55 @@ Onde `{subdomain}` é o subdomain único do tenant (ex: `odontovida`, `clinica-t
 
 ### Controle de Acesso
 
-Os usuários do tenant possuem um campo `modules` (JSON) que define quais módulos podem acessar:
+O sistema possui dois níveis de controle de acesso:
 
-- `users` - Gerenciamento de usuários
-- `doctors` - Gerenciamento de médicos
-- `specialties` - Gerenciamento de especialidades
-- `patients` - Gerenciamento de pacientes
-- `calendars` - Gerenciamento de calendários
-- `business-hours` - Horários comerciais
-- `appointment-types` - Tipos de consulta
+#### 1. **Sistema de Roles (Papéis)**
+
+Os usuários do tenant possuem um campo `role` que define seu papel no sistema:
+
+- **`admin`**: Administrador com acesso completo a todos os médicos e funcionalidades
+  - Vê todos os médicos cadastrados
+  - Pode gerenciar todos os dados do sistema
+  - Sem restrições de acesso
+
+- **`doctor`**: Médico que só acessa seus próprios dados
+  - Vê apenas seu próprio perfil de médico
+  - Acessa apenas seus próprios agendamentos, calendários, formulários, etc.
+  - Restrito aos seus próprios dados
+
+- **`user`**: Usuário comum com acesso restrito a médicos permitidos
+  - Vê apenas médicos que têm permissão explícita (`UserDoctorPermission`)
+  - Pode ser vinculado a um ou mais médicos específicos
+  - Se não tiver médicos permitidos, não vê nenhum dado
+
+**Filtros Automáticos:**
+- O sistema aplica filtros automáticos baseados no role em todas as listagens
+- Os filtros são aplicados automaticamente via trait `HasDoctorFilter` nos controllers
+- Médicos com role `doctor` só veem seus próprios dados
+- Usuários com role `user` só veem dados dos médicos permitidos
+- Administradores veem tudo (sem filtro)
+
+#### 2. **Sistema de Módulos**
+
+Os usuários também possuem um campo `modules` (JSON) que define quais módulos podem acessar:
+
 - `appointments` - Gerenciamento de agendamentos
+- `online_appointments` - Consultas online
+- `medical_appointments` - Atendimento Médico (sessão de atendimento)
+- `patients` - Gerenciamento de pacientes
+- `doctors` - Gerenciamento de médicos
+- `calendar` - Gerenciamento de calendários
+- `specialties` - Gerenciamento de especialidades
+- `users` - Gerenciamento de usuários
+- `business_hours` - Horários comerciais
 - `forms` - Gerenciamento de formulários
-- `responses` - Respostas de formulários
+- `reports` - Relatórios
 - `integrations` - Integrações
 - `settings` - Configurações
-- `notifications` - Notificações do tenant
 
 O middleware `module.access:{modulo}` verifica o acesso antes de permitir a rota.
+
+**Nota:** O controle por módulos funciona em conjunto com o sistema de roles. Um médico (role `doctor`) pode ter acesso ao módulo `appointments`, mas só verá seus próprios agendamentos devido ao filtro de role.
 
 ---
 
@@ -120,12 +156,18 @@ GET  /t/{tenant}/agendamento/api/doctors/{doctorId}/calendars
 GET  /t/{tenant}/agendamento/api/doctors/{doctorId}/appointment-types
 GET  /t/{tenant}/agendamento/api/doctors/{doctorId}/specialties
 GET  /t/{tenant}/agendamento/api/doctors/{doctorId}/available-slots
+
+# Formulários públicos
+GET  /t/{tenant}/formulario/{form}/responder                    # Responder formulário
+POST /t/{tenant}/formulario/{form}/responder                    # Salvar resposta
+GET  /t/{tenant}/formulario/{form}/resposta/{response}/sucesso   # Página de sucesso
 ```
 
 ### Rotas Autenticadas (área administrativa do tenant)
 
 ```php
 /tenant/dashboard                   # Dashboard do tenant
+/tenant/profile                     # Perfil do usuário do tenant
 /tenant/users                       # CRUD de usuários do tenant
 /tenant/doctors                     # CRUD de médicos
 /tenant/specialties                  # CRUD de especialidades médicas
@@ -146,7 +188,29 @@ GET  /t/{tenant}/agendamento/api/doctors/{doctorId}/available-slots
 /tenant/settings/calendar            # Atualizar configurações de calendário
 /tenant/settings/notifications       # Atualizar configurações de notificações
 /tenant/settings/integrations        # Atualizar configurações de integrações
+/tenant/settings/user-defaults       # Atualizar configurações de padrões de usuário
+/tenant/settings/professionals       # Atualizar configurações de profissionais
 /tenant/agendamentos/recorrentes     # Agendamentos recorrentes
+/tenant/appointments/online          # Lista de agendamentos online
+/tenant/atendimento                  # Atendimento Médico - escolher dia
+/tenant/atendimento/iniciar          # Iniciar sessão de atendimento
+/tenant/atendimento/dia/{date}       # Sessão de atendimento do dia
+/tenant/atendimento/{appointment}/detalhes # Detalhes do agendamento (AJAX)
+/tenant/atendimento/{appointment}/status # Alterar status do atendimento
+/tenant/atendimento/{appointment}/concluir # Concluir atendimento
+/tenant/atendimento/{appointment}/formulario-resposta # Buscar resposta do formulário
+/tenant/reports                       # Página inicial de relatórios
+/tenant/reports/appointments          # Relatório de agendamentos
+/tenant/reports/patients              # Relatório de pacientes
+/tenant/reports/doctors               # Relatório de médicos
+/tenant/reports/recurring             # Relatório de recorrências
+/tenant/reports/forms                 # Relatório de formulários
+/tenant/reports/portal                # Relatório do portal do paciente
+/tenant/reports/notifications         # Relatório de notificações
+/tenant/appointments/online/{id}     # Visualizar/configurar agendamento online
+/tenant/appointments/online/{id}/save # Salvar instruções do agendamento online
+/tenant/appointments/online/{id}/send-email # Enviar instruções por email
+/tenant/appointments/online/{id}/send-whatsapp # Enviar instruções por WhatsApp
 
 # APIs para agendamentos
 /tenant/api/doctors/{doctorId}/calendars
@@ -159,6 +223,8 @@ GET  /t/{tenant}/agendamento/api/doctors/{doctorId}/available-slots
 /tenant/api/doctors/{doctorId}/available-slots-recurring
 
 # Rotas especiais
+/tenant/profile                      # GET: Editar perfil do usuário logado
+/tenant/profile                      # PUT: Atualizar perfil do usuário logado
 /tenant/users/{id}/change-password   # Alterar senha de usuário
 /tenant/users/{id}/doctor-permissions # Permissões de médicos para usuários
 /tenant/users/{id}/allowed-doctors    # API: Médicos permitidos para usuário
@@ -210,10 +276,10 @@ GET  /t/{tenant}/paciente/resetar-senha/{token} # Formulário de resetar senha
 GET  /paciente/dashboard                      # Dashboard do paciente
 GET  /paciente/agendamentos                   # Lista de agendamentos
 GET  /paciente/agendamentos/criar             # Criar agendamento
-POST /paciente/agendamentos                  # Processar criação
+POST /paciente/agendamentos                   # Processar criação
 GET  /paciente/agendamentos/{id}/editar       # Editar agendamento
 PUT  /paciente/agendamentos/{id}              # Atualizar agendamento
-POST /paciente/agendamentos/{id}/cancelar    # Cancelar agendamento
+POST /paciente/agendamentos/{id}/cancelar     # Cancelar agendamento
 GET  /paciente/notificacoes                   # Notificações do paciente
 GET  /paciente/perfil                         # Perfil do paciente
 POST /paciente/perfil                         # Atualizar perfil
@@ -248,10 +314,13 @@ GET  /paciente/logout                         # Logout (GET)
 | `SettingsController` | Configurações do tenant | `/tenant/settings` |
 | `RecurringAppointmentController` | Agendamentos recorrentes | `/tenant/agendamentos/recorrentes` |
 | `UserDoctorPermissionController` | Permissões de médicos para usuários | `/tenant/users/{id}/doctor-permissions` |
+| `ProfileController` | Perfil do usuário do tenant | `/tenant/profile` |
 | `NotificationController` | Notificações do tenant | `/tenant/notifications` |
+| `OnlineAppointmentController` | Agendamentos online e instruções | `/tenant/appointments/online` |
 | `PublicPatientController` | Identificação de paciente (área pública) | `/t/{tenant}/agendamento/identificar` |
 | `PublicPatientRegisterController` | Cadastro de paciente (área pública) | `/t/{tenant}/agendamento/cadastro` |
 | `PublicAppointmentController` | Criação de agendamento (área pública) | `/t/{tenant}/agendamento/criar` |
+| `PublicFormController` | Formulários públicos para pacientes | `/t/{tenant}/formulario/{form}/responder` |
 | `PatientPortal/AuthController` | Autenticação do portal do paciente | `/t/{tenant}/paciente/login` |
 | `PatientPortal/DashboardController` | Dashboard do portal do paciente | `/paciente/dashboard` |
 | `PatientPortal/AppointmentController` | Agendamentos do portal do paciente | `/paciente/agendamentos` |
@@ -292,6 +361,7 @@ Armazenados no **banco do tenant** (conexão `tenant`):
 | `Notification` | `notifications` | Notificações do tenant |
 | `TenantSetting` | `tenant_settings` | Configurações específicas do tenant |
 | `GoogleCalendarToken` | `google_calendar_tokens` | Tokens OAuth do Google Calendar por médico |
+| `OnlineAppointmentInstruction` | `online_appointment_instructions` | Instruções para consultas online |
 | `Module` | - | Módulos de acesso (helper) |
 
 ### Características Importantes
@@ -306,6 +376,12 @@ Armazenados no **banco do tenant** (conexão `tenant`):
 - `TenantSetting` armazena configurações específicas do tenant em formato chave-valor
 - `GoogleCalendarToken` armazena tokens OAuth do Google Calendar vinculados a médicos (`doctor_id`)
 - `Doctor` possui relacionamento com `GoogleCalendarToken` para integração com Google Calendar
+- `Appointment` possui campo `appointment_mode` (presencial/online) e relacionamento com `OnlineAppointmentInstruction`
+- `OnlineAppointmentInstruction` armazena instruções para consultas online (link de reunião, aplicativo, instruções)
+- `RecurringAppointment` também possui campo `appointment_mode` para definir se a recorrência é presencial ou online
+- `User` possui campo `role` que define o papel do usuário (`admin`, `doctor`, `user`) e controla o acesso a dados
+- `Doctor` possui campos de personalização: `signature`, `label_singular`, `label_plural`, `registration_label`, `registration_value`
+- O sistema aplica filtros automáticos baseados no role do usuário através do trait `HasDoctorFilter`
 
 ---
 
@@ -317,10 +393,36 @@ Armazenados no **banco do tenant** (conexão `tenant`):
 1. Acesse `/tenant/doctors`
 2. Clique em "Criar Médico"
 3. Preencha:
-   - Nome completo
-   - CRM (Conselho Regional de Medicina)
-   - Especialidades (múltiplas)
-   - Status (ativo/inativo)
+   - **Usuário**: Selecione um usuário existente (usuários que já são médicos não aparecem)
+   - **Número de Registro**: CRM, CRP, CRO ou outro número de registro profissional
+   - **Estado do Registro**: Sigla do estado (ex: SP, RJ)
+   - **Especialidades**: Selecione uma ou mais especialidades médicas
+   - **Assinatura**: Upload da assinatura digital do médico (opcional)
+   - **Labels Personalizados** (opcional):
+     - **Label Singular**: Nome no singular (ex: "Médico", "Dentista", "Psicólogo")
+     - **Label Plural**: Nome no plural (ex: "Médicos", "Dentistas", "Psicólogos")
+   - **Campos de Registro Personalizados** (opcional):
+     - **Label do Registro**: Nome do campo de registro (ex: "CRM", "CRP", "CRO")
+     - **Valor do Registro**: Valor do registro profissional
+
+**Vinculação Automática de Permissões:**
+- Quando um usuário comum (role `user`) cadastra um médico, ele **automaticamente recebe permissão** para visualizar e gerenciar esse médico
+- Isso facilita o workflow onde um usuário cria o médico e já pode trabalhar com ele
+
+**Personalização de Labels:**
+- Os labels personalizados permitem adaptar a terminologia do sistema para diferentes tipos de profissionais
+- Por exemplo, uma clínica odontológica pode usar "Dentista" ao invés de "Médico"
+- Os labels são usados na interface do sistema para exibição personalizada
+
+**Campos de Registro:**
+- Permite personalizar o tipo de registro profissional (CRM, CRP, CRO, etc.)
+- Útil para clínicas que atendem diferentes categorias de profissionais de saúde
+
+**Restrições de Acesso:**
+- Apenas usuários com módulo `doctors` podem acessar o gerenciamento de médicos
+- Os filtros baseados em role são aplicados automaticamente na listagem
+- Médicos (role `doctor`) só veem seu próprio perfil
+- Usuários comuns (role `user`) só veem médicos aos quais têm permissão
 
 ### 2. Gerenciamento de Pacientes
 
@@ -374,13 +476,22 @@ Armazenados no **banco do tenant** (conexão `tenant`):
    - Médico
    - Calendário
    - Tipo de consulta
+   - Modo de atendimento (presencial/online) - se habilitado nas configurações
    - Data e horário
    - Observações (opcional)
+
+**Modos de Atendimento:**
+- **Presencial**: Consulta física na clínica
+- **Online**: Consulta virtual via videoconferência
+- A configuração padrão pode ser definida em `/tenant/settings` → **Configurações de Agendamentos** → `default_appointment_mode`
+  - `presencial`: Apenas agendamentos presenciais
+  - `online`: Apenas agendamentos online
+  - `user_choice`: Usuário escolhe no momento do agendamento
 
 **Visualizar Calendário:**
 - Acesse `/tenant/appointments`
 - Visualize agendamentos em formato de calendário
-- Filtre por médico, data, etc.
+- Filtre por médico, data, modo de atendimento, etc.
 
 ### 6. Formulários Personalizados
 
@@ -400,6 +511,35 @@ Armazenados no **banco do tenant** (conexão `tenant`):
 
 **Ver Guia Completo:** [docs/GUIA_CRIAR_FORMULARIO.md](docs/GUIA_CRIAR_FORMULARIO.md)
 
+**Formulários Públicos e Envio Automático:**
+
+O sistema possui funcionalidade de **envio automático de links de formulários** aos pacientes quando um agendamento é criado:
+
+- **Prioridade de Seleção**: O sistema busca automaticamente um formulário ativo para o agendamento seguindo esta ordem:
+  1. Formulário vinculado ao médico do agendamento
+  2. Formulário vinculado à especialidade do agendamento
+  3. Se nenhum for encontrado, nenhum link é enviado
+
+- **Envio Automático**: Quando um agendamento é criado e existe um formulário ativo correspondente:
+  - O sistema gera automaticamente um link público para o paciente responder o formulário
+  - O link é enviado por **email** e/ou **WhatsApp** conforme as configurações do tenant
+  - O link inclui o ID do agendamento, permitindo vincular a resposta ao agendamento
+
+- **Configurações de Notificação** (em `/tenant/settings`):
+  - `notifications.form_send_email`: Habilita/desabilita envio de formulário por email (padrão: `false`)
+  - `notifications.form_send_whatsapp`: Habilita/desabilita envio de formulário por WhatsApp (padrão: `false`)
+  - `notifications.send_email_to_patients`: Habilita/desabilita envio de emails aos pacientes (padrão: `false`)
+  - `notifications.send_whatsapp_to_patients`: Habilita/desabilita envio de WhatsApp aos pacientes (padrão: `false`)
+
+- **URL do Formulário Público**: 
+  - Formato: `/t/{tenant}/formulario/{form}/responder?appointment={appointment_id}`
+  - O paciente pode responder o formulário sem precisar estar logado
+  - A resposta é automaticamente vinculada ao agendamento quando o `appointment_id` está presente
+
+- **Resposta do Formulário**:
+  - Após responder, o paciente é redirecionado para uma página de sucesso
+  - A resposta fica disponível em `/tenant/responses` para visualização pela clínica
+
 ### 7. Respostas de Formulários
 
 **Visualizar Respostas:**
@@ -408,7 +548,72 @@ Armazenados no **banco do tenant** (conexão `tenant`):
 3. Filtre por formulário, paciente, data, etc.
 4. Clique em "Ver" para visualizar resposta completa
 
-### 8. Agendamentos Recorrentes
+### 8. Agendamentos Online
+
+**Gerenciar Agendamentos Online:**
+1. Acesse `/tenant/appointments/online`
+2. Visualize apenas agendamentos com modo "online"
+3. Clique em um agendamento para configurar instruções
+4. Configure:
+   - **Link da reunião**: URL da videoconferência (Zoom, Google Meet, etc.)
+   - **Aplicativo**: Nome do aplicativo utilizado (opcional)
+   - **Instruções gerais**: Informações para o paciente sobre a consulta
+   - **Instruções específicas**: Orientações personalizadas
+
+**Enviar Instruções:**
+- Após configurar, envie as instruções por:
+  - **Email**: Clique em "Enviar por Email" (requer `notifications.send_email_to_patients` habilitado)
+  - **WhatsApp**: Clique em "Enviar por WhatsApp" (requer `notifications.send_whatsapp_to_patients` habilitado)
+- O sistema registra quando e por qual canal as instruções foram enviadas
+
+**Configurações Necessárias:**
+- O módulo `online_appointments` deve estar habilitado para o usuário
+- O modo padrão de agendamento deve permitir consultas online (`online` ou `user_choice`)
+- Para envio automático, configure notificações em `/tenant/settings`
+
+**Importante:**
+- Agendamentos online são automaticamente identificados pelo campo `appointment_mode = 'online'`
+- Cada agendamento online pode ter instruções específicas vinculadas
+- As instruções são enviadas apenas manualmente pelo administrador/clínica
+- O paciente recebe as informações necessárias para participar da consulta virtual
+
+### 9. Atendimento Médico
+
+O módulo de **Atendimento Médico** permite realizar sessões de atendimento do dia, facilitando o fluxo de trabalho durante o atendimento aos pacientes.
+
+**Acessar Atendimento Médico:**
+1. Acesse `/tenant/atendimento`
+2. Selecione o dia desejado para iniciar a sessão de atendimento
+3. O sistema exibirá todos os agendamentos do dia filtrados conforme permissões do usuário
+
+**Funcionalidades:**
+- **Visualização de Agendamentos do Dia**: Lista todos os agendamentos agendados, confirmados, chegados ou em atendimento
+- **Detalhes do Agendamento**: Clique em um agendamento para ver:
+  - Dados do paciente
+  - Dados do médico
+  - Tipo de consulta e especialidade
+  - Observações
+  - **Resposta do Formulário**: Se o paciente respondeu um formulário, pode ser visualizado diretamente no modal
+- **Gerenciamento de Status**: Alterar status do atendimento:
+  - `scheduled` - Agendado
+  - `arrived` - Paciente chegou
+  - `in_service` - Em atendimento
+  - `completed` - Concluído
+  - `cancelled` - Cancelado
+- **Navegação entre Agendamentos**: Após concluir um atendimento, o sistema pode redirecionar automaticamente para o próximo agendamento do dia
+
+**Controle de Acesso:**
+- Requer módulo `medical_appointments` habilitado
+- Filtros automáticos baseados em roles são aplicados:
+  - **Admin**: Vê todos os agendamentos do dia
+  - **Doctor**: Vê apenas seus próprios agendamentos
+  - **User**: Vê apenas agendamentos dos médicos permitidos
+
+**Integração com Formulários:**
+- Se o agendamento possui um formulário respondido pelo paciente, ele é exibido automaticamente no modal de detalhes
+- Permite visualizar as respostas antes ou durante o atendimento
+
+### 10. Agendamentos Recorrentes
 
 **Criar Agendamento Recorrente:**
 1. Acesse `/tenant/agendamentos/recorrentes`
@@ -428,7 +633,126 @@ Armazenados no **banco do tenant** (conexão `tenant`):
 - Cancele agendamentos recorrentes
 - Visualize agendamentos gerados a partir da recorrência
 
-### 9. Permissões de Médicos para Usuários
+**Criar Agendamento Recorrente:**
+1. Acesse `/tenant/agendamentos/recorrentes`
+2. Clique em "Criar Agendamento Recorrente"
+3. Preencha:
+   - Paciente
+   - Médico
+   - Tipo de consulta
+   - **Modo de atendimento** (presencial/online) - se habilitado nas configurações
+   - Data de início
+   - Tipo de término (data final ou número de sessões)
+   - Regras de recorrência (diária, semanal, mensal, etc.)
+4. O sistema gerará automaticamente os agendamentos conforme as regras
+
+**Importante:**
+- Agendamentos recorrentes também suportam modo online/presencial
+- Se o modo padrão estiver configurado como `presencial` ou `online`, todos os agendamentos gerados seguirão esse modo
+- Se o modo padrão for `user_choice`, você pode escolher o modo ao criar a recorrência
+
+### 11. Relatórios
+
+O sistema possui um módulo completo de **Relatórios** que permite gerar análises detalhadas de diversos aspectos da clínica.
+
+**Acessar Relatórios:**
+1. Acesse `/tenant/reports`
+2. Selecione o tipo de relatório desejado
+3. Configure filtros (data, médico, status, etc.)
+4. Visualize os dados e exporte se necessário
+
+**Tipos de Relatórios Disponíveis:**
+
+1. **Relatório de Agendamentos** (`/tenant/reports/appointments`)
+   - Lista todos os agendamentos com filtros avançados
+   - Filtros: Período, médico, paciente, status, modo de atendimento, etc.
+   - Exportação: Excel, PDF, CSV
+
+2. **Relatório de Pacientes** (`/tenant/reports/patients`)
+   - Lista todos os pacientes cadastrados
+   - Filtros: Período de cadastro, médicos atendidos, etc.
+   - Exportação: Excel, PDF, CSV
+
+3. **Relatório de Médicos** (`/tenant/reports/doctors`)
+   - Lista todos os médicos e estatísticas
+   - Filtros: Especialidade, status, etc.
+   - Exportação: Excel, PDF, CSV
+
+4. **Relatório de Recorrências** (`/tenant/reports/recurring`)
+   - Lista agendamentos recorrentes
+   - Filtros: Período, médico, paciente, status, etc.
+   - Exportação: Excel, PDF, CSV
+
+5. **Relatório de Formulários** (`/tenant/reports/forms`)
+   - Lista formulários e respostas
+   - Filtros: Formulário, médico, paciente, período, etc.
+   - Exportação: Excel, PDF, CSV
+
+6. **Relatório do Portal do Paciente** (`/tenant/reports/portal`)
+   - Estatísticas de uso do portal do paciente
+   - Filtros: Período, ações realizadas, etc.
+   - Exportação: Excel, PDF, CSV
+
+7. **Relatório de Notificações** (`/tenant/reports/notifications`)
+   - Lista notificações enviadas
+   - Filtros: Tipo, destinatário, período, status, etc.
+   - Exportação: Excel, PDF, CSV
+
+**Exportação de Dados:**
+- Todos os relatórios suportam exportação em múltiplos formatos:
+  - **Excel** (`.xlsx`): Formato adequado para análises e planilhas
+  - **PDF** (`.pdf`): Formato adequado para impressão e arquivamento
+  - **CSV** (`.csv`): Formato adequado para importação em outros sistemas
+
+**Controle de Acesso:**
+- Requer módulo `reports` habilitado
+- Filtros baseados em roles são aplicados automaticamente:
+  - **Admin**: Vê todos os dados
+  - **Doctor**: Vê apenas seus próprios dados
+  - **User**: Vê apenas dados dos médicos permitidos
+
+### 12. Sistema de Roles e Permissões
+
+O sistema possui um controle de acesso baseado em roles (papéis) que define automaticamente o que cada usuário pode ver e acessar.
+
+#### Roles Disponíveis
+
+1. **Administrador (`admin`)**:
+   - Acesso completo a todos os médicos e funcionalidades
+   - Vê todos os dados do sistema sem restrições
+   - Pode gerenciar qualquer médico, agendamento, paciente, etc.
+   - Não possui filtros de acesso
+
+2. **Médico (`doctor`)**:
+   - Acesso restrito apenas aos seus próprios dados
+   - Vê apenas seu próprio perfil de médico
+   - Acessa apenas seus próprios agendamentos, calendários, formulários, pacientes, etc.
+   - Filtros automáticos são aplicados para garantir que só veja seus dados
+
+3. **Usuário Comum (`user`)**:
+   - Acesso restrito a médicos específicos com permissão
+   - Vê apenas médicos aos quais foi explicitamente permitido
+   - Se não tiver médicos permitidos, não vê nenhum dado
+   - Pode ser vinculado a um ou mais médicos via permissões
+
+#### Filtros Automáticos
+
+O sistema aplica filtros automáticos baseados no role em todas as listagens:
+
+- **Controllers**: Usam o trait `HasDoctorFilter` para aplicar filtros automaticamente
+- **Queries**: Filtros são aplicados antes de buscar dados do banco
+- **Transparente**: Os filtros funcionam automaticamente sem necessidade de configuração manual
+
+#### Como Funciona
+
+- Quando um usuário acessa uma listagem (médicos, agendamentos, calendários, etc.)
+- O sistema identifica o role do usuário
+- Aplica o filtro apropriado:
+  - `admin`: Sem filtro (vê tudo)
+  - `doctor`: Filtra por `doctor_id = usuário.doctor.id`
+  - `user`: Filtra por `doctor_id IN (médicos_permitidos)`
+
+### 13. Permissões de Médicos para Usuários
 
 **Gerenciar Permissões:**
 1. Acesse `/tenant/users/{id}/doctor-permissions`
@@ -436,7 +760,17 @@ Armazenados no **banco do tenant** (conexão `tenant`):
 3. Salve as permissões
 4. O usuário terá acesso apenas aos médicos permitidos
 
-### 10. Integrações
+**Vinculação Automática:**
+- Quando um usuário comum (role `user`) **cadastra um novo médico**, ele **automaticamente recebe permissão** para visualizar e gerenciar esse médico
+- Isso facilita o workflow: o usuário cria o médico e já pode trabalhar com ele sem precisar configurar permissões manualmente
+- Permissões adicionais podem ser adicionadas posteriormente através da página de gerenciamento de permissões
+
+**Importante:**
+- Permissões são necessárias apenas para usuários com role `user`
+- Administradores (role `admin`) veem todos os médicos automaticamente
+- Médicos (role `doctor`) só veem seus próprios dados, independente de permissões
+
+### 14. Integrações
 
 #### Google Calendar
 
@@ -587,7 +921,7 @@ A integração com Google Calendar permite sincronizar automaticamente os agenda
 - Agendamentos individuais gerados por recorrências **NÃO** são sincronizados separadamente (evita duplicação)
 - Agendamentos recorrentes são sincronizados como eventos recorrentes (RRULE) no Google Calendar
 
-### 11. Notificações do Tenant
+### 15. Notificações do Tenant
 
 **Visualizar Notificações:**
 1. Acesse `/tenant/notifications`
@@ -599,6 +933,106 @@ A integração com Google Calendar permite sincronizar automaticamente os agenda
 - `GET /tenant/notifications/json` - Retorna notificações em JSON
 - `POST /tenant/notifications/{id}/read` - Marcar notificação como lida
 - `POST /tenant/notifications/mark-all-read` - Marcar todas como lidas
+
+### 16. Configurações de Agendamentos
+
+**Configurações de Modo de Atendimento:**
+1. Acesse `/tenant/settings`
+2. Clique na aba "Agendamentos"
+3. Configure o **Modo Padrão de Atendimento**:
+   - **Apenas Presencial**: Todos os agendamentos serão presenciais (módulo online desabilitado)
+   - **Apenas Online**: Todos os agendamentos serão online
+   - **Escolha do Usuário**: Usuário escolhe no momento do agendamento (presencial ou online)
+
+**Impacto das Configurações:**
+- Se configurado como `presencial`: O módulo de agendamentos online fica inacessível (404)
+- Se configurado como `online`: Todos os agendamentos criados serão online por padrão
+- Se configurado como `user_choice`: Campo de seleção aparece no formulário de agendamento
+
+**Chave de Configuração:**
+- `appointments.default_appointment_mode`: Valores possíveis: `presencial`, `online`, `user_choice` (padrão: `user_choice`)
+
+### 17. Configurações de Notificações e Comunicação
+
+O sistema possui configurações flexíveis para envio de notificações aos pacientes:
+
+**Configurações Disponíveis** (em `/tenant/settings`):
+
+- **Notificações de Email:**
+  - `notifications.send_email_to_patients`: Habilita/desabilita envio de emails aos pacientes (padrão: `false`)
+  - `notifications.form_send_email`: Habilita/desabilita envio de link de formulário por email (padrão: `false`)
+
+- **Notificações de WhatsApp:**
+  - `notifications.send_whatsapp_to_patients`: Habilita/desabilita envio de WhatsApp aos pacientes (padrão: `false`)
+  - `notifications.form_send_whatsapp`: Habilita/desabilita envio de link de formulário por WhatsApp (padrão: `false`)
+
+**Provedores de Email e WhatsApp:**
+
+O sistema suporta dois tipos de provedores:
+
+1. **Provedor Global**: Usa as configurações do sistema (definidas em `/Platform/settings` ou `.env`)
+2. **Provedor do Tenant**: Cada tenant pode configurar seu próprio SMTP e API de WhatsApp
+
+**Configuração de Email do Tenant:**
+- Acesse `/tenant/settings`
+- Configure:
+  - Driver (global ou tenancy)
+  - Host SMTP
+  - Porta
+  - Usuário e senha
+  - Email e nome do remetente
+
+**Configuração de WhatsApp do Tenant:**
+- Acesse `/tenant/settings`
+- Configure:
+  - Driver (global ou tenancy)
+  - URL da API
+  - Token de autenticação
+  - Remetente (número de telefone)
+
+**Envio Automático de Formulários:**
+
+Quando um agendamento é criado:
+1. O sistema verifica se existe um formulário ativo para o agendamento (médico ou especialidade)
+2. Se existir e as configurações estiverem habilitadas:
+   - Gera um link público do formulário
+   - Envia por email (se `form_send_email` estiver habilitado)
+   - Envia por WhatsApp (se `form_send_whatsapp` estiver habilitado)
+3. O paciente recebe o link e pode responder sem precisar estar logado
+4. A resposta é automaticamente vinculada ao agendamento
+
+### 18. Configurações de Profissionais
+
+O sistema permite personalizar rótulos globais para profissionais de saúde, adaptando a terminologia do sistema para diferentes tipos de clínicas (médicas, odontológicas, psicológicas, etc.).
+
+**Configurações Disponíveis** (em `/tenant/settings`):
+
+- **Personalização Global de Rótulos:**
+  - `professional.customization_enabled`: Habilita/desabilita personalização global (padrão: `false`)
+  - `professional.label_singular`: Rótulo no singular (ex: "Médico", "Dentista", "Psicólogo")
+  - `professional.label_plural`: Rótulo no plural (ex: "Médicos", "Dentistas", "Psicólogos")
+  - `professional.registration_label`: Label do campo de registro (ex: "CRM", "CRP", "CRO")
+
+**Como Funciona:**
+
+1. **Habilitar Personalização:**
+   - Acesse `/tenant/settings`
+   - Vá para a aba "Profissionais"
+   - Marque "Habilitar personalização global"
+   - Preencha os rótulos desejados
+   - Salve
+
+2. **Rótulos Globais vs. Individuais:**
+   - Se a personalização global estiver habilitada, os rótulos globais são usados como padrão
+   - Cada médico também pode ter seus próprios rótulos individuais que sobrescrevem os globais
+   - Útil para clínicas que atendem múltiplos tipos de profissionais
+
+3. **Personalização por Médico:**
+   - Cada médico pode ter rótulos personalizados individuais no cadastro
+   - Se não definidos, os rótulos globais são usados (se habilitados)
+   - Se nem global nem individual estiver configurado, usa os padrões do sistema
+
+**Nota:** As configurações de profissionais permitem adaptar o sistema para diferentes contextos profissionais, mantendo a flexibilidade de personalização individual quando necessário.
 
 ---
 
@@ -628,6 +1062,13 @@ A área pública permite que pacientes façam agendamentos sem precisar estar lo
    - URL: `/t/{tenant}/agendamento/sucesso`
    - Exibe mensagem de confirmação
    - Mostra detalhes do agendamento
+   - **Se houver formulário ativo**, o link é enviado automaticamente por email/WhatsApp
+
+5. **Responder Formulário (se aplicável)**
+   - O paciente recebe um link por email ou WhatsApp
+   - URL: `/t/{tenant}/formulario/{form}/responder?appointment={appointment_id}`
+   - Preenche o formulário sem precisar estar logado
+   - Após responder, é redirecionado para página de sucesso
 
 ### Guia de Teste
 
@@ -648,10 +1089,10 @@ O portal permite que pacientes acessem suas informações e agendamentos.
 
 ### Acesso ao Portal
 
-1. O paciente deve ter `login_enabled = true`
-2. Credenciais são enviadas por email automaticamente
-3. Acesse: `/t/{tenant}/portal/login`
-4. Após login, redireciona para `/t/{tenant}/portal/dashboard`
+1. O paciente deve ter `login_enabled = true` (gerenciado através de `PatientLogin`)
+2. Credenciais são enviadas por email ou WhatsApp automaticamente
+3. Acesse: `/t/{tenant}/paciente/login`
+4. Após login, redireciona para `/paciente/dashboard`
 
 ### Login do Paciente
 
@@ -664,11 +1105,12 @@ O sistema possui uma tabela `patient_logins` que armazena:
 - `is_active` - Status ativo/inativo
 
 **Gerenciar Login do Paciente:**
-1. Acesse `/tenant/patients/{id}/login`
-2. Crie credenciais de login para o paciente
-3. Envie credenciais por email ou WhatsApp
-4. Ative/desative o acesso do paciente
-5. Remova credenciais se necessário
+1. Acesse `/tenant/patients/{id}/login` (GET: formulário de gerenciamento)
+2. Crie credenciais de login para o paciente (POST: `/tenant/patients/{id}/login`)
+3. Envie credenciais por email (POST: `/tenant/patients/{id}/login/send-email`) ou WhatsApp (POST: `/tenant/patients/{id}/login/send-whatsapp`)
+4. Ative/desative o acesso do paciente (POST: `/tenant/patients/{id}/login/toggle`)
+5. Visualize credenciais (GET: `/tenant/patients/{id}/login/show`)
+6. Remova credenciais se necessário (DELETE: `/tenant/patients/{id}/login`)
 
 ---
 
@@ -721,7 +1163,8 @@ O sistema possui uma tabela `patient_logins` que armazena:
 2. Clique em "Gerenciar Login" no paciente desejado
 3. Crie credenciais de login (email e senha)
 4. Envie credenciais por email ou WhatsApp
-5. O paciente poderá acessar o portal em `/t/{tenant}/paciente/login`
+5. O paciente poderá acessar o portal em `/t/{tenant}/paciente/login` (rota pública com tenant na URL)
+6. Após login, será redirecionado para `/paciente/dashboard` (rota autenticada sem tenant na URL)
 
 ### Criar Agendamento Recorrente
 
@@ -767,9 +1210,33 @@ Executadas automaticamente quando um tenant é criado via `TenantProvisioner`:
 16. `create_notifications_table` - Notificações do tenant
 17. `create_tenant_settings_table` - Configurações específicas do tenant
 18. `create_google_calendar_tokens_table` - Tokens OAuth do Google Calendar
-19. `add_google_event_id_to_appointments_table` - Campo `google_event_id` em agendamentos
-20. `add_google_recurring_event_id_to_recurring_appointments_table` - Campo `google_recurring_event_ids` em agendamentos recorrentes
-21. `add_recurring_appointment_id_to_appointments_table` - Relacionamento com agendamentos recorrentes
+19. `add_role_to_users_table` - Campo `role` em usuários
+20. `add_avatar_to_users_table` - Campo `avatar` em usuários
+21. `add_role_to_users_table` - Campo `role` em usuários (admin, doctor, user)
+22. `add_recurring_appointment_id_to_appointments_table` - Relacionamento com agendamentos recorrentes
+23. `add_appointment_mode_to_appointments` - Campo `appointment_mode` (presencial/online) em agendamentos e recorrências
+24. `create_online_appointment_instructions_table` - Tabela de instruções para consultas online
+25. `add_default_appointment_mode_setting` - Configuração padrão de modo de atendimento
+26. `add_customization_fields_to_doctors_table` - Campos de personalização do médico (labels, signature, registration)
+
+**Nota sobre campos do Google Calendar:**
+- O campo `google_event_id` já está incluído na migração `create_appointments_table`
+- O campo `google_recurring_event_ids` já está incluído na migração `create_recurring_appointments_table`
+
+**Nota sobre agendamentos online:**
+- O campo `appointment_mode` foi adicionado via migração `add_appointment_mode_to_appointments`
+- A tabela `online_appointment_instructions` foi criada para armazenar instruções de consultas online
+- A configuração `appointments.default_appointment_mode` é criada automaticamente via migração
+
+**Nota sobre sistema de roles:**
+- O campo `role` foi adicionado via migração `add_role_to_users_table`
+- Valores possíveis: `admin`, `doctor`, `user`
+- O sistema aplica filtros automáticos baseados no role em todas as listagens
+- Controllers usam o trait `HasDoctorFilter` para aplicar filtros automaticamente
+
+**Nota sobre personalização de médicos:**
+- Os campos de personalização (`label_singular`, `label_plural`, `signature`, `registration_label`, `registration_value`) foram adicionados via migração `add_customization_fields_to_doctors_table`
+- Permitem adaptar a terminologia e campos do sistema para diferentes tipos de profissionais de saúde
 
 **Nota:** As migrações são executadas automaticamente ao criar um tenant. Para executar manualmente em um tenant existente, use:
 
@@ -785,6 +1252,7 @@ php artisan tenants:migrate
 2. **Autenticação Separada**: Guard `tenant` específico para usuários do tenant
 3. **Validação de Tenant**: Middlewares garantem que tenant correto está ativo
 4. **Controle de Acesso**: Sistema de módulos para restringir funcionalidades
+5. **Sistema de Roles**: Controle de acesso baseado em papéis (admin, doctor, user) com filtros automáticos
 5. **Validação de Dados**: Form Requests validam todos os dados de entrada
 
 ---
@@ -840,5 +1308,85 @@ web middleware group
 
 ---
 
-**Última atualização:** 2025-01-27
+**Última atualização:** 2025-12-01
+
+**Nota:** Esta documentação foi revisada e atualizada para refletir todas as funcionalidades atuais, incluindo:
+- Portal do Paciente completo
+- Integração Google Calendar com sincronização automática
+- Agendamentos recorrentes
+- Permissões de médicos para usuários
+- Sistema de notificações
+- **Agendamentos Online** com instruções e envio de links de reunião
+- **Módulo de Consultas Online** (`online_appointments`)
+- **Atendimento Médico** (sessão de atendimento do dia)
+- **Relatórios completos** (agendamentos, pacientes, médicos, formulários, etc.)
+- **Configuração de modo de atendimento** (presencial/online/escolha do usuário)
+- **Sistema de Roles** (admin, doctor, user) com controle de acesso baseado em papéis
+- **Filtros Automáticos** baseados em roles aplicados em todas as listagens
+- **Campos de Personalização** no Doctor (labels, signature, registration)
+- **Configurações de Profissionais** (rótulos globais personalizados)
+
+---
+
+## 📝 Correções e Atualizações
+
+### Módulos de Acesso
+- Corrigida lista de módulos para corresponder ao código (`Module.php`)
+- Removidos módulos que não existem no código (`responses`, `settings`, `notifications`, `appointment-types`, `business-hours`)
+- Ajustados nomes dos módulos para corresponder às chaves reais (`calendar`, `business_hours`)
+
+### Controllers
+- Adicionado `ProfileController` na tabela de controllers do tenant
+
+### Rotas do Portal do Paciente
+- Corrigida URL de acesso: `/t/{tenant}/paciente/login` (não `/t/{tenant}/portal/login`)
+- Corrigida URL após login: `/paciente/dashboard` (não `/t/{tenant}/portal/dashboard`)
+
+### Migrações
+- Adicionadas migrações faltantes: `add_role_to_users_table`, `add_avatar_to_users_table`
+- Nota sobre campos do Google Calendar já incluídos nas migrações principais
+
+### Gerenciamento de Login do Paciente
+- Atualizada seção com todas as rotas disponíveis para gerenciar login do paciente
+
+### Agendamentos Online (Nova Funcionalidade)
+- Adicionado suporte completo para agendamentos online
+- Novo controller `OnlineAppointmentController` para gerenciar consultas virtuais
+- Novo model `OnlineAppointmentInstruction` para armazenar instruções de consultas online
+- Campo `appointment_mode` adicionado em `Appointments` e `RecurringAppointments`
+- Configuração `appointments.default_appointment_mode` para definir comportamento padrão
+- Rotas adicionadas para gerenciar agendamentos online
+- Envio de instruções por email e WhatsApp para pacientes
+- Novo módulo `online_appointments` adicionado ao sistema de permissões
+- Migrações adicionadas para suportar a funcionalidade
+
+### Formulários Públicos
+- Adicionado controller `PublicFormController` para formulários públicos
+- Pacientes podem responder formulários sem precisar estar logados
+- Suporte para vincular respostas a agendamentos específicos
+
+### Atendimento Médico (Nova Funcionalidade)
+- Adicionado módulo completo de Atendimento Médico para sessões de atendimento do dia
+- Novo controller `MedicalAppointmentController` para gerenciar sessões de atendimento
+- Visualização de agendamentos do dia com filtros baseados em roles
+- Gerenciamento de status de atendimento (agendado, chegou, em atendimento, concluído, cancelado)
+- Integração com formulários para visualizar respostas durante o atendimento
+- Navegação automática entre agendamentos após conclusão
+- Novo módulo `medical_appointments` adicionado ao sistema de permissões
+- Rotas adicionadas para acessar e gerenciar atendimentos do dia
+
+### Relatórios (Nova Funcionalidade)
+- Adicionado módulo completo de Relatórios
+- Novos controllers de relatórios: `Reports/ReportController`, `Reports/AppointmentReportController`, `Reports/PatientReportController`, `Reports/DoctorReportController`, `Reports/RecurringReportController`, `Reports/FormReportController`, `Reports/PortalReportController`, `Reports/NotificationReportController`
+- Relatórios disponíveis: Agendamentos, Pacientes, Médicos, Recorrências, Formulários, Portal do Paciente, Notificações
+- Exportação em múltiplos formatos: Excel, PDF, CSV
+- Filtros avançados em todos os relatórios
+- Novo módulo `reports` adicionado ao sistema de permissões
+- Rotas adicionadas para acessar e exportar relatórios
+
+### Configurações de Profissionais
+- Adicionada configuração de rótulos globais para profissionais
+- Personalização de labels (singular, plural) e label de registro
+- Configuração disponível em `/tenant/settings/professionals`
+- Permite adaptar terminologia do sistema para diferentes tipos de clínicas
 

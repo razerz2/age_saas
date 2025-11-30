@@ -63,12 +63,13 @@
                         </div>
                     </div>
 
-                    {{-- Informações do CRM --}}
+                    {{-- Informações do Registro Profissional --}}
                     <div class="row mb-4">
                         <div class="col-md-6 mb-3">
                             <div class="border rounded p-3 h-100">
                                 <label class="text-muted small mb-1 d-block">
-                                    <i class="mdi mdi-card-account-details me-1"></i> Número CRM
+                                    <i class="mdi mdi-card-account-details me-1"></i> 
+                                    {{ professional_registration_label($doctor) }} - Número
                                 </label>
                                 <p class="mb-0 fw-semibold">{{ $doctor->crm_number ?? 'N/A' }}</p>
                             </div>
@@ -76,11 +77,23 @@
                         <div class="col-md-6 mb-3">
                             <div class="border rounded p-3 h-100">
                                 <label class="text-muted small mb-1 d-block">
-                                    <i class="mdi mdi-map-marker me-1"></i> Estado CRM
+                                    <i class="mdi mdi-map-marker me-1"></i> 
+                                    {{ professional_registration_label($doctor) }} - Estado
                                 </label>
                                 <p class="mb-0 fw-semibold">{{ $doctor->crm_state ?? 'N/A' }}</p>
                             </div>
                         </div>
+                        @if(professional_registration_value($doctor))
+                            <div class="col-md-12 mb-3">
+                                <div class="border rounded p-3 h-100">
+                                    <label class="text-muted small mb-1 d-block">
+                                        <i class="mdi mdi-identifier me-1"></i> 
+                                        {{ professional_registration_label($doctor) }} Completo
+                                    </label>
+                                    <p class="mb-0 fw-semibold">{{ professional_registration_value($doctor) }}</p>
+                                </div>
+                            </div>
+                        @endif
                     </div>
 
                     {{-- Especialidades --}}
@@ -113,6 +126,68 @@
                             </label>
                             <div class="border rounded p-3 bg-light">
                                 <p class="mb-0">{{ $doctor->signature }}</p>
+                            </div>
+                        </div>
+                    @endif
+
+                    {{-- Personalização de Rótulos --}}
+                    @php
+                        $customizationEnabled = tenant_setting('professional.customization_enabled') === 'true';
+                        $hasCustomLabels = $customizationEnabled && (
+                            !empty($doctor->label_singular) || 
+                            !empty($doctor->label_plural) || 
+                            !empty($doctor->registration_label) || 
+                            !empty($doctor->registration_value)
+                        );
+                    @endphp
+
+                    @if($hasCustomLabels)
+                        <div class="mb-4">
+                            <h5 class="mb-3 text-primary">
+                                <i class="mdi mdi-tag-text-outline me-2"></i>
+                                Personalização de Rótulos
+                            </h5>
+                            <div class="row">
+                                @if(!empty($doctor->label_singular))
+                                    <div class="col-md-6 mb-3">
+                                        <div class="border rounded p-3 h-100">
+                                            <label class="text-muted small mb-1 d-block">
+                                                <i class="mdi mdi-tag me-1"></i> Tipo do Profissional (Singular)
+                                            </label>
+                                            <p class="mb-0 fw-semibold">{{ $doctor->label_singular }}</p>
+                                        </div>
+                                    </div>
+                                @endif
+                                @if(!empty($doctor->label_plural))
+                                    <div class="col-md-6 mb-3">
+                                        <div class="border rounded p-3 h-100">
+                                            <label class="text-muted small mb-1 d-block">
+                                                <i class="mdi mdi-tag-multiple me-1"></i> Tipo do Profissional (Plural)
+                                            </label>
+                                            <p class="mb-0 fw-semibold">{{ $doctor->label_plural }}</p>
+                                        </div>
+                                    </div>
+                                @endif
+                                @if(!empty($doctor->registration_label))
+                                    <div class="col-md-6 mb-3">
+                                        <div class="border rounded p-3 h-100">
+                                            <label class="text-muted small mb-1 d-block">
+                                                <i class="mdi mdi-card-account-details me-1"></i> Registro Profissional (Rótulo)
+                                            </label>
+                                            <p class="mb-0 fw-semibold">{{ $doctor->registration_label }}</p>
+                                        </div>
+                                    </div>
+                                @endif
+                                @if(!empty($doctor->registration_value))
+                                    <div class="col-md-6 mb-3">
+                                        <div class="border rounded p-3 h-100">
+                                            <label class="text-muted small mb-1 d-block">
+                                                <i class="mdi mdi-identifier me-1"></i> Registro Profissional Completo
+                                            </label>
+                                            <p class="mb-0 fw-semibold">{{ $doctor->registration_value }}</p>
+                                        </div>
+                                    </div>
+                                @endif
                             </div>
                         </div>
                     @endif

@@ -17,6 +17,10 @@ return new class extends Migration
             $table->string('crm_number')->nullable();
             $table->string('crm_state')->nullable();
             $table->string('signature')->nullable();
+            $table->string('label_singular', 50)->nullable()->after('signature');
+            $table->string('label_plural', 50)->nullable()->after('label_singular');
+            $table->string('registration_label', 50)->nullable()->after('label_plural');
+            $table->string('registration_value', 100)->nullable()->after('registration_label');
             $table->timestamps();
             $table->foreign('user_id')->references('id')->on('users')->cascadeOnDelete();
         });

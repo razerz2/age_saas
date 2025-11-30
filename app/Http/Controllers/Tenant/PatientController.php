@@ -9,6 +9,8 @@ use App\Http\Requests\Tenant\StorePatientRequest;
 use App\Http\Requests\Tenant\UpdatePatientRequest;
 use App\Mail\PatientLoginCredentials;
 use App\Services\WhatsAppService;
+use App\Services\WhatsappTenantService;
+use App\Services\MailTenantService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Mail;
@@ -332,8 +334,21 @@ class PatientController extends Controller
             $tenantSlug = $tenant?->subdomain ?? 'tenant';
             $portalUrl = request()->getSchemeAndHttpHost() . '/t/' . $tenantSlug . '/paciente/login';
 
-            Mail::to($patient->login->email)
-                ->send(new PatientLoginCredentials($patient, $patient->login, $password, $portalUrl, $tenantName));
+            // Usa MailTenantService para respeitar configurações de SMTP do tenant
+            // Nota: Para credenciais de login, sempre envia (não verifica notificações.send_email_to_patients)
+            // pois é uma ação administrativa, não uma notificação automática
+            MailTenantService::send(
+                $patient->login->email,
+                "Credenciais de Acesso ao Portal",
+                'tenant.patients.emails.login-credentials',
+                [
+                    'patient' => $patient,
+                    'login' => $patient->login,
+                    'password' => $password,
+                    'portalUrl' => $portalUrl,
+                    'tenantName' => $tenantName
+                ]
+            );
 
             return back()->with('success', 'E-mail enviado com sucesso para ' . $patient->login->email . '!');
         } catch (\Exception $e) {
@@ -380,8 +395,10 @@ class PatientController extends Controller
             $message .= "🔗 *Acesse:* {$portalUrl}\n\n";
             $message .= "Atenciosamente,\n{$tenantName}";
 
-            $whatsappService = new WhatsAppService();
-            $success = $whatsappService->sendMessage($patient->phone, $message);
+            // Usa WhatsappTenantService para respeitar configurações do tenant
+            // Nota: Para credenciais de login, sempre envia (não verifica notificações.send_whatsapp_to_patients)
+            // pois é uma ação administrativa, não uma notificação automática
+            $success = WhatsappTenantService::send($patient->phone, $message);
 
             if ($success) {
                 return back()->with('success', 'Mensagem WhatsApp enviada com sucesso para ' . $patient->phone . '!');

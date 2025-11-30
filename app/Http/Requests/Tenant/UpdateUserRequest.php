@@ -36,10 +36,8 @@ class UpdateUserRequest extends FormRequest
             $rules['doctor_ids.*'] = ['exists:tenant.doctors,id'];
         }
 
-        // Se o usuário logado não é admin, permite validar modules
-        if ($user && $user->role !== 'admin') {
-            $rules['modules'] = ['nullable', 'array'];
-        }
+        // Permite validar modules (admin pode atribuir módulos a outros usuários)
+        $rules['modules'] = ['nullable', 'array'];
 
         return $rules;
     }

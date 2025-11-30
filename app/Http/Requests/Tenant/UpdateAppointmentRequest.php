@@ -15,7 +15,7 @@ class UpdateAppointmentRequest extends FormRequest
 
     public function rules()
     {
-        return [
+        $rules = [
             'calendar_id'      => ['required', 'exists:tenant.calendars,id'],
             'appointment_type' => ['nullable', 'exists:tenant.appointment_types,id'],
             'patient_id'       => ['required', 'exists:tenant.patients,id'],
@@ -26,6 +26,16 @@ class UpdateAppointmentRequest extends FormRequest
             'status'           => ['required', 'in:scheduled,rescheduled,canceled,attended,no_show'],
             'notes'            => ['nullable', 'string'],
         ];
+
+        // Aplicar validação de appointment_mode baseado na configuração
+        $mode = \App\Models\Tenant\TenantSetting::get('appointments.default_appointment_mode', 'user_choice');
+        if ($mode === 'user_choice') {
+            $rules['appointment_mode'] = ['required', 'in:presencial,online'];
+        } else {
+            $rules['appointment_mode'] = ['nullable'];
+        }
+
+        return $rules;
     }
 
     /**

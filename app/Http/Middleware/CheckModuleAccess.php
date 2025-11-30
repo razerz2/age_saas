@@ -62,8 +62,19 @@ class CheckModuleAccess
             return $next($request);
         }
 
+        // Garantir que modules seja sempre um array
+        $userModules = [];
+        if ($user->modules) {
+            if (is_array($user->modules)) {
+                $userModules = $user->modules;
+            } elseif (is_string($user->modules)) {
+                $decoded = json_decode($user->modules, true);
+                $userModules = is_array($decoded) ? $decoded : [];
+            }
+        }
+
         // Verifica se o usuário não tem acesso ao módulo solicitado
-        if (!in_array($module, $user->modules ?? [])) {
+        if (!in_array($module, $userModules)) {
             // Busca o nome do módulo
             $moduleName = $moduleClass::getName($module) ?? ucfirst($module);
 
@@ -75,7 +86,7 @@ class CheckModuleAccess
                 'user_name' => $user->name ?? $user->name_full,
                 'module' => $module,
                 'module_name' => $moduleName,
-                'user_modules' => $user->modules ?? [],
+                'user_modules' => $userModules,
                 'url' => $request->fullUrl()
             ]);
 

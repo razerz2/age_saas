@@ -43,8 +43,8 @@
                         </div>
                     </div>
 
-                    {{-- Status Badge --}}
-                    <div class="mb-4">
+                    {{-- Status Badge e Modo --}}
+                    <div class="mb-4 d-flex gap-2">
                         @php
                             $statusBadges = [
                                 'pending' => ['bg-warning', 'mdi-clock-outline'],
@@ -58,6 +58,17 @@
                             <i class="mdi {{ $statusInfo[1] }} me-1"></i>
                             {{ $appointment->status_translated }}
                         </span>
+                        @if($appointment->appointment_mode === 'online')
+                            <span class="badge bg-info px-3 py-2">
+                                <i class="mdi mdi-video-account me-1"></i>
+                                Online
+                            </span>
+                        @else
+                            <span class="badge bg-success px-3 py-2">
+                                <i class="mdi mdi-hospital-building me-1"></i>
+                                Presencial
+                            </span>
+                        @endif
                     </div>
 
                     {{-- Informações do Agendamento --}}
@@ -192,6 +203,29 @@
                                 <p class="mb-0">{{ $appointment->updated_at->format('d/m/Y H:i') }}</p>
                             </div>
                         </div>
+                    </div>
+
+                    {{-- Botões de Ação --}}
+                    <div class="border-top pt-3 mt-3 d-flex gap-2">
+                        @if($appointment->appointment_mode === 'online')
+                            <a href="{{ route('tenant.online-appointments.show', $appointment->id) }}" class="btn btn-info">
+                                <i class="mdi mdi-video-account me-2"></i>
+                                Instruções Online
+                            </a>
+                        @endif
+                        
+                        @php
+                            $form = \App\Models\Tenant\Form::getFormForAppointment($appointment);
+                            $tenant = \App\Models\Platform\Tenant::current();
+                        @endphp
+                        @if($form && $tenant)
+                            <a href="{{ tenant_route($tenant, 'public.form.response.create', ['form' => $form->id, 'appointment' => $appointment->id]) }}" 
+                               target="_blank"
+                               class="btn btn-outline-primary">
+                                <i class="mdi mdi-file-document-edit me-2"></i>
+                                Responder Formulário (Paciente)
+                            </a>
+                        @endif
                     </div>
                 </div>
             </div>

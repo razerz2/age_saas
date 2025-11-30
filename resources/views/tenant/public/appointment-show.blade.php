@@ -178,6 +178,20 @@
                                 </div>
                             </div>
 
+                            @php
+                                $form = \App\Models\Tenant\Form::getFormForAppointment($appointment);
+                            @endphp
+
+                            @if($form)
+                            <div class="mt-4 d-flex justify-content-center">
+                                <a href="{{ tenant_route($tenant, 'public.form.response.create', ['form' => $form->id, 'appointment' => $appointment->id]) }}" 
+                                   class="btn btn-primary btn-lg">
+                                    <i class="mdi mdi-file-document-edit me-2"></i>
+                                    Responder Formulário
+                                </a>
+                            </div>
+                            @endif
+
                             <div class="mt-4 d-flex justify-content-center gap-3">
                                 <a href="{{ route('public.patient.identify', ['tenant' => $tenant->subdomain]) }}" class="btn btn-primary">
                                     <i class="mdi mdi-calendar-plus me-2"></i>

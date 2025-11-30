@@ -76,7 +76,7 @@
                                     <div class="form-group">
                                         <label class="fw-semibold">
                                             <i class="mdi mdi-card-account-details me-1"></i>
-                                            Número CRM
+                                            Número CRM, CRP ou CRO
                                         </label>
                                         <input type="text" class="form-control @error('crm_number') is-invalid @enderror" 
                                                name="crm_number" value="{{ old('crm_number', $doctor->crm_number) }}" 
@@ -90,7 +90,7 @@
                                     <div class="form-group">
                                         <label class="fw-semibold">
                                             <i class="mdi mdi-map-marker me-1"></i>
-                                            Estado CRM
+                                            Estado CRM, CRP ou CRO
                                         </label>
                                         <input type="text" class="form-control @error('crm_state') is-invalid @enderror" 
                                                name="crm_state" value="{{ old('crm_state', $doctor->crm_state) }}" 
@@ -119,6 +119,60 @@
                                 </div>
                             </div>
                         </div>
+
+                        @php
+                            $customizationEnabled = tenant_setting('professional.customization_enabled') === 'true';
+                        @endphp
+
+                        @if($customizationEnabled)
+                            <div class="mt-4 p-3 bg-light border rounded">
+                                <h5 class="mb-3">Personalização do Profissional (Opcional)</h5>
+
+                                <div class="mb-3">
+                                    <label class="form-label">Tipo do Profissional (Singular)</label>
+                                    <input type="text" name="label_singular" class="form-control @error('label_singular') is-invalid @enderror"
+                                           placeholder="Ex: Psicólogo, Fisioterapeuta"
+                                           value="{{ old('label_singular', $doctor->label_singular ?? '') }}"
+                                           maxlength="60">
+                                    @error('label_singular')
+                                        <div class="invalid-feedback d-block">{{ $message }}</div>
+                                    @enderror
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label">Tipo do Profissional (Plural)</label>
+                                    <input type="text" name="label_plural" class="form-control @error('label_plural') is-invalid @enderror"
+                                           placeholder="Ex: Psicólogos, Fisioterapeutas"
+                                           value="{{ old('label_plural', $doctor->label_plural ?? '') }}"
+                                           maxlength="60">
+                                    @error('label_plural')
+                                        <div class="invalid-feedback d-block">{{ $message }}</div>
+                                    @enderror
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label">Registro Profissional (Rótulo)</label>
+                                    <input type="text" name="registration_label" class="form-control @error('registration_label') is-invalid @enderror"
+                                           placeholder="Ex: CRM, CRP, CRO, CREFITO"
+                                           value="{{ old('registration_label', $doctor->registration_label ?? '') }}"
+                                           maxlength="40">
+                                    @error('registration_label')
+                                        <div class="invalid-feedback d-block">{{ $message }}</div>
+                                    @enderror
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label">Registro Profissional Completo (Valor)</label>
+                                    <input type="text" name="registration_value" class="form-control @error('registration_value') is-invalid @enderror"
+                                           placeholder="Ex: CRM 55221, CRP 05/19999, CREFITO 123456-F"
+                                           value="{{ old('registration_value', $doctor->registration_value ?? '') }}"
+                                           maxlength="100">
+                                    @error('registration_value')
+                                        <div class="invalid-feedback d-block">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                            </div>
+                        @endif
 
                         {{-- Seção: Especialidades --}}
                         <div class="mb-4">

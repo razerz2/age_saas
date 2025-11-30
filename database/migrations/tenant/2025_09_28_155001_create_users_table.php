@@ -21,6 +21,7 @@ return new class extends Migration
             $table->string('password')->nullable();
             $table->boolean('is_doctor')->default(false);
             $table->enum('status', ['active', 'blocked'])->default('active');
+            $table->enum('role', ['admin', 'user', 'doctor'])->default('user')->after('status');
             $table->json('modules')->nullable();
             $table->uuid('tenant_id')->nullable()->index();
             $table->rememberToken();

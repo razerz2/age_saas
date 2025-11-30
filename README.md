@@ -42,8 +42,11 @@ Sistema SaaS (Software as a Service) de agendamento médico construído com Lara
 - ✅ Agendamentos
 - ✅ Formulários personalizados
 - ✅ Respostas de formulários
+- ✅ Formulários públicos (pacientes respondem sem login)
+- ✅ Envio automático de links de formulários por email/WhatsApp
 - ✅ Integrações (Google Calendar, etc.)
 - ✅ Sincronização de calendário
+- ✅ Notificações configuráveis (email e WhatsApp por tenant)
 
 ## 🛠 Tecnologias
 
@@ -358,10 +361,12 @@ Sincronização automática de agendamentos com Google Calendar por médico.
    ```
    GOOGLE_CLIENT_ID=seu_client_id
    GOOGLE_CLIENT_SECRET=seu_client_secret
-   GOOGLE_REDIRECT_URI=http://localhost:8000/tenant/integrations/google/callback
    ```
-3. Cada médico pode conectar sua própria conta Google Calendar
-4. Os agendamentos são sincronizados automaticamente
+3. Configure a URI de redirecionamento no Google Cloud Console como: `{APP_URL}/google/callback`
+   - Exemplo local: `http://localhost:8000/google/callback`
+   - Exemplo produção: `https://seudominio.com/google/callback`
+4. Cada médico pode conectar sua própria conta Google Calendar
+5. Os agendamentos são sincronizados automaticamente
 
 Para mais detalhes, consulte a documentação em [TENANT.md](TENANT.md#10-integrações).
 

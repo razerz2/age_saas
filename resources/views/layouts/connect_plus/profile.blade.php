@@ -15,6 +15,26 @@
         'doctor' => 'Médico',
         default => 'Usuário'
     };
+    
+    // Verificar acesso ao módulo de configurações
+    $hasSettingsAccess = false;
+    if ($user) {
+        if ($user->role === 'admin') {
+            $hasSettingsAccess = true;
+        } else {
+            // Garantir que modules seja sempre um array
+            $userModules = [];
+            if ($user->modules) {
+                if (is_array($user->modules)) {
+                    $userModules = $user->modules;
+                } elseif (is_string($user->modules)) {
+                    $decoded = json_decode($user->modules, true);
+                    $userModules = is_array($decoded) ? $decoded : [];
+                }
+            }
+            $hasSettingsAccess = in_array('settings', $userModules);
+        }
+    }
 @endphp
 
 <li class="nav-item nav-profile dropdown">
@@ -93,21 +113,23 @@
                 <i class="mdi mdi-chevron-right text-muted"></i>
             </a>
 
-            <a class="dropdown-item d-flex align-items-center py-3 px-3 rounded-2 mb-1" 
-               href="{{ route('tenant.settings.index') }}" 
-               style="transition: all 0.2s ease; border-left: 3px solid transparent;"
-               onmouseover="this.style.backgroundColor='#f8f9fa'; this.style.borderLeftColor='#0062ff';"
-               onmouseout="this.style.backgroundColor='transparent'; this.style.borderLeftColor='transparent';">
-                <div class="d-flex align-items-center justify-content-center me-3" 
-                     style="width: 36px; height: 36px; background: #a461d8; border-radius: 8px;">
-                    <i class="mdi mdi-cog-outline text-white" style="font-size: 1.1rem;"></i>
-                </div>
-                <div class="flex-grow-1">
-                    <span class="fw-semibold d-block" style="font-size: 0.9rem; color: #212529;">Configurações</span>
-                    <span class="text-muted" style="font-size: 0.75rem;">Preferências e opções</span>
-                </div>
-                <i class="mdi mdi-chevron-right text-muted"></i>
-            </a>
+            @if($hasSettingsAccess)
+                <a class="dropdown-item d-flex align-items-center py-3 px-3 rounded-2 mb-1" 
+                   href="{{ route('tenant.settings.index') }}" 
+                   style="transition: all 0.2s ease; border-left: 3px solid transparent;"
+                   onmouseover="this.style.backgroundColor='#f8f9fa'; this.style.borderLeftColor='#0062ff';"
+                   onmouseout="this.style.backgroundColor='transparent'; this.style.borderLeftColor='transparent';">
+                    <div class="d-flex align-items-center justify-content-center me-3" 
+                         style="width: 36px; height: 36px; background: #a461d8; border-radius: 8px;">
+                        <i class="mdi mdi-settings text-white" style="font-size: 1.1rem;"></i>
+                    </div>
+                    <div class="flex-grow-1">
+                        <span class="fw-semibold d-block" style="font-size: 0.9rem; color: #212529;">Configurações</span>
+                        <span class="text-muted" style="font-size: 0.75rem;">Preferências e opções</span>
+                    </div>
+                    <i class="mdi mdi-chevron-right text-muted"></i>
+                </a>
+            @endif
 
             <div class="dropdown-divider my-2"></div>
 

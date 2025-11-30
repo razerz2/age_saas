@@ -293,13 +293,42 @@
                             </h5>
                             <div class="form-group">
                                 <label class="fw-semibold mb-2">Selecione os módulos disponíveis para este usuário:</label>
+                                <div class="alert alert-info" id="modules-info-alert">
+                                    <i class="mdi mdi-information-outline me-2"></i>
+                                    <span id="modules-info-text">
+                                        <strong>Nota:</strong> Os módulos serão pré-selecionados conforme as configurações padrão em <a href="{{ route('tenant.settings.index') }}" target="_blank">Configurações → Usuários & Permissões</a>. Você pode ajustar manualmente se necessário.
+                                    </span>
+                                </div>
                                 @php
                                     $allModules = App\Models\Tenant\Module::all();
                                     // Sempre remover módulo "usuários" - apenas admins têm acesso, mas não podem atribuir a outros
                                     $modules = collect($allModules)->reject(function($module) {
                                         return $module['key'] === 'users';
                                     })->values()->all();
-                                    $userModules = is_array($user->modules) ? $user->modules : (json_decode($user->modules, true) ?: []);
+                                    
+                                    // Garantir que modules seja sempre um array
+                                    $userModules = [];
+                                    if ($user->modules) {
+                                        if (is_array($user->modules)) {
+                                            $userModules = $user->modules;
+                                        } elseif (is_string($user->modules)) {
+                                            $decoded = json_decode($user->modules, true);
+                                            $userModules = is_array($decoded) ? $decoded : [];
+                                        }
+                                    }
+                                    
+                                    // Se não houver módulos selecionados, usar os padrões baseado no role atual
+                                    if (empty($userModules)) {
+                                        $currentRole = old('role', $user->role ?? 'user');
+                                        if ($currentRole === 'doctor') {
+                                            $userModules = json_decode(App\Models\Tenant\TenantSetting::get('user_defaults.modules_doctor', '[]'), true) ?? [];
+                                        } elseif ($currentRole === 'user') {
+                                            $userModules = json_decode(App\Models\Tenant\TenantSetting::get('user_defaults.modules_common_user', '[]'), true) ?? [];
+                                        }
+                                    }
+                                    
+                                    // Se houver old('modules'), usar ele
+                                    $oldModules = old('modules', $userModules);
                                 @endphp
                                 <div class="border rounded p-3 bg-light">
                                     <div class="d-flex flex-wrap gap-3">
@@ -307,10 +336,11 @@
                                             <div class="form-check">
                                                 <label class="form-check-label">
                                                     <input type="checkbox" 
-                                                        class="form-check-input" 
+                                                        class="form-check-input module-checkbox" 
                                                         name="modules[]"
                                                         value="{{ $module['key'] }}" 
-                                                        {{ in_array($module['key'], $userModules) ? 'checked' : '' }}>
+                                                        data-module-key="{{ $module['key'] }}"
+                                                        {{ in_array($module['key'], $oldModules) ? 'checked' : '' }}>
                                                     {{ $module['name'] }}
                                                     <i class="input-helper"></i>
                                                 </label>
@@ -318,6 +348,9 @@
                                         @endforeach
                                     </div>
                                 </div>
+                                @error('modules')
+                                    <div class="invalid-feedback d-block">{{ $message }}</div>
+                                @enderror
                             </div>
                         </div>
 
@@ -518,15 +551,55 @@
                 }
             }
             
-            // Controlar exibição de "Módulos"
-            // Aparece se: role selecionado não é "admin"
-            // (admin pode ver e configurar módulos para outros usuários, mas não para admin)
+            // Controlar exibição e pré-seleção de "Módulos"
+            // Sempre exibir, mas pré-selecionar conforme configurações padrão
             if (modulesSection) {
-                if (role === 'admin') {
-                    modulesSection.style.display = 'none';
-                } else {
-                    modulesSection.style.display = 'block';
+                modulesSection.style.display = 'block';
+                
+                // Atualizar mensagem informativa
+                const modulesInfoText = document.getElementById('modules-info-text');
+                if (modulesInfoText) {
+                    if (role === 'admin') {
+                        modulesInfoText.innerHTML = '<strong>Nota:</strong> Administradores têm acesso total ao sistema. Você pode selecionar módulos específicos se necessário.';
+                    } else if (role === 'doctor') {
+                        modulesInfoText.innerHTML = '<strong>Nota:</strong> Os módulos foram pré-selecionados conforme as configurações padrão para médicos em <a href="{{ route("tenant.settings.index") }}" target="_blank">Configurações → Usuários & Permissões</a>. Você pode ajustar manualmente se necessário.';
+                    } else {
+                        modulesInfoText.innerHTML = '<strong>Nota:</strong> Os módulos foram pré-selecionados conforme as configurações padrão para usuários comuns em <a href="{{ route("tenant.settings.index") }}" target="_blank">Configurações → Usuários & Permissões</a>. Você pode ajustar manualmente se necessário.';
+                    }
                 }
+                
+                // Pré-selecionar módulos padrão baseado no role
+                updateModulesSelection(role);
+            }
+        }
+
+        // Dados dos módulos padrão carregados do servidor
+        @php
+            $commonUserDefaultModules = json_decode(App\Models\Tenant\TenantSetting::get('user_defaults.modules_common_user', '[]'), true) ?? [];
+            $doctorDefaultModules = json_decode(App\Models\Tenant\TenantSetting::get('user_defaults.modules_doctor', '[]'), true) ?? [];
+        @endphp
+        
+        const defaultModulesData = {
+            'user': @json($commonUserDefaultModules),
+            'doctor': @json($doctorDefaultModules),
+            'admin': []
+        };
+
+        // Função para atualizar seleção de módulos baseado no role
+        function updateModulesSelection(role) {
+            const defaultModules = defaultModulesData[role] || [];
+            const moduleCheckboxes = document.querySelectorAll('.module-checkbox');
+            
+            // Só atualizar se não houver módulos já selecionados (para não sobrescrever dados existentes)
+            // Mas se o usuário mudar o role, podemos atualizar
+            const hasCheckedModules = Array.from(moduleCheckboxes).some(cb => cb.checked);
+            
+            // Se não houver módulos marcados OU se o role mudou, aplicar os padrões
+            if (!hasCheckedModules || role !== '{{ old('role', $user->role ?? 'user') }}') {
+                moduleCheckboxes.forEach(checkbox => {
+                    const moduleKey = checkbox.getAttribute('data-module-key');
+                    checkbox.checked = defaultModules.includes(moduleKey);
+                });
             }
         }
 

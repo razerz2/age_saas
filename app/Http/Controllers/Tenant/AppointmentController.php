@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Tenant;
 
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\Tenant\Concerns\HasDoctorFilter;
 use App\Models\Tenant\Appointment;
 use App\Models\Tenant\Calendar;
 use App\Models\Tenant\Patient;
@@ -22,6 +23,7 @@ use Carbon\Carbon;
 
 class AppointmentController extends Controller
 {
+    use HasDoctorFilter;
     protected GoogleCalendarService $googleCalendarService;
 
     public function __construct(GoogleCalendarService $googleCalendarService)
@@ -30,28 +32,10 @@ class AppointmentController extends Controller
     }
     public function index()
     {
-        $user = Auth::guard('tenant')->user();
         $query = Appointment::with(['calendar.doctor.user', 'patient', 'type', 'specialty']);
-
-        // Aplicar filtros baseado no role
-        if ($user->role === 'doctor' && $user->doctor) {
-            // Médico só vê seus próprios agendamentos
-            $query->whereHas('calendar', function($q) use ($user) {
-                $q->where('doctor_id', $user->doctor->id);
-            });
-        } elseif ($user->role === 'user') {
-            // Usuário comum só vê médicos relacionados
-            $allowedDoctorIds = $user->allowedDoctors()->pluck('doctors.id')->toArray();
-            if (!empty($allowedDoctorIds)) {
-                $query->whereHas('calendar', function($q) use ($allowedDoctorIds) {
-                    $q->whereIn('doctor_id', $allowedDoctorIds);
-                });
-            } else {
-                // Se não tem médicos permitidos, não mostra nada
-                $query->whereRaw('1 = 0');
-            }
-        }
-        // Admin vê tudo (sem filtro)
+        
+        // Aplicar filtro de médico
+        $this->applyDoctorFilterWhereHas($query, 'calendar', 'doctor_id');
 
         $appointments = $query->orderBy('starts_at')->paginate(30);
 
@@ -60,29 +44,14 @@ class AppointmentController extends Controller
 
     public function create()
     {
-        $user = Auth::guard('tenant')->user();
-        
         // Listar médicos ativos (com status active)
         $doctorsQuery = Doctor::with('user')
             ->whereHas('user', function($query) {
                 $query->where('status', 'active');
             });
 
-        // Aplicar filtros baseado no role
-        if ($user->role === 'doctor' && $user->doctor) {
-            // Médico só pode criar para si mesmo
-            $doctorsQuery->where('id', $user->doctor->id);
-        } elseif ($user->role === 'user') {
-            // Usuário comum só vê médicos relacionados
-            $allowedDoctorIds = $user->allowedDoctors()->pluck('doctors.id')->toArray();
-            if (!empty($allowedDoctorIds)) {
-                $doctorsQuery->whereIn('id', $allowedDoctorIds);
-            } else {
-                // Se não tem médicos permitidos, não mostra nada
-                $doctorsQuery->whereRaw('1 = 0');
-            }
-        }
-        // Admin vê todos (sem filtro)
+        // Aplicar filtro de médico
+        $this->applyDoctorFilter($doctorsQuery);
 
         $doctors = $doctorsQuery->orderBy('id')->get();
         $patients = Patient::orderBy('full_name')->get();
@@ -100,6 +69,16 @@ class AppointmentController extends Controller
         
         // Sempre definir status como "scheduled" ao criar um novo agendamento
         $data['status'] = 'scheduled';
+
+        // Aplicar lógica de appointment_mode baseado na configuração
+        $mode = \App\Models\Tenant\TenantSetting::get('appointments.default_appointment_mode', 'user_choice');
+        if ($mode === 'presencial') {
+            $data['appointment_mode'] = 'presencial';
+        } elseif ($mode === 'online') {
+            $data['appointment_mode'] = 'online';
+        } else { // user_choice
+            $data['appointment_mode'] = $request->appointment_mode ?? 'presencial';
+        }
 
         // Buscar o calendário principal do médico automaticamente
         if (isset($data['doctor_id'])) {
@@ -158,7 +137,19 @@ class AppointmentController extends Controller
     public function update(UpdateAppointmentRequest $request, $id)
     {
         $appointment = Appointment::findOrFail($id);
-        $appointment->update($request->validated());
+        $data = $request->validated();
+
+        // Aplicar lógica de appointment_mode baseado na configuração
+        $mode = \App\Models\Tenant\TenantSetting::get('appointments.default_appointment_mode', 'user_choice');
+        if ($mode === 'presencial') {
+            $data['appointment_mode'] = 'presencial';
+        } elseif ($mode === 'online') {
+            $data['appointment_mode'] = 'online';
+        } else { // user_choice
+            $data['appointment_mode'] = $request->appointment_mode ?? $appointment->appointment_mode ?? 'presencial';
+        }
+
+        $appointment->update($data);
 
         // Sincronizar com Google Calendar se o médico tiver token
         try {
@@ -271,6 +262,9 @@ class AppointmentController extends Controller
             if (!$user->belongsToUser($calendar->doctor_id)) {
                 abort(403, 'Você não tem permissão para visualizar este calendário.');
             }
+        } elseif ($user->role === 'admin') {
+            // Administradores não têm acesso a agendas (apenas médicos têm)
+            abort(403, 'Apenas médicos têm acesso a agendas. Administradores não possuem agendas individuais.');
         } else {
             // Usuário não autenticado ou role inválido
             abort(403, 'Você precisa estar autenticado para visualizar este calendário.');

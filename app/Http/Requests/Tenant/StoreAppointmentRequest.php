@@ -17,7 +17,7 @@ class StoreAppointmentRequest extends FormRequest
 
     public function rules()
     {
-        return [
+        $rules = [
             'doctor_id'        => ['required', 'exists:tenant.doctors,id'],
             'calendar_id'      => ['nullable', 'exists:tenant.calendars,id'], // Opcional, será definido automaticamente
             'appointment_type' => ['nullable', 'exists:tenant.appointment_types,id'],
@@ -29,6 +29,16 @@ class StoreAppointmentRequest extends FormRequest
             'status'           => ['nullable', 'in:scheduled,rescheduled,canceled,attended,no_show'],
             'notes'            => ['nullable', 'string'],
         ];
+
+        // Aplicar validação de appointment_mode baseado na configuração
+        $mode = \App\Models\Tenant\TenantSetting::get('appointments.default_appointment_mode', 'user_choice');
+        if ($mode === 'user_choice') {
+            $rules['appointment_mode'] = ['required', 'in:presencial,online'];
+        } else {
+            $rules['appointment_mode'] = ['nullable'];
+        }
+
+        return $rules;
     }
 
     /**

@@ -9,6 +9,7 @@ use App\Http\Controllers\Tenant\Auth\LoginController;
 use App\Http\Controllers\Tenant\PublicPatientController;
 use App\Http\Controllers\Tenant\PublicPatientRegisterController;
 use App\Http\Controllers\Tenant\PublicAppointmentController;
+use App\Http\Controllers\Tenant\PublicFormController;
 
 // Dashboard
 use App\Http\Controllers\Tenant\DashboardController;
@@ -52,6 +53,12 @@ use App\Http\Controllers\Tenant\SettingsController;
 // Recurring Appointments
 use App\Http\Controllers\Tenant\RecurringAppointmentController;
 
+// Online Appointments
+use App\Http\Controllers\Tenant\OnlineAppointmentController;
+
+// Medical Appointments
+use App\Http\Controllers\Tenant\MedicalAppointmentController;
+
 
 /**
  * =====================================================================
@@ -84,6 +91,11 @@ Route::prefix('t/{tenant}')
             Route::get('/doctors/{doctorId}/specialties', [PublicAppointmentController::class, 'getSpecialtiesByDoctor'])->name('api.specialties');
             Route::get('/doctors/{doctorId}/available-slots', [PublicAppointmentController::class, 'getAvailableSlots'])->name('api.available-slots');
         });
+
+        // Formulários públicos
+        Route::get('/formulario/{form}/responder', [PublicFormController::class, 'create'])->name('form.response.create');
+        Route::post('/formulario/{form}/responder', [PublicFormController::class, 'store'])->name('form.response.store');
+        Route::get('/formulario/{form}/resposta/{response}/sucesso', [PublicFormController::class, 'success'])->name('form.response.success');
     });
 
 /**
@@ -312,6 +324,33 @@ Route::prefix('tenant')
             ->where('id', '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}')
             ->name('appointments.destroy');
 
+        // =====================================================================
+        // ONLINE APPOINTMENTS
+        // =====================================================================
+        Route::prefix('appointments/online')
+            ->name('online-appointments.')
+            ->middleware(['module.access:online_appointments'])
+            ->group(function () {
+                Route::get('/', [\App\Http\Controllers\Tenant\OnlineAppointmentController::class, 'index'])
+                    ->name('index');
+                
+                Route::get('/{appointment}', [\App\Http\Controllers\Tenant\OnlineAppointmentController::class, 'show'])
+                    ->where('appointment', '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}')
+                    ->name('show');
+                
+                Route::post('/{appointment}/save', [\App\Http\Controllers\Tenant\OnlineAppointmentController::class, 'save'])
+                    ->where('appointment', '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}')
+                    ->name('save');
+                
+                Route::post('/{appointment}/send-email', [\App\Http\Controllers\Tenant\OnlineAppointmentController::class, 'sendEmail'])
+                    ->where('appointment', '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}')
+                    ->name('send-email');
+                
+                Route::post('/{appointment}/send-whatsapp', [\App\Http\Controllers\Tenant\OnlineAppointmentController::class, 'sendWhatsapp'])
+                    ->where('appointment', '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}')
+                    ->name('send-whatsapp');
+            });
+
         // API endpoints para agendamentos
         Route::get('api/doctors/{doctorId}/calendars', [AppointmentController::class, 'getCalendarsByDoctor'])
             ->where('doctorId', '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}')
@@ -515,12 +554,57 @@ Route::prefix('tenant')
         Route::resource('notifications', NotificationController::class)->only(['index', 'show']);
 
         // =====================================================================
+        // MEDICAL APPOINTMENTS (Atendimento Médico)
+        // =====================================================================
+        Route::middleware(['module.access:medical_appointments'])->group(function () {
+            // Tela inicial: escolher dia e iniciar atendimento
+            Route::get('/atendimento', [MedicalAppointmentController::class, 'index'])
+                ->name('medical-appointments.index');
+
+            Route::post('/atendimento/iniciar', [MedicalAppointmentController::class, 'start'])
+                ->name('medical-appointments.start');
+
+            // Tela de atendimento em si
+            Route::get('/atendimento/dia/{date}', [MedicalAppointmentController::class, 'session'])
+                ->name('medical-appointments.session');
+
+            // Detalhes do agendamento (AJAX)
+            Route::get('/atendimento/{appointment}/detalhes', [MedicalAppointmentController::class, 'details'])
+                ->where('appointment', '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}')
+                ->name('medical-appointments.details');
+
+            // Alterar status do atendimento
+            Route::post('/atendimento/{appointment}/status', [MedicalAppointmentController::class, 'updateStatus'])
+                ->where('appointment', '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}')
+                ->name('medical-appointments.update-status');
+
+            // Concluir e ir para o próximo
+            Route::post('/atendimento/{appointment}/concluir', [MedicalAppointmentController::class, 'complete'])
+                ->where('appointment', '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}')
+                ->name('medical-appointments.complete');
+
+            // Buscar resposta do formulário
+            Route::get('/atendimento/{appointment}/formulario-resposta', [MedicalAppointmentController::class, 'getFormResponse'])
+                ->where('appointment', '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}')
+                ->name('medical-appointments.form-response');
+        });
+
+        // =====================================================================
         // SETTINGS
         // =====================================================================
-        Route::get('settings', [SettingsController::class, 'index'])->name('settings.index');
-        Route::post('settings/general', [SettingsController::class, 'updateGeneral'])->name('settings.update.general');
-        Route::post('settings/appointments', [SettingsController::class, 'updateAppointments'])->name('settings.update.appointments');
-        Route::post('settings/calendar', [SettingsController::class, 'updateCalendar'])->name('settings.update.calendar');
-        Route::post('settings/notifications', [SettingsController::class, 'updateNotifications'])->name('settings.update.notifications');
-        Route::post('settings/integrations', [SettingsController::class, 'updateIntegrations'])->name('settings.update.integrations');
+        Route::middleware(['module.access:settings'])->group(function () {
+            Route::get('settings', [SettingsController::class, 'index'])->name('settings.index');
+            Route::post('settings/general', [SettingsController::class, 'updateGeneral'])->name('settings.update.general');
+            Route::post('settings/appointments', [SettingsController::class, 'updateAppointments'])->name('settings.update.appointments');
+            Route::post('settings/calendar', [SettingsController::class, 'updateCalendar'])->name('settings.update.calendar');
+            Route::post('settings/notifications', [SettingsController::class, 'updateNotifications'])->name('settings.update.notifications');
+            Route::post('settings/integrations', [SettingsController::class, 'updateIntegrations'])->name('settings.update.integrations');
+            Route::post('settings/user-defaults', [SettingsController::class, 'updateUserDefaults'])->name('settings.update.user-defaults');
+            Route::post('settings/professionals', [SettingsController::class, 'updateProfessionals'])->name('settings.update.professionals');
+        });
+
+        // =====================================================================
+        // REPORTS
+        // =====================================================================
+        require __DIR__ . '/tenant/reports.php';
     });

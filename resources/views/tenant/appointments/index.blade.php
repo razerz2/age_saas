@@ -37,6 +37,7 @@
                                     <th>Tipo</th>
                                     <th>Início</th>
                                     <th>Fim</th>
+                                    <th>Modo</th>
                                     <th>Status</th>
                                     <th style="width: 140px;">Ações</th>
                                 </tr>
@@ -51,6 +52,13 @@
                                         <td>{{ $appointment->type->name ?? 'N/A' }}</td>
                                         <td>{{ $appointment->starts_at ? $appointment->starts_at->format('d/m/Y H:i') : 'N/A' }}</td>
                                         <td>{{ $appointment->ends_at ? $appointment->ends_at->format('d/m/Y H:i') : 'N/A' }}</td>
+                                        <td>
+                                            @if($appointment->appointment_mode === 'online')
+                                                <span class="badge bg-info">Online</span>
+                                            @else
+                                                <span class="badge bg-success">Presencial</span>
+                                            @endif
+                                        </td>
                                         <td>{{ $appointment->status_translated }}</td>
                                         <td>
                                             <a href="{{ route('tenant.appointments.show', $appointment->id) }}" class="btn btn-info btn-sm">Ver</a>

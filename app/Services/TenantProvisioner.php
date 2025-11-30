@@ -13,11 +13,22 @@ class TenantProvisioner
 {
     /**
      * Cria o banco, o usuário do tenant, executa as migrations e cria o admin padrão.
+     * Retorna a senha gerada para o admin.
+     * 
+     * @return string Senha gerada para o usuário admin
      */
-    public static function createDatabase($tenant)
+    public static function createDatabase($tenant): string
     {
         try {
             Log::info("🔧 Iniciando criação do banco para tenant {$tenant->id}");
+
+            // --------------------------------------------------------------------
+            // 0. Gerar senha aleatória para o admin (mínimo 10 caracteres com letras, números e símbolos)
+            // --------------------------------------------------------------------
+            $adminPassword = self::generateSecurePassword();
+            
+            // Passar senha para o seeder através de config runtime
+            config(['tenant.admin_password' => $adminPassword]);
 
             // --------------------------------------------------------------------
             // 1. Criar banco e usuário no Postgres (conexão principal)
@@ -95,14 +106,14 @@ class TenantProvisioner
                 // Gerar email dinâmico
                 $email = "admin@{$domain}.com";
 
-                // Inserir usuário admin diretamente no banco do tenant
+                // Inserir usuário admin diretamente no banco do tenant usando a senha gerada
                 DB::connection('tenant')->table('users')->insert([
                     'tenant_id'  => $tenant->id,
                     'name'       => 'Administrador',
                     'name_full'  => 'Administrador do Sistema',
                     'telefone'   => '00000000000',
                     'email'      => $email,
-                    'password'   => Hash::make('admin123'),
+                    'password'   => Hash::make($adminPassword),
                     'is_doctor'  => false,
                     'status'     => 'active',
                     'modules'    => json_encode([]),
@@ -186,6 +197,9 @@ class TenantProvisioner
                 'dbname'    => $tenant->db_name,
                 'dbuser'    => $tenant->db_username
             ]);
+
+            // Retornar a senha gerada
+            return $adminPassword;
         } catch (Throwable $e) {
             Log::error("❌ ERRO FATAL na criação do banco do tenant", [
                 'tenant_id' => $tenant->id,
@@ -194,6 +208,37 @@ class TenantProvisioner
             ]);
             throw $e;
         }
+    }
+
+    /**
+     * Gera uma senha segura com mínimo 10 caracteres, incluindo letras, números e símbolos.
+     */
+    private static function generateSecurePassword(int $length = 12): string
+    {
+        // Garantir mínimo de 10 caracteres
+        $length = max(10, $length);
+        
+        // Caracteres permitidos
+        $lowercase = 'abcdefghijklmnopqrstuvwxyz';
+        $uppercase = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+        $numbers = '0123456789';
+        $symbols = '!@#$%^&*()_+-=[]{}|;:,.<>?';
+        
+        // Garantir pelo menos um de cada tipo
+        $password = '';
+        $password .= $lowercase[random_int(0, strlen($lowercase) - 1)];
+        $password .= $uppercase[random_int(0, strlen($uppercase) - 1)];
+        $password .= $numbers[random_int(0, strlen($numbers) - 1)];
+        $password .= $symbols[random_int(0, strlen($symbols) - 1)];
+        
+        // Preencher o restante com caracteres aleatórios
+        $allChars = $lowercase . $uppercase . $numbers . $symbols;
+        for ($i = strlen($password); $i < $length; $i++) {
+            $password .= $allChars[random_int(0, strlen($allChars) - 1)];
+        }
+        
+        // Embaralhar a senha
+        return str_shuffle($password);
     }
 
     /**

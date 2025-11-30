@@ -12,20 +12,6 @@
     </h3>
 </div>
 
-@if (session('success'))
-    <div class="alert alert-success alert-dismissible fade show" role="alert">
-        {{ session('success') }}
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-    </div>
-@endif
-
-@if (session('error'))
-    <div class="alert alert-danger alert-dismissible fade show" role="alert">
-        {{ session('error') }}
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-    </div>
-@endif
-
 <div class="row">
     <div class="col-12">
         <div class="card shadow-sm">
@@ -55,6 +41,16 @@
                     <li class="nav-item" role="presentation">
                         <a class="nav-link" id="integrations-tab" data-bs-toggle="tab" href="#integrations" role="tab" aria-controls="integrations" aria-selected="false">
                             <i class="mdi mdi-link-variant me-2"></i>Integrações
+                        </a>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <a class="nav-link" id="users-tab" data-bs-toggle="tab" href="#users" role="tab" aria-controls="users" aria-selected="false">
+                            <i class="mdi mdi-account-group me-2"></i>Usuários & Permissões
+                        </a>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <a class="nav-link" id="professionals-tab" data-bs-toggle="tab" href="#professionals" role="tab" aria-controls="professionals" aria-selected="false">
+                            <i class="mdi mdi-stethoscope me-2"></i>Profissionais
                         </a>
                     </li>
                 </ul>
@@ -194,6 +190,25 @@
                                            min="1" max="168" step="1">
                                     <small class="text-muted">Quantas horas antes do agendamento enviar lembrete (máx. 168 = 7 dias)</small>
                                 </div>
+
+                                <div class="col-md-12 mb-3">
+                                    <label class="form-label">Modo de Atendimento Padrão <span class="text-danger">*</span></label>
+                                    <select class="form-select" name="appointments_default_appointment_mode" required>
+                                        <option value="presencial" {{ ($settings['appointments.default_appointment_mode'] ?? 'user_choice') == 'presencial' ? 'selected' : '' }}>
+                                            Sempre presencial
+                                        </option>
+                                        <option value="online" {{ ($settings['appointments.default_appointment_mode'] ?? 'user_choice') == 'online' ? 'selected' : '' }}>
+                                            Sempre online
+                                        </option>
+                                        <option value="user_choice" {{ ($settings['appointments.default_appointment_mode'] ?? 'user_choice') == 'user_choice' ? 'selected' : '' }}>
+                                            Paciente escolhe
+                                        </option>
+                                    </select>
+                                    <small class="text-muted">
+                                        Define como o modo de atendimento será escolhido ao criar agendamentos. 
+                                        Se "Paciente escolhe", o campo será exibido para seleção.
+                                    </small>
+                                </div>
                             </div>
 
                             <div class="mt-4">
@@ -294,19 +309,24 @@
                             
                             <h4 class="mb-4">Configurações de Notificações</h4>
                             <p class="text-muted mb-4">
-                                Configure quais tipos de notificações você deseja receber no sistema.
+                                Configure quais tipos de notificações você deseja receber no sistema e como enviar notificações aos pacientes.
                             </p>
 
                             <div class="row">
-                                <div class="col-md-12">
+                                <div class="col-md-12 mb-4">
                                     <div class="card border shadow-sm">
+                                        <div class="card-header bg-light">
+                                            <h5 class="mb-0">
+                                                <i class="mdi mdi-bell-outline me-2"></i>Notificações Internas
+                                            </h5>
+                                        </div>
                                         <div class="card-body">
                                             <div class="form-check form-switch mb-3 p-3 rounded" style="border: 1px solid #e9ecef;">
                                                 <input class="form-check-input" type="checkbox" 
                                                        id="notifications_appointments_enabled"
                                                        name="notifications_appointments_enabled"
                                                        value="1"
-                                                       {{ $settings['notifications.appointments.enabled'] ? 'checked' : '' }}>
+                                                       {{ ($settings['notifications.appointments.enabled'] ?? false) ? 'checked' : '' }}>
                                                 <label class="form-check-label" for="notifications_appointments_enabled">
                                                     <strong class="d-block mb-1">Notificações de Agendamentos</strong>
                                                     <p class="text-muted mb-0" style="font-size: 0.875rem;">
@@ -316,12 +336,12 @@
                                                 </label>
                                             </div>
 
-                                            <div class="form-check form-switch mb-3 p-3 rounded" style="border: 1px solid #e9ecef;">
+                                            <div class="form-check form-switch p-3 rounded" style="border: 1px solid #e9ecef;">
                                                 <input class="form-check-input" type="checkbox" 
                                                        id="notifications_form_responses_enabled"
                                                        name="notifications_form_responses_enabled"
                                                        value="1"
-                                                       {{ $settings['notifications.form_responses.enabled'] ? 'checked' : '' }}>
+                                                       {{ ($settings['notifications.form_responses.enabled'] ?? false) ? 'checked' : '' }}>
                                                 <label class="form-check-label" for="notifications_form_responses_enabled">
                                                     <strong class="d-block mb-1">Notificações de Respostas de Formulários</strong>
                                                     <p class="text-muted mb-0" style="font-size: 0.875rem;">
@@ -329,33 +349,139 @@
                                                     </p>
                                                 </label>
                                             </div>
+                                        </div>
+                                    </div>
+                                </div>
 
+                                {{-- Configurações de Email --}}
+                                <div class="col-md-12 mb-4">
+                                    <div class="card border shadow-sm">
+                                        <div class="card-header bg-light">
+                                            <h5 class="mb-0">
+                                                <i class="mdi mdi-email-outline me-2"></i>Configurações de Email
+                                            </h5>
+                                        </div>
+                                        <div class="card-body">
                                             <div class="form-check form-switch mb-3 p-3 rounded" style="border: 1px solid #e9ecef;">
                                                 <input class="form-check-input" type="checkbox" 
-                                                       id="notifications_email_enabled"
-                                                       name="notifications_email_enabled"
+                                                       id="notifications_send_email_to_patients"
+                                                       name="notifications_send_email_to_patients"
                                                        value="1"
-                                                       {{ $settings['notifications.email.enabled'] ? 'checked' : '' }}>
-                                                <label class="form-check-label" for="notifications_email_enabled">
-                                                    <strong class="d-block mb-1">Notificações por E-mail</strong>
+                                                       {{ ($settings['notifications.send_email_to_patients'] ?? false) ? 'checked' : '' }}>
+                                                <label class="form-check-label" for="notifications_send_email_to_patients">
+                                                    <strong class="d-block mb-1">Enviar e-mails aos pacientes</strong>
                                                     <p class="text-muted mb-0" style="font-size: 0.875rem;">
-                                                        Receba notificações por e-mail quando eventos importantes ocorrerem.
+                                                        Quando habilitado, os pacientes receberão notificações por email sobre agendamentos, formulários, etc.
                                                     </p>
                                                 </label>
                                             </div>
 
-                                            <div class="form-check form-switch p-3 rounded" style="border: 1px solid #e9ecef;">
+                                            <div class="mb-3">
+                                                <label class="form-label">Driver de Email</label>
+                                                <select class="form-select" name="email_driver" id="email_driver" required>
+                                                    <option value="global" {{ ($settings['email.driver'] ?? 'global') == 'global' ? 'selected' : '' }}>Usar serviço global do sistema</option>
+                                                    <option value="tenancy" {{ ($settings['email.driver'] ?? 'global') == 'tenancy' ? 'selected' : '' }}>Usar SMTP próprio</option>
+                                                </select>
+                                                <small class="text-muted">Escolha entre usar o serviço global ou configurar seu próprio SMTP</small>
+                                            </div>
+
+                                            <div id="email_tenancy_config" style="display: {{ ($settings['email.driver'] ?? 'global') == 'tenancy' ? 'block' : 'none' }};">
+                                                <div class="row">
+                                                    <div class="col-md-6 mb-3">
+                                                        <label class="form-label">Host SMTP</label>
+                                                        <input type="text" class="form-control" name="email_host" 
+                                                               value="{{ $settings['email.host'] ?? '' }}" 
+                                                               placeholder="smtp.exemplo.com">
+                                                    </div>
+                                                    <div class="col-md-6 mb-3">
+                                                        <label class="form-label">Porta</label>
+                                                        <input type="number" class="form-control" name="email_port" 
+                                                               value="{{ $settings['email.port'] ?? '' }}" 
+                                                               placeholder="587">
+                                                    </div>
+                                                    <div class="col-md-6 mb-3">
+                                                        <label class="form-label">Usuário</label>
+                                                        <input type="text" class="form-control" name="email_username" 
+                                                               value="{{ $settings['email.username'] ?? '' }}" 
+                                                               placeholder="usuario@exemplo.com">
+                                                    </div>
+                                                    <div class="col-md-6 mb-3">
+                                                        <label class="form-label">Senha</label>
+                                                        <input type="password" class="form-control" name="email_password" 
+                                                               value="{{ $settings['email.password'] ?? '' }}" 
+                                                               placeholder="••••••••">
+                                                    </div>
+                                                    <div class="col-md-6 mb-3">
+                                                        <label class="form-label">Nome do Remetente</label>
+                                                        <input type="text" class="form-control" name="email_from_name" 
+                                                               value="{{ $settings['email.from_name'] ?? '' }}" 
+                                                               placeholder="Nome da Clínica">
+                                                    </div>
+                                                    <div class="col-md-6 mb-3">
+                                                        <label class="form-label">Email do Remetente</label>
+                                                        <input type="email" class="form-control" name="email_from_address" 
+                                                               value="{{ $settings['email.from_address'] ?? '' }}" 
+                                                               placeholder="noreply@exemplo.com">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {{-- Configurações de WhatsApp --}}
+                                <div class="col-md-12 mb-4">
+                                    <div class="card border shadow-sm">
+                                        <div class="card-header bg-light">
+                                            <h5 class="mb-0">
+                                                <i class="mdi mdi-whatsapp me-2 text-success"></i>Configurações de WhatsApp
+                                            </h5>
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="form-check form-switch mb-3 p-3 rounded" style="border: 1px solid #e9ecef;">
                                                 <input class="form-check-input" type="checkbox" 
-                                                       id="notifications_whatsapp_enabled"
-                                                       name="notifications_whatsapp_enabled"
+                                                       id="notifications_send_whatsapp_to_patients"
+                                                       name="notifications_send_whatsapp_to_patients"
                                                        value="1"
-                                                       {{ $settings['notifications.whatsapp.enabled'] ? 'checked' : '' }}>
-                                                <label class="form-check-label" for="notifications_whatsapp_enabled">
-                                                    <strong class="d-block mb-1">Notificações por WhatsApp</strong>
+                                                       {{ ($settings['notifications.send_whatsapp_to_patients'] ?? false) ? 'checked' : '' }}>
+                                                <label class="form-check-label" for="notifications_send_whatsapp_to_patients">
+                                                    <strong class="d-block mb-1">Enviar WhatsApp aos pacientes</strong>
                                                     <p class="text-muted mb-0" style="font-size: 0.875rem;">
-                                                        Receba notificações por WhatsApp quando eventos importantes ocorrerem.
+                                                        Quando habilitado, os pacientes receberão notificações por WhatsApp sobre agendamentos, formulários, etc.
                                                     </p>
                                                 </label>
+                                            </div>
+
+                                            <div class="mb-3">
+                                                <label class="form-label">Driver de WhatsApp</label>
+                                                <select class="form-select" name="whatsapp_driver" id="whatsapp_driver" required>
+                                                    <option value="global" {{ ($settings['whatsapp.driver'] ?? 'global') == 'global' ? 'selected' : '' }}>Usar serviço global do sistema</option>
+                                                    <option value="tenancy" {{ ($settings['whatsapp.driver'] ?? 'global') == 'tenancy' ? 'selected' : '' }}>Usar API própria</option>
+                                                </select>
+                                                <small class="text-muted">Escolha entre usar o serviço global ou configurar sua própria API de WhatsApp</small>
+                                            </div>
+
+                                            <div id="whatsapp_tenancy_config" style="display: {{ ($settings['whatsapp.driver'] ?? 'global') == 'tenancy' ? 'block' : 'none' }};">
+                                                <div class="row">
+                                                    <div class="col-md-12 mb-3">
+                                                        <label class="form-label">API URL</label>
+                                                        <input type="url" class="form-control" name="whatsapp_api_url" 
+                                                               value="{{ $settings['whatsapp.api_url'] ?? '' }}" 
+                                                               placeholder="https://api.exemplo.com/send">
+                                                    </div>
+                                                    <div class="col-md-6 mb-3">
+                                                        <label class="form-label">API Token</label>
+                                                        <input type="text" class="form-control" name="whatsapp_api_token" 
+                                                               value="{{ $settings['whatsapp.api_token'] ?? '' }}" 
+                                                               placeholder="seu-token-aqui">
+                                                    </div>
+                                                    <div class="col-md-6 mb-3">
+                                                        <label class="form-label">Sender (Remetente)</label>
+                                                        <input type="text" class="form-control" name="whatsapp_sender" 
+                                                               value="{{ $settings['whatsapp.sender'] ?? '' }}" 
+                                                               placeholder="5511999999999">
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
@@ -494,6 +620,204 @@
                             </div>
                         </form>
                     </div>
+
+                    {{-- Aba Usuários & Permissões --}}
+                    <div class="tab-pane fade" id="users" role="tabpanel">
+                        <form method="POST" action="{{ route('tenant.settings.update.user-defaults') }}">
+                            @csrf
+                            
+                            <h4 class="mb-4">Configurações de Usuários & Permissões</h4>
+                            <p class="text-muted mb-4">
+                                Defina quais módulos serão atribuídos automaticamente ao criar novos usuários por perfil.
+                            </p>
+
+                            <div class="row">
+                                {{-- Módulos padrão para Usuário Comum --}}
+                                <div class="col-md-6 mb-4">
+                                    <div class="card border shadow-sm">
+                                        <div class="card-header bg-light">
+                                            <h5 class="mb-0">
+                                                <i class="mdi mdi-account me-2"></i>Módulos Padrão – Usuário Comum
+                                            </h5>
+                                        </div>
+                                        <div class="card-body">
+                                            <p class="text-muted small mb-3">
+                                                Selecione os módulos que serão atribuídos automaticamente ao criar um novo usuário comum.
+                                            </p>
+                                            @php
+                                                $allModules = App\Models\Tenant\Module::all();
+                                                // Remover módulo "usuários" e "configurações" da lista de opções
+                                                $availableModules = collect($allModules)->reject(function($module) {
+                                                    return in_array($module['key'], ['users', 'settings']);
+                                                })->values()->all();
+                                                $commonUserModules = json_decode(App\Models\Tenant\TenantSetting::get('user_defaults.modules_common_user', '[]'), true) ?? [];
+                                            @endphp
+                                            <div class="border rounded p-3 bg-light" style="max-height: 400px; overflow-y: auto;">
+                                                @foreach($availableModules as $module)
+                                                    <div class="form-check">
+                                                        <input class="form-check-input" 
+                                                               type="checkbox"
+                                                               name="user_defaults[modules_common_user][]"
+                                                               value="{{ $module['key'] }}"
+                                                               id="module_common_{{ $module['key'] }}"
+                                                               {{ in_array($module['key'], $commonUserModules) ? 'checked' : '' }}>
+                                                        <label class="form-check-label" for="module_common_{{ $module['key'] }}">
+                                                            {{ $module['name'] }}
+                                                        </label>
+                                                    </div>
+                                                @endforeach
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {{-- Módulos padrão para Médico --}}
+                                <div class="col-md-6 mb-4">
+                                    <div class="card border shadow-sm">
+                                        <div class="card-header bg-light">
+                                            <h5 class="mb-0">
+                                                <i class="mdi mdi-doctor me-2"></i>Módulos Padrão – Médico
+                                            </h5>
+                                        </div>
+                                        <div class="card-body">
+                                            <p class="text-muted small mb-3">
+                                                Selecione os módulos que serão atribuídos automaticamente ao criar um novo usuário médico.
+                                            </p>
+                                            @php
+                                                $doctorModules = json_decode(App\Models\Tenant\TenantSetting::get('user_defaults.modules_doctor', '[]'), true) ?? [];
+                                            @endphp
+                                            <div class="border rounded p-3 bg-light" style="max-height: 400px; overflow-y: auto;">
+                                                @foreach($availableModules as $module)
+                                                    <div class="form-check">
+                                                        <input class="form-check-input" 
+                                                               type="checkbox"
+                                                               name="user_defaults[modules_doctor][]"
+                                                               value="{{ $module['key'] }}"
+                                                               id="module_doctor_{{ $module['key'] }}"
+                                                               {{ in_array($module['key'], $doctorModules) ? 'checked' : '' }}>
+                                                        <label class="form-check-label" for="module_doctor_{{ $module['key'] }}">
+                                                            {{ $module['name'] }}
+                                                        </label>
+                                                    </div>
+                                                @endforeach
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="alert alert-info d-flex align-items-start" role="alert">
+                                <i class="mdi mdi-information-outline me-3" style="font-size: 1.5rem; flex-shrink: 0;"></i>
+                                <div class="flex-grow-1">
+                                    <strong class="d-block mb-2">Como funciona:</strong>
+                                    <ul class="mb-0" style="font-size: 0.9rem;">
+                                        <li>Os módulos selecionados serão aplicados automaticamente ao criar novos usuários com o perfil correspondente.</li>
+                                        <li>Usuários <strong>Administradores</strong> não são afetados por essas configurações, pois possuem acesso total ao sistema.</li>
+                                        <li>As configurações não afetam usuários já existentes, apenas novos usuários criados após a configuração.</li>
+                                    </ul>
+                                </div>
+                            </div>
+
+                            <div class="mt-4">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="mdi mdi-content-save me-2"></i>Salvar Alterações
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
+                    {{-- Aba Profissionais --}}
+                    <div class="tab-pane fade" id="professionals" role="tabpanel">
+                        <form method="POST" action="{{ route('tenant.settings.update.professionals') }}">
+                            @csrf
+                            
+                            <h4 class="mb-4">Configurações de Profissionais</h4>
+                            <p class="text-muted mb-4">
+                                Configure os rótulos personalizados para profissionais (Médico, Profissional, Psicólogo, etc.).
+                            </p>
+
+                            <div class="row">
+                                <div class="col-md-12 mb-4">
+                                    <div class="card border shadow-sm">
+                                        <div class="card-header bg-light">
+                                            <h5 class="mb-0">
+                                                <i class="mdi mdi-cog-outline me-2"></i>Personalização de Rótulos
+                                            </h5>
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="form-check form-switch mb-3 p-3 rounded" style="border: 1px solid #e9ecef;">
+                                                <input class="form-check-input" type="checkbox" 
+                                                       id="professional_customization_enabled"
+                                                       name="professional_customization_enabled"
+                                                       value="1"
+                                                       {{ ($settings['professional.customization_enabled'] ?? false) ? 'checked' : '' }}>
+                                                <label class="form-check-label" for="professional_customization_enabled">
+                                                    <strong class="d-block mb-1">Habilitar personalização por profissão?</strong>
+                                                    <p class="text-muted mb-0" style="font-size: 0.875rem;">
+                                                        Quando desabilitado, o sistema sempre usa "Médico", "Médicos" e "CRM". 
+                                                        Quando habilitado, você pode personalizar os rótulos globalmente, por especialidade ou por profissional individual.
+                                                    </p>
+                                                </label>
+                                            </div>
+
+                                            <div id="professional_customization_fields" style="display: {{ ($settings['professional.customization_enabled'] ?? false) ? 'block' : 'none' }};">
+                                                <div class="alert alert-info d-flex align-items-start mb-4" role="alert">
+                                                    <i class="mdi mdi-information-outline me-3" style="font-size: 1.5rem; flex-shrink: 0;"></i>
+                                                    <div class="flex-grow-1">
+                                                        <strong class="d-block mb-2">Como funciona:</strong>
+                                                        <ul class="mb-0" style="font-size: 0.9rem;">
+                                                            <li><strong>Rótulos Globais:</strong> Aplicados quando não há personalização por especialidade ou profissional.</li>
+                                                            <li><strong>Rótulos por Especialidade:</strong> Configure em cada especialidade para sobrescrever os globais.</li>
+                                                            <li><strong>Rótulos Individuais:</strong> Configure em cada profissional para sobrescrever especialidade e globais.</li>
+                                                            <li><strong>Hierarquia:</strong> Profissional individual → Especialidade → Global → Padrão</li>
+                                                        </ul>
+                                                    </div>
+                                                </div>
+
+                                                <div class="row">
+                                                    <div class="col-md-4 mb-3">
+                                                        <label class="form-label">Rótulo Singular (Global)</label>
+                                                        <input type="text" class="form-control" 
+                                                               name="professional_label_singular" 
+                                                               value="{{ $settings['professional.label_singular'] ?? '' }}" 
+                                                               placeholder="Ex: Profissional, Psicólogo, Dentista"
+                                                               maxlength="50">
+                                                        <small class="text-muted">Exemplo: "Profissional" ou "Psicólogo"</small>
+                                                    </div>
+
+                                                    <div class="col-md-4 mb-3">
+                                                        <label class="form-label">Rótulo Plural (Global)</label>
+                                                        <input type="text" class="form-control" 
+                                                               name="professional_label_plural" 
+                                                               value="{{ $settings['professional.label_plural'] ?? '' }}" 
+                                                               placeholder="Ex: Profissionais, Psicólogos, Dentistas"
+                                                               maxlength="50">
+                                                        <small class="text-muted">Exemplo: "Profissionais" ou "Psicólogos"</small>
+                                                    </div>
+
+                                                    <div class="col-md-4 mb-3">
+                                                        <label class="form-label">Rótulo de Registro (Global)</label>
+                                                        <input type="text" class="form-control" 
+                                                               name="professional_registration_label" 
+                                                               value="{{ $settings['professional.registration_label'] ?? '' }}" 
+                                                               placeholder="Ex: CRM, CRP, CRO"
+                                                               maxlength="50">
+                                                        <small class="text-muted">Exemplo: "CRM", "CRP" ou "CRO"</small>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="mt-4">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="mdi mdi-content-save me-2"></i>Salvar Alterações
+                                </button>
+                            </div>
+                        </form>
+                    </div>
                 </div>
             </div>
         </div>
@@ -552,6 +876,33 @@
                 $(this).append('<input type="hidden" name="calendar_default_weekdays" value="' + values.join(',') + '">');
             } else {
                 $(this).find('input[name="calendar_default_weekdays"]').val(values.join(','));
+            }
+        });
+
+        // Mostrar/ocultar configurações de email baseado no driver
+        $('#email_driver').on('change', function() {
+            if ($(this).val() === 'tenancy') {
+                $('#email_tenancy_config').show();
+            } else {
+                $('#email_tenancy_config').hide();
+            }
+        });
+
+        // Mostrar/ocultar configurações de WhatsApp baseado no driver
+        $('#whatsapp_driver').on('change', function() {
+            if ($(this).val() === 'tenancy') {
+                $('#whatsapp_tenancy_config').show();
+            } else {
+                $('#whatsapp_tenancy_config').hide();
+            }
+        });
+
+        // Mostrar/ocultar campos de personalização de profissionais
+        $('#professional_customization_enabled').on('change', function() {
+            if ($(this).is(':checked')) {
+                $('#professional_customization_fields').show();
+            } else {
+                $('#professional_customization_fields').hide();
             }
         });
     });

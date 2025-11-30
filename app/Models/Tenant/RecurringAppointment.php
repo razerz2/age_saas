@@ -27,6 +27,7 @@ class RecurringAppointment extends Model
         'end_date',
         'active',
         'google_recurring_event_ids',
+        'appointment_mode',
     ];
 
     protected $casts = [
@@ -35,6 +36,7 @@ class RecurringAppointment extends Model
         'active' => 'boolean',
         'total_sessions' => 'integer',
         'google_recurring_event_ids' => 'array',
+        'appointment_mode' => 'string',
     ];
 
     public $timestamps = true;

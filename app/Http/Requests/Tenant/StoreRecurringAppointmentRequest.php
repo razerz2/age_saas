@@ -18,7 +18,7 @@ class StoreRecurringAppointmentRequest extends FormRequest
 
     public function rules()
     {
-        return [
+        $rules = [
             'patient_id' => ['required', 'exists:tenant.patients,id'],
             'doctor_id' => ['required', 'exists:tenant.doctors,id'],
             'appointment_type_id' => ['required', 'exists:tenant.appointment_types,id'],
@@ -33,6 +33,16 @@ class StoreRecurringAppointmentRequest extends FormRequest
             'rules.*.frequency' => ['nullable', 'in:weekly,biweekly,monthly'],
             'rules.*.interval' => ['nullable', 'integer', 'min:1'],
         ];
+
+        // Aplicar validação de appointment_mode baseado na configuração
+        $mode = \App\Models\Tenant\TenantSetting::get('appointments.default_appointment_mode', 'user_choice');
+        if ($mode === 'user_choice') {
+            $rules['appointment_mode'] = ['required', 'in:presencial,online'];
+        } else {
+            $rules['appointment_mode'] = ['nullable'];
+        }
+
+        return $rules;
     }
 
     public function messages()

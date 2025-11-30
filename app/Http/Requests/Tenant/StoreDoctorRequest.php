@@ -21,6 +21,10 @@ class StoreDoctorRequest extends FormRequest
             'signature'     => ['nullable', 'string', 'max:255'],
             'specialties'   => ['required', 'array', 'min:1'],
             'specialties.*' => ['required', 'uuid', 'exists:tenant.medical_specialties,id'],
+            'label_singular' => ['nullable', 'string', 'max:60'],
+            'label_plural' => ['nullable', 'string', 'max:60'],
+            'registration_label' => ['nullable', 'string', 'max:40'],
+            'registration_value' => ['nullable', 'string', 'max:100'],
         ];
     }
 

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Platform;
 
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 use App\Http\Controllers\Controller;
 use App\Models\Platform\Tenant;
@@ -13,8 +14,10 @@ use App\Models\Platform\Estado;
 use App\Models\Platform\Cidade;
 use App\Models\Platform\SystemSetting;
 use App\Services\TenantProvisioner;
+use App\Services\SystemSettingsService;
 use App\Services\AsaasService;
 use App\Http\Requests\TenantRequest;
+use App\Mail\TenantAdminCredentialsMail;
 
 class TenantController extends Controller
 {
@@ -37,7 +40,8 @@ class TenantController extends Controller
         
         // Buscar informações do usuário admin do tenant
         $adminUser = null;
-        $adminPassword = 'admin123'; // Senha padrão conforme TenantProvisioner
+        // Buscar senha da sessão (se foi criada recentemente) ou usar null
+        $adminPassword = session('tenant_admin_password', null);
         
         try {
             // Configurar conexão do tenant temporariamente
@@ -112,14 +116,50 @@ class TenantController extends Controller
 
             DB::commit();
 
-            // 🚀 Cria o banco físico e roda as migrations
-            TenantProvisioner::createDatabase($tenant);
+            // 🚀 Cria o banco físico e roda as migrations (retorna a senha gerada)
+            $adminPassword = TenantProvisioner::createDatabase($tenant);
+
+            // 📧 Enviar email com credenciais se SMTP estiver configurado
+            $systemSettingsService = new SystemSettingsService();
+            if ($systemSettingsService->emailIsConfigured()) {
+                try {
+                    // Limpar subdomínio para formato válido de domínio
+                    $sanitizedSubdomain = preg_replace('/[^a-z0-9\-]/', '', Str::slug($tenant->subdomain));
+                    $sanitizedSubdomain = !empty($sanitizedSubdomain) ? $sanitizedSubdomain : 'tenant';
+                    $adminEmail = "admin@{$sanitizedSubdomain}.com";
+                    $loginUrl = url("/t/{$tenant->subdomain}/login");
+
+                    Mail::to($tenant->email)->send(
+                        new TenantAdminCredentialsMail(
+                            $tenant,
+                            $loginUrl,
+                            $adminEmail,
+                            $adminPassword
+                        )
+                    );
+
+                    Log::info("📧 Email com credenciais enviado para tenant {$tenant->id}", [
+                        'email' => $tenant->email
+                    ]);
+                } catch (\Throwable $e) {
+                    // Não falhar a criação do tenant se o email falhar
+                    Log::error("❌ Erro ao enviar email com credenciais", [
+                        'tenant_id' => $tenant->id,
+                        'erro' => $e->getMessage()
+                    ]);
+                }
+            } else {
+                Log::info("⚠️ Email não enviado: SMTP não configurado para tenant {$tenant->id}");
+            }
 
             // 🔄 Sincroniza com Asaas
             $this->syncWithAsaas($tenant);
 
+            // Salvar senha temporariamente na sessão para exibir na view de show
+            session()->flash('tenant_admin_password', $adminPassword);
+
             return redirect()
-                ->route('Platform.tenants.index')
+                ->route('Platform.tenants.show', $tenant->id)
                 ->with('success', '✅ Tenant criado com sucesso e sincronizado com o Asaas.');
         } catch (\Throwable $e) {
             DB::rollBack();

@@ -15,7 +15,7 @@ class MedicalSpecialty extends Model
     public $incrementing = false;
     protected $keyType = 'uuid';
 
-    protected $fillable = ['id', 'name', 'code'];
+    protected $fillable = ['id', 'name', 'code', 'label_singular', 'label_plural', 'registration_label'];
 
     public $timestamps = true;
 

@@ -117,6 +117,30 @@ META_PHONE_NUMBER_ID=seu_phone_number_id
 3. Configure WhatsApp Business API
 4. Obtenha o token de acesso e phone number ID
 
+### Google Calendar
+
+```env
+GOOGLE_CLIENT_ID=seu_client_id
+GOOGLE_CLIENT_SECRET=seu_client_secret
+```
+
+| Variável | Descrição | Obrigatório | Padrão |
+|----------|-----------|-------------|--------|
+| `GOOGLE_CLIENT_ID` | Client ID do Google OAuth 2.0 | Sim | - |
+| `GOOGLE_CLIENT_SECRET` | Client Secret do Google OAuth 2.0 | Sim | - |
+
+**Como obter:**
+1. Acesse o [Google Cloud Console](https://console.cloud.google.com/)
+2. Crie um projeto ou selecione um existente
+3. Ative a API do Google Calendar
+4. Crie credenciais OAuth 2.0 (tipo: Aplicativo Web)
+5. Configure a URI de redirecionamento como: `{APP_URL}/google/callback`
+   - Exemplo local: `http://localhost:8000/google/callback`
+   - Exemplo produção: `https://seudominio.com/google/callback`
+6. Copie o Client ID e Client Secret para o arquivo `.env`
+
+**Nota:** O sistema usa automaticamente a rota `route('google.callback')` que resolve para `/google/callback` baseado no `APP_URL`. Certifique-se de que a URI configurada no Google Cloud Console corresponda exatamente à URL completa (incluindo domínio e porta). A URI deve ser **sem barra final** e **sem parâmetros**.
+
 ## 📧 Email
 
 ```env
@@ -260,6 +284,9 @@ WHATSAPP_PHONE_ID=seu_phone_id
 META_ACCESS_TOKEN=seu_token_meta
 META_PHONE_NUMBER_ID=seu_phone_number_id
 
+GOOGLE_CLIENT_ID=seu_client_id
+GOOGLE_CLIENT_SECRET=seu_client_secret
+
 MAIL_MAILER=smtp
 MAIL_HOST=smtp.mailtrap.io
 MAIL_PORT=2525
@@ -312,6 +339,9 @@ Essas configurações têm prioridade sobre as variáveis de ambiente quando def
 ---
 
 **Última atualização:** 2025-01-27
+
+**Nota:** Esta documentação foi revisada e atualizada para incluir:
+- Variáveis de ambiente do Google Calendar (GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET)
 
 
 

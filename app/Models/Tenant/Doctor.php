@@ -21,6 +21,10 @@ class Doctor extends Model
         'crm_number',
         'crm_state',
         'signature',
+        'label_singular',
+        'label_plural',
+        'registration_label',
+        'registration_value',
     ];
 
     public $timestamps = true;
