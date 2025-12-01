@@ -17,6 +17,7 @@ use App\Http\Controllers\Platform\CidadeController;
 use App\Http\Controllers\Platform\LocationController;
 use App\Http\Controllers\Platform\SystemSettingsController;
 use App\Http\Controllers\Platform\KioskMonitorController;
+use App\Http\Controllers\Platform\PlanAccessManagerController;
 use App\Models\Platform\SystemNotification;
 use App\Http\Controllers\Platform\WhatsAppController;
 use App\Http\Controllers\Tenant\Integrations\GoogleCalendarController;
@@ -75,6 +76,15 @@ Route::middleware(['auth'])->prefix('Platform')->name('Platform.')->group(functi
     // 🔸 Módulo: Planos
     Route::middleware('module.access:plans')->group(function () {
         Route::resource('plans', PlanController::class);
+        Route::resource('subscription-access', PlanAccessManagerController::class)->names([
+            'index' => 'subscription-access.index',
+            'create' => 'subscription-access.create',
+            'store' => 'subscription-access.store',
+            'show' => 'subscription-access.show',
+            'edit' => 'subscription-access.edit',
+            'update' => 'subscription-access.update',
+            'destroy' => 'subscription-access.destroy',
+        ]);
     });
 
     // 🔸 Módulo: Assinaturas

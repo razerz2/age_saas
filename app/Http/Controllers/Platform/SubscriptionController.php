@@ -7,9 +7,12 @@ use App\Models\Platform\Subscription;
 use App\Models\Platform\Tenant;
 use App\Models\Platform\Plan;
 use App\Models\Platform\Invoices;
+use App\Models\Platform\PlanAccessRule;
+use App\Models\Tenant\TenantPlanLimit;
 use App\Services\AsaasService;
 use App\Http\Requests\SubscriptionRequest;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 
 class SubscriptionController extends Controller
@@ -60,6 +63,9 @@ class SubscriptionController extends Controller
 
             // 🔹 Cria assinatura local
             $subscription = Subscription::create($data);
+
+            // 🔹 Aplica regras de acesso ao tenant
+            $this->applyAccessRulesToTenant($subscription);
 
             // 🔹 Chama o método de sincronização (centralizado)
             $result = $this->syncWithAsaas($subscription);
@@ -135,6 +141,11 @@ class SubscriptionController extends Controller
             );
 
             $subscription->update($data);
+
+            // 🔹 Se o plano mudou, aplica novas regras de acesso
+            if (isset($data['plan_id']) && $subscription->plan_id != $data['plan_id']) {
+                $this->applyAccessRulesToTenant($subscription->fresh());
+            }
 
             // 🔹 Se houve mudança crítica → reenviar sincronismo ao Asaas
             if ($houveMudanca) {
@@ -388,6 +399,75 @@ class SubscriptionController extends Controller
             ]);
 
             return back()->withErrors(['general' => 'Erro ao sincronizar com Asaas.']);
+        }
+    }
+
+    /**
+     * Aplica regras de acesso do plano ao tenant
+     */
+    private function applyAccessRulesToTenant(Subscription $subscription)
+    {
+        try {
+            $tenant = $subscription->tenant;
+            $plan = $subscription->plan;
+
+            if (!$tenant || !$plan) {
+                Log::warning("⚠️ Não foi possível aplicar regras: tenant ou plano não encontrado");
+                return;
+            }
+
+            // Busca regra de acesso do plano
+            $rule = PlanAccessRule::where('plan_id', $plan->id)
+                ->with('features')
+                ->first();
+
+            if (!$rule) {
+                Log::warning("⚠️ Regra de acesso não encontrada para o plano: {$plan->name}");
+                return;
+            }
+
+            // Prepara dados para salvar no tenant
+            $allowedFeatures = $rule->features->where('pivot.allowed', true)->pluck('name')->toArray();
+
+            $limitsData = [
+                'max_admin_users' => $rule->max_admin_users,
+                'max_common_users' => $rule->max_common_users,
+                'max_doctors' => $rule->max_doctors,
+                'allowed_features' => $allowedFeatures,
+            ];
+
+            // Configura conexão do tenant
+            config([
+                'database.connections.tenant.host' => $tenant->db_host,
+                'database.connections.tenant.port' => $tenant->db_port,
+                'database.connections.tenant.database' => $tenant->db_name,
+                'database.connections.tenant.username' => $tenant->db_username,
+                'database.connections.tenant.password' => $tenant->db_password,
+            ]);
+
+            DB::purge('tenant');
+            DB::reconnect('tenant');
+
+            // Testa conexão
+            try {
+                DB::connection('tenant')->getPdo();
+            } catch (\Throwable $e) {
+                Log::error("❌ Erro ao conectar ao banco do tenant: {$e->getMessage()}");
+                return;
+            }
+
+            // Salva ou atualiza limites no tenant (sempre terá apenas um registro)
+            // Deleta registros existentes e cria novo
+            TenantPlanLimit::query()->delete();
+            TenantPlanLimit::create($limitsData);
+
+            Log::info("✅ Regras de acesso aplicadas ao tenant: {$tenant->trade_name}", [
+                'limits' => $limitsData,
+            ]);
+        } catch (\Throwable $e) {
+            Log::error("❌ Erro ao aplicar regras de acesso: {$e->getMessage()}", [
+                'trace' => $e->getTraceAsString(),
+            ]);
         }
     }
 }

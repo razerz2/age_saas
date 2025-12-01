@@ -44,6 +44,8 @@
                     <span class="hide-menu"><i class="fas fa-list-alt"></i> Planos</span></a></li>
                 <li class="sidebar-item"><a href="{{ route('Platform.plans.create') }}" class="sidebar-link">
                     <span class="hide-menu"><i class="fas fa-plus-circle"></i> Novo Plano</span></a></li>
+                <li class="sidebar-item"><a href="{{ route('Platform.subscription-access.index') }}" class="sidebar-link">
+                    <span class="hide-menu"><i class="fas fa-shield-alt"></i> Regras de Acesso</span></a></li>
             </ul>
         </li>
         @endif

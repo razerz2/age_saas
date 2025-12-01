@@ -43,4 +43,12 @@ class Plan extends Model
     {
         return 'R$ ' . number_format($this->price_cents / 100, 2, ',', '.');
     }
+
+    /**
+     * Relacionamento com regra de acesso
+     */
+    public function accessRule()
+    {
+        return $this->hasOne(PlanAccessRule::class, 'plan_id');
+    }
 }
