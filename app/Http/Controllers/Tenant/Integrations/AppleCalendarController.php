@@ -29,6 +29,11 @@ class AppleCalendarController extends Controller
     {
         $user = Auth::guard('tenant')->user();
         
+        // Carregar relacionamento doctor do usuário se necessário
+        if ($user->role === 'doctor' && !$user->relationLoaded('doctor')) {
+            $user->load('doctor');
+        }
+        
         // Verificar se a tabela apple_calendar_tokens existe
         $hasAppleCalendarTable = Schema::connection('tenant')
             ->hasTable('apple_calendar_tokens');

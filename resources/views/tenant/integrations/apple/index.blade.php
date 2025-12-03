@@ -203,7 +203,24 @@ php artisan migrate --database=tenant --path=database/migrations/tenant/2025_12_
                                             @endif
                                         </td>
                                         <td class="text-end">
-                                            @if ($user->role === 'admin' || ($user->role === 'doctor' && $user->doctor && $user->doctor->id === $doctor->id))
+                                            @php
+                                                $canConnect = false;
+                                                if ($user->role === 'admin') {
+                                                    $canConnect = true;
+                                                } elseif ($user->role === 'doctor') {
+                                                    // Carregar relacionamento se não estiver carregado
+                                                    if (!$user->relationLoaded('doctor')) {
+                                                        $user->load('doctor');
+                                                    }
+                                                    // Verificar se o médico do usuário corresponde ao médico da linha
+                                                    $canConnect = $user->doctor && (string) $user->doctor->id === (string) $doctor->id;
+                                                } elseif ($user->role === 'user') {
+                                                    // Usuário comum não pode conectar, apenas visualizar
+                                                    $canConnect = false;
+                                                }
+                                            @endphp
+                                            
+                                            @if ($canConnect)
                                                 {{-- Admin e médico (para si mesmo) podem conectar/desconectar --}}
                                                 @if (isset($hasAppleCalendarTable) && $hasAppleCalendarTable && $doctor->appleCalendarToken)
                                                     <div class="btn-group" role="group">

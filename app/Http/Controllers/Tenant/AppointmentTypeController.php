@@ -62,8 +62,35 @@ class AppointmentTypeController extends Controller
 
     public function store(StoreAppointmentTypeRequest $request)
     {
+        $user = Auth::guard('tenant')->user();
+        
+        // Determinar qual médico será usado
+        $doctor = null;
+        
+        if ($user->role === 'doctor' && $user->doctor) {
+            $doctor = $user->doctor;
+        } elseif ($user->role === 'user') {
+            $allowedDoctors = $user->allowedDoctors()->get();
+            if ($allowedDoctors->count() === 1) {
+                $doctor = $allowedDoctors->first();
+            } elseif ($request->has('doctor_id')) {
+                // Se houver múltiplos médicos, usar o doctor_id do request (admin ou usuário com múltiplos médicos)
+                $doctor = Doctor::find($request->doctor_id);
+            } else {
+                abort(403, 'Você não tem permissão para realizar esta ação.');
+            }
+        } elseif ($user->role === 'admin' && $request->has('doctor_id')) {
+            // Admin pode especificar o médico
+            $doctor = Doctor::find($request->doctor_id);
+        }
+        
+        if (!$doctor) {
+            return redirect()->back()->with('error', 'Médico não encontrado.');
+        }
+        
         $data = $request->validated();
         $data['id'] = Str::uuid();
+        $data['doctor_id'] = $doctor->id;
 
         AppointmentType::create($data);
 
@@ -103,6 +130,15 @@ class AppointmentTypeController extends Controller
     public function update(UpdateAppointmentTypeRequest $request, $id)
     {
         $appointmentType = AppointmentType::findOrFail($id);
+        
+        // Verificar permissões
+        $user = Auth::guard('tenant')->user();
+        $allowedDoctorIds = $this->getAllowedDoctorIds();
+        
+        if ($user->role !== 'admin' && !in_array($appointmentType->doctor_id, $allowedDoctorIds)) {
+            abort(403, 'Você não tem permissão para atualizar este tipo de atendimento.');
+        }
+        
         $appointmentType->update($request->validated());
 
         return redirect()->route('tenant.appointment-types.index')
@@ -112,6 +148,15 @@ class AppointmentTypeController extends Controller
     public function destroy($id)
     {
         $appointmentType = AppointmentType::findOrFail($id);
+        
+        // Verificar permissões
+        $user = Auth::guard('tenant')->user();
+        $allowedDoctorIds = $this->getAllowedDoctorIds();
+        
+        if ($user->role !== 'admin' && !in_array($appointmentType->doctor_id, $allowedDoctorIds)) {
+            abort(403, 'Você não tem permissão para remover este tipo de atendimento.');
+        }
+        
         $appointmentType->delete();
 
         return redirect()->route('tenant.appointment-types.index')
