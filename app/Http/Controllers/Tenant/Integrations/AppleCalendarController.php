@@ -33,7 +33,13 @@ class AppleCalendarController extends Controller
         $hasAppleCalendarTable = Schema::connection('tenant')
             ->hasTable('apple_calendar_tokens');
         
-        $doctorsQuery = Doctor::with(['user' . ($hasAppleCalendarTable ? ', appleCalendarToken' : '')])
+        // Construir array de relacionamentos
+        $relations = ['user'];
+        if ($hasAppleCalendarTable) {
+            $relations[] = 'appleCalendarToken';
+        }
+        
+        $doctorsQuery = Doctor::with($relations)
             ->whereHas('user', function($query) {
                 $query->where('status', 'active');
             });
