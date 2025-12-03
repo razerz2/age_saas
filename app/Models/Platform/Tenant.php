@@ -21,6 +21,11 @@ class Tenant extends BaseTenant
         'phone',
         'subdomain',
 
+        // Credenciais do admin
+        'admin_login_url',
+        'admin_email',
+        'admin_password',
+
         // Dados do banco do tenant
         'db_host',
         'db_port',

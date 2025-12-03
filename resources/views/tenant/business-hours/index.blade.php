@@ -36,6 +36,7 @@
                                     <th>Dia da Semana</th>
                                     <th>Horário Início</th>
                                     <th>Horário Fim</th>
+                                    <th>Intervalo</th>
                                     <th style="width: 140px;">Ações</th>
                                 </tr>
                             </thead>
@@ -53,6 +54,16 @@
                                         </td>
                                         <td>{{ $businessHour->start_time }}</td>
                                         <td>{{ $businessHour->end_time }}</td>
+                                        <td>
+                                            @if($businessHour->break_start_time && $businessHour->break_end_time)
+                                                <span class="badge bg-info">
+                                                    <i class="mdi mdi-pause-circle me-1"></i>
+                                                    {{ $businessHour->break_start_time }} - {{ $businessHour->break_end_time }}
+                                                </span>
+                                            @else
+                                                <span class="text-muted">-</span>
+                                            @endif
+                                        </td>
                                         <td>
                                             <a href="{{ route('tenant.business-hours.show', $businessHour->id) }}" class="btn btn-info btn-sm">Ver</a>
                                             <a href="{{ route('tenant.business-hours.edit', $businessHour->id) }}" class="btn btn-warning btn-sm">Editar</a>

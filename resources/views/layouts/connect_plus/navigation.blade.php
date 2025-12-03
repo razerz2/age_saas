@@ -18,7 +18,7 @@
         @php
             $user = auth('tenant')->user();
         @endphp
-        @if ($user && ($user->role === 'doctor' || ($user->role === 'admin')))
+        @if ($user && $user->role === 'doctor')
             <li class="nav-item {{ request()->routeIs('tenant.calendars.events.*') ? 'active' : '' }}">
                 <a class="nav-link" href="{{ route('tenant.calendars.events.redirect') }}">
                     <span class="icon-bg"><i class="mdi mdi-calendar-check menu-icon"></i></span>
@@ -178,78 +178,110 @@
         {{-- ============================================================
             CONFIGURAÇÕES DE AGENDAMENTO
         ============================================================ --}}
-        <li class="nav-item nav-category" title="Configurações de Agendamento">Configurações</li>
+        <li class="nav-item nav-category" title="Configurações de Agendamento">Config. de Calendários</li>
 
-        {{-- CALENDÁRIOS --}}
         @php
             $user = auth('tenant')->user();
-            $canCreateCalendar = $user && ($user->is_doctor || !$user->is_doctor); // Por enquanto, todos podem criar, mas pode ser ajustado
+            $showUnifiedPage = false;
+            
+            // Verificar se deve mostrar página única ou menu separado
+            if ($user) {
+                if ($user->role === 'doctor' && $user->doctor) {
+                    // Médico logado sempre vê página única
+                    $showUnifiedPage = true;
+                } elseif ($user->role === 'user') {
+                    // Usuário comum: verificar quantidade de médicos relacionados
+                    $allowedDoctorsCount = $user->allowedDoctors()->count();
+                    if ($allowedDoctorsCount === 1) {
+                        // Usuário com 1 médico relacionado vê página única
+                        $showUnifiedPage = true;
+                    }
+                    // Usuário com mais de 1 médico ou admin vê menu separado (showUnifiedPage = false)
+                }
+                // Admin sempre vê menu separado (showUnifiedPage = false)
+            }
         @endphp
-        <li class="nav-item {{ request()->routeIs('tenant.calendars.*') ? 'active' : '' }}">
-            <a class="nav-link" data-bs-toggle="collapse" href="#calendars-menu"
-                aria-expanded="{{ request()->routeIs('tenant.calendars.*') ? 'true' : 'false' }}">
-                <span class="icon-bg"><i class="mdi mdi-calendar-month menu-icon"></i></span>
-                <span class="menu-title">Calendários</span>
-                <i class="menu-arrow"></i>
-            </a>
 
-            <div class="collapse {{ request()->routeIs('tenant.calendars.*') ? 'show' : '' }}" id="calendars-menu">
-                <ul class="nav flex-column sub-menu">
-                    <li class="nav-item">
-                        <a class="nav-link {{ request()->routeIs('tenant.calendars.index') ? 'active' : '' }}" href="{{ route('tenant.calendars.index') }}">Listar</a>
-                    </li>
-                    @if ($canCreateCalendar)
+        @if($showUnifiedPage)
+            {{-- Página única de configurações --}}
+            <li class="nav-item {{ request()->routeIs('tenant.doctor-settings.*') ? 'active' : '' }}">
+                <a class="nav-link" href="{{ route('tenant.doctor-settings.index') }}">
+                    <span class="icon-bg"><i class="mdi mdi-calendar-month menu-icon"></i></span>
+                    <span class="menu-title">Calendário</span>
+                </a>
+            </li>
+        @else
+            {{-- Menu separado (admin ou usuário com mais de 1 médico) --}}
+            {{-- CALENDÁRIOS --}}
+            @php
+                $canCreateCalendar = $user && ($user->is_doctor || !$user->is_doctor); // Por enquanto, todos podem criar, mas pode ser ajustado
+            @endphp
+            <li class="nav-item {{ request()->routeIs('tenant.calendars.*') ? 'active' : '' }}">
+                <a class="nav-link" data-bs-toggle="collapse" href="#calendars-menu"
+                    aria-expanded="{{ request()->routeIs('tenant.calendars.*') ? 'true' : 'false' }}">
+                    <span class="icon-bg"><i class="mdi mdi-calendar-month menu-icon"></i></span>
+                    <span class="menu-title">Calendários</span>
+                    <i class="menu-arrow"></i>
+                </a>
+
+                <div class="collapse {{ request()->routeIs('tenant.calendars.*') ? 'show' : '' }}" id="calendars-menu">
+                    <ul class="nav flex-column sub-menu">
                         <li class="nav-item">
-                            <a class="nav-link {{ request()->routeIs('tenant.calendars.create') ? 'active' : '' }}" href="{{ route('tenant.calendars.create') }}">Novo Calendário</a>
+                            <a class="nav-link {{ request()->routeIs('tenant.calendars.index') ? 'active' : '' }}" href="{{ route('tenant.calendars.index') }}">Listar</a>
                         </li>
-                    @endif
-                </ul>
-            </div>
-        </li>
+                        @if ($canCreateCalendar)
+                            <li class="nav-item">
+                                <a class="nav-link {{ request()->routeIs('tenant.calendars.create') ? 'active' : '' }}" href="{{ route('tenant.calendars.create') }}">Novo Calendário</a>
+                            </li>
+                        @endif
+                    </ul>
+                </div>
+            </li>
 
-        {{-- HORÁRIOS DE ATENDIMENTO --}}
-        <li class="nav-item {{ request()->routeIs('tenant.business-hours.*') ? 'active' : '' }}">
-            <a class="nav-link" data-bs-toggle="collapse" href="#business-hours-menu"
-                aria-expanded="{{ request()->routeIs('tenant.business-hours.*') ? 'true' : 'false' }}"
-                title="Horários de Atendimento">
-                <span class="icon-bg"><i class="mdi mdi-clock-outline menu-icon"></i></span>
-                <span class="menu-title">Horários</span>
-                <i class="menu-arrow"></i>
-            </a>
+            {{-- HORÁRIOS DE ATENDIMENTO --}}
+            <li class="nav-item {{ request()->routeIs('tenant.business-hours.*') ? 'active' : '' }}">
+                <a class="nav-link" data-bs-toggle="collapse" href="#business-hours-menu"
+                    aria-expanded="{{ request()->routeIs('tenant.business-hours.*') ? 'true' : 'false' }}"
+                    title="Horários de Atendimento">
+                    <span class="icon-bg"><i class="mdi mdi-clock-outline menu-icon"></i></span>
+                    <span class="menu-title">Horários</span>
+                    <i class="menu-arrow"></i>
+                </a>
 
-            <div class="collapse {{ request()->routeIs('tenant.business-hours.*') ? 'show' : '' }}" id="business-hours-menu">
-                <ul class="nav flex-column sub-menu">
-                    <li class="nav-item">
-                        <a class="nav-link {{ request()->routeIs('tenant.business-hours.index') ? 'active' : '' }}" href="{{ route('tenant.business-hours.index') }}">Listar</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link {{ request()->routeIs('tenant.business-hours.create') ? 'active' : '' }}" href="{{ route('tenant.business-hours.create') }}">Novo Horário</a>
-                    </li>
-                </ul>
-            </div>
-        </li>
+                <div class="collapse {{ request()->routeIs('tenant.business-hours.*') ? 'show' : '' }}" id="business-hours-menu">
+                    <ul class="nav flex-column sub-menu">
+                        <li class="nav-item">
+                            <a class="nav-link {{ request()->routeIs('tenant.business-hours.index') ? 'active' : '' }}" href="{{ route('tenant.business-hours.index') }}">Listar</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {{ request()->routeIs('tenant.business-hours.create') ? 'active' : '' }}" href="{{ route('tenant.business-hours.create') }}">Novo Horário</a>
+                        </li>
+                    </ul>
+                </div>
+            </li>
 
-        {{-- TIPOS DE ATENDIMENTO --}}
-        <li class="nav-item {{ request()->routeIs('tenant.appointment-types.*') ? 'active' : '' }}">
-            <a class="nav-link" data-bs-toggle="collapse" href="#appointment-types-menu"
-                aria-expanded="{{ request()->routeIs('tenant.appointment-types.*') ? 'true' : 'false' }}"
-                title="Tipos de Atendimento">
-                <span class="icon-bg"><i class="mdi mdi-clipboard-pulse menu-icon"></i></span>
-                <span class="menu-title">Tipos</span>
-                <i class="menu-arrow"></i>
-            </a>
+            {{-- TIPOS DE ATENDIMENTO --}}
+            <li class="nav-item {{ request()->routeIs('tenant.appointment-types.*') ? 'active' : '' }}">
+                <a class="nav-link" data-bs-toggle="collapse" href="#appointment-types-menu"
+                    aria-expanded="{{ request()->routeIs('tenant.appointment-types.*') ? 'true' : 'false' }}"
+                    title="Tipos de Atendimento">
+                    <span class="icon-bg"><i class="mdi mdi-clipboard-pulse menu-icon"></i></span>
+                    <span class="menu-title">Tipos</span>
+                    <i class="menu-arrow"></i>
+                </a>
 
-            <div class="collapse {{ request()->routeIs('tenant.appointment-types.*') ? 'show' : '' }}" id="appointment-types-menu">
-                <ul class="nav flex-column sub-menu">
-                    <li class="nav-item">
-                        <a class="nav-link {{ request()->routeIs('tenant.appointment-types.index') ? 'active' : '' }}" href="{{ route('tenant.appointment-types.index') }}">Listar</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link {{ request()->routeIs('tenant.appointment-types.create') ? 'active' : '' }}" href="{{ route('tenant.appointment-types.create') }}">Novo Tipo</a>
-                    </li>
-                </ul>
-            </div>
-        </li>
+                <div class="collapse {{ request()->routeIs('tenant.appointment-types.*') ? 'show' : '' }}" id="appointment-types-menu">
+                    <ul class="nav flex-column sub-menu">
+                        <li class="nav-item">
+                            <a class="nav-link {{ request()->routeIs('tenant.appointment-types.index') ? 'active' : '' }}" href="{{ route('tenant.appointment-types.index') }}">Listar</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {{ request()->routeIs('tenant.appointment-types.create') ? 'active' : '' }}" href="{{ route('tenant.appointment-types.create') }}">Novo Tipo</a>
+                        </li>
+                    </ul>
+                </div>
+            </li>
+        @endif
 
         {{-- ============================================================
             FORMULÁRIOS
@@ -340,11 +372,16 @@
                 <i class="menu-arrow"></i>
             </a>
 
-            <div class="collapse {{ request()->routeIs('tenant.integrations.*') || request()->routeIs('tenant.integrations.google.*') ? 'show' : '' }}" id="integrations-menu">
+            <div class="collapse {{ request()->routeIs('tenant.integrations.*') || request()->routeIs('tenant.integrations.google.*') || request()->routeIs('tenant.integrations.apple.*') ? 'show' : '' }}" id="integrations-menu">
                 <ul class="nav flex-column sub-menu">
                     <li class="nav-item">
                         <a class="nav-link {{ request()->routeIs('tenant.integrations.google.*') ? 'active' : '' }}" href="{{ route('tenant.integrations.google.index') }}">
                             <i class="mdi mdi-google me-1"></i> Google Calendar
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {{ request()->routeIs('tenant.integrations.apple.*') ? 'active' : '' }}" href="{{ route('tenant.integrations.apple.index') }}">
+                            <i class="mdi mdi-apple me-1"></i> Apple Calendar
                         </a>
                     </li>
                 </ul>

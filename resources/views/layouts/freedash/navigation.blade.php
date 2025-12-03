@@ -18,6 +18,15 @@
         <li class="list-divider"></li>
         <li class="nav-small-cap"><span class="hide-menu">Categorias</span></li>
 
+        {{-- Pré-Cadastros --}}
+        @if(in_array('pre_tenants', auth()->user()->modules ?? []))
+        <li class="sidebar-item">
+            <a class="sidebar-link" href="{{ route('Platform.pre_tenants.index') }}" aria-expanded="false">
+                <i class="fas fa-user-plus"></i><span class="hide-menu"> Pré-Cadastros </span>
+            </a>
+        </li>
+        @endif
+
         {{-- Empresa --}}
         @if(in_array('tenants', auth()->user()->modules ?? []))
         <li class="sidebar-item">
@@ -109,6 +118,15 @@
                 <li class="sidebar-item"><a href="{{ route('Platform.notifications_outbox.create') }}" class="sidebar-link">
                     <span class="hide-menu"><i class="fas fa-plus-circle"></i> Nova Notificação</span></a></li>
             </ul>
+        </li>
+        @endif
+
+        {{-- Templates de Notificação --}}
+        @if(in_array('notification_templates', auth()->user()->modules ?? []))
+        <li class="sidebar-item">
+            <a class="sidebar-link" href="{{ route('Platform.notification-templates.index') }}" aria-expanded="false">
+                <i class="fas fa-envelope"></i><span class="hide-menu"> Templates de Notificação </span>
+            </a>
         </li>
         @endif
 

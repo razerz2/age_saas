@@ -25,6 +25,8 @@ return new class extends Migration
             $table->tinyInteger('weekday'); // 0=Dom, 6=Sáb
             $table->time('start_time');
             $table->time('end_time');
+            $table->time('break_start_time')->nullable(); // Intervalo opcional
+            $table->time('break_end_time')->nullable(); // Intervalo opcional
             $table->unique(['doctor_id', 'weekday', 'start_time', 'end_time']);
         });
     }

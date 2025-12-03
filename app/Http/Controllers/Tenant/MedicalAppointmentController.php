@@ -18,11 +18,38 @@ use Carbon\Carbon;
 class MedicalAppointmentController extends Controller
 {
     /**
-     * Exibe tela inicial com seleção de data
+     * Exibe tela inicial com seleção de data e médico (se necessário)
      */
     public function index()
     {
-        return view('tenant.medical_appointments.index');
+        $user = Auth::guard('tenant')->user();
+        $doctors = collect();
+
+        // Admin: pode selecionar qualquer médico
+        if ($user->role === 'admin') {
+            $doctors = Doctor::with('user')
+                ->whereHas('user', function($query) {
+                    $query->where('status', 'active');
+                })
+                ->orderBy('id')
+                ->get();
+        }
+        // Usuário comum: pode selecionar apenas médicos relacionados
+        elseif ($user->role === 'user') {
+            $allowedDoctorIds = $user->allowedDoctors()->pluck('doctors.id')->toArray();
+            if (!empty($allowedDoctorIds)) {
+                $doctors = Doctor::with('user')
+                    ->whereIn('id', $allowedDoctorIds)
+                    ->whereHas('user', function($query) {
+                        $query->where('status', 'active');
+                    })
+                    ->orderBy('id')
+                    ->get();
+            }
+        }
+        // Médico: não precisa selecionar (já tem seu médico)
+
+        return view('tenant.medical_appointments.index', compact('doctors'));
     }
 
     /**
@@ -30,38 +57,86 @@ class MedicalAppointmentController extends Controller
      */
     public function start(Request $request)
     {
-        $request->validate([
+        $user = Auth::guard('tenant')->user();
+        
+        $rules = [
             'date' => 'required|date',
-        ]);
+        ];
+
+        // Admin e usuário comum precisam selecionar médico (se tiverem médicos disponíveis)
+        if ($user->role === 'admin' || $user->role === 'user') {
+            // Verificar se há médicos disponíveis
+            if ($user->role === 'admin') {
+                $hasDoctors = Doctor::whereHas('user', function($query) {
+                    $query->where('status', 'active');
+                })->exists();
+            } else {
+                $allowedDoctorIds = $user->allowedDoctors()->pluck('doctors.id')->toArray();
+                $hasDoctors = !empty($allowedDoctorIds);
+            }
+            
+            if ($hasDoctors) {
+                $rules['doctor_ids'] = 'required|array|min:1';
+                $rules['doctor_ids.*'] = 'required|exists:tenant.doctors,id';
+            }
+        }
+
+        $request->validate($rules);
 
         $date = Carbon::parse($request->date)->format('Y-m-d');
+        
+        // Validar permissão do usuário comum
+        if ($user->role === 'user' && $request->doctor_ids) {
+            $allowedDoctorIds = $user->allowedDoctors()->pluck('doctors.id')->toArray();
+            $invalidDoctorIds = array_diff($request->doctor_ids, $allowedDoctorIds);
+            
+            if (!empty($invalidDoctorIds)) {
+                return redirect()->back()
+                    ->withInput()
+                    ->with('error', 'Você não tem permissão para acessar um ou mais médicos selecionados.');
+            }
+        }
 
-        return redirect()->route('tenant.medical-appointments.session', ['date' => $date]);
+        // Para médico, usar o doctor_id do próprio usuário
+        $doctorIds = $request->doctor_ids ?? ($user->doctor ? [$user->doctor->id] : []);
+
+        // Construir URL com múltiplos doctor_ids
+        $url = route('tenant.medical-appointments.session', ['date' => $date]);
+        if (!empty($doctorIds)) {
+            // Adicionar cada doctor_id como parâmetro separado na query string
+            $queryParams = [];
+            foreach ($doctorIds as $doctorId) {
+                $queryParams[] = 'doctor_ids[]=' . urlencode($doctorId);
+            }
+            $url .= '?' . implode('&', $queryParams);
+        }
+
+        return redirect($url);
     }
 
     /**
      * Exibe a tela de atendimento do dia
      */
-    public function session($date)
+    public function session($date, Request $request)
     {
         // Garantir que o tenant está ativo e a conexão configurada
         $this->ensureTenantConnection();
 
         $user = Auth::guard('tenant')->user();
         $dateCarbon = Carbon::parse($date);
+        
+        // Obter doctor_ids da query string (pode ser array ou string única)
+        $doctorIdsParam = $request->get('doctor_ids', []);
+        if (!is_array($doctorIdsParam)) {
+            // Se for string única, converter para array
+            $doctorIdsParam = $doctorIdsParam ? [$doctorIdsParam] : [];
+        }
+        $doctorIds = array_filter($doctorIdsParam); // Remove valores vazios
 
         // Buscar agendamentos do dia
         $query = Appointment::with(['calendar.doctor.user', 'patient', 'type', 'specialty'])
             ->forDay($dateCarbon)
             ->whereIn('status', ['scheduled', 'confirmed', 'arrived', 'in_service']);
-
-        // Log antes do filtro
-        $countBeforeFilter = $query->count();
-        Log::info('Agendamentos antes do filtro', [
-            'user_id' => $user->id,
-            'user_role' => $user->role,
-            'count' => $countBeforeFilter
-        ]);
 
         // Aplicar filtros baseado no role e permissões
         if ($user->role === 'doctor') {
@@ -69,57 +144,93 @@ class MedicalAppointmentController extends Controller
             $doctor = Doctor::where('user_id', $user->id)->first();
             
             if ($doctor) {
-                $doctorId = $doctor->id;
+                $doctorIds = [$doctor->id];
                 Log::info('Filtrando agendamentos para médico', [
                     'user_id' => $user->id,
-                    'doctor_id' => $doctorId,
-                    'doctor_id_type' => gettype($doctorId)
+                    'doctor_ids' => $doctorIds,
                 ]);
                 
                 // Filtrar diretamente pelo doctor_id do calendar
-                $query->whereHas('calendar', function($q) use ($doctorId) {
-                    $q->where('doctor_id', $doctorId);
+                $query->whereHas('calendar', function($q) use ($doctorIds) {
+                    $q->whereIn('doctor_id', $doctorIds);
                 });
             } else {
                 // Se o usuário tem role doctor mas não tem vínculo com médico, não mostra nada
                 Log::warning('Usuário com role doctor mas sem registro na tabela doctors', [
                     'user_id' => $user->id,
-                    'is_doctor' => $user->is_doctor ?? null
                 ]);
                 $query->whereRaw('1 = 0');
             }
-        } elseif ($user->role === 'user') {
-            // Usuário comum só vê médicos relacionados
-            $allowedDoctorIds = $user->allowedDoctors()->pluck('doctors.id')->toArray();
-            if (!empty($allowedDoctorIds)) {
-                Log::info('Filtrando agendamentos para usuário comum', [
+        } elseif ($user->role === 'admin') {
+            // Admin: filtrar por médicos selecionados se fornecidos
+            if (!empty($doctorIds)) {
+                Log::info('Filtrando agendamentos para admin por médicos específicos', [
                     'user_id' => $user->id,
-                    'allowed_doctor_ids' => $allowedDoctorIds
+                    'doctor_ids' => $doctorIds,
                 ]);
                 
-                $query->whereHas('calendar', function($q) use ($allowedDoctorIds) {
-                    $q->whereIn('doctor_id', $allowedDoctorIds);
+                $query->whereHas('calendar', function($q) use ($doctorIds) {
+                    $q->whereIn('doctor_id', $doctorIds);
+                });
+            }
+            // Se não fornecido, admin vê tudo (sem filtro adicional)
+        } elseif ($user->role === 'user') {
+            // Usuário comum: filtrar por médicos selecionados e validar permissão
+            if (!empty($doctorIds)) {
+                $allowedDoctorIds = $user->allowedDoctors()->pluck('doctors.id')->toArray();
+                $invalidDoctorIds = array_diff($doctorIds, $allowedDoctorIds);
+                
+                if (!empty($invalidDoctorIds)) {
+                    // Sem permissão para um ou mais médicos
+                    Log::warning('Usuário comum tentando acessar médicos sem permissão', [
+                        'user_id' => $user->id,
+                        'doctor_ids' => $doctorIds,
+                        'invalid_ids' => $invalidDoctorIds,
+                    ]);
+                    abort(403, 'Você não tem permissão para acessar um ou mais médicos selecionados.');
+                }
+                
+                Log::info('Filtrando agendamentos para usuário comum por médicos específicos', [
+                    'user_id' => $user->id,
+                    'doctor_ids' => $doctorIds,
+                ]);
+                
+                $query->whereHas('calendar', function($q) use ($doctorIds) {
+                    $q->whereIn('doctor_id', $doctorIds);
                 });
             } else {
-                // Se não tem médicos permitidos, não mostra nada
-                Log::info('Usuário comum sem médicos permitidos', [
-                    'user_id' => $user->id
-                ]);
-                $query->whereRaw('1 = 0');
+                // Se não fornecido, usar lista de médicos permitidos
+                $allowedDoctorIds = $user->allowedDoctors()->pluck('doctors.id')->toArray();
+                if (!empty($allowedDoctorIds)) {
+                    Log::info('Filtrando agendamentos para usuário comum', [
+                        'user_id' => $user->id,
+                        'allowed_doctor_ids' => $allowedDoctorIds
+                    ]);
+                    
+                    $query->whereHas('calendar', function($q) use ($allowedDoctorIds) {
+                        $q->whereIn('doctor_id', $allowedDoctorIds);
+                    });
+                } else {
+                    // Se não tem médicos permitidos, não mostra nada
+                    Log::info('Usuário comum sem médicos permitidos', [
+                        'user_id' => $user->id
+                    ]);
+                    $query->whereRaw('1 = 0');
+                }
             }
         }
-        // Admin vê tudo (sem filtro)
 
+        // Ordenar por horário de início (starts_at)
         $appointments = $query->orderBy('starts_at', 'asc')->get();
 
         Log::info('Agendamentos encontrados', [
             'user_id' => $user->id,
             'user_role' => $user->role,
+            'doctor_ids' => $doctorIds,
             'count' => $appointments->count(),
-            'doctor_ids' => $appointments->pluck('calendar.doctor_id')->unique()->values()->toArray()
         ]);
 
-        return view('tenant.medical_appointments.session', compact('appointments', 'date'));
+        return view('tenant.medical_appointments.session', compact('appointments', 'date', 'doctorIds'));
     }
 
     /**

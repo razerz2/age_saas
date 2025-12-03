@@ -19,6 +19,11 @@ Esta pasta contém documentação complementar e guias específicos do projeto.
 - **[ENV.md](ENV.md)** - Guia completo de variáveis de ambiente
 - **[CORRECAO_APP_URL.md](CORRECAO_APP_URL.md)** - Correção de problemas com APP_URL
 
+### 🔗 Integrações
+
+- **[INTEGRACAO_GOOGLE_CALENDAR.md](INTEGRACAO_GOOGLE_CALENDAR.md)** - Documentação completa da integração com Google Calendar
+- **[INTEGRACAO_APPLE_CALENDAR.md](INTEGRACAO_APPLE_CALENDAR.md)** - Documentação completa da integração com Apple Calendar (iCloud)
+
 ### 🗄️ Migrations e Banco de Dados
 
 - **[INSTRUCOES_MIGRATION.md](INSTRUCOES_MIGRATION.md)** - Instruções para migrações manuais

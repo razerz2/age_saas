@@ -29,6 +29,39 @@
                     <form action="{{ route('tenant.medical-appointments.start') }}" method="POST">
                         @csrf
 
+                        @php
+                            $user = auth('tenant')->user();
+                            $showDoctorSelect = ($user->role === 'admin' || $user->role === 'user') && $doctors->isNotEmpty();
+                        @endphp
+
+                        @if($showDoctorSelect)
+                            <div class="mb-3">
+                                <label class="form-label">Médicos</label>
+                                <div class="medical-appointments-doctor-select">
+                                    @foreach($doctors as $doctor)
+                                        <div class="form-check">
+                                            <input class="form-check-input @error('doctor_ids') is-invalid @enderror" 
+                                                   type="checkbox" 
+                                                   name="doctor_ids[]" 
+                                                   id="doctor_{{ $doctor->id }}" 
+                                                   value="{{ $doctor->id }}"
+                                                   {{ (is_array(old('doctor_ids')) && in_array($doctor->id, old('doctor_ids'))) ? 'checked' : '' }}>
+                                            <label class="form-check-label" for="doctor_{{ $doctor->id }}">
+                                                {{ $doctor->user->name ?? 'Sem nome' }}
+                                            </label>
+                                        </div>
+                                    @endforeach
+                                </div>
+                                @error('doctor_ids')
+                                    <div class="invalid-feedback d-block">{{ $message }}</div>
+                                @enderror
+                                @error('doctor_ids.*')
+                                    <div class="invalid-feedback d-block">{{ $message }}</div>
+                                @enderror
+                                <small class="text-muted">Selecione um ou mais médicos</small>
+                            </div>
+                        @endif
+
                         <div class="mb-3">
                             <label for="date" class="form-label">Data do Atendimento</label>
                             <input type="date" 
@@ -55,4 +88,8 @@
     </div>
 
 @endsection
+
+@push('styles')
+    <link href="{{ asset('css/tenant-medical-appointments.css') }}" rel="stylesheet">
+@endpush
 

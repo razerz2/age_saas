@@ -18,7 +18,7 @@ class Appointment extends Model
     protected $fillable = [
         'id', 'calendar_id', 'doctor_id', 'appointment_type', 'patient_id',
         'specialty_id', 'starts_at', 'ends_at',
-        'status', 'notes', 'recurring_appointment_id', 'google_event_id', 'appointment_mode'
+        'status', 'notes', 'recurring_appointment_id', 'google_event_id', 'apple_event_id', 'appointment_mode'
     ];
 
     protected $casts = [

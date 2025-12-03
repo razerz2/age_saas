@@ -109,4 +109,12 @@ class Doctor extends Model
     {
         return $this->hasOne(\App\Models\Tenant\GoogleCalendarToken::class);
     }
+
+    /**
+     * Relacionamento com Apple Calendar Token
+     */
+    public function appleCalendarToken()
+    {
+        return $this->hasOne(\App\Models\Tenant\AppleCalendarToken::class);
+    }
 }

@@ -3,8 +3,6 @@
 namespace App\Http\Requests\Tenant;
 
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Validator;
-use App\Models\Tenant\AppointmentType;
 
 class UpdateAppointmentTypeRequest extends FormRequest
 {
@@ -16,35 +14,23 @@ class UpdateAppointmentTypeRequest extends FormRequest
     public function rules()
     {
         return [
-            'doctor_id'   => ['required', 'uuid', 'exists:tenant.doctors,id'],
             'name'         => ['required', 'string', 'max:255'],
             'duration_min' => ['required', 'integer', 'min:1'],
-            'is_active'    => ['required', 'boolean'],
+            'is_active'    => ['required', 'in:0,1'],
         ];
     }
 
     /**
-     * Configure the validator instance.
+     * Prepare os dados para validação.
      */
-    public function withValidator(Validator $validator)
+    protected function prepareForValidation()
     {
-        $validator->after(function ($validator) {
-            $doctorId = $this->input('doctor_id');
-            $appointmentTypeId = $this->route('id');
-            
-            if ($doctorId && $appointmentTypeId) {
-                $existingAppointmentType = AppointmentType::where('doctor_id', $doctorId)
-                    ->where('id', '!=', $appointmentTypeId)
-                    ->first();
-                
-                if ($existingAppointmentType) {
-                    $validator->errors()->add(
-                        'doctor_id',
-                        'Este médico já possui um tipo de consulta registrado. Cada médico só pode ter um tipo de consulta.'
-                    );
+        // Converter is_active de string para boolean
+        if ($this->has('is_active')) {
+            $this->merge([
+                'is_active' => (bool) $this->is_active,
+            ]);
                 }
-            }
-        });
     }
 
     /**
@@ -53,11 +39,6 @@ class UpdateAppointmentTypeRequest extends FormRequest
     public function messages()
     {
         return [
-            'doctor_id.required' => 'O médico é obrigatório.',
-            'doctor_id.uuid' => 'O ID do médico deve ser um UUID válido.',
-            'doctor_id.exists' => 'O médico selecionado não existe.',
-            'doctor_id.custom' => 'Este médico já possui um tipo de consulta registrado. Cada médico só pode ter um tipo de consulta.',
-
             'name.required' => 'O nome do tipo de agendamento é obrigatório.',
             'name.string' => 'O nome do tipo de agendamento deve ser uma string válida.',
             'name.max' => 'O nome do tipo de agendamento não pode ter mais que 255 caracteres.',
@@ -67,7 +48,7 @@ class UpdateAppointmentTypeRequest extends FormRequest
             'duration_min.min' => 'A duração em minutos deve ser no mínimo 1 minuto.',
 
             'is_active.required' => 'O campo "Ativo" é obrigatório.',
-            'is_active.boolean' => 'O campo "Ativo" deve ser verdadeiro ou falso.',
+            'is_active.in' => 'O campo "Ativo" deve ser Ativo ou Inativo.',
         ];
     }
 }

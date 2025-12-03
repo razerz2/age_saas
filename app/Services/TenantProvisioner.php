@@ -116,6 +116,7 @@ class TenantProvisioner
                     'password'   => Hash::make($adminPassword),
                     'is_doctor'  => false,
                     'status'     => 'active',
+                    'role'       => 'admin',
                     'modules'    => json_encode([]),
                     'created_at' => now(),
                     'updated_at' => now(),

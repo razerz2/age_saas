@@ -40,11 +40,54 @@ class DoctorController extends Controller
 
     public function create()
     {
-        // Buscar apenas usuários que não possuem vínculo com médico
-        $users = User::whereDoesntHave('doctor')
-            ->orderBy('name')
-            ->get();
+        $loggedUser = Auth::guard('tenant')->user();
         
+        // Base: apenas usuários médicos que não possuem vínculo com médico
+        $query = User::where('role', 'doctor')
+            ->whereDoesntHave('doctor');
+        
+        // Aplicar filtros baseado no role do usuário logado
+        if ($loggedUser->role === 'admin') {
+            // Admin: lista todos os usuários médicos
+            // (sem filtro adicional)
+        } elseif ($loggedUser->role === 'user') {
+            // Usuário comum: lista apenas usuários médicos cujos médicos têm relação com ele
+            $allowedDoctorIds = $loggedUser->allowedDoctors()->pluck('doctors.id')->toArray();
+            if (!empty($allowedDoctorIds)) {
+                // Buscar os user_id dos médicos relacionados
+                $relatedUserIds = Doctor::whereIn('id', $allowedDoctorIds)
+                    ->pluck('user_id')
+                    ->toArray();
+                // Filtrar apenas esses usuários médicos
+                $query->whereIn('id', $relatedUserIds);
+            } else {
+                // Se não tem médicos permitidos, não mostra nada
+                $query->whereRaw('1 = 0');
+            }
+        } elseif ($loggedUser->role === 'doctor' && $loggedUser->doctor) {
+            // Usuário médico: lista apenas usuários médicos cujos médicos têm relação com ele
+            $allowedDoctorIds = $loggedUser->allowedDoctors()->pluck('doctors.id')->toArray();
+            // Incluir também o próprio médico
+            $allowedDoctorIds[] = $loggedUser->doctor->id;
+            $allowedDoctorIds = array_unique($allowedDoctorIds);
+            
+            if (!empty($allowedDoctorIds)) {
+                // Buscar os user_id dos médicos relacionados
+                $relatedUserIds = Doctor::whereIn('id', $allowedDoctorIds)
+                    ->pluck('user_id')
+                    ->toArray();
+                // Incluir também ele mesmo (caso não tenha médico ainda)
+                $relatedUserIds[] = $loggedUser->id;
+                $relatedUserIds = array_unique($relatedUserIds);
+                // Filtrar apenas esses usuários médicos
+                $query->whereIn('id', $relatedUserIds);
+            } else {
+                // Se não tem médicos permitidos, só mostra ele mesmo
+                $query->where('id', $loggedUser->id);
+            }
+        }
+        
+        $users = $query->orderBy('name')->get();
         $specialties = MedicalSpecialty::orderBy('name')->get();
 
         return view('tenant.doctors.create', compact('users', 'specialties'));
@@ -94,14 +137,68 @@ class DoctorController extends Controller
     public function edit($id)
     {
         $doctor = Doctor::findOrFail($id);
+        $loggedUser = Auth::guard('tenant')->user();
         
-        // Buscar usuários que não possuem vínculo com médico, 
+        // Base: apenas usuários médicos que não possuem vínculo com médico, 
         // OU o usuário atual deste médico (para permitir manter o mesmo usuário)
-        $users = User::where(function ($query) use ($doctor) {
-            $query->whereDoesntHave('doctor')
-                  ->orWhere('id', $doctor->user_id);
-        })->orderBy('name')->get();
+        $query = User::where('role', 'doctor')
+            ->where(function ($query) use ($doctor) {
+                $query->whereDoesntHave('doctor')
+                      ->orWhere('id', $doctor->user_id);
+            });
         
+        // Aplicar filtros baseado no role do usuário logado
+        if ($loggedUser->role === 'admin') {
+            // Admin: lista todos os usuários médicos
+            // (sem filtro adicional)
+        } elseif ($loggedUser->role === 'user') {
+            // Usuário comum: lista apenas médicos que têm relação com ele
+            $allowedDoctorIds = $loggedUser->allowedDoctors()->pluck('doctors.id')->toArray();
+            // Incluir o médico atual se ele estiver relacionado
+            if (in_array($doctor->id, $allowedDoctorIds)) {
+                $allowedDoctorIds[] = $doctor->id;
+            }
+            $allowedDoctorIds = array_unique($allowedDoctorIds);
+            
+            if (!empty($allowedDoctorIds)) {
+                // Buscar os user_id dos médicos relacionados
+                $relatedUserIds = Doctor::whereIn('id', $allowedDoctorIds)
+                    ->pluck('user_id')
+                    ->toArray();
+                // Garantir que o usuário atual do médico está incluído
+                $relatedUserIds[] = $doctor->user_id;
+                $relatedUserIds = array_unique($relatedUserIds);
+                $query->whereIn('id', $relatedUserIds);
+            } else {
+                // Se não tem médicos permitidos, só mostra o usuário atual do médico
+                $query->where('id', $doctor->user_id);
+            }
+        } elseif ($loggedUser->role === 'doctor' && $loggedUser->doctor) {
+            // Usuário médico: lista apenas médicos que têm relação com ele
+            $allowedDoctorIds = $loggedUser->allowedDoctors()->pluck('doctors.id')->toArray();
+            // Incluir também o próprio médico e o médico atual
+            $allowedDoctorIds[] = $loggedUser->doctor->id;
+            if ($doctor->id !== $loggedUser->doctor->id) {
+                $allowedDoctorIds[] = $doctor->id;
+            }
+            $allowedDoctorIds = array_unique($allowedDoctorIds);
+            
+            if (!empty($allowedDoctorIds)) {
+                // Buscar os user_id dos médicos relacionados
+                $relatedUserIds = Doctor::whereIn('id', $allowedDoctorIds)
+                    ->pluck('user_id')
+                    ->toArray();
+                // Garantir que o usuário atual do médico está incluído
+                $relatedUserIds[] = $doctor->user_id;
+                $relatedUserIds = array_unique($relatedUserIds);
+                $query->whereIn('id', $relatedUserIds);
+            } else {
+                // Se não tem médicos permitidos, só mostra o usuário atual do médico
+                $query->where('id', $doctor->user_id);
+            }
+        }
+        
+        $users = $query->orderBy('name')->get();
         $specialties = MedicalSpecialty::orderBy('name')->get();
         $doctor->load('specialties');
 

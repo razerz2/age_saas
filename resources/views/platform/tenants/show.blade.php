@@ -147,22 +147,36 @@
 
                                 <div class="col-md-6">
                                     <label class="fw-semibold text-muted">Usuário (Email):</label>
-                                    <p class="mb-0">
-                                        @if($adminUser)
-                                            <code class="bg-light px-2 py-1 rounded">{{ $adminUser->email }}</code>
+                                    <p class="mb-0 d-inline-flex align-items-center gap-2">
+                                        @if($tenant->admin_email)
+                                            <code class="bg-light px-2 py-1 rounded" id="adminEmail">{{ $tenant->admin_email }}</code>
+                                        @elseif($adminUser)
+                                            <code class="bg-light px-2 py-1 rounded" id="adminEmail">{{ $adminUser->email }}</code>
                                         @else
                                             <span class="text-muted">Usuário admin não encontrado</span>
+                                        @endif
+                                        @if($tenant->admin_email || ($adminUser && $adminUser->email))
+                                            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="copyToClipboard('adminEmail', 'btnCopyEmail')" id="btnCopyEmail" title="Copiar email">
+                                                <i class="fas fa-copy"></i>
+                                            </button>
                                         @endif
                                     </p>
                                 </div>
 
                                 <div class="col-md-6">
                                     <label class="fw-semibold text-muted">Senha:</label>
-                                    <p class="mb-0">
+                                    <p class="mb-0 d-inline-flex align-items-center gap-2">
                                         @if($adminPassword)
-                                            <code class="bg-light px-2 py-1 rounded">{{ $adminPassword }}</code>
+                                            <code class="bg-light px-2 py-1 rounded" id="adminPassword">{{ $adminPassword }}</code>
+                                        @elseif($tenant->admin_password)
+                                            <code class="bg-light px-2 py-1 rounded" id="adminPassword">{{ $tenant->admin_password }}</code>
                                         @else
                                             <span class="text-muted">Senha não disponível (já foi gerada anteriormente)</span>
+                                        @endif
+                                        @if($adminPassword || $tenant->admin_password)
+                                            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="copyToClipboard('adminPassword', 'btnCopyPassword')" id="btnCopyPassword" title="Copiar senha">
+                                                <i class="fas fa-copy"></i>
+                                            </button>
                                         @endif
                                     </p>
                                 </div>
@@ -265,4 +279,67 @@
     </div>
 
     @include('layouts.freedash.footer')
+
+    <script>
+        function copyToClipboard(elementId, buttonId) {
+            const element = document.getElementById(elementId);
+            if (!element) {
+                alert('Elemento não encontrado.');
+                return;
+            }
+
+            const text = element.textContent.trim();
+
+            // Tentar usar a API Clipboard moderna
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(text).then(function() {
+                    showCopySuccess(buttonId);
+                }).catch(function(err) {
+                    console.error('Erro ao copiar:', err);
+                    fallbackCopy(text, buttonId);
+                });
+            } else {
+                // Fallback para navegadores mais antigos
+                fallbackCopy(text, buttonId);
+            }
+        }
+
+        function fallbackCopy(text, buttonId) {
+            const textarea = document.createElement('textarea');
+            textarea.value = text;
+            textarea.style.position = 'fixed';
+            textarea.style.opacity = '0';
+            document.body.appendChild(textarea);
+            textarea.select();
+            
+            try {
+                document.execCommand('copy');
+                showCopySuccess(buttonId);
+            } catch (err) {
+                console.error('Erro ao copiar:', err);
+                alert('Erro ao copiar. Por favor, copie manualmente.');
+            }
+            
+            document.body.removeChild(textarea);
+        }
+
+        function showCopySuccess(buttonId) {
+            const btn = document.getElementById(buttonId);
+            if (!btn) return;
+            
+            const originalHtml = btn.innerHTML;
+            
+            btn.innerHTML = '<i class="fas fa-check"></i>';
+            btn.classList.remove('btn-outline-secondary');
+            btn.classList.add('btn-success');
+            btn.disabled = true;
+            
+            setTimeout(function() {
+                btn.innerHTML = originalHtml;
+                btn.classList.remove('btn-success');
+                btn.classList.add('btn-outline-secondary');
+                btn.disabled = false;
+            }, 2000);
+        }
+    </script>
 @endsection

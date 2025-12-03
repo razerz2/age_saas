@@ -18,6 +18,8 @@ use App\Http\Controllers\Platform\LocationController;
 use App\Http\Controllers\Platform\SystemSettingsController;
 use App\Http\Controllers\Platform\KioskMonitorController;
 use App\Http\Controllers\Platform\PlanAccessManagerController;
+use App\Http\Controllers\Platform\PreTenantController;
+use App\Http\Controllers\Platform\NotificationTemplateController;
 use App\Models\Platform\SystemNotification;
 use App\Http\Controllers\Platform\WhatsAppController;
 use App\Http\Controllers\Tenant\Integrations\GoogleCalendarController;
@@ -50,6 +52,14 @@ Route::get('/kiosk/monitor/data', [KioskMonitorController::class, 'data'])->name
 
 //Rota do Webhook do asaas...
 Route::post('/webhook/asaas', [AsaasWebhookController::class, 'handle'])->middleware('verify.asaas.token');
+
+// Webhook exclusivo para pré-cadastro
+Route::post('/webhook/asaas/pre-registration', [\App\Http\Controllers\Webhook\PreRegistrationWebhookController::class, 'handle'])
+    ->middleware('verify.asaas.token');
+
+// Rota pública para pré-cadastro (landing page)
+Route::post('/pre-register', [\App\Http\Controllers\PreRegisterController::class, 'store'])
+    ->middleware('throttle:10,1'); // Rate limit: 10 requisições por minuto
 
 // Callback global do Google Calendar (não fica no grupo /t/{tenant})
 Route::get('/google/callback', [GoogleCalendarController::class, 'callback'])->name('google.callback');
@@ -103,6 +113,16 @@ Route::middleware(['auth'])->prefix('Platform')->name('Platform.')->group(functi
         Route::post('/invoices/{invoice}/sync', [InvoiceController::class, 'syncManual'])->name('invoices.sync');
     });
 
+    // 🔸 Módulo: Pré-Cadastros
+    Route::middleware('module.access:pre_tenants')->group(function () {
+        Route::resource('pre-tenants', PreTenantController::class)->names([
+            'index' => 'pre_tenants.index',
+            'show' => 'pre_tenants.show',
+        ])->only(['index', 'show']);
+        Route::post('pre-tenants/{preTenant}/approve', [PreTenantController::class, 'approve'])->name('pre_tenants.approve');
+        Route::post('pre-tenants/{preTenant}/cancel', [PreTenantController::class, 'cancel'])->name('pre_tenants.cancel');
+    });
+
     // 🔸 Módulo: Catálogo de Especialidades Médicas
     Route::middleware('module.access:medical_specialties_catalog')->group(function () {
         Route::resource('medical_specialties_catalog', MedicalSpecialtyCatalogController::class);
@@ -118,6 +138,24 @@ Route::middleware(['auth'])->prefix('Platform')->name('Platform.')->group(functi
         Route::resource('system_notifications', SystemNotificationController::class)
             ->except(['create', 'edit', 'update', 'store', 'destroy'])
             ->whereUuid('system_notification');
+    });
+
+    // 🔸 Módulo: Templates de Notificação
+    Route::middleware('module.access:notification_templates')->group(function () {
+        Route::resource('notification-templates', NotificationTemplateController::class)
+            ->except(['show', 'create', 'store']);
+        
+        Route::post('notification-templates/{notificationTemplate}/restore', 
+            [NotificationTemplateController::class, 'restore'])
+            ->name('notification-templates.restore');
+        
+        Route::post('notification-templates/{notificationTemplate}/test', 
+            [NotificationTemplateController::class, 'testSend'])
+            ->name('notification-templates.test');
+        
+        Route::post('notification-templates/{notificationTemplate}/toggle', 
+            [NotificationTemplateController::class, 'toggle'])
+            ->name('notification-templates.toggle');
     });
 
     // 🔸 Módulo: Localização (Países, Estados, Cidades)

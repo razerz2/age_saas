@@ -325,12 +325,33 @@ class PublicAppointmentController extends Controller
         foreach ($businessHours as $businessHour) {
             $startTime = Carbon::parse($date->format('Y-m-d') . ' ' . $businessHour->start_time);
             $endTime = Carbon::parse($date->format('Y-m-d') . ' ' . $businessHour->end_time);
+            
+            // Verificar se há intervalo configurado
+            $breakStartTime = null;
+            $breakEndTime = null;
+            if ($businessHour->break_start_time && $businessHour->break_end_time) {
+                $breakStartTime = Carbon::parse($date->format('Y-m-d') . ' ' . $businessHour->break_start_time);
+                $breakEndTime = Carbon::parse($date->format('Y-m-d') . ' ' . $businessHour->break_end_time);
+            }
 
             $currentSlot = $startTime->copy();
 
             while ($currentSlot->copy()->addMinutes($duration)->lte($endTime)) {
                 $slotStart = $currentSlot->copy();
                 $slotEnd = $currentSlot->copy()->addMinutes($duration);
+                
+                // Verificar se o slot está dentro do intervalo (se houver)
+                $isInBreak = false;
+                if ($breakStartTime && $breakEndTime) {
+                    // Verifica se o slot se sobrepõe ao intervalo
+                    $isInBreak = ($slotStart->lt($breakEndTime) && $slotEnd->gt($breakStartTime));
+                }
+                
+                if ($isInBreak) {
+                    // Pular este slot pois está no intervalo
+                    $currentSlot->addMinutes($duration);
+                    continue;
+                }
 
                 $hasConflict = $existingAppointments->filter(function($appointment) use ($slotStart, $slotEnd) {
                     $apptStart = Carbon::parse($appointment->starts_at);

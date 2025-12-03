@@ -44,15 +44,6 @@ class SwitchTenantTask extends SwitchTenantDatabaseTask
             'slug' => $platformTenant->subdomain,
         ]);
 
-        // Verificar se as credenciais estão sendo passadas corretamente
-        Log::info("🔧 Verificando as credenciais para a conexão com o banco", [
-            'host' => env('DB_TENANT_HOST', '127.0.0.1'),  // Host fixo no .env
-            'port' => env('DB_TENANT_PORT', '5432'),       // Porta fixa no .env
-            'database' => $platformTenant->db_name,        // Banco dinâmico
-            'username' => $platformTenant->db_username,    // Usuário dinâmico
-            'password_set' => !empty($platformTenant->db_password),    // Verifica se senha está definida
-        ]);
-
         // Valida se as credenciais essenciais estão presentes
         if (empty($platformTenant->db_name)) {
             Log::error("❗ Nome do banco de dados do tenant está vazio", [
@@ -68,16 +59,29 @@ class SwitchTenantTask extends SwitchTenantDatabaseTask
             return;
         }
 
+        // Usar host e porta do tenant, com fallback para .env se não estiver definido
+        $dbHost = $platformTenant->db_host ?: env('DB_TENANT_HOST', '127.0.0.1');
+        $dbPort = $platformTenant->db_port ?: env('DB_TENANT_PORT', '5432');
+
+        // Verificar se as credenciais estão sendo passadas corretamente
+        Log::info("🔧 Verificando as credenciais para a conexão com o banco", [
+            'host' => $dbHost,
+            'port' => $dbPort,
+            'database' => $platformTenant->db_name,
+            'username' => $platformTenant->db_username,
+            'password_set' => !empty($platformTenant->db_password),
+        ]);
+
         // Primeiro purga a conexão
         DB::purge('tenant');
 
-        // Agora, configura os parâmetros corretamente
-        Config::set('database.connections.tenant.host', env('DB_TENANT_HOST', '127.0.0.1'));  // Fixo no .env
-        Config::set('database.connections.tenant.port', env('DB_TENANT_PORT', '5432'));  // Fixo no .env
-        Config::set('database.connections.tenant.database', $platformTenant->db_name);  // Dinâmico
-        Config::set('database.connections.tenant.username', $platformTenant->db_username);  // Dinâmico
+        // Agora, configura os parâmetros corretamente usando os valores do tenant
+        Config::set('database.connections.tenant.host', $dbHost);
+        Config::set('database.connections.tenant.port', $dbPort);
+        Config::set('database.connections.tenant.database', $platformTenant->db_name);
+        Config::set('database.connections.tenant.username', $platformTenant->db_username);
         // Garante que a senha seja uma string (mesmo que vazia, mas não null)
-        Config::set('database.connections.tenant.password', $platformTenant->db_password ?? '');  // Dinâmico
+        Config::set('database.connections.tenant.password', $platformTenant->db_password ?? '');
 
 
         Log::info("🔧 Conexão configurada para tenant", [

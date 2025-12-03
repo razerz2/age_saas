@@ -21,6 +21,7 @@ class AuthServiceProvider extends ServiceProvider
         \App\Models\Tenant\AppointmentType::class => \App\Policies\Tenant\AppointmentTypePolicy::class,
         \App\Models\Tenant\Form::class => \App\Policies\Tenant\FormPolicy::class,
         \App\Models\Tenant\FormResponse::class => \App\Policies\Tenant\FormResponsePolicy::class,
+        \App\Models\Platform\PreTenant::class => \App\Policies\Platform\PreTenantPolicy::class,
     ];
 
     /**

@@ -32,6 +32,37 @@
                             </h4>
                             <p class="card-description mb-0 text-muted">Preencha os dados abaixo para criar um novo agendamento</p>
                         </div>
+                        <div>
+                            <a href="{{ route('tenant.public-booking-link.index') }}" 
+                               class="btn btn-outline-info btn-sm" 
+                               title="Acessar link de agendamento público">
+                                <i class="mdi mdi-link-variant me-1"></i>
+                                Link de Agendamento
+                            </a>
+                        </div>
+                    </div>
+
+                    {{-- Card informativo sobre agendamento público --}}
+                    <div class="alert alert-info alert-dismissible fade show shadow-sm mb-4" role="alert">
+                        <div class="d-flex align-items-start">
+                            <i class="mdi mdi-information-outline me-3" style="font-size: 1.5rem; flex-shrink: 0; margin-top: 0.25rem;"></i>
+                            <div class="flex-grow-1">
+                                <strong class="d-block mb-2">
+                                    <i class="mdi mdi-link-variant me-1"></i>
+                                    Agendamento Público Disponível
+                                </strong>
+                                <p class="mb-2" style="font-size: 0.9rem;">
+                                    Seus pacientes podem agendar consultas diretamente pela internet usando o link de agendamento público. 
+                                    Compartilhe o link nas redes sociais, WhatsApp ou site da clínica.
+                                </p>
+                                <a href="{{ route('tenant.public-booking-link.index') }}" 
+                                   class="btn btn-sm btn-info mt-2">
+                                    <i class="mdi mdi-link-variant me-1"></i>
+                                    Ver e Copiar Link de Agendamento
+                                </a>
+                            </div>
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+                        </div>
                     </div>
 
                     {{-- Exibição de erros de validação --}}

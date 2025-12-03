@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Tenant;
 use App\Http\Controllers\Controller;
 use App\Models\Tenant\TenantSetting;
 use App\Models\Tenant\Integrations;
+use App\Models\Platform\Tenant;
 use Illuminate\Http\Request;
 
 class SettingsController extends Controller
@@ -95,7 +96,32 @@ class SettingsController extends Controller
             $hasGoogleCalendarIntegration = $googleCalendarIntegration->is_enabled && $hasConfig;
         }
 
-        return view('tenant.settings.index', compact('settings', 'integrations', 'hasGoogleCalendarIntegration', 'googleCalendarIntegration'));
+        // Obter tenant atual para gerar o link de agendamento público
+        $currentTenant = Tenant::current();
+        $publicBookingUrl = null;
+        
+        if ($currentTenant) {
+            $publicBookingUrl = url('/t/' . $currentTenant->subdomain . '/agendamento/criar');
+        }
+
+        return view('tenant.settings.index', compact('settings', 'integrations', 'hasGoogleCalendarIntegration', 'googleCalendarIntegration', 'publicBookingUrl'));
+    }
+
+    /**
+     * Exibe a página dedicada do link de agendamento público
+     * Esta página não requer acesso ao módulo de configurações
+     */
+    public function publicBookingLink()
+    {
+        // Obter tenant atual para gerar o link de agendamento público
+        $currentTenant = Tenant::current();
+        $publicBookingUrl = null;
+        
+        if ($currentTenant) {
+            $publicBookingUrl = url('/t/' . $currentTenant->subdomain . '/agendamento/criar');
+        }
+
+        return view('tenant.settings.public-booking-link', compact('publicBookingUrl'));
     }
 
     /**

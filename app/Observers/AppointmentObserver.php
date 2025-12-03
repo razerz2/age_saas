@@ -10,6 +10,7 @@ use App\Models\Platform\Tenant;
 use App\Services\TenantNotificationService;
 use App\Services\NotificationService;
 use App\Services\Tenant\GoogleCalendarService;
+use App\Services\Tenant\AppleCalendarService;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Str;
@@ -17,10 +18,14 @@ use Illuminate\Support\Str;
 class AppointmentObserver
 {
     protected GoogleCalendarService $googleCalendarService;
+    protected AppleCalendarService $appleCalendarService;
 
-    public function __construct(GoogleCalendarService $googleCalendarService)
-    {
+    public function __construct(
+        GoogleCalendarService $googleCalendarService,
+        AppleCalendarService $appleCalendarService
+    ) {
         $this->googleCalendarService = $googleCalendarService;
+        $this->appleCalendarService = $appleCalendarService;
     }
 
     /**
@@ -110,6 +115,16 @@ class AppointmentObserver
                 'error' => $e->getMessage(),
             ]);
         }
+
+        // Sincronizar com Apple Calendar se o médico tiver token
+        try {
+            $this->appleCalendarService->syncEvent($appointment);
+        } catch (\Exception $e) {
+            Log::error('Erro ao sincronizar agendamento com Apple Calendar (Observer)', [
+                'appointment_id' => $appointment->id,
+                'error' => $e->getMessage(),
+            ]);
+        }
     }
 
     /**
@@ -155,12 +170,20 @@ class AppointmentObserver
             return;
         }
 
-        // Se status mudou para "canceled", apenas remover do Google Calendar
+        // Se status mudou para "canceled", remover dos calendários externos
         if ($appointment->wasChanged('status') && $appointment->status === 'canceled') {
             try {
                 $this->googleCalendarService->deleteEvent($appointment);
             } catch (\Exception $e) {
                 Log::error('Erro ao remover agendamento cancelado do Google Calendar (Observer)', [
+                    'appointment_id' => $appointment->id,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+            try {
+                $this->appleCalendarService->deleteEvent($appointment);
+            } catch (\Exception $e) {
+                Log::error('Erro ao remover agendamento cancelado do Apple Calendar (Observer)', [
                     'appointment_id' => $appointment->id,
                     'error' => $e->getMessage(),
                 ]);
@@ -184,8 +207,9 @@ class AppointmentObserver
             }
         }
         
-        // Se a única mudança foi no google_event_id, ignora (foi atualização do próprio serviço)
-        if (!$hasRelevantChange && count($changedFields) === 1 && in_array('google_event_id', $changedFields)) {
+        // Se a única mudança foi nos event_ids, ignora (foi atualização do próprio serviço)
+        if (!$hasRelevantChange && count($changedFields) === 1 && 
+            (in_array('google_event_id', $changedFields) || in_array('apple_event_id', $changedFields))) {
             return;
         }
         
@@ -194,6 +218,14 @@ class AppointmentObserver
                 $this->googleCalendarService->syncEvent($appointment);
             } catch (\Exception $e) {
                 Log::error('Erro ao sincronizar agendamento com Google Calendar (Observer)', [
+                    'appointment_id' => $appointment->id,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+            try {
+                $this->appleCalendarService->syncEvent($appointment);
+            } catch (\Exception $e) {
+                Log::error('Erro ao sincronizar agendamento com Apple Calendar (Observer)', [
                     'appointment_id' => $appointment->id,
                     'error' => $e->getMessage(),
                 ]);
@@ -212,11 +244,19 @@ class AppointmentObserver
             return;
         }
 
-        // Remover do Google Calendar se existir
+        // Remover dos calendários externos se existir
         try {
             $this->googleCalendarService->deleteEvent($appointment);
         } catch (\Exception $e) {
             Log::error('Erro ao remover agendamento do Google Calendar (Observer)', [
+                'appointment_id' => $appointment->id,
+                'error' => $e->getMessage(),
+            ]);
+        }
+        try {
+            $this->appleCalendarService->deleteEvent($appointment);
+        } catch (\Exception $e) {
+            Log::error('Erro ao remover agendamento do Apple Calendar (Observer)', [
                 'appointment_id' => $appointment->id,
                 'error' => $e->getMessage(),
             ]);

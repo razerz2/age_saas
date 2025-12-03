@@ -202,16 +202,19 @@ class AppointmentController extends Controller
             $query = Appointment::where('calendar_id', $calendar->id)
                 ->with(['patient', 'type', 'specialty']);
             
-            // Verifica permissão para visualizar os eventos
-            if ($user->role === 'doctor' && $user->doctor) {
-                // Médico só pode ver eventos do seu próprio calendário
-                if ($calendar->doctor_id !== $user->doctor->id) {
-                    return response()->json([]);
-                }
-            } elseif ($user->role === 'user') {
-                // Usuário comum precisa ter permissão para ver o médico
-                if (!$user->belongsToUser($calendar->doctor_id)) {
-                    return response()->json([]);
+            // Admin pode ver todos os eventos, outros roles têm restrições
+            if ($user->role !== 'admin') {
+                // Verifica permissão para visualizar os eventos
+                if ($user->role === 'doctor' && $user->doctor) {
+                    // Médico só pode ver eventos do seu próprio calendário
+                    if ($calendar->doctor_id !== $user->doctor->id) {
+                        return response()->json([]);
+                    }
+                } elseif ($user->role === 'user') {
+                    // Usuário comum precisa ter permissão para ver o médico
+                    if (!$user->belongsToUser($calendar->doctor_id)) {
+                        return response()->json([]);
+                    }
                 }
             }
             
@@ -251,23 +254,23 @@ class AppointmentController extends Controller
         // Retorna a view para acesso direto - mas primeiro verifica permissões
         $user = Auth::guard('tenant')->user();
         
-        // Verifica permissão para visualizar o calendário
-        if ($user->role === 'doctor' && $user->doctor) {
-            // Médico só pode ver seu próprio calendário
-            if ($calendar->doctor_id !== $user->doctor->id) {
-                abort(403, 'Você não tem permissão para visualizar este calendário.');
+        // Admin pode ver todos os calendários, outros roles têm restrições
+        if ($user->role !== 'admin') {
+            // Verifica permissão para visualizar o calendário
+            if ($user->role === 'doctor' && $user->doctor) {
+                // Médico só pode ver seu próprio calendário
+                if ($calendar->doctor_id !== $user->doctor->id) {
+                    abort(403, 'Você não tem permissão para visualizar este calendário.');
+                }
+            } elseif ($user->role === 'user') {
+                // Usuário comum precisa ter permissão para ver o médico
+                if (!$user->belongsToUser($calendar->doctor_id)) {
+                    abort(403, 'Você não tem permissão para visualizar este calendário.');
+                }
+            } else {
+                // Usuário não autenticado ou role inválido
+                abort(403, 'Você precisa estar autenticado para visualizar este calendário.');
             }
-        } elseif ($user->role === 'user') {
-            // Usuário comum precisa ter permissão para ver o médico
-            if (!$user->belongsToUser($calendar->doctor_id)) {
-                abort(403, 'Você não tem permissão para visualizar este calendário.');
-            }
-        } elseif ($user->role === 'admin') {
-            // Administradores não têm acesso a agendas (apenas médicos têm)
-            abort(403, 'Apenas médicos têm acesso a agendas. Administradores não possuem agendas individuais.');
-        } else {
-            // Usuário não autenticado ou role inválido
-            abort(403, 'Você precisa estar autenticado para visualizar este calendário.');
         }
         
         return view('tenant.calendars.events', compact('calendar'));
@@ -532,11 +535,32 @@ class AppointmentController extends Controller
             $startTime = Carbon::parse($date->format('Y-m-d') . ' ' . $businessHour->start_time);
             $endTime = Carbon::parse($date->format('Y-m-d') . ' ' . $businessHour->end_time);
 
+            // Verificar se há intervalo configurado
+            $breakStartTime = null;
+            $breakEndTime = null;
+            if ($businessHour->break_start_time && $businessHour->break_end_time) {
+                $breakStartTime = Carbon::parse($date->format('Y-m-d') . ' ' . $businessHour->break_start_time);
+                $breakEndTime = Carbon::parse($date->format('Y-m-d') . ' ' . $businessHour->break_end_time);
+            }
+
             $currentSlot = $startTime->copy();
 
             while ($currentSlot->copy()->addMinutes($duration)->lte($endTime)) {
                 $slotStart = $currentSlot->copy();
                 $slotEnd = $currentSlot->copy()->addMinutes($duration);
+                
+                // Verificar se o slot está dentro do intervalo (se houver)
+                $isInBreak = false;
+                if ($breakStartTime && $breakEndTime) {
+                    // Verifica se o slot se sobrepõe ao intervalo
+                    $isInBreak = ($slotStart->lt($breakEndTime) && $slotEnd->gt($breakStartTime));
+                }
+                
+                if ($isInBreak) {
+                    // Pular este slot pois está no intervalo
+                    $currentSlot->addMinutes($duration);
+                    continue;
+                }
 
                 // Verificar se o slot não conflita com agendamentos existentes
                 // Considera apenas agendamentos com status 'scheduled' ou 'rescheduled'

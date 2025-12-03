@@ -18,6 +18,7 @@ return new class extends Migration
             $table->foreignUuid('appointment_type')->nullable()->constrained('appointment_types');
             $table->foreignUuid('patient_id')->constrained('patients');
             $table->uuid('recurring_appointment_id')->nullable()->after('patient_id');
+            // Foreign key será adicionada na migration de recurring_appointments
             $table->foreignUuid('specialty_id')->nullable()->constrained('medical_specialties');
             $table->timestamp('starts_at');
             $table->timestamp('ends_at');

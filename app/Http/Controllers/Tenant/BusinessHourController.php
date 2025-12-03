@@ -64,6 +64,8 @@ class BusinessHourController extends Controller
                     'weekday' => $weekday,
                     'start_time' => $startTime,
                     'end_time' => $endTime,
+                    'break_start_time' => $data['break_start_time'] ?? null,
+                    'break_end_time' => $data['break_end_time'] ?? null,
                 ]);
                 $createdCount++;
             }

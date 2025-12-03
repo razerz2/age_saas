@@ -445,10 +445,42 @@ class RecurringAppointmentController extends Controller
                     : Carbon::parse($endTimeStr);
 
                 $currentSlot = $startTime->copy();
+                
+                // Verificar se há intervalo configurado
+                $breakStartTime = null;
+                $breakEndTime = null;
+                if ($businessHour->break_start_time && $businessHour->break_end_time) {
+                    $breakStartTimeStr = $businessHour->break_start_time;
+                    $breakEndTimeStr = $businessHour->break_end_time;
+                    
+                    $breakStartTime = strlen($breakStartTimeStr) <= 5 
+                        ? Carbon::createFromFormat('H:i', $breakStartTimeStr)
+                        : Carbon::parse($breakStartTimeStr);
+                        
+                    $breakEndTime = strlen($breakEndTimeStr) <= 5 
+                        ? Carbon::createFromFormat('H:i', $breakEndTimeStr)
+                        : Carbon::parse($breakEndTimeStr);
+                }
 
                 while ($currentSlot->copy()->addMinutes($duration)->lte($endTime)) {
                     $slotStartTime = $currentSlot->format('H:i');
                     $slotEndTime = $currentSlot->copy()->addMinutes($duration)->format('H:i');
+                    
+                    // Verificar se o slot está dentro do intervalo (se houver)
+                    $isInBreak = false;
+                    if ($breakStartTime && $breakEndTime) {
+                        $slotStart = $currentSlot->copy();
+                        $slotEnd = $currentSlot->copy()->addMinutes($duration);
+                        
+                        // Verifica se o slot se sobrepõe ao intervalo
+                        $isInBreak = ($slotStart->lt($breakEndTime) && $slotEnd->gt($breakStartTime));
+                    }
+                    
+                    if ($isInBreak) {
+                        // Pular este slot pois está no intervalo
+                        $currentSlot->addMinutes($duration);
+                        continue;
+                    }
 
                     // Verificar se o slot está bloqueado por uma regra de recorrência existente
                     $hasRecurringConflict = $existingRecurringRules->filter(function($rule) use ($slotStartTime, $slotEndTime) {

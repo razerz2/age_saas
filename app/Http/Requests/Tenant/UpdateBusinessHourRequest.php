@@ -14,10 +14,11 @@ class UpdateBusinessHourRequest extends FormRequest
     public function rules()
     {
         return [
-            'doctor_id'  => ['required', 'exists:tenant.doctors,id'],
             'weekday'    => ['required', 'integer', 'min:0', 'max:6'],
             'start_time' => ['required', 'date_format:H:i'],
             'end_time'   => ['required', 'date_format:H:i', 'after:start_time'],
+            'break_start_time' => ['nullable', 'date_format:H:i'],
+            'break_end_time'   => ['nullable', 'date_format:H:i', 'required_with:break_start_time', 'after:break_start_time'],
         ];
     }
 
@@ -27,9 +28,6 @@ class UpdateBusinessHourRequest extends FormRequest
     public function messages()
     {
         return [
-            'doctor_id.required' => 'O médico é obrigatório.',
-            'doctor_id.exists' => 'O médico selecionado não existe.',
-
             'weekday.required' => 'O dia da semana é obrigatório.',
             'weekday.integer' => 'O dia da semana deve ser um número inteiro.',
             'weekday.min' => 'O dia da semana deve ser no mínimo 0 (domingo).',
@@ -41,6 +39,11 @@ class UpdateBusinessHourRequest extends FormRequest
             'end_time.required' => 'A hora de fim é obrigatória.',
             'end_time.date_format' => 'A hora de fim deve estar no formato HH:mm.',
             'end_time.after' => 'A hora de fim deve ser posterior à hora de início.',
+
+            'break_start_time.date_format' => 'A hora de início do intervalo deve estar no formato HH:mm.',
+            'break_end_time.date_format' => 'A hora de fim do intervalo deve estar no formato HH:mm.',
+            'break_end_time.required_with' => 'A hora de fim do intervalo é obrigatória quando há hora de início.',
+            'break_end_time.after' => 'A hora de fim do intervalo deve ser posterior à hora de início do intervalo.',
         ];
     }
 }

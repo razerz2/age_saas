@@ -29,6 +29,7 @@ use App\Http\Controllers\Tenant\CalendarController;
 use App\Http\Controllers\Tenant\BusinessHourController;
 use App\Http\Controllers\Tenant\AppointmentTypeController;
 use App\Http\Controllers\Tenant\AppointmentController;
+use App\Http\Controllers\Tenant\DoctorSettingsController;
 
 // Forms
 use App\Http\Controllers\Tenant\FormController;
@@ -40,6 +41,7 @@ use App\Http\Controllers\Tenant\FormResponseController;
 use App\Http\Controllers\Tenant\IntegrationController;
 use App\Http\Controllers\Tenant\OAuthAccountController;
 use App\Http\Controllers\Tenant\Integrations\GoogleCalendarController;
+use App\Http\Controllers\Tenant\Integrations\AppleCalendarController;
 
 // Calendar Sync
 use App\Http\Controllers\Tenant\CalendarSyncStateController;
@@ -241,6 +243,30 @@ Route::prefix('tenant')
             ->where('id', '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}')
             ->name('patients.login.send-whatsapp');
 
+
+        // =====================================================================
+        // DOCTOR SETTINGS (Página única para médico ou usuário com 1 médico)
+        // =====================================================================
+        Route::get('doctor-settings', [DoctorSettingsController::class, 'index'])
+            ->name('doctor-settings.index');
+        Route::put('doctor-settings/calendar', [DoctorSettingsController::class, 'updateCalendar'])
+            ->name('doctor-settings.update-calendar');
+        Route::post('doctor-settings/business-hour', [DoctorSettingsController::class, 'storeBusinessHour'])
+            ->name('doctor-settings.store-business-hour');
+        Route::put('doctor-settings/business-hour/{id}', [DoctorSettingsController::class, 'updateBusinessHour'])
+            ->where('id', '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}')
+            ->name('doctor-settings.update-business-hour');
+        Route::delete('doctor-settings/business-hour/{id}', [DoctorSettingsController::class, 'destroyBusinessHour'])
+            ->where('id', '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}')
+            ->name('doctor-settings.destroy-business-hour');
+        Route::post('doctor-settings/appointment-type', [DoctorSettingsController::class, 'storeAppointmentType'])
+            ->name('doctor-settings.store-appointment-type');
+        Route::put('doctor-settings/appointment-type/{id}', [DoctorSettingsController::class, 'updateAppointmentType'])
+            ->where('id', '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}')
+            ->name('doctor-settings.update-appointment-type');
+        Route::delete('doctor-settings/appointment-type/{id}', [DoctorSettingsController::class, 'destroyAppointmentType'])
+            ->where('id', '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}')
+            ->name('doctor-settings.destroy-appointment-type');
 
         // =====================================================================
         // CALENDARS
@@ -530,6 +556,42 @@ Route::prefix('tenant')
                     ->name('api.events');
             });
 
+        // =====================================================================
+        // APPLE CALENDAR INTEGRATION
+        // =====================================================================
+        Route::prefix('integrations/apple')
+            ->name('integrations.apple.')
+            ->middleware(['module.access:integrations'])
+            ->group(function () {
+                // Página principal
+                Route::get('/', [AppleCalendarController::class, 'index'])->name('index');
+                
+                // Mostrar formulário de conexão
+                Route::get('/{doctor}/connect', [AppleCalendarController::class, 'showConnectForm'])
+                    ->where('doctor', '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}')
+                    ->name('connect.form');
+                
+                // Conectar conta Apple do médico
+                Route::post('/{doctor}/connect', [AppleCalendarController::class, 'connect'])
+                    ->where('doctor', '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}')
+                    ->name('connect');
+                
+                // Desconectar
+                Route::delete('/{doctor}/disconnect', [AppleCalendarController::class, 'disconnect'])
+                    ->where('doctor', '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}')
+                    ->name('disconnect');
+                
+                // Status JSON
+                Route::get('/{doctor}/status', [AppleCalendarController::class, 'status'])
+                    ->where('doctor', '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}')
+                    ->name('status');
+                
+                // API: Eventos do Apple Calendar para FullCalendar
+                Route::get('/api/{doctor}/events', [AppleCalendarController::class, 'getEvents'])
+                    ->where('doctor', '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}')
+                    ->name('api.events');
+            });
+
         // Resource de integrations (deve vir DEPOIS das rotas específicas)
         Route::resource('integrations', IntegrationController::class);
 
@@ -588,6 +650,11 @@ Route::prefix('tenant')
                 ->where('appointment', '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}')
                 ->name('medical-appointments.form-response');
         });
+
+        // =====================================================================
+        // PUBLIC BOOKING LINK (acessível a todos os usuários autenticados)
+        // =====================================================================
+        Route::get('agendamento-publico', [SettingsController::class, 'publicBookingLink'])->name('public-booking-link.index');
 
         // =====================================================================
         // SETTINGS

@@ -25,6 +25,15 @@ return new class extends Migration
             $table->text('google_recurring_event_ids')->nullable(); // Armazena JSON com os IDs dos eventos recorrentes criados no Google Calendar
             $table->timestamps();
         });
+
+        // Adicionar foreign key em appointments.recurring_appointment_id
+        // A tabela appointments já existe, então podemos adicionar a constraint agora
+        Schema::table('appointments', function (Blueprint $table) {
+            $table->foreign('recurring_appointment_id')
+                ->references('id')
+                ->on('recurring_appointments')
+                ->nullOnDelete();
+        });
     }
 
     /**
@@ -32,6 +41,11 @@ return new class extends Migration
      */
     public function down(): void
     {
+        // Remover foreign key antes de dropar a tabela
+        Schema::table('appointments', function (Blueprint $table) {
+            $table->dropForeign(['recurring_appointment_id']);
+        });
+        
         Schema::dropIfExists('recurring_appointments');
     }
 };

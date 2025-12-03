@@ -83,29 +83,57 @@
                                     </div>
                                 </div>
                             </div>
-                            <div class="row">
+                            <div class="row business-hours-form-layout">
                                 <div class="col-md-6">
-                                    <div class="form-group">
+                                    <div class="form-group mb-3">
                                         <label class="fw-semibold">
                                             <i class="mdi mdi-clock-start me-1"></i>
                                             Horário Início <span class="text-danger">*</span>
                                         </label>
                                         <input type="time" class="form-control @error('start_time') is-invalid @enderror" 
                                                name="start_time" value="{{ old('start_time', $businessHour->start_time) }}" required>
+                                        <small class="form-text text-muted" style="visibility: hidden;">Opcional</small>
                                         @error('start_time')
                                             <div class="invalid-feedback d-block">{{ $message }}</div>
                                         @enderror
                                     </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="form-group">
+                                    <div class="form-group mb-3">
                                         <label class="fw-semibold">
                                             <i class="mdi mdi-clock-end me-1"></i>
                                             Horário Fim <span class="text-danger">*</span>
                                         </label>
                                         <input type="time" class="form-control @error('end_time') is-invalid @enderror" 
                                                name="end_time" value="{{ old('end_time', $businessHour->end_time) }}" required>
+                                        <small class="form-text text-muted" style="visibility: hidden;">Opcional</small>
                                         @error('end_time')
+                                            <div class="invalid-feedback d-block">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group mb-3">
+                                        <label class="fw-semibold">
+                                            <i class="mdi mdi-pause-circle-outline me-1"></i>
+                                            Início do Intervalo
+                                        </label>
+                                        <input type="time" class="form-control @error('break_start_time') is-invalid @enderror" 
+                                               name="break_start_time" value="{{ old('break_start_time', $businessHour->break_start_time) }}" 
+                                               id="break_start_time">
+                                        <small class="form-text text-muted">Opcional</small>
+                                        @error('break_start_time')
+                                            <div class="invalid-feedback d-block">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+                                    <div class="form-group mb-3">
+                                        <label class="fw-semibold">
+                                            <i class="mdi mdi-pause-circle me-1"></i>
+                                            Fim do Intervalo
+                                        </label>
+                                        <input type="time" class="form-control @error('break_end_time') is-invalid @enderror" 
+                                               name="break_end_time" value="{{ old('break_end_time', $businessHour->break_end_time) }}" 
+                                               id="break_end_time">
+                                        <small class="form-text text-muted">Opcional</small>
+                                        @error('break_end_time')
                                             <div class="invalid-feedback d-block">{{ $message }}</div>
                                         @enderror
                                     </div>
@@ -133,6 +161,7 @@
 
 @push('styles')
     <link href="{{ asset('css/tenant-common.css') }}" rel="stylesheet">
+    <link href="{{ asset('css/tenant-business-hours.css') }}" rel="stylesheet">
 @endpush
 
 @endsection

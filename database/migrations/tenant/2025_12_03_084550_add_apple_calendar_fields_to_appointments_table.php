@@ -11,12 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        // A coluna já existe na migration original, apenas adiciona a foreign key
         Schema::table('appointments', function (Blueprint $table) {
-            $table->foreign('recurring_appointment_id')
-                ->references('id')
-                ->on('recurring_appointments')
-                ->nullOnDelete();
+            $table->string('apple_event_id')->nullable()->after('google_event_id');
         });
     }
 
@@ -26,9 +22,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('appointments', function (Blueprint $table) {
-            $table->dropForeign(['recurring_appointment_id']);
-            // Não remove a coluna pois ela faz parte da migration original
+            $table->dropColumn('apple_event_id');
         });
     }
 };
-

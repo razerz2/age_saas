@@ -40,8 +40,11 @@ class TenantController extends Controller
         
         // Buscar informações do usuário admin do tenant
         $adminUser = null;
-        // Buscar senha da sessão (se foi criada recentemente) ou usar null
-        $adminPassword = session('tenant_admin_password', null);
+        
+        // 💾 Buscar informações do admin do banco de dados (ou da sessão como fallback)
+        $adminPassword = $tenant->admin_password ?? session('tenant_admin_password', null);
+        $adminEmail = $tenant->admin_email;
+        $loginUrl = $tenant->admin_login_url ?? url("/t/{$tenant->subdomain}/login");
         
         try {
             // Configurar conexão do tenant temporariamente
@@ -56,14 +59,17 @@ class TenantController extends Controller
             DB::purge('tenant');
             DB::reconnect('tenant');
             
-            // Buscar usuário admin (geralmente o primeiro usuário criado ou com email admin@{subdomain}.com)
-            $sanitizedSubdomain = preg_replace('/[^a-z0-9\-]/', '', Str::slug($tenant->subdomain));
-            $sanitizedSubdomain = !empty($sanitizedSubdomain) ? $sanitizedSubdomain : 'tenant';
-            $adminEmail = "admin@{$sanitizedSubdomain}.com";
+            // Buscar usuário admin (usar email do banco ou gerar dinamicamente)
+            $emailToSearch = $adminEmail;
+            if (!$emailToSearch) {
+                $sanitizedSubdomain = preg_replace('/[^a-z0-9\-]/', '', Str::slug($tenant->subdomain));
+                $sanitizedSubdomain = !empty($sanitizedSubdomain) ? $sanitizedSubdomain : 'tenant';
+                $emailToSearch = "admin@{$sanitizedSubdomain}.com";
+            }
             
             $adminUser = DB::connection('tenant')
                 ->table('users')
-                ->where('email', $adminEmail)
+                ->where('email', $emailToSearch)
                 ->orWhere('name', 'Administrador')
                 ->first();
                 
@@ -73,9 +79,6 @@ class TenantController extends Controller
                 'error' => $e->getMessage()
             ]);
         }
-        
-        // Gerar link de acesso
-        $loginUrl = url("/t/{$tenant->subdomain}/login");
         
         return view('platform.tenants.show', compact('tenant', 'adminUser', 'adminPassword', 'loginUrl'));
     }
@@ -119,16 +122,39 @@ class TenantController extends Controller
             // 🚀 Cria o banco físico e roda as migrations (retorna a senha gerada)
             $adminPassword = TenantProvisioner::createDatabase($tenant);
 
+            // Limpar subdomínio para formato válido de domínio
+            $sanitizedSubdomain = preg_replace('/[^a-z0-9\-]/', '', Str::slug($tenant->subdomain));
+            $sanitizedSubdomain = !empty($sanitizedSubdomain) ? $sanitizedSubdomain : 'tenant';
+            $adminEmail = "admin@{$sanitizedSubdomain}.com";
+            $loginUrl = url("/t/{$tenant->subdomain}/login");
+
+            // 💾 Salvar informações do admin no banco de dados usando DB direto para garantir persistência
+            // Usar conexão pgsql (banco central) onde a tabela tenants está
+            DB::connection('pgsql')
+                ->table('tenants')
+                ->where('id', $tenant->id)
+                ->update([
+                    'admin_login_url' => $loginUrl,
+                    'admin_email' => $adminEmail,
+                    'admin_password' => $adminPassword,
+                    'updated_at' => now(),
+                ]);
+            
+            // Recarregar do banco para confirmar que foi salvo
+            $tenant->refresh();
+            
+            Log::info("💾 Informações do admin salvas no banco", [
+                'tenant_id' => $tenant->id,
+                'admin_email' => $tenant->admin_email,
+                'admin_password_saved' => !empty($tenant->admin_password),
+                'admin_password_length' => $tenant->admin_password ? strlen($tenant->admin_password) : 0,
+                'admin_login_url' => $tenant->admin_login_url,
+            ]);
+
             // 📧 Enviar email com credenciais se SMTP estiver configurado
             $systemSettingsService = new SystemSettingsService();
             if ($systemSettingsService->emailIsConfigured()) {
                 try {
-                    // Limpar subdomínio para formato válido de domínio
-                    $sanitizedSubdomain = preg_replace('/[^a-z0-9\-]/', '', Str::slug($tenant->subdomain));
-                    $sanitizedSubdomain = !empty($sanitizedSubdomain) ? $sanitizedSubdomain : 'tenant';
-                    $adminEmail = "admin@{$sanitizedSubdomain}.com";
-                    $loginUrl = url("/t/{$tenant->subdomain}/login");
-
                     Mail::to($tenant->email)->send(
                         new TenantAdminCredentialsMail(
                             $tenant,

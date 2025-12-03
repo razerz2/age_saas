@@ -28,6 +28,7 @@ A **Platform** é a área administrativa central do sistema SaaS de agendamento 
 - ✅ Integração com gateway de pagamento (Asaas)
 - ✅ Envio de mensagens WhatsApp
 - ✅ Monitor de kiosk
+- ✅ **Módulo de Pré-Cadastro** - Gerenciamento de pré-cadastros de novos tenants
 
 ### Banco de Dados
 
@@ -39,6 +40,8 @@ A Platform utiliza o **banco central (landlord)**, que armazena:
 - Configurações do sistema
 - Catálogo de especialidades médicas
 - Dados de localização (países, estados, cidades)
+- Pré-cadastros de tenants (pre_tenants)
+- Logs de pré-cadastros (pre_tenant_logs)
 
 ---
 
@@ -71,6 +74,7 @@ Os usuários da Platform possuem um campo `modules` (JSON) que define quais mód
 - `notifications_outbox` - Histórico de notificações enviadas
 - `system_notifications` - Notificações do sistema
 - `locations` - Gerenciamento de localização (países, estados, cidades)
+- `pre_tenants` - Gerenciamento de pré-cadastros
 
 O middleware `module.access:{modulo}` verifica o acesso antes de permitir a rota.
 
@@ -99,6 +103,7 @@ DELETE /Platform/profile                  # Deletar perfil
 # CRUD de recursos (com controle de acesso por módulo)
 /Platform/tenants                         # CRUD de tenants
 /Platform/plans                           # CRUD de planos
+/Platform/subscription-access              # Gerenciamento de regras de acesso por plano
 /Platform/subscriptions                   # CRUD de assinaturas
 /Platform/invoices                        # CRUD de faturas
 /Platform/users                           # CRUD de usuários da platform
@@ -106,6 +111,7 @@ DELETE /Platform/profile                  # Deletar perfil
 /Platform/system_notifications            # Notificações do sistema (read-only)
 /Platform/notifications_outbox            # Histórico de notificações enviadas
 /Platform/medical_specialties_catalog     # Catálogo de especialidades
+/Platform/pre-tenants                      # Gerenciamento de pré-cadastros
 /Platform/paises                          # Listar/visualizar países (read-only)
 /Platform/estados                        # Listar/visualizar estados (read-only)
 /Platform/cidades                         # Listar/visualizar cidades (read-only)
@@ -117,6 +123,14 @@ DELETE /Platform/profile                  # Deletar perfil
 # Tenants
 POST /Platform/tenants/{tenant}/sync                    # Sincronizar tenant com Asaas
 GET  /Platform/tenants/{tenant}/subscriptions          # Listar assinaturas de um tenant
+
+# Planos - Regras de Acesso
+GET    /Platform/subscription-access                  # Listar regras de acesso
+POST   /Platform/subscription-access                  # Criar regra de acesso
+GET    /Platform/subscription-access/{id}              # Visualizar regra
+GET    /Platform/subscription-access/{id}/edit         # Editar regra
+PUT    /Platform/subscription-access/{id}             # Atualizar regra
+DELETE /Platform/subscription-access/{id}             # Excluir regra
 
 # Assinaturas
 POST /Platform/subscriptions/{id}/renew               # Renovar assinatura (onde {id} é numérico)
@@ -138,10 +152,20 @@ POST /Platform/settings/update/integrations            # Atualizar integrações
 POST /Platform/whatsapp/send                           # Enviar mensagem WhatsApp
 POST /Platform/whatsapp/invoice/{invoice}              # Enviar notificação de fatura via WhatsApp
 
+# Pré-Cadastros
+GET    /Platform/pre-tenants                           # Listar pré-cadastros
+GET    /Platform/pre-tenants/{preTenant}                # Visualizar pré-cadastro
+POST   /Platform/pre-tenants/{preTenant}/approve         # Aprovar pré-cadastro manualmente
+POST   /Platform/pre-tenants/{preTenant}/cancel          # Cancelar pré-cadastro
+
 # APIs auxiliares
 GET  /Platform/api/estados/{pais}                      # API: Estados por país
 GET  /Platform/api/cidades/{estado}                    # API: Cidades por estado
 GET  /Platform/system_notifications/json                # API: Notificações em JSON (últimas 5)
+
+# Rotas Públicas (sem autenticação)
+POST /pre-register                                      # Criar pré-cadastro (landing page)
+POST /webhook/asaas/pre-registration                   # Webhook do Asaas para pré-cadastros
 ```
 
 ### Controle de Acesso por Módulo
@@ -172,6 +196,7 @@ As rotas abaixo exigem o módulo correspondente no campo `modules` do usuário:
 | `DashboardController` | Dashboard principal com estatísticas e métricas | `/Platform/dashboard` | Sempre acessível |
 | `TenantController` | CRUD de tenants + sincronização com Asaas + criação de banco | `/Platform/tenants` | `tenants` |
 | `PlanController` | CRUD de planos de assinatura | `/Platform/plans` | `plans` |
+| `PlanAccessManagerController` | Gerenciamento de regras de acesso por plano | `/Platform/subscription-access` | `plans` |
 | `SubscriptionController` | CRUD de assinaturas + renovação + sincronização | `/Platform/subscriptions` | `subscriptions` |
 | `InvoiceController` | CRUD de faturas + sincronização manual + envio WhatsApp | `/Platform/invoices` | `invoices` |
 | `UserController` | CRUD de usuários da platform + reset de senha + toggle status | `/Platform/users` | `users` |
@@ -184,6 +209,7 @@ As rotas abaixo exigem o módulo correspondente no campo `modules` do usuário:
 | `CidadeController` | Listar e visualizar cidades | `/Platform/cidades` | `locations` |
 | `LocationController` | API de localização (estados/cidades) | `/Platform/api/estados/{pais}`, `/Platform/api/cidades/{estado}` | Sempre acessível |
 | `WhatsAppController` | Envio de mensagens WhatsApp | `/Platform/whatsapp/send`, `/Platform/whatsapp/invoice/{invoice}` | Sempre acessível |
+| `PreTenantController` | Gerenciamento de pré-cadastros | `/Platform/pre-tenants` | `pre_tenants` |
 | `KioskMonitorController` | Monitor de kiosk com estatísticas | `/kiosk/monitor`, `/kiosk/monitor/data` | Público (sem autenticação) |
 
 ### Funcionalidades Detalhadas dos Controllers
@@ -205,6 +231,17 @@ As rotas abaixo exigem o módulo correspondente no campo `modules` do usuário:
 - Sincronização com gateway de pagamento Asaas
 - Visualização de informações do usuário admin do tenant
 
+#### PlanAccessManagerController
+- Gerenciamento de regras de acesso por plano
+- Definição de limites:
+  - Máximo de usuários admin
+  - Máximo de usuários comuns
+  - Máximo de médicos
+- Associação de funcionalidades aos planos
+- Funcionalidades "default" sempre permitidas
+- Validação de exclusão (verifica assinaturas ativas)
+- Uma regra por plano (validação de duplicidade)
+
 #### SubscriptionController
 - CRUD completo de assinaturas
 - Renovação de assinaturas
@@ -221,6 +258,14 @@ As rotas abaixo exigem o módulo correspondente no campo `modules` do usuário:
 - Integrações: Asaas, WhatsApp (Meta), Email (SMTP)
 - Teste de conexão para cada serviço
 - Atualização de variáveis de ambiente
+
+#### PreTenantController
+- Gerenciamento de pré-cadastros de novos tenants
+- Listagem com filtros (status, email)
+- Visualização detalhada com logs
+- Aprovação manual de pré-cadastros
+- Cancelamento de pré-cadastros
+- Integração com webhook do Asaas
 
 #### KioskMonitorController
 - Monitor público (sem autenticação)
@@ -242,6 +287,11 @@ Armazenados no **banco central (landlord)**:
 | `Tenant` | `tenants` | Clientes (clínicas) - UUID como chave primária |
 | `User` | `users` | Usuários da plataforma administrativa |
 | `Plan` | `plans` | Planos de assinatura |
+| `PlanAccessRule` | `plan_access_rules` | Regras de acesso por plano (limites e funcionalidades) |
+| `SubscriptionFeature` | `subscription_features` | Funcionalidades disponíveis para planos |
+| `PlanAccessRuleFeature` | `plan_access_rule_feature` | Relação entre regras e funcionalidades (pivot) |
+| `PreTenant` | `pre_tenants` | Pré-cadastros de novos tenants |
+| `PreTenantLog` | `pre_tenant_logs` | Logs de eventos dos pré-cadastros |
 | `Subscription` | `subscriptions` | Assinaturas dos tenants |
 | `Invoices` | `invoices` | Faturas geradas |
 | `NotificationOutbox` | `notifications_outbox` | Histórico de notificações |
@@ -315,14 +365,41 @@ Armazenados no **banco central (landlord)**:
 ### 3. Gestão de Planos
 
 **Criar Plano:**
-1. Acesse `/Platform/plans`
+1. Acesse `/Platform/plans` (requer módulo `plans`)
 2. Clique em "Criar Plano"
 3. Defina:
    - Nome do plano
    - Descrição
-   - Valor mensal
-   - Recursos incluídos
+   - Valor mensal (em reais, convertido automaticamente para centavos)
+   - Recursos incluídos (texto multilinha, convertido em array)
    - Status (ativo/inativo)
+
+**Gerenciar Regras de Acesso por Plano:**
+1. Acesse `/Platform/subscription-access` (requer módulo `plans`)
+2. **Criar Regra de Acesso:**
+   - Clique em "Criar Regra"
+   - Selecione um plano (apenas planos ativos)
+   - Defina limites:
+     - Máximo de usuários admin
+     - Máximo de usuários comuns
+     - Máximo de médicos
+   - Selecione funcionalidades permitidas:
+     - Funcionalidades marcadas como "default" são sempre permitidas
+     - Outras funcionalidades podem ser selecionadas
+3. **Editar Regra:**
+   - Acesse a regra → Editar
+   - Modifique limites e funcionalidades
+   - **Nota:** O plano não pode ser alterado após criação
+4. **Excluir Regra:**
+   - A regra só pode ser excluída se não houver assinaturas ativas usando o plano
+   - O sistema valida antes de permitir exclusão
+
+**Funcionalidades do Sistema de Regras:**
+- Cada plano pode ter apenas uma regra de acesso
+- As regras definem limites de recursos (usuários, médicos)
+- As regras controlam quais funcionalidades estão disponíveis
+- Funcionalidades "default" são sempre permitidas para todos os planos
+- O sistema valida se o tenant está dentro dos limites ao criar recursos
 
 ### 4. Assinaturas
 
@@ -460,7 +537,109 @@ Armazenados no **banco central (landlord)**:
 
 **Nota:** O perfil é gerenciado pelo `ProfileController` (não está em `Platform/`), mas é acessível via rota `/Platform/profile`.
 
-### 11. Monitor de Kiosk
+### 11. Módulo de Pré-Cadastro
+
+**Visão Geral:**
+O módulo de pré-cadastro permite que novos clientes se cadastrem através de uma landing page pública. Após o pagamento via Asaas, o sistema cria automaticamente o tenant e a assinatura.
+
+**Fluxo do Pré-Cadastro:**
+1. **Cadastro Público** (`POST /pre-register`):
+   - Cliente preenche formulário na landing page
+   - Validações:
+     - Subdomain deve ser único (verifica em `tenants`)
+     - Plano deve estar ativo
+     - Rate limit: 10 requisições por minuto
+   - Sistema cria registro em `pre_tenants` com status `pending`
+   - Cria cliente no Asaas automaticamente
+   - Gera cobrança PIX com:
+     - Vencimento: 5 dias
+     - Valor: baseado no plano selecionado
+     - Descrição: "Pré-cadastro - Plano {nome}"
+   - Retorna JSON com:
+     - `payment_url` - Link para pagamento
+     - `payment_id` - ID do pagamento no Asaas
+     - `pre_tenant_id` - ID do pré-cadastro
+
+2. **Pagamento Confirmado** (via Webhook):
+   - Webhook do Asaas (`POST /webhook/asaas/pre-registration`) recebe eventos:
+     - `PAYMENT_CONFIRMED` ou `PAYMENT_RECEIVED` → Processa criação do tenant
+     - `PAYMENT_REFUNDED` ou `PAYMENT_CANCELED` → Cancela pré-cadastro
+   - Sistema processa automaticamente via `PreTenantProcessorService`:
+     - Marca pré-cadastro como `paid`
+     - Cria banco de dados PostgreSQL do tenant
+     - Cria tenant completo com todos os dados
+     - Cria assinatura ativa vinculada ao plano
+     - Envia email de boas-vindas com credenciais de acesso
+     - Registra todos os eventos em logs
+
+3. **Gerenciamento na Platform**:
+   - Acesse `/Platform/pre-tenants` (requer módulo `pre_tenants`)
+   - Visualize todos os pré-cadastros com filtros
+   - Aprove manualmente se necessário
+   - Cancele pré-cadastros
+
+**Gerenciar Pré-Cadastros:**
+1. Acesse `/Platform/pre-tenants` (requer módulo `pre_tenants`)
+2. **Filtros disponíveis:**
+   - Por status (pending, paid, canceled)
+   - Por email
+3. **Visualizar Detalhes:**
+   - Clique em um pré-cadastro
+   - Visualize:
+     - Dados cadastrais completos
+     - Plano selecionado
+     - Localização
+     - Status do pagamento
+     - Logs de eventos
+     - IDs do Asaas (customer_id, payment_id)
+4. **Aprovar Manualmente:**
+   - Acesse o pré-cadastro → Ações → "Aprovar"
+   - Força criação do tenant mesmo sem pagamento confirmado
+   - Útil para casos especiais ou testes
+5. **Cancelar:**
+   - Acesse o pré-cadastro → Ações → "Cancelar"
+   - Marca como cancelado
+   - Registra evento no log
+
+**Status dos Pré-Cadastros:**
+- `pending` - Aguardando pagamento
+- `paid` - Pago e processado (tenant criado)
+- `canceled` - Cancelado
+
+**Logs de Eventos:**
+- Cada ação gera um log em `pre_tenant_logs`
+- Eventos registrados:
+  - `pre_register_created` - Pré-cadastro criado
+  - `payment_created` - Pagamento criado no Asaas
+  - `payment_confirmed` - Pagamento confirmado
+  - `tenant_created` - Tenant criado
+  - `subscription_created` - Assinatura criada
+  - `manual_approval` - Aprovação manual
+  - `manual_cancellation` - Cancelamento manual
+  - `payment_canceled` - Pagamento cancelado/estornado
+  - `processing_error` - Erro no processamento
+
+**Processamento Automático:**
+O serviço `PreTenantProcessorService` executa as seguintes etapas ao processar um pré-cadastro pago:
+1. Valida e sanitiza subdomain (gera automaticamente se não fornecido)
+2. Verifica disponibilidade do subdomain (adiciona sufixo aleatório se necessário)
+3. Gera configuração do banco de dados (nome, usuário, senha)
+4. Cria tenant no banco central
+5. Cria banco de dados PostgreSQL isolado
+6. Executa migrations do tenant
+7. Cria usuário admin padrão
+8. Cria localização do tenant (se informada)
+9. Cria assinatura ativa vinculada ao plano
+10. Sincroniza tenant com Asaas
+11. Envia email de boas-vindas com credenciais
+
+**Validações:**
+- Subdomain deve ser único (verifica em `tenants`)
+- Plano deve estar ativo
+- Rate limit: 10 requisições por minuto na rota pública
+- Webhook valida token do Asaas antes de processar
+
+### 12. Monitor de Kiosk
 
 **Acessar Monitor:**
 1. Acesse `/kiosk/monitor` (rota pública, sem autenticação)
@@ -609,6 +788,11 @@ Armazenados no **banco central (landlord)**:
 Tabelas principais:
 - `tenants` - Registro de todos os tenants
 - `plans` - Planos de assinatura
+- `plan_access_rules` - Regras de acesso por plano
+- `subscription_features` - Funcionalidades disponíveis
+- `plan_access_rule_feature` - Relação entre regras e funcionalidades
+- `pre_tenants` - Pré-cadastros de novos tenants
+- `pre_tenant_logs` - Logs de eventos dos pré-cadastros
 - `subscriptions` - Assinaturas ativas
 - `invoices` - Faturas geradas
 - `users` - Usuários da platform
@@ -667,4 +851,12 @@ php artisan migrate
 - Monitor de kiosk público
 - APIs auxiliares de localização
 - Configurações do sistema com testes de conexão
+- Sistema de gerenciamento de regras de acesso por plano (`PlanAccessManagerController`)
+- Models `PlanAccessRule`, `SubscriptionFeature` e `PlanAccessRuleFeature`
+- Rotas `/Platform/subscription-access` para gerenciar limites e funcionalidades dos planos
+- **NOVO:** Módulo de Pré-Cadastro (`PreTenantController`)
+- **NOVO:** Models `PreTenant` e `PreTenantLog`
+- **NOVO:** Rotas públicas `/pre-register` e `/webhook/asaas/pre-registration`
+- **NOVO:** Serviço `PreTenantProcessorService` para processamento automático
+- **NOVO:** Integração completa com Asaas para pagamentos de pré-cadastro
 
