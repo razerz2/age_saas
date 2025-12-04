@@ -92,6 +92,7 @@ Route::prefix('t/{tenant}')
             Route::get('/doctors/{doctorId}/appointment-types', [PublicAppointmentController::class, 'getAppointmentTypesByDoctor'])->name('api.appointment-types');
             Route::get('/doctors/{doctorId}/specialties', [PublicAppointmentController::class, 'getSpecialtiesByDoctor'])->name('api.specialties');
             Route::get('/doctors/{doctorId}/available-slots', [PublicAppointmentController::class, 'getAvailableSlots'])->name('api.available-slots');
+            Route::get('/doctors/{doctorId}/business-hours', [PublicAppointmentController::class, 'getBusinessHoursByDoctor'])->name('api.business-hours');
         });
 
         // Formulários públicos
@@ -390,6 +391,9 @@ Route::prefix('tenant')
         Route::get('api/doctors/{doctorId}/available-slots', [AppointmentController::class, 'getAvailableSlots'])
             ->where('doctorId', '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}')
             ->name('appointments.api.available-slots');
+        Route::get('api/doctors/{doctorId}/business-hours', [AppointmentController::class, 'getBusinessHoursByDoctor'])
+            ->where('doctorId', '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}')
+            ->name('appointments.api.business-hours');
 
 
         // =====================================================================

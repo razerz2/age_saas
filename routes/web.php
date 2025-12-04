@@ -37,15 +37,15 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::get('/', function () {
-    if (Auth::check()) {
-        // Usuário autenticado → vai para o dashboard
-        return redirect()->route('Platform.dashboard');
-    }
+// Rotas da Landing Page (públicas)
+use App\Http\Controllers\Landing\LandingController;
 
-    // Não autenticado → vai para o login
-    return redirect()->route('login');
-});
+Route::get('/', [LandingController::class, 'index'])->name('landing.home');
+Route::get('/funcionalidades', [LandingController::class, 'features'])->name('landing.features');
+Route::get('/planos', [LandingController::class, 'plans'])->name('landing.plans');
+Route::get('/contato', [LandingController::class, 'contact'])->name('landing.contact');
+Route::post('/pre-cadastro', [LandingController::class, 'storePreRegister'])->name('landing.pre-register')
+    ->middleware('throttle:10,1'); // Rate limit: 10 requisições por minuto
 
 Route::get('/kiosk/monitor', [KioskMonitorController::class, 'index'])->name('platform.kiosk.monitor');
 Route::get('/kiosk/monitor/data', [KioskMonitorController::class, 'data'])->name('platform.kiosk.monitor.data');
@@ -56,10 +56,6 @@ Route::post('/webhook/asaas', [AsaasWebhookController::class, 'handle'])->middle
 // Webhook exclusivo para pré-cadastro
 Route::post('/webhook/asaas/pre-registration', [\App\Http\Controllers\Webhook\PreRegistrationWebhookController::class, 'handle'])
     ->middleware('verify.asaas.token');
-
-// Rota pública para pré-cadastro (landing page)
-Route::post('/pre-register', [\App\Http\Controllers\PreRegisterController::class, 'store'])
-    ->middleware('throttle:10,1'); // Rate limit: 10 requisições por minuto
 
 // Callback global do Google Calendar (não fica no grupo /t/{tenant})
 Route::get('/google/callback', [GoogleCalendarController::class, 'callback'])->name('google.callback');

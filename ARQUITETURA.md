@@ -582,8 +582,8 @@ O middleware `CheckModuleAccess` verifica se o usuário possui acesso ao módulo
 
 ---
 
-**Documentação gerada em:** 2025-01-27
-**Última atualização:** 2025-01-27
+**Documentação gerada em:** 2025-12-03
+**Última atualização:** 2025-12-03
 
 **Nota:** Esta documentação foi revisada e atualizada para refletir todas as rotas e funcionalidades atuais do sistema, incluindo:
 - Rotas do Portal do Paciente
@@ -592,4 +592,8 @@ O middleware `CheckModuleAccess` verifica se o usuário possui acesso ao módulo
 - Rotas de permissões de médicos para usuários
 - Formulários públicos e envio automático de links
 - Serviços de notificação (MailTenantService, NotificationService, WhatsappTenantService)
+- Integração com Apple Calendar (iCloud)
+- Sistema completo de relatórios
+- Módulo de atendimento médico
+- Agendamentos online com instruções
 

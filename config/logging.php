@@ -53,9 +53,8 @@ return [
 
     'channels' => [
         'stack' => [
-            'driver' => 'stack',
-            'channels' => ['single', 'dynamic_tenant'],
-            'ignore_exceptions' => false,
+            'driver' => 'custom',
+            'via' => App\Logging\TenantAwareStackChannel::class,
         ],
 
         'single' => [
@@ -136,6 +135,7 @@ return [
         'dynamic_tenant' => [
             'driver' => 'custom',
             'via' => App\Logging\TenantLogChannel::class,
+            'level' => env('LOG_LEVEL', 'debug'),
         ],
     ],
 

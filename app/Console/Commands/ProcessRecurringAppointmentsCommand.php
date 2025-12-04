@@ -246,6 +246,7 @@ class ProcessRecurringAppointmentsCommand extends Command
             $appointment = Appointment::create([
                 'id' => Str::uuid(),
                 'calendar_id' => $calendar->id,
+                'doctor_id' => $calendar->doctor_id, // Garantir que doctor_id está definido
                 'appointment_type' => $recurring->appointment_type_id,
                 'patient_id' => $recurring->patient_id,
                 'specialty_id' => null, // Pode ser adicionado depois se necessário

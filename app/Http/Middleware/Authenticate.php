@@ -4,6 +4,8 @@ namespace App\Http\Middleware;
 
 use Illuminate\Auth\Middleware\Authenticate as Middleware;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use App\Models\Platform\Tenant;
 
 class Authenticate extends Middleware
 {
@@ -15,10 +17,8 @@ class Authenticate extends Middleware
             
             if ($isTenantRoute) {
                 // NUNCA redirecionar para platform em rotas de tenant
-                // Tenta obter o slug do tenant
-                $tenantSlug = $request->route('tenant') 
-                    ?? session('tenant_slug') 
-                    ?? \App\Models\Platform\Tenant::current()?->subdomain;
+                // Tenta obter o slug do tenant de várias fontes
+                $tenantSlug = $this->getTenantSlug($request);
                 
                 if ($tenantSlug) {
                     return route('tenant.login', ['tenant' => $tenantSlug]);
@@ -30,6 +30,47 @@ class Authenticate extends Middleware
             
             // Para rotas da platform, redireciona para login da platform
             return route('login');
+        }
+
+        return null;
+    }
+
+    /**
+     * Tenta obter o slug do tenant de várias fontes
+     * Similar à lógica do RedirectIfTenantUnauthenticated
+     */
+    protected function getTenantSlug(Request $request): ?string
+    {
+        // 1. Tenta pegar da rota (para rotas como /t/{tenant}/...)
+        if ($request->route('tenant')) {
+            return $request->route('tenant');
+        }
+
+        // 2. Tenta pegar da sessão
+        $sessionSlug = session('tenant_slug');
+        if ($sessionSlug) {
+            return $sessionSlug;
+        }
+
+        // 3. Tenta pegar do tenant atual (se já estiver ativo)
+        $currentTenant = Tenant::current();
+        if ($currentTenant && $currentTenant->subdomain) {
+            return $currentTenant->subdomain;
+        }
+
+        // 4. Tenta pegar do usuário autenticado no guard tenant (mesmo que não passe no check)
+        // Isso pode acontecer se o token expirou mas ainda está na sessão
+        try {
+            $user = Auth::guard('tenant')->user();
+            if ($user && $user->tenant_id) {
+                // Busca o tenant sem fazer makeCurrent para evitar problemas
+                $tenant = Tenant::find($user->tenant_id);
+                if ($tenant && $tenant->subdomain) {
+                    return $tenant->subdomain;
+                }
+            }
+        } catch (\Exception $e) {
+            // Ignora erros ao tentar pegar o usuário
         }
 
         return null;

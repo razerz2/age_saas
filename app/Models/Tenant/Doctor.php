@@ -117,4 +117,52 @@ class Doctor extends Model
     {
         return $this->hasOne(\App\Models\Tenant\AppleCalendarToken::class);
     }
+
+    /**
+     * Verifica se o médico possui todas as configurações necessárias para agendamentos:
+     * - Calendário cadastrado
+     * - Horários comerciais (business hours) configurados
+     * - Tipos de atendimento (appointment types) cadastrados
+     * 
+     * @return bool
+     */
+    public function hasCompleteCalendarConfiguration(): bool
+    {
+        // Verifica se tem calendário
+        $hasCalendar = $this->calendars()->exists();
+        
+        // Verifica se tem horários comerciais configurados
+        $hasBusinessHours = $this->businessHours()->exists();
+        
+        // Verifica se tem tipos de atendimento cadastrados e ativos
+        $hasAppointmentTypes = $this->appointmentTypes()
+            ->where('is_active', true)
+            ->exists();
+        
+        return $hasCalendar && $hasBusinessHours && $hasAppointmentTypes;
+    }
+
+    /**
+     * Retorna uma mensagem descritiva sobre quais configurações estão faltando
+     * 
+     * @return array Array com informações sobre o que está faltando
+     */
+    public function getMissingConfigurationDetails(): array
+    {
+        $missing = [];
+        
+        if (!$this->calendars()->exists()) {
+            $missing[] = 'calendário';
+        }
+        
+        if (!$this->businessHours()->exists()) {
+            $missing[] = 'horários comerciais';
+        }
+        
+        if (!$this->appointmentTypes()->where('is_active', true)->exists()) {
+            $missing[] = 'tipos de atendimento';
+        }
+        
+        return $missing;
+    }
 }

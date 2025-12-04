@@ -368,7 +368,19 @@ Sincronização automática de agendamentos com Google Calendar por médico.
 4. Cada médico pode conectar sua própria conta Google Calendar
 5. Os agendamentos são sincronizados automaticamente
 
-Para mais detalhes, consulte a documentação em [TENANT.md](TENANT.md#10-integrações).
+Para mais detalhes, consulte a documentação em [docs/INTEGRACAO_GOOGLE_CALENDAR.md](docs/INTEGRACAO_GOOGLE_CALENDAR.md).
+
+### Apple Calendar (iCloud)
+
+Sincronização automática de agendamentos com Apple Calendar (iCloud) por médico usando protocolo CalDAV.
+
+**Configuração:**
+
+1. Cada médico pode conectar sua própria conta iCloud
+2. Use uma Senha de App Específica para maior segurança
+3. Os agendamentos são sincronizados automaticamente via CalDAV
+
+Para mais detalhes, consulte a documentação em [docs/INTEGRACAO_APPLE_CALENDAR.md](docs/INTEGRACAO_APPLE_CALENDAR.md).
 
 ## 💻 Desenvolvimento
 

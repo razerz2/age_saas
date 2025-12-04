@@ -1,0 +1,177 @@
+/**
+ * CSS PERSONALIZADO - FIX COMPLETO DA SIDEBAR
+ * Remove altura fixa, espaço vazio e comportamento de scroll
+ * Apenas afeta layout principal (não login)
+ */
+
+@media (min-width: 992px) {
+  /* ============================================
+     CONTAINER-SCROLLER - Não força altura
+     ============================================ */
+  body:not(:has(.full-page-wrapper)) .container-scroller,
+  body .container-scroller:not(:has(.full-page-wrapper)) {
+    height: auto !important;
+    min-height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
+    position: relative !important;
+  }
+
+  /* ============================================
+     PAGE-BODY-WRAPPER - Não força altura mínima
+     ============================================ */
+  body:not(:has(.full-page-wrapper)) .page-body-wrapper,
+  body .page-body-wrapper:not(.full-page-wrapper) {
+    min-height: auto !important;
+    height: auto !important;
+    max-height: none !important;
+    align-items: flex-start !important;
+    position: relative !important;
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+  }
+
+  /* ============================================
+     SIDEBAR - Altura automática baseada no conteúdo
+     ESPECIFICIDADE MÁXIMA para sobrescrever CSS original
+     ============================================ */
+  html body:not(:has(.full-page-wrapper)) .sidebar.sidebar-offcanvas,
+  html body .page-body-wrapper:not(.full-page-wrapper) .sidebar.sidebar-offcanvas,
+  html body #sidebar.sidebar.sidebar-offcanvas,
+  html body .container-scroller:not(:has(.full-page-wrapper)) .sidebar.sidebar-offcanvas,
+  html body .page-body-wrapper:not(.full-page-wrapper) #sidebar,
+  /* Seletor ainda mais específico para garantir sobrescrita */
+  html body .container-scroller .page-body-wrapper:not(.full-page-wrapper) .sidebar.sidebar-offcanvas#sidebar {
+    /* Altura - CRÍTICO: Remove min-height do CSS original, mas NÃO força height: auto */
+    min-height: auto !important;
+    /* height será definido pelo JavaScript */
+    max-height: none !important;
+    
+    /* Posicionamento */
+    position: relative !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: auto !important;
+    bottom: auto !important;
+    
+    /* Flexbox */
+    align-self: flex-start !important;
+    flex-grow: 0 !important;
+    flex-shrink: 0 !important;
+    flex-basis: auto !important;
+    display: flex !important;
+    flex-direction: column !important;
+    
+    /* Overflow - CRÍTICO para prevenir background se estender */
+    overflow: hidden !important;
+    
+    /* Espaçamento */
+    padding: 0 !important;
+    margin: 0 !important;
+    
+    /* Background */
+    background: #202039 !important;
+  }
+
+  /* ============================================
+     SIDEBAR NAV - Altura automática
+     ESPECIFICIDADE MÁXIMA para remover margin-bottom: 60px
+     ============================================ */
+  html body:not(:has(.full-page-wrapper)) .sidebar.sidebar-offcanvas .nav,
+  html body .page-body-wrapper:not(.full-page-wrapper) .sidebar .nav,
+  html body #sidebar .nav,
+  html body .container-scroller:not(:has(.full-page-wrapper)) .sidebar .nav,
+  html body .page-body-wrapper:not(.full-page-wrapper) #sidebar .nav {
+    overflow: visible !important;
+    height: auto !important;
+    min-height: auto !important;
+    max-height: none !important;
+    margin-bottom: 0 !important;
+    margin-top: 0 !important;
+    padding-bottom: 0 !important;
+    padding-top: 0 !important;
+    display: block !important;
+    flex: 0 0 auto !important;
+    box-sizing: border-box !important;
+  }
+
+  /* ============================================
+     MAIN-PANEL - Não força altura no wrapper
+     ============================================ */
+  body:not(:has(.full-page-wrapper)) .main-panel,
+  body .page-body-wrapper:not(.full-page-wrapper) .main-panel {
+    min-height: auto !important;
+    align-self: stretch !important;
+    position: relative !important;
+  }
+
+  /* ============================================
+     Remove pseudo-elementos que possam criar espaço
+     ============================================ */
+  body:not(:has(.full-page-wrapper)) .sidebar::before,
+  body:not(:has(.full-page-wrapper)) .sidebar::after,
+  body .page-body-wrapper:not(.full-page-wrapper) .sidebar::before,
+  body .page-body-wrapper:not(.full-page-wrapper) .sidebar::after {
+    display: none !important;
+    content: none !important;
+    height: 0 !important;
+    width: 0 !important;
+  }
+
+  /* ============================================
+     Remove espaçamento extra do último item
+     ============================================ */
+  body:not(:has(.full-page-wrapper)) .sidebar .nav .nav-item:last-child,
+  body .page-body-wrapper:not(.full-page-wrapper) .sidebar .nav .nav-item:last-child {
+    margin-bottom: 0 !important;
+    padding-bottom: 0 !important;
+  }
+
+  body:not(:has(.full-page-wrapper)) .sidebar .nav:last-child,
+  body .page-body-wrapper:not(.full-page-wrapper) .sidebar .nav:last-child {
+    margin-bottom: 0 !important;
+    padding-bottom: 0 !important;
+  }
+}
+
+/* Fallback para navegadores que não suportam :has() */
+@media (min-width: 992px) {
+  /* Usa seletor mais específico quando :has() não está disponível */
+  html body .page-body-wrapper:not(.full-page-wrapper) .sidebar.sidebar-offcanvas,
+  html body .page-body-wrapper:not(.full-page-wrapper) #sidebar {
+    min-height: auto !important;
+    height: auto !important;
+    max-height: none !important;
+    position: relative !important;
+    align-self: flex-start !important;
+    overflow: hidden !important;
+    flex-grow: 0 !important;
+    flex-shrink: 0 !important;
+    top: 0 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  html body .page-body-wrapper:not(.full-page-wrapper) {
+    min-height: auto !important;
+    height: auto !important;
+    align-items: flex-start !important;
+    position: relative !important;
+  }
+
+  html body .page-body-wrapper:not(.full-page-wrapper) .sidebar .nav,
+  html body .page-body-wrapper:not(.full-page-wrapper) #sidebar .nav {
+    margin-bottom: 0 !important;
+    padding-bottom: 0 !important;
+    margin-top: 0 !important;
+    padding-top: 0 !important;
+  }
+  
+  html body .container-scroller:not(:has(.full-page-wrapper)) {
+    height: auto !important;
+    min-height: auto !important;
+    overflow: visible !important;
+  }
+}
+

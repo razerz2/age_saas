@@ -22,7 +22,7 @@ Esta pasta contém documentação complementar e guias específicos do projeto.
 ### 🔗 Integrações
 
 - **[INTEGRACAO_GOOGLE_CALENDAR.md](INTEGRACAO_GOOGLE_CALENDAR.md)** - Documentação completa da integração com Google Calendar
-- **[INTEGRACAO_APPLE_CALENDAR.md](INTEGRACAO_APPLE_CALENDAR.md)** - Documentação completa da integração com Apple Calendar (iCloud)
+- **[INTEGRACAO_APPLE_CALENDAR.md](INTEGRACAO_APPLE_CALENDAR.md)** - Documentação completa da integração com Apple Calendar (iCloud) usando protocolo CalDAV
 
 ### 🗄️ Migrations e Banco de Dados
 

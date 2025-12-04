@@ -30,24 +30,29 @@ class Appointment extends Model
     public $timestamps = true;
 
     /**
-     * Mutator para garantir que doctor_id seja definido automaticamente quando calendar_id é definido
+     * Mutator para garantir que doctor_id seja sempre sincronizado com calendar_id
      */
     protected static function boot()
     {
         parent::boot();
 
         static::saving(function ($appointment) {
-            // Se calendar_id está sendo definido e doctor_id não está, buscar do calendar
-            if ($appointment->calendar_id && !$appointment->doctor_id) {
-                $calendar = Calendar::find($appointment->calendar_id);
-                if ($calendar && $calendar->doctor_id) {
-                    $appointment->doctor_id = $calendar->doctor_id;
+            // Sempre garantir que doctor_id está sincronizado com calendar_id
+            if ($appointment->calendar_id) {
+                // Se calendar_id mudou ou doctor_id não está definido, buscar do calendar
+                if ($appointment->isDirty('calendar_id') || !$appointment->doctor_id) {
+                    $calendar = Calendar::find($appointment->calendar_id);
+                    if ($calendar && $calendar->doctor_id) {
+                        $appointment->doctor_id = $calendar->doctor_id;
+                    }
                 }
             }
-            // Se calendar_id mudou, atualizar doctor_id também
-            if ($appointment->isDirty('calendar_id') && $appointment->calendar_id) {
+            
+            // Se doctor_id foi definido diretamente mas calendar_id não está, validar consistência
+            if ($appointment->doctor_id && $appointment->calendar_id) {
                 $calendar = Calendar::find($appointment->calendar_id);
-                if ($calendar && $calendar->doctor_id) {
+                if ($calendar && $calendar->doctor_id !== $appointment->doctor_id) {
+                    // Se houver inconsistência, sincronizar doctor_id com o calendar
                     $appointment->doctor_id = $calendar->doctor_id;
                 }
             }

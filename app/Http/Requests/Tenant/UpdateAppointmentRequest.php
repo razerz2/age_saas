@@ -4,6 +4,9 @@ namespace App\Http\Requests\Tenant;
 
 use Illuminate\Foundation\Http\FormRequest;
 use App\Models\Tenant\Appointment;
+use App\Models\Tenant\BusinessHour;
+use App\Models\Tenant\Calendar;
+use App\Models\Tenant\Doctor;
 use Carbon\Carbon;
 
 class UpdateAppointmentRequest extends FormRequest
@@ -16,7 +19,8 @@ class UpdateAppointmentRequest extends FormRequest
     public function rules()
     {
         $rules = [
-            'calendar_id'      => ['required', 'exists:tenant.calendars,id'],
+            'doctor_id'        => ['required', 'exists:tenant.doctors,id'],
+            'calendar_id'      => ['nullable', 'exists:tenant.calendars,id'], // Será definido automaticamente
             'appointment_type' => ['nullable', 'exists:tenant.appointment_types,id'],
             'patient_id'       => ['required', 'exists:tenant.patients,id'],
             'specialty_id'     => ['nullable', 'exists:tenant.medical_specialties,id'],
@@ -47,7 +51,91 @@ class UpdateAppointmentRequest extends FormRequest
             $appointmentId = $this->route('id');
             $startsAt = Carbon::parse($this->starts_at);
             $endsAt = Carbon::parse($this->ends_at);
+            
+            // Verificar se a data de início não é anterior à data/hora atual
+            $now = Carbon::now();
+            if ($startsAt->lt($now)) {
+                $validator->errors()->add('starts_at', 'Não é possível agendar para uma data/hora passada. Por favor, selecione uma data/hora atual ou futura.');
+                return;
+            }
+            
+            // Obter doctor_id e buscar calendar_id automaticamente
+            $doctorId = $this->doctor_id;
             $calendarId = $this->calendar_id;
+            
+            // Se não tiver calendar_id mas tiver doctor_id, buscar o calendário principal do médico
+            if (!$calendarId && $doctorId) {
+                $doctor = Doctor::find($doctorId);
+                if ($doctor) {
+                    $calendar = $doctor->getPrimaryCalendar();
+                    if ($calendar) {
+                        $calendarId = $calendar->id;
+                    }
+                }
+            }
+            
+            if (!$calendarId) {
+                $validator->errors()->add('doctor_id', 'O médico selecionado não possui um calendário cadastrado.');
+                return;
+            }
+
+            // Buscar o calendário para validação
+            $calendar = Calendar::with('doctor')->find($calendarId);
+            if (!$calendar || !$calendar->doctor) {
+                $validator->errors()->add('doctor_id', 'O calendário do médico não foi encontrado.');
+                return;
+            }
+            
+            // Garantir que o calendar_id corresponde ao doctor_id
+            if ($calendar->doctor_id !== $doctorId) {
+                $validator->errors()->add('doctor_id', 'O calendário selecionado não pertence ao médico escolhido.');
+                return;
+            }
+            $weekday = $startsAt->dayOfWeek; // 0 = Domingo, 6 = Sábado
+
+            // Verificar se o médico atende no dia da semana selecionado
+            $businessHours = BusinessHour::where('doctor_id', $doctorId)
+                ->where('weekday', $weekday)
+                ->get();
+
+            if ($businessHours->isEmpty()) {
+                $weekdayNames = ['Domingo', 'Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado'];
+                $validator->errors()->add('starts_at', 'O médico não realiza atendimento em ' . $weekdayNames[$weekday] . '. Por favor, selecione outro dia.');
+                return;
+            }
+
+            // Verificar se o horário está dentro do horário de atendimento do médico
+            $startTime = $startsAt->format('H:i:s');
+            $endTime = $endsAt->format('H:i:s');
+            $isWithinBusinessHours = false;
+
+            foreach ($businessHours as $businessHour) {
+                $bhStart = Carbon::parse($businessHour->start_time)->format('H:i:s');
+                $bhEnd = Carbon::parse($businessHour->end_time)->format('H:i:s');
+
+                // Verificar se o agendamento está dentro do horário de atendimento
+                if ($startTime >= $bhStart && $endTime <= $bhEnd) {
+                    // Verificar se não está dentro de um intervalo (se houver)
+                    $isInBreak = false;
+                    if ($businessHour->break_start_time && $businessHour->break_end_time) {
+                        $breakStart = Carbon::parse($businessHour->break_start_time)->format('H:i:s');
+                        $breakEnd = Carbon::parse($businessHour->break_end_time)->format('H:i:s');
+                        
+                        // Verifica se o agendamento se sobrepõe ao intervalo
+                        $isInBreak = ($startTime < $breakEnd && $endTime > $breakStart);
+                    }
+
+                    if (!$isInBreak) {
+                        $isWithinBusinessHours = true;
+                        break;
+                    }
+                }
+            }
+
+            if (!$isWithinBusinessHours) {
+                $validator->errors()->add('starts_at', 'O horário selecionado está fora do horário de atendimento do médico. Por favor, selecione um horário dentro do horário de atendimento.');
+                return;
+            }
 
             // Verificar se o paciente já possui outro agendamento no mesmo dia (excluindo o atual)
             if ($this->patient_id) {
@@ -90,7 +178,9 @@ class UpdateAppointmentRequest extends FormRequest
     public function messages()
     {
         return [
-            'calendar_id.required' => 'O calendário é obrigatório.',
+            'doctor_id.required' => 'O médico é obrigatório.',
+            'doctor_id.exists' => 'O médico selecionado não existe.',
+
             'calendar_id.exists' => 'O calendário selecionado não existe.',
 
             'appointment_type.exists' => 'O tipo de agendamento selecionado não existe.',

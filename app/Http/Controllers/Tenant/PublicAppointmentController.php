@@ -41,12 +41,23 @@ class PublicAppointmentController extends Controller
         }
 
         // Busca os médicos ativos
-        $doctors = Doctor::with('user')
+        $allDoctors = Doctor::with('user')
             ->whereHas('user', function($query) {
                 $query->where('status', 'active');
             })
             ->orderBy('id')
             ->get();
+        
+        // Filtrar apenas médicos com configurações completas
+        $doctors = $allDoctors->filter(function($doctor) {
+            return $doctor->hasCompleteCalendarConfiguration();
+        });
+        
+        // Se não houver médicos com configurações completas, retornar erro
+        if ($doctors->isEmpty()) {
+            return redirect()->route('public.patient.identify', ['tenant' => $tenant])
+                ->with('error', 'Não há médicos disponíveis para agendamento no momento. Por favor, entre em contato com a clínica.');
+        }
 
         // Busca o nome do paciente da sessão ou do banco
         $patientName = Session::get('public_patient_name');
@@ -97,6 +108,7 @@ class PublicAppointmentController extends Controller
         
         $data['id'] = Str::uuid();
         $data['patient_id'] = $patientId; // Usa o paciente da sessão
+        $data['doctor_id'] = $calendar->doctor_id; // Garantir que doctor_id está definido
         $data['status'] = 'scheduled'; // Status padrão para agendamentos públicos
 
         // Aplicar lógica de appointment_mode baseado na configuração
@@ -373,6 +385,85 @@ class PublicAppointmentController extends Controller
         }
 
         return response()->json($availableSlots);
+    }
+
+    /**
+     * API Pública: Buscar dias trabalhados (business hours) do médico
+     */
+    public function getBusinessHoursByDoctor($tenant, $doctorId)
+    {
+        $tenantModel = Tenant::where('subdomain', $tenant)->first();
+        if (!$tenantModel) {
+            return response()->json(['error' => 'Clínica não encontrada'], 404);
+        }
+
+        $tenantModel->makeCurrent();
+
+        try {
+            $doctor = Doctor::with('user')->findOrFail($doctorId);
+            
+            $businessHours = BusinessHour::where('doctor_id', $doctorId)
+                ->orderBy('weekday')
+                ->orderBy('start_time')
+                ->get();
+
+            // Mapear weekday para nome do dia
+            $weekdayNames = [
+                0 => 'Domingo',
+                1 => 'Segunda-feira',
+                2 => 'Terça-feira',
+                3 => 'Quarta-feira',
+                4 => 'Quinta-feira',
+                5 => 'Sexta-feira',
+                6 => 'Sábado',
+            ];
+
+            // Agrupar por weekday
+            $grouped = $businessHours->groupBy('weekday');
+            
+            // Criar array com todos os dias da semana (mesmo que não tenham horários)
+            $result = [
+                'doctor' => [
+                    'id' => $doctor->id,
+                    'name' => $doctor->user->name_full ?? $doctor->user->name ?? 'N/A',
+                ],
+                'business_hours' => []
+            ];
+
+            // Processar cada dia da semana
+            foreach ($grouped as $weekday => $hours) {
+                $result['business_hours'][] = [
+                    'weekday' => (int)$weekday,
+                    'weekday_name' => $weekdayNames[$weekday] ?? 'N/A',
+                    'hours' => $hours->map(function($h) {
+                        return [
+                            'start_time' => substr($h->start_time, 0, 5), // Formato HH:MM
+                            'end_time' => substr($h->end_time, 0, 5),
+                            'break_start_time' => $h->break_start_time ? substr($h->break_start_time, 0, 5) : null,
+                            'break_end_time' => $h->break_end_time ? substr($h->break_end_time, 0, 5) : null,
+                        ];
+                    })->values()->toArray(),
+                ];
+            }
+
+            // Ordenar por weekday
+            usort($result['business_hours'], function($a, $b) {
+                return $a['weekday'] <=> $b['weekday'];
+            });
+
+            return response()->json($result);
+        } catch (\Exception $e) {
+            \Log::error('Erro ao buscar dias trabalhados do médico (público)', [
+                'doctor_id' => $doctorId,
+                'error' => $e->getMessage(),
+            ]);
+            
+            return response()->json([
+                'error' => 'Erro ao buscar dias trabalhados do médico',
+                'doctor' => null,
+                'business_hours' => []
+            ], 500);
+        }
     }
 }
 

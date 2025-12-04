@@ -63,18 +63,18 @@ http://localhost/Platform/dashboard
 
 Os usuários da Platform possuem um campo `modules` (JSON) que define quais módulos podem acessar:
 
-- `tenants` - Gerenciamento de tenants
-- `plans` - Gerenciamento de planos
-- `subscriptions` - Gerenciamento de assinaturas
-- `invoices` - Gerenciamento de faturas
-- `users` - Gerenciamento de usuários
-- `settings` - Configurações do sistema
-- `notifications` - Notificações
-- `medical_specialties_catalog` - Catálogo de especialidades
-- `notifications_outbox` - Histórico de notificações enviadas
-- `system_notifications` - Notificações do sistema
-- `locations` - Gerenciamento de localização (países, estados, cidades)
-- `pre_tenants` - Gerenciamento de pré-cadastros
+- `tenants` - Tenants
+- `pre_tenants` - Pré-Cadastros
+- `plans` - Planos
+- `subscriptions` - Assinaturas
+- `invoices` - Faturas
+- `medical_specialties_catalog` - Catálogo Médico
+- `notifications_outbox` - Notificações
+- `system_notifications` - Notificações do Sistema
+- `notification_templates` - Templates de Notificação
+- `locations` - Localização
+- `users` - Usuários
+- `settings` - Configurações
 
 O middleware `module.access:{modulo}` verifica o acesso antes de permitir a rota.
 
@@ -840,7 +840,7 @@ php artisan migrate
 
 ---
 
-**Última atualização:** 2025-01-27
+**Última atualização:** 2025-12-03
 
 **Nota:** Esta documentação foi revisada e atualizada com base no código implementado, incluindo:
 - Todas as rotas atuais da Platform
@@ -859,4 +859,5 @@ php artisan migrate
 - **NOVO:** Rotas públicas `/pre-register` e `/webhook/asaas/pre-registration`
 - **NOVO:** Serviço `PreTenantProcessorService` para processamento automático
 - **NOVO:** Integração completa com Asaas para pagamentos de pré-cadastro
+- Lista completa e atualizada de módulos disponíveis
 

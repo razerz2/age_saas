@@ -109,16 +109,16 @@ Os usuários do tenant possuem um campo `role` que define seu papel no sistema:
 
 Os usuários também possuem um campo `modules` (JSON) que define quais módulos podem acessar:
 
-- `appointments` - Gerenciamento de agendamentos
-- `online_appointments` - Consultas online
-- `medical_appointments` - Atendimento Médico (sessão de atendimento)
-- `patients` - Gerenciamento de pacientes
-- `doctors` - Gerenciamento de médicos
-- `calendar` - Gerenciamento de calendários
-- `specialties` - Gerenciamento de especialidades
-- `users` - Gerenciamento de usuários
-- `business_hours` - Horários comerciais
-- `forms` - Gerenciamento de formulários
+- `appointments` - Atendimentos
+- `online_appointments` - Consultas Online
+- `medical_appointments` - Atendimento Médico
+- `patients` - Pacientes
+- `doctors` - Médicos
+- `calendar` - Agenda
+- `specialties` - Especialidades
+- `users` - Usuários
+- `business_hours` - Horários Médicos
+- `forms` - Formulários
 - `reports` - Relatórios
 - `integrations` - Integrações
 - `settings` - Configurações
@@ -1308,11 +1308,12 @@ web middleware group
 
 ---
 
-**Última atualização:** 2025-12-01
+**Última atualização:** 2025-12-03
 
 **Nota:** Esta documentação foi revisada e atualizada para refletir todas as funcionalidades atuais, incluindo:
 - Portal do Paciente completo
 - Integração Google Calendar com sincronização automática
+- Integração Apple Calendar (iCloud) com protocolo CalDAV
 - Agendamentos recorrentes
 - Permissões de médicos para usuários
 - Sistema de notificações
@@ -1325,6 +1326,7 @@ web middleware group
 - **Filtros Automáticos** baseados em roles aplicados em todas as listagens
 - **Campos de Personalização** no Doctor (labels, signature, registration)
 - **Configurações de Profissionais** (rótulos globais personalizados)
+- Lista completa e atualizada de módulos disponíveis
 
 ---
 

@@ -16,6 +16,7 @@ use App\Models\Tenant\RecurringAppointmentRule;
 use App\Http\Requests\Tenant\StoreAppointmentRequest;
 use App\Http\Requests\Tenant\UpdateAppointmentRequest;
 use App\Services\Tenant\GoogleCalendarService;
+use App\Services\Tenant\AppleCalendarService;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
@@ -25,17 +26,19 @@ class AppointmentController extends Controller
 {
     use HasDoctorFilter;
     protected GoogleCalendarService $googleCalendarService;
+    protected AppleCalendarService $appleCalendarService;
 
-    public function __construct(GoogleCalendarService $googleCalendarService)
+    public function __construct(GoogleCalendarService $googleCalendarService, AppleCalendarService $appleCalendarService)
     {
         $this->googleCalendarService = $googleCalendarService;
+        $this->appleCalendarService = $appleCalendarService;
     }
     public function index()
     {
-        $query = Appointment::with(['calendar.doctor.user', 'patient', 'type', 'specialty']);
+        $query = Appointment::with(['doctor.user', 'calendar', 'patient', 'type', 'specialty']);
         
-        // Aplicar filtro de médico
-        $this->applyDoctorFilterWhereHas($query, 'calendar', 'doctor_id');
+        // Aplicar filtro de médico usando doctor_id diretamente
+        $this->applyDoctorFilter($query, 'doctor_id');
 
         $appointments = $query->orderBy('starts_at')->paginate(30);
 
@@ -53,7 +56,70 @@ class AppointmentController extends Controller
         // Aplicar filtro de médico
         $this->applyDoctorFilter($doctorsQuery);
 
-        $doctors = $doctorsQuery->orderBy('id')->get();
+        // Buscar todos os médicos primeiro para verificar configurações
+        $allDoctors = $doctorsQuery->orderBy('id')->get();
+        
+        // Filtrar apenas médicos com configurações completas
+        $doctors = $allDoctors->filter(function($doctor) {
+            return $doctor->hasCompleteCalendarConfiguration();
+        });
+
+        // Verificar se não há médicos cadastrados
+        if ($allDoctors->isEmpty()) {
+            return redirect()->route('tenant.appointments.index')
+                ->with('error', 'Não há médicos cadastrados no sistema. Por favor, cadastre pelo menos um médico antes de criar agendamentos.');
+        }
+
+        // Verificar se não há médicos com configurações completas
+        if ($doctors->isEmpty()) {
+            $user = Auth::guard('tenant')->user();
+            $isAdmin = $user->role === 'admin';
+            
+            // Construir mensagem detalhada sobre o que está faltando
+            $missingDetails = [];
+            foreach ($allDoctors as $doctor) {
+                $missing = $doctor->getMissingConfigurationDetails();
+                if (!empty($missing)) {
+                    $doctorName = $doctor->user->name_full ?? $doctor->user->name ?? 'Médico';
+                    $missingDetails[] = [
+                        'name' => $doctorName,
+                        'missing' => $missing
+                    ];
+                }
+            }
+            
+            $message = 'Não é possível criar agendamentos porque nenhum médico possui todas as configurações necessárias. ';
+            $message .= 'Para criar agendamentos, cada médico precisa ter: ';
+            $message .= '<ul class="mb-0 mt-2">';
+            $message .= '<li><strong>Calendário</strong> cadastrado</li>';
+            $message .= '<li><strong>Horários comerciais</strong> configurados</li>';
+            $message .= '<li><strong>Tipos de atendimento</strong> cadastrados e ativos</li>';
+            $message .= '</ul>';
+            
+            if ($isAdmin && !empty($missingDetails)) {
+                $message .= '<div class="mt-3"><strong>Detalhes por médico:</strong><ul class="mb-0 mt-2">';
+                foreach ($missingDetails as $detail) {
+                    $missingList = implode(', ', array_map(function($item) {
+                        return '<strong>' . $item . '</strong>';
+                    }, $detail['missing']));
+                    $message .= '<li>' . $detail['name'] . ': falta ' . $missingList . '</li>';
+                }
+                $message .= '</ul></div>';
+            }
+            
+            $message .= '<div class="mt-3">';
+            $message .= '<strong>O que fazer:</strong><br>';
+            $message .= '1. Acesse <a href="' . route('tenant.doctors.index') . '" class="alert-link">Médicos</a> para verificar os médicos cadastrados<br>';
+            $message .= '2. Para cada médico, configure:<br>';
+            $message .= '&nbsp;&nbsp;&nbsp;- <a href="' . route('tenant.calendars.index') . '" class="alert-link">Calendário</a><br>';
+            $message .= '&nbsp;&nbsp;&nbsp;- <a href="' . route('tenant.business-hours.index') . '" class="alert-link">Horários Comerciais</a><br>';
+            $message .= '&nbsp;&nbsp;&nbsp;- <a href="' . route('tenant.appointment-types.index') . '" class="alert-link">Tipos de Atendimento</a>';
+            $message .= '</div>';
+            
+            return redirect()->route('tenant.appointments.index')
+                ->with('error', $message);
+        }
+
         $patients = Patient::orderBy('full_name')->get();
 
         return view('tenant.appointments.create', compact(
@@ -83,6 +149,24 @@ class AppointmentController extends Controller
         // Buscar o calendário principal do médico automaticamente
         if (isset($data['doctor_id'])) {
             $doctor = Doctor::findOrFail($data['doctor_id']);
+            
+            // Validar se o médico tem todas as configurações necessárias
+            if (!$doctor->hasCompleteCalendarConfiguration()) {
+                $missing = $doctor->getMissingConfigurationDetails();
+                $missingList = implode(', ', array_map(function($item) {
+                    return '<strong>' . $item . '</strong>';
+                }, $missing));
+                
+                $doctorName = $doctor->user->name_full ?? $doctor->user->name ?? 'Este médico';
+                $message = $doctorName . ' não possui todas as configurações necessárias para criar agendamentos. ';
+                $message .= 'Faltam: ' . $missingList . '. ';
+                $message .= 'Por favor, configure todas as opções antes de criar agendamentos.';
+                
+                return redirect()->back()
+                    ->withInput()
+                    ->with('error', $message);
+            }
+            
             $calendar = $doctor->getPrimaryCalendar();
             
             if (!$calendar) {
@@ -92,6 +176,31 @@ class AppointmentController extends Controller
             }
             
             $data['calendar_id'] = $calendar->id;
+            // Garantir que doctor_id está definido explicitamente
+            $data['doctor_id'] = $doctor->id;
+        } elseif (isset($data['calendar_id'])) {
+            // Se não tiver doctor_id mas tiver calendar_id, buscar do calendário
+            $calendar = Calendar::findOrFail($data['calendar_id']);
+            $doctor = $calendar->doctor;
+            
+            // Validar se o médico tem todas as configurações necessárias
+            if (!$doctor->hasCompleteCalendarConfiguration()) {
+                $missing = $doctor->getMissingConfigurationDetails();
+                $missingList = implode(', ', array_map(function($item) {
+                    return '<strong>' . $item . '</strong>';
+                }, $missing));
+                
+                $doctorName = $doctor->user->name_full ?? $doctor->user->name ?? 'Este médico';
+                $message = $doctorName . ' não possui todas as configurações necessárias para criar agendamentos. ';
+                $message .= 'Faltam: ' . $missingList . '. ';
+                $message .= 'Por favor, configure todas as opções antes de criar agendamentos.';
+                
+                return redirect()->back()
+                    ->withInput()
+                    ->with('error', $message);
+            }
+            
+            $data['doctor_id'] = $calendar->doctor_id;
         }
 
         $appointment = Appointment::create($data);
@@ -120,17 +229,34 @@ class AppointmentController extends Controller
     public function edit($id)
     {
         $appointment = Appointment::findOrFail($id);
-        $calendars      = Calendar::with('doctor.user')->orderBy('name')->get();
-        $patients       = Patient::orderBy('full_name')->get();
-        $specialties    = MedicalSpecialty::orderBy('name')->get();
+        
+        // Listar médicos ativos (com status active)
+        $doctorsQuery = Doctor::with('user')
+            ->whereHas('user', function($query) {
+                $query->where('status', 'active');
+            });
 
-        $appointment->load(['calendar', 'patient', 'specialty', 'type', 'calendar.doctor']);
+        // Aplicar filtro de médico
+        $this->applyDoctorFilter($doctorsQuery);
+
+        // Buscar todos os médicos primeiro para verificar configurações
+        $allDoctors = $doctorsQuery->orderBy('id')->get();
+        
+        // Filtrar apenas médicos com configurações completas
+        // Mas incluir o médico do agendamento atual mesmo que não tenha todas as configurações
+        // (para não impedir a edição de agendamentos existentes)
+        $doctors = $allDoctors->filter(function($doctor) use ($appointment) {
+            return $doctor->hasCompleteCalendarConfiguration() || $doctor->id === $appointment->doctor_id;
+        });
+        
+        $patients = Patient::orderBy('full_name')->get();
+
+        $appointment->load(['doctor.user', 'calendar', 'patient', 'specialty', 'type']);
 
         return view('tenant.appointments.edit', compact(
             'appointment',
-            'calendars',
-            'patients',
-            'specialties'
+            'doctors',
+            'patients'
         ));
     }
 
@@ -138,6 +264,40 @@ class AppointmentController extends Controller
     {
         $appointment = Appointment::findOrFail($id);
         $data = $request->validated();
+
+        // Buscar o calendário principal do médico automaticamente
+        if (isset($data['doctor_id'])) {
+            $doctor = Doctor::findOrFail($data['doctor_id']);
+            
+            // Validar se o médico tem todas as configurações necessárias (apenas se mudou de médico)
+            if ($appointment->doctor_id !== $doctor->id && !$doctor->hasCompleteCalendarConfiguration()) {
+                $missing = $doctor->getMissingConfigurationDetails();
+                $missingList = implode(', ', array_map(function($item) {
+                    return '<strong>' . $item . '</strong>';
+                }, $missing));
+                
+                $doctorName = $doctor->user->name_full ?? $doctor->user->name ?? 'Este médico';
+                $message = $doctorName . ' não possui todas as configurações necessárias para criar agendamentos. ';
+                $message .= 'Faltam: ' . $missingList . '. ';
+                $message .= 'Por favor, configure todas as opções antes de alterar o agendamento para este médico.';
+                
+                return redirect()->back()
+                    ->withInput()
+                    ->with('error', $message);
+            }
+            
+            $calendar = $doctor->getPrimaryCalendar();
+            
+            if (!$calendar) {
+                return redirect()->back()
+                    ->withInput()
+                    ->with('error', 'O médico selecionado não possui um calendário cadastrado. Por favor, cadastre um calendário para este médico primeiro.');
+            }
+            
+            $data['calendar_id'] = $calendar->id;
+            // Garantir que doctor_id está definido explicitamente
+            $data['doctor_id'] = $doctor->id;
+        }
 
         // Aplicar lógica de appointment_mode baseado na configuração
         $mode = \App\Models\Tenant\TenantSetting::get('appointments.default_appointment_mode', 'user_choice');
@@ -167,6 +327,13 @@ class AppointmentController extends Controller
 
     public function destroy($id)
     {
+        $user = Auth::guard('tenant')->user();
+        
+        // Apenas admin pode excluir agendamentos
+        if ($user->role !== 'admin') {
+            abort(403, 'Você não tem permissão para excluir agendamentos.');
+        }
+        
         $appointment = Appointment::findOrFail($id);
 
         // Remover do Google Calendar se existir
@@ -174,6 +341,16 @@ class AppointmentController extends Controller
             $this->googleCalendarService->deleteEvent($appointment);
         } catch (\Exception $e) {
             \Log::error('Erro ao remover agendamento do Google Calendar', [
+                'appointment_id' => $appointment->id,
+                'error' => $e->getMessage(),
+            ]);
+        }
+
+        // Remover do Apple Calendar se existir
+        try {
+            $this->appleCalendarService->deleteEvent($appointment);
+        } catch (\Exception $e) {
+            \Log::error('Erro ao remover agendamento do Apple Calendar', [
                 'appointment_id' => $appointment->id,
                 'error' => $e->getMessage(),
             ]);
@@ -702,5 +879,78 @@ class AppointmentController extends Controller
         }
 
         return false;
+    }
+
+    /**
+     * API: Buscar dias trabalhados (business hours) do médico
+     */
+    public function getBusinessHoursByDoctor($doctorId)
+    {
+        try {
+            $doctor = Doctor::with('user')->findOrFail($doctorId);
+            
+            $businessHours = BusinessHour::where('doctor_id', $doctorId)
+                ->orderBy('weekday')
+                ->orderBy('start_time')
+                ->get();
+
+            // Mapear weekday para nome do dia
+            $weekdayNames = [
+                0 => 'Domingo',
+                1 => 'Segunda-feira',
+                2 => 'Terça-feira',
+                3 => 'Quarta-feira',
+                4 => 'Quinta-feira',
+                5 => 'Sexta-feira',
+                6 => 'Sábado',
+            ];
+
+            // Agrupar por weekday
+            $grouped = $businessHours->groupBy('weekday');
+            
+            // Criar array com todos os dias da semana (mesmo que não tenham horários)
+            $result = [
+                'doctor' => [
+                    'id' => $doctor->id,
+                    'name' => $doctor->user->name_full ?? $doctor->user->name ?? 'N/A',
+                ],
+                'business_hours' => []
+            ];
+
+            // Processar cada dia da semana
+            foreach ($grouped as $weekday => $hours) {
+                $result['business_hours'][] = [
+                    'weekday' => (int)$weekday,
+                    'weekday_name' => $weekdayNames[$weekday] ?? 'N/A',
+                    'hours' => $hours->map(function($h) {
+                        return [
+                            'start_time' => substr($h->start_time, 0, 5), // Formato HH:MM
+                            'end_time' => substr($h->end_time, 0, 5),
+                            'break_start_time' => $h->break_start_time ? substr($h->break_start_time, 0, 5) : null,
+                            'break_end_time' => $h->break_end_time ? substr($h->break_end_time, 0, 5) : null,
+                        ];
+                    })->values()->toArray(),
+                ];
+            }
+
+            // Ordenar por weekday
+            usort($result['business_hours'], function($a, $b) {
+                return $a['weekday'] <=> $b['weekday'];
+            });
+
+            return response()->json($result);
+        } catch (\Exception $e) {
+            \Log::error('Erro ao buscar dias trabalhados do médico', [
+                'doctor_id' => $doctorId,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            return response()->json([
+                'error' => 'Erro ao buscar dias trabalhados do médico: ' . $e->getMessage(),
+                'doctor' => null,
+                'business_hours' => []
+            ], 500);
+        }
     }
 }

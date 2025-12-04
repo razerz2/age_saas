@@ -4,8 +4,8 @@ namespace App\Logging;
 
 use Monolog\Logger;
 use Monolog\Handler\AbstractProcessingHandler;
+use Monolog\Formatter\LineFormatter;
 use Monolog\LogRecord;
-use Illuminate\Support\Str;
 use Spatie\Multitenancy\Models\Tenant;
 
 class TenantLogChannel
@@ -13,11 +13,42 @@ class TenantLogChannel
     public function __invoke(array $config)
     {
         $logger = new Logger('tenant-dynamic');
-        $level = Logger::DEBUG;
+        
+        // Respeita o nível de log configurado no ambiente
+        $level = $this->parseLogLevel($config['level'] ?? env('LOG_LEVEL', 'debug'));
 
-        $logger->pushHandler(new PerTenantStreamHandler($level));
+        $handler = new PerTenantStreamHandler($level);
+        
+        // Configura o formatter padrão do Laravel para consistência
+        $formatter = new LineFormatter(
+            format: "[%datetime%] %channel%.%level_name%: %message% %context% %extra%\n",
+            dateFormat: 'Y-m-d H:i:s',
+            allowInlineLineBreaks: true,
+            ignoreEmptyContextAndExtra: false
+        );
+        $handler->setFormatter($formatter);
+        
+        $logger->pushHandler($handler);
 
         return $logger;
+    }
+
+    /**
+     * Converte string de nível para constante do Logger
+     */
+    protected function parseLogLevel(string $level): int
+    {
+        return match (strtolower($level)) {
+            'debug' => Logger::DEBUG,
+            'info' => Logger::INFO,
+            'notice' => Logger::NOTICE,
+            'warning' => Logger::WARNING,
+            'error' => Logger::ERROR,
+            'critical' => Logger::CRITICAL,
+            'alert' => Logger::ALERT,
+            'emergency' => Logger::EMERGENCY,
+            default => Logger::DEBUG,
+        };
     }
 }
 
@@ -38,11 +69,18 @@ class PerTenantStreamHandler extends AbstractProcessingHandler
 
         $dir = \dirname($logPath);
         if (!\is_dir($dir)) {
-            @\mkdir($dir, 0775, true);
+            if (!@\mkdir($dir, 0775, true) && !\is_dir($dir)) {
+                // Se falhar ao criar diretório, tenta logar no log padrão
+                error_log("Erro ao criar diretório de log do tenant: {$dir}");
+                return;
+            }
         }
 
         $line = (string) $record->formatted;
-        @\file_put_contents($logPath, $line, FILE_APPEND);
+        if (@\file_put_contents($logPath, $line, FILE_APPEND | LOCK_EX) === false) {
+            // Se falhar ao escrever, tenta logar no log padrão
+            error_log("Erro ao escrever log do tenant: {$logPath}");
+        }
     }
 
     /**

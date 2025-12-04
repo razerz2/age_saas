@@ -338,10 +338,11 @@ Essas configurações têm prioridade sobre as variáveis de ambiente quando def
 
 ---
 
-**Última atualização:** 2025-01-27
+**Última atualização:** 2025-12-03
 
 **Nota:** Esta documentação foi revisada e atualizada para incluir:
 - Variáveis de ambiente do Google Calendar (GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET)
+- Todas as variáveis necessárias para o funcionamento completo do sistema
 
 
 

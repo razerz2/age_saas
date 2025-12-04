@@ -17,8 +17,10 @@
     <link rel="stylesheet" href="{{ asset('connect_plus/assets/css/style.css') }}">
     <link rel="shortcut icon" href="{{ asset('connect_plus/assets/images/favicon.png') }}">
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.5/css/dataTables.bootstrap5.min.css">
-
+    
     @stack('styles')
+    
+    
 
 </head>
 
@@ -45,7 +47,7 @@
                                         <i class="mdi mdi-alert-circle me-3" style="font-size: 1.5rem;"></i>
                                         <div class="flex-grow-1">
                                             <h5 class="alert-heading mb-1">Acesso Negado</h5>
-                                            <p class="mb-0">{{ session('error') }}</p>
+                                            <div class="mb-0">{!! session('error') !!}</div>
                                         </div>
                                     </div>
                                     <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
@@ -109,6 +111,7 @@
     <script src="https://cdn.datatables.net/1.13.5/js/dataTables.bootstrap5.min.js"></script>
 
     @stack('scripts')
+
 
 </body>
 

@@ -1,0 +1,151 @@
+/* Fix para sidebar - Remove altura fixa e comportamento de scroll */
+/* A sidebar deve ter altura automática baseada no conteúdo e não acompanhar o scroll */
+/* IMPORTANTE: Apenas afeta páginas com sidebar (layout principal), não páginas de login */
+/* A página de login usa .full-page-wrapper, então usamos :not(.full-page-wrapper) para excluí-la */
+
+@media (min-width: 992px) {
+  /* CORREÇÃO: container-scroller não deve forçar altura quando não é login */
+  html body .container-scroller:not(:has(.full-page-wrapper)) {
+    height: auto !important;
+    min-height: auto !important;
+    overflow: visible !important;
+  }
+  
+  /* CORREÇÃO: page-body-wrapper apenas quando NÃO é full-page-wrapper (login) */
+  html body .container-scroller .page-body-wrapper:not(.full-page-wrapper) {
+    align-items: flex-start !important; /* CRÍTICO: Alinha itens ao topo, não estica */
+    min-height: auto !important; /* Remove altura mínima que força esticamento */
+    height: auto !important; /* Altura automática baseada no conteúdo */
+    max-height: none !important;
+    display: flex !important; /* Mantém flex para layout horizontal */
+    flex-wrap: nowrap !important; /* Evita quebra de linha */
+    position: relative !important; /* Não acompanha scroll */
+  }
+
+  /* Desktop: Sidebar com altura automática, não acompanha scroll */
+  /* ESPECIFICIDADE MÁXIMA - Sobrescreve CSS original .sidebar */
+  html body .container-scroller .page-body-wrapper:not(.full-page-wrapper) .sidebar.sidebar-offcanvas,
+  html body .page-body-wrapper:not(.full-page-wrapper) .sidebar.sidebar-offcanvas,
+  html body .page-body-wrapper:not(.full-page-wrapper) #sidebar.sidebar.sidebar-offcanvas,
+  html body .container-scroller:not(:has(.full-page-wrapper)) .sidebar.sidebar-offcanvas {
+    min-height: auto !important;
+    /* height será definido pelo JavaScript */
+    max-height: none !important;
+    position: relative !important; /* CRÍTICO: Não acompanha scroll */
+    align-self: flex-start !important; /* CRÍTICO: Não estica verticalmente no flex container */
+    display: flex !important;
+    flex-direction: column !important;
+    flex-shrink: 0 !important; /* Não encolhe */
+    flex-grow: 0 !important; /* Não cresce */
+    flex-basis: auto !important; /* Tamanho baseado no conteúdo */
+    overflow: hidden !important; /* Previne background se estender além do conteúdo */
+    padding: 0 !important;
+    margin: 0 !important;
+    align-items: stretch !important;
+    background: #202039 !important; /* Background na sidebar diretamente */
+    top: 0 !important; /* Remove qualquer offset */
+  }
+  
+  /* Especificidade máxima para garantir que sobrescreva */
+  html body .page-body-wrapper:not(.full-page-wrapper) .sidebar.sidebar-offcanvas#sidebar,
+  html body .page-body-wrapper:not(.full-page-wrapper) #sidebar.sidebar.sidebar-offcanvas {
+    min-height: auto !important;
+    height: auto !important;
+    max-height: none !important;
+  }
+
+  /* Remove altura mínima e força altura baseada no conteúdo */
+  html body .page-body-wrapper:not(.full-page-wrapper) .sidebar.sidebar-offcanvas .nav,
+  html body .page-body-wrapper:not(.full-page-wrapper) #sidebar .nav {
+    overflow: visible !important;
+    height: auto !important;
+    max-height: none !important;
+    margin-bottom: 0 !important; /* Remove margem inferior desnecessária */
+    padding-bottom: 0 !important;
+    padding-top: 0 !important;
+    display: block !important;
+    flex: 0 0 auto !important; /* Não cresce nem encolhe */
+    min-height: auto !important;
+    /* Garante que o nav não tenha espaçamento extra */
+    box-sizing: border-box !important;
+    /* Garante que todo conteúdo seja visível */
+    min-height: fit-content !important;
+  }
+  
+
+  /* Remove qualquer comportamento sticky/fixed desnecessário em desktop */
+  html body .page-body-wrapper:not(.full-page-wrapper) .sidebar.sidebar-offcanvas {
+    position: relative !important;
+    height: auto !important;
+    max-height: none !important;
+  }
+  
+  /* Garante que main-panel não force altura no wrapper - apenas quando não é login */
+  html body .page-body-wrapper:not(.full-page-wrapper) .main-panel {
+    min-height: auto !important;
+    align-self: stretch !important; /* main-panel pode esticar, mas sidebar não */
+    position: relative !important; /* Não acompanha scroll */
+  }
+  
+  /* Garante que container-scroller não force altura quando não é login */
+  html body .container-scroller:not(:has(.full-page-wrapper)) {
+    height: auto !important;
+    min-height: auto !important;
+    overflow: visible !important;
+    position: relative !important;
+  }
+
+  /* Remove qualquer pseudo-elemento que possa estar criando espaço */
+  html body .page-body-wrapper:not(.full-page-wrapper) .sidebar::after,
+  html body .page-body-wrapper:not(.full-page-wrapper) .sidebar::before {
+    display: none !important;
+    content: none !important;
+    height: 0 !important;
+  }
+
+  /* Garante que não haja espaço extra após o último item */
+  html body .page-body-wrapper:not(.full-page-wrapper) .sidebar.sidebar-offcanvas .nav .nav-item:last-child,
+  html body .page-body-wrapper:not(.full-page-wrapper) #sidebar .nav .nav-item:last-child {
+    margin-bottom: 0 !important;
+    padding-bottom: 0 !important;
+  }
+
+  /* Remove qualquer espaçamento extra no final da lista */
+  html body .page-body-wrapper:not(.full-page-wrapper) .sidebar.sidebar-offcanvas .nav:last-child,
+  html body .page-body-wrapper:not(.full-page-wrapper) #sidebar .nav:last-child {
+    margin-bottom: 0 !important;
+    padding-bottom: 0 !important;
+  }
+
+  /* Remove espaçamento do último elemento da lista de navegação */
+  html body .page-body-wrapper:not(.full-page-wrapper) .sidebar.sidebar-offcanvas .nav > .nav-item:last-child,
+  html body .page-body-wrapper:not(.full-page-wrapper) #sidebar .nav > .nav-item:last-child {
+    margin-bottom: 0 !important;
+  }
+
+  /* Garante que o último link não tenha padding extra */
+  html body .page-body-wrapper:not(.full-page-wrapper) .sidebar.sidebar-offcanvas .nav > .nav-item:last-child > .nav-link,
+  html body .page-body-wrapper:not(.full-page-wrapper) #sidebar .nav > .nav-item:last-child > .nav-link {
+    padding-bottom: 0.625rem !important; /* Mantém apenas o padding padrão */
+    margin-bottom: 0 !important;
+  }
+}
+
+@media screen and (max-width: 991px) {
+  /* Mobile: Mantém comportamento mobile original (offcanvas) */
+  .sidebar-offcanvas {
+    position: fixed !important;
+    max-height: calc(100vh - 64px) !important;
+    top: 64px !important;
+    bottom: 0 !important;
+    overflow: auto !important;
+    right: -258px;
+    -webkit-transition: all 0.25s ease-out;
+    -o-transition: all 0.25s ease-out;
+    transition: all 0.25s ease-out;
+  }
+  
+  .sidebar-offcanvas.active {
+    right: 0 !important;
+  }
+}
