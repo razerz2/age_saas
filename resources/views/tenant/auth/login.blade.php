@@ -33,10 +33,30 @@
                             </h4>
                             <h6 class="font-weight-light mb-4">Entre para continuar</h6>
 
+                            {{-- ALERTA DE ERRO 419 --}}
+                            @if (session('error'))
+                                <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                                    <strong>Atenção!</strong> {{ session('error') }}
+                                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                        <span aria-hidden="true">&times;</span>
+                                    </button>
+                                </div>
+                            @endif
+                            
+                            @if ($errors->has('_token'))
+                                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                                    <strong>Erro!</strong> Token de segurança inválido. Por favor, recarregue a página e tente novamente.
+                                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                        <span aria-hidden="true">&times;</span>
+                                    </button>
+                                </div>
+                            @endif
+
                             {{-- FORM LOGIN --}}
                             <form method="POST"
                                 action="{{ route('tenant.login.submit', ['slug' => $tenant->subdomain]) }}"
-                                class="pt-3">
+                                class="pt-3"
+                                id="login-form">
                                 @csrf
 
                                 {{-- EMAIL --}}
@@ -104,6 +124,61 @@
     <script src="{{ asset('connect_plus/assets/js/off-canvas.js') }}"></script>
     <script src="{{ asset('connect_plus/assets/js/hoverable-collapse.js') }}"></script>
     <script src="{{ asset('connect_plus/assets/js/misc.js') }}"></script>
+
+    {{-- Script para prevenir erro 419 --}}
+    <script>
+        (function() {
+            // Verificar se há erro 419 na página atual
+            if (document.body.innerHTML.includes('419') || document.body.innerHTML.includes('PAGE EXPIRED')) {
+                setTimeout(function() {
+                    alert('Sua sessão expirou. A página será recarregada para gerar um novo token.');
+                    window.location.href = '{{ route("tenant.login", ["slug" => $tenant->subdomain]) }}';
+                }, 500);
+                return;
+            }
+
+            // Atualizar token CSRF periodicamente (a cada 4 minutos)
+            // Isso mantém o token válido mesmo se o usuário deixar a página aberta por muito tempo
+            setInterval(function() {
+                fetch('{{ route("tenant.login", ["slug" => $tenant->subdomain]) }}', {
+                    method: 'GET',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'text/html'
+                    },
+                    credentials: 'same-origin'
+                })
+                .then(response => {
+                    if (response.ok) {
+                        return response.text();
+                    }
+                    throw new Error('Resposta não OK');
+                })
+                .then(html => {
+                    try {
+                        // Extrair novo token CSRF do HTML
+                        const parser = new DOMParser();
+                        const doc = parser.parseFromString(html, 'text/html');
+                        const newToken = doc.querySelector('input[name="_token"]')?.value;
+                        
+                        if (newToken) {
+                            // Atualizar token no formulário
+                            const formToken = document.querySelector('#login-form input[name="_token"]');
+                            if (formToken && formToken.value !== newToken) {
+                                formToken.value = newToken;
+                                console.log('Token CSRF atualizado automaticamente');
+                            }
+                        }
+                    } catch (e) {
+                        // Ignorar erros de parsing silenciosamente
+                    }
+                })
+                .catch(function() {
+                    // Ignorar erros silenciosamente
+                });
+            }, 4 * 60 * 1000); // 4 minutos (antes dos 120 minutos padrão de expiração)
+        })();
+    </script>
 
 </body>
 
