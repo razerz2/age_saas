@@ -128,15 +128,6 @@
     {{-- Script para prevenir erro 419 --}}
     <script>
         (function() {
-            // Verificar se há erro 419 na página atual
-            if (document.body.innerHTML.includes('419') || document.body.innerHTML.includes('PAGE EXPIRED')) {
-                setTimeout(function() {
-                    alert('Sua sessão expirou. A página será recarregada para gerar um novo token.');
-                    window.location.href = '{{ route("tenant.login", ["slug" => $tenant->subdomain]) }}';
-                }, 500);
-                return;
-            }
-
             // Atualizar token CSRF periodicamente (a cada 4 minutos)
             // Isso mantém o token válido mesmo se o usuário deixar a página aberta por muito tempo
             setInterval(function() {
