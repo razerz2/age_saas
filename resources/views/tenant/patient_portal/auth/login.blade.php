@@ -7,7 +7,7 @@
 <h6 class="font-weight-light mb-4">Entre para continuar</h6>
 
 {{-- FORM LOGIN --}}
-<form method="POST" action="{{ route('patient.login.submit', ['tenant' => $tenant]) }}" class="pt-3">
+<form method="POST" action="{{ route('patient.login.submit', ['slug' => $tenant->subdomain ?? $tenant]) }}" class="pt-3">
     @csrf
 
     {{-- EMAIL --}}
@@ -47,7 +47,7 @@
             </label>
         </div>
 
-        <a href="{{ route('patient.forgot-password', ['tenant' => $tenant]) }}" class="auth-link text-black">
+        <a href="{{ route('patient.forgot-password', ['slug' => $tenant->subdomain ?? $tenant]) }}" class="auth-link text-black">
             Esqueceu a senha?
         </a>
     </div>

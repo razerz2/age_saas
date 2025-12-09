@@ -57,7 +57,7 @@
 
                 @if($notification->related)
                     <div class="border-top pt-3 mt-3">
-                        <a href="@if($notification->type === 'appointment') {{ route('tenant.appointments.show', $notification->related_id) }} @elseif($notification->type === 'form_response') {{ route('tenant.responses.show', $notification->related_id) }} @endif" 
+                        <a href="@if($notification->type === 'appointment') {{ workspace_route('tenant.appointments.show', ['id' => $notification->related_id]) }} @elseif($notification->type === 'form_response') {{ workspace_route('tenant.responses.show', ['id' => $notification->related_id]) }} @endif" 
                            class="btn btn-primary">
                             <i class="mdi mdi-eye me-2"></i>
                             Ver {{ $notification->type === 'appointment' ? 'Agendamento' : 'Resposta' }}
@@ -66,7 +66,7 @@
                 @endif
 
                 <div class="mt-4">
-                    <a href="{{ route('tenant.notifications.index') }}" class="btn btn-secondary">
+                    <a href="{{ workspace_route('tenant.notifications.index') }}" class="btn btn-secondary">
                         <i class="mdi mdi-arrow-left me-1"></i> Voltar
                     </a>
                 </div>

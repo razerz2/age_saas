@@ -65,7 +65,7 @@
                             <input type="text" 
                                    class="form-control" 
                                    id="portalUrl" 
-                                   value="{{ route('patient.login', ['tenant' => \Spatie\Multitenancy\Models\Tenant::current()->subdomain ?? 'tenant']) }}" 
+                                   value="{{ route('patient.login', ['slug' => \Spatie\Multitenancy\Models\Tenant::current()->subdomain ?? 'tenant']) }}" 
                                    readonly>
                             <button class="btn btn-outline-secondary" 
                                     type="button" 

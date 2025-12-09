@@ -25,6 +25,7 @@ class UsersSeeder extends Seeder
         // 📦 Módulos padrão (array real)
         $defaultModules = [
             "tenants",
+            "pre_tenants",
             "plans",
             "subscriptions",
             "invoices",

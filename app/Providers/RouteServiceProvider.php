@@ -10,7 +10,8 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\DB;
-use App\Models\Tenant\User;
+use App\Models\Tenant\User as TenantUser;
+use App\Models\Platform\User as PlatformUser;
 use App\Models\Tenant\Appointment;
 use App\Models\Platform\Tenant;
 
@@ -23,11 +24,41 @@ class RouteServiceProvider extends ServiceProvider
         /**
          * ================================================================
          * 🔥 Route Model Binding para "user"
-         * Garantir que o ID do User seja resolvido corretamente
+         * Usa o modelo correto baseado no contexto (Platform ou Tenant)
          * ================================================================
          */
-        Route::bind('user', function ($value) {
-            return User::findOrFail($value);  // Faz o binding de 'user' usando o ID
+        Route::bind('user', function ($value, $route) {
+            // Verificar se é uma rota da Platform verificando o path ou o prefixo da rota
+            $isPlatformRoute = false;
+            
+            if ($route) {
+                // Verificar pelo prefixo da rota
+                $prefix = $route->getPrefix();
+                if ($prefix && str_contains($prefix, 'Platform')) {
+                    $isPlatformRoute = true;
+                }
+                // Verificar pelo nome da rota
+                elseif ($route->getName() && str_starts_with($route->getName(), 'Platform.')) {
+                    $isPlatformRoute = true;
+                }
+            }
+            
+            // Se não conseguiu determinar pela rota, verificar pelo path da requisição
+            if (!$isPlatformRoute && request()) {
+                $path = request()->path();
+                if (str_starts_with($path, 'Platform')) {
+                    $isPlatformRoute = true;
+                }
+            }
+            
+            // Se é rota da Platform, usar Platform\User
+            if ($isPlatformRoute) {
+                return PlatformUser::findOrFail($value);
+            }
+            
+            // Caso contrário, é uma rota de tenant - garantir conexão e usar Tenant\User
+            $this->ensureTenantConnection();
+            return TenantUser::findOrFail($value);
         });
 
         /**
@@ -54,6 +85,11 @@ class RouteServiceProvider extends ServiceProvider
             Route::middleware('api')
                 ->prefix('api')
                 ->group(base_path('routes/api.php'));
+
+            // Bot API (API pública para bots - protegida por token)
+            Route::middleware(['api', 'platform.bot.token'])
+                ->prefix('bot')
+                ->group(base_path('routes/platform_bot_api.php'));
 
             // Plataforma
             Route::middleware('web')

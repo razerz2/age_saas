@@ -15,7 +15,11 @@
     <link rel="stylesheet"
         href="{{ asset('connect_plus/assets/vendors/bootstrap-datepicker/bootstrap-datepicker.min.css') }}">
     <link rel="stylesheet" href="{{ asset('connect_plus/assets/css/style.css') }}">
-    <link rel="shortcut icon" href="{{ asset('connect_plus/assets/images/favicon.png') }}">
+    @php
+        $customFavicon = \App\Models\Tenant\TenantSetting::get('appearance.favicon');
+        $faviconUrl = $customFavicon ? asset('storage/' . $customFavicon) : asset('connect_plus/assets/images/favicon.ico');
+    @endphp
+    <link rel="shortcut icon" href="{{ $faviconUrl }}">
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.5/css/dataTables.bootstrap5.min.css">
     
     @stack('styles')

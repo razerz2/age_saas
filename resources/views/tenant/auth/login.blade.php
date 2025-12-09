@@ -35,7 +35,7 @@
 
                             {{-- FORM LOGIN --}}
                             <form method="POST"
-                                action="{{ route('tenant.login.submit', ['tenant' => $tenant->subdomain]) }}"
+                                action="{{ route('tenant.login.submit', ['slug' => $tenant->subdomain]) }}"
                                 class="pt-3">
                                 @csrf
 

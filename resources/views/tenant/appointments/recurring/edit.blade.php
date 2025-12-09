@@ -10,10 +10,10 @@
         <nav aria-label="breadcrumb">
             <ol class="breadcrumb">
                 <li class="breadcrumb-item">
-                    <a href="{{ route('tenant.dashboard') }}">Dashboard</a>
+                    <a href="{{ workspace_route('tenant.dashboard') }}">Dashboard</a>
                 </li>
                 <li class="breadcrumb-item">
-                    <a href="{{ route('tenant.recurring-appointments.index') }}">Agendamentos Recorrentes</a>
+                    <a href="{{ workspace_route('tenant.recurring-appointments.index') }}">Agendamentos Recorrentes</a>
                 </li>
                 <li class="breadcrumb-item active" aria-current="page">Editar</li>
             </ol>
@@ -34,7 +34,7 @@
                         </div>
                     </div>
 
-                    <form class="forms-sample" action="{{ route('tenant.recurring-appointments.update', $recurringAppointment->id) }}" method="POST">
+                    <form class="forms-sample" action="{{ workspace_route('tenant.recurring-appointments.update', ['id' => $recurringAppointment->id]) }}" method="POST">
                         @csrf
                         @method('PUT')
 
@@ -225,7 +225,7 @@
                         </div>
 
                         <div class="d-flex justify-content-end">
-                            <a href="{{ route('tenant.recurring-appointments.index') }}" class="btn btn-light me-2">Cancelar</a>
+                            <a href="{{ workspace_route('tenant.recurring-appointments.index') }}" class="btn btn-light me-2">Cancelar</a>
                             <button type="submit" class="btn btn-primary">Atualizar Agendamento Recorrente</button>
                         </div>
                     </form>
@@ -238,6 +238,7 @@
 
 @push('scripts')
 <script>
+    const tenantSlug = '{{ tenant()->subdomain }}';
     let ruleIndex = {{ count($recurringAppointment->rules) }};
     let businessHours = [];
     let doctorId = null;
@@ -265,7 +266,7 @@
         $appointmentTypeSelect.html('<option value="">Carregando...</option>').prop('disabled', true);
 
         $.ajax({
-            url: `/tenant/api/doctors/${doctorId}/appointment-types`,
+            url: `/workspace/${tenantSlug}/api/doctors/${doctorId}/appointment-types`,
             method: 'GET',
             success: function(data) {
                 $appointmentTypeSelect.empty();
@@ -314,7 +315,7 @@
 
         // Buscar business hours do médico
         $.ajax({
-            url: `/tenant/api/doctors/${doctorId}/business-hours`,
+            url: `/workspace/${tenantSlug}/api/doctors/${doctorId}/business-hours`,
             method: 'GET',
             success: function(data) {
                 businessHours = data;
@@ -418,7 +419,7 @@
 
         // Buscar horários disponíveis da API
         $.ajax({
-            url: `/tenant/api/doctors/${doctorId}/available-slots-recurring`,
+            url: `/workspace/${tenantSlug}/api/doctors/${doctorId}/available-slots-recurring`,
             method: 'GET',
             data: {
                 weekday: weekdayString,

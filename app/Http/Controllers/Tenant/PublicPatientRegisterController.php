@@ -61,7 +61,7 @@ class PublicPatientRegisterController extends Controller
 
         Patient::create($data);
 
-        return redirect()->route('public.patient.identify', ['tenant' => $tenantSlug])
+        return redirect()->route('public.patient.identify', ['slug' => $tenantSlug])
             ->with('success', 'Cadastro realizado com sucesso! Agora você já pode realizar seu agendamento.');
     }
 }

@@ -5,12 +5,15 @@
 @section('content')
 
     <div class="page-header">
-        <h3 class="page-title"> Criar Integração </h3>
+        <div class="d-flex justify-content-between align-items-center">
+            <h3 class="page-title mb-0"> Criar Integração </h3>
+            <x-help-button module="integrations" />
+        </div>
 
         <nav aria-label="breadcrumb">
             <ol class="breadcrumb">
                 <li class="breadcrumb-item">
-                    <a href="{{ route('tenant.dashboard') }}">Dashboard</a>
+                    <a href="{{ workspace_route('tenant.dashboard') }}">Dashboard</a>
                 </li>
                 <li class="breadcrumb-item">
                     <a href="{{ route('tenant.integrations.index') }}">Integrações</a>

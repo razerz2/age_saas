@@ -2,6 +2,7 @@
 
 namespace App\Mail;
 
+use App\Helpers\EmailLayoutHelper;
 use App\Models\Tenant\Patient;
 use App\Models\Tenant\Appointment;
 use Illuminate\Bus\Queueable;
@@ -23,8 +24,15 @@ class FormToFillMail extends Mailable
      */
     public function build()
     {
+        // Renderiza a view e aplica o layout
+        $html = EmailLayoutHelper::renderViewContent('emails.form_link', [
+            'patient' => $this->patient,
+            'appointment' => $this->appointment,
+            'url' => $this->url,
+        ]);
+
         return $this->subject("Formulário Pré-Consulta")
-            ->view('emails.form_link');
+            ->html($html);
     }
 }
 

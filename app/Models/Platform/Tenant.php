@@ -101,6 +101,34 @@ class Tenant extends BaseTenant
         return $this->hasOne(TenantLocalizacao::class, 'tenant_id', 'id');
     }
 
+    public function admin()
+    {
+        return $this->hasOne(TenantAdmin::class, 'tenant_id', 'id');
+    }
+
+    /**
+     * Relacionamento com assinaturas (na base da plataforma)
+     */
+    public function subscriptions()
+    {
+        return $this->hasMany(Subscription::class, 'tenant_id');
+    }
+
+    /**
+     * Retorna a assinatura ativa do tenant
+     */
+    public function activeSubscription()
+    {
+        return $this->subscriptions()
+            ->where('status', 'active')
+            ->where(function ($query) {
+                $query->whereNull('ends_at')
+                    ->orWhere('ends_at', '>', now());
+            })
+            ->latest('starts_at')
+            ->first();
+    }
+
     public function initializeTenant(array $attributes)
     {
         // Corrige quando o Spatie restaura tenant errado usando integer

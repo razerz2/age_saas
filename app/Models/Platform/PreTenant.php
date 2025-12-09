@@ -107,4 +107,30 @@ class PreTenant extends Model
             'status' => 'canceled',
         ]);
     }
+
+    /**
+     * Verifica se o pré-cadastro pode ser excluído
+     * Não pode excluir se já foi processado e criou um tenant
+     */
+    public function canBeDeleted(): bool
+    {
+        // Se não está pago, pode excluir
+        if (!$this->isPaid()) {
+            return true;
+        }
+
+        // Se está pago, verificar se criou tenant
+        $tenantCreatedLog = $this->logs()
+            ->where('event', 'tenant_created')
+            ->first();
+
+        if ($tenantCreatedLog) {
+            $payload = $tenantCreatedLog->payload;
+            if (is_array($payload) && isset($payload['tenant_id'])) {
+                return false; // Já criou tenant, não pode excluir
+            }
+        }
+
+        return true; // Pode excluir
+    }
 }

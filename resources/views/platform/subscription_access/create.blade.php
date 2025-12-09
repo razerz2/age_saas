@@ -94,7 +94,7 @@
                     <div class="mb-3">
                         <label class="form-label">Funcionalidades Disponíveis</label>
                         <div class="border rounded p-3" style="max-height: 400px; overflow-y: auto;">
-                            @foreach ($features as $feature)
+                            @forelse ($features as $feature)
                                 <div class="form-check mb-2">
                                     <input class="form-check-input feature-checkbox" type="checkbox" name="features[]"
                                         value="{{ $feature->id }}" id="feature_{{ $feature->id }}"
@@ -107,7 +107,12 @@
                                         @endif
                                     </label>
                                 </div>
-                            @endforeach
+                            @empty
+                                <div class="alert alert-warning mb-0">
+                                    <i class="fa fa-exclamation-triangle me-2"></i>
+                                    Nenhuma funcionalidade disponível. Execute o seeder para criar as funcionalidades.
+                                </div>
+                            @endforelse
                         </div>
                         <small class="text-muted">
                             <i class="fa fa-info-circle"></i> Funcionalidades marcadas como "Essencial" são obrigatórias e não podem ser desmarcadas.

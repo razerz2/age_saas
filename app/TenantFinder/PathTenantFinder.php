@@ -10,16 +10,23 @@ class PathTenantFinder extends TenantFinder
 {
     public function findForRequest(Request $request): ?Tenant
     {
-        // /t/{tenant}/login
-        // segment(1) = t
-        // segment(2) = {tenant}
+        // /customer/{slug}/login ou /workspace/{slug}/dashboard
+        // segment(1) = customer ou workspace
+        // segment(2) = {slug}
 
-        $subdomain = $request->segment(2);
-
-        if (!$subdomain) {
+        $segment1 = $request->segment(1);
+        
+        // Verifica se é um dos novos prefixos comerciais
+        if (!in_array($segment1, ['customer', 'workspace'])) {
             return null;
         }
 
-        return Tenant::where('subdomain', $subdomain)->first();
+        $slug = $request->segment(2);
+
+        if (!$slug) {
+            return null;
+        }
+
+        return Tenant::where('subdomain', $slug)->first();
     }
 }

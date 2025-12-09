@@ -10,7 +10,7 @@
         <nav aria-label="breadcrumb">
             <ol class="breadcrumb">
                 <li class="breadcrumb-item">
-                    <a href="{{ route('tenant.dashboard') }}">Dashboard</a>
+                    <a href="{{ workspace_route('tenant.dashboard') }}">Dashboard</a>
                 </li>
                 <li class="breadcrumb-item">
                     <a href="{{ route('tenant.users.index') }}">Usuários</a>
@@ -27,7 +27,7 @@
                     <h4 class="card-title">Alterar Senha</h4>
                     <p class="card-description">Digite a senha atual e a nova senha.</p>
 
-                    <form method="POST" action="{{ route('tenant.users.change-password', $user->id) }}"
+                    <form method="POST" action="{{ route('tenant.users.change-password.store', $user->id) }}"
                         class="forms-sample">
                         @csrf
 

@@ -15,7 +15,7 @@
                 </h1>
                 <p class="text-xl text-gray-600 mb-8 max-w-3xl mx-auto">
                     Agende consultas presenciais e online, gerencie pacientes, médicos, formulários, calendários e muito mais — 
-                    tudo em um único sistema SaaS multi-tenant.
+                    tudo em um único sistema completo na nuvem.
                 </p>
                 <div class="flex flex-col sm:flex-row gap-4 justify-center">
                     <a href="#pre-cadastro" class="bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-lg font-semibold text-lg transition-colors shadow-lg hover:shadow-xl">
@@ -56,9 +56,9 @@
                     <div class="inline-flex items-center justify-center w-16 h-16 bg-blue-100 text-blue-600 rounded-full text-2xl font-bold mb-4">
                         2
                     </div>
-                    <h3 class="text-xl font-semibold text-gray-900 mb-2">Sistema cria automaticamente o banco do tenant</h3>
+                    <h3 class="text-xl font-semibold text-gray-900 mb-2">Sistema cria automaticamente seu ambiente</h3>
                     <p class="text-gray-600">
-                        Após o pagamento, o sistema cria automaticamente seu banco de dados PostgreSQL isolado
+                        Após o pagamento, o sistema cria automaticamente seu ambiente completo e isolado
                     </p>
                 </div>
                 
@@ -215,8 +215,8 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4" />
                         </svg>
                     </div>
-                    <h3 class="text-lg font-semibold text-gray-900 mb-2">Banco Isolado por Tenant</h3>
-                    <p class="text-gray-600">Cada clínica possui seu próprio banco PostgreSQL isolado garantindo total segurança dos dados</p>
+                    <h3 class="text-lg font-semibold text-gray-900 mb-2">Ambiente Isolado por Clínica</h3>
+                    <p class="text-gray-600">Cada clínica possui seu próprio ambiente isolado garantindo total segurança e privacidade dos dados</p>
                 </div>
             </div>
             
@@ -467,8 +467,8 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4" />
                         </svg>
                     </div>
-                    <h3 class="font-semibold mb-2">Banco Isolado</h3>
-                    <p class="text-blue-100 text-sm">Cada tenant possui seu próprio banco PostgreSQL isolado</p>
+                    <h3 class="font-semibold mb-2">Ambiente Isolado</h3>
+                    <p class="text-blue-100 text-sm">Cada clínica possui seu próprio ambiente isolado</p>
                 </div>
                 
                 <div class="text-center">
@@ -478,7 +478,7 @@
                         </svg>
                     </div>
                     <h3 class="font-semibold mb-2">Autenticação Separada</h3>
-                    <p class="text-blue-100 text-sm">Sistema de guards isolados por tenant</p>
+                    <p class="text-blue-100 text-sm">Sistema de autenticação isolado por clínica</p>
                 </div>
                 
                 <div class="text-center">
@@ -570,9 +570,15 @@
                         <p class="text-gray-600">por mês</p>
                     </div>
                     
+                    @if($plan->description)
+                    <div class="mb-4 text-center">
+                        <p class="text-gray-600 text-sm">{{ $plan->description }}</p>
+                    </div>
+                    @endif
+                    
                     <ul class="space-y-3 mb-8">
-                        @if($plan->features)
-                            @foreach(array_slice($plan->features, 0, 5) as $feature)
+                        @if(!empty($plan->features) && is_array($plan->features) && count($plan->features) > 0)
+                            @foreach(array_slice($plan->features, 0, 6) as $feature)
                             <li class="flex items-start">
                                 <svg class="w-5 h-5 text-green-500 mr-3 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
@@ -580,6 +586,13 @@
                                 <span class="text-gray-700">{{ $feature }}</span>
                             </li>
                             @endforeach
+                            @if(count($plan->features) > 6)
+                            <li class="text-center pt-2">
+                                <button onclick="openPlanModal('{{ $plan->id }}')" class="text-blue-600 hover:text-blue-700 text-sm font-semibold">
+                                    Ver todos os recursos ({{ count($plan->features) }})
+                                </button>
+                            </li>
+                            @endif
                         @endif
                     </ul>
                     
@@ -613,14 +626,14 @@
                 <details class="group bg-gray-50 rounded-lg p-6">
                     <summary class="font-semibold text-gray-900 cursor-pointer list-none">
                         <span class="flex items-center justify-between">
-                            Como funciona o sistema multi-tenant?
+                            Como funciona o isolamento de dados?
                             <svg class="w-5 h-5 text-gray-500 group-open:rotate-180 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
                             </svg>
                         </span>
                     </summary>
                     <p class="mt-4 text-gray-600">
-                        Cada clínica (tenant) possui seu próprio banco de dados PostgreSQL completamente isolado. 
+                        Cada clínica possui seu próprio ambiente completamente isolado. 
                         Isso garante total segurança e privacidade dos dados, sem compartilhamento entre diferentes clientes.
                     </p>
                 </details>
@@ -643,16 +656,16 @@
                 <details class="group bg-gray-50 rounded-lg p-6">
                     <summary class="font-semibold text-gray-900 cursor-pointer list-none">
                         <span class="flex items-center justify-between">
-                            Como funciona o pré-cadastro e criação do tenant?
+                            Como funciona o pré-cadastro e criação da conta?
                             <svg class="w-5 h-5 text-gray-500 group-open:rotate-180 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
                             </svg>
                         </span>
                     </summary>
                     <p class="mt-4 text-gray-600">
-                        Após realizar o pré-cadastro e pagamento, o sistema cria automaticamente o banco de dados, 
-                        executa todas as migrações e configura o ambiente completo. Você receberá por email as credenciais 
-                        de acesso com usuário admin já criado.
+                        Após realizar o pré-cadastro e pagamento, o sistema cria automaticamente seu ambiente completo, 
+                        configura todas as estruturas necessárias e prepara tudo para uso. Você receberá por email as credenciais 
+                        de acesso com usuário administrador já criado.
                     </p>
                 </details>
                 
@@ -690,6 +703,52 @@
         </div>
     </section>
 
+    <!-- Modal de Plano Completo -->
+    <div id="planModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+        <div class="bg-white rounded-lg max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+            <div class="p-6 border-b border-gray-200">
+                <div class="flex justify-between items-center">
+                    <h3 class="text-2xl font-bold text-gray-900" id="planModalTitle">Detalhes do Plano</h3>
+                    <button onclick="closePlanModal()" class="text-gray-400 hover:text-gray-600">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+            
+            <div class="p-6">
+                <div class="text-center mb-6">
+                    <div class="mb-2">
+                        <span class="text-4xl font-bold text-blue-600" id="planModalPrice"></span>
+                        <span class="text-gray-600">/mês</span>
+                    </div>
+                    <p class="text-sm text-gray-500" id="planModalPeriodicity"></p>
+                </div>
+                
+                <div id="planModalDescription" class="mb-6 text-center text-gray-600"></div>
+                
+                <div class="mb-6">
+                    <h4 class="font-semibold text-gray-900 mb-4">Recursos Inclusos:</h4>
+                    <ul class="space-y-3" id="planModalFeatures">
+                        <!-- Preenchido via JavaScript -->
+                    </ul>
+                </div>
+                
+                <div class="flex justify-end gap-4">
+                    <button onclick="closePlanModal()" 
+                        class="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors">
+                        Fechar
+                    </button>
+                    <button onclick="selectPlanFromModal()" 
+                        class="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold transition-colors">
+                        Escolher Este Plano
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- CTA Final -->
     <section class="py-16 lg:py-24 bg-gradient-to-r from-blue-600 to-blue-700 text-white" id="pre-cadastro">
         <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
@@ -708,3 +767,84 @@
         </div>
     </section>
 @endsection
+
+@push('scripts')
+<script>
+    let currentPlanId = null;
+    let currentPlanName = null;
+    let currentPlanPrice = null;
+
+    async function openPlanModal(planId) {
+        try {
+            const response = await fetch('{{ url("/planos/json") }}/' + planId);
+            const plan = await response.json();
+            
+            if (!response.ok) {
+                throw new Error('Erro ao carregar dados do plano');
+            }
+            
+            // Preencher dados do modal
+            document.getElementById('planModalTitle').textContent = plan.name;
+            document.getElementById('planModalPrice').textContent = plan.formatted_price;
+            document.getElementById('planModalPeriodicity').textContent = plan.periodicity;
+            
+            // Descrição
+            const descriptionDiv = document.getElementById('planModalDescription');
+            if (plan.description) {
+                descriptionDiv.textContent = plan.description;
+                descriptionDiv.classList.remove('hidden');
+            } else {
+                descriptionDiv.classList.add('hidden');
+            }
+            
+            // Features
+            const featuresList = document.getElementById('planModalFeatures');
+            featuresList.innerHTML = '';
+            if (plan.features && plan.features.length > 0) {
+                plan.features.forEach(feature => {
+                    const li = document.createElement('li');
+                    li.className = 'flex items-start';
+                    li.innerHTML = `
+                        <svg class="w-6 h-6 text-green-500 mr-3 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                        </svg>
+                        <span class="text-gray-700">${feature}</span>
+                    `;
+                    featuresList.appendChild(li);
+                });
+            } else {
+                featuresList.innerHTML = '<li class="text-gray-500 text-center py-4">Sem recursos cadastrados</li>';
+            }
+            
+            // Armazenar dados para o botão "Escolher Este Plano"
+            currentPlanId = plan.id;
+            currentPlanName = plan.name;
+            currentPlanPrice = plan.formatted_price;
+            
+            // Mostrar modal
+            document.getElementById('planModal').classList.remove('hidden');
+            document.getElementById('planModal').classList.add('flex');
+            document.body.style.overflow = 'hidden';
+        } catch (error) {
+            console.error('Erro ao carregar plano:', error);
+            alert('Erro ao carregar informações do plano. Tente novamente.');
+        }
+    }
+    
+    function closePlanModal() {
+        document.getElementById('planModal').classList.add('hidden');
+        document.getElementById('planModal').classList.remove('flex');
+        document.body.style.overflow = 'auto';
+        currentPlanId = null;
+        currentPlanName = null;
+        currentPlanPrice = null;
+    }
+    
+    function selectPlanFromModal() {
+        if (currentPlanId) {
+            closePlanModal();
+            window.location.href = '{{ route("landing.plans") }}';
+        }
+    }
+</script>
+@endpush

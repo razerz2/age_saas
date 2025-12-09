@@ -45,27 +45,74 @@ class AsaasService
         try {
             // Sanitiza CNPJ/CPF
             $document = preg_replace('/\D/', '', $data['document'] ?? '');
+            
+            // Validação básica
+            if (empty($data['email'])) {
+                return ['error' => 'Email é obrigatório para criar cliente no Asaas'];
+            }
+            
+            $name = $data['trade_name'] ?? $data['legal_name'] ?? '';
+            if (empty($name)) {
+                return ['error' => 'Nome é obrigatório para criar cliente no Asaas'];
+            }
 
             $payload = [
-                'name'       => $data['trade_name'] ?? $data['legal_name'],
+                'name'       => $name,
                 'email'      => $data['email'],
-                'phone'      => preg_replace('/\D/', '', $data['phone'] ?? ''),
-                'cpfCnpj'    => $document,
-                'personType' => strlen($document) > 11 ? 'JURIDICA' : 'FISICA',
-                'externalReference' => $data['id'],
+                'externalReference' => $data['id'] ?? null,
             ];
+            
+            // Adiciona telefone se fornecido
+            if (!empty($data['phone'])) {
+                $phone = preg_replace('/\D/', '', $data['phone']);
+                if (!empty($phone)) {
+                    $payload['phone'] = $phone;
+                }
+            }
+            
+            // Adiciona documento se fornecido
+            if (!empty($document)) {
+                $payload['cpfCnpj'] = $document;
+                $payload['personType'] = strlen($document) > 11 ? 'JURIDICA' : 'FISICA';
+            }
 
             $response = Http::withHeaders([
                 'accept' => 'application/json',
                 'access_token' => $this->apiKey, // ✅ header correto!
             ])
-                ->post($this->baseUrl . 'customers', $payload)
-                ->json();
+                ->post($this->baseUrl . 'customers', $payload);
 
-            Log::info('📡 Asaas createCustomer resposta:', $response);
-            return $response;
+            $statusCode = $response->status();
+            $responseData = $response->json();
+
+            Log::info('📡 Asaas createCustomer resposta:', [
+                'status' => $statusCode,
+                'response' => $responseData,
+            ]);
+
+            // Se não foi sucesso (2xx), trata como erro
+            if ($statusCode < 200 || $statusCode >= 300) {
+                $errorMessage = $responseData['errors'][0]['description'] ?? 
+                               $responseData['message'] ?? 
+                               'Erro ao criar cliente no Asaas';
+                
+                Log::error('❌ Erro ao criar cliente Asaas', [
+                    'status' => $statusCode,
+                    'response' => $responseData,
+                    'error_message' => $errorMessage,
+                ]);
+                
+                return [
+                    'error' => $errorMessage,
+                    'errors' => $responseData['errors'] ?? [],
+                ];
+            }
+
+            return $responseData;
         } catch (\Exception $e) {
-            Log::error('❌ Erro ao criar cliente Asaas: ' . $e->getMessage());
+            Log::error('❌ Erro ao criar cliente Asaas: ' . $e->getMessage(), [
+                'trace' => $e->getTraceAsString(),
+            ]);
             return ['error' => $e->getMessage()];
         }
     }
@@ -286,6 +333,74 @@ class AsaasService
     }
 
     /**
+     * Cria um Payment Link (Link de Pagamento) no Asaas com múltiplas formas de pagamento.
+     * Permite que o cliente escolha entre PIX, Boleto e Cartão de Crédito.
+     */
+    public function createPaymentLink(array $data)
+    {
+        try {
+            $payload = [
+                'name'              => $data['name'] ?? 'Pagamento de Plano',
+                'description'      => $data['description'] ?? 'Pagamento de plano SaaS',
+                'billingType'       => 'UNDEFINED', // Permite múltiplas formas de pagamento (PIX, Boleto, Cartão)
+                'chargeType'        => 'DETACHED', // Pagamento único (não recorrente)
+                'value'             => $data['value'] ?? 0,
+                'dueDateLimitDays'  => $data['dueDateLimitDays'] ?? 5,
+            ];
+
+            // Se tiver customer, vincula ao cliente
+            if (!empty($data['customer'])) {
+                $payload['customer'] = $data['customer'];
+            }
+
+            // Se tiver externalReference, adiciona
+            if (!empty($data['externalReference'])) {
+                $payload['externalReference'] = $data['externalReference'];
+            }
+
+            $response = Http::withHeaders([
+                'accept'       => 'application/json',
+                'content-type' => 'application/json',
+                'access_token' => $this->apiKey,
+            ])
+                ->post($this->baseUrl . 'paymentLinks', $payload);
+
+            $statusCode = $response->status();
+            $responseData = $response->json();
+
+            Log::info('📡 Asaas createPaymentLink resposta:', [
+                'status' => $statusCode,
+                'response' => $responseData,
+            ]);
+
+            // Se não foi sucesso (2xx), trata como erro
+            if ($statusCode < 200 || $statusCode >= 300) {
+                $errorMessage = $responseData['errors'][0]['description'] ?? 
+                               $responseData['message'] ?? 
+                               'Erro ao criar link de pagamento no Asaas';
+                
+                Log::error('❌ Erro ao criar Payment Link Asaas', [
+                    'status' => $statusCode,
+                    'response' => $responseData,
+                    'error_message' => $errorMessage,
+                ]);
+                
+                return [
+                    'error' => $errorMessage,
+                    'errors' => $responseData['errors'] ?? [],
+                ];
+            }
+
+            return $responseData;
+        } catch (\Throwable $e) {
+            Log::error('❌ Erro ao criar Payment Link Asaas: ' . $e->getMessage(), [
+                'trace' => $e->getTraceAsString(),
+            ]);
+            return ['error' => $e->getMessage()];
+        }
+    }
+
+    /**
      * Cria uma cobrança (fatura) no Asaas.
      */
     public function createPayment(array $data)
@@ -305,11 +420,35 @@ class AsaasService
                 'content-type' => 'application/json',
                 'access_token' => $this->apiKey,
             ])
-                ->post($this->baseUrl . 'payments', $payload)
-                ->json();
+                ->post($this->baseUrl . 'payments', $payload);
 
-            Log::info('📡 Asaas createPayment resposta:', $response);
-            return $response;
+            $statusCode = $response->status();
+            $responseData = $response->json();
+
+            Log::info('📡 Asaas createPayment resposta:', [
+                'status' => $statusCode,
+                'response' => $responseData,
+            ]);
+
+            // Se não foi sucesso (2xx), trata como erro
+            if ($statusCode < 200 || $statusCode >= 300) {
+                $errorMessage = $responseData['errors'][0]['description'] ?? 
+                               $responseData['message'] ?? 
+                               'Erro ao criar pagamento no Asaas';
+                
+                Log::error('❌ Erro ao criar pagamento Asaas', [
+                    'status' => $statusCode,
+                    'response' => $responseData,
+                    'error_message' => $errorMessage,
+                ]);
+                
+                return [
+                    'error' => $errorMessage,
+                    'errors' => $responseData['errors'] ?? [],
+                ];
+            }
+
+            return $responseData;
         } catch (\Throwable $e) {
             Log::error('❌ Erro ao criar pagamento Asaas: ' . $e->getMessage(), [
                 'trace' => $e->getTraceAsString(),
@@ -420,16 +559,23 @@ class AsaasService
     /**
      * Lista pagamentos (paginação simples).
      */
-    public function listPayments(int $page = 1, int $limit = 100)
+    public function listPayments(int $page = 1, int $limit = 100, ?string $customerId = null)
     {
         try {
+            $params = [
+                'limit' => $limit,
+                'offset' => ($page - 1) * $limit,
+            ];
+
+            // Se fornecido, filtra por cliente
+            if ($customerId) {
+                $params['customer'] = $customerId;
+            }
+
             $response = Http::withHeaders([
                 'accept' => 'application/json',
                 'access_token' => $this->apiKey,
-            ])->get($this->baseUrl . 'payments', [
-                'limit' => $limit,
-                'offset' => ($page - 1) * $limit,
-            ])->json();
+            ])->get($this->baseUrl . 'payments', $params)->json();
 
             Log::info('📡 Asaas listPayments resposta:', $response);
             return $response;
@@ -465,6 +611,35 @@ class AsaasService
             ]);
 
             throw $e;
+        }
+    }
+
+    /**
+     * Exclui um Payment Link específico.
+     */
+    public function deletePaymentLink(string $paymentLinkId)
+    {
+        try {
+            $response = Http::withHeaders([
+                'accept' => 'application/json',
+                'content-type' => 'application/json',
+                'access_token' => $this->apiKey,
+            ])->delete($this->baseUrl . "paymentLinks/{$paymentLinkId}")
+                ->json();
+
+            Log::info('🗑️ Payment Link excluído no Asaas.', [
+                'payment_link_id' => $paymentLinkId,
+                'response'        => $response ?? [],
+            ]);
+
+            return $response;
+        } catch (\Throwable $e) {
+            Log::error("❌ Erro ao excluir Payment Link no Asaas: {$e->getMessage()}", [
+                'payment_link_id' => $paymentLinkId,
+                'trace'           => $e->getTraceAsString(),
+            ]);
+
+            return ['error' => $e->getMessage()];
         }
     }
 }

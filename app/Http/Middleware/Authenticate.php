@@ -12,16 +12,16 @@ class Authenticate extends Middleware
     protected function redirectTo(Request $request): ?string
     {
         if (!$request->expectsJson()) {
-            // Detecta se é rota de tenant
-            $isTenantRoute = $request->segment(1) === 'tenant';
+            // Detecta se é rota de workspace (área autenticada)
+            $isWorkspaceRoute = $request->segment(1) === 'workspace';
             
-            if ($isTenantRoute) {
+            if ($isWorkspaceRoute) {
                 // NUNCA redirecionar para platform em rotas de tenant
                 // Tenta obter o slug do tenant de várias fontes
                 $tenantSlug = $this->getTenantSlug($request);
                 
                 if ($tenantSlug) {
-                    return route('tenant.login', ['tenant' => $tenantSlug]);
+                    return route('tenant.login', ['slug' => $tenantSlug]);
                 }
                 
                 // Se não conseguir encontrar o slug, aborta com erro amigável
@@ -41,7 +41,12 @@ class Authenticate extends Middleware
      */
     protected function getTenantSlug(Request $request): ?string
     {
-        // 1. Tenta pegar da rota (para rotas como /t/{tenant}/...)
+        // 1. Tenta pegar da rota (para rotas como /customer/{slug}/... ou /workspace/{slug}/...)
+        if ($request->route('slug')) {
+            return $request->route('slug');
+        }
+        
+        // Fallback para 'tenant' (caso ainda exista alguma rota antiga)
         if ($request->route('tenant')) {
             return $request->route('tenant');
         }

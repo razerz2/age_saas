@@ -63,7 +63,7 @@
                                     </div>
                                 @endif
 
-                                <form class="forms-sample" action="{{ route('public.patient.register.submit', ['tenant' => $tenant->subdomain]) }}" method="POST">
+                                <form class="forms-sample" action="{{ route('public.patient.register.submit', ['slug' => $tenant->subdomain]) }}" method="POST">
                                     @csrf
 
                                     {{-- Seção: Dados Pessoais --}}
@@ -160,7 +160,7 @@
 
                                     {{-- Botões de Ação --}}
                                     <div class="d-flex justify-content-between align-items-center pt-3 border-top">
-                                        <a href="{{ route('public.patient.identify', ['tenant' => $tenant->subdomain]) }}" class="btn btn-light">
+                                        <a href="{{ route('public.patient.identify', ['slug' => $tenant->subdomain]) }}" class="btn btn-light">
                                             <i class="mdi mdi-arrow-left me-1"></i>
                                             Cancelar
                                         </a>

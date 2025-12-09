@@ -8,7 +8,7 @@
 
         {{-- DASHBOARD --}}
         <li class="nav-item {{ request()->routeIs('tenant.dashboard') ? 'active' : '' }}">
-            <a class="nav-link" href="{{ route('tenant.dashboard') }}">
+            <a class="nav-link" href="{{ workspace_route('tenant.dashboard') }}">
                 <span class="icon-bg"><i class="mdi mdi-view-dashboard menu-icon"></i></span>
                 <span class="menu-title">Dashboard</span>
             </a>
@@ -20,7 +20,7 @@
         @endphp
         @if ($user && $user->role === 'doctor')
             <li class="nav-item {{ request()->routeIs('tenant.calendars.events.*') ? 'active' : '' }}">
-                <a class="nav-link" href="{{ route('tenant.calendars.events.redirect') }}">
+                <a class="nav-link" href="{{ workspace_route('tenant.calendars.events.redirect') }}">
                     <span class="icon-bg"><i class="mdi mdi-calendar-check menu-icon"></i></span>
                     <span class="menu-title">Agenda</span>
                 </a>
@@ -29,7 +29,7 @@
 
         {{-- AGENDAMENTOS --}}
         <li class="nav-item {{ request()->routeIs('tenant.appointments.*') && !request()->routeIs('tenant.recurring-appointments.*') ? 'active' : '' }}">
-            <a class="nav-link" href="{{ route('tenant.appointments.index') }}">
+            <a class="nav-link" href="{{ workspace_route('tenant.appointments.index') }}">
                 <span class="icon-bg"><i class="mdi mdi-calendar-clock menu-icon"></i></span>
                 <span class="menu-title">Agendamentos</span>
             </a>
@@ -37,7 +37,7 @@
 
         {{-- AGENDAMENTOS RECORRENTES --}}
         <li class="nav-item {{ request()->routeIs('tenant.recurring-appointments.*') ? 'active' : '' }}">
-            <a class="nav-link" href="{{ route('tenant.recurring-appointments.index') }}">
+            <a class="nav-link" href="{{ workspace_route('tenant.recurring-appointments.index') }}">
                 <span class="icon-bg"><i class="mdi mdi-calendar-repeat menu-icon"></i></span>
                 <span class="menu-title">Agend. Recorrentes</span>
             </a>
@@ -66,7 +66,7 @@
             $defaultMode !== 'presencial'
         )
             <li class="nav-item {{ request()->routeIs('tenant.online-appointments.*') ? 'active' : '' }}">
-                <a class="nav-link" href="{{ route('tenant.online-appointments.index') }}">
+                <a class="nav-link" href="{{ workspace_route('tenant.online-appointments.index') }}">
                     <span class="icon-bg"><i class="mdi mdi-video-account menu-icon"></i></span>
                     <span class="menu-title">Consultas Online</span>
                 </a>
@@ -76,7 +76,7 @@
         {{-- ATENDIMENTO MÉDICO --}}
         @if(has_module('medical_appointments'))
             <li class="nav-item {{ request()->routeIs('tenant.medical-appointments.*') ? 'active' : '' }}">
-                <a class="nav-link" href="{{ route('tenant.medical-appointments.index') }}">
+                <a class="nav-link" href="{{ workspace_route('tenant.medical-appointments.index') }}">
                     <span class="icon-bg"><i class="mdi mdi-account-heart menu-icon"></i></span>
                     <span class="menu-title">Atendimento</span>
                 </a>
@@ -100,10 +100,10 @@
             <div class="collapse {{ request()->routeIs('tenant.patients.*') ? 'show' : '' }}" id="patients-menu">
                 <ul class="nav flex-column sub-menu">
                     <li class="nav-item">
-                        <a class="nav-link {{ request()->routeIs('tenant.patients.index') ? 'active' : '' }}" href="{{ route('tenant.patients.index') }}">Listar</a>
+                        <a class="nav-link {{ request()->routeIs('tenant.patients.index') ? 'active' : '' }}" href="{{ workspace_route('tenant.patients.index') }}">Listar</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link {{ request()->routeIs('tenant.patients.create') ? 'active' : '' }}" href="{{ route('tenant.patients.create') }}">Novo Paciente</a>
+                        <a class="nav-link {{ request()->routeIs('tenant.patients.create') ? 'active' : '' }}" href="{{ workspace_route('tenant.patients.create') }}">Novo Paciente</a>
                     </li>
                 </ul>
             </div>
@@ -121,10 +121,10 @@
             <div class="collapse {{ request()->routeIs('tenant.doctors.*') ? 'show' : '' }}" id="doctors-menu">
                 <ul class="nav flex-column sub-menu">
                     <li class="nav-item">
-                        <a class="nav-link {{ request()->routeIs('tenant.doctors.index') ? 'active' : '' }}" href="{{ route('tenant.doctors.index') }}">Listar</a>
+                        <a class="nav-link {{ request()->routeIs('tenant.doctors.index') ? 'active' : '' }}" href="{{ workspace_route('tenant.doctors.index') }}">Listar</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link {{ request()->routeIs('tenant.doctors.create') ? 'active' : '' }}" href="{{ route('tenant.doctors.create') }}">Novo {{ professional_label_singular() }}</a>
+                        <a class="nav-link {{ request()->routeIs('tenant.doctors.create') ? 'active' : '' }}" href="{{ workspace_route('tenant.doctors.create') }}">Novo {{ professional_label_singular() }}</a>
                     </li>
                 </ul>
             </div>
@@ -143,10 +143,10 @@
             <div class="collapse {{ request()->routeIs('tenant.specialties.*') ? 'show' : '' }}" id="specialties-menu">
                 <ul class="nav flex-column sub-menu">
                     <li class="nav-item">
-                        <a class="nav-link {{ request()->routeIs('tenant.specialties.index') ? 'active' : '' }}" href="{{ route('tenant.specialties.index') }}">Listar</a>
+                        <a class="nav-link {{ request()->routeIs('tenant.specialties.index') ? 'active' : '' }}" href="{{ workspace_route('tenant.specialties.index') }}">Listar</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link {{ request()->routeIs('tenant.specialties.create') ? 'active' : '' }}" href="{{ route('tenant.specialties.create') }}">Nova Especialidade</a>
+                        <a class="nav-link {{ request()->routeIs('tenant.specialties.create') ? 'active' : '' }}" href="{{ workspace_route('tenant.specialties.create') }}">Nova Especialidade</a>
                     </li>
                 </ul>
             </div>
@@ -165,10 +165,10 @@
                 <div class="collapse {{ request()->routeIs('tenant.users.*') ? 'show' : '' }}" id="users-menu">
                     <ul class="nav flex-column sub-menu">
                         <li class="nav-item">
-                            <a class="nav-link {{ request()->routeIs('tenant.users.index') ? 'active' : '' }}" href="{{ route('tenant.users.index') }}">Listar</a>
+                            <a class="nav-link {{ request()->routeIs('tenant.users.index') ? 'active' : '' }}" href="{{ workspace_route('tenant.users.index') }}">Listar</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link {{ request()->routeIs('tenant.users.create') ? 'active' : '' }}" href="{{ route('tenant.users.create') }}">Novo Usuário</a>
+                            <a class="nav-link {{ request()->routeIs('tenant.users.create') ? 'active' : '' }}" href="{{ workspace_route('tenant.users.create') }}">Novo Usuário</a>
                         </li>
                     </ul>
                 </div>
@@ -205,7 +205,7 @@
         @if($showUnifiedPage)
             {{-- Página única de configurações --}}
             <li class="nav-item {{ request()->routeIs('tenant.doctor-settings.*') ? 'active' : '' }}">
-                <a class="nav-link" href="{{ route('tenant.doctor-settings.index') }}">
+                <a class="nav-link" href="{{ workspace_route('tenant.doctor-settings.index') }}">
                     <span class="icon-bg"><i class="mdi mdi-calendar-month menu-icon"></i></span>
                     <span class="menu-title">Calendário</span>
                 </a>
@@ -227,11 +227,11 @@
                 <div class="collapse {{ request()->routeIs('tenant.calendars.*') ? 'show' : '' }}" id="calendars-menu">
                     <ul class="nav flex-column sub-menu">
                         <li class="nav-item">
-                            <a class="nav-link {{ request()->routeIs('tenant.calendars.index') ? 'active' : '' }}" href="{{ route('tenant.calendars.index') }}">Listar</a>
+                            <a class="nav-link {{ request()->routeIs('tenant.calendars.index') ? 'active' : '' }}" href="{{ workspace_route('tenant.calendars.index') }}">Listar</a>
                         </li>
                         @if ($canCreateCalendar)
                             <li class="nav-item">
-                                <a class="nav-link {{ request()->routeIs('tenant.calendars.create') ? 'active' : '' }}" href="{{ route('tenant.calendars.create') }}">Novo Calendário</a>
+                                <a class="nav-link {{ request()->routeIs('tenant.calendars.create') ? 'active' : '' }}" href="{{ workspace_route('tenant.calendars.create') }}">Novo Calendário</a>
                             </li>
                         @endif
                     </ul>
@@ -251,10 +251,10 @@
                 <div class="collapse {{ request()->routeIs('tenant.business-hours.*') ? 'show' : '' }}" id="business-hours-menu">
                     <ul class="nav flex-column sub-menu">
                         <li class="nav-item">
-                            <a class="nav-link {{ request()->routeIs('tenant.business-hours.index') ? 'active' : '' }}" href="{{ route('tenant.business-hours.index') }}">Listar</a>
+                            <a class="nav-link {{ request()->routeIs('tenant.business-hours.index') ? 'active' : '' }}" href="{{ workspace_route('tenant.business-hours.index') }}">Listar</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link {{ request()->routeIs('tenant.business-hours.create') ? 'active' : '' }}" href="{{ route('tenant.business-hours.create') }}">Novo Horário</a>
+                            <a class="nav-link {{ request()->routeIs('tenant.business-hours.create') ? 'active' : '' }}" href="{{ workspace_route('tenant.business-hours.create') }}">Novo Horário</a>
                         </li>
                     </ul>
                 </div>
@@ -273,10 +273,10 @@
                 <div class="collapse {{ request()->routeIs('tenant.appointment-types.*') ? 'show' : '' }}" id="appointment-types-menu">
                     <ul class="nav flex-column sub-menu">
                         <li class="nav-item">
-                            <a class="nav-link {{ request()->routeIs('tenant.appointment-types.index') ? 'active' : '' }}" href="{{ route('tenant.appointment-types.index') }}">Listar</a>
+                            <a class="nav-link {{ request()->routeIs('tenant.appointment-types.index') ? 'active' : '' }}" href="{{ workspace_route('tenant.appointment-types.index') }}">Listar</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link {{ request()->routeIs('tenant.appointment-types.create') ? 'active' : '' }}" href="{{ route('tenant.appointment-types.create') }}">Novo Tipo</a>
+                            <a class="nav-link {{ request()->routeIs('tenant.appointment-types.create') ? 'active' : '' }}" href="{{ workspace_route('tenant.appointment-types.create') }}">Novo Tipo</a>
                         </li>
                     </ul>
                 </div>
@@ -300,10 +300,10 @@
             <div class="collapse {{ request()->routeIs('tenant.forms.*') ? 'show' : '' }}" id="forms-menu">
                 <ul class="nav flex-column sub-menu">
                     <li class="nav-item">
-                        <a class="nav-link {{ request()->routeIs('tenant.forms.index') ? 'active' : '' }}" href="{{ route('tenant.forms.index') }}">Listar</a>
+                        <a class="nav-link {{ request()->routeIs('tenant.forms.index') ? 'active' : '' }}" href="{{ workspace_route('tenant.forms.index') }}">Listar</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link {{ request()->routeIs('tenant.forms.create') ? 'active' : '' }}" href="{{ route('tenant.forms.create') }}">Novo Formulário</a>
+                        <a class="nav-link {{ request()->routeIs('tenant.forms.create') ? 'active' : '' }}" href="{{ workspace_route('tenant.forms.create') }}">Novo Formulário</a>
                     </li>
                 </ul>
             </div>
@@ -322,7 +322,7 @@
             <div class="collapse {{ request()->routeIs('tenant.responses.*') ? 'show' : '' }}" id="responses-menu">
                 <ul class="nav flex-column sub-menu">
                     <li class="nav-item">
-                        <a class="nav-link {{ request()->routeIs('tenant.responses.index') ? 'active' : '' }}" href="{{ route('tenant.responses.index') }}">Listar</a>
+                        <a class="nav-link {{ request()->routeIs('tenant.responses.index') ? 'active' : '' }}" href="{{ workspace_route('tenant.responses.index') }}">Listar</a>
                     </li>
                 </ul>
             </div>
@@ -351,7 +351,7 @@
 
             {{-- CONFIGURAÇÕES --}}
             <li class="nav-item {{ request()->routeIs('tenant.settings.*') ? 'active' : '' }}">
-                <a class="nav-link" href="{{ route('tenant.settings.index') }}">
+                <a class="nav-link" href="{{ workspace_route('tenant.settings.index') }}">
                     <span class="icon-bg"><i class="mdi mdi-settings menu-icon"></i></span>
                     <span class="menu-title">Configurações</span>
                 </a>
@@ -375,12 +375,12 @@
             <div class="collapse {{ request()->routeIs('tenant.integrations.*') || request()->routeIs('tenant.integrations.google.*') || request()->routeIs('tenant.integrations.apple.*') ? 'show' : '' }}" id="integrations-menu">
                 <ul class="nav flex-column sub-menu">
                     <li class="nav-item">
-                        <a class="nav-link {{ request()->routeIs('tenant.integrations.google.*') ? 'active' : '' }}" href="{{ route('tenant.integrations.google.index') }}">
+                        <a class="nav-link {{ request()->routeIs('tenant.integrations.google.*') ? 'active' : '' }}" href="{{ workspace_route('tenant.integrations.google.index') }}">
                             <i class="mdi mdi-google me-1"></i> Google Calendar
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link {{ request()->routeIs('tenant.integrations.apple.*') ? 'active' : '' }}" href="{{ route('tenant.integrations.apple.index') }}">
+                        <a class="nav-link {{ request()->routeIs('tenant.integrations.apple.*') ? 'active' : '' }}" href="{{ workspace_route('tenant.integrations.apple.index') }}">
                             <i class="mdi mdi-apple me-1"></i> Apple Calendar
                         </a>
                     </li>
@@ -409,13 +409,13 @@
             </a>
             <div class="collapse {{ request()->routeIs('tenant.reports.*') ? 'show' : '' }}" id="reports-menu">
                 <ul class="nav flex-column sub-menu">
-                    <li><a class="nav-link" href="{{ route('tenant.reports.appointments') }}">Agendamentos</a></li>
-                    <li><a class="nav-link" href="{{ route('tenant.reports.patients') }}">Pacientes</a></li>
-                    <li><a class="nav-link" href="{{ route('tenant.reports.doctors') }}">Médicos</a></li>
-                    <li><a class="nav-link" href="{{ route('tenant.reports.recurring') }}">Recorrências</a></li>
-                    <li><a class="nav-link" href="{{ route('tenant.reports.forms') }}">Formulários</a></li>
-                    <li><a class="nav-link" href="{{ route('tenant.reports.portal') }}">Portal do Paciente</a></li>
-                    <li><a class="nav-link" href="{{ route('tenant.reports.notifications') }}">Notificações</a></li>
+                    <li><a class="nav-link" href="{{ workspace_route('tenant.reports.appointments') }}">Agendamentos</a></li>
+                    <li><a class="nav-link" href="{{ workspace_route('tenant.reports.patients') }}">Pacientes</a></li>
+                    <li><a class="nav-link" href="{{ workspace_route('tenant.reports.doctors') }}">Médicos</a></li>
+                    <li><a class="nav-link" href="{{ workspace_route('tenant.reports.recurring') }}">Recorrências</a></li>
+                    <li><a class="nav-link" href="{{ workspace_route('tenant.reports.forms') }}">Formulários</a></li>
+                    <li><a class="nav-link" href="{{ workspace_route('tenant.reports.portal') }}">Portal do Paciente</a></li>
+                    <li><a class="nav-link" href="{{ workspace_route('tenant.reports.notifications') }}">Notificações</a></li>
                 </ul>
             </div>
         </li>

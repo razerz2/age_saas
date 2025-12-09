@@ -64,10 +64,10 @@ use App\Http\Controllers\Tenant\MedicalAppointmentController;
 
 /**
  * =====================================================================
- * ROTAS PÚBLICAS DO TENANT (/t/{tenant}/agendamento/*)
+ * ROTAS PÚBLICAS DO TENANT (/customer/{slug}/agendamento/*)
  * =====================================================================
  */
-Route::prefix('t/{tenant}')
+Route::prefix('customer/{slug}')
     ->as('public.')
     ->middleware(['tenant-web'])
     ->group(function () {
@@ -103,10 +103,10 @@ Route::prefix('t/{tenant}')
 
 /**
  * =====================================================================
- * LOGIN DO TENANT (/t/{tenant}/login)
+ * LOGIN DO TENANT (/customer/{slug}/login)
  * =====================================================================
  */
-Route::prefix('t/{tenant}')
+Route::prefix('customer/{slug}')
     ->as('tenant.')
     ->middleware(['tenant-web'])
     ->group(function () {
@@ -118,10 +118,10 @@ Route::prefix('t/{tenant}')
 
 /**
  * =====================================================================
- * ROTAS AUTENTICADAS DO TENANT (/tenant/*)
+ * ROTAS AUTENTICADAS DO TENANT (/workspace/{slug}/*)
  * =====================================================================
  */
-Route::prefix('tenant')
+Route::prefix('workspace/{slug}')
     ->as('tenant.')
     ->middleware([
         'web',
@@ -157,7 +157,7 @@ Route::prefix('tenant')
         // Mostrar o formulário para alterar a senha
         Route::get('users/{id}/change-password', [UserController::class, 'showChangePasswordForm'])->where('id', '[0-9]+')->name('users.change-password');
         // Alterar a senha
-        Route::post('users/{id}/change-password', [UserController::class, 'changePassword'])->where('id', '[0-9]+')->name('users.change-password');
+        Route::post('users/{id}/change-password', [UserController::class, 'changePassword'])->where('id', '[0-9]+')->name('users.change-password.store');
         
         // Gerenciar permissões de médicos para usuários
         Route::get('users/{id}/doctor-permissions', [UserDoctorPermissionController::class, 'index'])->where('id', '[0-9]+')->name('users.doctor-permissions');
@@ -672,6 +672,7 @@ Route::prefix('tenant')
             Route::post('settings/integrations', [SettingsController::class, 'updateIntegrations'])->name('settings.update.integrations');
             Route::post('settings/user-defaults', [SettingsController::class, 'updateUserDefaults'])->name('settings.update.user-defaults');
             Route::post('settings/professionals', [SettingsController::class, 'updateProfessionals'])->name('settings.update.professionals');
+            Route::post('settings/appearance', [SettingsController::class, 'updateAppearance'])->name('settings.update.appearance');
         });
 
         // =====================================================================

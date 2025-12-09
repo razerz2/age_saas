@@ -26,6 +26,7 @@ return new class extends Migration
             $table->enum('appointment_mode', ['presencial', 'online'])->default('presencial')->after('status');
             $table->text('notes')->nullable();
             $table->string('google_event_id')->nullable();
+            $table->string('apple_event_id')->nullable();
             $table->timestamps();
         });
     }

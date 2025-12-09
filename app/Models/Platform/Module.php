@@ -23,6 +23,7 @@ class Module
             ['key' => 'locations', 'name' => 'Localização', 'icon' => 'fa-globe'],
             ['key' => 'users', 'name' => 'Usuários', 'icon' => 'fa-users'],
             ['key' => 'settings', 'name' => 'Configurações', 'icon' => 'fa-cog'],
+            ['key' => 'api_tokens', 'name' => 'Tokens de API', 'icon' => 'fa-key'],
         ];
     }
 
@@ -32,7 +33,10 @@ class Module
     public static function getName(string $key): ?string
     {
         $module = collect(self::all())->firstWhere('key', $key);
-        return $module['name'] ?? null;
+        if ($module && is_array($module) && isset($module['name'])) {
+            return $module['name'];
+        }
+        return null;
     }
 
     /**
@@ -41,6 +45,9 @@ class Module
     public static function getIcon(string $key): ?string
     {
         $module = collect(self::all())->firstWhere('key', $key);
-        return $module['icon'] ?? null;
+        if ($module && is_array($module) && isset($module['icon'])) {
+            return $module['icon'];
+        }
+        return null;
     }
 }

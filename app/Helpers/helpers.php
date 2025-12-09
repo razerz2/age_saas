@@ -207,10 +207,36 @@ if (! function_exists('tenant_route')) {
         // Se $tenant for um objeto Tenant, pega o subdomain
         $tenantSlug = is_object($tenant) ? $tenant->subdomain : $tenant;
         
-        // Adiciona o tenant aos parâmetros
-        $parameters['tenant'] = $tenantSlug;
+        // Verifica se é uma rota pública (usa 'slug') ou autenticada (também usa 'slug')
+        // Rotas públicas começam com 'public.'
+        if (str_starts_with($routeName, 'public.')) {
+            $parameters['slug'] = $tenantSlug;
+        } else {
+            // Para rotas autenticadas, também usa 'slug' agora
+            $parameters['slug'] = $tenantSlug;
+        }
         
         // Gera a rota
+        return route($routeName, $parameters);
+    }
+}
+
+/**
+ * 🔧 Gera URL de rota do tenant autenticado (workspace)
+ * Automaticamente adiciona o slug do tenant atual
+ */
+if (! function_exists('workspace_route')) {
+    function workspace_route(string $routeName, array $parameters = [])
+    {
+        // Pega o slug do tenant atual (da URL, sessão ou tenant ativo)
+        $slug = request()->route('slug') 
+            ?? session('tenant_slug') 
+            ?? (tenant() ? tenant()->subdomain : null);
+        
+        if ($slug) {
+            $parameters['slug'] = $slug;
+        }
+        
         return route($routeName, $parameters);
     }
 }
@@ -244,5 +270,55 @@ if (! function_exists('has_module')) {
         }
         
         return in_array($module, $userModules);
+    }
+}
+
+/**
+ * 🔐 Verifica se o tenant atual tem acesso a uma funcionalidade do plano
+ */
+if (! function_exists('has_feature')) {
+    function has_feature(string $featureName): bool
+    {
+        return app(\App\Services\FeatureAccessService::class)->hasFeature($featureName);
+    }
+}
+
+/**
+ * 🔐 Verifica se o tenant tem acesso a qualquer uma das funcionalidades
+ */
+if (! function_exists('has_any_feature')) {
+    function has_any_feature(array $featureNames): bool
+    {
+        return app(\App\Services\FeatureAccessService::class)->hasAnyFeature($featureNames);
+    }
+}
+
+/**
+ * 🔐 Verifica se o tenant tem acesso a todas as funcionalidades
+ */
+if (! function_exists('has_all_features')) {
+    function has_all_features(array $featureNames): bool
+    {
+        return app(\App\Services\FeatureAccessService::class)->hasAllFeatures($featureNames);
+    }
+}
+
+/**
+ * 🔐 Retorna todas as funcionalidades disponíveis para o tenant atual
+ */
+if (! function_exists('get_available_features')) {
+    function get_available_features(): array
+    {
+        return app(\App\Services\FeatureAccessService::class)->getAvailableFeatures();
+    }
+}
+
+/**
+ * 🔐 Retorna o limite do plano para um tipo específico (ex: max_doctors, max_users)
+ */
+if (! function_exists('get_plan_limit')) {
+    function get_plan_limit(string $limitType): ?int
+    {
+        return app(\App\Services\FeatureAccessService::class)->getPlanLimit($limitType);
     }
 }

@@ -363,7 +363,7 @@
                     </p>
                     <p class="text-sm text-gray-500">
                         Notificações automáticas de agendamentos, lembretes, formulários e instruções de consultas online 
-                        com configurações flexíveis por tenant.
+                        com configurações flexíveis por clínica.
                     </p>
                 </div>
 
@@ -393,13 +393,13 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4" />
                         </svg>
                     </div>
-                    <h3 class="text-xl font-bold text-gray-900 mb-3">Banco de Dados Isolado</h3>
+                    <h3 class="text-xl font-bold text-gray-900 mb-3">Ambiente de Dados Isolado</h3>
                     <p class="text-gray-600 mb-4">
-                        <strong>Segurança total:</strong> Cada tenant possui seu próprio banco PostgreSQL isolado 
+                        <strong>Segurança total:</strong> Cada clínica possui seu próprio ambiente isolado 
                         garantindo privacidade e segurança.
                     </p>
                     <p class="text-sm text-gray-500">
-                        Banco de dados PostgreSQL completamente isolado por tenant, criado automaticamente após 
+                        Ambiente completamente isolado por clínica, criado automaticamente após 
                         o pagamento, garantindo total separação e segurança dos dados.
                     </p>
                 </div>

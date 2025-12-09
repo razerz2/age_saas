@@ -42,8 +42,15 @@ return [
             'encryption' => env('MAIL_ENCRYPTION', 'tls'),
             'username' => env('MAIL_USERNAME'),
             'password' => env('MAIL_PASSWORD'),
-            'timeout' => null,
+            'timeout' => env('MAIL_TIMEOUT', 30),
             'local_domain' => env('MAIL_EHLO_DOMAIN'),
+            'stream' => [
+                'ssl' => [
+                    'allow_self_signed' => true,
+                    'verify_peer' => env('MAIL_VERIFY_PEER', false),
+                    'verify_peer_name' => env('MAIL_VERIFY_PEER_NAME', false),
+                ],
+            ],
         ],
 
         'ses' => [
@@ -108,7 +115,9 @@ return [
     */
 
     'from' => [
-        'address' => env('MAIL_FROM_ADDRESS', 'hello@example.com'),
+        // Se MAIL_FROM_ADDRESS não estiver definido, usa MAIL_USERNAME como fallback
+        // Isso garante que o remetente corresponda ao usuário autenticado
+        'address' => env('MAIL_FROM_ADDRESS', env('MAIL_USERNAME', 'hello@example.com')),
         'name' => env('MAIL_FROM_NAME', 'Example'),
     ],
 

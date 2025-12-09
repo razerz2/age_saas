@@ -4,12 +4,15 @@
 
 @section('content')
 <div class="page-header">
-    <h3 class="page-title">
-        <span class="page-title-icon bg-gradient-primary text-white me-2">
-            <i class="mdi mdi-settings"></i>
-        </span>
-        Configurações
-    </h3>
+    <div class="d-flex justify-content-between align-items-center">
+        <h3 class="page-title mb-0">
+            <span class="page-title-icon bg-gradient-primary text-white me-2">
+                <i class="mdi mdi-settings"></i>
+            </span>
+            Configurações
+        </h3>
+        <x-help-button module="settings" />
+    </div>
 </div>
 
 <div class="row">
@@ -58,13 +61,18 @@
                             <i class="mdi mdi-link-variant me-2"></i>Link de Agendamento
                         </a>
                     </li>
+                    <li class="nav-item" role="presentation">
+                        <a class="nav-link" id="appearance-tab" data-bs-toggle="tab" href="#appearance" role="tab" aria-controls="appearance" aria-selected="false">
+                            <i class="mdi mdi-palette me-2"></i>Aparência
+                        </a>
+                    </li>
                 </ul>
 
                 {{-- Conteúdo das Abas --}}
                 <div class="tab-content p-4" id="settingsTabsContent">
                     {{-- Aba Geral --}}
                     <div class="tab-pane fade show active" id="general" role="tabpanel">
-                        <form method="POST" action="{{ route('tenant.settings.update.general') }}">
+                        <form method="POST" action="{{ workspace_route('tenant.settings.update.general') }}">
                             @csrf
                             
                             <h4 class="mb-4">Configurações Gerais</h4>
@@ -122,7 +130,7 @@
 
                     {{-- Aba Agendamentos --}}
                     <div class="tab-pane fade" id="appointments" role="tabpanel">
-                        <form method="POST" action="{{ route('tenant.settings.update.appointments') }}">
+                        <form method="POST" action="{{ workspace_route('tenant.settings.update.appointments') }}">
                             @csrf
                             
                             <h4 class="mb-4">Configurações de Agendamentos</h4>
@@ -226,7 +234,7 @@
 
                     {{-- Aba Calendário --}}
                     <div class="tab-pane fade" id="calendar" role="tabpanel">
-                        <form method="POST" action="{{ route('tenant.settings.update.calendar') }}">
+                        <form method="POST" action="{{ workspace_route('tenant.settings.update.calendar') }}">
                             @csrf
                             
                             <h4 class="mb-4">Configurações de Calendário</h4>
@@ -309,7 +317,7 @@
 
                     {{-- Aba Notificações --}}
                     <div class="tab-pane fade" id="notifications" role="tabpanel">
-                        <form method="POST" action="{{ route('tenant.settings.update.notifications') }}">
+                        <form method="POST" action="{{ workspace_route('tenant.settings.update.notifications') }}">
                             @csrf
                             
                             <h4 class="mb-4">Configurações de Notificações</h4>
@@ -503,7 +511,7 @@
 
                     {{-- Aba Integrações --}}
                     <div class="tab-pane fade" id="integrations" role="tabpanel">
-                        <form method="POST" action="{{ route('tenant.settings.update.integrations') }}">
+                        <form method="POST" action="{{ workspace_route('tenant.settings.update.integrations') }}">
                             @csrf
                             
                             <h4 class="mb-4">Configurações de Integrações</h4>
@@ -539,10 +547,10 @@
                                                             com a chave <code class="bg-light px-2 py-1 rounded">google_calendar</code> e configurar a API no campo de configuração (JSON).
                                                         </p>
                                                         <div class="mt-3">
-                                                            <a href="{{ route('tenant.integrations.create') }}" class="btn btn-primary btn-sm me-2">
+                                                            <a href="{{ workspace_route('tenant.integrations.create') }}" class="btn btn-primary btn-sm me-2">
                                                                 <i class="mdi mdi-plus-circle me-2"></i>Cadastrar Integração
                                                             </a>
-                                                            <a href="{{ route('tenant.integrations.index') }}" class="btn btn-outline-secondary btn-sm">
+                                                            <a href="{{ workspace_route('tenant.integrations.index') }}" class="btn btn-outline-secondary btn-sm">
                                                                 <i class="mdi mdi-view-list me-2"></i>Ver Todas as Integrações
                                                             </a>
                                                         </div>
@@ -604,10 +612,10 @@
                                                         </div>
                                                     </div>
                                                     <div class="d-flex gap-2">
-                                                        <a href="{{ route('tenant.integrations.edit', $googleCalendarIntegration->id) }}" class="btn btn-outline-primary btn-sm">
+                                                        <a href="{{ workspace_route('tenant.integrations.edit', ['id' => $googleCalendarIntegration->id]) }}" class="btn btn-outline-primary btn-sm">
                                                             <i class="mdi mdi-pencil me-2"></i>Editar Integração
                                                         </a>
-                                                        <a href="{{ route('tenant.oauth-accounts.index') }}" class="btn btn-outline-secondary btn-sm">
+                                                        <a href="{{ workspace_route('tenant.oauth-accounts.index') }}" class="btn btn-outline-secondary btn-sm">
                                                             <i class="mdi mdi-link-variant me-2"></i>Gerenciar Contas OAuth
                                                         </a>
                                                     </div>
@@ -628,7 +636,7 @@
 
                     {{-- Aba Usuários & Permissões --}}
                     <div class="tab-pane fade" id="users" role="tabpanel">
-                        <form method="POST" action="{{ route('tenant.settings.update.user-defaults') }}">
+                        <form method="POST" action="{{ workspace_route('tenant.settings.update.user-defaults') }}">
                             @csrf
                             
                             <h4 class="mb-4">Configurações de Usuários & Permissões</h4>
@@ -733,7 +741,7 @@
 
                     {{-- Aba Profissionais --}}
                     <div class="tab-pane fade" id="professionals" role="tabpanel">
-                        <form method="POST" action="{{ route('tenant.settings.update.professionals') }}">
+                        <form method="POST" action="{{ workspace_route('tenant.settings.update.professionals') }}">
                             @csrf
                             
                             <h4 class="mb-4">Configurações de Profissionais</h4>
@@ -968,6 +976,127 @@
                             </div>
                         </div>
                     </div>
+
+                    {{-- Aba Aparência --}}
+                    <div class="tab-pane fade" id="appearance" role="tabpanel">
+                        <form method="POST" action="{{ workspace_route('tenant.settings.update.appearance') }}" enctype="multipart/form-data" id="appearance-form">
+                            @csrf
+                            
+                            <h4 class="mb-4">Configurações de Aparência</h4>
+                            <p class="text-muted mb-4">
+                                Personalize a aparência do sistema com seu logo e favicon. Se não informar nenhuma imagem, será usada a padrão do sistema.
+                            </p>
+
+                            <div class="row">
+                                {{-- Logo do Menu --}}
+                                <div class="col-md-6 mb-4">
+                                    <div class="card border shadow-sm">
+                                        <div class="card-header bg-light">
+                                            <h5 class="mb-0">
+                                                <i class="mdi mdi-image me-2"></i>Logo do Menu
+                                            </h5>
+                                        </div>
+                                        <div class="card-body">
+                                            @php
+                                                $currentLogo = \App\Models\Tenant\TenantSetting::get('appearance.logo');
+                                                $logoUrl = $currentLogo ? asset('storage/' . $currentLogo) : asset('connect_plus/assets/images/logos/AllSync-Logo-A.png');
+                                            @endphp
+                                            
+                                            <div class="mb-3">
+                                                <label class="form-label">Logo Atual</label>
+                                                <div class="border rounded p-3 bg-light text-center">
+                                                    <img src="{{ $logoUrl }}" alt="Logo" id="logo-preview" 
+                                                         style="max-width: 100%; max-height: 150px; object-fit: contain;">
+                                                </div>
+                                            </div>
+
+                                            <div class="mb-3">
+                                                <label class="form-label">Selecionar Nova Imagem</label>
+                                                <input type="file" class="form-control" name="logo" id="logo-input" 
+                                                       accept="image/png,image/jpeg,image/jpg,image/gif,image/svg+xml"
+                                                       onchange="previewImage(this, 'logo-preview')">
+                                                <small class="text-muted">
+                                                    Formatos aceitos: PNG, JPG, GIF, SVG. Tamanho recomendado: 200x60px
+                                                </small>
+                                            </div>
+
+                                            @if($currentLogo)
+                                                <div class="mb-3">
+                                                    <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeImage('logo')">
+                                                        <i class="mdi mdi-delete me-2"></i>Remover Logo Personalizado
+                                                    </button>
+                                                    <input type="hidden" name="remove_logo" id="remove-logo" value="0">
+                                                </div>
+                                            @endif
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {{-- Favicon --}}
+                                <div class="col-md-6 mb-4">
+                                    <div class="card border shadow-sm">
+                                        <div class="card-header bg-light">
+                                            <h5 class="mb-0">
+                                                <i class="mdi mdi-file-image me-2"></i>Favicon
+                                            </h5>
+                                        </div>
+                                        <div class="card-body">
+                                            @php
+                                                $currentFavicon = \App\Models\Tenant\TenantSetting::get('appearance.favicon');
+                                                $faviconUrl = $currentFavicon ? asset('storage/' . $currentFavicon) : asset('connect_plus/assets/images/favicon.png');
+                                            @endphp
+                                            
+                                            <div class="mb-3">
+                                                <label class="form-label">Favicon Atual</label>
+                                                <div class="border rounded p-3 bg-light text-center">
+                                                    <img src="{{ $faviconUrl }}" alt="Favicon" id="favicon-preview" 
+                                                         style="max-width: 64px; max-height: 64px; object-fit: contain;">
+                                                </div>
+                                            </div>
+
+                                            <div class="mb-3">
+                                                <label class="form-label">Selecionar Nova Imagem</label>
+                                                <input type="file" class="form-control" name="favicon" id="favicon-input" 
+                                                       accept="image/png,image/x-icon,image/svg+xml"
+                                                       onchange="previewImage(this, 'favicon-preview')">
+                                                <small class="text-muted">
+                                                    Formatos aceitos: PNG, ICO, SVG. Tamanho recomendado: 32x32px ou 64x64px
+                                                </small>
+                                            </div>
+
+                                            @if($currentFavicon)
+                                                <div class="mb-3">
+                                                    <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeImage('favicon')">
+                                                        <i class="mdi mdi-delete me-2"></i>Remover Favicon Personalizado
+                                                    </button>
+                                                    <input type="hidden" name="remove_favicon" id="remove-favicon" value="0">
+                                                </div>
+                                            @endif
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="alert alert-info d-flex align-items-start" role="alert">
+                                <i class="mdi mdi-information-outline me-3" style="font-size: 1.5rem; flex-shrink: 0;"></i>
+                                <div class="flex-grow-1">
+                                    <strong class="d-block mb-2">Importante:</strong>
+                                    <ul class="mb-0" style="font-size: 0.9rem;">
+                                        <li>As imagens serão redimensionadas automaticamente se necessário</li>
+                                        <li>Para melhor resultado, use imagens de alta qualidade</li>
+                                        <li>Se não informar nenhuma imagem, será usada a padrão do sistema</li>
+                                        <li>Após salvar, pode ser necessário limpar o cache do navegador para ver as mudanças</li>
+                                    </ul>
+                                </div>
+                            </div>
+
+                            <div class="mt-4">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="mdi mdi-content-save me-2"></i>Salvar Alterações
+                                </button>
+                            </div>
+                        </form>
+                    </div>
                 </div>
             </div>
         </div>
@@ -982,6 +1111,32 @@
 @push('scripts')
 <script>
     $(document).ready(function() {
+        // Verificar se há mensagem de sucesso com redirecionamento para aba específica
+        @if(session('redirect_to_tab'))
+            const targetTab = $('#settingsTabs a[href="#{{ session('redirect_to_tab') }}"]');
+            if (targetTab.length) {
+                // Remover active de todas as tabs e panes
+                $('#settingsTabs a[data-bs-toggle="tab"]').removeClass('active').attr('aria-selected', 'false');
+                $('.tab-pane').removeClass('show active');
+                
+                // Ativar a tab e pane correspondente
+                targetTab.addClass('active').attr('aria-selected', 'true');
+                $('#{{ session('redirect_to_tab') }}').addClass('show active');
+                
+                // Adicionar hash na URL
+                if (history.pushState) {
+                    history.pushState(null, null, '#{{ session('redirect_to_tab') }}');
+                } else {
+                    window.location.hash = '#{{ session('redirect_to_tab') }}';
+                }
+                
+                // Scroll suave até a aba
+                $('html, body').animate({
+                    scrollTop: $('#settingsTabs').offset().top - 20
+                }, 500);
+            }
+        @endif
+        
         // Verificar se há hash na URL para abrir aba específica
         if (window.location.hash) {
             const hash = window.location.hash.substring(1); // Remove o #
@@ -1135,6 +1290,56 @@
             setTimeout(function() {
                 alert.style.display = 'none';
             }, 3000);
+        }
+    }
+
+    // Função para preview de imagem
+    function previewImage(input, previewId) {
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const preview = document.getElementById(previewId);
+                if (preview) {
+                    preview.src = e.target.result;
+                    preview.style.display = 'block';
+                }
+            };
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
+
+    // Função para remover imagem
+    function removeImage(type) {
+        if (confirm('Tem certeza que deseja remover a imagem personalizada? Será usada a imagem padrão do sistema.')) {
+            const inputId = 'remove-' + type;
+            const input = document.getElementById(inputId);
+            if (input) {
+                input.value = '1';
+            }
+            
+            // Resetar preview para imagem padrão
+            const previewId = type + '-preview';
+            const preview = document.getElementById(previewId);
+            if (preview) {
+                if (type === 'logo') {
+                    preview.src = '{{ asset("connect_plus/assets/images/logos/AllSync-Logo-A.png") }}';
+                } else if (type === 'favicon') {
+                    preview.src = '{{ asset("connect_plus/assets/images/favicon.png") }}';
+                }
+            }
+            
+            // Limpar input de arquivo
+            const fileInputId = type + '-input';
+            const fileInput = document.getElementById(fileInputId);
+            if (fileInput) {
+                fileInput.value = '';
+            }
+            
+            // Ocultar botão de remover
+            const removeBtn = event.target.closest('.mb-3');
+            if (removeBtn) {
+                removeBtn.style.display = 'none';
+            }
         }
     }
 </script>

@@ -32,25 +32,27 @@ class SubscriptionAccessSeeder extends Seeder
 
             $this->command->info("✅ Plano Developer criado/verificado: {$plan->id}");
 
-            // 2. Criar todas as funcionalidades essenciais
+            // 2. Criar todas as funcionalidades
+            // Funcionalidades essenciais (obrigatórias em todos os planos)
             $features = [
                 ['name' => 'appointments', 'label' => 'Agendamentos', 'is_default' => true],
                 ['name' => 'calendar', 'label' => 'Calendário', 'is_default' => true],
                 ['name' => 'doctors', 'label' => 'Médicos', 'is_default' => true],
                 ['name' => 'patients', 'label' => 'Pacientes', 'is_default' => true],
-                ['name' => 'forms', 'label' => 'Formulários', 'is_default' => true],
-                ['name' => 'agenda_recorrente', 'label' => 'Agenda Recorrente', 'is_default' => true],
-                ['name' => 'teleconsulta', 'label' => 'Teleconsulta', 'is_default' => true],
-                ['name' => 'notifications', 'label' => 'Notificações', 'is_default' => true],
-                ['name' => 'reports', 'label' => 'Relatórios', 'is_default' => true],
-                ['name' => 'whatsapp', 'label' => 'WhatsApp', 'is_default' => true],
                 ['name' => 'specialties', 'label' => 'Especialidades', 'is_default' => true],
                 ['name' => 'users', 'label' => 'Usuários', 'is_default' => true],
+                // Funcionalidades opcionais (podem ser desmarcadas)
+                ['name' => 'forms', 'label' => 'Formulários', 'is_default' => false],
+                ['name' => 'agenda_recorrente', 'label' => 'Agenda Recorrente', 'is_default' => false],
+                ['name' => 'teleconsulta', 'label' => 'Teleconsulta', 'is_default' => false],
+                ['name' => 'notifications', 'label' => 'Notificações', 'is_default' => false],
+                ['name' => 'reports', 'label' => 'Relatórios', 'is_default' => false],
+                ['name' => 'whatsapp', 'label' => 'WhatsApp', 'is_default' => false],
             ];
 
             $createdFeatures = [];
             foreach ($features as $featureData) {
-                $feature = SubscriptionFeature::firstOrCreate(
+                $feature = SubscriptionFeature::updateOrCreate(
                     ['name' => $featureData['name']],
                     [
                         'label' => $featureData['label'],
@@ -58,7 +60,7 @@ class SubscriptionAccessSeeder extends Seeder
                     ]
                 );
                 $createdFeatures[] = $feature;
-                $this->command->info("  ✓ Funcionalidade criada: {$feature->label}");
+                $this->command->info("  ✓ Funcionalidade criada/atualizada: {$feature->label} (" . ($feature->is_default ? 'Essencial' : 'Opcional') . ")");
             }
 
             $this->command->info("✅ Total de funcionalidades: " . count($createdFeatures));

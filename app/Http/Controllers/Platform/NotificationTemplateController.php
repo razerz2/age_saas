@@ -104,10 +104,11 @@ class NotificationTemplateController extends Controller
             $rendered = $this->renderer->render($notificationTemplate->name, $sampleData);
 
             if ($notificationTemplate->channel === 'email') {
+                // O layout já foi aplicado pelo TemplateRenderer
                 Mail::send([], [], function ($message) use ($request, $rendered) {
                     $message->to($request->email)
                         ->subject($rendered->subject ?? 'Teste de Template')
-                        ->setBody($rendered->body, 'text/html');
+                        ->html($rendered->body);
                 });
 
                 return response()->json([

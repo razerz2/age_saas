@@ -32,9 +32,84 @@ class TenantProvisioner
 
             // --------------------------------------------------------------------
             // 1. Criar banco e usuário no Postgres (conexão principal)
+            // 🔒 Com verificação de idempotência para evitar erros em webhooks duplicados
             // --------------------------------------------------------------------
-            DB::connection('pgsql')->statement("CREATE DATABASE \"{$tenant->db_name}\"");
-            DB::connection('pgsql')->statement("CREATE USER {$tenant->db_username} WITH PASSWORD '{$tenant->db_password}'");
+            
+            // Verificar se o banco já existe
+            try {
+                $dbExists = DB::connection('pgsql')->selectOne("
+                    SELECT 1 FROM pg_database WHERE datname = ?
+                ", [$tenant->db_name]);
+            } catch (\Throwable $e) {
+                // Se houver erro na consulta, assume que não existe
+                $dbExists = null;
+            }
+            
+            if ($dbExists) {
+                Log::info("ℹ️ Banco de dados {$tenant->db_name} já existe. Pulando criação do banco.", [
+                    'tenant_id' => $tenant->id,
+                    'db_name' => $tenant->db_name,
+                ]);
+            } else {
+                try {
+                    DB::connection('pgsql')->statement("CREATE DATABASE \"{$tenant->db_name}\"");
+                    Log::info("✅ Banco de dados {$tenant->db_name} criado com sucesso.", [
+                        'tenant_id' => $tenant->id,
+                    ]);
+                } catch (\Throwable $e) {
+                    // Se o erro for que o banco já existe, apenas loga
+                    if (str_contains($e->getMessage(), 'already exists') || 
+                        str_contains($e->getMessage(), 'duplicate')) {
+                        Log::info("ℹ️ Banco de dados {$tenant->db_name} já existe (erro capturado).", [
+                            'tenant_id' => $tenant->id,
+                        ]);
+                    } else {
+                        throw $e; // Re-lança se for outro tipo de erro
+                    }
+                }
+            }
+            
+            // Verificar se o usuário já existe
+            try {
+                $userExists = DB::connection('pgsql')->selectOne("
+                    SELECT 1 FROM pg_user WHERE usename = ?
+                ", [$tenant->db_username]);
+            } catch (\Throwable $e) {
+                // Se houver erro na consulta, assume que não existe
+                $userExists = null;
+            }
+            
+            if ($userExists) {
+                Log::info("ℹ️ Usuário {$tenant->db_username} já existe. Atualizando senha e permissões.", [
+                    'tenant_id' => $tenant->id,
+                    'db_username' => $tenant->db_username,
+                ]);
+                // Atualizar senha do usuário existente
+                try {
+                    DB::connection('pgsql')->statement("ALTER USER {$tenant->db_username} WITH PASSWORD '{$tenant->db_password}'");
+                } catch (\Throwable $e) {
+                    Log::warning("⚠️ Erro ao atualizar senha do usuário (pode ser normal): {$e->getMessage()}");
+                }
+            } else {
+                try {
+                    DB::connection('pgsql')->statement("CREATE USER {$tenant->db_username} WITH PASSWORD '{$tenant->db_password}'");
+                    Log::info("✅ Usuário {$tenant->db_username} criado com sucesso.", [
+                        'tenant_id' => $tenant->id,
+                    ]);
+                } catch (\Throwable $e) {
+                    // Se o erro for que o usuário já existe, apenas loga
+                    if (str_contains($e->getMessage(), 'already exists') || 
+                        str_contains($e->getMessage(), 'duplicate')) {
+                        Log::info("ℹ️ Usuário {$tenant->db_username} já existe (erro capturado).", [
+                            'tenant_id' => $tenant->id,
+                        ]);
+                    } else {
+                        throw $e; // Re-lança se for outro tipo de erro
+                    }
+                }
+            }
+            
+            // Sempre garantir permissões (idempotente)
             DB::connection('pgsql')->statement("GRANT ALL PRIVILEGES ON DATABASE \"{$tenant->db_name}\" TO {$tenant->db_username}");
             DB::connection('pgsql')->statement("ALTER DATABASE \"{$tenant->db_name}\" OWNER TO {$tenant->db_username}");
 
@@ -77,25 +152,37 @@ class TenantProvisioner
             }
 
             // --------------------------------------------------------------------
-            // 4. Executar migrations do tenant
+            // 4. Executar migrations do tenant (idempotente - só executa o que falta)
             // --------------------------------------------------------------------
             Log::info("📦 Executando migrations do tenant...");
 
-            Artisan::call('migrate', [
-                '--database' => 'tenant',
-                '--path'     => 'database/migrations/tenant',
-                '--force'    => true,
-            ]);
+            try {
+                Artisan::call('migrate', [
+                    '--database' => 'tenant',
+                    '--path'     => 'database/migrations/tenant',
+                    '--force'    => true,
+                ]);
 
-            Log::info("✅ Migrations executadas com sucesso!", [
-                'tenant_id' => $tenant->id,
-                'output'    => Artisan::output(),
-            ]);
+                Log::info("✅ Migrations executadas com sucesso!", [
+                    'tenant_id' => $tenant->id,
+                    'output'    => Artisan::output(),
+                ]);
+            } catch (\Throwable $e) {
+                // Se já existem migrations aplicadas, isso é esperado e não é erro crítico
+                if (str_contains($e->getMessage(), 'already exists') || 
+                    str_contains($e->getMessage(), 'duplicate key')) {
+                    Log::info("ℹ️ Migrations já aplicadas anteriormente. Continuando...", [
+                        'tenant_id' => $tenant->id,
+                    ]);
+                } else {
+                    throw $e; // Re-lança se for outro tipo de erro
+                }
+            }
 
             // --------------------------------------------------------------------
-            // 5. Criar usuário admin do tenant diretamente
+            // 5. Criar usuário admin do tenant diretamente (idempotente)
             // --------------------------------------------------------------------
-            Log::info("👤 Criando usuário admin padrão...");
+            Log::info("👤 Verificando/criando usuário admin padrão...");
 
             try {
                 // Limpar subdomínio para formato válido de domínio
@@ -106,31 +193,53 @@ class TenantProvisioner
                 // Gerar email dinâmico
                 $email = "admin@{$domain}.com";
 
-                // Inserir usuário admin diretamente no banco do tenant usando a senha gerada
-                DB::connection('tenant')->table('users')->insert([
-                    'tenant_id'  => $tenant->id,
-                    'name'       => 'Administrador',
-                    'name_full'  => 'Administrador do Sistema',
-                    'telefone'   => '00000000000',
-                    'email'      => $email,
-                    'password'   => Hash::make($adminPassword),
-                    'is_doctor'  => false,
-                    'status'     => 'active',
-                    'role'       => 'admin',
-                    'modules'    => json_encode([]),
-                    'created_at' => now(),
-                    'updated_at' => now(),
-                ]);
+                // 🔒 Verificar se o usuário admin já existe
+                $adminExists = DB::connection('tenant')
+                    ->table('users')
+                    ->where('email', $email)
+                    ->orWhere('role', 'admin')
+                    ->exists();
 
-                Log::info("🟢 Usuário admin criado para tenant {$tenant->id}", [
-                    'email' => $email
-                ]);
+                if ($adminExists) {
+                    Log::info("ℹ️ Usuário admin já existe para tenant {$tenant->id}. Pulando criação.", [
+                        'email' => $email,
+                        'tenant_id' => $tenant->id,
+                    ]);
+                } else {
+                    // Inserir usuário admin diretamente no banco do tenant usando a senha gerada
+                    DB::connection('tenant')->table('users')->insert([
+                        'tenant_id'  => $tenant->id,
+                        'name'       => 'Administrador',
+                        'name_full'  => 'Administrador do Sistema',
+                        'telefone'   => '00000000000',
+                        'email'      => $email,
+                        'password'   => Hash::make($adminPassword),
+                        'is_doctor'  => false,
+                        'status'     => 'active',
+                        'role'       => 'admin',
+                        'modules'    => json_encode([]),
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ]);
+
+                    Log::info("🟢 Usuário admin criado para tenant {$tenant->id}", [
+                        'email' => $email
+                    ]);
+                }
             } catch (\Throwable $e) {
-                Log::error("❌ Erro ao criar usuário admin", [
-                    'erro' => $e->getMessage(),
-                    'trace' => $e->getTraceAsString()
-                ]);
-                throw $e;
+                // Se o erro for de duplicata, apenas loga e continua
+                if (str_contains($e->getMessage(), 'duplicate key') || 
+                    str_contains($e->getMessage(), 'already exists')) {
+                    Log::info("ℹ️ Usuário admin já existe. Continuando...", [
+                        'tenant_id' => $tenant->id,
+                    ]);
+                } else {
+                    Log::error("❌ Erro ao criar usuário admin", [
+                        'erro' => $e->getMessage(),
+                        'trace' => $e->getTraceAsString()
+                    ]);
+                    throw $e;
+                }
             }
 
             // --------------------------------------------------------------------

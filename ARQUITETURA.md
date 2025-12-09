@@ -105,10 +105,21 @@ POST /Platform/whatsapp/send                   # Enviar mensagem WhatsApp
 POST /Platform/whatsapp/invoice/{invoice}      # Enviar notificação de fatura
 GET  /Platform/api/estados/{pais}              # API: Estados por país
 GET  /Platform/api/cidades/{estado}            # API: Cidades por estado
-GET  /kiosk/monitor                             # Monitor de kiosk
-GET  /kiosk/monitor/data                        # Dados do monitor (API)
-POST /webhook/asaas                            # Webhook do Asaas
-GET  /google/callback                           # Callback do Google Calendar OAuth (rota global)
+GET  /Platform/system_notifications/json        # API: Notificações em JSON (últimas 5)
+
+// Rotas Públicas (sem autenticação):
+GET  /                                       # Landing page (home)
+GET  /funcionalidades                        # Landing page (funcionalidades)
+GET  /planos                                 # Landing page (planos)
+GET  /planos/json/{id}                       # API: Dados do plano em JSON
+GET  /contato                                # Landing page (contato)
+GET  /manual                                 # Landing page (manual)
+POST /pre-register                           # Criar pré-cadastro (landing page)
+GET  /kiosk/monitor                          # Monitor de kiosk
+GET  /kiosk/monitor/data                     # Dados do monitor (API)
+POST /webhook/asaas                          # Webhook do Asaas
+POST /webhook/asaas/pre-registration         # Webhook do Asaas para pré-cadastros
+GET  /google/callback                        # Callback do Google Calendar OAuth (rota global)
 ```
 
 **Middleware aplicado:**
@@ -227,10 +238,15 @@ GET  /paciente/logout                           # Logout (GET)
 | `MedicalSpecialtyCatalogController` | Catálogo de especialidades médicas |
 | `NotificationOutboxController` | Histórico de notificações enviadas |
 | `SystemNotificationController` | Notificações do sistema |
+| `NotificationTemplateController` | Templates de notificação |
 | `SystemSettingsController` | Configurações gerais e integrações |
 | `PaisController`, `EstadoController`, `CidadeController` | CRUD de localização |
 | `LocationController` | API de localização (estados/cidades) |
 | `WhatsAppController` | Envio de mensagens WhatsApp |
+| `PlanAccessManagerController` | Gerenciamento de regras de acesso por plano |
+| `PreTenantController` | Gerenciamento de pré-cadastros |
+| `KioskMonitorController` | Monitor de kiosk |
+| `LandingController` | Landing page pública |
 
 ### **Controllers dos Tenants** (`app/Http/Controllers/Tenant/`)
 
@@ -270,11 +286,17 @@ Armazenados no **banco central (landlord)**:
 | `Invoices` | `invoices` | Faturas geradas |
 | `NotificationOutbox` | `notifications_outbox` | Histórico de notificações |
 | `SystemNotification` | `system_notifications` | Notificações do sistema |
+| `NotificationTemplate` | `notification_templates` | Templates de notificação |
 | `MedicalSpecialtyCatalog` | `medical_specialties_catalog` | Catálogo global de especialidades |
 | `Pais`, `Estado`, `Cidade` | `paises`, `estados`, `cidades` | Dados de localização |
 | `TenantLocalizacao` | `tenant_localizacoes` | Localização dos tenants |
 | `SystemSetting` | `system_settings` | Configurações do sistema |
 | `WebhookLog` | `webhook_logs` | Logs de webhooks recebidos |
+| `PlanAccessRule` | `plan_access_rules` | Regras de acesso por plano |
+| `SubscriptionFeature` | `subscription_features` | Funcionalidades disponíveis para planos |
+| `PlanAccessRuleFeature` | `plan_access_rule_feature` | Relação entre regras e funcionalidades |
+| `PreTenant` | `pre_tenants` | Pré-cadastros de novos tenants |
+| `PreTenantLog` | `pre_tenant_logs` | Logs de eventos dos pré-cadastros |
 | `Module` | - | Módulos de acesso (helper) |
 
 **Características importantes:**

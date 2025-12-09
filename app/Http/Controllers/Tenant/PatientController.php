@@ -332,7 +332,7 @@ class PatientController extends Controller
             $tenant = Tenant::current();
             $tenantName = $tenant?->trade_name ?? $tenant?->legal_name ?? 'Clínica';
             $tenantSlug = $tenant?->subdomain ?? 'tenant';
-            $portalUrl = request()->getSchemeAndHttpHost() . '/t/' . $tenantSlug . '/paciente/login';
+            $portalUrl = request()->getSchemeAndHttpHost() . '/customer/' . $tenantSlug . '/paciente/login';
 
             // Usa MailTenantService para respeitar configurações de SMTP do tenant
             // Nota: Para credenciais de login, sempre envia (não verifica notificações.send_email_to_patients)
@@ -385,7 +385,7 @@ class PatientController extends Controller
             $tenant = Tenant::current();
             $tenantName = $tenant?->trade_name ?? $tenant?->legal_name ?? 'Clínica';
             $tenantSlug = $tenant?->subdomain ?? 'tenant';
-            $portalUrl = request()->getSchemeAndHttpHost() . '/t/' . $tenantSlug . '/paciente/login';
+            $portalUrl = request()->getSchemeAndHttpHost() . '/customer/' . $tenantSlug . '/paciente/login';
 
             $message = "🔐 *Credenciais de Acesso ao Portal*\n\n";
             $message .= "Olá, {$patient->full_name}!\n\n";

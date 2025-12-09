@@ -193,17 +193,17 @@
                             @endif
 
                             <div class="mt-4 d-flex justify-content-center gap-3">
-                                <a href="{{ route('public.patient.identify', ['tenant' => $tenant->subdomain]) }}" class="btn btn-primary">
+                                <a href="{{ route('public.patient.identify', ['slug' => $tenant->subdomain]) }}" class="btn btn-primary">
                                     <i class="mdi mdi-calendar-plus me-2"></i>
                                     Novo Agendamento
                                 </a>
                                 @if(session('last_appointment_id'))
-                                    <a href="{{ route('public.appointment.success', ['tenant' => $tenant->subdomain, 'appointment_id' => session('last_appointment_id')]) }}" class="btn btn-light">
+                                    <a href="{{ route('public.appointment.success', ['slug' => $tenant->subdomain, 'appointment_id' => session('last_appointment_id')]) }}" class="btn btn-light">
                                         <i class="mdi mdi-arrow-left me-2"></i>
                                         Voltar
                                     </a>
                                 @else
-                                    <a href="{{ route('public.patient.identify', ['tenant' => $tenant->subdomain]) }}" class="btn btn-light">
+                                    <a href="{{ route('public.patient.identify', ['slug' => $tenant->subdomain]) }}" class="btn btn-light">
                                         <i class="mdi mdi-arrow-left me-2"></i>
                                         Voltar
                                     </a>

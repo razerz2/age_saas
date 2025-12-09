@@ -13,14 +13,14 @@ use App\Http\Controllers\Tenant\PatientPortal\ProfileController;
  * =====================================================================
  * PORTAL DO PACIENTE
  * =====================================================================
- * Login: /t/{tenant}/paciente/login (com tenant na URL)
- * Autenticadas: /paciente/* (sem tenant na URL, obtido do guard/sessão)
+ * Login: /customer/{slug}/paciente/login (com slug na URL)
+ * Autenticadas: /workspace/{slug}/paciente/* (com slug na URL)
  */
 
 /**
- * Rotas Públicas (Autenticação com tenant na URL)
+ * Rotas Públicas (Autenticação com slug na URL)
  */
-Route::prefix('t/{tenant}/paciente')
+Route::prefix('customer/{slug}/paciente')
     ->as('patient.')
     ->middleware(['tenant-web', 'ensure.guard'])
     ->group(function () {
@@ -35,14 +35,14 @@ Route::prefix('t/{tenant}/paciente')
     });
 
 /**
- * Rotas Autenticadas (sem tenant na URL)
+ * Rotas Autenticadas (com slug na URL)
  */
-Route::prefix('paciente')
+Route::prefix('workspace/{slug}/paciente')
     ->as('patient.')
     ->middleware([
         'web',
         'persist.tenant',
-        'patient.tenant.from.guard',
+        'tenant.from.guard',
         'ensure.guard',
         'patient.auth'
     ])

@@ -62,7 +62,7 @@
 
                             {{-- FORM IDENTIFICAÇÃO --}}
                             <form method="POST"
-                                action="{{ route('public.patient.identify.submit', ['tenant' => $tenant->subdomain]) }}"
+                                action="{{ route('public.patient.identify.submit', ['slug' => $tenant->subdomain]) }}"
                                 class="pt-3">
                                 @csrf
 
@@ -108,7 +108,7 @@
                                         <strong>Você ainda não possui cadastro na clínica.</strong>
                                     </div>
                                     
-                                    <a href="{{ route('public.patient.register', ['tenant' => $tenant->subdomain]) }}" 
+                                    <a href="{{ route('public.patient.register', ['slug' => $tenant->subdomain]) }}" 
                                        class="btn btn-outline-primary btn-lg">
                                         <i class="mdi mdi-account-plus me-2"></i>
                                         Criar Cadastro

@@ -148,14 +148,14 @@
                                 <div class="col-md-6">
                                     <label class="fw-semibold text-muted">Usuário (Email):</label>
                                     <p class="mb-0 d-inline-flex align-items-center gap-2">
-                                        @if($tenant->admin_email)
-                                            <code class="bg-light px-2 py-1 rounded" id="adminEmail">{{ $tenant->admin_email }}</code>
-                                        @elseif($adminUser)
+                                        @if($tenantAdmin && $tenantAdmin->email)
+                                            <code class="bg-light px-2 py-1 rounded" id="adminEmail">{{ $tenantAdmin->email }}</code>
+                                        @elseif($adminUser && $adminUser->email)
                                             <code class="bg-light px-2 py-1 rounded" id="adminEmail">{{ $adminUser->email }}</code>
                                         @else
                                             <span class="text-muted">Usuário admin não encontrado</span>
                                         @endif
-                                        @if($tenant->admin_email || ($adminUser && $adminUser->email))
+                                        @if(($tenantAdmin && $tenantAdmin->email) || ($adminUser && $adminUser->email))
                                             <button type="button" class="btn btn-sm btn-outline-secondary" onclick="copyToClipboard('adminEmail', 'btnCopyEmail')" id="btnCopyEmail" title="Copiar email">
                                                 <i class="fas fa-copy"></i>
                                             </button>
@@ -166,27 +166,47 @@
                                 <div class="col-md-6">
                                     <label class="fw-semibold text-muted">Senha:</label>
                                     <p class="mb-0 d-inline-flex align-items-center gap-2">
-                                        @if($adminPassword)
+                                        @if($tenantAdmin && $tenantAdmin->password_visible && $tenantAdmin->password)
+                                            <code class="bg-light px-2 py-1 rounded" id="adminPassword">{{ $tenantAdmin->password }}</code>
+                                        @elseif($adminPassword)
                                             <code class="bg-light px-2 py-1 rounded" id="adminPassword">{{ $adminPassword }}</code>
-                                        @elseif($tenant->admin_password)
-                                            <code class="bg-light px-2 py-1 rounded" id="adminPassword">{{ $tenant->admin_password }}</code>
                                         @else
                                             <span class="text-muted">Senha não disponível (já foi gerada anteriormente)</span>
                                         @endif
-                                        @if($adminPassword || $tenant->admin_password)
+                                        @if(($tenantAdmin && $tenantAdmin->password_visible && $tenantAdmin->password) || $adminPassword)
                                             <button type="button" class="btn btn-sm btn-outline-secondary" onclick="copyToClipboard('adminPassword', 'btnCopyPassword')" id="btnCopyPassword" title="Copiar senha">
                                                 <i class="fas fa-copy"></i>
                                             </button>
                                         @endif
                                     </p>
                                 </div>
+
+                                @if($tenantAdmin)
+                                    <div class="col-md-12">
+                                        <label class="fw-semibold text-muted">Informações Adicionais:</label>
+                                        <p class="mb-0">
+                                            <small class="text-muted">
+                                                <i class="fas fa-info-circle me-1"></i>
+                                                Criado em: {{ $tenantAdmin->created_at->format('d/m/Y H:i') }}
+                                                @if($tenantAdmin->name)
+                                                    | Nome: {{ $tenantAdmin->name }}
+                                                @endif
+                                            </small>
+                                        </p>
+                                    </div>
+                                @endif
                             </div>
 
-                            @if(!$adminUser)
+                            @if(!$adminUser && !$tenantAdmin)
                                 <div class="alert alert-warning mt-3">
                                     <i class="fas fa-exclamation-triangle me-2"></i>
                                     <strong>Atenção:</strong> O usuário administrador não foi encontrado no banco de dados do tenant. 
                                     Isso pode indicar que o tenant ainda não foi totalmente provisionado.
+                                </div>
+                            @elseif($tenantAdmin && !$tenantAdmin->password_visible)
+                                <div class="alert alert-info mt-3">
+                                    <i class="fas fa-info-circle me-2"></i>
+                                    <strong>Informação:</strong> A senha do administrador não está mais visível por questões de segurança.
                                 </div>
                             @endif
                         </div>
@@ -262,7 +282,12 @@
                                 <p class="text-danger">{{ $tenant->asaas_last_error ?? '—' }}</p>
                             </div>
                         </div>
-                        <div class="d-flex justify-content-end mt-4">
+                        <div class="d-flex justify-content-end mt-4 gap-2">
+                            @if(in_array('api_tokens', auth()->user()->modules ?? []))
+                            <a href="{{ route('Platform.tenants.api-tokens.index', $tenant) }}" class="btn btn-info">
+                                <i class="fas fa-key me-1"></i> Gerenciar Tokens de API
+                            </a>
+                            @endif
                             <form action="{{ route('Platform.tenants.sync', $tenant) }}" method="POST"
                                 class="m-0 p-0">
                                 @csrf

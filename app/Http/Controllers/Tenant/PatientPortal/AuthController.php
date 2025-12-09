@@ -10,17 +10,18 @@ use App\Models\Tenant\PatientLogin;
 
 class AuthController extends Controller
 {
-    public function showLoginForm($tenant)
+    public function showLoginForm($slug)
     {
         // Verifica se já está autenticado
         if (Auth::guard('patient')->check()) {
-            return redirect()->route('patient.dashboard');
+            $tenantSlug = tenant()->subdomain ?? $slug;
+            return redirect()->route('patient.dashboard', ['slug' => $tenantSlug]);
         }
 
         return view('tenant.patient_portal.auth.login', compact('tenant'));
     }
 
-    public function login(Request $request, $tenant)
+    public function login(Request $request, $slug)
     {
         $credentials = $request->validate([
             'email' => 'required|email',
@@ -60,7 +61,7 @@ class AuthController extends Controller
 
             $request->session()->regenerate();
 
-            return redirect()->route('patient.dashboard');
+            return redirect()->route('patient.dashboard', ['slug' => $tenantModel->subdomain]);
         }
 
         return back()->withErrors(['email' => 'Credenciais inválidas.'])->withInput();
@@ -75,19 +76,21 @@ class AuthController extends Controller
         $request->session()->regenerateToken();
 
         if ($tenantSlug) {
-            return redirect()->route('patient.login', ['tenant' => $tenantSlug]);
+            return redirect()->route('patient.login', ['slug' => $tenantSlug]);
         }
         
         return redirect('/');
     }
 
-    public function showForgotPasswordForm($tenant)
+    public function showForgotPasswordForm($slug)
     {
+        $tenant = \App\Models\Platform\Tenant::where('subdomain', $slug)->first();
         return view('tenant.patient_portal.auth.forgot-password', compact('tenant'));
     }
 
-    public function showResetPasswordForm($tenant, $token)
+    public function showResetPasswordForm($slug, $token)
     {
+        $tenant = \App\Models\Platform\Tenant::where('subdomain', $slug)->first();
         return view('tenant.patient_portal.auth.reset-password', ['token' => $token, 'tenant' => $tenant]);
     }
 }

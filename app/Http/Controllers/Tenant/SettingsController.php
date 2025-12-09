@@ -7,6 +7,8 @@ use App\Models\Tenant\TenantSetting;
 use App\Models\Tenant\Integrations;
 use App\Models\Platform\Tenant;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class SettingsController extends Controller
 {
@@ -69,6 +71,10 @@ class SettingsController extends Controller
             'professional.label_singular' => TenantSetting::get('professional.label_singular', ''),
             'professional.label_plural' => TenantSetting::get('professional.label_plural', ''),
             'professional.registration_label' => TenantSetting::get('professional.registration_label', ''),
+            
+            // Aparência
+            'appearance.logo' => TenantSetting::get('appearance.logo', ''),
+            'appearance.favicon' => TenantSetting::get('appearance.favicon', ''),
         ];
 
         // Buscar integrações ativas
@@ -101,7 +107,7 @@ class SettingsController extends Controller
         $publicBookingUrl = null;
         
         if ($currentTenant) {
-            $publicBookingUrl = url('/t/' . $currentTenant->subdomain . '/agendamento/criar');
+            $publicBookingUrl = url('/customer/' . $currentTenant->subdomain . '/agendamento/criar');
         }
 
         return view('tenant.settings.index', compact('settings', 'integrations', 'hasGoogleCalendarIntegration', 'googleCalendarIntegration', 'publicBookingUrl'));
@@ -118,7 +124,7 @@ class SettingsController extends Controller
         $publicBookingUrl = null;
         
         if ($currentTenant) {
-            $publicBookingUrl = url('/t/' . $currentTenant->subdomain . '/agendamento/criar');
+            $publicBookingUrl = url('/customer/' . $currentTenant->subdomain . '/agendamento/criar');
         }
 
         return view('tenant.settings.public-booking-link', compact('publicBookingUrl'));
@@ -385,6 +391,80 @@ class SettingsController extends Controller
 
         return redirect()->route('tenant.settings.index')
             ->with('success', 'Configurações de profissionais atualizadas com sucesso.');
+    }
+
+    /**
+     * Atualiza as configurações de aparência (logo e favicon)
+     */
+    public function updateAppearance(Request $request)
+    {
+        $request->validate([
+            'logo' => 'nullable|image|mimes:jpeg,jpg,png,gif,svg|max:2048',
+            'favicon' => 'nullable|image|mimes:jpeg,jpg,png,ico,svg|max:1024',
+            'remove_logo' => 'nullable|boolean',
+            'remove_favicon' => 'nullable|boolean',
+        ]);
+
+        // Obter tenant atual para criar diretório específico
+        $currentTenant = Tenant::current();
+        $tenantId = $currentTenant ? $currentTenant->id : 'default';
+        $storagePath = 'tenant/' . $tenantId;
+        
+        // Garantir que o diretório existe
+        if (!Storage::disk('public')->exists($storagePath)) {
+            Storage::disk('public')->makeDirectory($storagePath, 0755, true);
+        }
+
+        // Processar logo
+        if ($request->has('remove_logo') && $request->remove_logo) {
+            // Remover logo atual
+            $currentLogo = TenantSetting::get('appearance.logo');
+            if ($currentLogo && Storage::disk('public')->exists($currentLogo)) {
+                Storage::disk('public')->delete($currentLogo);
+            }
+            TenantSetting::set('appearance.logo', '');
+        } elseif ($request->hasFile('logo')) {
+            // Remover logo anterior se existir
+            $currentLogo = TenantSetting::get('appearance.logo');
+            if ($currentLogo && Storage::disk('public')->exists($currentLogo)) {
+                Storage::disk('public')->delete($currentLogo);
+            }
+
+            // Fazer upload do novo logo
+            $file = $request->file('logo');
+            $filename = 'logo_' . time() . '_' . Str::random(10) . '.' . $file->getClientOriginalExtension();
+            $path = $file->storeAs($storagePath, $filename, 'public');
+            
+            TenantSetting::set('appearance.logo', $path);
+        }
+
+        // Processar favicon
+        if ($request->has('remove_favicon') && $request->remove_favicon) {
+            // Remover favicon atual
+            $currentFavicon = TenantSetting::get('appearance.favicon');
+            if ($currentFavicon && Storage::disk('public')->exists($currentFavicon)) {
+                Storage::disk('public')->delete($currentFavicon);
+            }
+            TenantSetting::set('appearance.favicon', '');
+        } elseif ($request->hasFile('favicon')) {
+            // Remover favicon anterior se existir
+            $currentFavicon = TenantSetting::get('appearance.favicon');
+            if ($currentFavicon && Storage::disk('public')->exists($currentFavicon)) {
+                Storage::disk('public')->delete($currentFavicon);
+            }
+
+            // Fazer upload do novo favicon
+            $file = $request->file('favicon');
+            $filename = 'favicon_' . time() . '_' . Str::random(10) . '.' . $file->getClientOriginalExtension();
+            $path = $file->storeAs($storagePath, $filename, 'public');
+            
+            TenantSetting::set('appearance.favicon', $path);
+        }
+
+        // Redirecionar para a página de configurações mantendo o hash na URL
+        $redirectUrl = route('tenant.settings.index') . '#appearance';
+        return redirect($redirectUrl)
+            ->with('success', 'Configurações de aparência atualizadas com sucesso.');
     }
 }
 

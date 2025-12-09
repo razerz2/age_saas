@@ -43,7 +43,7 @@ return [
         'tenant' => [
             'driver' => 'session',
             'provider' => 'tenant_users',
-            'login' => '/t/{tenant}/login',
+            'login' => '/customer/{slug}/login',
         ],
         'patient' => [
             'driver' => 'session',

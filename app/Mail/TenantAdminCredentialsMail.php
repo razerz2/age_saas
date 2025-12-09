@@ -2,6 +2,7 @@
 
 namespace App\Mail;
 
+use App\Helpers\EmailLayoutHelper;
 use App\Models\Platform\Tenant;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
@@ -44,8 +45,16 @@ class TenantAdminCredentialsMail extends Mailable
      */
     public function content(): Content
     {
+        // Renderiza a view e aplica o layout
+        $html = EmailLayoutHelper::renderViewContent('emails.tenant-admin-credentials', [
+            'tenant' => $this->tenant,
+            'loginUrl' => $this->loginUrl,
+            'adminEmail' => $this->adminEmail,
+            'adminPassword' => $this->adminPassword,
+        ]);
+
         return new Content(
-            view: 'emails.tenant-admin-credentials',
+            htmlString: $html,
         );
     }
 

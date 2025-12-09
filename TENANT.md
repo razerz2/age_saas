@@ -201,12 +201,40 @@ GET  /t/{tenant}/formulario/{form}/resposta/{response}/sucesso   # Página de su
 /tenant/atendimento/{appointment}/formulario-resposta # Buscar resposta do formulário
 /tenant/reports                       # Página inicial de relatórios
 /tenant/reports/appointments          # Relatório de agendamentos
+/tenant/reports/appointments/data     # POST: Dados do relatório de agendamentos (AJAX)
+/tenant/reports/appointments/export/excel # Exportar relatório de agendamentos (Excel)
+/tenant/reports/appointments/export/pdf   # Exportar relatório de agendamentos (PDF)
+/tenant/reports/appointments/export/csv  # Exportar relatório de agendamentos (CSV)
 /tenant/reports/patients              # Relatório de pacientes
+/tenant/reports/patients/data         # POST: Dados do relatório de pacientes (AJAX)
+/tenant/reports/patients/export/excel # Exportar relatório de pacientes (Excel)
+/tenant/reports/patients/export/pdf   # Exportar relatório de pacientes (PDF)
+/tenant/reports/patients/export/csv  # Exportar relatório de pacientes (CSV)
 /tenant/reports/doctors               # Relatório de médicos
+/tenant/reports/doctors/data          # POST: Dados do relatório de médicos (AJAX)
+/tenant/reports/doctors/export/excel  # Exportar relatório de médicos (Excel)
+/tenant/reports/doctors/export/pdf    # Exportar relatório de médicos (PDF)
+/tenant/reports/doctors/export/csv   # Exportar relatório de médicos (CSV)
 /tenant/reports/recurring             # Relatório de recorrências
+/tenant/reports/recurring/data        # POST: Dados do relatório de recorrências (AJAX)
+/tenant/reports/recurring/export/excel # Exportar relatório de recorrências (Excel)
+/tenant/reports/recurring/export/pdf  # Exportar relatório de recorrências (PDF)
+/tenant/reports/recurring/export/csv # Exportar relatório de recorrências (CSV)
 /tenant/reports/forms                 # Relatório de formulários
+/tenant/reports/forms/data            # POST: Dados do relatório de formulários (AJAX)
+/tenant/reports/forms/export/excel    # Exportar relatório de formulários (Excel)
+/tenant/reports/forms/export/pdf      # Exportar relatório de formulários (PDF)
+/tenant/reports/forms/export/csv      # Exportar relatório de formulários (CSV)
 /tenant/reports/portal                # Relatório do portal do paciente
+/tenant/reports/portal/data           # POST: Dados do relatório do portal (AJAX)
+/tenant/reports/portal/export/excel   # Exportar relatório do portal (Excel)
+/tenant/reports/portal/export/pdf     # Exportar relatório do portal (PDF)
+/tenant/reports/portal/export/csv     # Exportar relatório do portal (CSV)
 /tenant/reports/notifications         # Relatório de notificações
+/tenant/reports/notifications/data    # POST: Dados do relatório de notificações (AJAX)
+/tenant/reports/notifications/export/excel # Exportar relatório de notificações (Excel)
+/tenant/reports/notifications/export/pdf   # Exportar relatório de notificações (PDF)
+/tenant/reports/notifications/export/csv  # Exportar relatório de notificações (CSV)
 /tenant/appointments/online/{id}     # Visualizar/configurar agendamento online
 /tenant/appointments/online/{id}/save # Salvar instruções do agendamento online
 /tenant/appointments/online/{id}/send-email # Enviar instruções por email
@@ -221,6 +249,13 @@ GET  /t/{tenant}/formulario/{form}/resposta/{response}/sucesso   # Página de su
 # APIs para agendamentos recorrentes
 /tenant/api/doctors/{doctorId}/business-hours
 /tenant/api/doctors/{doctorId}/available-slots-recurring
+
+# Rotas de relatórios (com exportação)
+/tenant/reports/appointments/data          # POST: Dados do relatório (AJAX)
+/tenant/reports/appointments/export/excel  # Exportar Excel
+/tenant/reports/appointments/export/pdf   # Exportar PDF
+/tenant/reports/appointments/export/csv   # Exportar CSV
+# (mesmo padrão para: patients, doctors, recurring, forms, portal, notifications)
 
 # Rotas especiais
 /tenant/profile                      # GET: Editar perfil do usuário logado
@@ -247,6 +282,15 @@ GET  /t/{tenant}/formulario/{form}/resposta/{response}/sucesso   # Página de su
 /tenant/questions/{id}/options        # Adicionar opção à pergunta
 /tenant/options/{id}                  # Atualizar/deletar opção
 /tenant/doctors/{doctorId}/specialties # API: Especialidades do médico
+/tenant/doctor-settings                # Configurações do médico (página única)
+/tenant/doctor-settings/calendar       # PUT: Atualizar calendário do médico
+/tenant/doctor-settings/business-hour  # POST: Criar horário comercial
+/tenant/doctor-settings/business-hour/{id} # PUT: Atualizar horário comercial
+/tenant/doctor-settings/business-hour/{id} # DELETE: Deletar horário comercial
+/tenant/doctor-settings/appointment-type # POST: Criar tipo de consulta
+/tenant/doctor-settings/appointment-type/{id} # PUT: Atualizar tipo de consulta
+/tenant/doctor-settings/appointment-type/{id} # DELETE: Deletar tipo de consulta
+/tenant/agendamento-publico            # Link público de agendamento
 /tenant/forms/{form_id}/responses/create # Criar resposta de formulário
 /tenant/forms/{form_id}/responses     # Salvar resposta de formulário
 /tenant/responses/{id}/answer         # Adicionar resposta individual
@@ -256,6 +300,12 @@ GET  /t/{tenant}/formulario/{form}/resposta/{response}/sucesso   # Página de su
 /tenant/integrations/google/{doctor}/disconnect # Desconectar conta Google
 /tenant/integrations/google/{doctor}/status # Status da integração (JSON)
 /tenant/integrations/google/api/{doctor}/events # Eventos do Google Calendar (JSON)
+/tenant/integrations/apple             # Lista médicos e status de integração Apple Calendar
+/tenant/integrations/apple/{doctor}/connect # GET: Formulário de conexão Apple Calendar
+/tenant/integrations/apple/{doctor}/connect # POST: Conectar conta Apple do médico
+/tenant/integrations/apple/{doctor}/disconnect # Desconectar conta Apple
+/tenant/integrations/apple/{doctor}/status # Status da integração (JSON)
+/tenant/integrations/apple/api/{doctor}/events # Eventos do Apple Calendar (JSON)
 /tenant/notifications/json             # API: Notificações em JSON
 /tenant/notifications/{id}/read      # Marcar notificação como lida
 /tenant/notifications/mark-all-read   # Marcar todas como lidas
@@ -310,6 +360,7 @@ GET  /paciente/logout                         # Logout (GET)
 | `IntegrationController` | Integrações (Google Calendar, etc.) | `/tenant/integrations` |
 | `OAuthAccountController` | Contas OAuth conectadas | `/tenant/oauth-accounts` |
 | `Integrations/GoogleCalendarController` | Integração Google Calendar | `/tenant/integrations/google` |
+| `Integrations/AppleCalendarController` | Integração Apple Calendar (iCloud) | `/tenant/integrations/apple` |
 | `CalendarSyncStateController` | Estado de sincronização de calendário | `/tenant/calendar-sync` |
 | `SettingsController` | Configurações do tenant | `/tenant/settings` |
 | `RecurringAppointmentController` | Agendamentos recorrentes | `/tenant/agendamentos/recorrentes` |
@@ -326,6 +377,15 @@ GET  /paciente/logout                         # Logout (GET)
 | `PatientPortal/AppointmentController` | Agendamentos do portal do paciente | `/paciente/agendamentos` |
 | `PatientPortal/NotificationController` | Notificações do portal do paciente | `/paciente/notificacoes` |
 | `PatientPortal/ProfileController` | Perfil do portal do paciente | `/paciente/perfil` |
+| `DoctorSettingsController` | Configurações do médico (página única) | `/tenant/doctor-settings` |
+| `Reports/ReportController` | Página inicial de relatórios | `/tenant/reports` |
+| `Reports/AppointmentReportController` | Relatório de agendamentos | `/tenant/reports/appointments` |
+| `Reports/PatientReportController` | Relatório de pacientes | `/tenant/reports/patients` |
+| `Reports/DoctorReportController` | Relatório de médicos | `/tenant/reports/doctors` |
+| `Reports/RecurringReportController` | Relatório de recorrências | `/tenant/reports/recurring` |
+| `Reports/FormReportController` | Relatório de formulários | `/tenant/reports/forms` |
+| `Reports/PortalReportController` | Relatório do portal do paciente | `/tenant/reports/portal` |
+| `Reports/NotificationReportController` | Relatório de notificações | `/tenant/reports/notifications` |
 
 ---
 
@@ -361,6 +421,7 @@ Armazenados no **banco do tenant** (conexão `tenant`):
 | `Notification` | `notifications` | Notificações do tenant |
 | `TenantSetting` | `tenant_settings` | Configurações específicas do tenant |
 | `GoogleCalendarToken` | `google_calendar_tokens` | Tokens OAuth do Google Calendar por médico |
+| `AppleCalendarToken` | `apple_calendar_tokens` | Tokens CalDAV do Apple Calendar (iCloud) por médico |
 | `OnlineAppointmentInstruction` | `online_appointment_instructions` | Instruções para consultas online |
 | `Module` | - | Módulos de acesso (helper) |
 
@@ -375,7 +436,8 @@ Armazenados no **banco do tenant** (conexão `tenant`):
 - `Notification` usa UUID como chave primária e possui relacionamento polimórfico
 - `TenantSetting` armazena configurações específicas do tenant em formato chave-valor
 - `GoogleCalendarToken` armazena tokens OAuth do Google Calendar vinculados a médicos (`doctor_id`)
-- `Doctor` possui relacionamento com `GoogleCalendarToken` para integração com Google Calendar
+- `AppleCalendarToken` armazena credenciais CalDAV do Apple Calendar (iCloud) vinculadas a médicos (`doctor_id`)
+- `Doctor` possui relacionamentos com `GoogleCalendarToken` e `AppleCalendarToken` para integrações de calendário
 - `Appointment` possui campo `appointment_mode` (presencial/online) e relacionamento com `OnlineAppointmentInstruction`
 - `OnlineAppointmentInstruction` armazena instruções para consultas online (link de reunião, aplicativo, instruções)
 - `RecurringAppointment` também possui campo `appointment_mode` para definir se a recorrência é presencial ou online
@@ -454,6 +516,15 @@ Armazenados no **banco do tenant** (conexão `tenant`):
 1. Acesse `/tenant/business-hours`
 2. Configure horários por dia da semana
 3. Defina intervalos de tempo disponíveis
+
+**Configurações do Médico (Página Única):**
+- Para médicos ou usuários com acesso a apenas um médico, existe uma página única de configurações:
+- Acesse `/tenant/doctor-settings`
+- Nesta página você pode:
+  - Atualizar calendário do médico
+  - Gerenciar horários comerciais (criar, editar, deletar)
+  - Gerenciar tipos de consulta (criar, editar, deletar)
+- Esta página facilita o gerenciamento quando há apenas um médico no contexto
 
 ### 4. Tipos de Consulta
 
@@ -622,6 +693,7 @@ O módulo de **Atendimento Médico** permite realizar sessões de atendimento do
    - Paciente
    - Médico
    - Tipo de consulta
+   - **Modo de atendimento** (presencial/online) - se habilitado nas configurações
    - Data de início
    - Tipo de término (data final ou número de sessões)
    - Regras de recorrência (diária, semanal, mensal, etc.)
@@ -632,19 +704,6 @@ O módulo de **Atendimento Médico** permite realizar sessões de atendimento do
 - Edite regras de recorrência
 - Cancele agendamentos recorrentes
 - Visualize agendamentos gerados a partir da recorrência
-
-**Criar Agendamento Recorrente:**
-1. Acesse `/tenant/agendamentos/recorrentes`
-2. Clique em "Criar Agendamento Recorrente"
-3. Preencha:
-   - Paciente
-   - Médico
-   - Tipo de consulta
-   - **Modo de atendimento** (presencial/online) - se habilitado nas configurações
-   - Data de início
-   - Tipo de término (data final ou número de sessões)
-   - Regras de recorrência (diária, semanal, mensal, etc.)
-4. O sistema gerará automaticamente os agendamentos conforme as regras
 
 **Importante:**
 - Agendamentos recorrentes também suportam modo online/presencial
@@ -703,6 +762,8 @@ O sistema possui um módulo completo de **Relatórios** que permite gerar análi
   - **Excel** (`.xlsx`): Formato adequado para análises e planilhas
   - **PDF** (`.pdf`): Formato adequado para impressão e arquivamento
   - **CSV** (`.csv`): Formato adequado para importação em outros sistemas
+- As exportações são geradas dinamicamente com base nos filtros aplicados
+- Cada relatório possui rotas específicas para exportação: `/tenant/reports/{tipo}/export/{formato}`
 
 **Controle de Acesso:**
 - Requer módulo `reports` habilitado
@@ -771,6 +832,11 @@ O sistema aplica filtros automáticos baseados no role em todas as listagens:
 - Médicos (role `doctor`) só veem seus próprios dados, independente de permissões
 
 ### 14. Integrações
+
+O sistema suporta integrações com calendários externos para sincronização automática de agendamentos:
+
+- **Google Calendar**: Sincronização via Google Calendar API (OAuth 2.0)
+- **Apple Calendar (iCloud)**: Sincronização via protocolo CalDAV
 
 #### Google Calendar
 
@@ -920,6 +986,76 @@ A integração com Google Calendar permite sincronizar automaticamente os agenda
 - Tokens expirados são renovados automaticamente usando o `refresh_token` quando necessário
 - Agendamentos individuais gerados por recorrências **NÃO** são sincronizados separadamente (evita duplicação)
 - Agendamentos recorrentes são sincronizados como eventos recorrentes (RRULE) no Google Calendar
+
+#### Apple Calendar (iCloud)
+
+A integração com Apple Calendar permite sincronizar automaticamente os agendamentos com o calendário iCloud de cada médico usando o protocolo CalDAV.
+
+**Características:**
+- ✅ Cada médico pode conectar sua própria conta do iCloud
+- ✅ Sincronização automática ao criar, editar ou excluir agendamentos
+- ✅ Protocolo CalDAV padrão para comunicação com iCloud
+- ✅ Formato iCalendar (.ics) para eventos
+- ✅ Credenciais armazenadas de forma segura (senha criptografada)
+
+**Configuração:**
+
+1. **Conectar Conta do Médico:**
+   - Acesse `/tenant/integrations/apple`
+   - Clique em "Conectar" para o médico desejado
+   - Preencha o formulário:
+     - **E-mail**: Seu endereço de e-mail do iCloud
+     - **Senha**: Senha do iCloud OU Senha de App Específica (recomendado)
+     - **URL do Servidor**: (Opcional) Deixe em branco para usar `https://caldav.icloud.com`
+     - **URL do Calendário**: (Opcional) Deixe em branco para descobrir automaticamente
+   - O sistema tentará descobrir os calendários disponíveis automaticamente
+   - Se bem-sucedido, o token será salvo vinculado ao médico
+
+2. **Sincronização Automática:**
+   - ✅ **Totalmente automática** via Observers - sincroniza TODOS os agendamentos criados, editados ou excluídos
+   - **Agendamentos Normais:** Sincronizados via `AppointmentObserver` quando criados, editados, cancelados ou deletados
+   - **Agendamentos Recorrentes:** Sincronizados via `RecurringAppointmentObserver` quando criados, editados, cancelados ou deletados
+   - Ao criar um agendamento, o evento é criado no Apple Calendar do médico
+   - **Ao editar um agendamento:** O evento antigo é deletado e um novo é criado com as informações atualizadas
+   - **Ao cancelar um agendamento:** O evento é removido do Apple Calendar do médico
+   - A sincronização só ocorre se o médico tiver token Apple configurado
+   - O sistema busca o token através do `doctor_id` do calendário do agendamento
+
+3. **Desconectar:**
+   - Acesse `/tenant/integrations/apple`
+   - Clique em "Desconectar" para o médico desejado
+   - O token será removido do banco de dados
+   - **Importante:** Os eventos já criados no Apple Calendar **não** serão removidos automaticamente ao desconectar
+
+**Rotas Disponíveis:**
+
+**Rotas Autenticadas (dentro do tenant):**
+- `GET /tenant/integrations/apple` - Lista médicos e status de integração (requer módulo `integrations`)
+- `GET /tenant/integrations/apple/{doctor}/connect` - Mostra formulário de conexão (requer módulo `integrations`)
+- `POST /tenant/integrations/apple/{doctor}/connect` - Conecta conta Apple (requer módulo `integrations`)
+- `DELETE /tenant/integrations/apple/{doctor}/disconnect` - Remove integração (requer módulo `integrations`)
+- `GET /tenant/integrations/apple/{doctor}/status` - Status da integração (JSON, requer módulo `integrations`)
+- `GET /tenant/integrations/apple/api/{doctor}/events` - Eventos do Apple Calendar (JSON, requer módulo `integrations`)
+
+**Estrutura de Dados:**
+- Tabela `apple_calendar_tokens`: Armazena credenciais CalDAV por médico (vinculado a `doctor_id`)
+  - Campos: `id` (UUID), `doctor_id` (UUID, FK para `doctors`), `username` (email iCloud), `password` (criptografado), `server_url` (padrão: `https://caldav.icloud.com`), `calendar_url` (nullable), `timestamps`
+  - Relacionamento: `belongsTo(Doctor::class)`
+- Campo `appointments.apple_event_id`: UID do evento no Apple Calendar para agendamentos normais (text, nullable)
+- Cada token é único por médico e não é compartilhado entre médicos
+
+**Serviços e Observers:**
+- `AppleCalendarService`: Serviço principal que gerencia todas as operações com Apple Calendar via CalDAV
+- `AppointmentObserver`: Observer que sincroniza agendamentos normais com o Apple Calendar
+- `RecurringAppointmentObserver`: Observer que sincroniza agendamentos recorrentes com o Apple Calendar
+
+**Importante:**
+- Os tokens são vinculados ao médico (`doctor_id`), não ao usuário
+- Cada médico deve conectar sua própria conta iCloud individualmente
+- Recomenda-se usar uma **Senha de App Específica** ao invés da senha normal do iCloud (maior segurança e evita problemas com autenticação de dois fatores)
+- A sincronização busca o token através do relacionamento `calendar -> doctor -> appleCalendarToken`
+- Agendamentos individuais gerados por recorrências **NÃO** são sincronizados separadamente (evita duplicação)
+- Para mais detalhes, consulte: [docs/INTEGRACAO_APPLE_CALENDAR.md](docs/INTEGRACAO_APPLE_CALENDAR.md)
 
 ### 15. Notificações do Tenant
 
@@ -1218,10 +1354,16 @@ Executadas automaticamente quando um tenant é criado via `TenantProvisioner`:
 24. `create_online_appointment_instructions_table` - Tabela de instruções para consultas online
 25. `add_default_appointment_mode_setting` - Configuração padrão de modo de atendimento
 26. `add_customization_fields_to_doctors_table` - Campos de personalização do médico (labels, signature, registration)
+27. `add_apple_calendar_fields_to_appointments_table` - Campo `apple_event_id` em agendamentos
+28. `create_apple_calendar_tokens_table` - Tabela de tokens CalDAV do Apple Calendar
 
 **Nota sobre campos do Google Calendar:**
 - O campo `google_event_id` já está incluído na migração `create_appointments_table`
 - O campo `google_recurring_event_ids` já está incluído na migração `create_recurring_appointments_table`
+
+**Nota sobre campos do Apple Calendar:**
+- O campo `apple_event_id` foi adicionado via migração `add_apple_calendar_fields_to_appointments_table`
+- A tabela `apple_calendar_tokens` foi criada para armazenar credenciais CalDAV do Apple Calendar
 
 **Nota sobre agendamentos online:**
 - O campo `appointment_mode` foi adicionado via migração `add_appointment_mode_to_appointments`
@@ -1310,10 +1452,10 @@ web middleware group
 
 **Última atualização:** 2025-12-03
 
-**Nota:** Esta documentação foi revisada e atualizada para refletir todas as funcionalidades atuais, incluindo:
+**Nota:** Esta documentação foi completamente revisada e atualizada para refletir todas as funcionalidades atuais, incluindo:
 - Portal do Paciente completo
 - Integração Google Calendar com sincronização automática
-- Integração Apple Calendar (iCloud) com protocolo CalDAV
+- Integração Apple Calendar (iCloud) com protocolo CalDAV (seção completa adicionada)
 - Agendamentos recorrentes
 - Permissões de médicos para usuários
 - Sistema de notificações
@@ -1327,6 +1469,11 @@ web middleware group
 - **Campos de Personalização** no Doctor (labels, signature, registration)
 - **Configurações de Profissionais** (rótulos globais personalizados)
 - Lista completa e atualizada de módulos disponíveis
+- Rotas completas de relatórios com exportação (Excel, PDF, CSV)
+- Rotas de integração Apple Calendar documentadas
+- Rotas de configurações do médico (doctor-settings) documentadas
+- Model AppleCalendarToken documentado
+- Controller AppleCalendarController documentado
 
 ---
 

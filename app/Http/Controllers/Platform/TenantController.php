@@ -9,6 +9,7 @@ use Illuminate\Support\Str;
 use App\Http\Controllers\Controller;
 use App\Models\Platform\Tenant;
 use App\Models\Platform\TenantLocalizacao;
+use App\Models\Platform\TenantAdmin;
 use App\Models\Platform\Pais;
 use App\Models\Platform\Estado;
 use App\Models\Platform\Cidade;
@@ -36,15 +37,16 @@ class TenantController extends Controller
 
     public function show($id)
     {
-        $tenant = Tenant::with('localizacao.pais', 'localizacao.estado', 'localizacao.cidade')->findOrFail($id);
+        $tenant = Tenant::with('localizacao.pais', 'localizacao.estado', 'localizacao.cidade', 'admin')->findOrFail($id);
         
         // Buscar informações do usuário admin do tenant
         $adminUser = null;
         
-        // 💾 Buscar informações do admin do banco de dados (ou da sessão como fallback)
-        $adminPassword = $tenant->admin_password ?? session('tenant_admin_password', null);
-        $adminEmail = $tenant->admin_email;
-        $loginUrl = $tenant->admin_login_url ?? url("/t/{$tenant->subdomain}/login");
+        // 💾 Buscar informações do admin da tabela tenant_admins
+        $tenantAdmin = $tenant->admin;
+        $adminPassword = $tenantAdmin?->password ?? session('tenant_admin_password', null);
+        $adminEmail = $tenantAdmin?->email;
+        $loginUrl = $tenantAdmin?->login_url ?? url("/customer/{$tenant->subdomain}/login");
         
         try {
             // Configurar conexão do tenant temporariamente
@@ -80,7 +82,7 @@ class TenantController extends Controller
             ]);
         }
         
-        return view('platform.tenants.show', compact('tenant', 'adminUser', 'adminPassword', 'loginUrl'));
+        return view('platform.tenants.show', compact('tenant', 'adminUser', 'adminPassword', 'loginUrl', 'tenantAdmin'));
     }
 
     public function store(TenantRequest $request)
@@ -128,27 +130,24 @@ class TenantController extends Controller
             $adminEmail = "admin@{$sanitizedSubdomain}.com";
             $loginUrl = url("/t/{$tenant->subdomain}/login");
 
-            // 💾 Salvar informações do admin no banco de dados usando DB direto para garantir persistência
-            // Usar conexão pgsql (banco central) onde a tabela tenants está
-            DB::connection('pgsql')
-                ->table('tenants')
-                ->where('id', $tenant->id)
-                ->update([
-                    'admin_login_url' => $loginUrl,
-                    'admin_email' => $adminEmail,
-                    'admin_password' => $adminPassword,
-                    'updated_at' => now(),
-                ]);
+            // 💾 Salvar informações do admin na tabela tenant_admins
+            TenantAdmin::updateOrCreate(
+                ['tenant_id' => $tenant->id],
+                [
+                    'email' => $adminEmail,
+                    'password' => $adminPassword,
+                    'login_url' => $loginUrl,
+                    'name' => 'Administrador',
+                    'password_visible' => true,
+                ]
+            );
             
-            // Recarregar do banco para confirmar que foi salvo
-            $tenant->refresh();
-            
-            Log::info("💾 Informações do admin salvas no banco", [
+            Log::info("💾 Informações do admin salvas na tabela tenant_admins", [
                 'tenant_id' => $tenant->id,
-                'admin_email' => $tenant->admin_email,
-                'admin_password_saved' => !empty($tenant->admin_password),
-                'admin_password_length' => $tenant->admin_password ? strlen($tenant->admin_password) : 0,
-                'admin_login_url' => $tenant->admin_login_url,
+                'admin_email' => $adminEmail,
+                'admin_password_saved' => !empty($adminPassword),
+                'admin_password_length' => strlen($adminPassword),
+                'admin_login_url' => $loginUrl,
             ]);
 
             // 📧 Enviar email com credenciais se SMTP estiver configurado

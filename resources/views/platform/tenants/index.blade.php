@@ -86,7 +86,7 @@
                                                 <a title="Editar" href="{{ route('Platform.tenants.edit', $tenant->id) }}"
                                                     class="btn btn-sm btn-warning"> <i class="fa fa-edit"></i> </a>
                                                 <a title="Acessar Login do Tenant" 
-                                                    href="{{ route('tenant.login', ['tenant' => $tenant->subdomain]) }}"
+                                                    href="{{ route('tenant.login', ['slug' => $tenant->subdomain]) }}"
                                                     target="_blank"
                                                     class="btn btn-sm btn-success">
                                                     <i class="fas fa-sign-in-alt"></i>

@@ -20,33 +20,46 @@ Sistema SaaS (Software as a Service) de agendamento médico construído com Lara
 
 ### Área Platform (Administrativa)
 - ✅ Gerenciamento de tenants (clínicas)
+- ✅ **Pré-cadastro de novos tenants** (via landing page com pagamento)
 - ✅ Gestão de planos de assinatura
+- ✅ **Controle de regras de acesso por plano** (limites e funcionalidades)
 - ✅ Controle de assinaturas e renovações
 - ✅ Gerenciamento de faturas
 - ✅ Sistema de notificações
+- ✅ **Templates de notificação** configuráveis
 - ✅ Catálogo de especialidades médicas
 - ✅ Gestão de usuários administrativos
 - ✅ Configurações do sistema
 - ✅ Integração com gateway de pagamento (Asaas)
 - ✅ Envio de mensagens WhatsApp
 - ✅ Monitor de kiosk
+- ✅ **Landing page pública** com informações do sistema
 
 ### Área Tenant (Clínicas)
 - ✅ Dashboard com estatísticas
-- ✅ Gerenciamento de usuários
+- ✅ Gerenciamento de usuários com **sistema de roles** (admin, doctor, user)
+- ✅ **Controle de permissões** de médicos para usuários
 - ✅ Cadastro de médicos e especialidades
+- ✅ **Personalização de rótulos** de profissionais (labels, assinatura, registro)
 - ✅ Cadastro de pacientes
+- ✅ **Portal do paciente** (pacientes podem fazer login e gerenciar agendamentos)
 - ✅ Calendários de agendamento
 - ✅ Horários comerciais
 - ✅ Tipos de consulta
-- ✅ Agendamentos
+- ✅ Agendamentos (presencial e online)
+- ✅ **Agendamentos recorrentes** com regras de recorrência
+- ✅ **Agendamentos online** com instruções e links de reunião
+- ✅ **Atendimento Médico** (sessão de atendimento do dia)
 - ✅ Formulários personalizados
 - ✅ Respostas de formulários
 - ✅ Formulários públicos (pacientes respondem sem login)
 - ✅ Envio automático de links de formulários por email/WhatsApp
-- ✅ Integrações (Google Calendar, etc.)
+- ✅ Integrações (Google Calendar, Apple Calendar/iCloud)
 - ✅ Sincronização de calendário
 - ✅ Notificações configuráveis (email e WhatsApp por tenant)
+- ✅ **Relatórios completos** (agendamentos, pacientes, médicos, formulários, etc.)
+- ✅ **Exportação de relatórios** (Excel, PDF, CSV)
+- ✅ **Área pública de agendamento** (pacientes agendam sem login)
 
 ## 🛠 Tecnologias
 

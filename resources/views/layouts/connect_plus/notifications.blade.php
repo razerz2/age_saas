@@ -67,7 +67,7 @@
                     $icon = $typeIcons[$notification->type] ?? 'mdi-bell';
                 @endphp
                 
-                <a href="{{ route('tenant.notifications.show', $notification->id) }}" 
+                <a href="{{ workspace_route('tenant.notifications.show', ['id' => $notification->id]) }}" 
                    class="notification-item d-flex align-items-start text-decoration-none position-relative {{ $isNew ? 'notification-new' : '' }}"
                    data-notification-id="{{ $notification->id }}"
                    style="padding: 16px 20px; border-bottom: 1px solid #f0f0f0; transition: all 0.2s ease; background: {{ $isNew ? '#f8f9ff' : 'white' }}; text-decoration: none !important; color: inherit;">
@@ -124,7 +124,7 @@
         @if($notifications->count() > 0)
             <div class="notification-footer text-center" 
                  style="padding: 16px; background: #f8f9fa; border-top: 1px solid #e9ecef;">
-                <a href="{{ route('tenant.notifications.index') }}" 
+                <a href="{{ workspace_route('tenant.notifications.index') }}" 
                    class="text-decoration-none fw-semibold"
                    style="color: #667eea; font-size: 13px; transition: color 0.2s;">
                     <i class="mdi mdi-eye-outline me-1"></i>
@@ -242,7 +242,7 @@ $(document).ready(function() {
     // Função para atualizar notificações
     function loadNotifications() {
         $.ajax({
-            url: "{{ route('tenant.notifications.json') }}",
+            url: "{{ workspace_route('tenant.notifications.json') }}",
             type: "GET",
             dataType: "json",
             headers: {

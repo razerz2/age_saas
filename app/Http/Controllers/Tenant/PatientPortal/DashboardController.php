@@ -19,7 +19,7 @@ class DashboardController extends Controller
             Auth::guard('patient')->logout();
             
             if ($tenantSlug) {
-                return redirect()->route('patient.login', ['tenant' => $tenantSlug])
+                return redirect()->route('patient.login', ['slug' => $tenantSlug])
                     ->withErrors(['email' => 'Paciente não encontrado.']);
             }
             

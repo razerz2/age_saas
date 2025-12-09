@@ -9,6 +9,8 @@
     
     <meta name="description" content="@yield('description', 'Sistema completo de agendamentos para clínicas, psicólogos, odontologias e profissionais de saúde. Agende consultas presenciais e online, gerencie pacientes, médicos e muito mais.')">
     
+    @stack('meta')
+    
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=figtree:400,500,600,700&display=swap" rel="stylesheet" />
@@ -26,8 +28,7 @@
                 <!-- Logo -->
                 <div class="flex-shrink-0">
                     <a href="{{ route('landing.home') }}" class="flex items-center">
-                        <span class="text-2xl font-bold text-blue-600">🏥</span>
-                        <span class="ml-2 text-xl font-bold text-gray-900">SaaS Saúde</span>
+                        <img src="{{ asset('connect_plus/assets/images/logos/landing-page/AllSync-Logo-LP.png') }}" alt="AllSync Logo" class="h-10 object-contain" style="border: none; outline: none; box-shadow: none; background: transparent;">
                     </a>
                 </div>
                 
@@ -130,7 +131,6 @@
                 <div>
                     <h3 class="text-lg font-bold mb-4">Suporte</h3>
                     <ul class="space-y-2">
-                        <li><a href="#" class="text-gray-400 hover:text-white transition-colors">Documentação</a></li>
                         <li><a href="#" class="text-gray-400 hover:text-white transition-colors">FAQ</a></li>
                         <li><a href="{{ route('landing.contact') }}" class="text-gray-400 hover:text-white transition-colors">Fale Conosco</a></li>
                     </ul>

@@ -11,15 +11,16 @@ class EnsureCorrectGuard
 {
     public function handle(Request $request, Closure $next)
     {
-        $isTenantLogin = $request->segment(1) === 't';
-        $isTenantArea  = $request->segment(1) === 'tenant';
-        $isPatientPortal = $request->segment(1) === 'paciente';
+        $segment1 = $request->segment(1);
+        $isCustomerLogin = $segment1 === 'customer';
+        $isWorkspaceArea  = $segment1 === 'workspace';
+        $isPatientPortal = $segment1 === 'paciente';
 
         /**
-         * LOGIN TENANT
-         * /t/{tenant}/login
+         * LOGIN TENANT (ÁREA PÚBLICA)
+         * /customer/{slug}/login
          */
-        if ($isTenantLogin) {
+        if ($isCustomerLogin) {
 
             // Impede conflito com guard web
             if (Auth::guard('web')->check()) {
@@ -33,9 +34,9 @@ class EnsureCorrectGuard
 
         /**
          * PORTAL DO PACIENTE
-         * /paciente/...
+         * /workspace/{slug}/paciente/... ou /paciente/...
          */
-        if ($isPatientPortal) {
+        if ($isPatientPortal || ($isWorkspaceArea && $request->segment(2) === 'paciente')) {
 
             // Impede conflito com outros guards
             if (Auth::guard('web')->check()) {
@@ -52,9 +53,9 @@ class EnsureCorrectGuard
 
         /**
          * ÁREA AUTENTICADA
-         * /tenant/...
+         * /workspace/{slug}/...
          */
-        if ($isTenantArea) {
+        if ($isWorkspaceArea) {
 
             if (!Tenant::current()) {
                 return redirect('/')->withErrors(['tenant' => 'Tenant não carregado.']);

@@ -124,9 +124,15 @@
         {{-- Templates de Notificação --}}
         @if(in_array('notification_templates', auth()->user()->modules ?? []))
         <li class="sidebar-item">
-            <a class="sidebar-link" href="{{ route('Platform.notification-templates.index') }}" aria-expanded="false">
+            <a class="sidebar-link has-arrow" href="javascript:void(0)" aria-expanded="false">
                 <i class="fas fa-envelope"></i><span class="hide-menu"> Templates de Notificação </span>
             </a>
+            <ul aria-expanded="false" class="collapse first-level base-level-line">
+                <li class="sidebar-item"><a href="{{ route('Platform.notification-templates.index') }}" class="sidebar-link">
+                    <span class="hide-menu"><i class="fas fa-list-alt"></i> Templates</span></a></li>
+                <li class="sidebar-item"><a href="{{ route('Platform.email-layouts.index') }}" class="sidebar-link">
+                    <span class="hide-menu"><i class="fas fa-palette"></i> Layouts de Email</span></a></li>
+            </ul>
         </li>
         @endif
 
@@ -161,6 +167,7 @@
             </ul>
         </li>
         @endif
+
     </ul>
 </nav>
 <!-- End Sidebar navigation -->

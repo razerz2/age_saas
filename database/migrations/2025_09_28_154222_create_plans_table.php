@@ -9,6 +9,7 @@ return new class extends Migration {
         Schema::create('plans', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->string('name');
+            $table->text('description')->nullable();
             $table->enum('periodicity', ['monthly','yearly']);
             $table->integer('period_months')->default(1);
             $table->integer('price_cents')->unsigned();

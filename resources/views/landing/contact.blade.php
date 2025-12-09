@@ -180,8 +180,8 @@
                     </summary>
                     <p class="mt-4 text-gray-600">
                         O pré-cadastro é simples: preencha os dados da sua clínica, escolha um plano e realize o pagamento. 
-                        Após a confirmação do pagamento, o sistema cria automaticamente seu ambiente completo com banco de dados 
-                        isolado e usuário admin já configurado. Você receberá as credenciais por email.
+                        Após a confirmação do pagamento, o sistema cria automaticamente seu ambiente completo e isolado 
+                        com usuário administrador já configurado. Você receberá as credenciais por email.
                     </p>
                 </details>
                 

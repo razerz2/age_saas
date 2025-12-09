@@ -10,7 +10,7 @@
         <nav aria-label="breadcrumb">
             <ol class="breadcrumb">
                 <li class="breadcrumb-item">
-                    <a href="{{ route('tenant.dashboard') }}">Dashboard</a>
+                    <a href="{{ workspace_route('tenant.dashboard') }}">Dashboard</a>
                 </li>
                 <li class="breadcrumb-item active" aria-current="page">Calendários</li>
             </ol>
@@ -53,7 +53,7 @@
                                                 $user = auth('tenant')->user();
                                             @endphp
                                             @if ($user && $user->is_doctor)
-                                                <a href="{{ route('tenant.calendars.events', $calendar->id) }}" class="btn btn-primary btn-sm">Eventos</a>
+                                                <a href="{{ workspace_route('tenant.calendars.events', ['id' => $calendar->id]) }}" class="btn btn-primary btn-sm">Eventos</a>
                                             @endif
                                         </td>
                                     </tr>

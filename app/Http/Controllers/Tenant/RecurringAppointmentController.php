@@ -139,7 +139,7 @@ class RecurringAppointmentController extends Controller
                     ->withErrors(['rules' => 'Nenhuma regra válida foi criada. Verifique os dados informados.']);
             }
 
-            return redirect()->route('tenant.recurring-appointments.index')
+            return redirect()->route('tenant.recurring-appointments.index', ['slug' => tenant()->subdomain])
                 ->with('success', 'Agendamento recorrente criado com sucesso.');
                 
         } catch (\Illuminate\Validation\ValidationException $e) {
@@ -248,7 +248,7 @@ class RecurringAppointmentController extends Controller
             RecurringAppointmentRule::create($ruleData);
         }
 
-        return redirect()->route('tenant.recurring-appointments.index')
+        return redirect()->route('tenant.recurring-appointments.index', ['slug' => tenant()->subdomain])
             ->with('success', 'Agendamento recorrente atualizado com sucesso.');
     }
 
@@ -266,7 +266,7 @@ class RecurringAppointmentController extends Controller
         // Desativar ao invés de deletar
         $recurringAppointment->update(['active' => false]);
 
-        return redirect()->route('tenant.recurring-appointments.index')
+        return redirect()->route('tenant.recurring-appointments.index', ['slug' => tenant()->subdomain])
             ->with('success', 'Agendamento recorrente cancelado com sucesso.');
     }
 

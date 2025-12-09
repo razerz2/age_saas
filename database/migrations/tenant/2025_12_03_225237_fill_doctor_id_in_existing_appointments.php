@@ -14,12 +14,14 @@ return new class extends Migration
     public function up(): void
     {
         // Atualizar appointments que não têm doctor_id mas têm calendar_id
-        // Usando DB::raw para garantir que funciona com a conexão tenant
+        // PostgreSQL não suporta INNER JOIN em UPDATE, usa FROM + WHERE
+        // doctor_id é UUID, então só verificamos IS NULL (não pode comparar com string vazia)
         DB::connection('tenant')->statement("
             UPDATE appointments a
-            INNER JOIN calendars c ON a.calendar_id = c.id
-            SET a.doctor_id = c.doctor_id
-            WHERE a.doctor_id IS NULL OR a.doctor_id = ''
+            SET doctor_id = c.doctor_id
+            FROM calendars c
+            WHERE a.calendar_id = c.id
+            AND a.doctor_id IS NULL
         ");
     }
 

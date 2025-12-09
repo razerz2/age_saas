@@ -37,7 +37,7 @@
                         {{-- Botão voltar --}}
                         <div class="row mt-5">
                             <div class="col-12 text-center mt-xl-2">
-                                <a class="text-white font-weight-medium" href="{{ route('tenant.dashboard') }}">
+                                <a class="text-white font-weight-medium" href="{{ workspace_route('tenant.dashboard') }}">
                                     Voltar ao início
                                 </a>
                             </div>

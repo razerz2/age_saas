@@ -10,7 +10,7 @@
         <nav aria-label="breadcrumb">
             <ol class="breadcrumb">
                 <li class="breadcrumb-item">
-                    <a href="{{ route('tenant.dashboard') }}">Dashboard</a>
+                    <a href="{{ workspace_route('tenant.dashboard') }}">Dashboard</a>
                 </li>
                 <li class="breadcrumb-item active" aria-current="page">Agendamentos Recorrentes</li>
             </ol>
@@ -23,7 +23,7 @@
                 <div class="card-body">
                     <h4 class="card-title">Lista de Agendamentos Recorrentes</h4>
 
-                    <a href="{{ route('tenant.recurring-appointments.create') }}" class="btn btn-primary mb-3">
+                    <a href="{{ workspace_route('tenant.recurring-appointments.create') }}" class="btn btn-primary mb-3">
                         <i class="mdi mdi-plus"></i> Novo Agendamento Recorrente
                     </a>
 
@@ -75,10 +75,10 @@
                                         </td>
                                         <td>{{ $recurring->getGeneratedSessionsCount() }}</td>
                                         <td>
-                                            <a href="{{ route('tenant.recurring-appointments.show', $recurring->id) }}" class="btn btn-info btn-sm">
+                                            <a href="{{ workspace_route('tenant.recurring-appointments.show', ['id' => $recurring->id]) }}" class="btn btn-info btn-sm">
                                                 <i class="mdi mdi-eye"></i> Ver
                                             </a>
-                                            <a href="{{ route('tenant.recurring-appointments.edit', $recurring->id) }}" class="btn btn-warning btn-sm">
+                                            <a href="{{ workspace_route('tenant.recurring-appointments.edit', ['id' => $recurring->id]) }}" class="btn btn-warning btn-sm">
                                                 <i class="mdi mdi-pencil"></i> Editar
                                             </a>
                                         </td>

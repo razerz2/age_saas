@@ -11,8 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('appointments', function (Blueprint $table) {
-            $table->string('apple_event_id')->nullable()->after('google_event_id');
+        Schema::table('api_tenant_tokens', function (Blueprint $table) {
+            //
         });
     }
 
@@ -21,8 +21,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('appointments', function (Blueprint $table) {
-            $table->dropColumn('apple_event_id');
+        Schema::table('api_tenant_tokens', function (Blueprint $table) {
+            //
         });
     }
 };

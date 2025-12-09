@@ -36,7 +36,7 @@ class PublicAppointmentController extends Controller
         // Verifica se o paciente foi identificado
         $patientId = Session::get('public_patient_id');
         if (!$patientId) {
-            return redirect()->route('public.patient.identify', ['tenant' => $tenant])
+            return redirect()->route('public.patient.identify', ['slug' => $tenant])
                 ->with('error', 'Por favor, identifique-se primeiro para realizar o agendamento.');
         }
 
@@ -55,7 +55,7 @@ class PublicAppointmentController extends Controller
         
         // Se não houver médicos com configurações completas, retornar erro
         if ($doctors->isEmpty()) {
-            return redirect()->route('public.patient.identify', ['tenant' => $tenant])
+            return redirect()->route('public.patient.identify', ['slug' => $tenant])
                 ->with('error', 'Não há médicos disponíveis para agendamento no momento. Por favor, entre em contato com a clínica.');
         }
 
@@ -92,7 +92,7 @@ class PublicAppointmentController extends Controller
         // Verifica se o paciente foi identificado
         $patientId = Session::get('public_patient_id');
         if (!$patientId) {
-            return redirect()->route('public.patient.identify', ['tenant' => $tenant])
+            return redirect()->route('public.patient.identify', ['slug' => $tenant])
                 ->with('error', 'Por favor, identifique-se primeiro para realizar o agendamento.');
         }
 
@@ -133,7 +133,7 @@ class PublicAppointmentController extends Controller
 
         // Redireciona para a página de detalhes do agendamento
         return redirect()->route('public.appointment.show', [
-            'tenant' => $tenant,
+            'slug' => $tenant,
             'appointment_id' => $appointment->id
         ])->with('success', 'Agendamento realizado com sucesso!');
     }

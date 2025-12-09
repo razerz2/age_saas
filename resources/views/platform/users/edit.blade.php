@@ -64,8 +64,8 @@
 
                                 <div class="col-md-6 mb-3">
                                     <label class="form-label">Nome Completo:</label>
-                                    <input type="text" name="name" class="form-control"
-                                        value="{{ old('name', $user->name) }}" required>
+                                    <input type="text" name="name_full" class="form-control"
+                                        value="{{ old('name_full', $user->name_full) }}" required>
                                 </div>
 
                                 <div class="col-md-6 mb-3">

@@ -29,6 +29,13 @@
                             </div>
                         @endif
 
+                        @if (session('error'))
+                            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                                <i class="fas fa-exclamation-circle me-1"></i> {{ session('error') }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                            </div>
+                        @endif
+
                         @if ($errors->any())
                             <div class="alert alert-danger alert-dismissible fade show shadow-sm" role="alert">
                                 <strong>Ops!</strong> Verifique os erros abaixo:
@@ -218,8 +225,17 @@
                                 <i class="fas fa-cog me-2"></i> Ações
                             </h5>
 
-                            <div class="d-flex gap-2">
+                            <div class="d-flex gap-2 flex-wrap">
                                 @if (!$preTenant->isPaid() && $preTenant->status !== 'canceled')
+                                    <form action="{{ route('Platform.pre_tenants.confirm_payment', $preTenant->id) }}" method="POST"
+                                        class="d-inline">
+                                        @csrf
+                                        <button type="submit" class="btn btn-primary"
+                                            onclick="return confirm('Deseja realmente confirmar o pagamento deste pré-cadastro? Esta ação irá criar o banco de dados da tenant, criar a assinatura vinculando o tenant ao plano escolhido, seguindo a mesma rotina do webhook do Asaas.')">
+                                            <i class="fas fa-credit-card me-1"></i> Confirmar Pagamento
+                                        </button>
+                                    </form>
+
                                     <form action="{{ route('Platform.pre_tenants.approve', $preTenant->id) }}" method="POST"
                                         class="d-inline">
                                         @csrf
@@ -234,9 +250,21 @@
                                     <form action="{{ route('Platform.pre_tenants.cancel', $preTenant->id) }}" method="POST"
                                         class="d-inline">
                                         @csrf
-                                        <button type="submit" class="btn btn-danger"
+                                        <button type="submit" class="btn btn-warning"
                                             onclick="return confirm('Deseja realmente cancelar este pré-cadastro?')">
                                             <i class="fas fa-times me-1"></i> Cancelar
+                                        </button>
+                                    </form>
+                                @endif
+
+                                @if ($preTenant->canBeDeleted())
+                                    <form action="{{ route('Platform.pre_tenants.destroy', $preTenant->id) }}" method="POST"
+                                        class="d-inline">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="btn btn-danger"
+                                            onclick="return confirm('Tem certeza que deseja excluir este pré-cadastro? Esta ação não pode ser desfeita.')">
+                                            <i class="fas fa-trash me-1"></i> Excluir
                                         </button>
                                     </form>
                                 @endif

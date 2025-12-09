@@ -13,7 +13,7 @@
         <nav aria-label="breadcrumb">
             <ol class="breadcrumb">
                 <li class="breadcrumb-item">
-                    <a href="{{ route('tenant.dashboard') }}">Dashboard</a>
+                    <a href="{{ workspace_route('tenant.dashboard') }}">Dashboard</a>
                 </li>
                 <li class="breadcrumb-item">
                     <a href="{{ route('tenant.calendars.index') }}">Calendários</a>
@@ -99,7 +99,7 @@
 
                     {{-- Botões de Ação --}}
                     <div class="border-top pt-3 mt-3">
-                        <a href="{{ route('tenant.calendars.events', $calendar->id) }}" class="btn btn-primary">
+                        <a href="{{ workspace_route('tenant.calendars.events', ['id' => $calendar->id]) }}" class="btn btn-primary">
                             <i class="mdi mdi-calendar-clock me-1"></i> Ver Eventos
                         </a>
                     </div>

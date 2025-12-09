@@ -16,11 +16,15 @@ class DetectTenantFromPath
             'segment2' => $request->segment(2),
         ]);
 
-        if ($request->segment(1) === 't') {
+        $segment1 = $request->segment(1);
+        
+        // Verifica se é um dos novos prefixos comerciais (customer ou workspace)
+        if (in_array($segment1, ['customer', 'workspace'])) {
 
             $slug = $request->segment(2);
 
             \Log::info("🔍 Detectando tenant pelo PATH", [
+                'prefix' => $segment1,
                 'slug' => $slug
             ]);
 

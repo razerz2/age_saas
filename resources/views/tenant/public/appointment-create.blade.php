@@ -101,7 +101,7 @@
                                 </div>
                             @endif
 
-                            <form class="forms-sample" action="{{ route('public.appointment.store', ['tenant' => $tenant->subdomain]) }}" method="POST">
+                            <form class="forms-sample" action="{{ route('public.appointment.store', ['slug' => $tenant->subdomain]) }}" method="POST">
                                 @csrf
 
                                 {{-- Seção: Informações Básicas --}}
@@ -259,7 +259,7 @@
 
                                 {{-- Botões de Ação --}}
                                 <div class="d-flex justify-content-between align-items-center pt-3 border-top">
-                                    <a href="{{ route('public.patient.identify', ['tenant' => $tenant->subdomain]) }}" class="btn btn-light">
+                                    <a href="{{ route('public.patient.identify', ['slug' => $tenant->subdomain]) }}" class="btn btn-light">
                                         <i class="mdi mdi-arrow-left me-1"></i>
                                         Voltar
                                     </a>
@@ -411,7 +411,7 @@
 
         function loadCalendarAuto(doctorId) {
             // Carrega o primeiro calendário do médico automaticamente
-            fetch(`/t/${tenant}/agendamento/api/doctors/${doctorId}/calendars`)
+            fetch(`/customer/${tenant}/agendamento/api/doctors/${doctorId}/calendars`)
                 .then(response => response.json())
                 .then(data => {
                     if (data && data.length > 0) {
@@ -430,7 +430,7 @@
         }
 
         function loadAppointmentTypes(doctorId) {
-            fetch(`/t/${tenant}/agendamento/api/doctors/${doctorId}/appointment-types`)
+            fetch(`/customer/${tenant}/agendamento/api/doctors/${doctorId}/appointment-types`)
                 .then(response => response.json())
                 .then(data => {
                     appointmentTypeSelect.innerHTML = '<option value="">Selecione um tipo</option>';
@@ -450,7 +450,7 @@
         }
 
         function loadSpecialties(doctorId) {
-            fetch(`/t/${tenant}/agendamento/api/doctors/${doctorId}/specialties`)
+            fetch(`/customer/${tenant}/agendamento/api/doctors/${doctorId}/specialties`)
                 .then(response => {
                     if (!response.ok) {
                         throw new Error(`HTTP error! status: ${response.status}`);
@@ -494,7 +494,7 @@
             timeSelect.disabled = true;
             timeSelect.innerHTML = '<option value="">Carregando horários...</option>';
 
-            const url = `/t/${tenant}/agendamento/api/doctors/${doctorId}/available-slots?date=${date}`;
+            const url = `/customer/${tenant}/agendamento/api/doctors/${doctorId}/available-slots?date=${date}`;
             const finalUrl = appointmentTypeId ? `${url}&appointment_type_id=${appointmentTypeId}` : url;
 
             fetch(finalUrl)
@@ -563,7 +563,7 @@
                 emptyEl.style.display = 'none';
             }
 
-            fetch(`/t/${tenant}/agendamento/api/doctors/${doctorId}/business-hours`)
+            fetch(`/customer/${tenant}/agendamento/api/doctors/${doctorId}/business-hours`)
                 .then(response => {
                     if (!response.ok) {
                         throw new Error(`HTTP error! status: ${response.status}`);

@@ -36,6 +36,12 @@ class PatientLoginCredentials extends Mailable
     public function build()
     {
         return $this->subject("Acesso ao Portal do Paciente - {$this->tenantName}")
-                    ->view('tenant.patients.emails.login-credentials');
+                    ->html(\App\Helpers\EmailLayoutHelper::renderViewContent('tenant.patients.emails.login-credentials', [
+                        'patient' => $this->patient,
+                        'login' => $this->login,
+                        'password' => $this->password,
+                        'portalUrl' => $this->portalUrl,
+                        'tenantName' => $this->tenantName,
+                    ]));
     }
 }

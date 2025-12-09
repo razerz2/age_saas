@@ -5,15 +5,18 @@
 @section('content')
 
     <div class="page-header">
-        <h3 class="page-title"> Criar Agendamento </h3>
+        <div class="d-flex justify-content-between align-items-center">
+            <h3 class="page-title mb-0"> Criar Agendamento </h3>
+            <x-help-button module="appointments" />
+        </div>
 
         <nav aria-label="breadcrumb">
             <ol class="breadcrumb">
                 <li class="breadcrumb-item">
-                    <a href="{{ route('tenant.dashboard') }}">Dashboard</a>
+                    <a href="{{ workspace_route('tenant.dashboard') }}">Dashboard</a>
                 </li>
                 <li class="breadcrumb-item">
-                    <a href="{{ route('tenant.appointments.index') }}">Agendamentos</a>
+                    <a href="{{ workspace_route('tenant.appointments.index') }}">Agendamentos</a>
                 </li>
                 <li class="breadcrumb-item active" aria-current="page">Criar</li>
             </ol>
@@ -309,6 +312,7 @@
 
 @push('scripts')
 <script>
+    const tenantSlug = '{{ tenant()->subdomain }}';
 document.addEventListener('DOMContentLoaded', function() {
     const doctorSelect = document.getElementById('doctor_id');
     const appointmentTypeSelect = document.getElementById('appointment_type');
@@ -381,7 +385,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function loadAppointmentTypes(doctorId) {
-        fetch(`/tenant/api/doctors/${doctorId}/appointment-types`)
+        fetch(`/workspace/${tenantSlug}/api/doctors/${doctorId}/appointment-types`)
             .then(response => response.json())
             .then(data => {
                 appointmentTypeSelect.innerHTML = '<option value="">Selecione um tipo</option>';
@@ -401,7 +405,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function loadSpecialties(doctorId) {
-        fetch(`/tenant/api/doctors/${doctorId}/specialties`)
+        fetch(`/workspace/${tenantSlug}/api/doctors/${doctorId}/specialties`)
             .then(response => {
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
@@ -445,7 +449,7 @@ document.addEventListener('DOMContentLoaded', function() {
         timeSelect.disabled = true;
         timeSelect.innerHTML = '<option value="">Carregando horários...</option>';
 
-        const url = `/tenant/api/doctors/${doctorId}/available-slots?date=${date}`;
+        const url = `/workspace/${tenantSlug}/api/doctors/${doctorId}/available-slots?date=${date}`;
         const finalUrl = appointmentTypeId ? `${url}&appointment_type_id=${appointmentTypeId}` : url;
 
         fetch(finalUrl)
@@ -532,7 +536,7 @@ document.addEventListener('DOMContentLoaded', function() {
             emptyEl.style.display = 'none';
         }
 
-        fetch(`/tenant/api/doctors/${doctorId}/business-hours`)
+        fetch(`/workspace/${tenantSlug}/api/doctors/${doctorId}/business-hours`)
             .then(response => {
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);

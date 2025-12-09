@@ -10,7 +10,7 @@
         <nav aria-label="breadcrumb">
             <ol class="breadcrumb">
                 <li class="breadcrumb-item">
-                    <a href="{{ route('tenant.dashboard') }}">Dashboard</a>
+                    <a href="{{ workspace_route('tenant.dashboard') }}">Dashboard</a>
                 </li>
                 <li class="breadcrumb-item">
                     <a href="{{ route('tenant.forms.index') }}">Formulários</a>
@@ -344,6 +344,7 @@
 
 @push('scripts')
 <script>
+    const tenantSlug = '{{ tenant()->subdomain }}';
 const formId = '{{ $form->id }}';
 const csrfToken = '{{ csrf_token() }}';
 
@@ -367,7 +368,7 @@ document.getElementById('addSectionForm').addEventListener('submit', async funct
     formData.append('position', document.querySelectorAll('.section-container').length);
 
     try {
-        const response = await fetch(`/tenant/forms/${formId}/sections`, {
+        const response = await fetch(`/workspace/${tenantSlug}/forms/${formId}/sections`, {
             method: 'POST',
             headers: {
                 'X-CSRF-TOKEN': csrfToken
@@ -403,7 +404,7 @@ document.getElementById('editSectionForm').addEventListener('submit', async func
     const formData = new FormData(this);
 
     try {
-        const response = await fetch(`/tenant/sections/${sectionId}`, {
+        const response = await fetch(`/workspace/${tenantSlug}/sections/${sectionId}`, {
             method: 'PUT',
             headers: {
                 'X-CSRF-TOKEN': csrfToken,
@@ -435,7 +436,7 @@ document.querySelectorAll('.delete-section-btn').forEach(btn => {
 
         const sectionId = this.dataset.sectionId;
         try {
-            const response = await fetch(`/tenant/sections/${sectionId}`, {
+            const response = await fetch(`/workspace/${tenantSlug}/sections/${sectionId}`, {
                 method: 'DELETE',
                 headers: {
                     'X-CSRF-TOKEN': csrfToken
@@ -534,7 +535,7 @@ document.getElementById('addQuestionForm').addEventListener('submit', async func
     };
 
     try {
-        const response = await fetch(`/tenant/forms/${formId}/questions`, {
+        const response = await fetch(`/workspace/${tenantSlug}/forms/${formId}/questions`, {
             method: 'POST',
             headers: {
                 'X-CSRF-TOKEN': csrfToken,
@@ -551,7 +552,7 @@ document.getElementById('addQuestionForm').addEventListener('submit', async func
             // Adicionar opções se houver
             if (options.length > 0) {
                 for (const option of options) {
-                    await fetch(`/tenant/questions/${questionId}/options`, {
+                    await fetch(`/workspace/${tenantSlug}/questions/${questionId}/options`, {
                         method: 'POST',
                         headers: {
                             'X-CSRF-TOKEN': csrfToken,
@@ -645,7 +646,7 @@ document.querySelectorAll('.delete-question-btn').forEach(btn => {
 
         const questionId = this.dataset.questionId;
         try {
-            const response = await fetch(`/tenant/questions/${questionId}`, {
+            const response = await fetch(`/workspace/${tenantSlug}/questions/${questionId}`, {
                 method: 'DELETE',
                 headers: {
                     'X-CSRF-TOKEN': csrfToken
@@ -715,7 +716,7 @@ document.addEventListener('click', function(e) {
         }
 
         const optionId = btn.dataset.optionId;
-        fetch(`/tenant/options/${optionId}`, {
+        fetch(`/workspace/${tenantSlug}/options/${optionId}`, {
             method: 'DELETE',
             headers: {
                 'X-CSRF-TOKEN': csrfToken
@@ -752,7 +753,7 @@ document.getElementById('editQuestionForm').addEventListener('submit', async fun
 
     try {
         // Atualizar pergunta
-        const response = await fetch(`/tenant/questions/${questionId}`, {
+        const response = await fetch(`/workspace/${tenantSlug}/questions/${questionId}`, {
             method: 'PUT',
             headers: {
                 'X-CSRF-TOKEN': csrfToken,

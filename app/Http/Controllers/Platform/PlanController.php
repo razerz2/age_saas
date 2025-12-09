@@ -59,11 +59,11 @@ class PlanController extends Controller
 
     public function update(PlanRequest $request, Plan $plan)
     {
-        // ✅ Usa apenas os dados validados
+        // ✅ Usa apenas os dados validados (price_cents já convertido para centavos no PlanRequest)
         $data = $request->validated();
 
-        // 🔹 Converte preço de reais → centavos (se necessário)
-        $data['price_cents'] = (int) round($data['price_cents'] * 100);
+        // ❌ Remover conversão duplicada — já convertemos no PlanRequest
+        // $data['price_cents'] = (int) round($data['price_cents'] * 100);
 
         // 🔹 Converte texto de features (multilinha) para array
         if ($request->filled('features_json')) {

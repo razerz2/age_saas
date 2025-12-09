@@ -71,9 +71,9 @@ class GoogleCalendarController extends Controller
             // REMOVER/COMENTAR APÓS CORRIGIR O APP_URL
             // dd(['redirect_uri' => $redirectUri, 'app_url' => config('app.url')]);
 
-            // State: JSON com tenant + doctor para recuperar no callback
+            // State: JSON com slug + doctor para recuperar no callback
             $state = json_encode([
-                'tenant' => $tenant->subdomain,
+                'slug' => $tenant->subdomain,
                 'doctor' => $doctor->id,
             ]);
 
@@ -132,7 +132,7 @@ class GoogleCalendarController extends Controller
                 $tenantSlug = null;
                 if ($stateRaw) {
                     $state = json_decode($stateRaw, true);
-                    $tenantSlug = $state['tenant'] ?? null;
+                    $tenantSlug = $state['slug'] ?? $state['tenant'] ?? null; // Fallback para 'tenant' por compatibilidade
                 }
                 
                 if ($tenantSlug) {
@@ -164,16 +164,18 @@ class GoogleCalendarController extends Controller
             }
 
             $state = json_decode($stateRaw, true);
-            if (!$state || !isset($state['tenant']) || !isset($state['doctor'])) {
+            // Aceita tanto 'slug' quanto 'tenant' para compatibilidade
+            $tenantSlug = $state['slug'] ?? $state['tenant'] ?? null;
+            $doctorId = $state['doctor'] ?? null;
+            
+            if (!$state || !$tenantSlug || !$doctorId) {
                 Log::error('State OAuth inválido no callback do Google OAuth', [
                     'state_raw' => $stateRaw,
+                    'state_decoded' => $state,
                 ]);
                 return redirect()->route('login')
                     ->with('error', 'Estado OAuth inválido. Tente conectar novamente.');
             }
-
-            $tenantSlug = $state['tenant'];
-            $doctorId = $state['doctor'];
 
             // Inicializa o tenant correto
             $tenant = \App\Models\Platform\Tenant::where('subdomain', $tenantSlug)->firstOrFail();

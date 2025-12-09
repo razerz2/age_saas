@@ -10,10 +10,10 @@
         <nav aria-label="breadcrumb">
             <ol class="breadcrumb">
                 <li class="breadcrumb-item">
-                    <a href="{{ route('tenant.dashboard') }}">Dashboard</a>
+                    <a href="{{ workspace_route('tenant.dashboard') }}">Dashboard</a>
                 </li>
                 <li class="breadcrumb-item">
-                    <a href="{{ route('tenant.recurring-appointments.index') }}">Agendamentos Recorrentes</a>
+                    <a href="{{ workspace_route('tenant.recurring-appointments.index') }}">Agendamentos Recorrentes</a>
                 </li>
                 <li class="breadcrumb-item active" aria-current="page">Detalhes</li>
             </ol>
@@ -32,11 +32,11 @@
                             </h4>
                         </div>
                         <div>
-                            <a href="{{ route('tenant.recurring-appointments.edit', $recurringAppointment->id) }}" class="btn btn-warning">
+                            <a href="{{ workspace_route('tenant.recurring-appointments.edit', ['id' => $recurringAppointment->id]) }}" class="btn btn-warning">
                                 <i class="mdi mdi-pencil"></i> Editar
                             </a>
                             @if($recurringAppointment->active)
-                                <a href="{{ route('tenant.recurring-appointments.cancel', $recurringAppointment->id) }}" class="btn btn-danger">
+                                <a href="{{ workspace_route('tenant.recurring-appointments.cancel', ['id' => $recurringAppointment->id]) }}" class="btn btn-danger">
                                     <i class="mdi mdi-cancel"></i> Cancelar
                                 </a>
                             @endif

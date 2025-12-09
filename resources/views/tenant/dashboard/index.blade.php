@@ -198,7 +198,7 @@
             <div class="card-body">
                 <div class="d-flex align-items-center justify-content-between mb-4">
                     <h4 class="card-title mb-0">Próximos Agendamentos</h4>
-                    <a href="{{ route('tenant.appointments.index') }}" class="btn btn-sm btn-primary">
+                    <a href="{{ workspace_route('tenant.appointments.index') }}" class="btn btn-sm btn-primary">
                         Ver todos
                     </a>
                 </div>

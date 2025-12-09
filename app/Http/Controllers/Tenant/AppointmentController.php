@@ -66,7 +66,7 @@ class AppointmentController extends Controller
 
         // Verificar se não há médicos cadastrados
         if ($allDoctors->isEmpty()) {
-            return redirect()->route('tenant.appointments.index')
+            return redirect()->route('tenant.appointments.index', ['slug' => tenant()->subdomain])
                 ->with('error', 'Não há médicos cadastrados no sistema. Por favor, cadastre pelo menos um médico antes de criar agendamentos.');
         }
 
@@ -116,7 +116,7 @@ class AppointmentController extends Controller
             $message .= '&nbsp;&nbsp;&nbsp;- <a href="' . route('tenant.appointment-types.index') . '" class="alert-link">Tipos de Atendimento</a>';
             $message .= '</div>';
             
-            return redirect()->route('tenant.appointments.index')
+            return redirect()->route('tenant.appointments.index', ['slug' => tenant()->subdomain])
                 ->with('error', $message);
         }
 

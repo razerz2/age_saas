@@ -12,14 +12,15 @@ class LoginController extends Controller
 {
     public function showLoginForm(Request $request)
     {
-        $slug = $request->route('tenant');
+        $slug = $request->route('slug') ?? $request->route('tenant');
 
         \Log::info("📌 Exibindo login form para slug", ['slug' => $slug]);
 
         // Verifica se o usuário já está autenticado no guard tenant
         if (Auth::guard('tenant')->check()) {
             // Se estiver autenticado, redireciona para o dashboard
-            return redirect()->route('tenant.dashboard');
+            $tenantSlug = tenant()->subdomain ?? $slug;
+            return redirect()->route('tenant.dashboard', ['slug' => $tenantSlug]);
         }
 
         $tenant = Tenant::where('subdomain', $slug)->first();
@@ -31,7 +32,7 @@ class LoginController extends Controller
     {
         \Log::info('===== INÍCIO LOGIN =====');
 
-        $tenantSlug = $request->route('tenant');
+        $tenantSlug = $request->route('slug') ?? $request->route('tenant');
 
         \Log::info('Slug recebido na rota', ['slug' => $tenantSlug]);
 
@@ -134,7 +135,7 @@ class LoginController extends Controller
 
             \Log::info('Redirecionando ao dashboard');
 
-            return redirect()->route('tenant.dashboard');
+            return redirect()->route('tenant.dashboard', ['slug' => $tenant->subdomain]);
         }
 
         return back()->withErrors(['email' => 'Senha incorreta.']);
@@ -153,7 +154,7 @@ class LoginController extends Controller
         $request->session()->regenerateToken();
 
         return redirect()->route('tenant.login', [
-            'tenant' => $tenant->subdomain ?? ''
+            'slug' => $tenant->subdomain ?? ''
         ]);
     }
 }

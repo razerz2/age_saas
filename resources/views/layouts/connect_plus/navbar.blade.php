@@ -1,10 +1,14 @@
+@php
+    $customLogo = \App\Models\Tenant\TenantSetting::get('appearance.logo');
+    $logoUrl = $customLogo ? asset('storage/' . $customLogo) : asset('connect_plus/assets/images/logos/AllSync-Logo-A.png');
+@endphp
 <nav class="navbar default-layout-navbar col-lg-12 col-12 p-0 fixed-top d-flex flex-row">
     <div class="text-center navbar-brand-wrapper d-flex align-items-center justify-content-center">
-        <a class="navbar-brand brand-logo" href="{{ route('tenant.dashboard') }}">
-            <img src="{{ asset('connect_plus/assets/images/logo.svg') }}" alt="logo">
+        <a class="navbar-brand brand-logo" href="{{ workspace_route('tenant.dashboard') }}">
+            <img src="{{ $logoUrl }}" alt="logo">
         </a>
-        <a class="navbar-brand brand-logo-mini" href="{{ route('tenant.dashboard') }}">
-            <img src="{{ asset('connect_plus/assets/images/logo-mini.svg') }}" alt="logo">
+        <a class="navbar-brand brand-logo-mini" href="{{ workspace_route('tenant.dashboard') }}">
+            <img src="{{ $logoUrl }}" alt="logo">
         </a>
     </div>
 

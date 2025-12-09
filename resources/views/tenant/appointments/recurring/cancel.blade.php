@@ -10,10 +10,10 @@
         <nav aria-label="breadcrumb">
             <ol class="breadcrumb">
                 <li class="breadcrumb-item">
-                    <a href="{{ route('tenant.dashboard') }}">Dashboard</a>
+                    <a href="{{ workspace_route('tenant.dashboard') }}">Dashboard</a>
                 </li>
                 <li class="breadcrumb-item">
-                    <a href="{{ route('tenant.recurring-appointments.index') }}">Agendamentos Recorrentes</a>
+                    <a href="{{ workspace_route('tenant.recurring-appointments.index') }}">Agendamentos Recorrentes</a>
                 </li>
                 <li class="breadcrumb-item active" aria-current="page">Cancelar</li>
             </ol>
@@ -56,12 +56,12 @@
                         </table>
                     </div>
 
-                    <form action="{{ route('tenant.recurring-appointments.destroy', $recurringAppointment->id) }}" method="POST">
+                    <form action="{{ workspace_route('tenant.recurring-appointments.destroy', ['id' => $recurringAppointment->id]) }}" method="POST">
                         @csrf
                         @method('DELETE')
                         
                         <div class="d-flex justify-content-end">
-                            <a href="{{ route('tenant.recurring-appointments.show', $recurringAppointment->id) }}" class="btn btn-light me-2">
+                            <a href="{{ workspace_route('tenant.recurring-appointments.show', ['id' => $recurringAppointment->id]) }}" class="btn btn-light me-2">
                                 Voltar
                             </a>
                             <button type="submit" class="btn btn-danger">

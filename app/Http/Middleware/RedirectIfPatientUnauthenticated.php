@@ -15,10 +15,10 @@ class RedirectIfPatientUnauthenticated
         }
 
         // Tenta obter o tenant da sessão ou da URL anterior
-        $tenantSlug = session('tenant_slug') ?? $request->route('tenant');
+        $tenantSlug = session('tenant_slug') ?? $request->route('slug') ?? $request->route('tenant');
 
         if ($tenantSlug) {
-            return redirect()->route('patient.login', ['tenant' => $tenantSlug]);
+            return redirect()->route('patient.login', ['slug' => $tenantSlug]);
         }
 
         // Se não conseguir identificar, redireciona para a página inicial

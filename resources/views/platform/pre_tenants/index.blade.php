@@ -36,6 +36,13 @@
                             </div>
                         @endif
 
+                        @if (session('error'))
+                            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                                <i class="fas fa-exclamation-circle me-1"></i> {{ session('error') }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                            </div>
+                        @endif
+
                         @if ($errors->any())
                             <div class="alert alert-danger alert-dismissible fade show shadow-sm" role="alert">
                                 <strong>Ops!</strong> Verifique os erros abaixo:
@@ -84,6 +91,18 @@
                                                     class="btn btn-sm btn-info">
                                                     <i class="fas fa-eye"></i>
                                                 </a>
+                                                @if ($preTenant->canBeDeleted())
+                                                    <form action="{{ route('Platform.pre_tenants.destroy', $preTenant->id) }}" 
+                                                          method="POST" 
+                                                          class="d-inline"
+                                                          onsubmit="return confirm('Tem certeza que deseja excluir este pré-cadastro? Esta ação não pode ser desfeita.');">
+                                                        @csrf
+                                                        @method('DELETE')
+                                                        <button type="submit" title="Excluir" class="btn btn-sm btn-danger">
+                                                            <i class="fas fa-trash"></i>
+                                                        </button>
+                                                    </form>
+                                                @endif
                                             </td>
                                         </tr>
                                     @endforeach

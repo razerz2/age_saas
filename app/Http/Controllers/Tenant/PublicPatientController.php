@@ -144,7 +144,7 @@ class PublicPatientController extends Controller
         Session::put('public_patient_name', $patient->full_name);
 
         // Redireciona para o fluxo de agendamento público
-        return redirect()->route('public.appointment.create', ['tenant' => $tenant])
+        return redirect()->route('public.appointment.create', ['slug' => $tenant])
             ->with('success', 'Paciente identificado com sucesso!');
     }
 }

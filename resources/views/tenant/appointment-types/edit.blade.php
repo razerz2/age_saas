@@ -5,12 +5,15 @@
 @section('content')
 
     <div class="page-header">
-        <h3 class="page-title"> Editar Tipo de Consulta </h3>
+        <div class="d-flex justify-content-between align-items-center">
+            <h3 class="page-title mb-0"> Editar Tipo de Consulta </h3>
+            <x-help-button module="appointment-types" />
+        </div>
 
         <nav aria-label="breadcrumb">
             <ol class="breadcrumb">
                 <li class="breadcrumb-item">
-                    <a href="{{ route('tenant.dashboard') }}">Dashboard</a>
+                    <a href="{{ workspace_route('tenant.dashboard') }}">Dashboard</a>
                 </li>
                 <li class="breadcrumb-item">
                     <a href="{{ route('tenant.appointment-types.index') }}">Tipos de Consulta</a>

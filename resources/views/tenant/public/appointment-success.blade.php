@@ -64,12 +64,12 @@
 
                             <div class="mt-4 d-flex justify-content-center gap-3">
                                 @if(isset($appointment_id) && $appointment_id)
-                                    <a href="{{ route('public.appointment.show', ['tenant' => $tenant->subdomain, 'appointment_id' => $appointment_id]) }}" class="btn btn-outline-primary btn-lg">
+                                    <a href="{{ route('public.appointment.show', ['slug' => $tenant->subdomain, 'appointment_id' => $appointment_id]) }}" class="btn btn-outline-primary btn-lg">
                                         <i class="mdi mdi-eye me-2"></i>
                                         Ver Agendamento
                                     </a>
                                 @endif
-                                <a href="{{ route('public.patient.identify', ['tenant' => $tenant->subdomain]) }}" class="btn btn-primary btn-lg">
+                                <a href="{{ route('public.patient.identify', ['slug' => $tenant->subdomain]) }}" class="btn btn-primary btn-lg">
                                     <i class="mdi mdi-calendar-plus me-2"></i>
                                     Fazer Novo Agendamento
                                 </a>

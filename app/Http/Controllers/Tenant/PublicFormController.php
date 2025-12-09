@@ -95,7 +95,7 @@ class PublicFormController extends Controller
         }
 
         return redirect()->route('public.form.response.success', [
-            'tenant' => $tenantModel->subdomain,
+            'slug' => $tenantModel->subdomain,
             'form' => $form,
             'response' => $response->id
         ])->with('success', 'Formulário respondido com sucesso!');

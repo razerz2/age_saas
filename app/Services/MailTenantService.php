@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Helpers\EmailLayoutHelper;
 use App\Models\Tenant\TenantSetting;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Log;
@@ -10,6 +11,7 @@ class MailTenantService
 {
     /**
      * Envia email usando SMTP do tenant ou global
+     * Aplica automaticamente o layout de email configurado
      */
     public static function send($to, $subject, $view, $data = [])
     {
@@ -34,8 +36,13 @@ class MailTenantService
             }
             // Se driver for 'global', usa configuração padrão do Laravel
 
-            Mail::send($view, $data, function ($message) use ($to, $subject) {
-                $message->to($to)->subject($subject);
+            // Renderiza a view e aplica o layout
+            $html = EmailLayoutHelper::renderViewContent($view, $data);
+
+            Mail::send([], [], function ($message) use ($to, $subject, $html) {
+                $message->to($to)
+                    ->subject($subject)
+                    ->html($html);
             });
 
             Log::info('📧 Email enviado', ['to' => $to, 'subject' => $subject, 'driver' => $provider['driver']]);

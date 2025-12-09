@@ -13,7 +13,7 @@
         <nav aria-label="breadcrumb">
             <ol class="breadcrumb">
                 <li class="breadcrumb-item">
-                    <a href="{{ route('tenant.dashboard') }}">Dashboard</a>
+                    <a href="{{ workspace_route('tenant.dashboard') }}">Dashboard</a>
                 </li>
                 <li class="breadcrumb-item">
                     <a href="{{ route('tenant.calendars.index') }}">Calendários</a>
@@ -59,6 +59,7 @@
     <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js"></script>
 
     <script>
+        const tenantSlug = '{{ tenant()->subdomain }}';
         document.addEventListener('DOMContentLoaded', function() {
             var calendarEl = document.getElementById('calendar');
 
@@ -84,7 +85,7 @@
                 },
 
                 // Rota que deve fornecer os eventos em JSON
-                events: "{{ route('tenant.calendars.events', $calendar->id) }}",
+                events: "{{ workspace_route('tenant.calendars.events', ['id' => $calendar->id]) }}",
 
                 // Personalização de eventos
                 eventDidMount: function(info) {
@@ -128,7 +129,7 @@
                     const extendedProps = info.event.extendedProps || {};
                     
                     // URL base para agendamentos recorrentes
-                    const recurringAppointmentsBaseUrl = '{{ route("tenant.recurring-appointments.index") }}'.replace('/agendamentos/recorrentes', '/agendamentos/recorrentes');
+                    const recurringAppointmentsBaseUrl = '{{ workspace_route("tenant.recurring-appointments.index") }}'.replace('/agendamentos/recorrentes', '/agendamentos/recorrentes');
                     
                     // Verifica se é um agendamento recorrente
                     if (extendedProps.is_recurring || (appointmentId && appointmentId.startsWith('recurring_'))) {
@@ -148,14 +149,14 @@
                         }
                         
                         if (recurringId) {
-                            window.location.href = `/tenant/agendamentos/recorrentes/${recurringId}`;
+                            window.location.href = `/workspace/${tenantSlug}/agendamentos/recorrentes/${recurringId}`;
                             return;
                         }
                     }
                     
                     // Redireciona para a página de detalhes do agendamento normal
                     if (appointmentId) {
-                        window.location.href = `/tenant/appointments/${appointmentId}`;
+                        window.location.href = `/workspace/${tenantSlug}/appointments/${appointmentId}`;
                     }
                 },
 
@@ -164,7 +165,7 @@
                     // Aqui podemos futuramente abrir modal para criar nova consulta
                     console.log('Data clicada:', info.dateStr);
                     // Pode adicionar um modal ou redirecionamento para criar agendamento
-                    // window.location.href = `/tenant/appointments/create?date=${info.dateStr}`;
+                    // window.location.href = `/workspace/${tenantSlug}/appointments/create?date=${info.dateStr}`;
                 },
 
                 // Melhorias visuais

@@ -152,11 +152,31 @@ POST /Platform/settings/update/integrations            # Atualizar integrações
 POST /Platform/whatsapp/send                           # Enviar mensagem WhatsApp
 POST /Platform/whatsapp/invoice/{invoice}              # Enviar notificação de fatura via WhatsApp
 
+# Templates de Notificação
+GET    /Platform/notification-templates                # Listar templates
+GET    /Platform/notification-templates/{id}/edit      # Editar template
+PUT    /Platform/notification-templates/{id}           # Atualizar template
+DELETE /Platform/notification-templates/{id}           # Deletar template
+POST   /Platform/notification-templates/{id}/restore   # Restaurar template deletado
+POST   /Platform/notification-templates/{id}/test      # Testar envio de template
+POST   /Platform/notification-templates/{id}/toggle    # Ativar/desativar template
+
 # Pré-Cadastros
 GET    /Platform/pre-tenants                           # Listar pré-cadastros
 GET    /Platform/pre-tenants/{preTenant}                # Visualizar pré-cadastro
 POST   /Platform/pre-tenants/{preTenant}/approve         # Aprovar pré-cadastro manualmente
 POST   /Platform/pre-tenants/{preTenant}/cancel          # Cancelar pré-cadastro
+POST   /Platform/pre-tenants/{preTenant}/confirm-payment # Confirmar pagamento manualmente
+
+# Rotas Públicas (sem autenticação)
+GET  /                                   # Landing page (home)
+GET  /funcionalidades                    # Landing page (funcionalidades)
+GET  /planos                             # Landing page (planos)
+GET  /planos/json/{id}                   # API: Dados do plano em JSON
+GET  /contato                            # Landing page (contato)
+GET  /manual                             # Landing page (manual)
+POST /pre-register                       # Criar pré-cadastro (landing page)
+POST /webhook/asaas/pre-registration     # Webhook do Asaas para pré-cadastros
 
 # APIs auxiliares
 GET  /Platform/api/estados/{pais}                      # API: Estados por país
@@ -203,6 +223,7 @@ As rotas abaixo exigem o módulo correspondente no campo `modules` do usuário:
 | `MedicalSpecialtyCatalogController` | Catálogo de especialidades médicas | `/Platform/medical_specialties_catalog` | `medical_specialties_catalog` |
 | `NotificationOutboxController` | Histórico de notificações enviadas | `/Platform/notifications_outbox` | `notifications_outbox` |
 | `SystemNotificationController` | Notificações do sistema (read-only) | `/Platform/system_notifications` | `system_notifications` |
+| `NotificationTemplateController` | Templates de notificação | `/Platform/notification-templates` | `notification_templates` |
 | `SystemSettingsController` | Configurações gerais e integrações + testes de conexão | `/Platform/settings` | `settings` |
 | `PaisController` | Listar e visualizar países | `/Platform/paises` | `locations` |
 | `EstadoController` | Listar e visualizar estados | `/Platform/estados` | `locations` |
@@ -296,6 +317,7 @@ Armazenados no **banco central (landlord)**:
 | `Invoices` | `invoices` | Faturas geradas |
 | `NotificationOutbox` | `notifications_outbox` | Histórico de notificações |
 | `SystemNotification` | `system_notifications` | Notificações do sistema |
+| `NotificationTemplate` | `notification_templates` | Templates de notificação |
 | `MedicalSpecialtyCatalog` | `medical_specialties_catalog` | Catálogo global de especialidades |
 | `Pais`, `Estado`, `Cidade` | `paises`, `estados`, `cidades` | Dados de localização |
 | `TenantLocalizacao` | `tenant_localizacoes` | Localização dos tenants |
@@ -470,7 +492,24 @@ Armazenados no **banco central (landlord)**:
 
 **Nota:** Configurações definidas aqui têm prioridade sobre variáveis de ambiente. As configurações são salvas na tabela `system_settings` e também atualizadas no arquivo `.env`.
 
-### 7. Catálogo de Especialidades Médicas
+### 7. Templates de Notificação
+
+**Gerenciar Templates:**
+1. Acesse `/Platform/notification-templates` (requer módulo `notification_templates`)
+2. Visualize todos os templates disponíveis no sistema
+3. Edite templates existentes
+4. Ative/desative templates
+5. Teste envio de templates
+6. Restaure templates deletados (soft delete)
+
+**Funcionalidades:**
+- Criação e edição de templates de notificação
+- Ativação/desativação de templates
+- Teste de envio de templates
+- Soft delete (templates podem ser restaurados)
+- Templates podem ser usados pelos tenants para envio de notificações personalizadas
+
+### 8. Catálogo de Especialidades Médicas
 
 **Gerenciar Especialidades:**
 1. Acesse `/Platform/medical_specialties_catalog` (requer módulo `medical_specialties_catalog`)
@@ -478,7 +517,7 @@ Armazenados no **banco central (landlord)**:
 3. As especialidades ficam disponíveis para todos os tenants
 4. Os tenants podem importar especialidades deste catálogo
 
-### 8. Localização (Países, Estados, Cidades)
+### 9. Localização (Países, Estados, Cidades)
 
 **Visualizar Localizações:**
 1. Acesse `/Platform/paises`, `/Platform/estados` ou `/Platform/cidades` (requer módulo `locations`)
@@ -490,7 +529,7 @@ Armazenados no **banco central (landlord)**:
 - `GET /Platform/api/cidades/{estado}` - Retorna cidades de um estado (JSON)
 - Utilizadas em formulários para seleção dinâmica
 
-### 9. Gerenciamento de Usuários da Platform
+### 10. Gerenciamento de Usuários da Platform
 
 **Criar Usuário:**
 1. Acesse `/Platform/users` (requer módulo `users`)
@@ -521,7 +560,7 @@ Armazenados no **banco central (landlord)**:
 - Alterna o status do usuário entre ativo e inativo
 - Usuários inativos não conseguem fazer login
 
-### 10. Perfil do Usuário
+### 11. Perfil do Usuário
 
 **Gerenciar Perfil:**
 1. Acesse `/Platform/profile` (sempre acessível para usuários autenticados)
@@ -537,7 +576,7 @@ Armazenados no **banco central (landlord)**:
 
 **Nota:** O perfil é gerenciado pelo `ProfileController` (não está em `Platform/`), mas é acessível via rota `/Platform/profile`.
 
-### 11. Módulo de Pré-Cadastro
+### 12. Módulo de Pré-Cadastro
 
 **Visão Geral:**
 O módulo de pré-cadastro permite que novos clientes se cadastrem através de uma landing page pública. Após o pagamento via Asaas, o sistema cria automaticamente o tenant e a assinatura.
@@ -639,7 +678,7 @@ O serviço `PreTenantProcessorService` executa as seguintes etapas ao processar 
 - Rate limit: 10 requisições por minuto na rota pública
 - Webhook valida token do Asaas antes de processar
 
-### 12. Monitor de Kiosk
+### 13. Monitor de Kiosk
 
 **Acessar Monitor:**
 1. Acesse `/kiosk/monitor` (rota pública, sem autenticação)

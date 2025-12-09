@@ -45,7 +45,7 @@ class CalendarController extends Controller
         if ($user->role === 'doctor') {
             $doctor = Doctor::where('user_id', $user->id)->first();
             if ($doctor && $doctor->calendars()->exists()) {
-                return redirect()->route('tenant.calendars.index')
+                return redirect()->route('tenant.calendars.index', ['slug' => tenant()->subdomain])
                     ->with('error', 'Você já possui um calendário cadastrado. Cada médico pode ter apenas um calendário.');
             }
         }
@@ -61,7 +61,7 @@ class CalendarController extends Controller
         // Verifica se o médico já possui um calendário
         $doctor = Doctor::findOrFail($data['doctor_id']);
         if ($doctor->calendars()->exists()) {
-            return redirect()->route('tenant.calendars.create')
+            return redirect()->route('tenant.calendars.create', ['slug' => tenant()->subdomain])
                 ->with('error', 'Este médico já possui um calendário cadastrado. Cada médico pode ter apenas um calendário.')
                 ->withInput();
         }
@@ -73,7 +73,7 @@ class CalendarController extends Controller
             }
             // Verifica se já tem calendário
             if ($user->doctor->calendars()->exists()) {
-                return redirect()->route('tenant.calendars.index')
+                return redirect()->route('tenant.calendars.index', ['slug' => tenant()->subdomain])
                     ->with('error', 'Você já possui um calendário cadastrado. Cada médico pode ter apenas um calendário.');
             }
         }
@@ -81,7 +81,7 @@ class CalendarController extends Controller
         $data['id'] = Str::uuid();
         Calendar::create($data);
 
-        return redirect()->route('tenant.calendars.index')
+        return redirect()->route('tenant.calendars.index', ['slug' => tenant()->subdomain])
             ->with('success', 'Agenda criada com sucesso.');
     }
 
@@ -158,7 +158,7 @@ class CalendarController extends Controller
                 }
                 // Médico não pode mudar o médico do calendário
                 if ($data['doctor_id'] !== $calendar->doctor_id) {
-                    return redirect()->route('tenant.calendars.edit', $calendar->id)
+                    return redirect()->route('tenant.calendars.edit', ['slug' => tenant()->subdomain, 'id' => $calendar->id])
                         ->with('error', 'Você não pode alterar o médico do calendário.')
                         ->withInput();
                 }
@@ -173,7 +173,7 @@ class CalendarController extends Controller
         if ($data['doctor_id'] !== $calendar->doctor_id) {
             $newDoctor = Doctor::findOrFail($data['doctor_id']);
             if ($newDoctor->calendars()->where('id', '!=', $calendar->id)->exists()) {
-                return redirect()->route('tenant.calendars.edit', $calendar->id)
+                return redirect()->route('tenant.calendars.edit', ['slug' => tenant()->subdomain, 'id' => $calendar->id])
                     ->with('error', 'Este médico já possui um calendário cadastrado. Cada médico pode ter apenas um calendário.')
                     ->withInput();
             }
@@ -181,7 +181,7 @@ class CalendarController extends Controller
         
         $calendar->update($data);
 
-        return redirect()->route('tenant.calendars.index')
+        return redirect()->route('tenant.calendars.index', ['slug' => tenant()->subdomain])
             ->with('success', 'Agenda atualizada com sucesso.');
     }
 
@@ -207,7 +207,7 @@ class CalendarController extends Controller
         
         $calendar->delete();
 
-        return redirect()->route('tenant.calendars.index')
+        return redirect()->route('tenant.calendars.index', ['slug' => tenant()->subdomain])
             ->with('success', 'Agenda removida.');
     }
 
@@ -217,7 +217,7 @@ class CalendarController extends Controller
         
         // Admin não deve acessar agendas individuais, apenas gerenciar calendários
         if ($user->role === 'admin') {
-            return redirect()->route('tenant.calendars.index')
+            return redirect()->route('tenant.calendars.index', ['slug' => tenant()->subdomain])
                 ->with('info', 'Administradores podem gerenciar calendários, mas não possuem agendas individuais.');
         }
         
@@ -236,10 +236,10 @@ class CalendarController extends Controller
         }
 
         if ($calendar) {
-            return redirect()->route('tenant.calendars.events', $calendar->id);
+            return redirect()->route('tenant.calendars.events', ['slug' => tenant()->subdomain, 'id' => $calendar->id]);
         }
 
-        return redirect()->route('tenant.calendars.index')
+        return redirect()->route('tenant.calendars.index', ['slug' => tenant()->subdomain])
             ->with('info', 'Nenhum calendário encontrado. Crie um calendário primeiro.');
     }
 }

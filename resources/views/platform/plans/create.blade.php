@@ -72,6 +72,15 @@
                     </div>
 
                     <div class="row mb-3">
+                        <div class="col-12">
+                            <label class="form-label">Resumo do Plano (para exibição na landing page)</label>
+                            <textarea name="description" class="form-control" rows="2" 
+                                placeholder="Breve descrição do plano que será exibida antes dos recursos na landing page (máximo 500 caracteres)">{{ old('description') }}</textarea>
+                            <small class="text-muted">Este texto aparecerá antes da lista de recursos nos cards da landing page.</small>
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
                         <div class="col-md-4">
                             <label class="form-label">Preço (R$)</label>
                             <input type="number" step="0.01" name="price_cents" value="{{ old('price_cents') }}"

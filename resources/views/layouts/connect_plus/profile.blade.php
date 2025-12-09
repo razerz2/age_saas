@@ -98,7 +98,7 @@
             </h6>
 
             <a class="dropdown-item d-flex align-items-center py-3 px-3 rounded-2 mb-1" 
-               href="{{ route('tenant.profile.edit') }}" 
+               href="{{ workspace_route('tenant.profile.edit') }}" 
                style="transition: all 0.2s ease; border-left: 3px solid transparent;"
                onmouseover="this.style.backgroundColor='#f8f9fa'; this.style.borderLeftColor='#0062ff';"
                onmouseout="this.style.backgroundColor='transparent'; this.style.borderLeftColor='transparent';">
@@ -115,7 +115,7 @@
 
             @if($hasSettingsAccess)
                 <a class="dropdown-item d-flex align-items-center py-3 px-3 rounded-2 mb-1" 
-                   href="{{ route('tenant.settings.index') }}" 
+                   href="{{ workspace_route('tenant.settings.index') }}" 
                    style="transition: all 0.2s ease; border-left: 3px solid transparent;"
                    onmouseover="this.style.backgroundColor='#f8f9fa'; this.style.borderLeftColor='#0062ff';"
                    onmouseout="this.style.backgroundColor='transparent'; this.style.borderLeftColor='transparent';">
@@ -139,7 +139,7 @@
             </h6>
 
             <a class="dropdown-item d-flex align-items-center py-3 px-3 rounded-2" 
-                href="{{ route('tenant.logout', ['tenant' => tenant()->subdomain]) }}"
+                href="{{ route('tenant.logout', ['slug' => tenant()->subdomain]) }}"
                onclick="event.preventDefault(); document.getElementById('logout-form').submit();"
                style="transition: all 0.2s ease; border-left: 3px solid transparent; color: #fc5a5a;"
                onmouseover="this.style.backgroundColor='#fff5f5'; this.style.borderLeftColor='#fc5a5a';"
@@ -155,7 +155,7 @@
                 <i class="mdi mdi-chevron-right text-muted"></i>
             </a>
 
-            <form id="logout-form" action="{{ route('tenant.logout', ['tenant' => tenant()->subdomain]) }}"
+            <form id="logout-form" action="{{ route('tenant.logout', ['slug' => tenant()->subdomain]) }}"
                 method="POST" class="d-none">
                 @csrf
             </form>

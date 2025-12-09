@@ -15,6 +15,9 @@ return new class extends Migration {
             $table->string('email')->nullable()->unique();
             $table->string('phone', 20)->nullable();
             $table->string('subdomain')->unique();
+            $table->string('admin_login_url')->nullable();
+            $table->string('admin_email')->nullable();
+            $table->string('admin_password')->nullable();
             $table->string('db_host');
             $table->integer('db_port')->default(5432);
             $table->string('db_name')->unique();

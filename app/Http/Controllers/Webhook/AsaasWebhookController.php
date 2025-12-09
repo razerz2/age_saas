@@ -9,7 +9,9 @@ use App\Models\Platform\Invoices;
 use App\Models\Platform\WebhookLog;
 use App\Models\Platform\Tenant;
 use App\Models\Platform\Subscription;
+use App\Models\Platform\PreTenant;
 use App\Services\SystemNotificationService;
+use App\Services\Platform\PreTenantProcessorService;
 use Carbon\Carbon;
 
 class AsaasWebhookController extends Controller
@@ -40,7 +42,117 @@ class AsaasWebhookController extends Controller
                 return response()->json(['message' => 'Missing resource ID'], 400);
             }
 
-            // 🔹 2. Buscar entidades locais
+            // 🔹 2. VERIFICAR SE É PRÉ-CADASTRO ANTES DE PROCESSAR COMO FATURA NORMAL
+            // O Asaas pode enviar webhooks de pré-cadastro para /webhook/asaas
+            $externalReference = $payload['payment']['externalReference'] ?? null;
+            $paymentLinkId = $payload['payment']['paymentLink'] ?? null;
+            
+            if ($externalReference || $paymentLinkId) {
+                $preTenant = null;
+                
+                // Buscar pré-tenant pelo externalReference (ID do pré-tenant)
+                if ($externalReference) {
+                    $preTenant = PreTenant::find($externalReference);
+                    if ($preTenant) {
+                        Log::info("🔍 Pré-tenant encontrado pelo externalReference no webhook principal", [
+                            'pre_tenant_id' => $preTenant->id,
+                            'external_reference' => $externalReference,
+                        ]);
+                    } else {
+                        Log::debug("🔍 Pré-tenant não encontrado pelo externalReference", [
+                            'external_reference' => $externalReference,
+                        ]);
+                    }
+                }
+                
+                // Se não encontrou, tentar pelo paymentLink
+                if (!$preTenant && $paymentLinkId) {
+                    $preTenant = PreTenant::where('asaas_payment_id', $paymentLinkId)->first();
+                    if ($preTenant) {
+                        Log::info("🔍 Pré-tenant encontrado pelo paymentLink no webhook principal", [
+                            'pre_tenant_id' => $preTenant->id,
+                            'payment_link_id' => $paymentLinkId,
+                        ]);
+                    } else {
+                        Log::debug("🔍 Pré-tenant não encontrado pelo paymentLink", [
+                            'payment_link_id' => $paymentLinkId,
+                        ]);
+                    }
+                }
+                
+                // Se encontrou pré-tenant, processar como pré-cadastro
+                if ($preTenant) {
+                    Log::info("🔄 Processando webhook como pré-cadastro no webhook principal", [
+                        'pre_tenant_id' => $preTenant->id,
+                        'event' => $event,
+                        'payment_id' => $paymentId,
+                    ]);
+                    
+                    try {
+                        $processor = new PreTenantProcessorService();
+                        
+                        // Verificar se já foi processado
+                        $tenantCreatedLog = $preTenant->logs()->where('event', 'tenant_created')->first();
+                        if ($tenantCreatedLog) {
+                            $payloadData = is_string($tenantCreatedLog->payload) 
+                                ? json_decode($tenantCreatedLog->payload, true) 
+                                : $tenantCreatedLog->payload;
+                            $tenantId = $payloadData['tenant_id'] ?? null;
+                            
+                            if ($tenantId) {
+                                $existingTenant = Tenant::find($tenantId);
+                                if ($existingTenant) {
+                                    Log::info("✅ Pré-tenant já processado. Verificando assinatura...", [
+                                        'pre_tenant_id' => $preTenant->id,
+                                        'tenant_id' => $tenantId,
+                                    ]);
+                                    
+                                    $subscription = $existingTenant->subscriptions()->latest()->first();
+                                    if (!$subscription) {
+                                        Log::warning("⚠️ Tenant existe mas não tem assinatura. Criando...", [
+                                            'pre_tenant_id' => $preTenant->id,
+                                            'tenant_id' => $tenantId,
+                                        ]);
+                                        $processor->createSubscription($preTenant, $existingTenant, $payload);
+                                    } else {
+                                        Log::info("✅ Tenant e assinatura já existem. Webhook ignorado (idempotência).", [
+                                            'pre_tenant_id' => $preTenant->id,
+                                            'tenant_id' => $tenantId,
+                                            'subscription_id' => $subscription->id,
+                                        ]);
+                                    }
+                                    return response()->json(['message' => 'OK'], 200);
+                                }
+                            }
+                        }
+                        
+                        // Processar pagamento confirmado
+                        if (in_array($event, ['PAYMENT_RECEIVED', 'PAYMENT_CONFIRMED'])) {
+                            $processor->processPaid($preTenant, $payload);
+                            Log::info("✅ Pré-tenant processado com sucesso via webhook principal", [
+                                'pre_tenant_id' => $preTenant->id,
+                            ]);
+                        }
+                        
+                        return response()->json(['message' => 'OK'], 200);
+                    } catch (\Throwable $e) {
+                        Log::error("❌ Erro ao processar pré-cadastro via webhook principal", [
+                            'pre_tenant_id' => $preTenant->id,
+                            'error' => $e->getMessage(),
+                            'trace' => $e->getTraceAsString(),
+                        ]);
+                        return response()->json(['error' => 'Internal Server Error'], 500);
+                    }
+                } else {
+                    // Não é pré-cadastro ou pré-tenant não encontrado - continua fluxo normal
+                    Log::debug("ℹ️ Não é pré-cadastro ou pré-tenant não encontrado. Continuando fluxo normal...", [
+                        'external_reference' => $externalReference,
+                        'payment_link_id' => $paymentLinkId,
+                    ]);
+                }
+            }
+
+            // 🔹 3. Buscar entidades locais (para tenants já existentes - fluxo normal)
             $invoice = null;
             if ($paymentId) {
                 $invoice = Invoices::where('asaas_payment_id', $paymentId)

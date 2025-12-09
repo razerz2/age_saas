@@ -1,27 +1,20 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Credenciais de Acesso - Portal do Paciente</title>
-</head>
-<body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+<div style="background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px; border: 1px solid #ddd;">
     <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
         <h1 style="color: white; margin: 0;">🔐 Portal do Paciente</h1>
         <p style="color: rgba(255,255,255,0.9); margin: 10px 0 0 0;">Credenciais de Acesso</p>
     </div>
 
-    <div style="background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px; border: 1px solid #ddd;">
+    <div style="background: white; padding: 30px;">
         <p style="font-size: 16px;">Olá, <strong>{{ $patient->full_name }}</strong>!</p>
         
         <p>Suas credenciais de acesso ao portal do paciente foram criadas. Utilize as informações abaixo para fazer login:</p>
 
-        <div style="background: white; padding: 20px; border-radius: 8px; border-left: 4px solid #667eea; margin: 20px 0;">
+        <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; border-left: 4px solid #667eea; margin: 20px 0;">
             <h3 style="margin-top: 0; color: #667eea;">📧 E-mail:</h3>
             <p style="font-size: 18px; font-weight: bold; margin: 0;">{{ $login->email }}</p>
         </div>
 
-        <div style="background: white; padding: 20px; border-radius: 8px; border-left: 4px solid #667eea; margin: 20px 0;">
+        <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; border-left: 4px solid #667eea; margin: 20px 0;">
             <h3 style="margin-top: 0; color: #667eea;">🔑 Senha:</h3>
             <p style="font-size: 18px; font-weight: bold; margin: 0; font-family: monospace;">{{ $password }}</p>
         </div>
@@ -46,10 +39,4 @@
             <strong>{{ $tenantName }}</strong>
         </p>
     </div>
-
-    <div style="text-align: center; padding: 20px; color: #999; font-size: 12px;">
-        <p>Este é um e-mail automático. Por favor, não responda.</p>
-    </div>
-</body>
-</html>
-
+</div>

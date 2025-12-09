@@ -35,7 +35,7 @@
                         </div>
                         <div class="flex-grow-1">
                             <h6 class="mb-1">
-                                <a href="{{ route('tenant.notifications.show', $notification->id) }}" 
+                                <a href="{{ workspace_route('tenant.notifications.show', ['id' => $notification->id]) }}" 
                                    class="text-decoration-none">
                                     {{ $notification->title }}
                                 </a>

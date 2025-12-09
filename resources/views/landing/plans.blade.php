@@ -22,10 +22,15 @@
     @if($plans && $plans->count() > 0)
     <section class="py-16 lg:py-24 bg-white">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-4">Escolha o Plano Ideal</h2>
+                <p class="text-lg text-gray-600">Todos os nossos planos incluem suporte completo e atualizações regulares</p>
+            </div>
+            
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                 @foreach($plans as $plan)
-                <div class="bg-white rounded-xl shadow-lg border-2 {{ $loop->index === 1 ? 'border-blue-600 transform scale-105' : 'border-gray-200' }} hover:shadow-2xl transition-all duration-300">
-                    @if($loop->index === 1)
+                <div class="bg-white rounded-xl shadow-lg border-2 {{ $loop->index === 1 && $plans->count() >= 3 ? 'border-blue-600 transform scale-105' : 'border-gray-200' }} hover:shadow-2xl transition-all duration-300">
+                    @if($loop->index === 1 && $plans->count() >= 3)
                     <div class="bg-blue-600 text-white text-center py-2 rounded-t-xl">
                         <span class="text-sm font-semibold">MAIS POPULAR</span>
                     </div>
@@ -45,9 +50,15 @@
                             @endif
                         </div>
                         
+                        @if($plan->description)
+                        <div class="mb-4 text-center">
+                            <p class="text-gray-600 text-sm">{{ $plan->description }}</p>
+                        </div>
+                        @endif
+                        
                         <ul class="space-y-4 mb-8">
-                            @if($plan->features && count($plan->features) > 0)
-                                @foreach($plan->features as $feature)
+                            @if(!empty($plan->features) && is_array($plan->features) && count($plan->features) > 0)
+                                @foreach(array_slice($plan->features, 0, 6) as $feature)
                                 <li class="flex items-start">
                                     <svg class="w-6 h-6 text-green-500 mr-3 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
@@ -55,14 +66,21 @@
                                     <span class="text-gray-700">{{ $feature }}</span>
                                 </li>
                                 @endforeach
+                                @if(count($plan->features) > 6)
+                                <li class="text-center pt-2">
+                                    <button onclick="openPlanModal('{{ $plan->id }}')" class="text-blue-600 hover:text-blue-700 text-sm font-semibold">
+                                        Ver todos os recursos ({{ count($plan->features) }})
+                                    </button>
+                                </li>
+                                @endif
                             @else
                                 <li class="text-gray-500 text-center py-4">Sem recursos cadastrados</li>
                             @endif
                         </ul>
                         
                         <div class="mt-8">
-                            <button onclick="openPreRegisterModal('{{ $plan->id }}', '{{ $plan->name }}', '{{ $plan->formatted_price }}')" 
-                                class="w-full {{ $loop->index === 1 ? 'bg-blue-600 hover:bg-blue-700' : 'bg-gray-900 hover:bg-gray-800' }} text-white px-6 py-3 rounded-lg font-semibold transition-colors shadow-lg">
+                            <button onclick="openPreRegisterModal('{{ $plan->id }}', '{{ addslashes($plan->name) }}', '{{ $plan->formatted_price }}')" 
+                                class="w-full {{ $loop->index === 1 && $plans->count() >= 3 ? 'bg-blue-600 hover:bg-blue-700' : 'bg-gray-900 hover:bg-gray-800' }} text-white px-6 py-3 rounded-lg font-semibold transition-colors shadow-lg">
                                 Escolher Plano
                             </button>
                         </div>
@@ -70,13 +88,6 @@
                 </div>
                 @endforeach
             </div>
-            
-            @if($plans->count() === 0)
-            <div class="text-center py-12">
-                <p class="text-gray-600 text-lg">Nenhum plano disponível no momento.</p>
-                <p class="text-gray-500 mt-2">Entre em contato para mais informações.</p>
-            </div>
-            @endif
         </div>
     </section>
     @else
@@ -133,10 +144,10 @@
                                 </li>
                             </ul>
                             
-                            <button onclick="openPreRegisterModal(null, 'Essencial', 'R$ 99,00')" 
-                                class="w-full bg-gray-900 hover:bg-gray-800 text-white px-6 py-3 rounded-lg font-semibold transition-colors shadow-lg">
-                                Escolher Plano
-                            </button>
+                            <a href="{{ route('landing.contact') }}" 
+                                class="block w-full text-center bg-gray-900 hover:bg-gray-800 text-white px-6 py-3 rounded-lg font-semibold transition-colors shadow-lg">
+                                Falar com Comercial
+                            </a>
                         </div>
                     </div>
                     
@@ -200,10 +211,10 @@
                                 </li>
                             </ul>
                             
-                            <button onclick="openPreRegisterModal(null, 'Profissional', 'R$ 299,00')" 
-                                class="w-full bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors shadow-lg">
-                                Escolher Plano
-                            </button>
+                            <a href="{{ route('landing.contact') }}" 
+                                class="block w-full text-center bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors shadow-lg">
+                                Falar com Comercial
+                            </a>
                         </div>
                     </div>
                     
@@ -280,6 +291,11 @@
                     <p class="text-gray-700"><strong>Valor:</strong> <span id="selected_plan_price"></span>/mês</p>
                 </div>
                 
+                <div id="noPlanWarning" class="hidden mb-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg text-yellow-800">
+                    <p class="font-semibold">Atenção:</p>
+                    <p class="text-sm">Para realizar o pré-cadastro, é necessário selecionar um plano cadastrado no sistema. Entre em contato com nossa equipe comercial para mais informações.</p>
+                </div>
+                
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                     <div>
                         <label for="name" class="block text-sm font-medium text-gray-700 mb-1">Nome Legal *</label>
@@ -312,12 +328,16 @@
                         class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                 </div>
                 
-                <div class="mb-4">
-                    <label for="subdomain_suggested" class="block text-sm font-medium text-gray-700 mb-1">Subdomínio Sugerido</label>
-                    <input type="text" id="subdomain_suggested" name="subdomain_suggested" 
-                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                        placeholder="minha-clinica">
-                    <p class="text-sm text-gray-500 mt-1">Seu sistema estará disponível em: /t/seu-subdominio</p>
+                <div class="mb-4 hidden">
+                    <!-- Campo oculto - subdomínio será gerado automaticamente -->
+                    <input type="hidden" id="subdomain_suggested" name="subdomain_suggested" value="">
+                </div>
+                
+                <div class="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                    <p class="text-sm text-blue-800">
+                        <strong>ℹ️ Informação:</strong> O subdomínio será gerado automaticamente a partir do nome fantasia (ou nome legal). 
+                        Seu sistema estará disponível em: <code class="bg-blue-100 px-2 py-1 rounded">/workspace/seu-subdominio</code>
+                    </p>
                 </div>
                 
                 <div id="formError" class="hidden mb-4 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700"></div>
@@ -337,6 +357,52 @@
         </div>
     </div>
 
+    <!-- Modal de Plano Completo -->
+    <div id="planModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+        <div class="bg-white rounded-lg max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+            <div class="p-6 border-b border-gray-200">
+                <div class="flex justify-between items-center">
+                    <h3 class="text-2xl font-bold text-gray-900" id="planModalTitle">Detalhes do Plano</h3>
+                    <button onclick="closePlanModal()" class="text-gray-400 hover:text-gray-600">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+            
+            <div class="p-6">
+                <div class="text-center mb-6">
+                    <div class="mb-2">
+                        <span class="text-4xl font-bold text-blue-600" id="planModalPrice"></span>
+                        <span class="text-gray-600">/mês</span>
+                    </div>
+                    <p class="text-sm text-gray-500" id="planModalPeriodicity"></p>
+                </div>
+                
+                <div id="planModalDescription" class="mb-6 text-center text-gray-600"></div>
+                
+                <div class="mb-6">
+                    <h4 class="font-semibold text-gray-900 mb-4">Recursos Inclusos:</h4>
+                    <ul class="space-y-3" id="planModalFeatures">
+                        <!-- Preenchido via JavaScript -->
+                    </ul>
+                </div>
+                
+                <div class="flex justify-end gap-4">
+                    <button onclick="closePlanModal()" 
+                        class="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors">
+                        Fechar
+                    </button>
+                    <button onclick="selectPlanFromModal()" 
+                        class="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold transition-colors">
+                        Escolher Este Plano
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- CTA Section -->
     <section class="py-16 lg:py-24 bg-gray-50">
         <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
@@ -353,10 +419,103 @@
 
 @push('scripts')
 <script>
+    let currentPlanId = null;
+    let currentPlanName = null;
+    let currentPlanPrice = null;
+
+    async function openPlanModal(planId) {
+        try {
+            const response = await fetch('{{ url("/planos/json") }}/' + planId);
+            const plan = await response.json();
+            
+            if (!response.ok) {
+                throw new Error('Erro ao carregar dados do plano');
+            }
+            
+            // Preencher dados do modal
+            document.getElementById('planModalTitle').textContent = plan.name;
+            document.getElementById('planModalPrice').textContent = plan.formatted_price;
+            document.getElementById('planModalPeriodicity').textContent = plan.periodicity;
+            
+            // Descrição
+            const descriptionDiv = document.getElementById('planModalDescription');
+            if (plan.description) {
+                descriptionDiv.textContent = plan.description;
+                descriptionDiv.classList.remove('hidden');
+            } else {
+                descriptionDiv.classList.add('hidden');
+            }
+            
+            // Features
+            const featuresList = document.getElementById('planModalFeatures');
+            featuresList.innerHTML = '';
+            if (plan.features && plan.features.length > 0) {
+                plan.features.forEach(feature => {
+                    const li = document.createElement('li');
+                    li.className = 'flex items-start';
+                    li.innerHTML = `
+                        <svg class="w-6 h-6 text-green-500 mr-3 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                        </svg>
+                        <span class="text-gray-700">${feature}</span>
+                    `;
+                    featuresList.appendChild(li);
+                });
+            } else {
+                featuresList.innerHTML = '<li class="text-gray-500 text-center py-4">Sem recursos cadastrados</li>';
+            }
+            
+            // Armazenar dados para o botão "Escolher Este Plano"
+            currentPlanId = plan.id;
+            currentPlanName = plan.name;
+            currentPlanPrice = plan.formatted_price;
+            
+            // Mostrar modal
+            document.getElementById('planModal').classList.remove('hidden');
+            document.getElementById('planModal').classList.add('flex');
+            document.body.style.overflow = 'hidden';
+        } catch (error) {
+            console.error('Erro ao carregar plano:', error);
+            alert('Erro ao carregar informações do plano. Tente novamente.');
+        }
+    }
+    
+    function closePlanModal() {
+        document.getElementById('planModal').classList.add('hidden');
+        document.getElementById('planModal').classList.remove('flex');
+        document.body.style.overflow = 'auto';
+        currentPlanId = null;
+        currentPlanName = null;
+        currentPlanPrice = null;
+    }
+    
+    function selectPlanFromModal() {
+        if (currentPlanId) {
+            closePlanModal();
+            openPreRegisterModal(currentPlanId, currentPlanName, currentPlanPrice);
+        }
+    }
+    
     function openPreRegisterModal(planId, planName, planPrice) {
+        // Validar se há plan_id antes de abrir o modal
+        if (!planId) {
+            alert('Por favor, selecione um plano cadastrado. Entre em contato com nossa equipe comercial para mais informações.');
+            window.location.href = '{{ route("landing.contact") }}';
+            return;
+        }
+        
         document.getElementById('selected_plan_id').value = planId || '';
         document.getElementById('selected_plan_name').textContent = planName;
         document.getElementById('selected_plan_price').textContent = planPrice;
+        
+        // Mostrar/ocultar aviso baseado na presença de plan_id
+        const noPlanWarning = document.getElementById('noPlanWarning');
+        if (!planId) {
+            noPlanWarning.classList.remove('hidden');
+        } else {
+            noPlanWarning.classList.add('hidden');
+        }
+        
         document.getElementById('preRegisterModal').classList.remove('hidden');
         document.getElementById('preRegisterModal').classList.add('flex');
         document.body.style.overflow = 'hidden';
@@ -373,6 +532,16 @@
     
     document.getElementById('preRegisterForm').addEventListener('submit', async function(e) {
         e.preventDefault();
+        
+        const planId = document.getElementById('selected_plan_id').value;
+        
+        // Validar se há plan_id antes de enviar
+        if (!planId) {
+            const errorDiv = document.getElementById('formError');
+            errorDiv.textContent = 'Por favor, selecione um plano cadastrado. Entre em contato com nossa equipe comercial para mais informações.';
+            errorDiv.classList.remove('hidden');
+            return;
+        }
         
         const formData = new FormData(this);
         const errorDiv = document.getElementById('formError');
@@ -397,12 +566,24 @@
                 successDiv.classList.remove('hidden');
                 
                 if (data.payment_url) {
-                    setTimeout(() => {
-                        window.location.href = data.payment_url;
-                    }, 2000);
+                    // Redireciona imediatamente para a página de pagamento do Asaas
+                    window.location.href = data.payment_url;
+                } else {
+                    errorDiv.textContent = 'Erro: Link de pagamento não foi gerado. Entre em contato com o suporte.';
+                    errorDiv.classList.remove('hidden');
+                    console.error('Link de pagamento não retornado', data);
                 }
             } else {
-                errorDiv.textContent = data.error || 'Erro ao processar pré-cadastro. Tente novamente.';
+                // Tratar erros de validação
+                let errorMessage = 'Erro ao processar pré-cadastro. Tente novamente.';
+                if (data.errors) {
+                    // Se houver erros de validação do Laravel
+                    const errors = Object.values(data.errors).flat();
+                    errorMessage = errors.join(', ');
+                } else if (data.error) {
+                    errorMessage = data.error;
+                }
+                errorDiv.textContent = errorMessage;
                 errorDiv.classList.remove('hidden');
             }
         } catch (error) {

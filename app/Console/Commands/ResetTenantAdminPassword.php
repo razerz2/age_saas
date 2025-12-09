@@ -101,7 +101,7 @@ class ResetTenantAdminPassword extends Command
         $this->line("   Senha: {$newPassword}");
         $this->newLine();
         $this->info("💡 Agora você pode fazer login em:");
-        $loginUrl = $tenant->admin_login_url ?? url("/t/{$subdomain}/login");
+        $loginUrl = $tenant->admin_login_url ?? url("/customer/{$subdomain}/login");
         $this->line("   {$loginUrl}");
 
         return 0;

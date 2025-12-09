@@ -40,7 +40,7 @@ class RedirectIfTenantUnauthenticated
         \Log::info("➡️ Redirecionando para login do tenant", ['slug' => $slug]);
 
         return redirect()->route('tenant.login', [
-            'tenant' => $slug
+            'slug' => $slug
         ]);
     }
 
@@ -49,7 +49,12 @@ class RedirectIfTenantUnauthenticated
      */
     protected function getTenantSlug(Request $request): ?string
     {
-        // 1. Tenta pegar da rota (para rotas como /t/{tenant}/...)
+        // 1. Tenta pegar da rota (para rotas como /customer/{slug}/... ou /workspace/{slug}/...)
+        if ($request->route('slug')) {
+            return $request->route('slug');
+        }
+        
+        // Fallback para 'tenant' (caso ainda exista alguma rota antiga)
         if ($request->route('tenant')) {
             return $request->route('tenant');
         }

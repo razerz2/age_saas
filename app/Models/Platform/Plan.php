@@ -16,6 +16,7 @@ class Plan extends Model
 
     protected $fillable = [
         'name',
+        'description',
         'periodicity',
         'period_months',
         'price_cents',
@@ -42,6 +43,23 @@ class Plan extends Model
     public function getFormattedPriceAttribute(): string
     {
         return 'R$ ' . number_format($this->price_cents / 100, 2, ',', '.');
+    }
+
+    /**
+     * Garante que features sempre seja um array
+     */
+    public function getFeaturesAttribute($value)
+    {
+        if (is_array($value)) {
+            return $value;
+        }
+        
+        if (is_string($value)) {
+            $decoded = json_decode($value, true);
+            return is_array($decoded) ? $decoded : [];
+        }
+        
+        return [];
     }
 
     /**

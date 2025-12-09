@@ -20,6 +20,7 @@ use App\Http\Controllers\Platform\KioskMonitorController;
 use App\Http\Controllers\Platform\PlanAccessManagerController;
 use App\Http\Controllers\Platform\PreTenantController;
 use App\Http\Controllers\Platform\NotificationTemplateController;
+use App\Http\Controllers\Platform\ApiTenantTokenController;
 use App\Models\Platform\SystemNotification;
 use App\Http\Controllers\Platform\WhatsAppController;
 use App\Http\Controllers\Tenant\Integrations\GoogleCalendarController;
@@ -43,7 +44,9 @@ use App\Http\Controllers\Landing\LandingController;
 Route::get('/', [LandingController::class, 'index'])->name('landing.home');
 Route::get('/funcionalidades', [LandingController::class, 'features'])->name('landing.features');
 Route::get('/planos', [LandingController::class, 'plans'])->name('landing.plans');
+Route::get('/planos/json/{id}', [LandingController::class, 'getPlan'])->name('landing.plan.json');
 Route::get('/contato', [LandingController::class, 'contact'])->name('landing.contact');
+Route::get('/manual', [LandingController::class, 'manual'])->name('landing.manual');
 Route::post('/pre-cadastro', [LandingController::class, 'storePreRegister'])->name('landing.pre-register')
     ->middleware('throttle:10,1'); // Rate limit: 10 requisições por minuto
 
@@ -77,6 +80,17 @@ Route::middleware(['auth'])->prefix('Platform')->name('Platform.')->group(functi
     Route::middleware('module.access:tenants')->group(function () {
         Route::resource('tenants', TenantController::class);
         Route::post('/tenants/{tenant}/sync', [TenantController::class, 'syncWithAsaas'])->name('tenants.sync');
+        
+        // Tokens de API para bots
+        Route::middleware('module.access:api_tokens')->group(function () {
+            Route::get('/tenants/{tenant}/api-tokens', [ApiTenantTokenController::class, 'index'])->name('tenants.api-tokens.index');
+            Route::get('/tenants/{tenant}/api-tokens/create', [ApiTenantTokenController::class, 'create'])->name('tenants.api-tokens.create');
+            Route::post('/tenants/{tenant}/api-tokens', [ApiTenantTokenController::class, 'store'])->name('tenants.api-tokens.store');
+            Route::get('/tenants/{tenant}/api-tokens/{token}', [ApiTenantTokenController::class, 'show'])->name('tenants.api-tokens.show');
+            Route::get('/tenants/{tenant}/api-tokens/{token}/edit', [ApiTenantTokenController::class, 'edit'])->name('tenants.api-tokens.edit');
+            Route::put('/tenants/{tenant}/api-tokens/{token}', [ApiTenantTokenController::class, 'update'])->name('tenants.api-tokens.update');
+            Route::delete('/tenants/{tenant}/api-tokens/{token}', [ApiTenantTokenController::class, 'destroy'])->name('tenants.api-tokens.destroy');
+        });
     });
 
     // 🔸 Módulo: Planos
@@ -114,9 +128,11 @@ Route::middleware(['auth'])->prefix('Platform')->name('Platform.')->group(functi
         Route::resource('pre-tenants', PreTenantController::class)->names([
             'index' => 'pre_tenants.index',
             'show' => 'pre_tenants.show',
-        ])->only(['index', 'show']);
+            'destroy' => 'pre_tenants.destroy',
+        ])->only(['index', 'show', 'destroy']);
         Route::post('pre-tenants/{preTenant}/approve', [PreTenantController::class, 'approve'])->name('pre_tenants.approve');
         Route::post('pre-tenants/{preTenant}/cancel', [PreTenantController::class, 'cancel'])->name('pre_tenants.cancel');
+        Route::post('pre-tenants/{preTenant}/confirm-payment', [PreTenantController::class, 'confirmPayment'])->name('pre_tenants.confirm_payment');
     });
 
     // 🔸 Módulo: Catálogo de Especialidades Médicas
@@ -152,6 +168,16 @@ Route::middleware(['auth'])->prefix('Platform')->name('Platform.')->group(functi
         Route::post('notification-templates/{notificationTemplate}/toggle', 
             [NotificationTemplateController::class, 'toggle'])
             ->name('notification-templates.toggle');
+        
+        // Layouts de Email
+        Route::get('email-layouts', [\App\Http\Controllers\Platform\EmailLayoutController::class, 'index'])
+            ->name('email-layouts.index');
+        Route::get('email-layouts/{emailLayout}/edit', [\App\Http\Controllers\Platform\EmailLayoutController::class, 'edit'])
+            ->name('email-layouts.edit');
+        Route::put('email-layouts/{emailLayout}', [\App\Http\Controllers\Platform\EmailLayoutController::class, 'update'])
+            ->name('email-layouts.update');
+        Route::get('email-layouts/{emailLayout}/preview', [\App\Http\Controllers\Platform\EmailLayoutController::class, 'preview'])
+            ->name('email-layouts.preview');
     });
 
     // 🔸 Módulo: Localização (Países, Estados, Cidades)

@@ -79,6 +79,7 @@ class Kernel extends HttpKernel
         'verify.asaas.token' => \App\Http\Middleware\VerifyAsaasToken::class,
         'module.access'      => \App\Http\Middleware\CheckModuleAccess::class,
         'ensure.guard'       => \App\Http\Middleware\EnsureCorrectGuard::class,
+        'platform.bot.token' => \App\Http\Middleware\Platform\BotApiTokenMiddleware::class,
 
         /**
          * 🔥 Tenant detectado pelo path
@@ -114,5 +115,15 @@ class Kernel extends HttpKernel
          * 🏥 Detecta tenant para rotas do portal do paciente
          */
         'detect.tenant.patient' => \App\Http\Middleware\DetectTenantForPatientPortal::class,
+
+        /**
+         * 🔐 Verifica acesso a funcionalidades do plano (requer TODAS as features)
+         */
+        'feature' => \App\Http\Middleware\EnsureFeatureAccess::class,
+
+        /**
+         * 🔐 Verifica acesso a funcionalidades do plano (requer QUALQUER feature)
+         */
+        'feature.any' => \App\Http\Middleware\EnsureAnyFeatureAccess::class,
     ];
 }

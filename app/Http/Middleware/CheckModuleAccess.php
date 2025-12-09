@@ -11,17 +11,18 @@ class CheckModuleAccess
 {
     public function handle(Request $request, Closure $next, string $module)
     {
-        // Detecta qual guard usar baseado na rota
-        $isTenantRoute = $request->segment(1) === 'tenant';
-        $isPlatformRoute = $request->segment(1) === 'platform' || $request->segment(1) === 'admin';
+        // Detecta qual guard usar baseado na rota (case-insensitive)
+        $segment1 = strtolower($request->segment(1) ?? '');
+        $isWorkspaceRoute = $segment1 === 'workspace';
+        $isPlatformRoute = $segment1 === 'platform' || $segment1 === 'admin';
         
         // Determina o guard e rotas de redirecionamento
-        if ($isTenantRoute) {
+        if ($isWorkspaceRoute) {
             $guard = 'tenant';
             $loginRoute = 'tenant.login';
             $dashboardRoute = 'tenant.dashboard';
             $moduleClass = \App\Models\Tenant\Module::class;
-            $tenantSlug = session('tenant_slug');
+            $tenantSlug = session('tenant_slug') ?? $request->route('slug');
             
             // Se não estiver autenticado no guard tenant
             if (!Auth::guard($guard)->check()) {
@@ -32,7 +33,7 @@ class CheckModuleAccess
                 
                 // Tenta redirecionar para o login do tenant
                 if ($tenantSlug) {
-                    return redirect()->route($loginRoute, ['tenant' => $tenantSlug])
+                    return redirect()->route($loginRoute, ['slug' => $tenantSlug])
                         ->with('error', 'Você precisa estar autenticado para acessar o sistema.');
                 }
                 
@@ -57,8 +58,8 @@ class CheckModuleAccess
             $user = Auth::guard($guard)->user();
         }
 
-        // Para rotas tenant, verifica se é admin (admin tem acesso a todos os módulos)
-        if ($isTenantRoute && isset($user->role) && $user->role === 'admin') {
+        // Para rotas workspace, verifica se é admin (admin tem acesso a todos os módulos)
+        if ($isWorkspaceRoute && isset($user->role) && $user->role === 'admin') {
             return $next($request);
         }
 
@@ -74,9 +75,22 @@ class CheckModuleAccess
         }
 
         // Verifica se o usuário não tem acesso ao módulo solicitado
+        // Garantir que $userModules seja sempre um array válido
+        if (!is_array($userModules)) {
+            $userModules = [];
+        }
+        
         if (!in_array($module, $userModules)) {
-            // Busca o nome do módulo
-            $moduleName = $moduleClass::getName($module) ?? ucfirst($module);
+            // Busca o nome do módulo com tratamento de erro
+            try {
+                $moduleName = $moduleClass::getName($module) ?? ucfirst($module);
+            } catch (\Exception $e) {
+                Log::warning("Erro ao buscar nome do módulo", [
+                    'module' => $module,
+                    'error' => $e->getMessage()
+                ]);
+                $moduleName = ucfirst($module);
+            }
 
             // Mensagem personalizada e amigável
             $message = "Você não tem permissão para acessar o módulo \"{$moduleName}\". Entre em contato com o administrador do sistema para solicitar acesso a este módulo.";
