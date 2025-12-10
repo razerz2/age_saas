@@ -42,14 +42,14 @@ class OAuthAccountController extends Controller
             ->with('success', 'Conta OAuth criada com sucesso.');
     }
 
-    public function show($id)
+    public function show($slug, $id)
     {
         $oauthAccount = OauthAccount::with(['integration', 'user'])->findOrFail($id);
 
         return view('tenant.oauth-accounts.show', compact('oauthAccount'));
     }
 
-    public function edit($id)
+    public function edit($slug, $id)
     {
         $oauthAccount = OauthAccount::findOrFail($id);
         $integrations = Integrations::where('is_enabled', true)->get();
@@ -58,7 +58,7 @@ class OAuthAccountController extends Controller
         return view('tenant.oauth-accounts.edit', compact('oauthAccount', 'integrations', 'users'));
     }
 
-    public function update(UpdateOAuthAccountRequest $request, $id)
+    public function update(UpdateOAuthAccountRequest $request, $slug, $id)
     {
         $oauthAccount = OauthAccount::findOrFail($id);
         $oauthAccount->update($request->validated());
@@ -67,7 +67,7 @@ class OAuthAccountController extends Controller
             ->with('success', 'Conta OAuth atualizada com sucesso.');
     }
 
-    public function destroy($id)
+    public function destroy($slug, $id)
     {
         $oauthAccount = OauthAccount::findOrFail($id);
         $oauthAccount->delete();

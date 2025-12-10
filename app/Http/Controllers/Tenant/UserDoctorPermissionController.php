@@ -13,13 +13,13 @@ class UserDoctorPermissionController extends Controller
     /**
      * Exibe a página de gerenciamento de permissões de um usuário
      */
-    public function index($userId)
+    public function index($slug, $userId)
     {
         $user = User::findOrFail($userId);
         
         // Não permite gerenciar permissões para médicos e admins
         if ($user->role === 'doctor' || $user->role === 'admin') {
-            return redirect()->route('tenant.users.index')
+            return redirect()->route('tenant.users.index', ['slug' => tenant()->subdomain])
                 ->with('error', 'Médicos e administradores não precisam de permissões. Eles têm acesso completo às suas próprias agendas.');
         }
         
@@ -32,13 +32,13 @@ class UserDoctorPermissionController extends Controller
     /**
      * Atualiza as permissões de um usuário
      */
-    public function update(Request $request, $userId)
+    public function update(Request $request, $slug, $userId)
     {
         $user = User::findOrFail($userId);
         
         // Não permite gerenciar permissões para médicos e admins
         if ($user->role === 'doctor' || $user->role === 'admin') {
-            return redirect()->route('tenant.users.index')
+            return redirect()->route('tenant.users.index', ['slug' => tenant()->subdomain])
                 ->with('error', 'Médicos e administradores não precisam de permissões.');
         }
         
@@ -60,14 +60,14 @@ class UserDoctorPermissionController extends Controller
             }
         }
         
-        return redirect()->route('tenant.users.show', $user->id)
+        return redirect()->route('tenant.users.show', ['slug' => tenant()->subdomain, 'id' => $user->id])
             ->with('success', 'Permissões de médicos atualizadas com sucesso.');
     }
 
     /**
      * API: Retorna os médicos que o usuário pode visualizar
      */
-    public function getAllowedDoctors($userId)
+    public function getAllowedDoctors($slug, $userId)
     {
         $user = User::findOrFail($userId);
         

@@ -1,4 +1,4 @@
-@extends('layouts.connect_plus.app')
+﻿@extends('layouts.connect_plus.app')
 
 @section('title', 'Gerenciar Permissões de Médicos')
 
@@ -13,10 +13,10 @@
                     <a href="{{ workspace_route('tenant.dashboard') }}">Dashboard</a>
                 </li>
                 <li class="breadcrumb-item">
-                    <a href="{{ route('tenant.users.index') }}">Usuários</a>
+                    <a href="{{ workspace_route('tenant.users.index') }}">Usuários</a>
                 </li>
                 <li class="breadcrumb-item">
-                    <a href="{{ route('tenant.users.show', $user->id) }}">{{ $user->name }}</a>
+                    <a href="{{ workspace_route('tenant.users.show', $user->id) }}">{{ $user->name }}</a>
                 </li>
                 <li class="breadcrumb-item active" aria-current="page">Permissões de Médicos</li>
             </ol>
@@ -36,7 +36,7 @@
                         <strong>Nota:</strong> Se nenhum médico for selecionado, o usuário poderá visualizar todos os médicos.
                     </p>
 
-                    <form action="{{ route('tenant.users.doctor-permissions.update', $user->id) }}" method="POST">
+                    <form action="{{ workspace_route('tenant.users.doctor-permissions.update', $user->id) }}" method="POST">
                         @csrf
                         @method('PUT')
 
@@ -75,7 +75,7 @@
                             <button type="submit" class="btn btn-primary">
                                 <i class="mdi mdi-content-save"></i> Salvar Permissões
                             </button>
-                            <a href="{{ route('tenant.users.show', $user->id) }}" class="btn btn-secondary">
+                            <a href="{{ workspace_route('tenant.users.show', $user->id) }}" class="btn btn-secondary">
                                 <i class="mdi mdi-arrow-left"></i> Voltar
                             </a>
                         </div>

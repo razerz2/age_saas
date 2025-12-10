@@ -1,4 +1,4 @@
-@extends('layouts.connect_plus.app')
+﻿@extends('layouts.connect_plus.app')
 
 @section('title', 'Agenda')
 
@@ -16,7 +16,7 @@
                     <a href="{{ workspace_route('tenant.dashboard') }}">Dashboard</a>
                 </li>
                 <li class="breadcrumb-item">
-                    <a href="{{ route('tenant.calendars.index') }}">Calendários</a>
+                    <a href="{{ workspace_route('tenant.calendars.index') }}">Calendários</a>
                 </li>
                 <li class="breadcrumb-item active" aria-current="page">
                     Agenda

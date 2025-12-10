@@ -1,4 +1,4 @@
-@extends('layouts.connect_plus.app')
+﻿@extends('layouts.connect_plus.app')
 
 @section('title', 'Consultas Online')
 
@@ -74,7 +74,7 @@
                                             @endif
                                         </td>
                                         <td>
-                                            <a href="{{ route('tenant.online-appointments.show', $appointment->id) }}" class="btn btn-info btn-sm">
+                                            <a href="{{ workspace_route('tenant.online-appointments.show', $appointment->id) }}" class="btn btn-info btn-sm">
                                                 <i class="mdi mdi-eye"></i> Gerenciar
                                             </a>
                                         </td>

@@ -219,14 +219,14 @@ class AppointmentController extends Controller
             ->with('success', 'Agendamento criado com sucesso.');
     }
 
-    public function show($id)
+    public function show($slug, $id)
     {
         $appointment = Appointment::findOrFail($id);
         $appointment->load(['calendar.doctor.user', 'patient', 'type', 'specialty']);
         return view('tenant.appointments.show', compact('appointment'));
     }
 
-    public function edit($id)
+    public function edit($slug, $id)
     {
         $appointment = Appointment::findOrFail($id);
         
@@ -260,7 +260,7 @@ class AppointmentController extends Controller
         ));
     }
 
-    public function update(UpdateAppointmentRequest $request, $id)
+    public function update(UpdateAppointmentRequest $request, $slug, $id)
     {
         $appointment = Appointment::findOrFail($id);
         $data = $request->validated();
@@ -325,7 +325,7 @@ class AppointmentController extends Controller
             ->with('success', 'Agendamento atualizado com sucesso.');
     }
 
-    public function destroy($id)
+    public function destroy($slug, $id)
     {
         $user = Auth::guard('tenant')->user();
         
@@ -362,7 +362,7 @@ class AppointmentController extends Controller
             ->with('success', 'Agendamento removido.');
     }
 
-    public function events(Request $request, $id)
+    public function events(Request $request, $slug, $id)
     {
         $calendar = Calendar::findOrFail($id);
         $calendar->load('doctor.user');
@@ -575,7 +575,7 @@ class AppointmentController extends Controller
     /**
      * API: Buscar calendários por médico
      */
-    public function getCalendarsByDoctor($doctorId)
+    public function getCalendarsByDoctor($slug, $doctorId)
     {
         $calendars = Calendar::where('doctor_id', $doctorId)
             ->orderBy('name')
@@ -593,7 +593,7 @@ class AppointmentController extends Controller
     /**
      * API: Buscar tipos de consulta por médico
      */
-    public function getAppointmentTypesByDoctor($doctorId)
+    public function getAppointmentTypesByDoctor($slug, $doctorId)
     {
         try {
             // Retorna apenas os tipos de consulta do médico específico
@@ -624,7 +624,7 @@ class AppointmentController extends Controller
     /**
      * API: Buscar especialidades por médico
      */
-    public function getSpecialtiesByDoctor($doctorId)
+    public function getSpecialtiesByDoctor($slug, $doctorId)
     {
         try {
             $doctor = Doctor::findOrFail($doctorId);
@@ -667,7 +667,7 @@ class AppointmentController extends Controller
     /**
      * API: Buscar horários disponíveis para um médico em uma data específica
      */
-    public function getAvailableSlots(Request $request, $doctorId)
+    public function getAvailableSlots(Request $request, $slug, $doctorId)
     {
         $request->validate([
             'date' => 'required|date',
@@ -884,7 +884,7 @@ class AppointmentController extends Controller
     /**
      * API: Buscar dias trabalhados (business hours) do médico
      */
-    public function getBusinessHoursByDoctor($doctorId)
+    public function getBusinessHoursByDoctor($slug, $doctorId)
     {
         try {
             $doctor = Doctor::with('user')->findOrFail($doctorId);

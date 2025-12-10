@@ -1,4 +1,4 @@
-@extends('layouts.connect_plus.app')
+﻿@extends('layouts.connect_plus.app')
 
 @section('title', 'Configurações')
 
@@ -73,7 +73,7 @@
                                     </h5>
 
                                     @if($calendar)
-                                        <form action="{{ route('tenant.doctor-settings.update-calendar') }}" method="POST">
+                                        <form action="{{ workspace_route('tenant.doctor-settings.update-calendar') }}" method="POST">
                                             @csrf
                                             @method('PUT')
                                             
@@ -113,7 +113,7 @@
                                             </div>
                                         </form>
                                     @else
-                                        <form action="{{ route('tenant.doctor-settings.update-calendar') }}" method="POST">
+                                        <form action="{{ workspace_route('tenant.doctor-settings.update-calendar') }}" method="POST">
                                             @csrf
                                             @method('PUT')
                                             
@@ -211,7 +211,7 @@
                                                                         onclick="editHour('{{ $hour->id }}', '{{ $hour->weekday }}', '{{ $hour->start_time }}', '{{ $hour->end_time }}', '{{ $hour->break_start_time }}', '{{ $hour->break_end_time }}')">
                                                                     <i class="mdi mdi-pencil"></i>
                                                                 </button>
-                                                                <form action="{{ route('tenant.doctor-settings.destroy-business-hour', $hour->id) }}" 
+                                                                <form action="{{ workspace_route('tenant.doctor-settings.destroy-business-hour', $hour->id) }}" 
                                                                       method="POST" class="d-inline" 
                                                                       onsubmit="return confirm('Tem certeza que deseja remover este horário?')">
                                                                     @csrf
@@ -279,7 +279,7 @@
                                                                         onclick="editType('{{ $type->id }}', '{{ $type->name }}', '{{ $type->duration_min }}', '{{ $type->is_active }}')">
                                                                     <i class="mdi mdi-pencil"></i>
                                                                 </button>
-                                                                <form action="{{ route('tenant.doctor-settings.destroy-appointment-type', $type->id) }}" 
+                                                                <form action="{{ workspace_route('tenant.doctor-settings.destroy-appointment-type', $type->id) }}" 
                                                                       method="POST" class="d-inline" 
                                                                       onsubmit="return confirm('Tem certeza que deseja remover este tipo de atendimento?')">
                                                                     @csrf
@@ -313,7 +313,7 @@
     <div class="modal fade" id="addHourModal" tabindex="-1">
         <div class="modal-dialog">
             <div class="modal-content">
-                <form action="{{ route('tenant.doctor-settings.store-business-hour') }}" method="POST">
+                <form action="{{ workspace_route('tenant.doctor-settings.store-business-hour') }}" method="POST">
                     @csrf
                     <div class="modal-header">
                         <h5 class="modal-title">Novo Horário de Atendimento</h5>
@@ -497,7 +497,7 @@
     <div class="modal fade" id="addTypeModal" tabindex="-1">
         <div class="modal-dialog">
             <div class="modal-content">
-                <form action="{{ route('tenant.doctor-settings.store-appointment-type') }}" method="POST">
+                <form action="{{ workspace_route('tenant.doctor-settings.store-appointment-type') }}" method="POST">
                     @csrf
                     <div class="modal-header">
                         <h5 class="modal-title">Novo Tipo de Atendimento</h5>
@@ -743,7 +743,7 @@
         // Função para editar horário
         window.editHour = function(id, weekday, startTime, endTime, breakStartTime, breakEndTime) {
             const form = $('#editHourForm');
-            form.attr('action', '{{ route("tenant.doctor-settings.update-business-hour", ":id") }}'.replace(':id', id));
+            form.attr('action', '{{ workspace_route("tenant.doctor-settings.update-business-hour", ":id") }}'.replace(':id', id));
             form.find('select[name="weekday"]').val(weekday);
             form.find('input[name="start_time"]').val(startTime);
             form.find('input[name="end_time"]').val(endTime);
@@ -755,7 +755,7 @@
         // Função para editar tipo
         window.editType = function(id, name, durationMin, isActive) {
             const form = $('#editTypeForm');
-            form.attr('action', '{{ route("tenant.doctor-settings.update-appointment-type", ":id") }}'.replace(':id', id));
+            form.attr('action', '{{ workspace_route("tenant.doctor-settings.update-appointment-type", ":id") }}'.replace(':id', id));
             form.find('input[name="name"]').val(name);
             form.find('input[name="duration_min"]').val(durationMin);
             form.find('select[name="is_active"]').val(isActive ? '1' : '0');

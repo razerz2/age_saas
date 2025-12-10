@@ -1,4 +1,4 @@
-@extends('layouts.connect_plus.app')
+﻿@extends('layouts.connect_plus.app')
 
 @section('title', 'Criar Agendamento')
 
@@ -36,7 +36,7 @@
                             <p class="card-description mb-0 text-muted">Preencha os dados abaixo para criar um novo agendamento</p>
                         </div>
                         <div>
-                            <a href="{{ route('tenant.public-booking-link.index') }}" 
+                            <a href="{{ workspace_route('tenant.public-booking-link.index') }}" 
                                class="btn btn-outline-info btn-sm" 
                                title="Acessar link de agendamento público">
                                 <i class="mdi mdi-link-variant me-1"></i>
@@ -58,7 +58,7 @@
                                     Seus pacientes podem agendar consultas diretamente pela internet usando o link de agendamento público. 
                                     Compartilhe o link nas redes sociais, WhatsApp ou site da clínica.
                                 </p>
-                                <a href="{{ route('tenant.public-booking-link.index') }}" 
+                                <a href="{{ workspace_route('tenant.public-booking-link.index') }}" 
                                    class="btn btn-sm btn-info mt-2">
                                     <i class="mdi mdi-link-variant me-1"></i>
                                     Ver e Copiar Link de Agendamento
@@ -81,7 +81,7 @@
                         </div>
                     @endif
 
-                    <form class="forms-sample" action="{{ route('tenant.appointments.store') }}" method="POST">
+                    <form class="forms-sample" action="{{ workspace_route('tenant.appointments.store') }}" method="POST">
                         @csrf
 
                         {{-- Seção: Informações Básicas --}}
@@ -247,7 +247,7 @@
 
                         {{-- Botões de Ação --}}
                         <div class="d-flex justify-content-between align-items-center pt-3 border-top">
-                            <a href="{{ route('tenant.appointments.index') }}" class="btn btn-light">
+                            <a href="{{ workspace_route('tenant.appointments.index') }}" class="btn btn-light">
                                 <i class="mdi mdi-arrow-left me-1"></i>
                                 Cancelar
                             </a>

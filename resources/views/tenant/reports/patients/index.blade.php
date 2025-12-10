@@ -1,4 +1,4 @@
-@extends('layouts.connect_plus.app')
+﻿@extends('layouts.connect_plus.app')
 
 @section('title', 'Relatório de Pacientes')
 
@@ -9,7 +9,7 @@
     <nav aria-label="breadcrumb">
         <ol class="breadcrumb">
             <li class="breadcrumb-item"><a href="{{ workspace_route('tenant.dashboard') }}">Dashboard</a></li>
-            <li class="breadcrumb-item"><a href="{{ route('tenant.reports.index') }}">Relatórios</a></li>
+            <li class="breadcrumb-item"><a href="{{ workspace_route('tenant.reports.index') }}">Relatórios</a></li>
             <li class="breadcrumb-item active" aria-current="page">Pacientes</li>
         </ol>
     </nav>
@@ -106,7 +106,7 @@ $(document).ready(function() {
 
 function loadData() {
     $.ajax({
-        url: '{{ route("tenant.reports.patients.data") }}',
+        url: '{{ workspace_route("tenant.reports.patients.data") }}',
         method: 'POST',
         data: $('#filter-form').serialize(),
         headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },

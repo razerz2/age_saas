@@ -1,4 +1,4 @@
-@extends('layouts.connect_plus.app')
+﻿@extends('layouts.connect_plus.app')
 
 @section('title', 'Editar Formulário')
 
@@ -16,7 +16,7 @@
                     <a href="{{ workspace_route('tenant.dashboard') }}">Dashboard</a>
                 </li>
                 <li class="breadcrumb-item">
-                    <a href="{{ route('tenant.forms.index') }}">Formulários</a>
+                    <a href="{{ workspace_route('tenant.forms.index') }}">Formulários</a>
                 </li>
                 <li class="breadcrumb-item active" aria-current="page">Editar</li>
             </ol>
@@ -37,7 +37,7 @@
                         </div>
                     </div>
 
-                    <form class="forms-sample" action="{{ route('tenant.forms.update', $form->id) }}" method="POST">
+                    <form class="forms-sample" action="{{ workspace_route('tenant.forms.update', $form->id) }}" method="POST">
                         @csrf
                         @method('PUT')
 
@@ -151,7 +151,7 @@
 
                         {{-- Botões de Ação --}}
                         <div class="d-flex justify-content-between align-items-center pt-3 border-top">
-                            <a href="{{ route('tenant.forms.index') }}" class="btn btn-light">
+                            <a href="{{ workspace_route('tenant.forms.index') }}" class="btn btn-light">
                                 <i class="mdi mdi-arrow-left me-1"></i>
                                 Cancelar
                             </a>
@@ -188,7 +188,7 @@
                 return;
             }
 
-            fetch(`{{ route('tenant.forms.doctors.specialties', ['doctorId' => '__DOCTOR_ID__']) }}`.replace('__DOCTOR_ID__', doctorId))
+            fetch(`{{ workspace_route('tenant.forms.doctors.specialties', ['doctorId' => '__DOCTOR_ID__']) }}`.replace('__DOCTOR_ID__', doctorId))
                 .then(response => response.json())
                 .then(data => {
                     specialtySelect.innerHTML = '<option value="">Selecione uma especialidade</option>';

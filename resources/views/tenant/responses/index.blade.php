@@ -1,4 +1,4 @@
-@extends('layouts.connect_plus.app')
+﻿@extends('layouts.connect_plus.app')
 
 @section('title', 'Respostas de Formulários')
 
@@ -47,8 +47,8 @@
                                         <td>{{ $response->submitted_at ? $response->submitted_at->format('d/m/Y H:i') : 'N/A' }}</td>
                                         <td>{{ $response->status ?? 'N/A' }}</td>
                                         <td>
-                                            <a href="{{ route('tenant.responses.show', $response->id) }}" class="btn btn-info btn-sm">Ver</a>
-                                            <a href="{{ route('tenant.responses.edit', $response->id) }}" class="btn btn-warning btn-sm">Editar</a>
+                                            <a href="{{ workspace_route('tenant.responses.show', $response->id) }}" class="btn btn-info btn-sm">Ver</a>
+                                            <a href="{{ workspace_route('tenant.responses.edit', $response->id) }}" class="btn btn-warning btn-sm">Editar</a>
                                         </td>
                                     </tr>
                                 @endforeach

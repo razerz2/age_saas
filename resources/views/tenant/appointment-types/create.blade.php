@@ -1,4 +1,4 @@
-@extends('layouts.connect_plus.app')
+﻿@extends('layouts.connect_plus.app')
 
 @section('title', 'Criar Tipo de Consulta')
 
@@ -16,7 +16,7 @@
                     <a href="{{ workspace_route('tenant.dashboard') }}">Dashboard</a>
                 </li>
                 <li class="breadcrumb-item">
-                    <a href="{{ route('tenant.appointment-types.index') }}">Tipos de Consulta</a>
+                    <a href="{{ workspace_route('tenant.appointment-types.index') }}">Tipos de Consulta</a>
                 </li>
                 <li class="breadcrumb-item active" aria-current="page">Criar</li>
             </ol>
@@ -37,7 +37,7 @@
                         </div>
                     </div>
 
-                    <form class="forms-sample" action="{{ route('tenant.appointment-types.store') }}" method="POST">
+                    <form class="forms-sample" action="{{ workspace_route('tenant.appointment-types.store') }}" method="POST">
                         @csrf
 
                         {{-- Seção: Informações do Tipo de Consulta --}}
@@ -109,7 +109,7 @@
 
                         {{-- Botões de Ação --}}
                         <div class="d-flex justify-content-between align-items-center pt-3 border-top">
-                            <a href="{{ route('tenant.appointment-types.index') }}" class="btn btn-light">
+                            <a href="{{ workspace_route('tenant.appointment-types.index') }}" class="btn btn-light">
                                 <i class="mdi mdi-arrow-left me-1"></i>
                                 Cancelar
                             </a>

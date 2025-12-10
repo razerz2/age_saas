@@ -1,4 +1,4 @@
-@extends('layouts.connect_plus.app')
+﻿@extends('layouts.connect_plus.app')
 
 @section('title', 'Integração Apple Calendar')
 
@@ -16,7 +16,7 @@
                     <a href="{{ workspace_route('tenant.dashboard') }}">Dashboard</a>
                 </li>
                 <li class="breadcrumb-item">
-                    <a href="{{ route('tenant.integrations.index') }}">Integrações</a>
+                    <a href="{{ workspace_route('tenant.integrations.index') }}">Integrações</a>
                 </li>
                 <li class="breadcrumb-item active" aria-current="page">Apple Calendar</li>
             </ol>
@@ -230,7 +230,7 @@ php artisan migrate --database=tenant --path=database/migrations/tenant/2025_12_
                                                                 title="Status da integração">
                                                             <i class="mdi mdi-information-outline"></i>
                                                         </button>
-                                                        <form action="{{ route('tenant.integrations.apple.disconnect', $doctor->id) }}" 
+                                                        <form action="{{ workspace_route('tenant.integrations.apple.disconnect', $doctor->id) }}" 
                                                               method="POST" 
                                                               class="d-inline"
                                                               onsubmit="return confirm('Tem certeza que deseja desconectar a integração do Apple Calendar para este médico?\n\nOs eventos já criados no Apple Calendar não serão removidos automaticamente.');">
@@ -244,7 +244,7 @@ php artisan migrate --database=tenant --path=database/migrations/tenant/2025_12_
                                                     </div>
                                                 @else
                                                     @if (isset($hasAppleCalendarTable) && $hasAppleCalendarTable)
-                                                        <a href="{{ route('tenant.integrations.apple.connect.form', $doctor->id) }}" 
+                                                        <a href="{{ workspace_route('tenant.integrations.apple.connect.form', $doctor->id) }}" 
                                                            class="btn btn-primary btn-sm">
                                                             <i class="mdi mdi-apple me-1"></i>
                                                             Conectar Apple
@@ -280,7 +280,7 @@ php artisan migrate --database=tenant --path=database/migrations/tenant/2025_12_
                     </div>
 
                     <div class="mt-4">
-                        <a href="{{ route('tenant.integrations.index') }}" class="btn btn-secondary">
+                        <a href="{{ workspace_route('tenant.integrations.index') }}" class="btn btn-secondary">
                             <i class="mdi mdi-arrow-left me-1"></i>
                             Voltar para Integrações
                         </a>

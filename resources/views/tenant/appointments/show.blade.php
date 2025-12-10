@@ -1,4 +1,4 @@
-@extends('layouts.connect_plus.app')
+﻿@extends('layouts.connect_plus.app')
 
 @section('title', 'Detalhes do Agendamento')
 
@@ -34,10 +34,10 @@
                             Informações do Agendamento
                         </h4>
                         <div>
-                            <a href="{{ route('tenant.appointments.edit', $appointment->id) }}" class="btn btn-warning btn-sm">
+                            <a href="{{ workspace_route('tenant.appointments.edit', $appointment->id) }}" class="btn btn-warning btn-sm">
                                 <i class="mdi mdi-pencil me-1"></i> Editar
                             </a>
-                            <a href="{{ route('tenant.appointments.index') }}" class="btn btn-secondary btn-sm">
+                            <a href="{{ workspace_route('tenant.appointments.index') }}" class="btn btn-secondary btn-sm">
                                 <i class="mdi mdi-arrow-left me-1"></i> Voltar
                             </a>
                         </div>
@@ -88,7 +88,7 @@
                                 </label>
                                 @if($appointment->patient)
                                     <p class="mb-0 fw-semibold">
-                                        <a href="{{ route('tenant.patients.show', $appointment->patient->id) }}" class="text-decoration-none">
+                                        <a href="{{ workspace_route('tenant.patients.show', $appointment->patient->id) }}" class="text-decoration-none">
                                             {{ $appointment->patient->full_name }}
                                         </a>
                                     </p>
@@ -104,7 +104,7 @@
                                 </label>
                                 @if($appointment->calendar && $appointment->calendar->doctor && $appointment->calendar->doctor->user)
                                     <p class="mb-0 fw-semibold">
-                                        <a href="{{ route('tenant.doctors.show', $appointment->calendar->doctor->id) }}" class="text-decoration-none">
+                                        <a href="{{ workspace_route('tenant.doctors.show', $appointment->calendar->doctor->id) }}" class="text-decoration-none">
                                             {{ $appointment->calendar->doctor->user->name }}
                                         </a>
                                     </p>
@@ -208,7 +208,7 @@
                     {{-- Botões de Ação --}}
                     <div class="border-top pt-3 mt-3 d-flex gap-2">
                         @if($appointment->appointment_mode === 'online')
-                            <a href="{{ route('tenant.online-appointments.show', $appointment->id) }}" class="btn btn-info">
+                            <a href="{{ workspace_route('tenant.online-appointments.show', $appointment->id) }}" class="btn btn-info">
                                 <i class="mdi mdi-video-account me-2"></i>
                                 Instruções Online
                             </a>

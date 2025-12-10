@@ -105,7 +105,7 @@ class BusinessHourController extends Controller
             ->with('success', $message);
     }
 
-    public function show($id)
+    public function show($slug, $id)
     {
         $businessHour = BusinessHour::findOrFail($id);
         $businessHour->load('doctor.user');
@@ -113,7 +113,7 @@ class BusinessHourController extends Controller
         return view('tenant.business-hours.show', compact('businessHour'));
     }
 
-    public function edit($id)
+    public function edit($slug, $id)
     {
         $businessHour = BusinessHour::findOrFail($id);
         
@@ -128,7 +128,7 @@ class BusinessHourController extends Controller
         return view('tenant.business-hours.edit', compact('businessHour', 'doctors'));
     }
 
-    public function update(UpdateBusinessHourRequest $request, $id)
+    public function update(UpdateBusinessHourRequest $request, $slug, $id)
     {
         $businessHour = BusinessHour::findOrFail($id);
         $businessHour->update($request->validated());
@@ -137,7 +137,7 @@ class BusinessHourController extends Controller
             ->with('success', 'Horário atualizado com sucesso.');
     }
 
-    public function destroy($id)
+    public function destroy($slug, $id)
     {
         $businessHour = BusinessHour::findOrFail($id);
         $businessHour->delete();

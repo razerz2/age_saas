@@ -1,4 +1,4 @@
-@extends('layouts.connect_plus.app')
+﻿@extends('layouts.connect_plus.app')
 
 @section('title', 'Detalhes da Conta OAuth')
 
@@ -16,7 +16,7 @@
                     <a href="{{ workspace_route('tenant.dashboard') }}">Dashboard</a>
                 </li>
                 <li class="breadcrumb-item">
-                    <a href="{{ route('tenant.oauth-accounts.index') }}">Contas OAuth</a>
+                    <a href="{{ workspace_route('tenant.oauth-accounts.index') }}">Contas OAuth</a>
                 </li>
                 <li class="breadcrumb-item active" aria-current="page">Detalhes</li>
             </ol>
@@ -34,7 +34,7 @@
                             Informações da Conta OAuth
                         </h4>
                         <div>
-                            <a href="{{ route('tenant.oauth-accounts.index') }}" class="btn btn-secondary btn-sm">
+                            <a href="{{ workspace_route('tenant.oauth-accounts.index') }}" class="btn btn-secondary btn-sm">
                                 <i class="mdi mdi-arrow-left me-1"></i> Voltar
                             </a>
                         </div>

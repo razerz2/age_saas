@@ -1,4 +1,4 @@
-@extends('layouts.connect_plus.app')
+﻿@extends('layouts.connect_plus.app')
 
 @section('title', 'Criar Conta OAuth')
 
@@ -13,7 +13,7 @@
                     <a href="{{ workspace_route('tenant.dashboard') }}">Dashboard</a>
                 </li>
                 <li class="breadcrumb-item">
-                    <a href="{{ route('tenant.oauth-accounts.index') }}">Contas OAuth</a>
+                    <a href="{{ workspace_route('tenant.oauth-accounts.index') }}">Contas OAuth</a>
                 </li>
                 <li class="breadcrumb-item active" aria-current="page">Criar</li>
             </ol>
@@ -46,7 +46,7 @@
                         </div>
                     @endif
 
-                    <form class="forms-sample" action="{{ route('tenant.oauth-accounts.store') }}" method="POST">
+                    <form class="forms-sample" action="{{ workspace_route('tenant.oauth-accounts.store') }}" method="POST">
                         @csrf
 
                         {{-- Seção: Informações Básicas --}}
@@ -162,7 +162,7 @@
 
                         {{-- Botões de Ação --}}
                         <div class="d-flex justify-content-between align-items-center pt-3 border-top">
-                            <a href="{{ route('tenant.oauth-accounts.index') }}" class="btn btn-light">
+                            <a href="{{ workspace_route('tenant.oauth-accounts.index') }}" class="btn btn-light">
                                 <i class="mdi mdi-arrow-left me-1"></i>
                                 Cancelar
                             </a>

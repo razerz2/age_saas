@@ -1,4 +1,4 @@
-@extends('layouts.connect_plus.app')
+﻿@extends('layouts.connect_plus.app')
 
 @section('title', 'Especialidades')
 
@@ -23,7 +23,7 @@
                 <div class="card-body">
                     <h4 class="card-title">Lista de Especialidades</h4>
 
-                    <a href="{{ route('tenant.specialties.create') }}" class="btn btn-primary mb-3">
+                    <a href="{{ workspace_route('tenant.specialties.create') }}" class="btn btn-primary mb-3">
                         + Novo
                     </a>
 
@@ -45,8 +45,8 @@
                                         <td>{{ $specialty->name }}</td>
                                         <td>{{ $specialty->code ?? 'N/A' }}</td>
                                         <td>
-                                            <a href="{{ route('tenant.specialties.show', $specialty->id) }}" class="btn btn-info btn-sm">Ver</a>
-                                            <a href="{{ route('tenant.specialties.edit', $specialty->id) }}" class="btn btn-warning btn-sm">Editar</a>
+                                            <a href="{{ workspace_route('tenant.specialties.show', $specialty->id) }}" class="btn btn-info btn-sm">Ver</a>
+                                            <a href="{{ workspace_route('tenant.specialties.edit', $specialty->id) }}" class="btn btn-warning btn-sm">Editar</a>
                                         </td>
                                     </tr>
                                 @endforeach

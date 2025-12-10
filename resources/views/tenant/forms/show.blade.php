@@ -1,4 +1,4 @@
-@extends('layouts.connect_plus.app')
+﻿@extends('layouts.connect_plus.app')
 
 @section('title', 'Detalhes do Formulário')
 
@@ -16,7 +16,7 @@
                     <a href="{{ workspace_route('tenant.dashboard') }}">Dashboard</a>
                 </li>
                 <li class="breadcrumb-item">
-                    <a href="{{ route('tenant.forms.index') }}">Formulários</a>
+                    <a href="{{ workspace_route('tenant.forms.index') }}">Formulários</a>
                 </li>
                 <li class="breadcrumb-item active" aria-current="page">Detalhes</li>
             </ol>
@@ -34,10 +34,10 @@
                             Informações do Formulário
                         </h4>
                         <div>
-                            <a href="{{ route('tenant.forms.edit', $form->id) }}" class="btn btn-warning btn-sm">
+                            <a href="{{ workspace_route('tenant.forms.edit', $form->id) }}" class="btn btn-warning btn-sm">
                                 <i class="mdi mdi-pencil me-1"></i> Editar
                             </a>
-                            <a href="{{ route('tenant.forms.index') }}" class="btn btn-secondary btn-sm">
+                            <a href="{{ workspace_route('tenant.forms.index') }}" class="btn btn-secondary btn-sm">
                                 <i class="mdi mdi-arrow-left me-1"></i> Voltar
                             </a>
                         </div>
@@ -128,12 +128,12 @@
                     <div class="border-top pt-3">
                         <div class="d-flex gap-2 flex-wrap">
                             @if($sectionsCount > 0 || $questionsCount > 0)
-                                <a href="{{ route('tenant.forms.preview', $form->id) }}" class="btn btn-primary" target="_blank">
+                                <a href="{{ workspace_route('tenant.forms.preview', $form->id) }}" class="btn btn-primary" target="_blank">
                                     <i class="mdi mdi-eye me-1"></i>
                                     Visualizar Formulário
                                 </a>
                             @endif
-                            <a href="{{ route('tenant.forms.builder', $form->id) }}" class="btn btn-info">
+                            <a href="{{ workspace_route('tenant.forms.builder', $form->id) }}" class="btn btn-info">
                                 <i class="mdi mdi-tools me-1"></i>
                                 Construir Formulário
                             </a>

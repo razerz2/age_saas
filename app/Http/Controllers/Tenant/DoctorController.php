@@ -127,14 +127,14 @@ class DoctorController extends Controller
             ->with('success', 'Médico cadastrado com sucesso.');
     }
 
-    public function show($id)
+    public function show($slug, $id)
     {
         $doctor = Doctor::findOrFail($id);
         $doctor->load(['user', 'specialties']);
         return view('tenant.doctors.show', compact('doctor'));
     }
 
-    public function edit($id)
+    public function edit($slug, $id)
     {
         $doctor = Doctor::findOrFail($id);
         $loggedUser = Auth::guard('tenant')->user();
@@ -205,7 +205,7 @@ class DoctorController extends Controller
         return view('tenant.doctors.edit', compact('doctor', 'users', 'specialties'));
     }
 
-    public function update(UpdateDoctorRequest $request, $id)
+    public function update(UpdateDoctorRequest $request, $slug, $id)
     {
         $doctor = Doctor::findOrFail($id);
         $data = $request->validated();
@@ -231,7 +231,7 @@ class DoctorController extends Controller
             ->with('success', 'Médico atualizado com sucesso.');
     }
 
-    public function destroy($id)
+    public function destroy($slug, $id)
     {
         $doctor = Doctor::findOrFail($id);
 

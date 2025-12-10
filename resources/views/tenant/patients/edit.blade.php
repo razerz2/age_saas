@@ -1,4 +1,4 @@
-@extends('layouts.connect_plus.app')
+﻿@extends('layouts.connect_plus.app')
 
 @section('title', 'Editar Paciente')
 
@@ -16,7 +16,7 @@
                     <a href="{{ workspace_route('tenant.dashboard') }}">Dashboard</a>
                 </li>
                 <li class="breadcrumb-item">
-                    <a href="{{ route('tenant.patients.index') }}">Pacientes</a>
+                    <a href="{{ workspace_route('tenant.patients.index') }}">Pacientes</a>
                 </li>
                 <li class="breadcrumb-item active" aria-current="page">Editar</li>
             </ol>
@@ -37,7 +37,7 @@
                         </div>
                     </div>
 
-                    <form class="forms-sample" action="{{ route('tenant.patients.update', $patient->id) }}" method="POST">
+                    <form class="forms-sample" action="{{ workspace_route('tenant.patients.update', $patient->id) }}" method="POST">
                         @csrf
                         @method('PUT')
 
@@ -159,7 +159,7 @@
 
                         {{-- Botões de Ação --}}
                         <div class="d-flex justify-content-between align-items-center pt-3 border-top">
-                            <a href="{{ route('tenant.patients.index') }}" class="btn btn-light">
+                            <a href="{{ workspace_route('tenant.patients.index') }}" class="btn btn-light">
                                 <i class="mdi mdi-arrow-left me-1"></i>
                                 Cancelar
                             </a>

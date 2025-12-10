@@ -43,7 +43,7 @@ class OnlineAppointmentController extends Controller
     /**
      * Exibe formulário para configurar instruções
      */
-    public function show($id)
+    public function show($slug, $id)
     {
         // Verificar se o modo permite acesso ao módulo
         $mode = TenantSetting::get('appointments.default_appointment_mode', 'user_choice');
@@ -82,7 +82,7 @@ class OnlineAppointmentController extends Controller
     /**
      * Salva as instruções
      */
-    public function save(Request $request, $id)
+    public function save(Request $request, $slug, $id)
     {
         // Verificar se o modo permite acesso ao módulo
         $mode = TenantSetting::get('appointments.default_appointment_mode', 'user_choice');
@@ -126,7 +126,7 @@ class OnlineAppointmentController extends Controller
     /**
      * Envia instruções por email
      */
-    public function sendEmail(Request $request, $id)
+    public function sendEmail(Request $request, $slug, $id)
     {
         $appointment = Appointment::with(['patient', 'onlineInstructions'])
             ->findOrFail($id);
@@ -196,7 +196,7 @@ class OnlineAppointmentController extends Controller
     /**
      * Envia instruções por WhatsApp
      */
-    public function sendWhatsapp(Request $request, $id)
+    public function sendWhatsapp(Request $request, $slug, $id)
     {
         // Verificar se o modo permite acesso ao módulo
         $mode = TenantSetting::get('appointments.default_appointment_mode', 'user_choice');

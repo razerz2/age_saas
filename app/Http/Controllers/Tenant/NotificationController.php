@@ -23,7 +23,7 @@ class NotificationController extends Controller
     /**
      * Exibe uma notificação específica
      */
-    public function show($id)
+    public function show($slug, $id)
     {
         $notification = Notification::findOrFail($id);
         
@@ -38,7 +38,7 @@ class NotificationController extends Controller
     /**
      * Marca uma notificação como lida
      */
-    public function markAsRead($id)
+    public function markAsRead($slug, $id)
     {
         $notification = Notification::findOrFail($id);
         $notification->markAsRead();

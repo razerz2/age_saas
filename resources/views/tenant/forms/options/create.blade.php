@@ -1,4 +1,4 @@
-@extends('layouts.connect_plus.app')
+﻿@extends('layouts.connect_plus.app')
 
 @section('title', 'Criar Opção')
 
@@ -13,7 +13,7 @@
                     <a href="{{ workspace_route('tenant.dashboard') }}">Dashboard</a>
                 </li>
                 <li class="breadcrumb-item">
-                    <a href="{{ route('tenant.forms.index') }}">Formulários</a>
+                    <a href="{{ workspace_route('tenant.forms.index') }}">Formulários</a>
                 </li>
                 <li class="breadcrumb-item active" aria-current="page">Criar Opção</li>
             </ol>
@@ -27,7 +27,7 @@
                     <h4 class="card-title">Nova Opção</h4>
                     <p class="card-description"> Preencha os dados abaixo </p>
 
-                    <form class="forms-sample" action="{{ route('tenant.forms.options.store', $question->id) }}" method="POST">
+                    <form class="forms-sample" action="{{ workspace_route('tenant.forms.options.store', $question->id) }}" method="POST">
                         @csrf
 
                         <div class="form-group">
@@ -52,7 +52,7 @@
                         </div>
 
                         <button type="submit" class="btn btn-primary me-2">Salvar</button>
-                        <a href="{{ route('tenant.forms.show', $question->form_id) }}" class="btn btn-light">Cancelar</a>
+                        <a href="{{ workspace_route('tenant.forms.show', $question->form_id) }}" class="btn btn-light">Cancelar</a>
                     </form>
 
                 </div>

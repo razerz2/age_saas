@@ -111,7 +111,7 @@ class UserController extends Controller
             }
         }
 
-        return redirect()->route('tenant.users.index')
+        return redirect()->route('tenant.users.index', ['slug' => tenant()->subdomain])
             ->with('success', 'Usuário criado com sucesso.');
     }
 
@@ -119,7 +119,7 @@ class UserController extends Controller
      * Mostra as informações do usuário.
      * Agora usando o ID explícito.
      */
-    public function show($id)
+    public function show($slug, $id)
     {
         $user = User::with(['allowedDoctors.user'])->findOrFail($id);  // Utilizando o ID passado na rota
 
@@ -130,7 +130,7 @@ class UserController extends Controller
      * Exibe o formulário de edição do usuário.
      * Agora usando o ID explícito.
      */
-    public function edit($id)
+    public function edit($slug, $id)
     {
         $user = User::findOrFail($id);  // Utilizando o ID passado na rota
 
@@ -141,7 +141,7 @@ class UserController extends Controller
      * Atualiza os dados do usuário.
      * Agora usando o ID explícito.
      */
-    public function update(UpdateUserRequest $request, $id)
+    public function update(UpdateUserRequest $request, $slug, $id)
     {
         $user = User::findOrFail($id);
 
@@ -234,7 +234,7 @@ class UserController extends Controller
             }
         }
 
-        return redirect()->route('tenant.users.index')
+        return redirect()->route('tenant.users.index', ['slug' => tenant()->subdomain])
             ->with('success', 'Usuário atualizado com sucesso!');
     }
 
@@ -243,17 +243,17 @@ class UserController extends Controller
      * Remove o usuário.
      * Agora usando o ID explícito.
      */
-    public function destroy($id)
+    public function destroy($slug, $id)
     {
         $user = User::findOrFail($id);  // Utilizando o ID passado na rota
 
         $user->delete();
 
-        return redirect()->route('tenant.users.index')
+        return redirect()->route('tenant.users.index', ['slug' => tenant()->subdomain])
             ->with('success', 'Usuário removido.');
     }
 
-    public function showChangePasswordForm($id)
+    public function showChangePasswordForm($slug, $id)
     {
         // Recupera o usuário pelo ID
         $user = User::findOrFail($id);
@@ -262,7 +262,7 @@ class UserController extends Controller
         return view('tenant.users.change-password', compact('user'));
     }
 
-    public function changePassword(ChangePasswordUserRequest $request, $id)
+    public function changePassword(ChangePasswordUserRequest $request, $slug, $id)
     {
         // Valida os dados com a ChangePasswordRequest
         $validated = $request->validated();
@@ -280,7 +280,7 @@ class UserController extends Controller
         $user->save();
 
         // Redireciona com sucesso
-        return redirect()->route('tenant.users.index')
+        return redirect()->route('tenant.users.index', ['slug' => tenant()->subdomain])
             ->with('success', 'Senha alterada com sucesso!');
     }
 }

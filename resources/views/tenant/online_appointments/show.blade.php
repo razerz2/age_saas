@@ -1,4 +1,4 @@
-@extends('layouts.connect_plus.app')
+﻿@extends('layouts.connect_plus.app')
 
 @section('title', 'Instruções de Consulta Online')
 
@@ -16,7 +16,7 @@
                     <a href="{{ workspace_route('tenant.dashboard') }}">Dashboard</a>
                 </li>
                 <li class="breadcrumb-item">
-                    <a href="{{ route('tenant.online-appointments.index') }}">Consultas Online</a>
+                    <a href="{{ workspace_route('tenant.online-appointments.index') }}">Consultas Online</a>
                 </li>
                 <li class="breadcrumb-item active" aria-current="page">Instruções</li>
             </ol>
@@ -34,7 +34,7 @@
                             Configurar Instruções
                         </h4>
                         <div>
-                            <a href="{{ route('tenant.appointments.show', $appointment->id) }}" class="btn btn-secondary btn-sm">
+                            <a href="{{ workspace_route('tenant.appointments.show', $appointment->id) }}" class="btn btn-secondary btn-sm">
                                 <i class="mdi mdi-arrow-left me-1"></i> Voltar ao Agendamento
                             </a>
                         </div>
@@ -54,7 +54,7 @@
                     </div>
 
                     {{-- Formulário de Instruções --}}
-                    <form action="{{ route('tenant.online-appointments.save', $appointment->id) }}" method="POST">
+                    <form action="{{ workspace_route('tenant.online-appointments.save', $appointment->id) }}" method="POST">
                         @csrf
                         
                         <div class="row">
@@ -119,7 +119,7 @@
                         </div>
 
                         <div class="d-flex justify-content-end gap-2">
-                            <a href="{{ route('tenant.online-appointments.index') }}" class="btn btn-secondary">
+                            <a href="{{ workspace_route('tenant.online-appointments.index') }}" class="btn btn-secondary">
                                 <i class="mdi mdi-close me-1"></i> Cancelar
                             </a>
                             <button type="submit" class="btn btn-primary">
@@ -139,13 +139,13 @@
                             <div class="alert alert-warning">
                                 <i class="mdi mdi-alert me-2"></i>
                                 <strong>Atenção:</strong> Nenhum meio de envio está configurado. 
-                                Configure as notificações em <a href="{{ route('tenant.settings.index') }}">Configurações</a>.
+                                Configure as notificações em <a href="{{ workspace_route('tenant.settings.index') }}">Configurações</a>.
                             </div>
                         @else
                             <div class="row">
                                 @if($canSendEmail)
                                     <div class="col-md-6 mb-3">
-                                        <form action="{{ route('tenant.online-appointments.send-email', $appointment->id) }}" method="POST" class="d-inline">
+                                        <form action="{{ workspace_route('tenant.online-appointments.send-email', $appointment->id) }}" method="POST" class="d-inline">
                                             @csrf
                                             <button type="submit" class="btn btn-success w-100" 
                                                     @if(!$appointment->patient->email) disabled title="Paciente não possui email cadastrado" @endif>
@@ -163,7 +163,7 @@
 
                                 @if($canSendWhatsapp)
                                     <div class="col-md-6 mb-3">
-                                        <form action="{{ route('tenant.online-appointments.send-whatsapp', $appointment->id) }}" method="POST" class="d-inline">
+                                        <form action="{{ workspace_route('tenant.online-appointments.send-whatsapp', $appointment->id) }}" method="POST" class="d-inline">
                                             @csrf
                                             <button type="submit" class="btn btn-success w-100" 
                                                     @if(!$appointment->patient->phone) disabled title="Paciente não possui telefone cadastrado" @endif>

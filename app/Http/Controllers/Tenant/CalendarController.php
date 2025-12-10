@@ -85,7 +85,7 @@ class CalendarController extends Controller
             ->with('success', 'Agenda criada com sucesso.');
     }
 
-    public function show($id)
+    public function show($slug, $id)
     {
         $calendar = Calendar::findOrFail($id);
         $calendar->load('doctor.user');
@@ -109,7 +109,7 @@ class CalendarController extends Controller
         return view('tenant.calendars.show', compact('calendar'));
     }
 
-    public function edit($id)
+    public function edit($slug, $id)
     {
         $calendar = Calendar::findOrFail($id);
         $calendar->load('doctor');
@@ -142,7 +142,7 @@ class CalendarController extends Controller
         return view('tenant.calendars.edit', compact('calendar', 'doctors'));
     }
 
-    public function update(UpdateCalendarRequest $request, $id)
+    public function update(UpdateCalendarRequest $request, $slug, $id)
     {
         $calendar = Calendar::findOrFail($id);
         
@@ -185,7 +185,7 @@ class CalendarController extends Controller
             ->with('success', 'Agenda atualizada com sucesso.');
     }
 
-    public function destroy($id)
+    public function destroy($slug, $id)
     {
         $calendar = Calendar::findOrFail($id);
         

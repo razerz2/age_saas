@@ -1,4 +1,4 @@
-@extends('layouts.connect_plus.app')
+﻿@extends('layouts.connect_plus.app')
 
 @section('title', 'Editar Resposta')
 
@@ -13,7 +13,7 @@
                     <a href="{{ workspace_route('tenant.dashboard') }}">Dashboard</a>
                 </li>
                 <li class="breadcrumb-item">
-                    <a href="{{ route('tenant.responses.index') }}">Respostas</a>
+                    <a href="{{ workspace_route('tenant.responses.index') }}">Respostas</a>
                 </li>
                 <li class="breadcrumb-item active" aria-current="page">Editar</li>
             </ol>
@@ -27,7 +27,7 @@
                     <h4 class="card-title">Editar Resposta</h4>
                     <p class="card-description"> Atualize as informações abaixo </p>
 
-                    <form class="forms-sample" action="{{ route('tenant.responses.update', $response->id) }}" method="POST">
+                    <form class="forms-sample" action="{{ workspace_route('tenant.responses.update', $response->id) }}" method="POST">
                         @csrf
                         @method('PUT')
 
@@ -206,7 +206,7 @@
                         @endif
 
                         <button type="submit" class="btn btn-primary me-2">Salvar</button>
-                        <a href="{{ route('tenant.responses.show', $response->id) }}" class="btn btn-light">Cancelar</a>
+                        <a href="{{ workspace_route('tenant.responses.show', $response->id) }}" class="btn btn-light">Cancelar</a>
                     </form>
 
                 </div>

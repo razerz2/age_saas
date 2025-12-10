@@ -1,4 +1,4 @@
-@extends('layouts.connect_plus.app')
+﻿@extends('layouts.connect_plus.app')
 
 @section('title', 'Sincronização de Calendário')
 
@@ -45,7 +45,7 @@
                                         <td>{{ $syncState->provider ?? 'N/A' }}</td>
                                         <td>{{ $syncState->last_sync_at ? $syncState->last_sync_at->format('d/m/Y H:i') : 'N/A' }}</td>
                                         <td>
-                                            <a href="{{ route('tenant.calendar-sync.show', $syncState->id) }}" class="btn btn-info btn-sm">Ver</a>
+                                            <a href="{{ workspace_route('tenant.calendar-sync.show', $syncState->id) }}" class="btn btn-info btn-sm">Ver</a>
                                         </td>
                                     </tr>
                                 @endforeach

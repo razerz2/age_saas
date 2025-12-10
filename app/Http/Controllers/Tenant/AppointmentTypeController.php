@@ -98,13 +98,13 @@ class AppointmentTypeController extends Controller
             ->with('success', 'Tipo de atendimento criado com sucesso.');
     }
 
-    public function show($id)
+    public function show($slug, $id)
     {
         $appointmentType = AppointmentType::with(['doctor.user'])->findOrFail($id);
         return view('tenant.appointment-types.show', compact('appointmentType'));
     }
 
-    public function edit($id)
+    public function edit($slug, $id)
     {
         $appointmentType = AppointmentType::with(['doctor.user'])->findOrFail($id);
 
@@ -127,7 +127,7 @@ class AppointmentTypeController extends Controller
         return view('tenant.appointment-types.edit', compact('appointmentType', 'doctors'));
     }
 
-    public function update(UpdateAppointmentTypeRequest $request, $id)
+    public function update(UpdateAppointmentTypeRequest $request, $slug, $id)
     {
         $appointmentType = AppointmentType::findOrFail($id);
         
@@ -145,7 +145,7 @@ class AppointmentTypeController extends Controller
             ->with('success', 'Tipo de atendimento atualizado com sucesso.');
     }
 
-    public function destroy($id)
+    public function destroy($slug, $id)
     {
         $appointmentType = AppointmentType::findOrFail($id);
         

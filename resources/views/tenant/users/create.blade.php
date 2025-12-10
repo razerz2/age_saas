@@ -1,4 +1,4 @@
-@extends('layouts.connect_plus.app')
+﻿@extends('layouts.connect_plus.app')
 
 @section('title', 'Criar Usuário')
 
@@ -16,7 +16,7 @@
                     <a href="{{ workspace_route('tenant.dashboard') }}">Dashboard</a>
                 </li>
                 <li class="breadcrumb-item">
-                    <a href="{{ route('tenant.users.index') }}">Usuários</a>
+                    <a href="{{ workspace_route('tenant.users.index') }}">Usuários</a>
                 </li>
                 <li class="breadcrumb-item active" aria-current="page">Criar</li>
             </ol>
@@ -37,7 +37,7 @@
                         </div>
                     </div>
 
-                    <form method="POST" action="{{ route('tenant.users.store') }}" class="forms-sample" enctype="multipart/form-data">
+                    <form method="POST" action="{{ workspace_route('tenant.users.store') }}" class="forms-sample" enctype="multipart/form-data">
                         @csrf
 
                         {{-- Seção: Dados Pessoais --}}
@@ -327,7 +327,7 @@
                                 <div class="alert alert-info" id="modules-info-alert">
                                     <i class="mdi mdi-information-outline me-2"></i>
                                     <span id="modules-info-text">
-                                        <strong>Nota:</strong> Os módulos serão pré-selecionados conforme as configurações padrão em <a href="{{ route('tenant.settings.index') }}" target="_blank">Configurações → Usuários & Permissões</a>. Você pode ajustar manualmente se necessário.
+                                        <strong>Nota:</strong> Os módulos serão pré-selecionados conforme as configurações padrão em <a href="{{ workspace_route('tenant.settings.index') }}" target="_blank">Configurações → Usuários & Permissões</a>. Você pode ajustar manualmente se necessário.
                                     </span>
                                 </div>
                                 @php
@@ -375,7 +375,7 @@
 
                         {{-- Botões de Ação --}}
                         <div class="d-flex justify-content-between align-items-center pt-3 border-top">
-                            <a href="{{ route('tenant.users.index') }}" class="btn btn-light">
+                            <a href="{{ workspace_route('tenant.users.index') }}" class="btn btn-light">
                                 <i class="mdi mdi-arrow-left me-1"></i>
                                 Cancelar
                             </a>
@@ -575,9 +575,9 @@
                     if (role === 'admin') {
                         modulesInfoText.innerHTML = '<strong>Nota:</strong> Administradores têm acesso total ao sistema. Você pode selecionar módulos específicos se necessário.';
                     } else if (role === 'doctor') {
-                        modulesInfoText.innerHTML = '<strong>Nota:</strong> Os módulos foram pré-selecionados conforme as configurações padrão para médicos em <a href="{{ route("tenant.settings.index") }}" target="_blank">Configurações → Usuários & Permissões</a>. Você pode ajustar manualmente se necessário.';
+                        modulesInfoText.innerHTML = '<strong>Nota:</strong> Os módulos foram pré-selecionados conforme as configurações padrão para médicos em <a href="{{ workspace_route("tenant.settings.index") }}" target="_blank">Configurações → Usuários & Permissões</a>. Você pode ajustar manualmente se necessário.';
                     } else {
-                        modulesInfoText.innerHTML = '<strong>Nota:</strong> Os módulos foram pré-selecionados conforme as configurações padrão para usuários comuns em <a href="{{ route("tenant.settings.index") }}" target="_blank">Configurações → Usuários & Permissões</a>. Você pode ajustar manualmente se necessário.';
+                        modulesInfoText.innerHTML = '<strong>Nota:</strong> Os módulos foram pré-selecionados conforme as configurações padrão para usuários comuns em <a href="{{ workspace_route("tenant.settings.index") }}" target="_blank">Configurações → Usuários & Permissões</a>. Você pode ajustar manualmente se necessário.';
                     }
                 }
                 

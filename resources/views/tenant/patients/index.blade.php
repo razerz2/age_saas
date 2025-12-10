@@ -1,4 +1,4 @@
-@extends('layouts.connect_plus.app')
+﻿@extends('layouts.connect_plus.app')
 
 @section('title', 'Pacientes')
 
@@ -41,7 +41,7 @@
                 <div class="card-body">
                     <h4 class="card-title">Lista de Pacientes</h4>
 
-                    <a href="{{ route('tenant.patients.create') }}" class="btn btn-primary mb-3">
+                    <a href="{{ workspace_route('tenant.patients.create') }}" class="btn btn-primary mb-3">
                         + Novo
                     </a>
 
@@ -106,19 +106,19 @@
                                         </td>
                                         <td>
                                             <div class="d-flex gap-1 flex-wrap">
-                                                <a href="{{ route('tenant.patients.show', $patient->id) }}" 
+                                                <a href="{{ workspace_route('tenant.patients.show', $patient->id) }}" 
                                                    class="btn btn-info btn-sm" 
                                                    title="Ver detalhes">
                                                     <i class="mdi mdi-eye"></i>
                                                 </a>
-                                                <a href="{{ route('tenant.patients.edit', $patient->id) }}" 
+                                                <a href="{{ workspace_route('tenant.patients.edit', $patient->id) }}" 
                                                    class="btn btn-warning btn-sm" 
                                                    title="Editar">
                                                     <i class="mdi mdi-pencil"></i>
                                                 </a>
                                                 
                                                 {{-- Botão para criar/editar login --}}
-                                                <a href="{{ route('tenant.patients.login.form', $patient->id) }}" 
+                                                <a href="{{ workspace_route('tenant.patients.login.form', $patient->id) }}" 
                                                    class="btn btn-primary btn-sm" 
                                                    title="{{ $hasLogin ? 'Editar login' : 'Criar login' }}">
                                                     <i class="mdi mdi-account-key"></i>
@@ -127,7 +127,7 @@
                                                 
                                                 @if ($hasLogin)
                                                     {{-- Botão para bloquear/desbloquear --}}
-                                                    <form action="{{ route('tenant.patients.login.toggle', $patient->id) }}" 
+                                                    <form action="{{ workspace_route('tenant.patients.login.toggle', $patient->id) }}" 
                                                           method="POST" 
                                                           class="d-inline"
                                                           onsubmit="return confirm('{{ $loginActive ? 'Bloquear' : 'Habilitar' }} acesso deste paciente?');">
@@ -140,7 +140,7 @@
                                                     </form>
                                                     
                                                     {{-- Botão para excluir login --}}
-                                                    <form action="{{ route('tenant.patients.login.destroy', $patient->id) }}" 
+                                                    <form action="{{ workspace_route('tenant.patients.login.destroy', $patient->id) }}" 
                                                           method="POST" 
                                                           class="d-inline"
                                                           onsubmit="return confirm('Tem certeza que deseja excluir o login deste paciente? Esta ação não pode ser desfeita.');">

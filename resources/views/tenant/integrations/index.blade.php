@@ -1,4 +1,4 @@
-@extends('layouts.connect_plus.app')
+﻿@extends('layouts.connect_plus.app')
 
 @section('title', 'Integrações')
 
@@ -54,7 +54,7 @@
                                             Conta individual por médico
                                         </li>
                                     </ul>
-                                    <a href="{{ route('tenant.integrations.google.index') }}" class="btn btn-primary">
+                                    <a href="{{ workspace_route('tenant.integrations.google.index') }}" class="btn btn-primary">
                                         <i class="mdi mdi-google me-1"></i>
                                         Configurar Google Calendar
                                     </a>
@@ -67,7 +67,7 @@
 
                     <h5 class="mb-3">Outras Integrações</h5>
 
-                    <a href="{{ route('tenant.integrations.create') }}" class="btn btn-secondary mb-3">
+                    <a href="{{ workspace_route('tenant.integrations.create') }}" class="btn btn-secondary mb-3">
                         + Nova Integração
                     </a>
 
@@ -95,8 +95,8 @@
                                             @endif
                                         </td>
                                         <td>
-                                            <a href="{{ route('tenant.integrations.show', $integration->id) }}" class="btn btn-info btn-sm">Ver</a>
-                                            <a href="{{ route('tenant.integrations.edit', $integration->id) }}" class="btn btn-warning btn-sm">Editar</a>
+                                            <a href="{{ workspace_route('tenant.integrations.show', $integration->id) }}" class="btn btn-info btn-sm">Ver</a>
+                                            <a href="{{ workspace_route('tenant.integrations.edit', $integration->id) }}" class="btn btn-warning btn-sm">Editar</a>
                                         </td>
                                     </tr>
                                 @endforeach

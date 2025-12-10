@@ -35,19 +35,19 @@ class IntegrationController extends Controller
             ->with('success', 'Integração criada com sucesso.');
     }
 
-    public function show($id)
+    public function show($slug, $id)
     {
         $integration = Integrations::findOrFail($id);
         return view('tenant.integrations.show', compact('integration'));
     }
 
-    public function edit($id)
+    public function edit($slug, $id)
     {
         $integration = Integrations::findOrFail($id);
         return view('tenant.integrations.edit', compact('integration'));
     }
 
-    public function update(UpdateIntegrationRequest $request, $id)
+    public function update(UpdateIntegrationRequest $request, $slug, $id)
     {
         $integration = Integrations::findOrFail($id);
         $integration->update($request->validated());
@@ -56,7 +56,7 @@ class IntegrationController extends Controller
             ->with('success', 'Integração atualizada com sucesso.');
     }
 
-    public function destroy($id)
+    public function destroy($slug, $id)
     {
         $integration = Integrations::findOrFail($id);
         $integration->delete();

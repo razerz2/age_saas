@@ -1,4 +1,4 @@
-@extends('layouts.connect_plus.app')
+﻿@extends('layouts.connect_plus.app')
 
 @section('title', 'Preencher Formulário')
 
@@ -13,10 +13,10 @@
                     <a href="{{ workspace_route('tenant.dashboard') }}">Dashboard</a>
                 </li>
                 <li class="breadcrumb-item">
-                    <a href="{{ route('tenant.forms.index') }}">Formulários</a>
+                    <a href="{{ workspace_route('tenant.forms.index') }}">Formulários</a>
                 </li>
                 <li class="breadcrumb-item">
-                    <a href="{{ route('tenant.responses.index') }}">Respostas</a>
+                    <a href="{{ workspace_route('tenant.responses.index') }}">Respostas</a>
                 </li>
                 <li class="breadcrumb-item active" aria-current="page">Preencher</li>
             </ol>
@@ -30,7 +30,7 @@
                     <h4 class="card-title">Formulário: {{ $form->name }}</h4>
                     <p class="card-description"> {{ $form->description ?? '' }} </p>
 
-                    <form class="forms-sample" action="{{ route('tenant.responses.store', $form->id) }}" method="POST">
+                    <form class="forms-sample" action="{{ workspace_route('tenant.responses.store', $form->id) }}" method="POST">
                         @csrf
 
                         <input type="hidden" name="form_id" value="{{ $form->id }}">
@@ -188,7 +188,7 @@
                         @endif
 
                         <button type="submit" class="btn btn-primary me-2">Enviar</button>
-                        <a href="{{ route('tenant.responses.index') }}" class="btn btn-light">Cancelar</a>
+                        <a href="{{ workspace_route('tenant.responses.index') }}" class="btn btn-light">Cancelar</a>
                     </form>
 
                 </div>

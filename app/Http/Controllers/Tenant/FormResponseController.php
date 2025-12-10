@@ -41,7 +41,7 @@ class FormResponseController extends Controller
     /** -----------------------------------------
      *      INICIAR PREENCHIMENTO DE FORMULÁRIO
      * -----------------------------------------*/
-    public function create($id)
+    public function create($slug, $id)
     {
         $form = Form::findOrFail($id);
         $form->load(['sections.questions.options']);
@@ -54,7 +54,7 @@ class FormResponseController extends Controller
     /** -----------------------------------------
      *           SALVAR RESPOSTA (STORE)
      * -----------------------------------------*/
-    public function store(StoreFormResponseRequest $request, $id)
+    public function store(StoreFormResponseRequest $request, $slug, $id)
     {
         $form = Form::findOrFail($id);
         $data = $request->validated();
@@ -83,7 +83,7 @@ class FormResponseController extends Controller
     /** -----------------------------------------
      *        VISUALIZAR FORMULÁRIO RESPONDIDO
      * -----------------------------------------*/
-    public function show($id)
+    public function show($slug, $id)
     {
         $response = FormResponse::findOrFail($id);
         $response->load([
@@ -100,7 +100,7 @@ class FormResponseController extends Controller
     /** -----------------------------------------
      *           EDITAR RESPOSTA (PENDING)
      * -----------------------------------------*/
-    public function edit($id)
+    public function edit($slug, $id)
     {
         $response = FormResponse::findOrFail($id);
         $response->load([
@@ -117,7 +117,7 @@ class FormResponseController extends Controller
     /** -----------------------------------------
      *                UPDATE
      * -----------------------------------------*/
-    public function update(UpdateFormResponseRequest $request, $id)
+    public function update(UpdateFormResponseRequest $request, $slug, $id)
     {
         $response = FormResponse::findOrFail($id);
         $data = $request->validated();
@@ -142,7 +142,7 @@ class FormResponseController extends Controller
     /** -----------------------------------------
      *                REMOVE RESPOSTA
      * -----------------------------------------*/
-    public function destroy($id)
+    public function destroy($slug, $id)
     {
         $response = FormResponse::findOrFail($id);
         $response->answers()->delete();
@@ -223,7 +223,7 @@ class FormResponseController extends Controller
     /** -----------------------------------------
      *    ENDPOINT OPCIONAL PARA SALVAR 1 RESPOSTA VIA AJAX
      * -----------------------------------------*/
-    public function storeAnswer(StoreResponseAnswerRequest $request, $id)
+    public function storeAnswer(StoreResponseAnswerRequest $request, $slug, $id)
     {
         $response = FormResponse::findOrFail($id);
         $this->saveAnswer(

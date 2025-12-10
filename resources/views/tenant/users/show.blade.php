@@ -1,4 +1,4 @@
-@extends('layouts.connect_plus.app')
+﻿@extends('layouts.connect_plus.app')
 
 @section('title', 'Detalhes do Usuário')
 
@@ -16,7 +16,7 @@
                     <a href="{{ workspace_route('tenant.dashboard') }}">Dashboard</a>
                 </li>
                 <li class="breadcrumb-item">
-                    <a href="{{ route('tenant.users.index') }}">Usuários</a>
+                    <a href="{{ workspace_route('tenant.users.index') }}">Usuários</a>
                 </li>
                 <li class="breadcrumb-item active" aria-current="page">Detalhes</li>
             </ol>
@@ -193,7 +193,7 @@
                                 </div>
                             @endif
                             <div class="mt-3">
-                                <a href="{{ route('tenant.users.doctor-permissions', $user->id) }}" class="btn btn-primary">
+                                <a href="{{ workspace_route('tenant.users.doctor-permissions', $user->id) }}" class="btn btn-primary">
                                     <i class="mdi mdi-account-key me-1"></i> Gerenciar Permissões de Médicos
                                 </a>
                             </div>
@@ -203,10 +203,10 @@
                     {{-- Botões de Ação --}}
                     <div class="border-top pt-3 mt-4">
                         <div class="d-flex justify-content-between align-items-center">
-                            <a href="{{ route('tenant.users.index') }}" class="btn btn-secondary">
+                            <a href="{{ workspace_route('tenant.users.index') }}" class="btn btn-secondary">
                                 <i class="mdi mdi-arrow-left me-1"></i> Voltar
                             </a>
-                            <a href="{{ route('tenant.users.edit', $user->id) }}" class="btn btn-warning">
+                            <a href="{{ workspace_route('tenant.users.edit', $user->id) }}" class="btn btn-warning">
                                 <i class="mdi mdi-pencil me-1"></i> Editar
                             </a>
                         </div>

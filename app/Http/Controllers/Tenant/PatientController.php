@@ -60,19 +60,19 @@ class PatientController extends Controller
     }
 
 
-    public function show($id)
+    public function show($slug, $id)
     {
         $patient = Patient::findOrFail($id);
         return view('tenant.patients.show', compact('patient'));
     }
 
-    public function edit($id)
+    public function edit($slug, $id)
     {
         $patient = Patient::findOrFail($id);
         return view('tenant.patients.edit', compact('patient'));
     }
 
-    public function update(UpdatePatientRequest $request, $id)
+    public function update(UpdatePatientRequest $request, $slug, $id)
     {
         $patient = Patient::findOrFail($id);
         $patient->update($request->validated());
@@ -81,7 +81,7 @@ class PatientController extends Controller
             ->with('success', 'Paciente atualizado com sucesso.');
     }
 
-    public function destroy($id)
+    public function destroy($slug, $id)
     {
         $patient = Patient::findOrFail($id);
         $patient->delete();
@@ -93,7 +93,7 @@ class PatientController extends Controller
     /**
      * Mostra formulário para criar/editar login do paciente
      */
-    public function showLoginForm($id)
+    public function showLoginForm($slug, $id)
     {
         try {
             $patient = Patient::with('login')->findOrFail($id);
@@ -107,7 +107,7 @@ class PatientController extends Controller
     /**
      * Cria ou atualiza login do paciente
      */
-    public function storeLogin(Request $request, $id)
+    public function storeLogin(Request $request, $slug, $id)
     {
         $patient = Patient::findOrFail($id);
 
@@ -259,7 +259,7 @@ class PatientController extends Controller
     /**
      * Bloqueia/desbloqueia acesso do paciente
      */
-    public function toggleLoginStatus($id)
+    public function toggleLoginStatus($slug, $id)
     {
         $patient = Patient::with('login')->findOrFail($id);
 
@@ -281,7 +281,7 @@ class PatientController extends Controller
     /**
      * Remove login do paciente
      */
-    public function destroyLogin($id)
+    public function destroyLogin($slug, $id)
     {
         $patient = Patient::with('login')->findOrFail($id);
 
@@ -299,7 +299,7 @@ class PatientController extends Controller
     /**
      * Mostra informações do login do paciente
      */
-    public function showLogin($id)
+    public function showLogin($slug, $id)
     {
         $patient = Patient::with('login')->findOrFail($id);
 
@@ -314,7 +314,7 @@ class PatientController extends Controller
     /**
      * Envia informações de acesso por e-mail
      */
-    public function sendLoginByEmail(Request $request, $id)
+    public function sendLoginByEmail(Request $request, $slug, $id)
     {
         $patient = Patient::with('login')->findOrFail($id);
 
@@ -363,7 +363,7 @@ class PatientController extends Controller
     /**
      * Envia informações de acesso por WhatsApp
      */
-    public function sendLoginByWhatsApp(Request $request, $id)
+    public function sendLoginByWhatsApp(Request $request, $slug, $id)
     {
         $patient = Patient::with('login')->findOrFail($id);
 

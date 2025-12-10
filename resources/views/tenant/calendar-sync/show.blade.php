@@ -1,4 +1,4 @@
-@extends('layouts.connect_plus.app')
+﻿@extends('layouts.connect_plus.app')
 
 @section('title', 'Detalhes da Sincronização')
 
@@ -16,7 +16,7 @@
                     <a href="{{ workspace_route('tenant.dashboard') }}">Dashboard</a>
                 </li>
                 <li class="breadcrumb-item">
-                    <a href="{{ route('tenant.calendar-sync.index') }}">Sincronização de Calendário</a>
+                    <a href="{{ workspace_route('tenant.calendar-sync.index') }}">Sincronização de Calendário</a>
                 </li>
                 <li class="breadcrumb-item active" aria-current="page">Detalhes</li>
             </ol>
@@ -34,7 +34,7 @@
                             Informações da Sincronização
                         </h4>
                         <div>
-                            <a href="{{ route('tenant.calendar-sync.index') }}" class="btn btn-secondary btn-sm">
+                            <a href="{{ workspace_route('tenant.calendar-sync.index') }}" class="btn btn-secondary btn-sm">
                                 <i class="mdi mdi-arrow-left me-1"></i> Voltar
                             </a>
                         </div>

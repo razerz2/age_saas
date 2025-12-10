@@ -226,15 +226,26 @@ if (! function_exists('tenant_route')) {
  * Automaticamente adiciona o slug do tenant atual
  */
 if (! function_exists('workspace_route')) {
-    function workspace_route(string $routeName, array $parameters = [])
+    function workspace_route(string $routeName, $parameters = [])
     {
-        // Pega o slug do tenant atual (da URL, sessão ou tenant ativo)
+        // Converte parâmetro único (int, string) para array associativo se necessário
+        // Assumimos que um valor único é o parâmetro 'id'
+        if (!is_array($parameters)) {
+            $parameters = $parameters !== null ? ['id' => $parameters] : [];
+        }
+        
+        // Pega o slug do tenant atual (da rota, segment da URL, sessão ou tenant ativo)
         $slug = request()->route('slug') 
+            ?? request()->segment(2) // Pega do segundo segmento da URL (workspace/{slug}/...)
             ?? session('tenant_slug') 
             ?? (tenant() ? tenant()->subdomain : null);
         
         if ($slug) {
-            $parameters['slug'] = $slug;
+            // Adiciona o slug aos parâmetros, garantindo que não sobrescreva se já existir
+            if (!isset($parameters['slug'])) {
+                // Coloca o slug primeiro no array para garantir a ordem correta
+                $parameters = array_merge(['slug' => $slug], $parameters);
+            }
         }
         
         return route($routeName, $parameters);

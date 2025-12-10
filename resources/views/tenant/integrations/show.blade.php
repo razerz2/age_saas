@@ -1,4 +1,4 @@
-@extends('layouts.connect_plus.app')
+﻿@extends('layouts.connect_plus.app')
 
 @section('title', 'Detalhes da Integração')
 
@@ -16,7 +16,7 @@
                     <a href="{{ workspace_route('tenant.dashboard') }}">Dashboard</a>
                 </li>
                 <li class="breadcrumb-item">
-                    <a href="{{ route('tenant.integrations.index') }}">Integrações</a>
+                    <a href="{{ workspace_route('tenant.integrations.index') }}">Integrações</a>
                 </li>
                 <li class="breadcrumb-item active" aria-current="page">Detalhes</li>
             </ol>
@@ -34,10 +34,10 @@
                             Informações da Integração
                         </h4>
                         <div>
-                            <a href="{{ route('tenant.integrations.edit', $integration->id) }}" class="btn btn-warning btn-sm">
+                            <a href="{{ workspace_route('tenant.integrations.edit', $integration->id) }}" class="btn btn-warning btn-sm">
                                 <i class="mdi mdi-pencil me-1"></i> Editar
                             </a>
-                            <a href="{{ route('tenant.integrations.index') }}" class="btn btn-secondary btn-sm">
+                            <a href="{{ workspace_route('tenant.integrations.index') }}" class="btn btn-secondary btn-sm">
                                 <i class="mdi mdi-arrow-left me-1"></i> Voltar
                             </a>
                         </div>

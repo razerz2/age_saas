@@ -1,4 +1,4 @@
-@extends('layouts.connect_plus.app')
+﻿@extends('layouts.connect_plus.app')
 
 @section('title', 'Alterar Senha')
 
@@ -13,7 +13,7 @@
                     <a href="{{ workspace_route('tenant.dashboard') }}">Dashboard</a>
                 </li>
                 <li class="breadcrumb-item">
-                    <a href="{{ route('tenant.users.index') }}">Usuários</a>
+                    <a href="{{ workspace_route('tenant.users.index') }}">Usuários</a>
                 </li>
                 <li class="breadcrumb-item active" aria-current="page">Alterar Senha</li>
             </ol>
@@ -27,7 +27,7 @@
                     <h4 class="card-title">Alterar Senha</h4>
                     <p class="card-description">Digite a senha atual e a nova senha.</p>
 
-                    <form method="POST" action="{{ route('tenant.users.change-password.store', $user->id) }}"
+                    <form method="POST" action="{{ workspace_route('tenant.users.change-password.store', $user->id) }}"
                         class="forms-sample">
                         @csrf
 
@@ -51,7 +51,7 @@
 
                         <div class="text-end mt-4">
                             <button type="submit" class="btn btn-primary btn-lg">Alterar Senha</button>
-                            <a href="{{ route('tenant.users.index') }}" class="btn btn-light btn-lg">Cancelar</a>
+                            <a href="{{ workspace_route('tenant.users.index') }}" class="btn btn-light btn-lg">Cancelar</a>
                         </div>
 
                     </form>

@@ -54,7 +54,7 @@ class FormController extends Controller
         return view('tenant.forms.create', compact('doctors'));
     }
 
-    public function getSpecialtiesByDoctor($doctorId)
+    public function getSpecialtiesByDoctor($slug, $doctorId)
     {
         $doctor = Doctor::with('specialties')->findOrFail($doctorId);
         $specialties = $doctor->specialties()->orderBy('name')->get();
@@ -73,7 +73,7 @@ class FormController extends Controller
             ->with('success', 'Formulário criado com sucesso.');
     }
 
-    public function show($id)
+    public function show($slug, $id)
     {
         $form = Form::with(['specialty', 'doctor.user'])->findOrFail($id);
         $sectionsCount = $form->sections()->count();
@@ -82,7 +82,7 @@ class FormController extends Controller
         return view('tenant.forms.show', compact('form', 'sectionsCount', 'questionsCount'));
     }
 
-    public function preview($id)
+    public function preview($slug, $id)
     {
         $form = Form::findOrFail($id);
         $form->load([
@@ -94,7 +94,7 @@ class FormController extends Controller
         return view('tenant.forms.preview', compact('form'));
     }
 
-    public function builder($id)
+    public function builder($slug, $id)
     {
         $form = Form::findOrFail($id);
         $form->load([
@@ -106,7 +106,7 @@ class FormController extends Controller
         return view('tenant.forms.builder', compact('form'));
     }
 
-    public function edit($id)
+    public function edit($slug, $id)
     {
         $form = Form::findOrFail($id);
         $form->load([
@@ -126,7 +126,7 @@ class FormController extends Controller
         return view('tenant.forms.edit', compact('form', 'doctors'));
     }
 
-    public function update(UpdateFormRequest $request, $id)
+    public function update(UpdateFormRequest $request, $slug, $id)
     {
         $form = Form::findOrFail($id);
         $form->update($request->validated());
@@ -134,7 +134,7 @@ class FormController extends Controller
         return back()->with('success', 'Formulário atualizado com sucesso.');
     }
 
-    public function destroy($id)
+    public function destroy($slug, $id)
     {
         $form = Form::findOrFail($id);
         $formName = $form->name;
@@ -144,7 +144,7 @@ class FormController extends Controller
             ->with('success', "Formulário '{$formName}' removido com sucesso.");
     }
 
-    public function clearContent($id)
+    public function clearContent($slug, $id)
     {
         $form = Form::findOrFail($id);
         
@@ -165,7 +165,7 @@ class FormController extends Controller
      *            SECTIONS
      * ------------------------------ */
 
-    public function addSection(AddSectionRequest $request, $id)
+    public function addSection(AddSectionRequest $request, $slug, $id)
     {
         $form = Form::findOrFail($id);
         $data = $request->validated();
@@ -180,7 +180,7 @@ class FormController extends Controller
         return response()->json(['section' => $section], 201);
     }
 
-    public function updateSection(UpdateSectionRequest $request, $id)
+    public function updateSection(UpdateSectionRequest $request, $slug, $id)
     {
         $section = FormSection::findOrFail($id);
         $section->update($request->validated());
@@ -188,7 +188,7 @@ class FormController extends Controller
         return response()->json(['section' => $section]);
     }
 
-    public function deleteSection($id)
+    public function deleteSection($slug, $id)
     {
         $section = FormSection::findOrFail($id);
         $section->delete();
@@ -202,7 +202,7 @@ class FormController extends Controller
      *            QUESTIONS
      * ------------------------------ */
 
-    public function addQuestion(AddQuestionRequest $request, $id)
+    public function addQuestion(AddQuestionRequest $request, $slug, $id)
     {
         $form = Form::findOrFail($id);
         $data = $request->validated();
@@ -237,7 +237,7 @@ class FormController extends Controller
         return response()->json(['question' => $question], 201);
     }
 
-    public function updateQuestion(UpdateQuestionRequest $request, $id)
+    public function updateQuestion(UpdateQuestionRequest $request, $slug, $id)
     {
         $question = FormQuestion::findOrFail($id);
         $question->update($request->validated());
@@ -245,7 +245,7 @@ class FormController extends Controller
         return response()->json(['question' => $question]);
     }
 
-    public function deleteQuestion($id)
+    public function deleteQuestion($slug, $id)
     {
         $question = FormQuestion::findOrFail($id);
         $question->delete();
@@ -259,7 +259,7 @@ class FormController extends Controller
      *            OPTIONS
      * ------------------------------ */
 
-    public function addOption(AddOptionRequest $request, $id)
+    public function addOption(AddOptionRequest $request, $slug, $id)
     {
         $question = FormQuestion::findOrFail($id);
         $data = $request->validated();
@@ -275,7 +275,7 @@ class FormController extends Controller
         return response()->json(['option' => $option], 201);
     }
 
-    public function updateOption(UpdateOptionRequest $request, $id)
+    public function updateOption(UpdateOptionRequest $request, $slug, $id)
     {
         $option = QuestionOption::findOrFail($id);
         $option->update($request->validated());
@@ -283,7 +283,7 @@ class FormController extends Controller
         return response()->json(['option' => $option]);
     }
 
-    public function deleteOption($id)
+    public function deleteOption($slug, $id)
     {
         $option = QuestionOption::findOrFail($id);
         $option->delete();

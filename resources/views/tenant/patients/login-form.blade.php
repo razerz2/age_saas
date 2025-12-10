@@ -1,4 +1,4 @@
-@extends('layouts.connect_plus.app')
+﻿@extends('layouts.connect_plus.app')
 
 @section('title', 'Gerenciar Login do Paciente')
 
@@ -55,7 +55,7 @@
                     {{ (isset($patient->login) && $patient->login) ? 'Editar Login' : 'Criar Login' }}
                 </h4>
 
-                <form method="POST" action="{{ route('tenant.patients.login.store', $patient->id) }}">
+                <form method="POST" action="{{ workspace_route('tenant.patients.login.store', $patient->id) }}">
                     @csrf
 
                     <div class="form-group">
@@ -129,7 +129,7 @@
                         <button type="submit" class="btn btn-primary">
                             <i class="mdi mdi-content-save"></i> Salvar
                         </button>
-                        <a href="{{ route('tenant.patients.index') }}" class="btn btn-secondary">
+                        <a href="{{ workspace_route('tenant.patients.index') }}" class="btn btn-secondary">
                             <i class="mdi mdi-arrow-left"></i> Voltar
                         </a>
                     </div>

@@ -1,4 +1,4 @@
-@extends('layouts.connect_plus.app')
+﻿@extends('layouts.connect_plus.app')
 
 @section('title', 'Atendimento - ' . \Carbon\Carbon::parse($date)->format('d/m/Y'))
 
@@ -16,7 +16,7 @@
                     <a href="{{ workspace_route('tenant.dashboard') }}">Dashboard</a>
                 </li>
                 <li class="breadcrumb-item">
-                    <a href="{{ route('tenant.medical-appointments.index') }}">Atendimento</a>
+                    <a href="{{ workspace_route('tenant.medical-appointments.index') }}">Atendimento</a>
                 </li>
                 <li class="breadcrumb-item active" aria-current="page">
                     {{ \Carbon\Carbon::parse($date)->format('d/m/Y') }}
@@ -96,7 +96,7 @@
                     </div>
                 </div>
                 <div class="card-footer">
-                    <a href="{{ route('tenant.medical-appointments.index') }}" class="btn btn-outline-secondary w-100">
+                    <a href="{{ workspace_route('tenant.medical-appointments.index') }}" class="btn btn-outline-secondary w-100">
                         <i class="mdi mdi-arrow-left me-2"></i>
                         Voltar para Seleção
                     </a>
@@ -176,7 +176,7 @@
         }
 
         // Carregar detalhes via AJAX
-        fetch(`{{ route('tenant.medical-appointments.details', ['appointment' => '__ID__']) }}`.replace('__ID__', appointmentId), {
+        fetch(`{{ workspace_route('tenant.medical-appointments.details', ['appointment' => '__ID__']) }}`.replace('__ID__', appointmentId), {
             method: 'GET',
             headers: {
                 'X-Requested-With': 'XMLHttpRequest',
@@ -252,7 +252,7 @@
         formData.append('status', status);
         formData.append('_token', '{{ csrf_token() }}');
 
-        fetch(`{{ route('tenant.medical-appointments.update-status', ['appointment' => '__ID__']) }}`.replace('__ID__', appointmentId), {
+        fetch(`{{ workspace_route('tenant.medical-appointments.update-status', ['appointment' => '__ID__']) }}`.replace('__ID__', appointmentId), {
             method: 'POST',
             body: formData,
             headers: {
@@ -283,7 +283,7 @@
         const formData = new FormData();
         formData.append('_token', '{{ csrf_token() }}');
 
-        fetch(`{{ route('tenant.medical-appointments.complete', ['appointment' => '__ID__']) }}`.replace('__ID__', appointmentId), {
+        fetch(`{{ workspace_route('tenant.medical-appointments.complete', ['appointment' => '__ID__']) }}`.replace('__ID__', appointmentId), {
             method: 'POST',
             body: formData,
             headers: {
@@ -325,7 +325,7 @@
         modal.show();
 
         // Buscar resposta do formulário
-        fetch(`{{ route('tenant.medical-appointments.form-response', ['appointment' => '__ID__']) }}`.replace('__ID__', appointmentId), {
+        fetch(`{{ workspace_route('tenant.medical-appointments.form-response', ['appointment' => '__ID__']) }}`.replace('__ID__', appointmentId), {
             method: 'GET',
             headers: {
                 'X-Requested-With': 'XMLHttpRequest',

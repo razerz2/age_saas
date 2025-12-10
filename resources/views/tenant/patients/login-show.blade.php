@@ -1,4 +1,4 @@
-@extends('layouts.connect_plus.app')
+﻿@extends('layouts.connect_plus.app')
 
 @section('title', 'Informações de Login do Paciente')
 
@@ -152,7 +152,7 @@
                 <p class="text-muted">Envie as credenciais de acesso ao paciente por e-mail ou WhatsApp.</p>
                 
                 <form id="sendEmailForm" 
-                      action="{{ route('tenant.patients.login.send-email', $patient->id) }}" 
+                      action="{{ workspace_route('tenant.patients.login.send-email', $patient->id) }}" 
                       method="POST" 
                       class="d-inline">
                     @csrf
@@ -168,7 +168,7 @@
 
                 @if($patient->phone)
                     <form id="sendWhatsAppForm" 
-                          action="{{ route('tenant.patients.login.send-whatsapp', $patient->id) }}" 
+                          action="{{ workspace_route('tenant.patients.login.send-whatsapp', $patient->id) }}" 
                           method="POST" 
                           class="d-inline">
                         @csrf
@@ -191,7 +191,7 @@
                     <small class="text-muted d-block mt-1">Adicione um telefone ao paciente para enviar por WhatsApp.</small>
                 @endif
 
-                <a href="{{ route('tenant.patients.index') }}" class="btn btn-secondary btn-lg">
+                <a href="{{ workspace_route('tenant.patients.index') }}" class="btn btn-secondary btn-lg">
                     <i class="mdi mdi-arrow-left"></i> Voltar para Lista
                 </a>
             </div>

@@ -1,4 +1,4 @@
-@extends('layouts.connect_plus.app')
+﻿@extends('layouts.connect_plus.app')
 
 @section('title', 'Atendimento Médico')
 
@@ -26,7 +26,7 @@
                 <div class="card-body">
                     <h4 class="card-title mb-4">Selecione o dia para iniciar o atendimento</h4>
 
-                    <form action="{{ route('tenant.medical-appointments.start') }}" method="POST">
+                    <form action="{{ workspace_route('tenant.medical-appointments.start') }}" method="POST">
                         @csrf
 
                         @php

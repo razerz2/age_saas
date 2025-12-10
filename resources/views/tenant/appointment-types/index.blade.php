@@ -1,4 +1,4 @@
-@extends('layouts.connect_plus.app')
+﻿@extends('layouts.connect_plus.app')
 
 @section('title', 'Tipos de Consulta')
 
@@ -25,7 +25,7 @@
 
                     <div class="d-flex justify-content-between align-items-center mb-3">
                         <div class="d-flex gap-2 align-items-center">
-                            <form method="GET" action="{{ route('tenant.appointment-types.index') }}" class="d-flex gap-2">
+                            <form method="GET" action="{{ workspace_route('tenant.appointment-types.index') }}" class="d-flex gap-2">
                                 <select name="doctor_id" class="form-select" style="width: 250px;" onchange="this.form.submit()">
                                     <option value="">Todos os médicos</option>
                                     @foreach($doctors as $doctor)
@@ -35,13 +35,13 @@
                                     @endforeach
                                 </select>
                                 @if(request('doctor_id'))
-                                    <a href="{{ route('tenant.appointment-types.index') }}" class="btn btn-outline-secondary">
+                                    <a href="{{ workspace_route('tenant.appointment-types.index') }}" class="btn btn-outline-secondary">
                                         <i class="mdi mdi-close"></i> Limpar
                                     </a>
                                 @endif
                             </form>
                         </div>
-                        <a href="{{ route('tenant.appointment-types.create') }}" class="btn btn-primary">
+                        <a href="{{ workspace_route('tenant.appointment-types.create') }}" class="btn btn-primary">
                             <i class="mdi mdi-plus"></i> Novo
                         </a>
                     </div>
@@ -81,10 +81,10 @@
                                             @endif
                                         </td>
                                         <td>
-                                            <a href="{{ route('tenant.appointment-types.show', $appointmentType->id) }}" class="btn btn-info btn-sm">
+                                            <a href="{{ workspace_route('tenant.appointment-types.show', $appointmentType->id) }}" class="btn btn-info btn-sm">
                                                 <i class="mdi mdi-eye"></i>
                                             </a>
-                                            <a href="{{ route('tenant.appointment-types.edit', $appointmentType->id) }}" class="btn btn-warning btn-sm">
+                                            <a href="{{ workspace_route('tenant.appointment-types.edit', $appointmentType->id) }}" class="btn btn-warning btn-sm">
                                                 <i class="mdi mdi-pencil"></i>
                                             </a>
                                         </td>

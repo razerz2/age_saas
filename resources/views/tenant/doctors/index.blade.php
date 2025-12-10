@@ -1,4 +1,4 @@
-@extends('layouts.connect_plus.app')
+﻿@extends('layouts.connect_plus.app')
 
 @section('title', 'Médicos')
 
@@ -39,7 +39,7 @@
                         </div>
                     @endif
 
-                    <a href="{{ route('tenant.doctors.create') }}" class="btn btn-primary mb-3">
+                    <a href="{{ workspace_route('tenant.doctors.create') }}" class="btn btn-primary mb-3">
                         + Novo
                     </a>
 
@@ -64,14 +64,14 @@
                                         <td>{{ $doctor->crm_state ?? 'N/A' }}</td>
                                         <td>
                                             <div class="d-flex gap-1 flex-wrap">
-                                                <a href="{{ route('tenant.doctors.show', $doctor->id) }}" class="btn btn-info btn-sm">
+                                                <a href="{{ workspace_route('tenant.doctors.show', $doctor->id) }}" class="btn btn-info btn-sm">
                                                     <i class="mdi mdi-eye"></i> Ver
                                                 </a>
-                                                <a href="{{ route('tenant.doctors.edit', $doctor->id) }}" class="btn btn-warning btn-sm">
+                                                <a href="{{ workspace_route('tenant.doctors.edit', $doctor->id) }}" class="btn btn-warning btn-sm">
                                                     <i class="mdi mdi-pencil"></i> Editar
                                                 </a>
                                                 @if(!$doctor->hasAppointments())
-                                                    <form action="{{ route('tenant.doctors.destroy', $doctor->id) }}" method="POST" class="d-inline" 
+                                                    <form action="{{ workspace_route('tenant.doctors.destroy', $doctor->id) }}" method="POST" class="d-inline" 
                                                           onsubmit="return confirm('Tem certeza que deseja excluir este médico?');">
                                                         @csrf
                                                         @method('DELETE')

@@ -1,4 +1,4 @@
-@extends('layouts.connect_plus.app')
+﻿@extends('layouts.connect_plus.app')
 
 @section('title', 'Usuários')
 
@@ -24,7 +24,7 @@
                 <div class="card-body">
                     <h4 class="card-title">Lista de Usuários</h4>
 
-                    <a href="{{ route('tenant.users.create') }}" class="btn btn-primary mb-3">
+                    <a href="{{ workspace_route('tenant.users.create') }}" class="btn btn-primary mb-3">
                         + Novo Usuário
                     </a>
 
@@ -55,26 +55,26 @@
                                         </td>
                                         <td>
                                             <!-- Botão de Ver com ícone -->
-                                            <a href="{{ route('tenant.users.show', $user->id) }}"
+                                            <a href="{{ workspace_route('tenant.users.show', $user->id) }}"
                                                 class="btn btn-info btn-sm mb-1 d-block">
                                                 <i class="mdi mdi-eye"></i> Ver
                                             </a>
 
                                             <!-- Botão de Editar com ícone -->
-                                            <a href="{{ route('tenant.users.edit', $user->id) }}"
+                                            <a href="{{ workspace_route('tenant.users.edit', $user->id) }}"
                                                 class="btn btn-warning btn-sm mb-1 d-block">
                                                 <i class="mdi mdi-pencil"></i> Editar
                                             </a>
 
                                             <!-- Botão de Trocar Senha com ícone -->
-                                            <a href="{{ route('tenant.users.change-password', $user->id) }}"
+                                            <a href="{{ workspace_route('tenant.users.change-password', $user->id) }}"
                                                 class="btn btn-primary btn-sm mb-1 d-block">
                                                 <i class="mdi mdi-lock-reset"></i> Trocar Senha
                                             </a>
 
                                             <!-- Botão de Gerenciar Permissões de Médicos (apenas para não médicos) -->
                                             @if (!$user->is_doctor)
-                                                <a href="{{ route('tenant.users.doctor-permissions', $user->id) }}"
+                                                <a href="{{ workspace_route('tenant.users.doctor-permissions', $user->id) }}"
                                                     class="btn btn-info btn-sm d-block"
                                                     title="Gerenciar Permissões de Médicos">
                                                     <i class="mdi mdi-account-key"></i> Permissões

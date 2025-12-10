@@ -1,4 +1,4 @@
-@extends('layouts.connect_plus.app')
+﻿@extends('layouts.connect_plus.app')
 
 @section('title', 'Horários Comerciais')
 
@@ -23,7 +23,7 @@
                 <div class="card-body">
                     <h4 class="card-title">Lista de Horários Comerciais</h4>
 
-                    <a href="{{ route('tenant.business-hours.create') }}" class="btn btn-primary mb-3">
+                    <a href="{{ workspace_route('tenant.business-hours.create') }}" class="btn btn-primary mb-3">
                         + Novo
                     </a>
 
@@ -65,8 +65,8 @@
                                             @endif
                                         </td>
                                         <td>
-                                            <a href="{{ route('tenant.business-hours.show', $businessHour->id) }}" class="btn btn-info btn-sm">Ver</a>
-                                            <a href="{{ route('tenant.business-hours.edit', $businessHour->id) }}" class="btn btn-warning btn-sm">Editar</a>
+                                            <a href="{{ workspace_route('tenant.business-hours.show', $businessHour->id) }}" class="btn btn-info btn-sm">Ver</a>
+                                            <a href="{{ workspace_route('tenant.business-hours.edit', $businessHour->id) }}" class="btn btn-warning btn-sm">Editar</a>
                                         </td>
                                     </tr>
                                 @endforeach

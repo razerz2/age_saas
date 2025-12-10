@@ -182,7 +182,7 @@ class DoctorSettingsController extends Controller
     /**
      * Atualiza um horário comercial
      */
-    public function updateBusinessHour(UpdateBusinessHourRequest $request, $id)
+    public function updateBusinessHour(UpdateBusinessHourRequest $request, $slug, $id)
     {
         $user = Auth::guard('tenant')->user();
         $businessHour = BusinessHour::findOrFail($id);
@@ -217,7 +217,7 @@ class DoctorSettingsController extends Controller
     /**
      * Remove um horário comercial
      */
-    public function destroyBusinessHour($id)
+    public function destroyBusinessHour($slug, $id)
     {
         $user = Auth::guard('tenant')->user();
         $businessHour = BusinessHour::findOrFail($id);
@@ -287,7 +287,7 @@ class DoctorSettingsController extends Controller
     /**
      * Atualiza um tipo de atendimento
      */
-    public function updateAppointmentType(UpdateAppointmentTypeRequest $request, $id)
+    public function updateAppointmentType(UpdateAppointmentTypeRequest $request, $slug, $id)
     {
         $user = Auth::guard('tenant')->user();
         $appointmentType = AppointmentType::findOrFail($id);
@@ -320,7 +320,7 @@ class DoctorSettingsController extends Controller
     /**
      * Remove um tipo de atendimento
      */
-    public function destroyAppointmentType($id)
+    public function destroyAppointmentType($slug, $id)
     {
         $user = Auth::guard('tenant')->user();
         $appointmentType = AppointmentType::findOrFail($id);

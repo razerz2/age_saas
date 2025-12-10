@@ -1,4 +1,4 @@
-@extends('layouts.connect_plus.app')
+﻿@extends('layouts.connect_plus.app')
 
 @section('title', 'Conectar Apple Calendar')
 
@@ -16,10 +16,10 @@
                     <a href="{{ workspace_route('tenant.dashboard') }}">Dashboard</a>
                 </li>
                 <li class="breadcrumb-item">
-                    <a href="{{ route('tenant.integrations.index') }}">Integrações</a>
+                    <a href="{{ workspace_route('tenant.integrations.index') }}">Integrações</a>
                 </li>
                 <li class="breadcrumb-item">
-                    <a href="{{ route('tenant.integrations.apple.index') }}">Apple Calendar</a>
+                    <a href="{{ workspace_route('tenant.integrations.apple.index') }}">Apple Calendar</a>
                 </li>
                 <li class="breadcrumb-item active" aria-current="page">Conectar</li>
             </ol>
@@ -68,7 +68,7 @@
                         </ol>
                     </div>
 
-                    <form action="{{ route('tenant.integrations.apple.connect', $doctor->id) }}" method="POST">
+                    <form action="{{ workspace_route('tenant.integrations.apple.connect', $doctor->id) }}" method="POST">
                         @csrf
 
                         <div class="mb-3">
@@ -145,7 +145,7 @@
                         </div>
 
                         <div class="d-flex justify-content-between">
-                            <a href="{{ route('tenant.integrations.apple.index') }}" class="btn btn-secondary">
+                            <a href="{{ workspace_route('tenant.integrations.apple.index') }}" class="btn btn-secondary">
                                 <i class="mdi mdi-arrow-left me-1"></i>
                                 Cancelar
                             </a>

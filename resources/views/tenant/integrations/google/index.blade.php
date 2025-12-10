@@ -1,4 +1,4 @@
-@extends('layouts.connect_plus.app')
+﻿@extends('layouts.connect_plus.app')
 
 @section('title', 'Integração Google Calendar')
 
@@ -16,7 +16,7 @@
                     <a href="{{ workspace_route('tenant.dashboard') }}">Dashboard</a>
                 </li>
                 <li class="breadcrumb-item">
-                    <a href="{{ route('tenant.integrations.index') }}">Integrações</a>
+                    <a href="{{ workspace_route('tenant.integrations.index') }}">Integrações</a>
                 </li>
                 <li class="breadcrumb-item active" aria-current="page">Google Calendar</li>
             </ol>
@@ -192,7 +192,7 @@
                                                                 title="Status da integração">
                                                             <i class="mdi mdi-information-outline"></i>
                                                         </button>
-                                                        <form action="{{ route('tenant.integrations.google.disconnect', $doctor->id) }}" 
+                                                        <form action="{{ workspace_route('tenant.integrations.google.disconnect', $doctor->id) }}" 
                                                               method="POST" 
                                                               class="d-inline"
                                                               onsubmit="return confirm('Tem certeza que deseja desconectar a integração do Google Calendar para este médico?\n\nOs eventos já criados no Google Calendar não serão removidos automaticamente.');">
@@ -205,7 +205,7 @@
                                                         </form>
                                                     </div>
                                                 @else
-                                                    <a href="{{ route('tenant.integrations.google.connect', $doctor->id) }}" 
+                                                    <a href="{{ workspace_route('tenant.integrations.google.connect', $doctor->id) }}" 
                                                        class="btn btn-primary btn-sm">
                                                         <i class="mdi mdi-google me-1"></i>
                                                         Conectar Google
@@ -233,7 +233,7 @@
                     </div>
 
                     <div class="mt-4">
-                        <a href="{{ route('tenant.integrations.index') }}" class="btn btn-secondary">
+                        <a href="{{ workspace_route('tenant.integrations.index') }}" class="btn btn-secondary">
                             <i class="mdi mdi-arrow-left me-1"></i>
                             Voltar para Integrações
                         </a>

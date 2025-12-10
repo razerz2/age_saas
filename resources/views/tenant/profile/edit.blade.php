@@ -1,4 +1,4 @@
-@extends('layouts.connect_plus.app')
+﻿@extends('layouts.connect_plus.app')
 
 @section('title', 'Meu Perfil')
 
@@ -106,7 +106,7 @@
                         </div>
                     </div>
 
-                    <form method="POST" action="{{ route('tenant.profile.update') }}" enctype="multipart/form-data">
+                    <form method="POST" action="{{ workspace_route('tenant.profile.update') }}" enctype="multipart/form-data">
                         @csrf
                         @method('PUT')
 

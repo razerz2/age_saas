@@ -1,4 +1,4 @@
-@extends('layouts.connect_plus.app')
+﻿@extends('layouts.connect_plus.app')
 
 @section('title', 'Relatórios')
 
@@ -29,7 +29,7 @@
                         <p class="text-muted mb-0">Relatórios de agendamentos</p>
                     </div>
                 </div>
-                <a href="{{ route('tenant.reports.appointments') }}" class="btn btn-primary btn-sm mt-3 w-100">
+                <a href="{{ workspace_route('tenant.reports.appointments') }}" class="btn btn-primary btn-sm mt-3 w-100">
                     Acessar <i class="mdi mdi-arrow-right"></i>
                 </a>
             </div>
@@ -50,7 +50,7 @@
                         <p class="text-muted mb-0">Relatórios de pacientes</p>
                     </div>
                 </div>
-                <a href="{{ route('tenant.reports.patients') }}" class="btn btn-success btn-sm mt-3 w-100">
+                <a href="{{ workspace_route('tenant.reports.patients') }}" class="btn btn-success btn-sm mt-3 w-100">
                     Acessar <i class="mdi mdi-arrow-right"></i>
                 </a>
             </div>
@@ -71,7 +71,7 @@
                         <p class="text-muted mb-0">Relatórios de médicos</p>
                     </div>
                 </div>
-                <a href="{{ route('tenant.reports.doctors') }}" class="btn btn-info btn-sm mt-3 w-100">
+                <a href="{{ workspace_route('tenant.reports.doctors') }}" class="btn btn-info btn-sm mt-3 w-100">
                     Acessar <i class="mdi mdi-arrow-right"></i>
                 </a>
             </div>
@@ -92,7 +92,7 @@
                         <p class="text-muted mb-0">Relatórios de recorrências</p>
                     </div>
                 </div>
-                <a href="{{ route('tenant.reports.recurring') }}" class="btn btn-warning btn-sm mt-3 w-100">
+                <a href="{{ workspace_route('tenant.reports.recurring') }}" class="btn btn-warning btn-sm mt-3 w-100">
                     Acessar <i class="mdi mdi-arrow-right"></i>
                 </a>
             </div>
@@ -113,7 +113,7 @@
                         <p class="text-muted mb-0">Relatórios de formulários</p>
                     </div>
                 </div>
-                <a href="{{ route('tenant.reports.forms') }}" class="btn btn-danger btn-sm mt-3 w-100">
+                <a href="{{ workspace_route('tenant.reports.forms') }}" class="btn btn-danger btn-sm mt-3 w-100">
                     Acessar <i class="mdi mdi-arrow-right"></i>
                 </a>
             </div>
@@ -134,7 +134,7 @@
                         <p class="text-muted mb-0">Relatórios do portal</p>
                     </div>
                 </div>
-                <a href="{{ route('tenant.reports.portal') }}" class="btn btn-secondary btn-sm mt-3 w-100">
+                <a href="{{ workspace_route('tenant.reports.portal') }}" class="btn btn-secondary btn-sm mt-3 w-100">
                     Acessar <i class="mdi mdi-arrow-right"></i>
                 </a>
             </div>
@@ -155,7 +155,7 @@
                         <p class="text-muted mb-0">Relatórios de notificações</p>
                     </div>
                 </div>
-                <a href="{{ route('tenant.reports.notifications') }}" class="btn btn-dark btn-sm mt-3 w-100">
+                <a href="{{ workspace_route('tenant.reports.notifications') }}" class="btn btn-dark btn-sm mt-3 w-100">
                     Acessar <i class="mdi mdi-arrow-right"></i>
                 </a>
             </div>

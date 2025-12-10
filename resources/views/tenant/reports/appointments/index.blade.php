@@ -1,4 +1,4 @@
-@extends('layouts.connect_plus.app')
+﻿@extends('layouts.connect_plus.app')
 
 @section('title', 'Relatório de Agendamentos')
 
@@ -43,7 +43,7 @@
     <nav aria-label="breadcrumb">
         <ol class="breadcrumb">
             <li class="breadcrumb-item"><a href="{{ workspace_route('tenant.dashboard') }}">Dashboard</a></li>
-            <li class="breadcrumb-item"><a href="{{ route('tenant.reports.index') }}">Relatórios</a></li>
+            <li class="breadcrumb-item"><a href="{{ workspace_route('tenant.reports.index') }}">Relatórios</a></li>
             <li class="breadcrumb-item active" aria-current="page">Agendamentos</li>
         </ol>
     </nav>
@@ -281,7 +281,7 @@ function loadData() {
     }
     
     $.ajax({
-        url: '{{ route("tenant.reports.appointments.data") }}',
+        url: '{{ workspace_route("tenant.reports.appointments.data") }}',
         method: 'POST',
         data: formData,
         headers: {
@@ -464,9 +464,9 @@ function updateTable(tableData) {
 function exportData(format) {
     const formData = $('#filter-form').serialize();
     const routes = {
-        'excel': '{{ route("tenant.reports.appointments.export.excel") }}',
-        'pdf': '{{ route("tenant.reports.appointments.export.pdf") }}',
-        'csv': '{{ route("tenant.reports.appointments.export.csv") }}'
+        'excel': '{{ workspace_route("tenant.reports.appointments.export.excel") }}',
+        'pdf': '{{ workspace_route("tenant.reports.appointments.export.pdf") }}',
+        'csv': '{{ workspace_route("tenant.reports.appointments.export.csv") }}'
     };
     const url = routes[format] || routes['excel'];
     window.open(`${url}?${formData}`, '_blank');

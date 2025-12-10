@@ -160,7 +160,7 @@ class RecurringAppointmentController extends Controller
         }
     }
 
-    public function show($id)
+    public function show($slug, $id)
     {
         $recurringAppointment = RecurringAppointment::with([
             'patient',
@@ -175,7 +175,7 @@ class RecurringAppointmentController extends Controller
         return view('tenant.appointments.recurring.show', compact('recurringAppointment'));
     }
 
-    public function edit($id)
+    public function edit($slug, $id)
     {
         $recurringAppointment = RecurringAppointment::with('rules')->findOrFail($id);
         
@@ -197,7 +197,7 @@ class RecurringAppointmentController extends Controller
         ));
     }
 
-    public function update(UpdateRecurringAppointmentRequest $request, $id)
+    public function update(UpdateRecurringAppointmentRequest $request, $slug, $id)
     {
         $recurringAppointment = RecurringAppointment::findOrFail($id);
         
@@ -252,14 +252,14 @@ class RecurringAppointmentController extends Controller
             ->with('success', 'Agendamento recorrente atualizado com sucesso.');
     }
 
-    public function cancel($id)
+    public function cancel($slug, $id)
     {
         $recurringAppointment = RecurringAppointment::findOrFail($id);
         
         return view('tenant.appointments.recurring.cancel', compact('recurringAppointment'));
     }
 
-    public function destroy($id)
+    public function destroy($slug, $id)
     {
         $recurringAppointment = RecurringAppointment::findOrFail($id);
         
@@ -273,7 +273,7 @@ class RecurringAppointmentController extends Controller
     /**
      * API: Buscar business hours do médico
      */
-    public function getBusinessHoursByDoctor($doctorId)
+    public function getBusinessHoursByDoctor($slug, $doctorId)
     {
         $businessHours = BusinessHour::where('doctor_id', $doctorId)
             ->orderBy('weekday')
@@ -347,7 +347,7 @@ class RecurringAppointmentController extends Controller
      * API: Buscar horários disponíveis para recorrência
      * Considera: business hours, duração do tipo de consulta, conflitos com agendamentos existentes
      */
-    public function getAvailableSlotsForRecurring(Request $request, $doctorId)
+    public function getAvailableSlotsForRecurring(Request $request, $slug, $doctorId)
     {
         $request->validate([
             'weekday' => 'required|in:monday,tuesday,wednesday,thursday,friday,saturday,sunday',

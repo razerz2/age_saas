@@ -1,4 +1,4 @@
-@extends('layouts.connect_plus.app')
+﻿@extends('layouts.connect_plus.app')
 
 @section('title', 'Calendários')
 
@@ -23,7 +23,7 @@
                 <div class="card-body">
                     <h4 class="card-title">Lista de Calendários</h4>
 
-                    <a href="{{ route('tenant.calendars.create') }}" class="btn btn-primary mb-3">
+                    <a href="{{ workspace_route('tenant.calendars.create') }}" class="btn btn-primary mb-3">
                         + Novo
                     </a>
 
@@ -47,8 +47,8 @@
                                         <td>{{ $calendar->doctor->user->name ?? 'N/A' }}</td>
                                         <td>{{ $calendar->external_id ?? 'N/A' }}</td>
                                         <td>
-                                            <a href="{{ route('tenant.calendars.show', $calendar->id) }}" class="btn btn-info btn-sm">Ver</a>
-                                            <a href="{{ route('tenant.calendars.edit', $calendar->id) }}" class="btn btn-warning btn-sm">Editar</a>
+                                            <a href="{{ workspace_route('tenant.calendars.show', $calendar->id) }}" class="btn btn-info btn-sm">Ver</a>
+                                            <a href="{{ workspace_route('tenant.calendars.edit', $calendar->id) }}" class="btn btn-warning btn-sm">Editar</a>
                                             @php
                                                 $user = auth('tenant')->user();
                                             @endphp

@@ -42,7 +42,7 @@ class CalendarSyncStateController extends Controller
             ->with('success', 'Estado de sincronização criado com sucesso.');
     }
 
-    public function show($id)
+    public function show($slug, $id)
     {
         $calendarSyncState = CalendarSyncState::findOrFail($id);
         $calendarSyncState->load([
@@ -53,7 +53,7 @@ class CalendarSyncStateController extends Controller
         return view('tenant.calendar-sync.show', compact('calendarSyncState'));
     }
 
-    public function edit($id)
+    public function edit($slug, $id)
     {
         $calendarSyncState = CalendarSyncState::findOrFail($id);
         $calendarSyncState->load(['appointment']);
@@ -63,7 +63,7 @@ class CalendarSyncStateController extends Controller
         return view('tenant.calendar-sync.edit', compact('calendarSyncState', 'appointments'));
     }
 
-    public function update(UpdateCalendarSyncStateRequest $request, $id)
+    public function update(UpdateCalendarSyncStateRequest $request, $slug, $id)
     {
         $calendarSyncState = CalendarSyncState::findOrFail($id);
         $calendarSyncState->update($request->validated());
@@ -72,7 +72,7 @@ class CalendarSyncStateController extends Controller
             ->with('success', 'Estado de sincronização atualizado.');
     }
 
-    public function destroy($id)
+    public function destroy($slug, $id)
     {
         $calendarSyncState = CalendarSyncState::findOrFail($id);
         $calendarSyncState->delete();

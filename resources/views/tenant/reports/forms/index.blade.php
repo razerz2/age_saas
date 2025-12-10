@@ -1,4 +1,4 @@
-@extends('layouts.connect_plus.app')
+﻿@extends('layouts.connect_plus.app')
 
 @section('title', 'Relatório de Formulários')
 
@@ -9,7 +9,7 @@
     <nav aria-label="breadcrumb">
         <ol class="breadcrumb">
             <li class="breadcrumb-item"><a href="{{ workspace_route('tenant.dashboard') }}">Dashboard</a></li>
-            <li class="breadcrumb-item"><a href="{{ route('tenant.reports.index') }}">Relatórios</a></li>
+            <li class="breadcrumb-item"><a href="{{ workspace_route('tenant.reports.index') }}">Relatórios</a></li>
             <li class="breadcrumb-item active" aria-current="page">Formulários</li>
         </ol>
     </nav>
@@ -45,7 +45,7 @@ $(document).ready(function() {
     $('#reports-table').DataTable({
         language: { url: "//cdn.datatables.net/plug-ins/1.11.5/i18n/pt-BR.json" },
         ajax: {
-            url: '{{ route("tenant.reports.forms.data") }}',
+            url: '{{ workspace_route("tenant.reports.forms.data") }}',
             method: 'POST',
             headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
             dataSrc: 'table'

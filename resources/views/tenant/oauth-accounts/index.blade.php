@@ -1,4 +1,4 @@
-@extends('layouts.connect_plus.app')
+﻿@extends('layouts.connect_plus.app')
 
 @section('title', 'Contas OAuth')
 
@@ -43,7 +43,7 @@
                                         <td>{{ $oauthAccount->user_id ?? 'N/A' }}</td>
                                         <td>{{ $oauthAccount->expires_at ? $oauthAccount->expires_at->format('d/m/Y H:i') : 'N/A' }}</td>
                                         <td>
-                                            <a href="{{ route('tenant.oauth-accounts.show', $oauthAccount->id) }}" class="btn btn-info btn-sm">Ver</a>
+                                            <a href="{{ workspace_route('tenant.oauth-accounts.show', $oauthAccount->id) }}" class="btn btn-info btn-sm">Ver</a>
                                         </td>
                                     </tr>
                                 @endforeach
