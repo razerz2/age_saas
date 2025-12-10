@@ -44,7 +44,7 @@
                             <tbody>
                                 @foreach ($forms as $form)
                                     <tr>
-                                        <td>{{ $form->id }}</td>
+                                        <td>{{ truncate_uuid($form->id) }}</td>
                                         <td>{{ $form->name }}</td>
                                         <td>{{ $form->description ?? 'N/A' }}</td>
                                         <td>{{ $form->specialty->name ?? 'N/A' }}</td>

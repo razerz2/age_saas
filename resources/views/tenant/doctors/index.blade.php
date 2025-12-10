@@ -58,7 +58,7 @@
                             <tbody>
                                 @foreach ($doctors as $doctor)
                                     <tr>
-                                        <td>{{ $doctor->id }}</td>
+                                        <td>{{ truncate_uuid($doctor->id) }}</td>
                                         <td>{{ $doctor->user->name ?? 'N/A' }}</td>
                                         <td>{{ $doctor->crm_number ?? 'N/A' }}</td>
                                         <td>{{ $doctor->crm_state ?? 'N/A' }}</td>

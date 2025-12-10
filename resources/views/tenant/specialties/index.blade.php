@@ -41,7 +41,7 @@
                             <tbody>
                                 @foreach ($specialties as $specialty)
                                     <tr>
-                                        <td>{{ $specialty->id }}</td>
+                                        <td>{{ truncate_uuid($specialty->id) }}</td>
                                         <td>{{ $specialty->name }}</td>
                                         <td>{{ $specialty->code ?? 'N/A' }}</td>
                                         <td>

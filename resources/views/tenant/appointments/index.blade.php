@@ -69,7 +69,7 @@
                             <tbody>
                                 @foreach ($appointments as $appointment)
                                     <tr>
-                                        <td>{{ $appointment->id }}</td>
+                                        <td>{{ truncate_uuid($appointment->id) }}</td>
                                         <td>{{ $appointment->patient->full_name ?? 'N/A' }}</td>
                                         <td>{{ $appointment->calendar->name ?? 'N/A' }}</td>
                                         <td>{{ $appointment->type->name ?? 'N/A' }}</td>

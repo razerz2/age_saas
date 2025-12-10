@@ -333,3 +333,24 @@ if (! function_exists('get_plan_limit')) {
         return app(\App\Services\FeatureAccessService::class)->getPlanLimit($limitType);
     }
 }
+
+/**
+ * ✂️ Trunca UUID para exibição em listagens (mostra apenas os primeiros 8 caracteres + "...")
+ * Usado para economizar espaço em tabelas. Mantenha o ID completo nas views show.
+ */
+if (! function_exists('truncate_uuid')) {
+    function truncate_uuid(?string $uuid, int $length = 8): string
+    {
+        if (empty($uuid)) {
+            return 'N/A';
+        }
+        
+        // Se não for um UUID (menor que 8 caracteres), retorna completo
+        if (strlen($uuid) <= $length) {
+            return $uuid;
+        }
+        
+        // Retorna os primeiros caracteres + "..."
+        return substr($uuid, 0, $length) . '...';
+    }
+}

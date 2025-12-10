@@ -73,7 +73,7 @@
                                         }
                                     @endphp
                                     <tr>
-                                        <td>{{ $patient->id }}</td>
+                                        <td>{{ truncate_uuid($patient->id) }}</td>
                                         <td>{{ $patient->full_name }}</td>
                                         <td>{{ $patient->cpf ?? 'N/A' }}</td>
                                         <td>{{ $patient->email ?? 'N/A' }}</td>

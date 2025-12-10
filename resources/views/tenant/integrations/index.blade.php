@@ -85,7 +85,7 @@
                             <tbody>
                                 @foreach ($integrations as $integration)
                                     <tr>
-                                        <td>{{ $integration->id }}</td>
+                                        <td>{{ truncate_uuid($integration->id) }}</td>
                                         <td>{{ $integration->key }}</td>
                                         <td>
                                             @if ($integration->is_enabled)

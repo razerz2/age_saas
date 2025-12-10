@@ -44,7 +44,7 @@
                             <tbody>
                                 @foreach ($businessHours as $businessHour)
                                     <tr>
-                                        <td>{{ $businessHour->id }}</td>
+                                        <td>{{ truncate_uuid($businessHour->id) }}</td>
                                         <td>{{ $businessHour->doctor->user->name ?? 'N/A' }}</td>
                                         <td>
                                             @php

@@ -39,7 +39,7 @@
                             <tbody>
                                 @foreach ($syncStates as $syncState)
                                     <tr>
-                                        <td>{{ $syncState->id }}</td>
+                                        <td>{{ truncate_uuid($syncState->id) }}</td>
                                         <td>{{ $syncState->appointment_id ?? 'N/A' }}</td>
                                         <td>{{ $syncState->external_event_id ?? 'N/A' }}</td>
                                         <td>{{ $syncState->provider ?? 'N/A' }}</td>

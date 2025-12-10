@@ -42,7 +42,7 @@
                             <tbody>
                                 @foreach ($calendars as $calendar)
                                     <tr>
-                                        <td>{{ $calendar->id }}</td>
+                                        <td>{{ truncate_uuid($calendar->id) }}</td>
                                         <td>{{ $calendar->name }}</td>
                                         <td>{{ $calendar->doctor->user->name ?? 'N/A' }}</td>
                                         <td>{{ $calendar->external_id ?? 'N/A' }}</td>

@@ -38,7 +38,7 @@
                             <tbody>
                                 @foreach ($oauthAccounts as $oauthAccount)
                                     <tr>
-                                        <td>{{ $oauthAccount->id }}</td>
+                                        <td>{{ truncate_uuid($oauthAccount->id) }}</td>
                                         <td>{{ $oauthAccount->integration->key ?? 'N/A' }}</td>
                                         <td>{{ $oauthAccount->user_id ?? 'N/A' }}</td>
                                         <td>{{ $oauthAccount->expires_at ? $oauthAccount->expires_at->format('d/m/Y H:i') : 'N/A' }}</td>

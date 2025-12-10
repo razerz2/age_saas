@@ -40,7 +40,7 @@
                             <tbody>
                                 @foreach ($responses as $response)
                                     <tr>
-                                        <td>{{ $response->id }}</td>
+                                        <td>{{ truncate_uuid($response->id) }}</td>
                                         <td>{{ $response->form->name ?? 'N/A' }}</td>
                                         <td>{{ $response->patient->full_name ?? 'N/A' }}</td>
                                         <td>{{ $response->appointment_id ?? 'N/A' }}</td>

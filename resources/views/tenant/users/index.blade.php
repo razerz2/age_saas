@@ -43,7 +43,7 @@
                             <tbody>
                                 @foreach ($users as $user)
                                     <tr>
-                                        <td>{{ $user->id }}</td>
+                                        <td>{{ truncate_uuid($user->id) }}</td>
                                         <td>{{ $user->name_full }}</td>
                                         <td>{{ $user->email }}</td>
                                         <td>
