@@ -63,6 +63,10 @@ Route::post('/webhook/asaas/pre-registration', [\App\Http\Controllers\Webhook\Pr
 // Callback global do Google Calendar (não fica no grupo /t/{tenant})
 Route::get('/google/callback', [GoogleCalendarController::class, 'callback'])->name('google.callback');
 
+// Rotas públicas para Google OAuth (Política de Privacidade e Termos de Serviço)
+Route::view('/politica-de-privacidade', 'public.privacy')->name('public.privacy');
+Route::view('/termos-de-servico', 'public.terms')->name('public.terms');
+
 
 Route::middleware(['auth'])->prefix('Platform')->name('Platform.')->group(function () {
 
@@ -202,6 +206,10 @@ Route::middleware(['auth'])->prefix('Platform')->name('Platform.')->group(functi
         // Service pode ser uma string, então não precisa restrição numérica
         Route::get('settings/test/{service}', [SystemSettingsController::class, 'testConnection'])->name('settings.test');
     });
+
+    // 🔸 Módulo: Z-API (acessível a todos os usuários autenticados)
+    Route::get('zapi', [\App\Http\Controllers\Platform\ZApiController::class, 'index'])->name('zapi.index');
+    Route::post('zapi/send', [\App\Http\Controllers\Platform\ZApiController::class, 'sendMessage'])->name('zapi.send');
 
     // =======================================================
     // 🔸 Rotas auxiliares (sem restrição de módulo)
