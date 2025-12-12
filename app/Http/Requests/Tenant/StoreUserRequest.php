@@ -4,6 +4,7 @@ namespace App\Http\Requests\Tenant;
 
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
+use App\Rules\StrongPassword;
 
 class StoreUserRequest extends FormRequest
 {
@@ -20,7 +21,7 @@ class StoreUserRequest extends FormRequest
             'name_full'  => ['required', 'string', 'max:255'],
             'telefone'   => ['required', 'string', 'max:255'],
             'email'      => ['nullable', 'email', Rule::unique('tenant.users', 'email')],
-            'password'   => ['nullable', 'string', 'min:6'],
+            'password'   => ['nullable', 'string', 'min:8', new StrongPassword()],
             'password_confirmation' => ['nullable', 'string'],
             'avatar'     => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif', 'max:2048'],
             'is_doctor' => ['nullable', 'boolean'],
@@ -79,7 +80,7 @@ class StoreUserRequest extends FormRequest
             'email.email' => 'Por favor, insira um e-mail válido.',
             'email.unique' => 'Este e-mail já está em uso.',
 
-            'password.min' => 'A senha deve ter pelo menos 6 caracteres.',
+            'password.min' => 'A senha deve ter pelo menos 8 caracteres.',
 
             'avatar.image' => 'O arquivo deve ser uma imagem.',
             'avatar.mimes' => 'A imagem deve ser do tipo: jpeg, png, jpg ou gif.',

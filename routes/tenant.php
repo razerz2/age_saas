@@ -114,6 +114,10 @@ Route::prefix('customer/{slug}')
         Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
         Route::post('/login', [LoginController::class, 'login'])->name('login.submit');
         Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
+        
+        Route::get('/two-factor-challenge', [\App\Http\Controllers\Tenant\Auth\TwoFactorChallengeController::class, 'create'])->name('two-factor.challenge');
+        Route::post('/two-factor-challenge', [\App\Http\Controllers\Tenant\Auth\TwoFactorChallengeController::class, 'store']);
+        Route::post('/two-factor-challenge/resend', [\App\Http\Controllers\Tenant\Auth\TwoFactorChallengeController::class, 'resend'])->name('two-factor.challenge.resend');
     });
 
 /**
@@ -139,6 +143,18 @@ Route::prefix('workspace/{slug}')
         // Profile
         Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
         Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
+
+        // Autenticação de dois fatores (2FA)
+        Route::prefix('two-factor')->name('two-factor.')->group(function () {
+            Route::get('/', [\App\Http\Controllers\Tenant\TwoFactorController::class, 'index'])->name('index');
+            Route::post('/generate-secret', [\App\Http\Controllers\Tenant\TwoFactorController::class, 'generateSecret'])->name('generate-secret');
+            Route::post('/confirm', [\App\Http\Controllers\Tenant\TwoFactorController::class, 'confirm'])->name('confirm');
+            Route::post('/set-method', [\App\Http\Controllers\Tenant\TwoFactorController::class, 'setMethod'])->name('set-method');
+            Route::post('/activate-with-code', [\App\Http\Controllers\Tenant\TwoFactorController::class, 'activateWithCode'])->name('activate-with-code');
+            Route::post('/confirm-with-code', [\App\Http\Controllers\Tenant\TwoFactorController::class, 'confirmWithCode'])->name('confirm-with-code');
+            Route::post('/disable', [\App\Http\Controllers\Tenant\TwoFactorController::class, 'disable'])->name('disable');
+            Route::post('/regenerate-recovery-codes', [\App\Http\Controllers\Tenant\TwoFactorController::class, 'regenerateRecoveryCodes'])->name('regenerate-recovery-codes');
+        });
 
 
         // =====================================================================

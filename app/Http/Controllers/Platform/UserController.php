@@ -76,10 +76,37 @@ class UserController extends Controller
             return back()->with('error', 'Você não pode redefinir sua própria senha por aqui. Use o menu de perfil.');
         }
 
-        $newPassword = 'user' . rand(1000, 9999);
+        // Gera senha forte: pelo menos 8 caracteres com maiúscula, minúscula, número e caractere especial
+        $newPassword = $this->generateStrongPassword();
         $user->update(['password' => $newPassword]);
 
         return back()->with('success', "Senha redefinida para o usuário {$user->name}. Nova senha: {$newPassword}");
+    }
+
+    /**
+     * Gera uma senha forte que atende aos requisitos de segurança
+     */
+    private function generateStrongPassword(): string
+    {
+        $uppercase = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+        $lowercase = 'abcdefghijklmnopqrstuvwxyz';
+        $numbers = '0123456789';
+        $special = '!@#$%^&*()_+-=[]{}|;:,.<>?';
+        
+        // Garante pelo menos um de cada tipo
+        $password = $uppercase[rand(0, strlen($uppercase) - 1)];
+        $password .= $lowercase[rand(0, strlen($lowercase) - 1)];
+        $password .= $numbers[rand(0, strlen($numbers) - 1)];
+        $password .= $special[rand(0, strlen($special) - 1)];
+        
+        // Completa até 12 caracteres com caracteres aleatórios
+        $all = $uppercase . $lowercase . $numbers . $special;
+        for ($i = strlen($password); $i < 12; $i++) {
+            $password .= $all[rand(0, strlen($all) - 1)];
+        }
+        
+        // Embaralha os caracteres
+        return str_shuffle($password);
     }
 
     public function toggleStatus(User $user)

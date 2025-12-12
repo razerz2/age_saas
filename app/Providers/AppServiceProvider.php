@@ -6,11 +6,13 @@ use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Mail\MailManager;
 use App\Models\Tenant\Appointment;
 use App\Models\Tenant\RecurringAppointment;
 use App\Observers\AppointmentObserver;
 use App\Observers\RecurringAppointmentObserver;
+use App\Channels\WhatsAppChannel;
 use Symfony\Component\Mailer\Transport\Smtp\SmtpTransport;
 use Symfony\Component\Mailer\Transport\Smtp\Stream\SocketStream;
 
@@ -48,6 +50,11 @@ class AppServiceProvider extends ServiceProvider
     {
         // Configura o contexto SSL para SMTP quando necessário
         $this->configureMailSsl();
+
+        // Registra o canal customizado WhatsApp
+        Notification::extend('whatsapp', function ($app) {
+            return new WhatsAppChannel($app->make(\App\Services\WhatsAppService::class));
+        });
 
         // Registra os Observers para sincronização automática com Google Calendar
         Appointment::observe(AppointmentObserver::class);

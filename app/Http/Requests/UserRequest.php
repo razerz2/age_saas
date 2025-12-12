@@ -4,6 +4,7 @@ namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 use App\Models\Platform\User;
+use App\Rules\StrongPassword;
 
 class UserRequest extends FormRequest
 {
@@ -31,8 +32,9 @@ class UserRequest extends FormRequest
             'password'   => [
                 $isUpdate ? 'nullable' : 'required',
                 'string',
-                'min:6',
+                'min:8',
                 'max:255',
+                new StrongPassword(),
             ],
             'status'  => ['required', 'in:active,blocked'],
             'modules' => ['nullable', 'array'],
@@ -61,7 +63,7 @@ class UserRequest extends FormRequest
             'email.email'          => 'Informe um e-mail válido.',
             'email.unique'         => 'Este e-mail já está em uso.',
             'password.required'    => 'A senha é obrigatória.',
-            'password.min'         => 'A senha deve ter pelo menos 6 caracteres.',
+            'password.min'         => 'A senha deve ter pelo menos 8 caracteres.',
             'status.required'      => 'O status é obrigatório.',
             'status.in'            => 'O status informado é inválido.',
         ];

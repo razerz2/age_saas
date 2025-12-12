@@ -217,7 +217,7 @@
                                         @enderror
                                     </div>
                                 </div>
-                                <div class="col-md-4">
+                                <div class="col-md-4" id="is-doctor-section" style="display: none;">
                                     <div class="form-group">
                                         <label class="fw-semibold">
                                             <i class="mdi mdi-doctor me-1"></i>
@@ -533,19 +533,29 @@
         // Controlar exibição de seções baseado no role
         function toggleRoleSections() {
             const role = roleSelect.value;
+            const isDoctorSection = document.getElementById('is-doctor-section');
             
-            // Ajustar campo "é médico" automaticamente
-            if (isDoctorSelect) {
-                if (role === 'doctor') {
-                    isDoctorSelect.value = '1'; // Marca como "Sim"
-                } else if (role === 'user' || role === 'admin') {
-                    isDoctorSelect.value = '0'; // Marca como "Não"
+            // Campo "É Médico?" - só aparece quando role é "admin"
+            if (isDoctorSection) {
+                if (role === 'admin') {
+                    isDoctorSection.style.display = 'block';
+                } else {
+                    isDoctorSection.style.display = 'none';
+                    // Resetar valor quando ocultar (exceto se já estava como doctor)
+                    if (isDoctorSelect && role !== 'doctor') {
+                        isDoctorSelect.value = '0';
+                    }
                 }
+            }
+            
+            // Ajustar campo "é médico" automaticamente quando role é doctor
+            if (isDoctorSelect && role === 'doctor') {
+                isDoctorSelect.value = '1'; // Marca como "Sim"
             }
             
             // Controlar exibição de "Médicos Permitidos"
             // Aparece se: role selecionado é "user" E usuário logado não é médico
-            // (admin pode ver e configurar para outros usuários)
+            // NÃO aparece se role é "admin"
             if (doctorPermissionsSection) {
                 if (role === 'user' && loggedUserRole !== 'doctor') {
                     doctorPermissionsSection.style.display = 'block';
@@ -555,24 +565,26 @@
             }
             
             // Controlar exibição e pré-seleção de "Módulos"
-            // Sempre exibir, mas pré-selecionar conforme configurações padrão
+            // NÃO aparece se role é "admin"
             if (modulesSection) {
-                modulesSection.style.display = 'block';
-                
-                // Atualizar mensagem informativa
-                const modulesInfoText = document.getElementById('modules-info-text');
-                if (modulesInfoText) {
-                    if (role === 'admin') {
-                        modulesInfoText.innerHTML = '<strong>Nota:</strong> Administradores têm acesso total ao sistema. Você pode selecionar módulos específicos se necessário.';
-                    } else if (role === 'doctor') {
-                        modulesInfoText.innerHTML = '<strong>Nota:</strong> Os módulos foram pré-selecionados conforme as configurações padrão para médicos em <a href="{{ workspace_route("tenant.settings.index") }}" target="_blank">Configurações → Usuários & Permissões</a>. Você pode ajustar manualmente se necessário.';
-                    } else {
-                        modulesInfoText.innerHTML = '<strong>Nota:</strong> Os módulos foram pré-selecionados conforme as configurações padrão para usuários comuns em <a href="{{ workspace_route("tenant.settings.index") }}" target="_blank">Configurações → Usuários & Permissões</a>. Você pode ajustar manualmente se necessário.';
+                if (role === 'admin') {
+                    modulesSection.style.display = 'none';
+                } else {
+                    modulesSection.style.display = 'block';
+                    
+                    // Atualizar mensagem informativa
+                    const modulesInfoText = document.getElementById('modules-info-text');
+                    if (modulesInfoText) {
+                        if (role === 'doctor') {
+                            modulesInfoText.innerHTML = '<strong>Nota:</strong> Os módulos foram pré-selecionados conforme as configurações padrão para médicos em <a href="{{ workspace_route("tenant.settings.index") }}" target="_blank">Configurações → Usuários & Permissões</a>. Você pode ajustar manualmente se necessário.';
+                        } else {
+                            modulesInfoText.innerHTML = '<strong>Nota:</strong> Os módulos foram pré-selecionados conforme as configurações padrão para usuários comuns em <a href="{{ workspace_route("tenant.settings.index") }}" target="_blank">Configurações → Usuários & Permissões</a>. Você pode ajustar manualmente se necessário.';
+                        }
                     }
+                    
+                    // Pré-selecionar módulos padrão baseado no role
+                    updateModulesSelection(role);
                 }
-                
-                // Pré-selecionar módulos padrão baseado no role
-                updateModulesSelection(role);
             }
         }
 

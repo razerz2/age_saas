@@ -12,11 +12,16 @@
             <label for="update_password_current_password" class="form-label fw-semibold">
                 {{ __('Senha Atual') }}
             </label>
-            <input type="password" 
-                   name="current_password" 
-                   id="update_password_current_password" 
-                   class="form-control @error('current_password', 'updatePassword') is-invalid @enderror"
-                   autocomplete="current-password">
+            <div class="input-group">
+                <input type="password" 
+                       name="current_password" 
+                       id="update_password_current_password" 
+                       class="form-control @error('current_password', 'updatePassword') is-invalid @enderror"
+                       autocomplete="current-password">
+                <button type="button" class="btn btn-outline-secondary" onclick="togglePasswordVisibility('update_password_current_password')" title="Mostrar/Ocultar senha">
+                    <i class="fas fa-eye" id="update_password_current_password-eye-icon"></i>
+                </button>
+            </div>
             @error('current_password', 'updatePassword')
                 <div class="invalid-feedback">{{ $message }}</div>
             @enderror
@@ -26,11 +31,20 @@
             <label for="update_password_password" class="form-label fw-semibold">
                 {{ __('Nova Senha') }}
             </label>
-            <input type="password" 
-                   name="password" 
-                   id="update_password_password" 
-                   class="form-control @error('password', 'updatePassword') is-invalid @enderror"
-                   autocomplete="new-password">
+            <div class="input-group">
+                <input type="password" 
+                       name="password" 
+                       id="update_password_password" 
+                       class="form-control @error('password', 'updatePassword') is-invalid @enderror"
+                       autocomplete="new-password">
+                <button type="button" class="btn btn-outline-secondary" onclick="togglePasswordVisibility('update_password_password')" title="Mostrar/Ocultar senha">
+                    <i class="fas fa-eye" id="update_password_password-eye-icon"></i>
+                </button>
+                <button type="button" class="btn btn-outline-secondary" onclick="generatePassword()">
+                    <i class="fas fa-refresh me-1"></i> Gerar
+                </button>
+            </div>
+            <small class="form-text text-muted">Mínimo 8 caracteres com maiúscula, minúscula, número e caractere especial</small>
             @error('password', 'updatePassword')
                 <div class="invalid-feedback">{{ $message }}</div>
             @enderror
@@ -40,11 +54,16 @@
             <label for="update_password_password_confirmation" class="form-label fw-semibold">
                 {{ __('Confirmar Nova Senha') }}
             </label>
-            <input type="password" 
-                   name="password_confirmation" 
-                   id="update_password_password_confirmation" 
-                   class="form-control @error('password_confirmation', 'updatePassword') is-invalid @enderror"
-                   autocomplete="new-password">
+            <div class="input-group">
+                <input type="password" 
+                       name="password_confirmation" 
+                       id="update_password_password_confirmation" 
+                       class="form-control @error('password_confirmation', 'updatePassword') is-invalid @enderror"
+                       autocomplete="new-password">
+                <button type="button" class="btn btn-outline-secondary" onclick="togglePasswordVisibility('update_password_password_confirmation')" title="Mostrar/Ocultar senha">
+                    <i class="fas fa-eye" id="update_password_password_confirmation-eye-icon"></i>
+                </button>
+            </div>
             @error('password_confirmation', 'updatePassword')
                 <div class="invalid-feedback">{{ $message }}</div>
             @enderror

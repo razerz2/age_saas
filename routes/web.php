@@ -75,6 +75,18 @@ Route::middleware(['auth'])->prefix('Platform')->name('Platform.')->group(functi
     Route::patch('profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
+    // 🔹 Autenticação de dois fatores (2FA)
+    Route::prefix('two-factor')->name('two-factor.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\TwoFactorController::class, 'index'])->name('index');
+        Route::post('/generate-secret', [\App\Http\Controllers\TwoFactorController::class, 'generateSecret'])->name('generate-secret');
+        Route::post('/confirm', [\App\Http\Controllers\TwoFactorController::class, 'confirm'])->name('confirm');
+        Route::post('/set-method', [\App\Http\Controllers\TwoFactorController::class, 'setMethod'])->name('set-method');
+        Route::post('/activate-with-code', [\App\Http\Controllers\TwoFactorController::class, 'activateWithCode'])->name('activate-with-code');
+        Route::post('/confirm-with-code', [\App\Http\Controllers\TwoFactorController::class, 'confirmWithCode'])->name('confirm-with-code');
+        Route::post('/disable', [\App\Http\Controllers\TwoFactorController::class, 'disable'])->name('disable');
+        Route::post('/regenerate-recovery-codes', [\App\Http\Controllers\TwoFactorController::class, 'regenerateRecoveryCodes'])->name('regenerate-recovery-codes');
+    });
+
     // 🔹 Dashboard (acesso sempre permitido)
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 

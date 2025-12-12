@@ -85,12 +85,26 @@
 
                                 <div class="col-md-6 mb-3">
                                     <label class="form-label">Senha (opcional)</label>
-                                    <input type="password" name="password" class="form-control">
+                                    <div class="input-group">
+                                        <input type="password" name="password" id="password" class="form-control">
+                                        <button type="button" class="btn btn-outline-secondary" onclick="togglePasswordVisibility('password')" title="Mostrar/Ocultar senha">
+                                            <i class="fa fa-eye" id="password-eye-icon"></i>
+                                        </button>
+                                        <button type="button" class="btn btn-outline-secondary" onclick="generatePassword()">
+                                            <i class="fa fa-refresh me-1"></i> Gerar
+                                        </button>
+                                    </div>
+                                    <small class="form-text text-muted">Mínimo 8 caracteres com maiúscula, minúscula, número e caractere especial</small>
                                 </div>
 
                                 <div class="col-md-6 mb-3">
                                     <label class="form-label">Confirmar Senha</label>
-                                    <input type="password" name="password_confirmation" class="form-control">
+                                    <div class="input-group">
+                                        <input type="password" name="password_confirmation" id="password_confirmation" class="form-control">
+                                        <button type="button" class="btn btn-outline-secondary" onclick="togglePasswordVisibility('password_confirmation')" title="Mostrar/Ocultar senha">
+                                            <i class="fa fa-eye" id="password_confirmation-eye-icon"></i>
+                                        </button>
+                                    </div>
                                 </div>
 
                                 
@@ -135,4 +149,45 @@
     </div>
 
     @include('layouts.freedash.footer')
+
+@push('scripts')
+<script src="{{ asset('js/password-generator.js') }}"></script>
+<script>
+    function togglePasswordVisibility(fieldId) {
+        const field = document.getElementById(fieldId);
+        const icon = document.getElementById(fieldId + '-eye-icon');
+        
+        if (field.type === 'password') {
+            field.type = 'text';
+            icon.classList.remove('fa-eye');
+            icon.classList.add('fa-eye-slash');
+        } else {
+            field.type = 'password';
+            icon.classList.remove('fa-eye-slash');
+            icon.classList.add('fa-eye');
+        }
+    }
+    
+    function generatePassword() {
+        const password = generateStrongPassword();
+        document.getElementById('password').value = password;
+        document.getElementById('password_confirmation').value = password;
+        
+        // Mostra temporariamente
+        document.getElementById('password').type = 'text';
+        document.getElementById('password_confirmation').type = 'text';
+        document.getElementById('password_confirmation-eye-icon').classList.remove('fa-eye');
+        document.getElementById('password_confirmation-eye-icon').classList.add('fa-eye-slash');
+        document.getElementById('password').select();
+        
+        // Volta para password após 3 segundos
+        setTimeout(() => {
+            document.getElementById('password').type = 'password';
+            document.getElementById('password_confirmation').type = 'password';
+            document.getElementById('password_confirmation-eye-icon').classList.remove('fa-eye-slash');
+            document.getElementById('password_confirmation-eye-icon').classList.add('fa-eye');
+        }, 3000);
+    }
+</script>
+@endpush
 @endsection

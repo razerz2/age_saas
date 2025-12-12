@@ -4,6 +4,7 @@ namespace App\Http\Requests\Tenant;
 
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
+use App\Rules\StrongPassword;
 
 class UpdateUserRequest extends FormRequest
 {
@@ -22,7 +23,7 @@ class UpdateUserRequest extends FormRequest
             'name_full'  => ['required', 'string', 'max:255'],
             'email'      => ['required', 'email', Rule::unique('tenant.users', 'email')->ignore($userId)],
             'telefone'   => ['nullable', 'string', 'max:255'],
-            'password'   => ['nullable', 'min:6'],
+            'password'   => ['nullable', 'string', 'min:8', new StrongPassword()],
             'avatar'     => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif', 'max:2048'],
             'is_doctor' => ['nullable', 'boolean'],
             'role'       => ['required', 'in:admin,user,doctor'],
@@ -63,7 +64,7 @@ class UpdateUserRequest extends FormRequest
             'telefone.string' => 'O telefone deve ser uma string válida.',
             'telefone.max' => 'O telefone não pode ter mais que 255 caracteres.',
 
-            'password.min' => 'A senha deve ter pelo menos 6 caracteres.',
+            'password.min' => 'A senha deve ter pelo menos 8 caracteres.',
 
             'avatar.image' => 'O arquivo deve ser uma imagem.',
             'avatar.mimes' => 'A imagem deve ser do tipo: jpeg, png, jpg ou gif.',

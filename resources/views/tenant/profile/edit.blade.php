@@ -276,9 +276,17 @@
                                             <i class="mdi mdi-lock me-1"></i>
                                             Nova Senha
                                         </label>
-                                        <input type="password" name="password" class="form-control @error('password') is-invalid @enderror" 
-                                               placeholder="Deixe em branco para manter a senha atual">
-                                        <small class="form-text text-muted">Mínimo de 6 caracteres</small>
+                                        <div class="input-group">
+                                            <input type="password" name="password" id="password" class="form-control @error('password') is-invalid @enderror" 
+                                                   placeholder="Deixe em branco para manter a senha atual">
+                                            <button type="button" class="btn btn-outline-secondary" onclick="togglePasswordVisibility('password')" title="Mostrar/Ocultar senha">
+                                                <i class="mdi mdi-eye" id="password-eye-icon"></i>
+                                            </button>
+                                            <button type="button" class="btn btn-outline-secondary" onclick="generatePassword()">
+                                                <i class="mdi mdi-refresh me-1"></i> Gerar
+                                            </button>
+                                        </div>
+                                        <small class="form-text text-muted">Mínimo 8 caracteres com maiúscula, minúscula, número e caractere especial</small>
                                         @error('password')
                                             <div class="invalid-feedback d-block">{{ $message }}</div>
                                         @enderror
@@ -290,11 +298,46 @@
                                             <i class="mdi mdi-lock-check me-1"></i>
                                             Confirmar Senha
                                         </label>
-                                        <input type="password" name="password_confirmation" class="form-control @error('password_confirmation') is-invalid @enderror" 
-                                               placeholder="Confirme a nova senha">
+                                        <div class="input-group">
+                                            <input type="password" name="password_confirmation" id="password_confirmation" class="form-control @error('password_confirmation') is-invalid @enderror" 
+                                                   placeholder="Confirme a nova senha">
+                                            <button type="button" class="btn btn-outline-secondary" onclick="togglePasswordVisibility('password_confirmation')" title="Mostrar/Ocultar senha">
+                                                <i class="mdi mdi-eye" id="password_confirmation-eye-icon"></i>
+                                            </button>
+                                        </div>
                                         @error('password_confirmation')
                                             <div class="invalid-feedback d-block">{{ $message }}</div>
                                         @enderror
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            {{-- Autenticação de dois fatores --}}
+                            <div class="mt-4 p-3 border rounded">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h6 class="mb-1">
+                                            <i class="mdi mdi-shield-account me-2"></i>
+                                            Autenticação de Dois Fatores
+                                        </h6>
+                                        <small class="text-muted">Adicione uma camada extra de segurança à sua conta</small>
+                                    </div>
+                                    <div class="text-end">
+                                        @if($user->hasTwoFactorEnabled())
+                                            <span class="badge bg-success mb-2 d-block">
+                                                <i class="mdi mdi-shield-check me-1"></i>
+                                                2FA Ativado
+                                            </span>
+                                        @else
+                                            <span class="badge bg-warning mb-2 d-block">
+                                                <i class="mdi mdi-shield-alert me-1"></i>
+                                                2FA Desativado
+                                            </span>
+                                        @endif
+                                        <a href="{{ workspace_route('tenant.two-factor.index') }}" class="btn btn-sm btn-outline-primary">
+                                            <i class="mdi mdi-cog me-1"></i>
+                                            Configurar
+                                        </a>
                                     </div>
                                 </div>
                             </div>
@@ -344,7 +387,48 @@
 @endpush
 
 @push('scripts')
+<script src="{{ asset('js/password-generator.js') }}"></script>
 <script>
+    function togglePasswordVisibility(fieldId) {
+        const field = document.getElementById(fieldId);
+        const icon = document.getElementById(fieldId + '-eye-icon');
+        
+        if (field.type === 'password') {
+            field.type = 'text';
+            icon.classList.remove('mdi-eye');
+            icon.classList.add('mdi-eye-off');
+        } else {
+            field.type = 'password';
+            icon.classList.remove('mdi-eye-off');
+            icon.classList.add('mdi-eye');
+        }
+    }
+    
+    function generatePassword() {
+        const password = generateStrongPassword();
+        document.getElementById('password').value = password;
+        document.getElementById('password_confirmation').value = password;
+        
+        // Mostra temporariamente
+        document.getElementById('password').type = 'text';
+        document.getElementById('password_confirmation').type = 'text';
+        document.getElementById('password-eye-icon').classList.remove('mdi-eye');
+        document.getElementById('password-eye-icon').classList.add('mdi-eye-off');
+        document.getElementById('password_confirmation-eye-icon').classList.remove('mdi-eye');
+        document.getElementById('password_confirmation-eye-icon').classList.add('mdi-eye-off');
+        document.getElementById('password').select();
+        
+        // Volta para password após 3 segundos
+        setTimeout(() => {
+            document.getElementById('password').type = 'password';
+            document.getElementById('password_confirmation').type = 'password';
+            document.getElementById('password-eye-icon').classList.remove('mdi-eye-off');
+            document.getElementById('password-eye-icon').classList.add('mdi-eye');
+            document.getElementById('password_confirmation-eye-icon').classList.remove('mdi-eye-off');
+            document.getElementById('password_confirmation-eye-icon').classList.add('mdi-eye');
+        }, 3000);
+    }
+    
     document.addEventListener('DOMContentLoaded', function() {
         const avatarInput = document.getElementById('avatar-input');
         const avatarPreviewContainer = document.getElementById('avatar-preview-container');

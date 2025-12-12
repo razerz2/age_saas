@@ -27,6 +27,20 @@ class AuthenticatedSessionController extends Controller
     {
         $request->authenticate();
 
+        $user = Auth::user();
+
+        // Verifica se o usuário tem 2FA habilitado
+        if ($user && $user->hasTwoFactorEnabled()) {
+            // Salva informações temporárias na sessão
+            session(['login.id' => $user->id, 'login.remember' => $request->boolean('remember')]);
+            
+            // Faz logout temporário
+            Auth::logout();
+            
+            // Redireciona para verificação do código 2FA
+            return redirect()->route('two-factor.challenge');
+        }
+
         $request->session()->regenerate();
 
         return redirect()->intended(RouteServiceProvider::HOME);

@@ -49,6 +49,35 @@
                     </div>
                 </div>
 
+                {{-- Autenticação de dois fatores --}}
+                <div class="card">
+                    <div class="card-body">
+                        <h4 class="card-title">Autenticação de Dois Fatores</h4>
+                        <p class="card-subtitle mb-4">
+                            Adicione uma camada extra de segurança à sua conta com autenticação de dois fatores.
+                        </p>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                @if($user->hasTwoFactorEnabled())
+                                    <span class="badge bg-success">
+                                        <i class="mdi mdi-shield-check me-1"></i>
+                                        2FA Ativado
+                                    </span>
+                                @else
+                                    <span class="badge bg-warning">
+                                        <i class="mdi mdi-shield-alert me-1"></i>
+                                        2FA Desativado
+                                    </span>
+                                @endif
+                            </div>
+                            <a href="{{ route('Platform.two-factor.index') }}" class="btn btn-outline-primary">
+                                <i class="mdi mdi-shield-account me-1"></i>
+                                Configurar 2FA
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
                 {{-- Excluir conta --}}
                 <div class="card border-danger">
                     <div class="card-body">
@@ -64,4 +93,49 @@
     </div>
 
     @include('layouts.freedash.footer')
+
+@push('scripts')
+<script src="{{ asset('js/password-generator.js') }}"></script>
+<script>
+    function togglePasswordVisibility(fieldId) {
+        const field = document.getElementById(fieldId);
+        const icon = document.getElementById(fieldId + '-eye-icon');
+        
+        if (field.type === 'password') {
+            field.type = 'text';
+            icon.classList.remove('fa-eye');
+            icon.classList.add('fa-eye-slash');
+        } else {
+            field.type = 'password';
+            icon.classList.remove('fa-eye-slash');
+            icon.classList.add('fa-eye');
+        }
+    }
+    
+    function generatePassword() {
+        const password = generateStrongPassword();
+        document.getElementById('update_password_password').value = password;
+        document.getElementById('update_password_password_confirmation').value = password;
+        
+        // Mostra temporariamente
+        document.getElementById('update_password_password').type = 'text';
+        document.getElementById('update_password_password_confirmation').type = 'text';
+        document.getElementById('update_password_password-eye-icon').classList.remove('fa-eye');
+        document.getElementById('update_password_password-eye-icon').classList.add('fa-eye-slash');
+        document.getElementById('update_password_password_confirmation-eye-icon').classList.remove('fa-eye');
+        document.getElementById('update_password_password_confirmation-eye-icon').classList.add('fa-eye-slash');
+        document.getElementById('update_password_password').select();
+        
+        // Volta para password após 3 segundos
+        setTimeout(() => {
+            document.getElementById('update_password_password').type = 'password';
+            document.getElementById('update_password_password_confirmation').type = 'password';
+            document.getElementById('update_password_password-eye-icon').classList.remove('fa-eye-slash');
+            document.getElementById('update_password_password-eye-icon').classList.add('fa-eye');
+            document.getElementById('update_password_password_confirmation-eye-icon').classList.remove('fa-eye-slash');
+            document.getElementById('update_password_password_confirmation-eye-icon').classList.add('fa-eye');
+        }, 3000);
+    }
+</script>
+@endpush
 @endsection

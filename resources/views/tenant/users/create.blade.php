@@ -198,9 +198,17 @@
                                             <i class="mdi mdi-lock me-1"></i>
                                             Senha
                                         </label>
-                                        <input type="password" name="password" class="form-control @error('password') is-invalid @enderror" 
-                                               placeholder="Digite a senha">
-                                        <small class="form-text text-muted">Deixe em branco para gerar senha automática</small>
+                                        <div class="input-group">
+                                            <input type="password" name="password" id="password" class="form-control @error('password') is-invalid @enderror" 
+                                                   placeholder="Digite a senha">
+                                            <button type="button" class="btn btn-outline-secondary" onclick="togglePasswordVisibility('password')" title="Mostrar/Ocultar senha">
+                                                <i class="mdi mdi-eye" id="password-eye-icon"></i>
+                                            </button>
+                                            <button type="button" class="btn btn-outline-secondary" onclick="generatePassword()">
+                                                <i class="mdi mdi-refresh me-1"></i> Gerar
+                                            </button>
+                                        </div>
+                                        <small class="form-text text-muted">Mínimo 8 caracteres com maiúscula, minúscula, número e caractere especial</small>
                                         @error('password')
                                             <div class="invalid-feedback d-block">{{ $message }}</div>
                                         @enderror
@@ -212,8 +220,13 @@
                                             <i class="mdi mdi-lock-check me-1"></i>
                                             Confirmar Senha
                                         </label>
-                                        <input type="password" name="password_confirmation" class="form-control @error('password_confirmation') is-invalid @enderror" 
-                                               placeholder="Confirme a senha">
+                                        <div class="input-group">
+                                            <input type="password" name="password_confirmation" id="password_confirmation" class="form-control @error('password_confirmation') is-invalid @enderror" 
+                                                   placeholder="Confirme a senha">
+                                            <button type="button" class="btn btn-outline-secondary" onclick="togglePasswordVisibility('password_confirmation')" title="Mostrar/Ocultar senha">
+                                                <i class="mdi mdi-eye" id="password_confirmation-eye-icon"></i>
+                                            </button>
+                                        </div>
                                         <small class="form-text text-muted">Digite a senha novamente para confirmar</small>
                                         @error('password_confirmation')
                                             <div class="invalid-feedback d-block">{{ $message }}</div>
@@ -246,7 +259,7 @@
                                         @enderror
                                     </div>
                                 </div>
-                                <div class="col-md-4">
+                                <div class="col-md-4" id="is-doctor-section" style="display: none;">
                                     <div class="form-group">
                                         <label class="fw-semibold">
                                             <i class="mdi mdi-doctor me-1"></i>
@@ -397,7 +410,48 @@
 @endpush
 
 @push('scripts')
+<script src="{{ asset('js/password-generator.js') }}"></script>
 <script>
+    function togglePasswordVisibility(fieldId) {
+        const field = document.getElementById(fieldId);
+        const icon = document.getElementById(fieldId + '-eye-icon');
+        
+        if (field.type === 'password') {
+            field.type = 'text';
+            icon.classList.remove('mdi-eye');
+            icon.classList.add('mdi-eye-off');
+        } else {
+            field.type = 'password';
+            icon.classList.remove('mdi-eye-off');
+            icon.classList.add('mdi-eye');
+        }
+    }
+    
+    function generatePassword() {
+        const password = generateStrongPassword();
+        document.getElementById('password').value = password;
+        document.getElementById('password_confirmation').value = password;
+        
+        // Mostra temporariamente
+        document.getElementById('password').type = 'text';
+        document.getElementById('password_confirmation').type = 'text';
+        document.getElementById('password-eye-icon').classList.remove('mdi-eye');
+        document.getElementById('password-eye-icon').classList.add('mdi-eye-off');
+        document.getElementById('password_confirmation-eye-icon').classList.remove('mdi-eye');
+        document.getElementById('password_confirmation-eye-icon').classList.add('mdi-eye-off');
+        document.getElementById('password').select();
+        
+        // Volta para password após 3 segundos
+        setTimeout(() => {
+            document.getElementById('password').type = 'password';
+            document.getElementById('password_confirmation').type = 'password';
+            document.getElementById('password-eye-icon').classList.remove('mdi-eye-off');
+            document.getElementById('password-eye-icon').classList.add('mdi-eye');
+            document.getElementById('password_confirmation-eye-icon').classList.remove('mdi-eye-off');
+            document.getElementById('password_confirmation-eye-icon').classList.add('mdi-eye');
+        }, 3000);
+    }
+    
     document.addEventListener('DOMContentLoaded', function() {
         const avatarInput = document.getElementById('avatar-input');
         const avatarPreviewContainer = document.getElementById('avatar-preview-container');
@@ -543,19 +597,29 @@
         // Controlar exibição de seções baseado no role
         function toggleRoleSections() {
             const role = roleSelect.value;
+            const isDoctorSection = document.getElementById('is-doctor-section');
             
-            // Ajustar campo "é médico" automaticamente
-            if (isDoctorSelect) {
-                if (role === 'doctor') {
-                    isDoctorSelect.value = '1'; // Marca como "Sim"
-                } else if (role === 'user' || role === 'admin') {
-                    isDoctorSelect.value = '0'; // Marca como "Não"
+            // Campo "É Médico?" - só aparece quando role é "admin"
+            if (isDoctorSection) {
+                if (role === 'admin') {
+                    isDoctorSection.style.display = 'block';
+                } else {
+                    isDoctorSection.style.display = 'none';
+                    // Resetar valor quando ocultar
+                    if (isDoctorSelect) {
+                        isDoctorSelect.value = '0';
+                    }
                 }
+            }
+            
+            // Ajustar campo "é médico" automaticamente quando role é doctor
+            if (isDoctorSelect && role === 'doctor') {
+                isDoctorSelect.value = '1'; // Marca como "Sim"
             }
             
             // Controlar exibição de "Médicos Permitidos"
             // Aparece se: role selecionado é "user" E usuário logado não é médico
-            // (admin pode ver e configurar para outros usuários)
+            // NÃO aparece se role é "admin"
             if (doctorPermissionsSection) {
                 if (role === 'user' && loggedUserRole !== 'doctor') {
                     doctorPermissionsSection.style.display = 'block';
@@ -565,24 +629,26 @@
             }
             
             // Controlar exibição e pré-seleção de "Módulos"
-            // Sempre exibir, mas pré-selecionar conforme configurações padrão
+            // NÃO aparece se role é "admin"
             if (modulesSection) {
-                modulesSection.style.display = 'block';
-                
-                // Atualizar mensagem informativa
-                const modulesInfoText = document.getElementById('modules-info-text');
-                if (modulesInfoText) {
-                    if (role === 'admin') {
-                        modulesInfoText.innerHTML = '<strong>Nota:</strong> Administradores têm acesso total ao sistema. Você pode selecionar módulos específicos se necessário.';
-                    } else if (role === 'doctor') {
-                        modulesInfoText.innerHTML = '<strong>Nota:</strong> Os módulos foram pré-selecionados conforme as configurações padrão para médicos em <a href="{{ workspace_route("tenant.settings.index") }}" target="_blank">Configurações → Usuários & Permissões</a>. Você pode ajustar manualmente se necessário.';
-                    } else {
-                        modulesInfoText.innerHTML = '<strong>Nota:</strong> Os módulos foram pré-selecionados conforme as configurações padrão para usuários comuns em <a href="{{ workspace_route("tenant.settings.index") }}" target="_blank">Configurações → Usuários & Permissões</a>. Você pode ajustar manualmente se necessário.';
+                if (role === 'admin') {
+                    modulesSection.style.display = 'none';
+                } else {
+                    modulesSection.style.display = 'block';
+                    
+                    // Atualizar mensagem informativa
+                    const modulesInfoText = document.getElementById('modules-info-text');
+                    if (modulesInfoText) {
+                        if (role === 'doctor') {
+                            modulesInfoText.innerHTML = '<strong>Nota:</strong> Os módulos foram pré-selecionados conforme as configurações padrão para médicos em <a href="{{ workspace_route("tenant.settings.index") }}" target="_blank">Configurações → Usuários & Permissões</a>. Você pode ajustar manualmente se necessário.';
+                        } else {
+                            modulesInfoText.innerHTML = '<strong>Nota:</strong> Os módulos foram pré-selecionados conforme as configurações padrão para usuários comuns em <a href="{{ workspace_route("tenant.settings.index") }}" target="_blank">Configurações → Usuários & Permissões</a>. Você pode ajustar manualmente se necessário.';
+                        }
                     }
+                    
+                    // Pré-selecionar módulos padrão baseado no role
+                    updateModulesSelection(role);
                 }
-                
-                // Pré-selecionar módulos padrão baseado no role
-                updateModulesSelection(role);
             }
         }
 

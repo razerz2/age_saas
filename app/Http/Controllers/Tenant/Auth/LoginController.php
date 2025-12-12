@@ -26,6 +26,15 @@ class LoginController extends Controller
 
         $tenant = Tenant::where('subdomain', $slug)->first();
 
+        // Se o tenant não existir, retornar a view com mensagem de erro
+        if (!$tenant) {
+            \Log::warning("⚠️ Tenant não encontrado", ['slug' => $slug]);
+            return view('tenant.auth.login', [
+                'tenant' => null,
+                'error_message' => 'A clínica informada não existe ou não está disponível. Verifique o endereço e tente novamente.'
+            ]);
+        }
+
         return view('tenant.auth.login', compact('tenant'));
     }
 
@@ -127,6 +136,27 @@ class LoginController extends Controller
         \Log::info('Tentativa de login', ['success' => $attempt]);
 
         if ($attempt) {
+            $authenticatedUser = Auth::guard('tenant')->user();
+
+            // Verifica se o usuário tem 2FA habilitado
+            if ($authenticatedUser && $authenticatedUser->hasTwoFactorEnabled()) {
+                // Salva informações temporárias na sessão
+                session([
+                    'login.id' => $authenticatedUser->id,
+                    'login.remember' => $request->boolean('remember'),
+                    'login.tenant_id' => $tenant->id
+                ]);
+                
+                // Faz logout temporário
+                Auth::guard('tenant')->logout();
+                
+                \Log::info('2FA habilitado, redirecionando para verificação', [
+                    'user_id' => $authenticatedUser->id
+                ]);
+                
+                // Redireciona para verificação do código 2FA
+                return redirect()->route('tenant.two-factor.challenge', ['slug' => $tenant->subdomain]);
+            }
 
             \Log::info('Login OK — tenant já está ativo', [
                 'tenant_id' => $tenant->id
