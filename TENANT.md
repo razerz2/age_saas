@@ -20,7 +20,7 @@ A **Tenant** é a área específica de cada cliente (clínica) do sistema SaaS d
 
 ### Funcionalidades Principais
 
-- ✅ Dashboard com estatísticas
+- ✅ Dashboard com estatísticas e gráficos
 - ✅ Gerenciamento de usuários
 - ✅ Cadastro de médicos e especialidades
 - ✅ Cadastro de pacientes
@@ -33,11 +33,13 @@ A **Tenant** é a área específica de cada cliente (clínica) do sistema SaaS d
 - ✅ Atendimento Médico (sessão de atendimento do dia)
 - ✅ Formulários personalizados
 - ✅ Respostas de formulários
-- ✅ Integrações (Google Calendar, etc.)
+- ✅ Integrações (Google Calendar, Apple Calendar, etc.)
 - ✅ Sincronização de calendário
 - ✅ Relatórios completos (agendamentos, pacientes, médicos, etc.)
 - ✅ Área pública de agendamento
 - ✅ Portal do paciente
+- ✅ Sistema de notificações
+- ✅ Acesso rápido ao manual do sistema
 
 ### Banco de Dados
 
@@ -449,7 +451,33 @@ Armazenados no **banco do tenant** (conexão `tenant`):
 
 ## ⚙️ Funcionalidades Principais
 
-### 1. Gerenciamento de Médicos
+### 1. Dashboard
+
+O dashboard do tenant exibe uma visão geral das estatísticas e informações importantes da clínica.
+
+**Cards Estatísticos:**
+- **Total de Pacientes**: Número total de pacientes cadastrados
+- **Médicos Cadastrados**: Número total de médicos cadastrados
+- **Agendamentos do Dia**: Agendamentos agendados para hoje
+- **Agendamentos da Semana**: Agendamentos da semana atual
+- **Agendamentos do Mês**: Agendamentos do mês atual
+
+**Gráficos:**
+- **Gráfico de Linha**: Agendamentos nos últimos 12 meses
+- **Gráfico de Pizza**: Distribuição de agendamentos por especialidade
+- **Tabela**: Próximos agendamentos (próximas 24 horas)
+- **Consultórios Ativos**: Médicos com agendamentos hoje
+
+**Layout:**
+- Cards organizados em grid responsivo
+- Cards de estatísticas com largura reduzida (25% em telas grandes)
+- Gráficos e tabelas lado a lado com mesma altura
+- Design moderno com gradientes e animações
+
+**Acesso Rápido:**
+- Ícone de ajuda no navbar (ao lado do sino de notificações) que direciona para o manual do sistema
+
+### 2. Gerenciamento de Médicos
 
 **Criar Médico:**
 1. Acesse `/tenant/doctors`
@@ -486,7 +514,7 @@ Armazenados no **banco do tenant** (conexão `tenant`):
 - Médicos (role `doctor`) só veem seu próprio perfil
 - Usuários comuns (role `user`) só veem médicos aos quais têm permissão
 
-### 2. Gerenciamento de Pacientes
+### 3. Gerenciamento de Pacientes
 
 **Criar Paciente:**
 1. Acesse `/tenant/patients`
@@ -504,7 +532,7 @@ Armazenados no **banco do tenant** (conexão `tenant`):
 - Se `login_enabled = true`, o paciente pode acessar o portal
 - Credenciais são enviadas por email automaticamente
 
-### 3. Calendários e Horários
+### 4. Calendários e Horários
 
 **Criar Calendário:**
 1. Acesse `/tenant/calendars`
@@ -526,7 +554,7 @@ Armazenados no **banco do tenant** (conexão `tenant`):
   - Gerenciar tipos de consulta (criar, editar, deletar)
 - Esta página facilita o gerenciamento quando há apenas um médico no contexto
 
-### 4. Tipos de Consulta
+### 5. Tipos de Consulta
 
 **Criar Tipo de Consulta:**
 1. Acesse `/tenant/appointment-types`
@@ -537,7 +565,7 @@ Armazenados no **banco do tenant** (conexão `tenant`):
    - Médico associado
    - Descrição (opcional)
 
-### 5. Agendamentos
+### 6. Agendamentos
 
 **Criar Agendamento:**
 1. Acesse `/tenant/appointments`
@@ -564,7 +592,7 @@ Armazenados no **banco do tenant** (conexão `tenant`):
 - Visualize agendamentos em formato de calendário
 - Filtre por médico, data, modo de atendimento, etc.
 
-### 6. Formulários Personalizados
+### 7. Formulários Personalizados
 
 **Criar Formulário:**
 1. Acesse `/tenant/forms`
@@ -611,7 +639,7 @@ O sistema possui funcionalidade de **envio automático de links de formulários*
   - Após responder, o paciente é redirecionado para uma página de sucesso
   - A resposta fica disponível em `/tenant/responses` para visualização pela clínica
 
-### 7. Respostas de Formulários
+### 8. Respostas de Formulários
 
 **Visualizar Respostas:**
 1. Acesse `/tenant/responses`
@@ -619,7 +647,7 @@ O sistema possui funcionalidade de **envio automático de links de formulários*
 3. Filtre por formulário, paciente, data, etc.
 4. Clique em "Ver" para visualizar resposta completa
 
-### 8. Agendamentos Online
+### 9. Agendamentos Online
 
 **Gerenciar Agendamentos Online:**
 1. Acesse `/tenant/appointments/online`
@@ -648,7 +676,7 @@ O sistema possui funcionalidade de **envio automático de links de formulários*
 - As instruções são enviadas apenas manualmente pelo administrador/clínica
 - O paciente recebe as informações necessárias para participar da consulta virtual
 
-### 9. Atendimento Médico
+### 10. Atendimento Médico
 
 O módulo de **Atendimento Médico** permite realizar sessões de atendimento do dia, facilitando o fluxo de trabalho durante o atendimento aos pacientes.
 
@@ -684,7 +712,7 @@ O módulo de **Atendimento Médico** permite realizar sessões de atendimento do
 - Se o agendamento possui um formulário respondido pelo paciente, ele é exibido automaticamente no modal de detalhes
 - Permite visualizar as respostas antes ou durante o atendimento
 
-### 10. Agendamentos Recorrentes
+### 11. Agendamentos Recorrentes
 
 **Criar Agendamento Recorrente:**
 1. Acesse `/tenant/agendamentos/recorrentes`
@@ -710,7 +738,7 @@ O módulo de **Atendimento Médico** permite realizar sessões de atendimento do
 - Se o modo padrão estiver configurado como `presencial` ou `online`, todos os agendamentos gerados seguirão esse modo
 - Se o modo padrão for `user_choice`, você pode escolher o modo ao criar a recorrência
 
-### 11. Relatórios
+### 12. Relatórios
 
 O sistema possui um módulo completo de **Relatórios** que permite gerar análises detalhadas de diversos aspectos da clínica.
 
@@ -772,7 +800,7 @@ O sistema possui um módulo completo de **Relatórios** que permite gerar análi
   - **Doctor**: Vê apenas seus próprios dados
   - **User**: Vê apenas dados dos médicos permitidos
 
-### 12. Sistema de Roles e Permissões
+### 13. Sistema de Roles e Permissões
 
 O sistema possui um controle de acesso baseado em roles (papéis) que define automaticamente o que cada usuário pode ver e acessar.
 
@@ -813,7 +841,7 @@ O sistema aplica filtros automáticos baseados no role em todas as listagens:
   - `doctor`: Filtra por `doctor_id = usuário.doctor.id`
   - `user`: Filtra por `doctor_id IN (médicos_permitidos)`
 
-### 13. Permissões de Médicos para Usuários
+### 14. Permissões de Médicos para Usuários
 
 **Gerenciar Permissões:**
 1. Acesse `/tenant/users/{id}/doctor-permissions`
@@ -831,7 +859,7 @@ O sistema aplica filtros automáticos baseados no role em todas as listagens:
 - Administradores (role `admin`) veem todos os médicos automaticamente
 - Médicos (role `doctor`) só veem seus próprios dados, independente de permissões
 
-### 14. Integrações
+### 15. Integrações
 
 O sistema suporta integrações com calendários externos para sincronização automática de agendamentos:
 
@@ -1057,7 +1085,7 @@ A integração com Apple Calendar permite sincronizar automaticamente os agendam
 - Agendamentos individuais gerados por recorrências **NÃO** são sincronizados separadamente (evita duplicação)
 - Para mais detalhes, consulte: [docs/INTEGRACAO_APPLE_CALENDAR.md](docs/INTEGRACAO_APPLE_CALENDAR.md)
 
-### 15. Notificações do Tenant
+### 16. Notificações do Tenant
 
 **Visualizar Notificações:**
 1. Acesse `/tenant/notifications`
@@ -1070,7 +1098,7 @@ A integração com Apple Calendar permite sincronizar automaticamente os agendam
 - `POST /tenant/notifications/{id}/read` - Marcar notificação como lida
 - `POST /tenant/notifications/mark-all-read` - Marcar todas como lidas
 
-### 16. Configurações de Agendamentos
+### 17. Configurações de Agendamentos
 
 **Configurações de Modo de Atendimento:**
 1. Acesse `/tenant/settings`
@@ -1088,7 +1116,7 @@ A integração com Apple Calendar permite sincronizar automaticamente os agendam
 **Chave de Configuração:**
 - `appointments.default_appointment_mode`: Valores possíveis: `presencial`, `online`, `user_choice` (padrão: `user_choice`)
 
-### 17. Configurações de Notificações e Comunicação
+### 18. Configurações de Notificações e Comunicação
 
 O sistema possui configurações flexíveis para envio de notificações aos pacientes:
 
@@ -1137,7 +1165,7 @@ Quando um agendamento é criado:
 3. O paciente recebe o link e pode responder sem precisar estar logado
 4. A resposta é automaticamente vinculada ao agendamento
 
-### 18. Configurações de Profissionais
+### 19. Configurações de Profissionais
 
 O sistema permite personalizar rótulos globais para profissionais de saúde, adaptando a terminologia do sistema para diferentes tipos de clínicas (médicas, odontológicas, psicológicas, etc.).
 
@@ -1453,9 +1481,11 @@ web middleware group
 **Última atualização:** 2025-12-03
 
 **Nota:** Esta documentação foi completamente revisada e atualizada para refletir todas as funcionalidades atuais, incluindo:
+- **Dashboard atualizado** com cards otimizados e layout responsivo
+- **Ícone de ajuda** no navbar para acesso rápido ao manual
 - Portal do Paciente completo
 - Integração Google Calendar com sincronização automática
-- Integração Apple Calendar (iCloud) com protocolo CalDAV (seção completa adicionada)
+- Integração Apple Calendar (iCloud) com protocolo CalDAV
 - Agendamentos recorrentes
 - Permissões de médicos para usuários
 - Sistema de notificações
@@ -1468,12 +1498,8 @@ web middleware group
 - **Filtros Automáticos** baseados em roles aplicados em todas as listagens
 - **Campos de Personalização** no Doctor (labels, signature, registration)
 - **Configurações de Profissionais** (rótulos globais personalizados)
-- Lista completa e atualizada de módulos disponíveis
-- Rotas completas de relatórios com exportação (Excel, PDF, CSV)
-- Rotas de integração Apple Calendar documentadas
-- Rotas de configurações do médico (doctor-settings) documentadas
-- Model AppleCalendarToken documentado
-- Controller AppleCalendarController documentado
+- **Dashboard otimizado** com cards responsivos e layout melhorado
+- **Acesso rápido ao manual** via ícone de ajuda no navbar
 
 ---
 

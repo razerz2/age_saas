@@ -6,6 +6,7 @@ use App\Helpers\EmailLayoutHelper;
 use App\Models\Tenant\TenantSetting;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Log;
+use App\Services\FeatureAccessService;
 
 class MailTenantService
 {
@@ -16,6 +17,16 @@ class MailTenantService
     public static function send($to, $subject, $view, $data = [])
     {
         try {
+            // Verifica se a funcionalidade de notificação por email está habilitada no plano
+            $featureAccess = new FeatureAccessService();
+            if (!$featureAccess->hasFeature('email_notifications')) {
+                Log::info('📧 Email não enviado: funcionalidade de notificação por email não está habilitada no plano', [
+                    'to' => $to,
+                    'subject' => $subject
+                ]);
+                return;
+            }
+
             $provider = TenantSetting::emailProvider();
 
             if ($provider['driver'] === 'tenancy') {

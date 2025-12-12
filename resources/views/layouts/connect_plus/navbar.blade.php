@@ -19,6 +19,18 @@
 
         <ul class="navbar-nav navbar-nav-right">
 
+            {{-- AJUDA / MANUAL --}}
+            <li class="nav-item">
+                <a class="nav-link" 
+                   href="{{ route('landing.manual') }}" 
+                   target="_blank"
+                   title="Ajuda / Manual do Sistema"
+                   data-bs-toggle="tooltip"
+                   data-bs-placement="bottom">
+                    <i class="mdi mdi-help-circle-outline"></i>
+                </a>
+            </li>
+
             {{-- NOTIFICAÇÕES --}}
             @include('layouts.connect_plus.notifications')
 

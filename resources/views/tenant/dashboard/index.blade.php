@@ -12,7 +12,7 @@
     {{-- 🔹 Cards Estatísticos Principais --}}
     
     {{-- Total de Pacientes --}}
-    <div class="col-xl-4 col-lg-6 col-md-6 col-sm-12 grid-margin stretch-card">
+    <div class="col-xl-3 col-lg-4 col-md-6 col-sm-12 grid-margin stretch-card">
         <div class="card card-rounded stat-card shadow-lg border-0 card-bg-gradient-primary">
             <div class="card-body p-3">
                 <div class="d-flex align-items-center justify-content-between">
@@ -38,7 +38,7 @@
     </div>
 
     {{-- Médicos Cadastrados --}}
-    <div class="col-xl-4 col-lg-6 col-md-6 col-sm-12 grid-margin stretch-card">
+    <div class="col-xl-3 col-lg-4 col-md-6 col-sm-12 grid-margin stretch-card">
         <div class="card card-rounded stat-card shadow-lg border-0 card-bg-gradient-info">
             <div class="card-body p-3">
                 <div class="d-flex align-items-center justify-content-between">
@@ -63,34 +63,8 @@
         </div>
     </div>
 
-    {{-- Especialidades --}}
-    <div class="col-xl-4 col-lg-6 col-md-6 col-sm-12 grid-margin stretch-card">
-        <div class="card card-rounded stat-card shadow-lg border-0 card-bg-gradient-warning">
-            <div class="card-body p-3">
-                <div class="d-flex align-items-center justify-content-between">
-                    <div class="d-flex align-items-center flex-grow-1">
-                        <div class="icon-wrapper icon-gradient-warning me-3">
-                            <i class="mdi mdi-medical-bag icon-3d text-white"></i>
-                        </div>
-                        <div class="flex-grow-1">
-                            <div class="stat-label mb-2">Especialidades</div>
-                            <div class="stat-number">{{ number_format($stats['specialties']['total']) }}</div>
-                        </div>
-                    </div>
-                    @if($stats['specialties']['variation'] != 0)
-                    <div class="ms-2">
-                        <span class="badge variation-badge {{ $stats['specialties']['variation'] > 0 ? 'bg-success' : 'bg-danger' }} rounded-pill">
-                            {{ $stats['specialties']['variation'] > 0 ? '↑' : '↓' }} {{ abs($stats['specialties']['variation']) }}%
-                        </span>
-                    </div>
-                    @endif
-                </div>
-            </div>
-        </div>
-    </div>
-
     {{-- Agendamentos do Dia --}}
-    <div class="col-xl-4 col-lg-6 col-md-6 col-sm-12 grid-margin stretch-card">
+    <div class="col-xl-3 col-lg-4 col-md-6 col-sm-12 grid-margin stretch-card">
         <div class="card card-rounded stat-card shadow-lg border-0 card-bg-gradient-success">
             <div class="card-body p-3">
                 <div class="d-flex align-items-center justify-content-between">
@@ -116,7 +90,7 @@
     </div>
 
     {{-- Agendamentos da Semana --}}
-    <div class="col-xl-4 col-lg-6 col-md-6 col-sm-12 grid-margin stretch-card">
+    <div class="col-xl-3 col-lg-4 col-md-6 col-sm-12 grid-margin stretch-card">
         <div class="card card-rounded stat-card shadow-lg border-0 card-bg-gradient-blue">
             <div class="card-body p-3">
                 <div class="d-flex align-items-center justify-content-between">
@@ -142,7 +116,7 @@
     </div>
 
     {{-- Agendamentos do Mês --}}
-    <div class="col-xl-4 col-lg-6 col-md-6 col-sm-12 grid-margin stretch-card">
+    <div class="col-xl-3 col-lg-4 col-md-6 col-sm-12 grid-margin stretch-card">
         <div class="card card-rounded stat-card shadow-lg border-0 card-bg-gradient-indigo">
             <div class="card-body p-3">
                 <div class="d-flex align-items-center justify-content-between">
@@ -181,29 +155,31 @@
 </div>
 
 {{-- 🔹 Gráfico de Pizza e Tabela de Próximos Agendamentos --}}
-<div class="row mt-4">
+<div class="row mt-4 dashboard-cards-row">
     {{-- Gráfico de Pizza - Distribuição por Especialidade --}}
-    <div class="col-xl-6 col-lg-6 col-md-12 grid-margin stretch-card">
-        <div class="card card-rounded chart-card shadow-lg border-0">
-            <div class="card-body">
-                <h4 class="card-title">Distribuição por Especialidade</h4>
-                <canvas id="specialtyPieChart" style="max-height: 300px;"></canvas>
+    <div class="col-xl-6 col-lg-6 col-md-12 mb-4 mb-xl-0 dashboard-card-col">
+        <div class="card card-rounded chart-card shadow-lg border-0 h-100">
+            <div class="card-body d-flex flex-column">
+                <h4 class="card-title mb-3">Distribuição por Especialidade</h4>
+                <div class="flex-grow-1 d-flex align-items-center justify-content-center" style="min-height: 300px;">
+                    <canvas id="specialtyPieChart" style="max-width: 100%; max-height: 100%;"></canvas>
+                </div>
             </div>
         </div>
     </div>
 
     {{-- Tabela - Próximos Agendamentos --}}
-    <div class="col-xl-6 col-lg-6 col-md-12 grid-margin stretch-card">
-        <div class="card card-rounded table-card shadow-lg border-0">
-            <div class="card-body">
-                <div class="d-flex align-items-center justify-content-between mb-4">
+    <div class="col-xl-6 col-lg-6 col-md-12 dashboard-card-col">
+        <div class="card card-rounded table-card shadow-lg border-0 h-100">
+            <div class="card-body d-flex flex-column">
+                <div class="d-flex align-items-center justify-content-between mb-3">
                     <h4 class="card-title mb-0">Próximos Agendamentos</h4>
                     <a href="{{ workspace_route('tenant.appointments.index') }}" class="btn btn-sm btn-primary">
                         Ver todos
                     </a>
                 </div>
-                <div class="table-responsive">
-                    <table class="table table-hover">
+                <div class="table-responsive flex-grow-1">
+                    <table class="table table-hover mb-0">
                         <thead>
                             <tr>
                                 <th>Paciente</th>
@@ -402,7 +378,7 @@
             },
             options: {
                 responsive: true,
-                maintainAspectRatio: true,
+                maintainAspectRatio: false,
                 plugins: {
                     legend: {
                         position: 'right',

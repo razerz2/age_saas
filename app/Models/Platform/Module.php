@@ -24,6 +24,7 @@ class Module
             ['key' => 'users', 'name' => 'Usuários', 'icon' => 'fa-users'],
             ['key' => 'settings', 'name' => 'Configurações', 'icon' => 'fa-cog'],
             ['key' => 'api_tokens', 'name' => 'Tokens de API', 'icon' => 'fa-key'],
+            ['key' => 'zapi', 'name' => 'Z-API', 'icon' => 'fa-whatsapp'],
         ];
     }
 

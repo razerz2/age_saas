@@ -123,7 +123,9 @@ class DoctorController extends Controller
             ]);
         }
 
-        return redirect()->route('tenant.doctors.index')
+        $slug = $request->route('slug') ?? tenant()->subdomain;
+        
+        return redirect()->route('tenant.doctors.index', ['slug' => $slug])
             ->with('success', 'Médico cadastrado com sucesso.');
     }
 
@@ -227,7 +229,7 @@ class DoctorController extends Controller
             $doctor->specialties()->detach();
         }
 
-        return redirect()->route('tenant.doctors.index')
+        return redirect()->route('tenant.doctors.index', ['slug' => $slug])
             ->with('success', 'Médico atualizado com sucesso.');
     }
 
@@ -237,13 +239,13 @@ class DoctorController extends Controller
 
         // Verificar se o médico possui atendimentos
         if ($doctor->hasAppointments()) {
-            return redirect()->route('tenant.doctors.index')
+            return redirect()->route('tenant.doctors.index', ['slug' => $slug])
                 ->with('error', 'Não é possível excluir o médico pois ele possui atendimentos cadastrados.');
         }
 
         $doctor->delete();
 
-        return redirect()->route('tenant.doctors.index')
+        return redirect()->route('tenant.doctors.index', ['slug' => $slug])
             ->with('success', 'Médico removido com sucesso.');
     }
 }

@@ -16,6 +16,7 @@ class NotificationService
     {
         try {
             // Verifica se está habilitado enviar email aos pacientes (opt-in, padrão é false)
+            // A verificação de funcionalidade é feita no MailTenantService
             $enabled = TenantSetting::get('notifications.send_email_to_patients');
             if ($enabled !== 'true' && $enabled !== true) {
                 Log::info('📧 Email não enviado: notificações de email desabilitadas para pacientes');
@@ -72,6 +73,7 @@ class NotificationService
     {
         try {
             // Verifica se está habilitado enviar email aos pacientes
+            // A verificação de funcionalidade é feita no MailTenantService
             $enabled = TenantSetting::get('notifications.send_email_to_patients');
             if ($enabled !== 'true' && $enabled !== true) {
                 Log::info('📧 Email de formulário não enviado: notificações de email desabilitadas para pacientes');

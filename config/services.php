@@ -38,6 +38,25 @@ return [
     ],
 
     'whatsapp' => [
+        // Provedor a ser usado: 'whatsapp_business' ou 'zapi'
+        'provider' => env('WHATSAPP_PROVIDER', 'whatsapp_business'),
+
+        // Configurações para WhatsApp Business API
+        'business' => [
+            'api_url' => env('WHATSAPP_BUSINESS_API_URL', 'https://graph.facebook.com/v18.0'),
+            'token' => env('WHATSAPP_BUSINESS_TOKEN'),
+            'phone_id' => env('WHATSAPP_BUSINESS_PHONE_ID'),
+        ],
+
+        // Configurações para Z-API
+        'zapi' => [
+            'api_url' => env('ZAPI_API_URL', 'https://api.z-api.io'),
+            'token' => env('ZAPI_TOKEN'), // Token da instância (usado na URL)
+            'client_token' => env('ZAPI_CLIENT_TOKEN'), // Client-Token de segurança da conta (usado no header)
+            'instance_id' => env('ZAPI_INSTANCE_ID'),
+        ],
+
+        // Configurações legadas (mantidas para compatibilidade)
         'api_url' => env('WHATSAPP_API_URL'),
         'token' => env('WHATSAPP_TOKEN'),
         'phone_id' => env('WHATSAPP_PHONE_ID'),

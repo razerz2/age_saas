@@ -208,14 +208,38 @@ ASAAS_WEBHOOK_SECRET=seu_secret_webhook
 ASAAS_ENV=sandbox
 ```
 
-#### Integração WhatsApp (Meta)
+#### Integração WhatsApp
+
+O sistema suporta dois provedores de WhatsApp: **WhatsApp Business API (Meta)** e **Z-API**.
+
+**Configuração do Provedor:**
 
 ```env
+# Escolha o provedor: 'whatsapp_business' ou 'zapi'
+WHATSAPP_PROVIDER=whatsapp_business
+```
+
+**Opção 1: WhatsApp Business API (Meta)**
+
+```env
+WHATSAPP_PROVIDER=whatsapp_business
+WHATSAPP_BUSINESS_API_URL=https://graph.facebook.com/v18.0
+WHATSAPP_BUSINESS_TOKEN=seu_token_meta
+WHATSAPP_BUSINESS_PHONE_ID=seu_phone_id
+
+# Configurações legadas (mantidas para compatibilidade)
 WHATSAPP_API_URL=https://graph.facebook.com/v18.0
 WHATSAPP_TOKEN=seu_token
 WHATSAPP_PHONE_ID=seu_phone_id
-META_ACCESS_TOKEN=seu_token_meta
-META_PHONE_NUMBER_ID=seu_phone_number_id
+```
+
+**Opção 2: Z-API**
+
+```env
+WHATSAPP_PROVIDER=zapi
+ZAPI_API_URL=https://api.z-api.io
+ZAPI_TOKEN=seu_token_zapi
+ZAPI_INSTANCE_ID=seu_instance_id
 ```
 
 #### Email
@@ -356,12 +380,28 @@ O sistema integra com o Asaas para:
 - Geração de faturas
 - Recebimento de webhooks de pagamento
 
-### WhatsApp Business API
+### WhatsApp (WhatsApp Business API ou Z-API)
 
-Integração com Meta para envio de:
-- Notificações de agendamento
+O sistema suporta dois provedores de WhatsApp:
+
+#### WhatsApp Business API (Meta)
+- Integração oficial com Meta/Facebook
+- Envio de notificações de agendamento
 - Lembretes
 - Notificações de faturas
+
+#### Z-API
+- API brasileira alternativa para WhatsApp
+- Mesmas funcionalidades do WhatsApp Business
+- Configuração simplificada
+
+**Como escolher o provedor:**
+
+Configure a variável `WHATSAPP_PROVIDER` no arquivo `.env`:
+- `whatsapp_business` - Usa WhatsApp Business API (Meta)
+- `zapi` - Usa Z-API
+
+O sistema automaticamente utiliza o provedor configurado para enviar todas as mensagens.
 
 ### Google Calendar
 

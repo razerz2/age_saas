@@ -136,6 +136,13 @@
         </li>
         @endif
 
+        {{-- Z-API --}}
+        <li class="sidebar-item">
+            <a class="sidebar-link" href="{{ route('Platform.zapi.index') }}" aria-expanded="false">
+                <i class="fab fa-whatsapp text-success"></i><span class="hide-menu"> Z-API </span>
+            </a>
+        </li>
+
         {{-- Usuários --}}
         @if(in_array('users', auth()->user()->modules ?? []))
         <li class="sidebar-item">

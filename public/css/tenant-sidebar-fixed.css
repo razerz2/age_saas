@@ -1,0 +1,222 @@
+/**
+ * CSS PERSONALIZADO - SIDEBAR FIXO PARA TENANT
+ * Garante que o sidebar fique fixo quando a classe 'sidebar-fixed' estiver no body
+ * Sobrescreve estilos conflitantes de outros arquivos CSS
+ */
+
+@media (min-width: 992px) {
+  /* ============================================
+     SIDEBAR FIXO - Agora está fora do page-body-wrapper
+     Altura FIXA baseada na viewport, não no conteúdo
+     Scroll funcional mas barra oculta
+     ============================================ */
+  body.sidebar-fixed .container-scroller .sidebar.sidebar-offcanvas,
+  body.sidebar-fixed .container-scroller #sidebar.sidebar.sidebar-offcanvas,
+  body.sidebar-fixed .sidebar.sidebar-offcanvas,
+  body.sidebar-fixed #sidebar.sidebar.sidebar-offcanvas {
+    position: fixed !important;
+    top: 64px !important; /* Altura do navbar */
+    left: 0 !important;
+    bottom: 0 !important;
+    right: auto !important;
+    width: 258px !important;
+    height: calc(100vh - 64px) !important;
+    max-height: calc(100vh - 64px) !important;
+    min-height: calc(100vh - 64px) !important;
+    z-index: 11 !important;
+    overflow-y: auto !important; /* Scroll funcional */
+    overflow-x: hidden !important;
+    /* Oculta barra de scroll mas mantém funcionalidade */
+    scrollbar-width: none !important; /* Firefox */
+    -ms-overflow-style: none !important; /* IE e Edge */
+    /* Remove qualquer altura baseada no conteúdo */
+    align-self: auto !important;
+    flex-grow: 0 !important;
+    flex-shrink: 0 !important;
+    flex-basis: auto !important;
+  }
+  
+  /* Oculta barra de scroll no Chrome, Safari e Opera */
+  body.sidebar-fixed .sidebar.sidebar-offcanvas::-webkit-scrollbar,
+  body.sidebar-fixed #sidebar::-webkit-scrollbar {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+  }
+
+  /* ============================================
+     SIDEBAR NAV - Scroll interno quando necessário
+     Barra de scroll oculta
+     Espaçamento no final para última opção não ficar colada
+     ============================================ */
+  body.sidebar-fixed .sidebar.sidebar-offcanvas .nav,
+  body.sidebar-fixed #sidebar .nav {
+    max-height: calc(100vh - 64px) !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    position: relative !important;
+    margin-bottom: 0 !important;
+    padding-bottom: 1.5rem !important; /* Espaço no final da sidebar */
+    /* Oculta barra de scroll mas mantém funcionalidade */
+    scrollbar-width: none !important; /* Firefox */
+    -ms-overflow-style: none !important; /* IE e Edge */
+  }
+  
+  /* Oculta barra de scroll do nav no Chrome, Safari e Opera */
+  body.sidebar-fixed .sidebar.sidebar-offcanvas .nav::-webkit-scrollbar,
+  body.sidebar-fixed #sidebar .nav::-webkit-scrollbar {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+  }
+
+  /* ============================================
+     MAIN-PANEL - Agora não precisa de margin-left
+     porque o page-body-wrapper já compensa
+     Altura automática para permitir todo o conteúdo
+     ============================================ */
+  body.sidebar-fixed .main-panel {
+    margin-left: 0 !important;
+    width: 100% !important;
+    height: auto !important;
+    min-height: 100% !important;
+    overflow: visible !important; /* SEM scroll no main-panel */
+    display: flex !important;
+    flex-direction: column !important;
+  }
+  
+  /* ============================================
+     CONTENT-WRAPPER - Permite conteúdo completo
+     Altura automática, não corta conteúdo
+     ============================================ */
+  body.sidebar-fixed .content-wrapper {
+    overflow: visible !important; /* SEM scroll no content-wrapper */
+    height: auto !important;
+    min-height: auto !important;
+    flex: 1 1 auto !important;
+    width: 100% !important;
+  }
+  
+  /* ============================================
+     HTML e BODY - Oculta scroll externo
+     Apenas quando sidebar-fixed está ativo
+     ============================================ */
+  html:has(body.sidebar-fixed) {
+    overflow: hidden !important;
+    height: 100% !important;
+  }
+  
+  /* Fallback para navegadores sem suporte a :has() */
+  html body.sidebar-fixed {
+    overflow: hidden !important;
+    height: 100vh !important;
+    width: 100% !important;
+    position: relative !important;
+  }
+  
+  body.sidebar-fixed {
+    overflow: hidden !important; /* Oculta scroll do body */
+    height: 100vh !important;
+    position: relative !important;
+  }
+
+  /* ============================================
+     PAGE-BODY-WRAPPER - Ajuste para sidebar fixo
+     Agora não contém o sidebar, apenas o main-panel
+     Altura fixa com scroll para permitir todo o conteúdo
+     Largura ajustada para não cortar conteúdo
+     Padding-top para não ser cortado pelo navbar fixo
+     ============================================ */
+  body.sidebar-fixed .page-body-wrapper {
+    position: relative !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    padding-top: 64px !important; /* Compensa altura do navbar fixo */
+    margin-left: 258px !important; /* Compensa largura do sidebar fixo */
+    margin-top: 0 !important;
+    width: calc(100% - 258px) !important; /* Largura ajustada */
+    display: block !important;
+    min-height: 100vh !important; /* Altura total da viewport */
+    height: 100vh !important;
+    max-height: 100vh !important;
+    overflow-y: auto !important; /* Scroll apenas no conteúdo */
+    overflow-x: hidden !important;
+    /* Garante que o conteúdo interno não seja cortado */
+    box-sizing: border-box !important;
+  }
+
+  /* ============================================
+     CONTAINER-SCROLLER - Ajuste para sidebar fixo
+     Permite scroll apenas no conteúdo, não no container
+     Oculta barra de scroll externa
+     ============================================ */
+  body.sidebar-fixed .container-scroller {
+    position: relative !important;
+    overflow: hidden !important; /* Oculta scroll externo */
+    height: 100vh !important;
+    min-height: 100vh !important;
+    display: block !important; /* Remove qualquer flex que possa afetar sidebar */
+  }
+  
+  /* ============================================
+     Remove qualquer estilo que faça sidebar acompanhar altura do conteúdo
+     Garante que sidebar filho direto do container-scroller seja fixo
+     ============================================ */
+  body.sidebar-fixed .container-scroller > .sidebar.sidebar-offcanvas,
+  body.sidebar-fixed .container-scroller > #sidebar {
+    position: fixed !important;
+    height: calc(100vh - 64px) !important;
+    max-height: calc(100vh - 64px) !important;
+    min-height: calc(100vh - 64px) !important;
+    /* Garante que não acompanhe o scroll do container */
+    transform: none !important;
+    top: 64px !important;
+    bottom: 0 !important;
+  }
+
+  /* ============================================
+     Remove estilos conflitantes de position: relative
+     e garante que sidebar não acompanhe altura do conteúdo
+     ============================================ */
+  body.sidebar-fixed .sidebar.sidebar-offcanvas {
+    align-self: auto !important;
+    flex-grow: 0 !important;
+    flex-shrink: 0 !important;
+    flex-basis: auto !important;
+    /* CRÍTICO: Remove qualquer altura baseada no conteúdo */
+    height: calc(100vh - 64px) !important;
+    max-height: calc(100vh - 64px) !important;
+    min-height: calc(100vh - 64px) !important;
+  }
+}
+
+/* ============================================
+   MOBILE - Mantém comportamento offcanvas
+   ============================================ */
+@media screen and (max-width: 991px) {
+  body.sidebar-fixed .sidebar-offcanvas {
+    position: fixed !important;
+    max-height: calc(100vh - 64px) !important;
+    top: 64px !important;
+    bottom: 0 !important;
+    overflow: auto !important;
+    right: -258px;
+    -webkit-transition: all 0.25s ease-out;
+    -o-transition: all 0.25s ease-out;
+    transition: all 0.25s ease-out;
+  }
+  
+  body.sidebar-fixed .sidebar-offcanvas.active {
+    right: 0 !important;
+  }
+
+  body.sidebar-fixed .page-body-wrapper {
+    margin-left: 0 !important;
+  }
+
+  body.sidebar-fixed .main-panel {
+    margin-left: 0 !important;
+    width: 100% !important;
+  }
+}
+

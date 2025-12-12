@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Config;
 use App\Models\Platform\Tenant;
 
 class LoginController extends Controller
@@ -51,6 +52,9 @@ class LoginController extends Controller
         // Isso garante que a conexão do banco de dados do tenant esteja configurada
         $tenant->makeCurrent();
         \Log::info('Tenant ativado antes da busca do usuário', ['tenant_id' => $tenant->id]);
+        
+        // Garantir que a conexão do tenant está configurada com as credenciais corretas
+        $this->configureTenantDatabaseConnection($tenant);
 
         // Verificar se a conexão do tenant está funcionando
         try {
@@ -156,5 +160,33 @@ class LoginController extends Controller
         return redirect()->route('tenant.login', [
             'slug' => $tenant->subdomain ?? ''
         ]);
+    }
+
+    /**
+     * Configura a conexão com o banco de dados do tenant
+     */
+    protected function configureTenantDatabaseConnection(Tenant $tenant)
+    {
+        \Log::info("🔧 Configurando conexão de banco de dados do tenant no LoginController", [
+            'host' => $tenant->db_host,
+            'database' => $tenant->db_name,
+            'username' => $tenant->db_username,
+            'password_set' => !empty($tenant->db_password)
+        ]);
+
+        // Usar host e porta do tenant, com fallback para .env se não estiver definido
+        $dbHost = $tenant->db_host ?: env('DB_TENANT_HOST', '127.0.0.1');
+        $dbPort = $tenant->db_port ?: env('DB_TENANT_PORT', '5432');
+
+        // Configura dinamicamente os detalhes do banco de dados
+        Config::set('database.connections.tenant.host', $dbHost);
+        Config::set('database.connections.tenant.port', $dbPort);
+        Config::set('database.connections.tenant.database', $tenant->db_name);
+        Config::set('database.connections.tenant.username', $tenant->db_username);
+        Config::set('database.connections.tenant.password', $tenant->db_password ?? '');
+
+        // Recarrega a conexão do banco de dados com as novas configurações
+        DB::purge('tenant');  // Limpa a conexão existente
+        DB::reconnect('tenant'); // Reconnecta com as novas configurações
     }
 }

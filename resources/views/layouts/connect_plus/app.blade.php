@@ -21,6 +21,7 @@
     @endphp
     <link rel="shortcut icon" href="{{ $faviconUrl }}">
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.5/css/dataTables.bootstrap5.min.css">
+    <link rel="stylesheet" href="{{ asset('css/tenant-sidebar-fixed.css') }}">
     
     @stack('styles')
     
@@ -28,17 +29,16 @@
 
 </head>
 
-<body>
+<body class="sidebar-fixed">
     <div class="container-scroller">
 
         {{-- NAVBAR --}}
         @include('layouts.connect_plus.navbar')
 
+        {{-- MENU LATERAL - Fora do page-body-wrapper para ficar fixo --}}
+        @include('layouts.connect_plus.navigation')
+
         <div class="container-fluid page-body-wrapper">
-
-            {{-- MENU LATERAL --}}
-            @include('layouts.connect_plus.navigation')
-
             <div class="main-panel">
                 <div class="content-wrapper">
 

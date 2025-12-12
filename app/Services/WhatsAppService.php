@@ -2,52 +2,74 @@
 
 namespace App\Services;
 
-use Illuminate\Support\Facades\Http;
+use App\Services\WhatsApp\WhatsAppProviderInterface;
+use App\Services\WhatsApp\WhatsAppBusinessProvider;
+use App\Services\WhatsApp\ZApiProvider;
 use Illuminate\Support\Facades\Log;
 
 class WhatsAppService
 {
-    protected $apiUrl;
-    protected $token;
-    protected $phoneId;
+    protected WhatsAppProviderInterface $provider;
 
     public function __construct()
     {
-        $this->apiUrl = config('services.whatsapp.api_url');
-        $this->token  = config('services.whatsapp.token');
-        $this->phoneId = config('services.whatsapp.phone_id');
+        $this->provider = $this->resolveProvider();
     }
 
+    /**
+     * Resolve qual provedor usar baseado na configuração
+     *
+     * @return WhatsAppProviderInterface
+     */
+    protected function resolveProvider(): WhatsAppProviderInterface
+    {
+        $provider = config('services.whatsapp.provider', 'whatsapp_business');
+
+        return match ($provider) {
+            'zapi', 'z-api' => new ZApiProvider(),
+            'whatsapp_business', 'business' => new WhatsAppBusinessProvider(),
+            default => new WhatsAppBusinessProvider(), // Fallback para WhatsApp Business
+        };
+    }
+
+    /**
+     * Envia uma mensagem de texto
+     *
+     * @param string $phone Número do telefone
+     * @param string $message Mensagem a ser enviada
+     * @return bool True se enviado com sucesso, False caso contrário
+     */
     public function sendMessage(string $phone, string $message): bool
     {
         try {
-            $response = Http::withToken($this->token)
-                ->post("{$this->apiUrl}/{$this->phoneId}/messages", [
-                    'messaging_product' => 'whatsapp',
-                    'to' => $this->formatPhone($phone),
-                    'type' => 'text',
-                    'text' => [
-                        'preview_url' => true,
-                        'body' => $message,
-                    ],
-                ]);
-
-            Log::info('📤 WhatsApp enviado', ['to' => $phone, 'status' => $response->status(), 'body' => $response->json()]);
-
-            return $response->successful();
+            return $this->provider->sendMessage($phone, $message);
         } catch (\Throwable $e) {
-            Log::error('❌ Erro ao enviar mensagem WhatsApp', ['error' => $e->getMessage()]);
+            Log::error('❌ Erro ao enviar mensagem WhatsApp', [
+                'provider' => get_class($this->provider),
+                'error' => $e->getMessage()
+            ]);
             return false;
         }
     }
 
-    protected function formatPhone(string $phone): string
+    /**
+     * Formata o número de telefone
+     *
+     * @param string $phone Número do telefone
+     * @return string Número formatado
+     */
+    public function formatPhone(string $phone): string
     {
-        // Ex: remove caracteres não numéricos e adiciona +55 se não tiver
-        $digits = preg_replace('/\D/', '', $phone);
-        if (!str_starts_with($digits, '55')) {
-            $digits = '55' . $digits;
-        }
-        return '+' . $digits;
+        return $this->provider->formatPhone($phone);
+    }
+
+    /**
+     * Retorna o provedor atual
+     *
+     * @return WhatsAppProviderInterface
+     */
+    public function getProvider(): WhatsAppProviderInterface
+    {
+        return $this->provider;
     }
 }
