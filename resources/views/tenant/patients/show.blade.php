@@ -101,6 +101,20 @@
                                 </p>
                             </div>
                         </div>
+                        <div class="col-md-6 mb-3">
+                            <div class="border rounded p-3 h-100">
+                                <label class="text-muted small mb-1 d-block">
+                                    <i class="mdi mdi-gender-male-female me-1"></i> Gênero
+                                </label>
+                                <p class="mb-0 fw-semibold">
+                                    @if($patient->gender)
+                                        {{ $patient->gender->name }} ({{ $patient->gender->abbreviation }})
+                                    @else
+                                        <span class="text-muted">N/A</span>
+                                    @endif
+                                </p>
+                            </div>
+                        </div>
                     </div>
 
                     {{-- Informações de Contato --}}
@@ -142,6 +156,72 @@
                             </div>
                         </div>
                     </div>
+
+                    {{-- Informações de Endereço --}}
+                    @if($patient->address)
+                    <h5 class="text-primary mb-3">
+                        <i class="mdi mdi-map-marker me-2"></i>
+                        Endereço
+                    </h5>
+                    <div class="row mb-4">
+                        <div class="col-md-8 mb-3">
+                            <div class="border rounded p-3 h-100">
+                                <label class="text-muted small mb-1 d-block">
+                                    <i class="mdi mdi-road me-1"></i> Logradouro
+                                </label>
+                                <p class="mb-0 fw-semibold">{{ $patient->address->street ?? 'N/A' }}</p>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <div class="border rounded p-3 h-100">
+                                <label class="text-muted small mb-1 d-block">
+                                    <i class="mdi mdi-numeric me-1"></i> Número
+                                </label>
+                                <p class="mb-0 fw-semibold">{{ $patient->address->number ?? 'N/A' }}</p>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <div class="border rounded p-3 h-100">
+                                <label class="text-muted small mb-1 d-block">
+                                    <i class="mdi mdi-home-variant me-1"></i> Complemento
+                                </label>
+                                <p class="mb-0 fw-semibold">{{ $patient->address->complement ?? 'N/A' }}</p>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <div class="border rounded p-3 h-100">
+                                <label class="text-muted small mb-1 d-block">
+                                    <i class="mdi mdi-city me-1"></i> Bairro
+                                </label>
+                                <p class="mb-0 fw-semibold">{{ $patient->address->neighborhood ?? 'N/A' }}</p>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <div class="border rounded p-3 h-100">
+                                <label class="text-muted small mb-1 d-block">
+                                    <i class="mdi mdi-city-variant me-1"></i> Cidade
+                                </label>
+                                <p class="mb-0 fw-semibold">{{ $patient->address->city ?? 'N/A' }}</p>
+                            </div>
+                        </div>
+                        <div class="col-md-2 mb-3">
+                            <div class="border rounded p-3 h-100">
+                                <label class="text-muted small mb-1 d-block">
+                                    <i class="mdi mdi-map-marker-radius me-1"></i> Estado (UF)
+                                </label>
+                                <p class="mb-0 fw-semibold">{{ $patient->address->state ?? 'N/A' }}</p>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <div class="border rounded p-3 h-100">
+                                <label class="text-muted small mb-1 d-block">
+                                    <i class="mdi mdi-postal-code me-1"></i> CEP
+                                </label>
+                                <p class="mb-0 fw-semibold">{{ $patient->address->postal_code ?? 'N/A' }}</p>
+                            </div>
+                        </div>
+                    </div>
+                    @endif
 
                     {{-- Informações Adicionais --}}
                     <div class="border-top pt-3">

@@ -16,7 +16,7 @@ class Patient extends Model
     protected $keyType = 'uuid';
 
     protected $fillable = [
-        'id', 'full_name', 'cpf', 'birth_date', 'email', 'phone', 'is_active'
+        'id', 'full_name', 'cpf', 'birth_date', 'gender_id', 'email', 'phone', 'is_active'
     ];
 
     protected $casts = [
@@ -39,5 +39,21 @@ class Patient extends Model
     public function login()
     {
         return $this->hasOne(PatientLogin::class, 'patient_id', 'id');
+    }
+
+    /**
+     * Relacionamento com gênero
+     */
+    public function gender()
+    {
+        return $this->belongsTo(Gender::class);
+    }
+
+    /**
+     * Relacionamento com endereço
+     */
+    public function address()
+    {
+        return $this->hasOne(PatientAddress::class);
     }
 }

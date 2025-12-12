@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Tenant;
 use App\Http\Controllers\Controller;
 use App\Models\Tenant\Patient;
 use App\Models\Tenant\PatientLogin;
+use App\Models\Tenant\Gender;
+use App\Models\Tenant\PatientAddress;
 use App\Http\Requests\Tenant\StorePatientRequest;
 use App\Http\Requests\Tenant\UpdatePatientRequest;
 use App\Mail\PatientLoginCredentials;
@@ -27,16 +29,16 @@ class PatientController extends Controller
             $tableExists = Schema::connection('tenant')->hasTable('patient_logins');
             
             if ($tableExists) {
-                $patients = Patient::with('login')
+                $patients = Patient::with(['login', 'gender'])
                     ->orderBy('full_name')
                     ->paginate(20);
             } else {
                 // Se a tabela não existir, carrega pacientes sem o relacionamento
-                $patients = Patient::orderBy('full_name')->paginate(20);
+                $patients = Patient::with('gender')->orderBy('full_name')->paginate(20);
             }
         } catch (\Exception $e) {
             // Em caso de erro, carrega pacientes sem relacionamento
-            $patients = Patient::orderBy('full_name')->paginate(20);
+            $patients = Patient::with('gender')->orderBy('full_name')->paginate(20);
         }
 
         return view('tenant.patients.index', compact('patients'));
@@ -44,16 +46,48 @@ class PatientController extends Controller
 
     public function create()
     {
-        return view('tenant.patients.create');
+        try {
+            // Verifica se a tabela existe antes de tentar buscar
+            $tableExists = Schema::connection('tenant')->hasTable('genders');
+            
+            if ($tableExists) {
+                $genders = Gender::where('is_active', true)->orderBy('order')->orderBy('name')->get();
+            } else {
+                // Se a tabela não existir, retorna array vazio
+                $genders = collect([]);
+            }
+        } catch (\Exception $e) {
+            // Em caso de erro, retorna array vazio
+            $genders = collect([]);
+        }
+        
+        return view('tenant.patients.create', compact('genders'));
     }
 
     public function store(StorePatientRequest $request)
     {
         $data = $request->validated();
 
-        $data['id'] = Str::uuid();
+        // Separar dados do paciente dos dados de endereço
+        $addressData = [];
+        $addressFields = ['postal_code', 'street', 'number', 'complement', 'neighborhood', 'city', 'state'];
+        
+        foreach ($addressFields as $field) {
+            if (isset($data[$field])) {
+                $addressData[$field] = $data[$field];
+                unset($data[$field]);
+            }
+        }
 
-        Patient::create($data);
+        $data['id'] = Str::uuid();
+        $patient = Patient::create($data);
+
+        // Criar endereço se houver dados
+        if (!empty(array_filter($addressData))) {
+            $addressData['id'] = Str::uuid();
+            $addressData['patient_id'] = $patient->id;
+            PatientAddress::create($addressData);
+        }
 
         return redirect()->route('tenant.patients.index', ['slug' => tenant()->subdomain])
             ->with('success', 'Paciente cadastrado com sucesso.');
@@ -62,20 +96,63 @@ class PatientController extends Controller
 
     public function show($slug, $id)
     {
-        $patient = Patient::findOrFail($id);
+        $patient = Patient::with(['gender', 'address'])->findOrFail($id);
         return view('tenant.patients.show', compact('patient'));
     }
 
     public function edit($slug, $id)
     {
-        $patient = Patient::findOrFail($id);
-        return view('tenant.patients.edit', compact('patient'));
+        $patient = Patient::with('address')->findOrFail($id);
+        
+        try {
+            // Verifica se a tabela existe antes de tentar buscar
+            $tableExists = Schema::connection('tenant')->hasTable('genders');
+            
+            if ($tableExists) {
+                $genders = Gender::where('is_active', true)->orderBy('order')->orderBy('name')->get();
+            } else {
+                // Se a tabela não existir, retorna array vazio
+                $genders = collect([]);
+            }
+        } catch (\Exception $e) {
+            // Em caso de erro, retorna array vazio
+            $genders = collect([]);
+        }
+        
+        return view('tenant.patients.edit', compact('patient', 'genders'));
     }
 
     public function update(UpdatePatientRequest $request, $slug, $id)
     {
         $patient = Patient::findOrFail($id);
-        $patient->update($request->validated());
+        $data = $request->validated();
+
+        // Separar dados do paciente dos dados de endereço
+        $addressData = [];
+        $addressFields = ['postal_code', 'street', 'number', 'complement', 'neighborhood', 'city', 'state'];
+        
+        foreach ($addressFields as $field) {
+            if (isset($data[$field])) {
+                $addressData[$field] = $data[$field];
+                unset($data[$field]);
+            }
+        }
+
+        $patient->update($data);
+
+        // Atualizar ou criar endereço
+        if (!empty(array_filter($addressData))) {
+            if ($patient->address) {
+                $patient->address->update($addressData);
+            } else {
+                $addressData['id'] = Str::uuid();
+                $addressData['patient_id'] = $patient->id;
+                PatientAddress::create($addressData);
+            }
+        } elseif ($patient->address) {
+            // Se não há dados de endereço mas existe um endereço, remover
+            $patient->address->delete();
+        }
 
         return redirect()->route('tenant.patients.index', ['slug' => $slug])
             ->with('success', 'Paciente atualizado com sucesso.');

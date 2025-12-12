@@ -24,3 +24,59 @@ h5.text-primary {
     font-weight: 600;
 }
 
+/* ============================================
+   ESTILOS PARA CAMPOS DE ENDEREÇO - Lado a lado com espaçamento adequado
+   ============================================ */
+
+/* Remove margens laterais da row */
+.patient-address-section .row,
+.patient-address-section .row.patient-address-row {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    margin-bottom: 1rem !important;
+}
+
+.patient-address-section .row:last-child,
+.patient-address-section .row.patient-address-row:last-child {
+    margin-bottom: 0 !important;
+}
+
+/* Espaçamento padrão do Bootstrap entre colunas - APLICAR EM TODAS */
+.patient-address-section .row > [class*="col-"],
+.patient-address-section .row.patient-address-row > [class*="col-"] {
+    padding-left: 0.75rem !important;
+    padding-right: 0.75rem !important;
+}
+
+/* Primeira coluna - sem padding à esquerda, mas mantém à direita */
+.patient-address-section .row > [class*="col-"]:first-child,
+.patient-address-section .row.patient-address-row > [class*="col-"]:first-child {
+    padding-left: 0 !important;
+    padding-right: 0.75rem !important;
+}
+
+/* Última coluna - sem padding à direita, mas mantém à esquerda */
+.patient-address-section .row > [class*="col-"]:last-child,
+.patient-address-section .row.patient-address-row > [class*="col-"]:last-child {
+    padding-right: 0 !important;
+    padding-left: 0.75rem !important;
+}
+
+/* Campos do meio - padding em ambos os lados */
+.patient-address-section .row > [class*="col-"]:not(:first-child):not(:last-child),
+.patient-address-section .row.patient-address-row > [class*="col-"]:not(:first-child):not(:last-child) {
+    padding-left: 0.75rem !important;
+    padding-right: 0.75rem !important;
+}
+
+/* Ajuste para form-group dentro de endereço */
+.patient-address-section .form-group {
+    margin-bottom: 0;
+}
+
+/* Garantir que os inputs ocupem 100% da largura da coluna */
+.patient-address-section .form-control {
+    width: 100%;
+    box-sizing: border-box;
+}
+

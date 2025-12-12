@@ -20,9 +20,19 @@ class UpdatePatientRequest extends FormRequest
             'full_name'  => ['required', 'string', 'max:255'],
             'cpf'        => ['required', 'string', 'max:14', Rule::unique('tenant.patients', 'cpf')->ignore($id)],
             'birth_date' => ['nullable', 'date'],
+            'gender_id'  => ['nullable', 'exists:tenant.genders,id'],
             'email'      => ['nullable', 'email'],
             'phone'      => ['nullable', 'string', 'max:20'],
             'is_active'  => ['nullable', 'boolean'],
+            
+            // Campos de endereço (opcionais)
+            'postal_code'    => ['nullable', 'string', 'max:10'],
+            'street'         => ['nullable', 'string', 'max:255'],
+            'number'         => ['nullable', 'string', 'max:20'],
+            'complement'     => ['nullable', 'string', 'max:255'],
+            'neighborhood'  => ['nullable', 'string', 'max:255'],
+            'city'           => ['nullable', 'string', 'max:255'],
+            'state'          => ['nullable', 'string', 'max:2'],
         ];
     }
 
@@ -42,6 +52,8 @@ class UpdatePatientRequest extends FormRequest
             'cpf.unique' => 'Este CPF já está cadastrado.',
 
             'birth_date.date' => 'A data de nascimento deve ser uma data válida.',
+
+            'gender_id.exists' => 'O gênero selecionado é inválido.',
 
             'email.email' => 'Por favor, insira um e-mail válido.',
 
