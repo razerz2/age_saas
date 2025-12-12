@@ -31,7 +31,7 @@ class IntegrationController extends Controller
 
         Integrations::create($data);
 
-        return redirect()->route('tenant.integrations.index')
+        return redirect()->route('tenant.integrations.index', ['slug' => tenant()->subdomain])
             ->with('success', 'Integração criada com sucesso.');
     }
 
@@ -52,7 +52,7 @@ class IntegrationController extends Controller
         $integration = Integrations::findOrFail($id);
         $integration->update($request->validated());
 
-        return redirect()->route('tenant.integrations.index')
+        return redirect()->route('tenant.integrations.index', ['slug' => $slug])
             ->with('success', 'Integração atualizada com sucesso.');
     }
 
@@ -61,7 +61,7 @@ class IntegrationController extends Controller
         $integration = Integrations::findOrFail($id);
         $integration->delete();
 
-        return redirect()->route('tenant.integrations.index')
+        return redirect()->route('tenant.integrations.index', ['slug' => $slug])
             ->with('success', 'Integração removida.');
     }
 }

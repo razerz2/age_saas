@@ -38,7 +38,7 @@ class OAuthAccountController extends Controller
 
         OauthAccount::create($data);
 
-        return redirect()->route('tenant.oauth-accounts.index')
+        return redirect()->route('tenant.oauth-accounts.index', ['slug' => tenant()->subdomain])
             ->with('success', 'Conta OAuth criada com sucesso.');
     }
 
@@ -63,7 +63,7 @@ class OAuthAccountController extends Controller
         $oauthAccount = OauthAccount::findOrFail($id);
         $oauthAccount->update($request->validated());
 
-        return redirect()->route('tenant.oauth-accounts.index')
+        return redirect()->route('tenant.oauth-accounts.index', ['slug' => $slug])
             ->with('success', 'Conta OAuth atualizada com sucesso.');
     }
 
@@ -72,7 +72,7 @@ class OAuthAccountController extends Controller
         $oauthAccount = OauthAccount::findOrFail($id);
         $oauthAccount->delete();
 
-        return redirect()->route('tenant.oauth-accounts.index')
+        return redirect()->route('tenant.oauth-accounts.index', ['slug' => $slug])
             ->with('success', 'Conta OAuth removida.');
     }
 }

@@ -119,7 +119,7 @@ class OnlineAppointmentController extends Controller
             'patient_instructions' => $request->patient_instructions,
         ]);
 
-        return redirect()->route('tenant.online-appointments.show', $id)
+        return redirect()->route('tenant.online-appointments.show', ['slug' => $slug, 'appointment' => $id])
             ->with('success', 'Instruções salvas com sucesso.');
     }
 
@@ -180,7 +180,7 @@ class OnlineAppointmentController extends Controller
                 'sent_by_email_at' => now(),
             ]);
 
-            return redirect()->route('tenant.online-appointments.show', $id)
+            return redirect()->route('tenant.online-appointments.show', ['slug' => $slug, 'appointment' => $id])
                 ->with('success', 'Instruções enviadas por email com sucesso.');
         } catch (\Exception $e) {
             Log::error('Erro ao enviar instruções por email', [
@@ -262,7 +262,7 @@ class OnlineAppointmentController extends Controller
                     'sent_by_whatsapp_at' => now(),
                 ]);
 
-                return redirect()->route('tenant.online-appointments.show', $id)
+                return redirect()->route('tenant.online-appointments.show', ['slug' => $slug, 'appointment' => $id])
                     ->with('success', 'Instruções enviadas por WhatsApp com sucesso.');
             } else {
                 return redirect()->back()

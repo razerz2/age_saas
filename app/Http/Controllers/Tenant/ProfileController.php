@@ -54,7 +54,7 @@ class ProfileController extends Controller
 
         $user->update($data);
 
-        return redirect()->route('tenant.profile.edit')
+        return redirect()->route('tenant.profile.edit', ['slug' => tenant()->subdomain])
             ->with('success', 'Perfil atualizado com sucesso!');
     }
 }

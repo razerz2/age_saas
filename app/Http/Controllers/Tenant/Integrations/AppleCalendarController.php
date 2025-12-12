@@ -145,7 +145,7 @@ class AppleCalendarController extends Controller
                 'token_id' => $token->id,
             ]);
 
-            return redirect()->route('tenant.integrations.apple.index')
+            return redirect()->route('tenant.integrations.apple.index', ['slug' => tenant()->subdomain])
                 ->with('success', 'Integração com Apple Calendar realizada com sucesso!');
         } catch (\Exception $e) {
             Log::error('Erro ao conectar com Apple Calendar', [
@@ -153,7 +153,7 @@ class AppleCalendarController extends Controller
                 'error' => $e->getMessage(),
             ]);
 
-            return redirect()->route('tenant.integrations.apple.index')
+            return redirect()->route('tenant.integrations.apple.index', ['slug' => tenant()->subdomain])
                 ->with('error', 'Erro ao conectar com Apple Calendar. Verifique suas credenciais.');
         }
     }
@@ -181,11 +181,11 @@ class AppleCalendarController extends Controller
                     'doctor_id' => $doctor->id,
                 ]);
 
-                return redirect()->route('tenant.integrations.apple.index')
+                return redirect()->route('tenant.integrations.apple.index', ['slug' => tenant()->subdomain])
                     ->with('success', 'Integração com Apple Calendar removida com sucesso.');
             }
 
-            return redirect()->route('tenant.integrations.apple.index')
+            return redirect()->route('tenant.integrations.apple.index', ['slug' => tenant()->subdomain])
                 ->with('info', 'Nenhuma integração encontrada para este médico.');
         } catch (\Exception $e) {
             Log::error('Erro ao desconectar Apple Calendar', [
@@ -193,7 +193,7 @@ class AppleCalendarController extends Controller
                 'error' => $e->getMessage(),
             ]);
 
-            return redirect()->route('tenant.integrations.apple.index')
+            return redirect()->route('tenant.integrations.apple.index', ['slug' => tenant()->subdomain])
                 ->with('error', 'Erro ao remover integração. Tente novamente.');
         }
     }

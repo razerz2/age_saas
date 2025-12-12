@@ -39,15 +39,15 @@ class DoctorSettingsController extends Controller
                 $doctor = $allowedDoctors->first();
             } else {
                 // Se tem mais de 1 médico, redireciona para as páginas separadas
-                return redirect()->route('tenant.calendars.index');
+                return redirect()->route('tenant.calendars.index', ['slug' => tenant()->subdomain]);
             }
         } else {
             // Admin ou outros casos não devem acessar esta página
-            return redirect()->route('tenant.calendars.index');
+            return redirect()->route('tenant.calendars.index', ['slug' => tenant()->subdomain]);
         }
         
         if (!$doctor) {
-            return redirect()->route('tenant.dashboard')
+            return redirect()->route('tenant.dashboard', ['slug' => tenant()->subdomain])
                 ->with('error', 'Nenhum médico encontrado.');
         }
         
@@ -111,7 +111,7 @@ class DoctorSettingsController extends Controller
             $message = 'Calendário criado com sucesso.';
         }
         
-        return redirect()->route('tenant.doctor-settings.index')
+        return redirect()->route('tenant.doctor-settings.index', ['slug' => tenant()->subdomain])
             ->with('success', $message);
     }
     
@@ -175,7 +175,7 @@ class DoctorSettingsController extends Controller
             ? "Horário de atendimento criado com sucesso para {$createdCount} dia(s)."
             : "Nenhum horário foi criado. Os horários selecionados já existem.";
         
-        return redirect()->route('tenant.doctor-settings.index')
+        return redirect()->route('tenant.doctor-settings.index', ['slug' => tenant()->subdomain])
             ->with('success', $message);
     }
     
@@ -210,7 +210,7 @@ class DoctorSettingsController extends Controller
         
         $businessHour->update($request->validated());
         
-        return redirect()->route('tenant.doctor-settings.index')
+        return redirect()->route('tenant.doctor-settings.index', ['slug' => $slug])
             ->with('success', 'Horário atualizado com sucesso.');
     }
     
@@ -243,7 +243,7 @@ class DoctorSettingsController extends Controller
         
         $businessHour->delete();
         
-        return redirect()->route('tenant.doctor-settings.index')
+        return redirect()->route('tenant.doctor-settings.index', ['slug' => $slug])
             ->with('success', 'Horário removido com sucesso.');
     }
     
@@ -280,7 +280,7 @@ class DoctorSettingsController extends Controller
         
         AppointmentType::create($data);
         
-        return redirect()->route('tenant.doctor-settings.index')
+        return redirect()->route('tenant.doctor-settings.index', ['slug' => tenant()->subdomain])
             ->with('success', 'Tipo de atendimento criado com sucesso.');
     }
     
@@ -313,7 +313,7 @@ class DoctorSettingsController extends Controller
         
         $appointmentType->update($request->validated());
         
-        return redirect()->route('tenant.doctor-settings.index')
+        return redirect()->route('tenant.doctor-settings.index', ['slug' => $slug])
             ->with('success', 'Tipo de atendimento atualizado com sucesso.');
     }
     
@@ -346,7 +346,7 @@ class DoctorSettingsController extends Controller
         
         $appointmentType->delete();
         
-        return redirect()->route('tenant.doctor-settings.index')
+        return redirect()->route('tenant.doctor-settings.index', ['slug' => $slug])
             ->with('success', 'Tipo de atendimento removido com sucesso.');
     }
 }

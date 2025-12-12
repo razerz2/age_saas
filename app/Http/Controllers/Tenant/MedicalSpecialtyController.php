@@ -29,7 +29,7 @@ class MedicalSpecialtyController extends Controller
             'code' => $request->validated()['code'] ?? null,
         ]);
 
-        return redirect()->route('tenant.specialties.index')
+        return redirect()->route('tenant.specialties.index', ['slug' => tenant()->subdomain])
             ->with('success', 'Especialidade cadastrada com sucesso.');
     }
 
@@ -50,7 +50,7 @@ class MedicalSpecialtyController extends Controller
         $specialty = MedicalSpecialty::findOrFail($id);
         $specialty->update($request->validated());
 
-        return redirect()->route('tenant.specialties.index')
+        return redirect()->route('tenant.specialties.index', ['slug' => $slug])
             ->with('success', 'Especialidade atualizada com sucesso.');
     }
 
@@ -59,7 +59,7 @@ class MedicalSpecialtyController extends Controller
         $specialty = MedicalSpecialty::findOrFail($id);
         $specialty->delete();
 
-        return redirect()->route('tenant.specialties.index')
+        return redirect()->route('tenant.specialties.index', ['slug' => $slug])
             ->with('success', 'Especialidade removida.');
     }
 }

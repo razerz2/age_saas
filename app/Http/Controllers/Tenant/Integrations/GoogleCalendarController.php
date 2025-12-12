@@ -41,7 +41,7 @@ class GoogleCalendarController extends Controller
                     'doctor_id' => $doctorId,
                 ]);
                 
-                return redirect()->route('tenant.integrations.google.index')
+                return redirect()->route('tenant.integrations.google.index', ['slug' => tenant()->subdomain])
                     ->with('error', 'Credenciais do Google não configuradas. Entre em contato com o administrador.');
             }
 
@@ -107,7 +107,7 @@ class GoogleCalendarController extends Controller
                 'trace' => $e->getTraceAsString(),
             ]);
 
-            return redirect()->route('tenant.integrations.google.index')
+            return redirect()->route('tenant.integrations.google.index', ['slug' => tenant()->subdomain])
                 ->with('error', 'Erro ao conectar com Google Calendar. Tente novamente.');
         }
     }
@@ -141,7 +141,7 @@ class GoogleCalendarController extends Controller
                     if ($tenant) {
                         $tenant->makeCurrent();
                     }
-                    return redirect()->route('tenant.integrations.google.index')
+                    return redirect()->route('tenant.integrations.google.index', ['slug' => $tenantSlug])
                         ->with('error', 'Erro ao autorizar acesso ao Google Calendar: ' . $error);
                 }
                 
@@ -207,7 +207,7 @@ class GoogleCalendarController extends Controller
                     'doctor_id' => $doctorId,
                 ]);
 
-                return redirect()->route('tenant.integrations.google.index')
+                return redirect()->route('tenant.integrations.google.index', ['slug' => $tenantSlug])
                     ->with('error', 'Erro ao obter token de acesso do Google.');
             }
 
@@ -235,7 +235,7 @@ class GoogleCalendarController extends Controller
             ]);
 
             // Redireciona para a página de integrações do tenant
-            return redirect()->route('tenant.integrations.google.index')
+            return redirect()->route('tenant.integrations.google.index', ['slug' => $tenantSlug])
                 ->with('success', 'Integração com Google Calendar realizada com sucesso!');
         } catch (\Exception $e) {
             Log::error('Erro no callback do Google Calendar', [
@@ -258,7 +258,7 @@ class GoogleCalendarController extends Controller
                 if ($tenant) {
                     $tenant->makeCurrent();
                 }
-                return redirect()->route('tenant.integrations.google.index')
+                return redirect()->route('tenant.integrations.google.index', ['slug' => $tenantSlug])
                     ->with('error', 'Erro ao processar autorização. Tente novamente.');
             }
 
@@ -285,11 +285,11 @@ class GoogleCalendarController extends Controller
                     'doctor_id' => $doctor->id,
                 ]);
 
-                return redirect()->route('tenant.integrations.google.index')
+                return redirect()->route('tenant.integrations.google.index', ['slug' => tenant()->subdomain])
                     ->with('success', 'Integração com Google Calendar removida com sucesso.');
             }
 
-            return redirect()->route('tenant.integrations.google.index')
+            return redirect()->route('tenant.integrations.google.index', ['slug' => tenant()->subdomain])
                 ->with('info', 'Nenhuma integração encontrada para este médico.');
         } catch (\Exception $e) {
             Log::error('Erro ao desconectar Google Calendar', [
@@ -297,7 +297,7 @@ class GoogleCalendarController extends Controller
                 'error' => $e->getMessage(),
             ]);
 
-            return redirect()->route('tenant.integrations.google.index')
+            return redirect()->route('tenant.integrations.google.index', ['slug' => tenant()->subdomain])
                 ->with('error', 'Erro ao remover integração. Tente novamente.');
         }
     }

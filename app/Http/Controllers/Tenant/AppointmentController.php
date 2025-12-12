@@ -215,7 +215,7 @@ class AppointmentController extends Controller
             ]);
         }
 
-        return redirect()->route('tenant.appointments.index')
+        return redirect()->route('tenant.appointments.index', ['slug' => tenant()->subdomain])
             ->with('success', 'Agendamento criado com sucesso.');
     }
 
@@ -321,7 +321,7 @@ class AppointmentController extends Controller
             ]);
         }
 
-        return redirect()->route('tenant.appointments.index')
+        return redirect()->route('tenant.appointments.index', ['slug' => $slug])
             ->with('success', 'Agendamento atualizado com sucesso.');
     }
 
@@ -358,7 +358,7 @@ class AppointmentController extends Controller
 
         $appointment->delete();
 
-        return redirect()->route('tenant.appointments.index')
+        return redirect()->route('tenant.appointments.index', ['slug' => $slug])
             ->with('success', 'Agendamento removido.');
     }
 

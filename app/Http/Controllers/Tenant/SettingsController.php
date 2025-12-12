@@ -147,7 +147,7 @@ class SettingsController extends Controller
         TenantSetting::set('time_format', $request->time_format);
         TenantSetting::set('language', $request->language);
 
-        return redirect()->route('tenant.settings.index')
+        return redirect()->route('tenant.settings.index', ['slug' => tenant()->subdomain])
             ->with('success', 'Configurações gerais atualizadas com sucesso.');
     }
 
@@ -185,7 +185,7 @@ class SettingsController extends Controller
         TenantSetting::set('appointments.reminder_hours', $request->appointments_reminder_hours ?? 24);
         TenantSetting::set('appointments.default_appointment_mode', $request->appointments_default_appointment_mode);
 
-        return redirect()->route('tenant.settings.index')
+        return redirect()->route('tenant.settings.index', ['slug' => tenant()->subdomain])
             ->with('success', 'Configurações de agendamentos atualizadas com sucesso.');
     }
 
@@ -203,7 +203,7 @@ class SettingsController extends Controller
 
         // Valida se o horário de término é depois do início
         if (strtotime($request->calendar_default_end_time) <= strtotime($request->calendar_default_start_time)) {
-            return redirect()->route('tenant.settings.index')
+            return redirect()->route('tenant.settings.index', ['slug' => tenant()->subdomain])
                 ->with('error', 'O horário de término deve ser posterior ao horário de início.');
         }
 
@@ -217,7 +217,7 @@ class SettingsController extends Controller
             TenantSetting::disable('calendar.show_weekends');
         }
 
-        return redirect()->route('tenant.settings.index')
+        return redirect()->route('tenant.settings.index', ['slug' => tenant()->subdomain])
             ->with('success', 'Configurações de calendário atualizadas com sucesso.');
     }
 
@@ -285,7 +285,7 @@ class SettingsController extends Controller
             TenantSetting::set('whatsapp.sender', '');
         }
 
-        return redirect()->route('tenant.settings.index')
+        return redirect()->route('tenant.settings.index', ['slug' => tenant()->subdomain])
             ->with('success', 'Configurações de notificações atualizadas com sucesso.');
     }
 
@@ -305,7 +305,7 @@ class SettingsController extends Controller
         if ($request->has('integrations_google_calendar_enabled')) {
             // Verificar se a integração está cadastrada e configurada
             if (!$googleCalendarIntegration || !$googleCalendarIntegration->is_enabled || empty($googleCalendarIntegration->config)) {
-                return redirect()->route('tenant.settings.index')
+                return redirect()->route('tenant.settings.index', ['slug' => tenant()->subdomain])
                     ->with('error', 'Não é possível habilitar o Google Calendar. Cadastre primeiro a integração em Integrações com a chave "google_calendar" e configure a API.');
             }
             
@@ -321,7 +321,7 @@ class SettingsController extends Controller
             TenantSetting::disable('integrations.google_calendar.auto_sync');
         }
 
-        return redirect()->route('tenant.settings.index')
+        return redirect()->route('tenant.settings.index', ['slug' => tenant()->subdomain])
             ->with('success', 'Configurações de integrações atualizadas com sucesso.');
     }
 
@@ -355,7 +355,7 @@ class SettingsController extends Controller
         }
         TenantSetting::set('user_defaults.modules_doctor', json_encode($doctorModules));
 
-        return redirect()->route('tenant.settings.index')
+        return redirect()->route('tenant.settings.index', ['slug' => tenant()->subdomain])
             ->with('success', 'Configurações de usuários e permissões atualizadas com sucesso.');
     }
 
@@ -389,7 +389,7 @@ class SettingsController extends Controller
             TenantSetting::set('professional.registration_label', '');
         }
 
-        return redirect()->route('tenant.settings.index')
+        return redirect()->route('tenant.settings.index', ['slug' => tenant()->subdomain])
             ->with('success', 'Configurações de profissionais atualizadas com sucesso.');
     }
 
@@ -462,7 +462,7 @@ class SettingsController extends Controller
         }
 
         // Redirecionar para a página de configurações mantendo o hash na URL
-        $redirectUrl = route('tenant.settings.index') . '#appearance';
+        $redirectUrl = route('tenant.settings.index', ['slug' => tenant()->subdomain]) . '#appearance';
         return redirect($redirectUrl)
             ->with('success', 'Configurações de aparência atualizadas com sucesso.');
     }

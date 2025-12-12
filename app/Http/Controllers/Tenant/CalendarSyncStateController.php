@@ -38,7 +38,7 @@ class CalendarSyncStateController extends Controller
 
         CalendarSyncState::create($data);
 
-        return redirect()->route('tenant.calendar-sync.index')
+        return redirect()->route('tenant.calendar-sync.index', ['slug' => tenant()->subdomain])
             ->with('success', 'Estado de sincronização criado com sucesso.');
     }
 
@@ -68,7 +68,7 @@ class CalendarSyncStateController extends Controller
         $calendarSyncState = CalendarSyncState::findOrFail($id);
         $calendarSyncState->update($request->validated());
 
-        return redirect()->route('tenant.calendar-sync.index')
+        return redirect()->route('tenant.calendar-sync.index', ['slug' => $slug])
             ->with('success', 'Estado de sincronização atualizado.');
     }
 
@@ -77,7 +77,7 @@ class CalendarSyncStateController extends Controller
         $calendarSyncState = CalendarSyncState::findOrFail($id);
         $calendarSyncState->delete();
 
-        return redirect()->route('tenant.calendar-sync.index')
+        return redirect()->route('tenant.calendar-sync.index', ['slug' => $slug])
             ->with('success', 'Estado de sincronização removido.');
     }
 }

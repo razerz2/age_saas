@@ -69,7 +69,7 @@ class FormController extends Controller
 
         Form::create($data);
 
-        return redirect()->route('tenant.forms.index')
+        return redirect()->route('tenant.forms.index', ['slug' => tenant()->subdomain])
             ->with('success', 'Formulário criado com sucesso.');
     }
 
@@ -140,7 +140,7 @@ class FormController extends Controller
         $formName = $form->name;
         $form->delete();
 
-        return redirect()->route('tenant.forms.index')
+        return redirect()->route('tenant.forms.index', ['slug' => $slug])
             ->with('success', "Formulário '{$formName}' removido com sucesso.");
     }
 
@@ -155,7 +155,7 @@ class FormController extends Controller
         // Deletar todas as seções (agora que não há mais perguntas relacionadas)
         $form->sections()->delete();
 
-        return redirect()->route('tenant.forms.index')
+        return redirect()->route('tenant.forms.index', ['slug' => $slug])
             ->with('success', "Conteúdo do formulário '{$form->name}' removido com sucesso. O formulário foi mantido.");
     }
 

@@ -94,7 +94,7 @@ class AppointmentTypeController extends Controller
 
         AppointmentType::create($data);
 
-        return redirect()->route('tenant.appointment-types.index')
+        return redirect()->route('tenant.appointment-types.index', ['slug' => tenant()->subdomain])
             ->with('success', 'Tipo de atendimento criado com sucesso.');
     }
 
@@ -141,7 +141,7 @@ class AppointmentTypeController extends Controller
         
         $appointmentType->update($request->validated());
 
-        return redirect()->route('tenant.appointment-types.index')
+        return redirect()->route('tenant.appointment-types.index', ['slug' => $slug])
             ->with('success', 'Tipo de atendimento atualizado com sucesso.');
     }
 
@@ -159,7 +159,7 @@ class AppointmentTypeController extends Controller
         
         $appointmentType->delete();
 
-        return redirect()->route('tenant.appointment-types.index')
+        return redirect()->route('tenant.appointment-types.index', ['slug' => $slug])
             ->with('success', 'Tipo removido.');
     }
 }

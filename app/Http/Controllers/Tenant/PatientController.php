@@ -55,7 +55,7 @@ class PatientController extends Controller
 
         Patient::create($data);
 
-        return redirect()->route('tenant.patients.index')
+        return redirect()->route('tenant.patients.index', ['slug' => tenant()->subdomain])
             ->with('success', 'Paciente cadastrado com sucesso.');
     }
 
@@ -77,7 +77,7 @@ class PatientController extends Controller
         $patient = Patient::findOrFail($id);
         $patient->update($request->validated());
 
-        return redirect()->route('tenant.patients.index')
+        return redirect()->route('tenant.patients.index', ['slug' => $slug])
             ->with('success', 'Paciente atualizado com sucesso.');
     }
 
@@ -86,7 +86,7 @@ class PatientController extends Controller
         $patient = Patient::findOrFail($id);
         $patient->delete();
 
-        return redirect()->route('tenant.patients.index')
+        return redirect()->route('tenant.patients.index', ['slug' => $slug])
             ->with('success', 'Paciente removido.');
     }
 
@@ -247,12 +247,12 @@ class PatientController extends Controller
 
         // Se é um novo login, redireciona para a página de show com a senha
         if ($isNewLogin && $plainPassword) {
-            return redirect()->route('tenant.patients.login.show', $patient->id)
+            return redirect()->route('tenant.patients.login.show', ['slug' => $slug, 'id' => $patient->id])
                 ->with('password', $plainPassword)
                 ->with('success', $message);
         }
 
-        return redirect()->route('tenant.patients.index')
+        return redirect()->route('tenant.patients.index', ['slug' => $slug])
             ->with('success', $message);
     }
 
@@ -264,7 +264,7 @@ class PatientController extends Controller
         $patient = Patient::with('login')->findOrFail($id);
 
         if (!$patient->login) {
-            return redirect()->route('tenant.patients.index')
+            return redirect()->route('tenant.patients.index', ['slug' => $slug])
                 ->withErrors(['error' => 'Paciente não possui login cadastrado.']);
         }
 
@@ -274,7 +274,7 @@ class PatientController extends Controller
 
         $status = $patient->login->is_active ? 'habilitado' : 'bloqueado';
 
-        return redirect()->route('tenant.patients.index')
+        return redirect()->route('tenant.patients.index', ['slug' => $slug])
             ->with('success', "Acesso do paciente {$status} com sucesso.");
     }
 
@@ -286,13 +286,13 @@ class PatientController extends Controller
         $patient = Patient::with('login')->findOrFail($id);
 
         if (!$patient->login) {
-            return redirect()->route('tenant.patients.index')
+            return redirect()->route('tenant.patients.index', ['slug' => $slug])
                 ->withErrors(['error' => 'Paciente não possui login cadastrado.']);
         }
 
         $patient->login->delete();
 
-        return redirect()->route('tenant.patients.index')
+        return redirect()->route('tenant.patients.index', ['slug' => $slug])
             ->with('success', 'Login removido com sucesso.');
     }
 
@@ -304,7 +304,7 @@ class PatientController extends Controller
         $patient = Patient::with('login')->findOrFail($id);
 
         if (!$patient->login) {
-            return redirect()->route('tenant.patients.login.form', $patient->id)
+            return redirect()->route('tenant.patients.login.form', ['slug' => $slug, 'id' => $patient->id])
                 ->withErrors(['error' => 'Paciente não possui login cadastrado.']);
         }
 

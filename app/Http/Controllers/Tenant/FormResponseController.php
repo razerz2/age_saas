@@ -75,7 +75,7 @@ class FormResponseController extends Controller
             }
         }
 
-        return redirect()->route('tenant.responses.index')
+        return redirect()->route('tenant.responses.index', ['slug' => $slug])
             ->with('success', 'Formulário respondido com sucesso.');
     }
 
@@ -134,7 +134,7 @@ class FormResponseController extends Controller
             }
         }
 
-        return redirect()->route('tenant.responses.show', $response->id)
+        return redirect()->route('tenant.responses.show', ['slug' => $slug, 'id' => $response->id])
             ->with('success', 'Resposta atualizada com sucesso.');
     }
 
@@ -148,7 +148,7 @@ class FormResponseController extends Controller
         $response->answers()->delete();
         $response->delete();
 
-        return redirect()->route('tenant.responses.index')
+        return redirect()->route('tenant.responses.index', ['slug' => $slug])
             ->with('success', 'Resposta removida.');
     }
 

@@ -101,7 +101,7 @@ class BusinessHourController extends Controller
             ? "Horário de atendimento criado com sucesso para {$createdCount} dia(s)."
             : "Nenhum horário foi criado. Os horários selecionados já existem.";
 
-        return redirect()->route('tenant.business-hours.index')
+        return redirect()->route('tenant.business-hours.index', ['slug' => tenant()->subdomain])
             ->with('success', $message);
     }
 
@@ -133,7 +133,7 @@ class BusinessHourController extends Controller
         $businessHour = BusinessHour::findOrFail($id);
         $businessHour->update($request->validated());
 
-        return redirect()->route('tenant.business-hours.index')
+        return redirect()->route('tenant.business-hours.index', ['slug' => $slug])
             ->with('success', 'Horário atualizado com sucesso.');
     }
 
@@ -142,7 +142,7 @@ class BusinessHourController extends Controller
         $businessHour = BusinessHour::findOrFail($id);
         $businessHour->delete();
 
-        return redirect()->route('tenant.business-hours.index')
+        return redirect()->route('tenant.business-hours.index', ['slug' => $slug])
             ->with('success', 'Horário removido.');
     }
 }
