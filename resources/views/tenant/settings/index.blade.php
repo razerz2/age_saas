@@ -21,46 +21,61 @@
             <div class="card-body p-0">
                 {{-- Navegação de Abas --}}
                 <ul class="nav nav-tabs" id="settingsTabs" role="tablist">
+                    {{-- 1. Configurações Básicas --}}
                     <li class="nav-item" role="presentation">
                         <a class="nav-link active" id="general-tab" data-bs-toggle="tab" href="#general" role="tab" aria-controls="general" aria-selected="true">
                             <i class="mdi mdi-cog-outline me-2"></i>Geral
                         </a>
                     </li>
+                    {{-- 2. Agendamentos --}}
                     <li class="nav-item" role="presentation">
                         <a class="nav-link" id="appointments-tab" data-bs-toggle="tab" href="#appointments" role="tab" aria-controls="appointments" aria-selected="false">
                             <i class="mdi mdi-calendar-clock me-2"></i>Agendamentos
                         </a>
                     </li>
+                    {{-- 3. Calendário --}}
                     <li class="nav-item" role="presentation">
                         <a class="nav-link" id="calendar-tab" data-bs-toggle="tab" href="#calendar" role="tab" aria-controls="calendar" aria-selected="false">
                             <i class="mdi mdi-calendar-range me-2"></i>Calendário
                         </a>
                     </li>
-                    <li class="nav-item" role="presentation">
-                        <a class="nav-link" id="notifications-tab" data-bs-toggle="tab" href="#notifications" role="tab" aria-controls="notifications" aria-selected="false">
-                            <i class="mdi mdi-bell-outline me-2"></i>Notificações
-                        </a>
-                    </li>
-                    <li class="nav-item" role="presentation">
-                        <a class="nav-link" id="integrations-tab" data-bs-toggle="tab" href="#integrations" role="tab" aria-controls="integrations" aria-selected="false">
-                            <i class="mdi mdi-link-variant me-2"></i>Integrações
-                        </a>
-                    </li>
-                    <li class="nav-item" role="presentation">
-                        <a class="nav-link" id="users-tab" data-bs-toggle="tab" href="#users" role="tab" aria-controls="users" aria-selected="false">
-                            <i class="mdi mdi-account-group me-2"></i>Usuários & Permissões
-                        </a>
-                    </li>
+                    {{-- 4. Profissionais --}}
                     <li class="nav-item" role="presentation">
                         <a class="nav-link" id="professionals-tab" data-bs-toggle="tab" href="#professionals" role="tab" aria-controls="professionals" aria-selected="false">
                             <i class="mdi mdi-stethoscope me-2"></i>Profissionais
                         </a>
                     </li>
+                    {{-- 5. Usuários & Permissões --}}
+                    <li class="nav-item" role="presentation">
+                        <a class="nav-link" id="users-tab" data-bs-toggle="tab" href="#users" role="tab" aria-controls="users" aria-selected="false">
+                            <i class="mdi mdi-account-group me-2"></i>Usuários & Permissões
+                        </a>
+                    </li>
+                    {{-- 6. Notificações --}}
+                    <li class="nav-item" role="presentation">
+                        <a class="nav-link" id="notifications-tab" data-bs-toggle="tab" href="#notifications" role="tab" aria-controls="notifications" aria-selected="false">
+                            <i class="mdi mdi-bell-outline me-2"></i>Notificações
+                        </a>
+                    </li>
+                    {{-- 7. Financeiro --}}
+                    <li class="nav-item" role="presentation">
+                        <a class="nav-link" id="finance-tab" data-bs-toggle="tab" href="#finance" role="tab" aria-controls="finance" aria-selected="false">
+                            <i class="mdi mdi-currency-usd me-2"></i>Financeiro
+                        </a>
+                    </li>
+                    {{-- 8. Integrações --}}
+                    <li class="nav-item" role="presentation">
+                        <a class="nav-link" id="integrations-tab" data-bs-toggle="tab" href="#integrations" role="tab" aria-controls="integrations" aria-selected="false">
+                            <i class="mdi mdi-link-variant me-2"></i>Integrações
+                        </a>
+                    </li>
+                    {{-- 9. Link de Agendamento --}}
                     <li class="nav-item" role="presentation">
                         <a class="nav-link" id="public-booking-tab" data-bs-toggle="tab" href="#public-booking" role="tab" aria-controls="public-booking" aria-selected="false">
                             <i class="mdi mdi-link-variant me-2"></i>Link de Agendamento
                         </a>
                     </li>
+                    {{-- 10. Aparência --}}
                     <li class="nav-item" role="presentation">
                         <a class="nav-link" id="appearance-tab" data-bs-toggle="tab" href="#appearance" role="tab" aria-controls="appearance" aria-selected="false">
                             <i class="mdi mdi-palette me-2"></i>Aparência
@@ -315,6 +330,204 @@
                         </form>
                     </div>
 
+                    {{-- Aba Profissionais --}}
+                    <div class="tab-pane fade" id="professionals" role="tabpanel">
+                        <form method="POST" action="{{ workspace_route('tenant.settings.update.professionals') }}">
+                            @csrf
+                            
+                            <h4 class="mb-4">Configurações de Profissionais</h4>
+                            <p class="text-muted mb-4">
+                                Configure os rótulos personalizados para profissionais (Médico, Profissional, Psicólogo, etc.).
+                            </p>
+
+                            <div class="row">
+                                <div class="col-md-12 mb-4">
+                                    <div class="card border shadow-sm">
+                                        <div class="card-header bg-light">
+                                            <h5 class="mb-0">
+                                                <i class="mdi mdi-cog-outline me-2"></i>Personalização de Rótulos
+                                            </h5>
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="form-check form-switch mb-3 p-3 rounded" style="border: 1px solid #e9ecef;">
+                                                <input class="form-check-input" type="checkbox" 
+                                                       id="professional_customization_enabled"
+                                                       name="professional_customization_enabled"
+                                                       value="1"
+                                                       {{ ($settings['professional.customization_enabled'] ?? false) ? 'checked' : '' }}>
+                                                <label class="form-check-label" for="professional_customization_enabled">
+                                                    <strong class="d-block mb-1">Habilitar personalização por profissão?</strong>
+                                                    <p class="text-muted mb-0" style="font-size: 0.875rem;">
+                                                        Quando desabilitado, o sistema sempre usa "Médico", "Médicos" e "CRM". 
+                                                        Quando habilitado, você pode personalizar os rótulos globalmente, por especialidade ou por profissional individual.
+                                                    </p>
+                                                </label>
+                                            </div>
+
+                                            <div id="professional_customization_fields" style="display: {{ ($settings['professional.customization_enabled'] ?? false) ? 'block' : 'none' }};">
+                                                <div class="alert alert-info d-flex align-items-start mb-4" role="alert">
+                                                    <i class="mdi mdi-information-outline me-3" style="font-size: 1.5rem; flex-shrink: 0;"></i>
+                                                    <div class="flex-grow-1">
+                                                        <strong class="d-block mb-2">Como funciona:</strong>
+                                                        <ul class="mb-0" style="font-size: 0.9rem;">
+                                                            <li><strong>Rótulos Globais:</strong> Aplicados quando não há personalização por especialidade ou profissional.</li>
+                                                            <li><strong>Rótulos por Especialidade:</strong> Configure em cada especialidade para sobrescrever os globais.</li>
+                                                            <li><strong>Rótulos Individuais:</strong> Configure em cada profissional para sobrescrever especialidade e globais.</li>
+                                                            <li><strong>Hierarquia:</strong> Profissional individual → Especialidade → Global → Padrão</li>
+                                                        </ul>
+                                                    </div>
+                                                </div>
+
+                                                <div class="row">
+                                                    <div class="col-md-4 mb-3">
+                                                        <label class="form-label">Rótulo Singular (Global)</label>
+                                                        <input type="text" class="form-control" 
+                                                               name="professional_label_singular" 
+                                                               value="{{ $settings['professional.label_singular'] ?? '' }}" 
+                                                               placeholder="Ex: Profissional, Psicólogo, Dentista"
+                                                               maxlength="50">
+                                                        <small class="text-muted">Exemplo: "Profissional" ou "Psicólogo"</small>
+                                                    </div>
+
+                                                    <div class="col-md-4 mb-3">
+                                                        <label class="form-label">Rótulo Plural (Global)</label>
+                                                        <input type="text" class="form-control" 
+                                                               name="professional_label_plural" 
+                                                               value="{{ $settings['professional.label_plural'] ?? '' }}" 
+                                                               placeholder="Ex: Profissionais, Psicólogos, Dentistas"
+                                                               maxlength="50">
+                                                        <small class="text-muted">Exemplo: "Profissionais" ou "Psicólogos"</small>
+                                                    </div>
+
+                                                    <div class="col-md-4 mb-3">
+                                                        <label class="form-label">Rótulo de Registro (Global)</label>
+                                                        <input type="text" class="form-control" 
+                                                               name="professional_registration_label" 
+                                                               value="{{ $settings['professional.registration_label'] ?? '' }}" 
+                                                               placeholder="Ex: CRM, CRP, CRO"
+                                                               maxlength="50">
+                                                        <small class="text-muted">Exemplo: "CRM", "CRP" ou "CRO"</small>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="mt-4">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="mdi mdi-content-save me-2"></i>Salvar Alterações
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
+                    {{-- Aba Usuários & Permissões --}}
+                    <div class="tab-pane fade" id="users" role="tabpanel">
+                        <form method="POST" action="{{ workspace_route('tenant.settings.update.user-defaults') }}">
+                            @csrf
+                            
+                            <h4 class="mb-4">Configurações de Usuários & Permissões</h4>
+                            <p class="text-muted mb-4">
+                                Defina quais módulos serão atribuídos automaticamente ao criar novos usuários por perfil.
+                            </p>
+
+                            <div class="row">
+                                {{-- Módulos padrão para Usuário Comum --}}
+                                <div class="col-md-6 mb-4">
+                                    <div class="card border shadow-sm">
+                                        <div class="card-header bg-light">
+                                            <h5 class="mb-0">
+                                                <i class="mdi mdi-account me-2"></i>Módulos Padrão – Usuário Comum
+                                            </h5>
+                                        </div>
+                                        <div class="card-body">
+                                            <p class="text-muted small mb-3">
+                                                Selecione os módulos que serão atribuídos automaticamente ao criar um novo usuário comum.
+                                            </p>
+                                            @php
+                                                $allModules = App\Models\Tenant\Module::all();
+                                                // Remover módulo "usuários" e "configurações" da lista de opções
+                                                $availableModules = collect($allModules)->reject(function($module) {
+                                                    return in_array($module['key'], ['users', 'settings']);
+                                                })->values()->all();
+                                                $commonUserModules = json_decode(App\Models\Tenant\TenantSetting::get('user_defaults.modules_common_user', '[]'), true) ?? [];
+                                            @endphp
+                                            <div class="border rounded p-3 bg-light" style="max-height: 400px; overflow-y: auto;">
+                                                @foreach($availableModules as $module)
+                                                    <div class="form-check">
+                                                        <input class="form-check-input" 
+                                                               type="checkbox"
+                                                               name="user_defaults[modules_common_user][]"
+                                                               value="{{ $module['key'] }}"
+                                                               id="module_common_{{ $module['key'] }}"
+                                                               {{ in_array($module['key'], $commonUserModules) ? 'checked' : '' }}>
+                                                        <label class="form-check-label" for="module_common_{{ $module['key'] }}">
+                                                            {{ $module['name'] }}
+                                                        </label>
+                                                    </div>
+                                                @endforeach
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {{-- Módulos padrão para Médico --}}
+                                <div class="col-md-6 mb-4">
+                                    <div class="card border shadow-sm">
+                                        <div class="card-header bg-light">
+                                            <h5 class="mb-0">
+                                                <i class="mdi mdi-doctor me-2"></i>Módulos Padrão – Médico
+                                            </h5>
+                                        </div>
+                                        <div class="card-body">
+                                            <p class="text-muted small mb-3">
+                                                Selecione os módulos que serão atribuídos automaticamente ao criar um novo usuário médico.
+                                            </p>
+                                            @php
+                                                $doctorModules = json_decode(App\Models\Tenant\TenantSetting::get('user_defaults.modules_doctor', '[]'), true) ?? [];
+                                            @endphp
+                                            <div class="border rounded p-3 bg-light" style="max-height: 400px; overflow-y: auto;">
+                                                @foreach($availableModules as $module)
+                                                    <div class="form-check">
+                                                        <input class="form-check-input" 
+                                                               type="checkbox"
+                                                               name="user_defaults[modules_doctor][]"
+                                                               value="{{ $module['key'] }}"
+                                                               id="module_doctor_{{ $module['key'] }}"
+                                                               {{ in_array($module['key'], $doctorModules) ? 'checked' : '' }}>
+                                                        <label class="form-check-label" for="module_doctor_{{ $module['key'] }}">
+                                                            {{ $module['name'] }}
+                                                        </label>
+                                                    </div>
+                                                @endforeach
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="alert alert-info d-flex align-items-start" role="alert">
+                                <i class="mdi mdi-information-outline me-3" style="font-size: 1.5rem; flex-shrink: 0;"></i>
+                                <div class="flex-grow-1">
+                                    <strong class="d-block mb-2">Como funciona:</strong>
+                                    <ul class="mb-0" style="font-size: 0.9rem;">
+                                        <li>Os módulos selecionados serão aplicados automaticamente ao criar novos usuários com o perfil correspondente.</li>
+                                        <li>Usuários <strong>Administradores</strong> não são afetados por essas configurações, pois possuem acesso total ao sistema.</li>
+                                        <li>As configurações não afetam usuários já existentes, apenas novos usuários criados após a configuração.</li>
+                                    </ul>
+                                </div>
+                            </div>
+
+                            <div class="mt-4">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="mdi mdi-content-save me-2"></i>Salvar Alterações
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
                     {{-- Aba Notificações --}}
                     <div class="tab-pane fade" id="notifications" role="tabpanel">
                         <form method="POST" action="{{ workspace_route('tenant.settings.update.notifications') }}">
@@ -509,6 +722,123 @@
                         </form>
                     </div>
 
+                    {{-- Aba Financeiro --}}
+                    <div class="tab-pane fade" id="finance" role="tabpanel">
+                        @php
+                            $financeEnabled = tenant_setting('finance.enabled') === 'true';
+                            $user = auth()->user();
+                            // Garantir que modules seja sempre um array
+                            $userModules = [];
+                            if ($user && $user->modules) {
+                                if (is_array($user->modules)) {
+                                    $userModules = $user->modules;
+                                } elseif (is_string($user->modules)) {
+                                    $decoded = json_decode($user->modules, true);
+                                    $userModules = is_array($decoded) ? $decoded : [];
+                                }
+                            }
+                            $hasFinanceModule = ($user && $user->role === 'admin') || in_array('finance', $userModules);
+                        @endphp
+
+                        @if(!$financeEnabled)
+                            <div class="alert alert-warning d-flex align-items-start mb-4" role="alert">
+                                <i class="mdi mdi-alert-circle-outline me-3" style="font-size: 1.5rem; flex-shrink: 0;"></i>
+                                <div class="flex-grow-1">
+                                    <strong class="d-block mb-2">Módulo Financeiro Desabilitado</strong>
+                                    <p class="mb-3" style="font-size: 0.9rem;">
+                                        O módulo financeiro não está habilitado para este tenant. Para habilitar e configurar, 
+                                        acesse a página de configurações completas.
+                                    </p>
+                                    <a href="{{ workspace_route('tenant.settings.finance.index') }}" class="btn btn-primary btn-sm">
+                                        <i class="mdi mdi-cog me-2"></i>Habilitar e Configurar
+                                    </a>
+                                </div>
+                            </div>
+                        @elseif(!$hasFinanceModule)
+                            <div class="alert alert-warning d-flex align-items-start mb-4" role="alert">
+                                <i class="mdi mdi-alert-circle-outline me-3" style="font-size: 1.5rem; flex-shrink: 0;"></i>
+                                <div class="flex-grow-1">
+                                    <strong class="d-block mb-2">Sem Acesso ao Módulo Financeiro</strong>
+                                    <p class="mb-0" style="font-size: 0.9rem;">
+                                        Você não possui permissão para acessar o módulo financeiro. Entre em contato com o administrador 
+                                        para solicitar acesso.
+                                    </p>
+                                </div>
+                            </div>
+                        @else
+                            <div class="d-flex justify-content-between align-items-center mb-4">
+                                <div>
+                                    <h4 class="mb-2">Configurações Financeiras</h4>
+                                    <p class="text-muted mb-0">
+                                        Configure o módulo financeiro, integração com Asaas e regras de cobrança.
+                                    </p>
+                                </div>
+                                <a href="{{ workspace_route('tenant.settings.finance.index') }}" class="btn btn-primary">
+                                    <i class="mdi mdi-cog me-2"></i>Configurações Completas
+                                </a>
+                            </div>
+
+                            <div class="alert alert-info d-flex align-items-start" role="alert">
+                                <i class="mdi mdi-information-outline me-3" style="font-size: 1.5rem; flex-shrink: 0;"></i>
+                                <div class="flex-grow-1">
+                                    <strong class="d-block mb-2">Módulo Financeiro Ativo</strong>
+                                    <p class="mb-0" style="font-size: 0.9rem;">
+                                        Clique em "Configurações Completas" para acessar todas as opções de configuração do módulo financeiro, 
+                                        incluindo integração com Asaas, regras de cobrança, comissões e muito mais.
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <div class="card border shadow-sm">
+                                        <div class="card-header bg-light">
+                                            <h5 class="mb-0">
+                                                <i class="mdi mdi-credit-card me-2"></i>Status do Módulo
+                                            </h5>
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="d-flex align-items-center justify-content-between">
+                                                <span>Módulo Financeiro</span>
+                                                <span class="badge bg-success">
+                                                    <i class="mdi mdi-check-circle me-1"></i>Habilitado
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-6 mb-3">
+                                    <div class="card border shadow-sm">
+                                        <div class="card-header bg-light">
+                                            <h5 class="mb-0">
+                                                <i class="mdi mdi-link-variant me-2"></i>Integração Asaas
+                                            </h5>
+                                        </div>
+                                        <div class="card-body">
+                                            @php
+                                                $asaasEnv = tenant_setting('finance.asaas.environment', 'sandbox');
+                                                $asaasKey = tenant_setting('finance.asaas.api_key', '');
+                                            @endphp
+                                            <div class="d-flex align-items-center justify-content-between mb-2">
+                                                <span>Ambiente</span>
+                                                <span class="badge {{ $asaasEnv === 'production' ? 'bg-success' : 'bg-warning text-dark' }}">
+                                                    {{ $asaasEnv === 'production' ? 'Produção' : 'Sandbox' }}
+                                                </span>
+                                            </div>
+                                            <div class="d-flex align-items-center justify-content-between">
+                                                <span>API Key</span>
+                                                <span class="badge {{ !empty($asaasKey) ? 'bg-success' : 'bg-danger' }}">
+                                                    {{ !empty($asaasKey) ? 'Configurada' : 'Não Configurada' }}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        @endif
+                    </div>
+
                     {{-- Aba Integrações --}}
                     <div class="tab-pane fade" id="integrations" role="tabpanel">
                         <form method="POST" action="{{ workspace_route('tenant.settings.update.integrations') }}">
@@ -621,204 +951,6 @@
                                                     </div>
                                                 </div>
                                             @endif
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="mt-4">
-                                <button type="submit" class="btn btn-primary">
-                                    <i class="mdi mdi-content-save me-2"></i>Salvar Alterações
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-
-                    {{-- Aba Usuários & Permissões --}}
-                    <div class="tab-pane fade" id="users" role="tabpanel">
-                        <form method="POST" action="{{ workspace_route('tenant.settings.update.user-defaults') }}">
-                            @csrf
-                            
-                            <h4 class="mb-4">Configurações de Usuários & Permissões</h4>
-                            <p class="text-muted mb-4">
-                                Defina quais módulos serão atribuídos automaticamente ao criar novos usuários por perfil.
-                            </p>
-
-                            <div class="row">
-                                {{-- Módulos padrão para Usuário Comum --}}
-                                <div class="col-md-6 mb-4">
-                                    <div class="card border shadow-sm">
-                                        <div class="card-header bg-light">
-                                            <h5 class="mb-0">
-                                                <i class="mdi mdi-account me-2"></i>Módulos Padrão – Usuário Comum
-                                            </h5>
-                                        </div>
-                                        <div class="card-body">
-                                            <p class="text-muted small mb-3">
-                                                Selecione os módulos que serão atribuídos automaticamente ao criar um novo usuário comum.
-                                            </p>
-                                            @php
-                                                $allModules = App\Models\Tenant\Module::all();
-                                                // Remover módulo "usuários" e "configurações" da lista de opções
-                                                $availableModules = collect($allModules)->reject(function($module) {
-                                                    return in_array($module['key'], ['users', 'settings']);
-                                                })->values()->all();
-                                                $commonUserModules = json_decode(App\Models\Tenant\TenantSetting::get('user_defaults.modules_common_user', '[]'), true) ?? [];
-                                            @endphp
-                                            <div class="border rounded p-3 bg-light" style="max-height: 400px; overflow-y: auto;">
-                                                @foreach($availableModules as $module)
-                                                    <div class="form-check">
-                                                        <input class="form-check-input" 
-                                                               type="checkbox"
-                                                               name="user_defaults[modules_common_user][]"
-                                                               value="{{ $module['key'] }}"
-                                                               id="module_common_{{ $module['key'] }}"
-                                                               {{ in_array($module['key'], $commonUserModules) ? 'checked' : '' }}>
-                                                        <label class="form-check-label" for="module_common_{{ $module['key'] }}">
-                                                            {{ $module['name'] }}
-                                                        </label>
-                                                    </div>
-                                                @endforeach
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {{-- Módulos padrão para Médico --}}
-                                <div class="col-md-6 mb-4">
-                                    <div class="card border shadow-sm">
-                                        <div class="card-header bg-light">
-                                            <h5 class="mb-0">
-                                                <i class="mdi mdi-doctor me-2"></i>Módulos Padrão – Médico
-                                            </h5>
-                                        </div>
-                                        <div class="card-body">
-                                            <p class="text-muted small mb-3">
-                                                Selecione os módulos que serão atribuídos automaticamente ao criar um novo usuário médico.
-                                            </p>
-                                            @php
-                                                $doctorModules = json_decode(App\Models\Tenant\TenantSetting::get('user_defaults.modules_doctor', '[]'), true) ?? [];
-                                            @endphp
-                                            <div class="border rounded p-3 bg-light" style="max-height: 400px; overflow-y: auto;">
-                                                @foreach($availableModules as $module)
-                                                    <div class="form-check">
-                                                        <input class="form-check-input" 
-                                                               type="checkbox"
-                                                               name="user_defaults[modules_doctor][]"
-                                                               value="{{ $module['key'] }}"
-                                                               id="module_doctor_{{ $module['key'] }}"
-                                                               {{ in_array($module['key'], $doctorModules) ? 'checked' : '' }}>
-                                                        <label class="form-check-label" for="module_doctor_{{ $module['key'] }}">
-                                                            {{ $module['name'] }}
-                                                        </label>
-                                                    </div>
-                                                @endforeach
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="alert alert-info d-flex align-items-start" role="alert">
-                                <i class="mdi mdi-information-outline me-3" style="font-size: 1.5rem; flex-shrink: 0;"></i>
-                                <div class="flex-grow-1">
-                                    <strong class="d-block mb-2">Como funciona:</strong>
-                                    <ul class="mb-0" style="font-size: 0.9rem;">
-                                        <li>Os módulos selecionados serão aplicados automaticamente ao criar novos usuários com o perfil correspondente.</li>
-                                        <li>Usuários <strong>Administradores</strong> não são afetados por essas configurações, pois possuem acesso total ao sistema.</li>
-                                        <li>As configurações não afetam usuários já existentes, apenas novos usuários criados após a configuração.</li>
-                                    </ul>
-                                </div>
-                            </div>
-
-                            <div class="mt-4">
-                                <button type="submit" class="btn btn-primary">
-                                    <i class="mdi mdi-content-save me-2"></i>Salvar Alterações
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-
-                    {{-- Aba Profissionais --}}
-                    <div class="tab-pane fade" id="professionals" role="tabpanel">
-                        <form method="POST" action="{{ workspace_route('tenant.settings.update.professionals') }}">
-                            @csrf
-                            
-                            <h4 class="mb-4">Configurações de Profissionais</h4>
-                            <p class="text-muted mb-4">
-                                Configure os rótulos personalizados para profissionais (Médico, Profissional, Psicólogo, etc.).
-                            </p>
-
-                            <div class="row">
-                                <div class="col-md-12 mb-4">
-                                    <div class="card border shadow-sm">
-                                        <div class="card-header bg-light">
-                                            <h5 class="mb-0">
-                                                <i class="mdi mdi-cog-outline me-2"></i>Personalização de Rótulos
-                                            </h5>
-                                        </div>
-                                        <div class="card-body">
-                                            <div class="form-check form-switch mb-3 p-3 rounded" style="border: 1px solid #e9ecef;">
-                                                <input class="form-check-input" type="checkbox" 
-                                                       id="professional_customization_enabled"
-                                                       name="professional_customization_enabled"
-                                                       value="1"
-                                                       {{ ($settings['professional.customization_enabled'] ?? false) ? 'checked' : '' }}>
-                                                <label class="form-check-label" for="professional_customization_enabled">
-                                                    <strong class="d-block mb-1">Habilitar personalização por profissão?</strong>
-                                                    <p class="text-muted mb-0" style="font-size: 0.875rem;">
-                                                        Quando desabilitado, o sistema sempre usa "Médico", "Médicos" e "CRM". 
-                                                        Quando habilitado, você pode personalizar os rótulos globalmente, por especialidade ou por profissional individual.
-                                                    </p>
-                                                </label>
-                                            </div>
-
-                                            <div id="professional_customization_fields" style="display: {{ ($settings['professional.customization_enabled'] ?? false) ? 'block' : 'none' }};">
-                                                <div class="alert alert-info d-flex align-items-start mb-4" role="alert">
-                                                    <i class="mdi mdi-information-outline me-3" style="font-size: 1.5rem; flex-shrink: 0;"></i>
-                                                    <div class="flex-grow-1">
-                                                        <strong class="d-block mb-2">Como funciona:</strong>
-                                                        <ul class="mb-0" style="font-size: 0.9rem;">
-                                                            <li><strong>Rótulos Globais:</strong> Aplicados quando não há personalização por especialidade ou profissional.</li>
-                                                            <li><strong>Rótulos por Especialidade:</strong> Configure em cada especialidade para sobrescrever os globais.</li>
-                                                            <li><strong>Rótulos Individuais:</strong> Configure em cada profissional para sobrescrever especialidade e globais.</li>
-                                                            <li><strong>Hierarquia:</strong> Profissional individual → Especialidade → Global → Padrão</li>
-                                                        </ul>
-                                                    </div>
-                                                </div>
-
-                                                <div class="row">
-                                                    <div class="col-md-4 mb-3">
-                                                        <label class="form-label">Rótulo Singular (Global)</label>
-                                                        <input type="text" class="form-control" 
-                                                               name="professional_label_singular" 
-                                                               value="{{ $settings['professional.label_singular'] ?? '' }}" 
-                                                               placeholder="Ex: Profissional, Psicólogo, Dentista"
-                                                               maxlength="50">
-                                                        <small class="text-muted">Exemplo: "Profissional" ou "Psicólogo"</small>
-                                                    </div>
-
-                                                    <div class="col-md-4 mb-3">
-                                                        <label class="form-label">Rótulo Plural (Global)</label>
-                                                        <input type="text" class="form-control" 
-                                                               name="professional_label_plural" 
-                                                               value="{{ $settings['professional.label_plural'] ?? '' }}" 
-                                                               placeholder="Ex: Profissionais, Psicólogos, Dentistas"
-                                                               maxlength="50">
-                                                        <small class="text-muted">Exemplo: "Profissionais" ou "Psicólogos"</small>
-                                                    </div>
-
-                                                    <div class="col-md-4 mb-3">
-                                                        <label class="form-label">Rótulo de Registro (Global)</label>
-                                                        <input type="text" class="form-control" 
-                                                               name="professional_registration_label" 
-                                                               value="{{ $settings['professional.registration_label'] ?? '' }}" 
-                                                               placeholder="Ex: CRM, CRP, CRO"
-                                                               maxlength="50">
-                                                        <small class="text-muted">Exemplo: "CRM", "CRP" ou "CRO"</small>
-                                                    </div>
-                                                </div>
-                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -988,12 +1120,12 @@
                             </p>
 
                             <div class="row">
-                                {{-- Logo do Menu --}}
-                                <div class="col-md-6 mb-4">
+                                {{-- Logo do Menu (Normal) --}}
+                                <div class="col-md-4 mb-4">
                                     <div class="card border shadow-sm">
                                         <div class="card-header bg-light">
                                             <h5 class="mb-0">
-                                                <i class="mdi mdi-image me-2"></i>Logo do Menu
+                                                <i class="mdi mdi-image me-2"></i>Logo Normal
                                             </h5>
                                         </div>
                                         <div class="card-body">
@@ -1023,7 +1155,7 @@
                                             @if($currentLogo)
                                                 <div class="mb-3">
                                                     <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeImage('logo')">
-                                                        <i class="mdi mdi-delete me-2"></i>Remover Logo Personalizado
+                                                        <i class="mdi mdi-delete me-2"></i>Remover Logo
                                                     </button>
                                                     <input type="hidden" name="remove_logo" id="remove-logo" value="0">
                                                 </div>
@@ -1032,8 +1164,52 @@
                                     </div>
                                 </div>
 
+                                {{-- Logo Retrátil (Mini) --}}
+                                <div class="col-md-4 mb-4">
+                                    <div class="card border shadow-sm">
+                                        <div class="card-header bg-light">
+                                            <h5 class="mb-0">
+                                                <i class="mdi mdi-image-outline me-2"></i>Logo Retrátil
+                                            </h5>
+                                        </div>
+                                        <div class="card-body">
+                                            @php
+                                                $currentLogoMini = \App\Models\Tenant\TenantSetting::get('appearance.logo_mini');
+                                                $logoMiniUrl = $currentLogoMini ? asset('storage/' . $currentLogoMini) : ($currentLogo ? asset('storage/' . $currentLogo) : asset('connect_plus/assets/images/logos/AllSync-Logo-A.png'));
+                                            @endphp
+                                            
+                                            <div class="mb-3">
+                                                <label class="form-label">Logo Atual</label>
+                                                <div class="border rounded p-3 bg-light text-center">
+                                                    <img src="{{ $logoMiniUrl }}" alt="Logo Retrátil" id="logo-mini-preview" 
+                                                         style="max-width: 100%; max-height: 150px; object-fit: contain;">
+                                                </div>
+                                            </div>
+
+                                            <div class="mb-3">
+                                                <label class="form-label">Selecionar Nova Imagem</label>
+                                                <input type="file" class="form-control" name="logo_mini" id="logo-mini-input" 
+                                                       accept="image/png,image/jpeg,image/jpg,image/gif,image/svg+xml"
+                                                       onchange="previewImage(this, 'logo-mini-preview')">
+                                                <small class="text-muted">
+                                                    Formatos aceitos: PNG, JPG, GIF, SVG. Tamanho recomendado: 60x60px (quadrado)
+                                                </small>
+                                            </div>
+
+                                            @if($currentLogoMini)
+                                                <div class="mb-3">
+                                                    <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeImage('logo_mini')">
+                                                        <i class="mdi mdi-delete me-2"></i>Remover Logo Retrátil
+                                                    </button>
+                                                    <input type="hidden" name="remove_logo_mini" id="remove-logo-mini" value="0">
+                                                </div>
+                                            @endif
+                                        </div>
+                                    </div>
+                                </div>
+
                                 {{-- Favicon --}}
-                                <div class="col-md-6 mb-4">
+                                <div class="col-md-4 mb-4">
                                     <div class="card border shadow-sm">
                                         <div class="card-header bg-light">
                                             <h5 class="mb-0">
@@ -1323,6 +1499,14 @@
             if (preview) {
                 if (type === 'logo') {
                     preview.src = '{{ asset("connect_plus/assets/images/logos/AllSync-Logo-A.png") }}';
+                } else if (type === 'logo_mini') {
+                    // Se houver logo normal, usar ele, senão usar padrão
+                    const logoPreview = document.getElementById('logo-preview');
+                    if (logoPreview && logoPreview.src) {
+                        preview.src = logoPreview.src;
+                    } else {
+                        preview.src = '{{ asset("connect_plus/assets/images/logos/AllSync-Logo-A.png") }}';
+                    }
                 } else if (type === 'favicon') {
                     preview.src = '{{ asset("connect_plus/assets/images/favicon.png") }}';
                 }

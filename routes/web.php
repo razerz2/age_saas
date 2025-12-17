@@ -60,6 +60,30 @@ Route::post('/webhook/asaas', [AsaasWebhookController::class, 'handle'])->middle
 Route::post('/webhook/asaas/pre-registration', [\App\Http\Controllers\Webhook\PreRegistrationWebhookController::class, 'handle'])
     ->middleware('verify.asaas.token');
 
+// Webhook do módulo financeiro (por tenant)
+Route::prefix('t/{slug}')->middleware(['tenant-web'])->group(function () {
+    Route::post('/webhooks/asaas', [\App\Http\Controllers\Tenant\AsaasWebhookController::class, 'handle'])
+        ->middleware([
+            'throttle.asaas.webhook',
+            'verify.asaas.webhook.secret',
+            'verify.asaas.webhook.ip',
+        ])
+        ->name('tenant.webhooks.asaas');
+    
+    // Páginas públicas de pagamento
+    Route::get('/pagamento/{charge}', [\App\Http\Controllers\Tenant\PaymentController::class, 'show'])
+        ->where('charge', '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}')
+        ->name('tenant.payment.show');
+    
+    Route::get('/pagamento/{charge}/sucesso', [\App\Http\Controllers\Tenant\PaymentController::class, 'success'])
+        ->where('charge', '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}')
+        ->name('tenant.payment.success');
+    
+    Route::get('/pagamento/{charge}/erro', [\App\Http\Controllers\Tenant\PaymentController::class, 'error'])
+        ->where('charge', '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}')
+        ->name('tenant.payment.error');
+});
+
 // Callback global do Google Calendar (não fica no grupo /t/{tenant})
 Route::get('/google/callback', [GoogleCalendarController::class, 'callback'])->name('google.callback');
 
@@ -96,6 +120,7 @@ Route::middleware(['auth'])->prefix('Platform')->name('Platform.')->group(functi
     Route::middleware('module.access:tenants')->group(function () {
         Route::resource('tenants', TenantController::class);
         Route::post('/tenants/{tenant}/sync', [TenantController::class, 'syncWithAsaas'])->name('tenants.sync');
+        Route::post('/tenants/{tenant}/send-credentials', [TenantController::class, 'sendCredentials'])->name('tenants.send-credentials');
         
         // Tokens de API para bots
         Route::middleware('module.access:api_tokens')->group(function () {
@@ -131,6 +156,12 @@ Route::middleware(['auth'])->prefix('Platform')->name('Platform.')->group(functi
             ->name('subscriptions.renew');
         Route::get('tenants/{tenant}/subscriptions', [SubscriptionController::class, 'getByTenant'])->name('subscriptions.getByTenant');
         Route::post('/subscriptions/{subscription}/sync', [SubscriptionController::class, 'syncWithAsaas'])->name('subscriptions.sync');
+        
+        // Solicitações de Mudança de Plano
+        Route::get('plan-change-requests', [\App\Http\Controllers\Platform\PlanChangeRequestController::class, 'index'])->name('plan-change-requests.index');
+        Route::get('plan-change-requests/{planChangeRequest}', [\App\Http\Controllers\Platform\PlanChangeRequestController::class, 'show'])->name('plan-change-requests.show');
+        Route::post('plan-change-requests/{planChangeRequest}/approve', [\App\Http\Controllers\Platform\PlanChangeRequestController::class, 'approve'])->name('plan-change-requests.approve');
+        Route::post('plan-change-requests/{planChangeRequest}/reject', [\App\Http\Controllers\Platform\PlanChangeRequestController::class, 'reject'])->name('plan-change-requests.reject');
     });
 
     // 🔸 Módulo: Faturas
@@ -215,6 +246,14 @@ Route::middleware(['auth'])->prefix('Platform')->name('Platform.')->group(functi
         Route::get('settings/', [SystemSettingsController::class, 'index'])->name('settings.index');
         Route::post('settings/update/general', [SystemSettingsController::class, 'updateGeneral'])->name('settings.update.general');
         Route::post('settings/update/integrations', [SystemSettingsController::class, 'updateIntegrations'])->name('settings.update.integrations');
+        Route::post('settings/update/logos', [SystemSettingsController::class, 'updateLogos'])->name('settings.update.logos');
+        Route::post('settings/update/billing', [SystemSettingsController::class, 'updateBilling'])->name('settings.update.billing');
+        Route::post('settings/update/notifications', [SystemSettingsController::class, 'updateNotifications'])->name('settings.update.notifications');
+        Route::post('settings/update/commands', [SystemSettingsController::class, 'updateScheduledCommands'])->name('settings.update.commands');
+        Route::post('settings/commands/add', [SystemSettingsController::class, 'addScheduledCommand'])->name('settings.commands.add');
+        Route::delete('settings/commands/{commandKey}', [SystemSettingsController::class, 'removeScheduledCommand'])->name('settings.commands.remove');
+        Route::post('settings/commands/remove-duplicates', [SystemSettingsController::class, 'removeDuplicateCommands'])->name('settings.commands.remove-duplicates');
+        Route::get('settings/commands/available', [SystemSettingsController::class, 'getAvailableCommands'])->name('settings.commands.available');
         // Service pode ser uma string, então não precisa restrição numérica
         Route::get('settings/test/{service}', [SystemSettingsController::class, 'testConnection'])->name('settings.test');
     });
@@ -233,7 +272,8 @@ Route::middleware(['auth'])->prefix('Platform')->name('Platform.')->group(functi
     Route::post('whatsapp/invoice/{invoice}', [WhatsAppController::class, 'sendInvoiceNotification'])->name('whatsapp.invoice');
 
     Route::get('system_notifications/json', function () {
-        $notifications = SystemNotification::latest('created_at')->take(5)->get();
+        $displayCount = sysconfig('notifications.display_count', 5);
+        $notifications = SystemNotification::latest('created_at')->take($displayCount)->get();
         $unreadCount = SystemNotification::where('status', 'new')->count();
 
         return response()->json([

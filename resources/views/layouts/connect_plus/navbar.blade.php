@@ -1,6 +1,24 @@
 @php
     $customLogo = \App\Models\Tenant\TenantSetting::get('appearance.logo');
-    $logoUrl = $customLogo ? asset('storage/' . $customLogo) : asset('connect_plus/assets/images/logos/AllSync-Logo-A.png');
+    $customLogoMini = \App\Models\Tenant\TenantSetting::get('appearance.logo_mini');
+    
+    // Logo padrão do sistema
+    $systemDefaultLogo = sysconfig('system.default_logo');
+    $systemDefaultLogoUrl = $systemDefaultLogo ? asset('storage/' . $systemDefaultLogo) : asset('connect_plus/assets/images/logos/AllSync-Logo-A.png');
+    
+    // Logo padrão configurada na plataforma para tenants
+    $defaultLogo = sysconfig('tenant.default_logo');
+    $defaultLogoUrl = $defaultLogo ? asset('storage/' . $defaultLogo) : $systemDefaultLogoUrl;
+    
+    // Logo retrátil padrão configurada na plataforma
+    $defaultLogoMini = sysconfig('tenant.default_logo_mini');
+    $defaultLogoMiniUrl = $defaultLogoMini ? asset('storage/' . $defaultLogoMini) : ($defaultLogo ? asset('storage/' . $defaultLogo) : $systemDefaultLogoUrl);
+    
+    // Logo do tenant: usa logo própria se existir, senão usa padrão da plataforma, senão usa padrão do sistema
+    $logoUrl = $customLogo ? asset('storage/' . $customLogo) : $defaultLogoUrl;
+    
+    // Logo retrátil: usa logo_mini própria se existir, senão usa logo própria, senão usa padrão da plataforma, senão usa padrão do sistema
+    $logoMiniUrl = $customLogoMini ? asset('storage/' . $customLogoMini) : ($customLogo ? asset('storage/' . $customLogo) : $defaultLogoMiniUrl);
 @endphp
 <nav class="navbar default-layout-navbar col-lg-12 col-12 p-0 fixed-top d-flex flex-row">
     <div class="text-center navbar-brand-wrapper d-flex align-items-center justify-content-center">
@@ -8,7 +26,7 @@
             <img src="{{ $logoUrl }}" alt="logo">
         </a>
         <a class="navbar-brand brand-logo-mini" href="{{ workspace_route('tenant.dashboard') }}">
-            <img src="{{ $logoUrl }}" alt="logo">
+            <img src="{{ $logoMiniUrl }}" alt="logo">
         </a>
     </div>
 

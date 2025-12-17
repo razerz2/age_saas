@@ -98,7 +98,7 @@
                                                     </a>
                                                     <form action="{{ route('Platform.tenants.api-tokens.destroy', [$tenant, $token]) }}" 
                                                           method="POST" class="d-inline"
-                                                          onsubmit="return confirm('Tem certeza que deseja excluir este token? Esta ação não pode ser desfeita.')">
+                                                          onsubmit="return confirmSubmit(event, 'Tem certeza que deseja excluir este token? Esta ação não pode ser desfeita.', 'Confirmar Exclusão')">
                                                         @csrf
                                                         @method('DELETE')
                                                         <button type="submit" class="btn btn-sm btn-danger" title="Excluir">

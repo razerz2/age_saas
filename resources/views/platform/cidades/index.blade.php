@@ -196,7 +196,7 @@
                     data-estado="${row.estado_id}">
                 <i class="fas fa-edit"></i>
             </button>
-            <form action="/Platform/cidades/${row.id_cidade}" method="POST" class="d-inline" onsubmit="return confirm('Excluir cidade?')">
+            <form action="/Platform/cidades/${row.id_cidade}" method="POST" class="d-inline" onsubmit="event.preventDefault(); showConfirm('Deseja realmente excluir esta cidade? Esta ação não pode ser desfeita.', 'Confirmar Exclusão').then(confirmed => { if(confirmed) event.target.submit(); }); return false;">
                 @csrf
                 @method('DELETE')
                 <button title="Exclusão" class="btn btn-sm btn-outline-danger">

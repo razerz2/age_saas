@@ -10,6 +10,7 @@ class Plan extends Model
 {
     use HasFactory, HasUuids;
 
+    protected $connection = 'pgsql';
     protected $table = 'plans';
     protected $keyType = 'string';
     public $incrementing = false;

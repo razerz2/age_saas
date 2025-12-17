@@ -9,6 +9,17 @@
     
     <meta name="description" content="@yield('description', 'Sistema completo de agendamentos para clínicas, psicólogos, odontologias e profissionais de saúde.')">
     
+    <!-- Favicon -->
+    @php
+        $landingFavicon = sysconfig('landing.favicon');
+        $systemDefaultFavicon = sysconfig('system.default_favicon');
+        $systemDefaultFaviconUrl = $systemDefaultFavicon ? asset('storage/' . $systemDefaultFavicon) : asset('connect_plus/assets/images/favicon.png');
+        $landingFaviconUrl = $landingFavicon ? asset('storage/' . $landingFavicon) : $systemDefaultFaviconUrl;
+    @endphp
+    <link rel="shortcut icon" href="{{ $landingFaviconUrl }}">
+    <link rel="icon" type="image/png" sizes="16x16" href="{{ $landingFaviconUrl }}">
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ $landingFaviconUrl }}">
+    
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=figtree:400,500,600,700&display=swap" rel="stylesheet" />
@@ -23,8 +34,14 @@
             <div class="flex justify-between items-center h-16">
                 <!-- Logo -->
                 <div class="flex-shrink-0">
+                    @php
+                        $landingLogo = sysconfig('landing.logo');
+                        $systemDefaultLogo = sysconfig('system.default_logo');
+                        $systemDefaultLogoUrl = $systemDefaultLogo ? asset('storage/' . $systemDefaultLogo) : asset('connect_plus/assets/images/logos/landing-page/AllSync-Logo-LP.png');
+                        $landingLogoUrl = $landingLogo ? asset('storage/' . $landingLogo) : $systemDefaultLogoUrl;
+                    @endphp
                     <a href="{{ route('landing.home') }}" class="flex items-center">
-                        <img src="{{ asset('connect_plus/assets/images/logos/landing-page/AllSync-Logo-LP.png') }}" alt="AllSync Logo" class="h-10 object-contain" style="border: none; outline: none; box-shadow: none; background: transparent;">
+                        <img src="{{ $landingLogoUrl }}" alt="Logo" class="h-10 object-contain" style="border: none; outline: none; box-shadow: none; background: transparent;">
                     </a>
                 </div>
                 

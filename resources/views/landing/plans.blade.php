@@ -343,6 +343,21 @@
                 <div id="formError" class="hidden mb-4 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700"></div>
                 <div id="formSuccess" class="hidden mb-4 p-4 bg-green-50 border border-green-200 rounded-lg text-green-700"></div>
                 
+                <div class="mb-4">
+                    <label class="flex items-start">
+                        <input type="checkbox" name="accept_terms" required 
+                            class="mt-1 mr-2 w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
+                        <span class="text-sm text-gray-700">
+                            Eu aceito os 
+                            <a href="https://www.allsync.com.br/termos-de-servico" target="_blank" 
+                                class="text-blue-600 hover:text-blue-700 underline">Termos de Uso</a> 
+                            e a 
+                            <a href="https://www.allsync.com.br/politica-de-privacidade" target="_blank" 
+                                class="text-blue-600 hover:text-blue-700 underline">Política de Privacidade</a>
+                        </span>
+                    </label>
+                </div>
+                
                 <div class="flex justify-end gap-4">
                     <button type="button" onclick="closePreRegisterModal()" 
                         class="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors">
@@ -534,11 +549,20 @@
         e.preventDefault();
         
         const planId = document.getElementById('selected_plan_id').value;
+        const acceptTerms = document.querySelector('input[name="accept_terms"]').checked;
         
         // Validar se há plan_id antes de enviar
         if (!planId) {
             const errorDiv = document.getElementById('formError');
             errorDiv.textContent = 'Por favor, selecione um plano cadastrado. Entre em contato com nossa equipe comercial para mais informações.';
+            errorDiv.classList.remove('hidden');
+            return;
+        }
+        
+        // Validar aceite dos termos
+        if (!acceptTerms) {
+            const errorDiv = document.getElementById('formError');
+            errorDiv.textContent = 'Você deve aceitar os Termos de Uso e a Política de Privacidade para continuar.';
             errorDiv.classList.remove('hidden');
             return;
         }

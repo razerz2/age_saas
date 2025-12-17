@@ -228,19 +228,19 @@
                             <div class="d-flex gap-2 flex-wrap">
                                 @if (!$preTenant->isPaid() && $preTenant->status !== 'canceled')
                                     <form action="{{ route('Platform.pre_tenants.confirm_payment', $preTenant->id) }}" method="POST"
-                                        class="d-inline">
+                                        class="d-inline"
+                                        onsubmit="return confirmSubmit(event, 'Deseja realmente confirmar o pagamento deste pré-cadastro? Esta ação irá criar o banco de dados da tenant, criar a assinatura vinculando o tenant ao plano escolhido, seguindo a mesma rotina do webhook do Asaas.', 'Confirmar Pagamento')">
                                         @csrf
-                                        <button type="submit" class="btn btn-primary"
-                                            onclick="return confirm('Deseja realmente confirmar o pagamento deste pré-cadastro? Esta ação irá criar o banco de dados da tenant, criar a assinatura vinculando o tenant ao plano escolhido, seguindo a mesma rotina do webhook do Asaas.')">
+                                        <button type="submit" class="btn btn-primary">
                                             <i class="fas fa-credit-card me-1"></i> Confirmar Pagamento
                                         </button>
                                     </form>
 
                                     <form action="{{ route('Platform.pre_tenants.approve', $preTenant->id) }}" method="POST"
-                                        class="d-inline">
+                                        class="d-inline"
+                                        onsubmit="return confirmSubmit(event, 'Deseja realmente aprovar este pré-cadastro e criar o tenant?', 'Aprovar e Criar Tenant')">
                                         @csrf
-                                        <button type="submit" class="btn btn-success"
-                                            onclick="return confirm('Deseja realmente aprovar este pré-cadastro e criar o tenant?')">
+                                        <button type="submit" class="btn btn-success">
                                             <i class="fas fa-check me-1"></i> Aprovar e Criar Tenant
                                         </button>
                                     </form>
@@ -248,10 +248,10 @@
 
                                 @if ($preTenant->status !== 'canceled')
                                     <form action="{{ route('Platform.pre_tenants.cancel', $preTenant->id) }}" method="POST"
-                                        class="d-inline">
+                                        class="d-inline"
+                                        onsubmit="return confirmSubmit(event, 'Deseja realmente cancelar este pré-cadastro?', 'Cancelar Pré-cadastro')">
                                         @csrf
-                                        <button type="submit" class="btn btn-warning"
-                                            onclick="return confirm('Deseja realmente cancelar este pré-cadastro?')">
+                                        <button type="submit" class="btn btn-warning">
                                             <i class="fas fa-times me-1"></i> Cancelar
                                         </button>
                                     </form>
@@ -259,11 +259,11 @@
 
                                 @if ($preTenant->canBeDeleted())
                                     <form action="{{ route('Platform.pre_tenants.destroy', $preTenant->id) }}" method="POST"
-                                        class="d-inline">
+                                        class="d-inline"
+                                        onsubmit="return confirmSubmit(event, 'Tem certeza que deseja excluir este pré-cadastro? Esta ação não pode ser desfeita.', 'Confirmar Exclusão')">
                                         @csrf
                                         @method('DELETE')
-                                        <button type="submit" class="btn btn-danger"
-                                            onclick="return confirm('Tem certeza que deseja excluir este pré-cadastro? Esta ação não pode ser desfeita.')">
+                                        <button type="submit" class="btn btn-danger">
                                             <i class="fas fa-trash me-1"></i> Excluir
                                         </button>
                                     </form>

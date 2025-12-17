@@ -113,6 +113,28 @@
                 <i class="mdi mdi-chevron-right text-muted"></i>
             </a>
 
+            @if($userRole === 'admin')
+                <a class="dropdown-item d-flex align-items-center py-3 px-3 rounded-2 mb-1" 
+                   href="{{ workspace_route('tenant.subscription.show') }}" 
+                   style="transition: all 0.2s ease; border-left: 3px solid transparent;"
+                   onmouseover="this.style.backgroundColor='#f8f9fa'; this.style.borderLeftColor='#28a745';"
+                   onmouseout="this.style.backgroundColor='transparent'; this.style.borderLeftColor='transparent';">
+                    <div class="d-flex align-items-center justify-content-center me-3" 
+                         style="width: 36px; height: 36px; background: #28a745; border-radius: 8px;">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: white;">
+                            <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
+                            <line x1="1" y1="10" x2="23" y2="10"></line>
+                            <path d="M7 14h.01M11 14h.01M15 14h.01"></path>
+                        </svg>
+                    </div>
+                    <div class="flex-grow-1">
+                        <span class="fw-semibold d-block" style="font-size: 0.9rem; color: #212529;">Minha Assinatura</span>
+                        <span class="text-muted" style="font-size: 0.75rem;">Detalhes, faturas e funcionalidades</span>
+                    </div>
+                    <i class="mdi mdi-chevron-right text-muted"></i>
+                </a>
+            @endif
+
             @if($hasSettingsAccess)
                 <a class="dropdown-item d-flex align-items-center py-3 px-3 rounded-2 mb-1" 
                    href="{{ workspace_route('tenant.settings.index') }}" 

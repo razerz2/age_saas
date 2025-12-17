@@ -8,7 +8,11 @@
     <meta name="description" content="">
     <meta name="author" content="">
     <!-- Favicon icon -->
-    <link rel="icon" type="image/png" sizes="16x16" href="{{ asset('freedash/assets/images/favicon.png') }}">
+    @php
+        $platformFavicon = sysconfig('platform.favicon');
+        $faviconUrl = $platformFavicon ? asset('storage/' . $platformFavicon) : asset('freedash/assets/images/favicon.png');
+    @endphp
+    <link rel="icon" type="image/png" sizes="16x16" href="{{ $faviconUrl }}">
     <title>AgeClin - Sistema de Agendamento para Clínicas </title>
     <!-- Custom CSS -->
     <link href="{{ asset('freedash/assets/extra-libs/c3/c3.min.css') }}" rel="stylesheet">
@@ -58,9 +62,23 @@
                     <!-- ============================================================== -->
                     <div class="navbar-brand">
                         <!-- Logo icon -->
+                        @php
+                            $platformLogo = sysconfig('platform.logo');
+                            if ($platformLogo) {
+                                // Verifica se o arquivo existe no storage
+                                $logoPath = storage_path('app/public/' . $platformLogo);
+                                if (file_exists($logoPath)) {
+                                    // Adiciona timestamp para evitar cache do navegador
+                                    $logoUrl = asset('storage/' . $platformLogo) . '?v=' . filemtime($logoPath);
+                                } else {
+                                    $logoUrl = asset('freedash/assets/images/freedashDark.svg');
+                                }
+                            } else {
+                                $logoUrl = asset('freedash/assets/images/freedashDark.svg');
+                            }
+                        @endphp
                         <a href="{{ route('Platform.dashboard') }}">
-                            <img src="{{ asset('freedash/assets/images/freedashDark.svg') }}" alt=""
-                                class="img-fluid">
+                            <img src="{{ $logoUrl }}" alt="Logo" class="img-fluid">
                         </a>
                     </div>
                     <!-- ============================================================== -->
@@ -169,6 +187,9 @@
     <script src="{{ asset('freedash/assets/extra-libs/datatables.net/js/jquery.dataTables.min.js') }}"></script>
     <script src="{{ asset('freedash/assets/extra-libs/datatables.net-bs4/js/dataTables.responsive.min.js') }}"></script>
     <script src="{{ asset('freedash/dist/js/pages/datatable/datatable-basic.init.js') }}"></script>
+
+    {{-- Helper para dialogs (substitui alert() e confirm()) --}}
+    <script src="{{ asset('freedash/assets/js/platform-dialogs.js') }}"></script>
 
     {{-- Núcleo do DataTables --}}
     <script src="{{ asset('freedash/assets/extra-libs/datatables.net/js/jquery.dataTables.min.js') }}"></script>

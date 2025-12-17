@@ -6,6 +6,8 @@ use Illuminate\Auth\Events\Registered;
 use Illuminate\Auth\Listeners\SendEmailVerificationNotification;
 use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
 use Illuminate\Support\Facades\Event;
+use App\Models\Tenant\Appointment;
+use App\Observers\Finance\AppointmentFinanceObserver;
 
 class EventServiceProvider extends ServiceProvider
 {
@@ -18,6 +20,9 @@ class EventServiceProvider extends ServiceProvider
         Registered::class => [
             SendEmailVerificationNotification::class,
         ],
+        \App\Events\Finance\PaymentConfirmed::class => [
+            \App\Listeners\Finance\CreateTransactionOnPaymentConfirmed::class,
+        ],
     ];
 
     /**
@@ -25,7 +30,8 @@ class EventServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        // Registrar Observer financeiro para agendamentos
+        Appointment::observe(AppointmentFinanceObserver::class);
     }
 
     /**

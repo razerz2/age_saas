@@ -34,7 +34,7 @@
                             Informações do Formulário
                         </h4>
                         <div>
-                            <a href="{{ workspace_route('tenant.forms.edit', $form->id) }}" class="btn btn-warning btn-sm">
+                            <a href="{{ workspace_route('tenant.forms.edit', ['form' => $form->id]) }}" class="btn btn-warning btn-sm">
                                 <i class="mdi mdi-pencil me-1"></i> Editar
                             </a>
                             <a href="{{ workspace_route('tenant.forms.index') }}" class="btn btn-secondary btn-sm">

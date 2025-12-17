@@ -393,4 +393,58 @@ class TenantController extends Controller
             return back()->withErrors(['general' => 'Erro ao sincronizar com o Asaas.']);
         }
     }
+
+    public function sendCredentials(Tenant $tenant)
+    {
+        try {
+            // Buscar informações do admin do tenant
+            $tenantAdmin = $tenant->admin;
+            
+            if (!$tenantAdmin) {
+                return back()->withErrors(['general' => 'Credenciais do admin não encontradas para este tenant.']);
+            }
+
+            // Verificar se o email do tenant está configurado
+            if (!$tenant->email) {
+                return back()->withErrors(['general' => 'Email do tenant não está configurado.']);
+            }
+
+            // Preparar dados para envio
+            $adminEmail = $tenantAdmin->email;
+            $adminPassword = $tenantAdmin->password;
+            $loginUrl = $tenantAdmin->login_url ?? url("/t/{$tenant->subdomain}/login");
+
+            // Verificar se SMTP está configurado
+            $systemSettingsService = new SystemSettingsService();
+            if (!$systemSettingsService->emailIsConfigured()) {
+                return back()->withErrors(['general' => 'SMTP não está configurado. Configure o email antes de enviar credenciais.']);
+            }
+
+            // Enviar email com credenciais
+            Mail::to($tenant->email)->send(
+                new TenantAdminCredentialsMail(
+                    $tenant,
+                    $loginUrl,
+                    $adminEmail,
+                    $adminPassword
+                )
+            );
+
+            Log::info("📧 Credenciais reenviadas para tenant {$tenant->id}", [
+                'tenant_id' => $tenant->id,
+                'email' => $tenant->email,
+                'admin_email' => $adminEmail
+            ]);
+
+            return back()->with('success', '✅ Credenciais enviadas com sucesso para ' . $tenant->email . '!');
+        } catch (\Throwable $e) {
+            Log::error("❌ Erro ao enviar credenciais do tenant", [
+                'tenant_id' => $tenant->id,
+                'erro' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            return back()->withErrors(['general' => 'Erro ao enviar credenciais. Consulte o log para mais detalhes.']);
+        }
+    }
 }

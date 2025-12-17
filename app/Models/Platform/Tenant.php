@@ -36,6 +36,8 @@ class Tenant extends BaseTenant
         // Status / assinaturas
         'status',
         'trial_ends_at',
+        'suspended_at',
+        'canceled_at',
         'asaas_customer_id',
         'asaas_synced',
         'asaas_sync_status',
@@ -45,6 +47,8 @@ class Tenant extends BaseTenant
 
     protected $casts = [
         'trial_ends_at'       => 'datetime',
+        'suspended_at'        => 'datetime',
+        'canceled_at'         => 'datetime',
         'asaas_synced'        => 'boolean',
         'asaas_last_sync_at'  => 'datetime',
     ];

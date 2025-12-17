@@ -135,6 +135,13 @@ class AppointmentController extends Controller
         
         // Sempre definir status como "scheduled" ao criar um novo agendamento
         $data['status'] = 'scheduled';
+        
+        // Identificar origem: se usuário autenticado é paciente, é portal; senão, é interno
+        if (Auth::guard('patient')->check()) {
+            $data['origin'] = 'portal';
+        } else {
+            $data['origin'] = 'internal';
+        }
 
         // Aplicar lógica de appointment_mode baseado na configuração
         $mode = \App\Models\Tenant\TenantSetting::get('appointments.default_appointment_mode', 'user_choice');
@@ -215,6 +222,21 @@ class AppointmentController extends Controller
             ]);
         }
 
+        // Para agendamentos internos: enviar link de pagamento se configurado
+        // O Observer já cuida disso, mas garantimos aqui também para casos especiais
+        if (
+            tenant_setting('finance.enabled') === 'true' &&
+            tenant_setting('finance.charge_on_internal_appointment') === 'true' &&
+            tenant_setting('finance.auto_send_payment_link') === 'true'
+        ) {
+            $redirectService = app(\App\Services\Finance\FinanceRedirectService::class);
+            $charge = $redirectService->getPendingCharge($appointment);
+            
+            if ($charge && $redirectService->shouldSendPaymentLink($charge)) {
+                \App\Services\TenantNotificationService::sendPaymentLink($charge);
+            }
+        }
+
         return redirect()->route('tenant.appointments.index', ['slug' => tenant()->subdomain])
             ->with('success', 'Agendamento criado com sucesso.');
     }
@@ -223,7 +245,37 @@ class AppointmentController extends Controller
     {
         $appointment = Appointment::findOrFail($id);
         $appointment->load(['calendar.doctor.user', 'patient', 'type', 'specialty']);
-        return view('tenant.appointments.show', compact('appointment'));
+        
+        // Buscar formulário ativo do médico
+        $form = \App\Models\Tenant\Form::getFormForAppointment($appointment);
+        
+        // Buscar resposta existente para este agendamento
+        // Prioridade: 1) Resposta com appointment_id e form_id específico, 2) Qualquer resposta com appointment_id, 3) Resposta sem appointment_id
+        $formResponse = null;
+        
+        if ($form) {
+            // Primeiro: buscar resposta específica para este agendamento e formulário
+            $formResponse = \App\Models\Tenant\FormResponse::findByAppointmentAndForm($appointment->id, $form->id);
+        }
+        
+        // Se não encontrou, buscar qualquer resposta para este agendamento
+        if (!$formResponse) {
+            $formResponse = \App\Models\Tenant\FormResponse::where('appointment_id', $appointment->id)
+                ->whereNotNull('appointment_id')
+                ->orderBy('submitted_at', 'desc')
+                ->first();
+        }
+        
+        // Fallback: buscar resposta sem appointment_id (caso não tenha sido salvo)
+        if (!$formResponse && $form && $appointment->patient_id) {
+            $formResponse = \App\Models\Tenant\FormResponse::where('form_id', $form->id)
+                ->where('patient_id', $appointment->patient_id)
+                ->whereNull('appointment_id')
+                ->orderBy('submitted_at', 'desc')
+                ->first();
+        }
+        
+        return view('tenant.appointments.show', compact('appointment', 'form', 'formResponse'));
     }
 
     public function edit($slug, $id)

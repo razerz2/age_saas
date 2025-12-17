@@ -36,6 +36,7 @@ class PublicFormController extends Controller
         // Verifica se há appointment_id na query string
         $appointmentId = $request->query('appointment');
         $appointment = null;
+        $existingResponse = null;
         
         if ($appointmentId) {
             $appointment = Appointment::find($appointmentId);
@@ -46,14 +47,30 @@ class PublicFormController extends Controller
                 $formForAppointment = Form::getFormForAppointment($appointment);
                 if (!$formForAppointment || $formForAppointment->id !== $formModel->id) {
                     $appointment = null; // Formulário não corresponde ao agendamento
+                } else {
+                    // Verifica se já existe resposta para este agendamento e formulário
+                    $existingResponse = FormResponse::where('appointment_id', $appointmentId)
+                        ->where('form_id', $formModel->id)
+                        ->first();
+                    
+                    // Se já existe resposta, redirecionar para edição (ou mostrar a resposta existente)
+                    if ($existingResponse) {
+                        // Carregar resposta existente com relacionamentos
+                        $existingResponse->load(['form.sections.questions.options', 'answers', 'patient', 'appointment']);
+                    }
                 }
             }
         }
 
+        // Verificar se está em modo de edição (query parameter)
+        $editMode = $request->query('edit') === '1' && $existingResponse;
+        
         return view('tenant.public.form-response-create', [
             'tenant' => $tenantModel,
             'form' => $formModel,
-            'appointment' => $appointment
+            'appointment' => $appointment,
+            'existingResponse' => $existingResponse,
+            'editMode' => $editMode
         ]);
     }
 
@@ -74,23 +91,74 @@ class PublicFormController extends Controller
         $formModel = Form::findOrFail($form);
         $data = $request->validated();
 
-        // Cria a resposta
         // Garante que appointment_id seja salvo se vier do request
+        // Priorizar o input direto do request, depois o validated data
         $appointmentId = $request->input('appointment_id') ?? $data['appointment_id'] ?? null;
         
-        $response = FormResponse::create([
-            'id' => Str::uuid(),
-            'form_id' => $formModel->id,
-            'patient_id' => $data['patient_id'],
-            'appointment_id' => $appointmentId,
-            'submitted_at' => $data['submitted_at'] ?? now(),
-            'status' => $data['status'] ?? 'submitted',
-        ]);
+        // Se não veio no validated, tentar pegar do request direto (pode não estar nas regras de validação)
+        if (!$appointmentId) {
+            $appointmentId = $request->get('appointment_id');
+        }
+        
+        // Se houver appointment_id, verificar se já existe resposta para este agendamento e formulário
+        if ($appointmentId) {
+            $existingResponse = FormResponse::where('appointment_id', $appointmentId)
+                ->where('form_id', $formModel->id)
+                ->first();
+            
+            if ($existingResponse) {
+                // Atualizar resposta existente em vez de criar nova
+                $existingResponse->update([
+                    'patient_id'   => $data['patient_id'],
+                    'submitted_at' => $data['submitted_at'] ?? now(),
+                    'status'       => $data['status'] ?? 'submitted',
+                ]);
 
-        // Salva as respostas
-        if (!empty($data['answers'])) {
-            foreach ($data['answers'] as $questionId => $value) {
-                $this->saveAnswer($response->id, $questionId, $value);
+                // Remover respostas antigas
+                $existingResponse->answers()->delete();
+
+                // Salvar novas respostas
+                if (!empty($data['answers'])) {
+                    foreach ($data['answers'] as $questionId => $value) {
+                        $this->saveAnswer($existingResponse->id, $questionId, $value);
+                    }
+                }
+
+                $response = $existingResponse;
+            } else {
+                // Criar nova resposta apenas se não existir
+                $response = FormResponse::create([
+                    'id' => Str::uuid(),
+                    'form_id' => $formModel->id,
+                    'patient_id' => $data['patient_id'],
+                    'appointment_id' => $appointmentId,
+                    'submitted_at' => $data['submitted_at'] ?? now(),
+                    'status' => $data['status'] ?? 'submitted',
+                ]);
+
+                // Salva as respostas
+                if (!empty($data['answers'])) {
+                    foreach ($data['answers'] as $questionId => $value) {
+                        $this->saveAnswer($response->id, $questionId, $value);
+                    }
+                }
+            }
+        } else {
+            // Se não houver appointment_id, criar nova resposta normalmente
+            $response = FormResponse::create([
+                'id' => Str::uuid(),
+                'form_id' => $formModel->id,
+                'patient_id' => $data['patient_id'],
+                'appointment_id' => $appointmentId,
+                'submitted_at' => $data['submitted_at'] ?? now(),
+                'status' => $data['status'] ?? 'submitted',
+            ]);
+
+            // Salva as respostas
+            if (!empty($data['answers'])) {
+                foreach ($data['answers'] as $questionId => $value) {
+                    $this->saveAnswer($response->id, $questionId, $value);
+                }
             }
         }
 

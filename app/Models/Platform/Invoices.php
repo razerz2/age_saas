@@ -19,12 +19,19 @@ class Invoices extends Model
         'tenant_id',
         'amount_cents',
         'due_date',
+        'paid_at',
+        'notified_upcoming_at',
         'status',
         'payment_link',
         'payment_method',
         'provider',
         'provider_id',
         'asaas_payment_id',
+        'is_recovery',
+        'recovery_origin_subscription_id',
+        'recovery_target_subscription_id',
+        'asaas_payment_link_id',
+        'asaas_recovery_subscription_id',
         'asaas_synced',
         'asaas_sync_status',
         'asaas_last_sync_at',
@@ -33,6 +40,8 @@ class Invoices extends Model
 
     protected $casts = [
         'due_date'            => 'datetime',
+        'paid_at'             => 'datetime',
+        'notified_upcoming_at' => 'datetime',
         'created_at'          => 'datetime',
         'updated_at'          => 'datetime',
         'asaas_last_sync_at'  => 'datetime',
@@ -53,5 +62,16 @@ class Invoices extends Model
     public function tenant()
     {
         return $this->belongsTo(Tenant::class);
+    }
+
+    // 🔄 Relacionamentos de recovery
+    public function recoveryOriginSubscription()
+    {
+        return $this->belongsTo(Subscription::class, 'recovery_origin_subscription_id');
+    }
+
+    public function recoveryTargetSubscription()
+    {
+        return $this->belongsTo(Subscription::class, 'recovery_target_subscription_id');
     }
 }

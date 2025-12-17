@@ -45,6 +45,7 @@ class PreRegisterController extends Controller
                 'phone' => 'nullable|string|max:20',
                 'document' => 'nullable|string|max:30',
                 'plan_id' => 'required|uuid|exists:plans,id',
+                'accept_terms' => 'required|accepted',
                 'subdomain_suggested' => 'nullable|string|max:100', // Mantido para compatibilidade, mas não será usado
                 'address' => 'nullable|string|max:255',
                 'zipcode' => 'nullable|string|max:20',
@@ -57,6 +58,8 @@ class PreRegisterController extends Controller
                 'email.email' => 'Informe um e-mail válido.',
                 'plan_id.required' => 'O plano é obrigatório.',
                 'plan_id.exists' => 'O plano selecionado não existe.',
+                'accept_terms.required' => 'Você deve aceitar os Termos de Uso e a Política de Privacidade para continuar.',
+                'accept_terms.accepted' => 'Você deve aceitar os Termos de Uso e a Política de Privacidade para continuar.',
             ]);
 
         } catch (\Illuminate\Validation\ValidationException $e) {

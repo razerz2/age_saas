@@ -74,6 +74,7 @@ class SettingsController extends Controller
             
             // Aparência
             'appearance.logo' => TenantSetting::get('appearance.logo', ''),
+            'appearance.logo_mini' => TenantSetting::get('appearance.logo_mini', ''),
             'appearance.favicon' => TenantSetting::get('appearance.favicon', ''),
         ];
 
@@ -400,8 +401,10 @@ class SettingsController extends Controller
     {
         $request->validate([
             'logo' => 'nullable|image|mimes:jpeg,jpg,png,gif,svg|max:2048',
+            'logo_mini' => 'nullable|image|mimes:jpeg,jpg,png,gif,svg|max:2048',
             'favicon' => 'nullable|image|mimes:jpeg,jpg,png,ico,svg|max:1024',
             'remove_logo' => 'nullable|boolean',
+            'remove_logo_mini' => 'nullable|boolean',
             'remove_favicon' => 'nullable|boolean',
         ]);
 
@@ -436,6 +439,29 @@ class SettingsController extends Controller
             $path = $file->storeAs($storagePath, $filename, 'public');
             
             TenantSetting::set('appearance.logo', $path);
+        }
+
+        // Processar logo retrátil (mini)
+        if ($request->has('remove_logo_mini') && $request->remove_logo_mini) {
+            // Remover logo mini atual
+            $currentLogoMini = TenantSetting::get('appearance.logo_mini');
+            if ($currentLogoMini && Storage::disk('public')->exists($currentLogoMini)) {
+                Storage::disk('public')->delete($currentLogoMini);
+            }
+            TenantSetting::set('appearance.logo_mini', '');
+        } elseif ($request->hasFile('logo_mini')) {
+            // Remover logo mini anterior se existir
+            $currentLogoMini = TenantSetting::get('appearance.logo_mini');
+            if ($currentLogoMini && Storage::disk('public')->exists($currentLogoMini)) {
+                Storage::disk('public')->delete($currentLogoMini);
+            }
+
+            // Fazer upload do novo logo mini
+            $file = $request->file('logo_mini');
+            $filename = 'logo_mini_' . time() . '_' . Str::random(10) . '.' . $file->getClientOriginalExtension();
+            $path = $file->storeAs($storagePath, $filename, 'public');
+            
+            TenantSetting::set('appearance.logo_mini', $path);
         }
 
         // Processar favicon

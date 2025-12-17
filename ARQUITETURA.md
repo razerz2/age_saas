@@ -101,6 +101,10 @@ A área administrativa central utiliza o prefixo `/Platform` e o guard `web`:
 POST /Platform/tenants/{tenant}/sync           # Sincronizar tenant com Asaas
 POST /Platform/subscriptions/{id}/renew        # Renovar assinatura
 POST /Platform/invoices/{invoice}/sync         # Sincronizar fatura manualmente
+GET  /Platform/plan-change-requests            # Listar solicitações de mudança de plano
+GET  /Platform/plan-change-requests/{id}       # Visualizar detalhes da solicitação
+POST /Platform/plan-change-requests/{id}/approve # Aprovar solicitação
+POST /Platform/plan-change-requests/{id}/reject  # Rejeitar solicitação
 POST /Platform/whatsapp/send                   # Enviar mensagem WhatsApp
 POST /Platform/whatsapp/invoice/{invoice}      # Enviar notificação de fatura
 GET  /Platform/api/estados/{pais}              # API: Estados por país
@@ -153,6 +157,9 @@ POST /t/{tenant}/logout             # Logout
 /tenant/forms                       # CRUD de formulários
 /tenant/responses                   # CRUD de respostas de formulários
 /tenant/integrations                # CRUD de integrações
+/tenant/subscription                # Detalhes da assinatura (apenas admins)
+/tenant/plan-change-request/create  # Solicitar mudança de plano
+/tenant/plan-change-request        # POST: Processar solicitação
 /tenant/integrations/google         # Integração Google Calendar
 /tenant/oauth-accounts              # CRUD de contas OAuth
 /tenant/calendar-sync               # Sincronização de calendário
@@ -353,6 +360,7 @@ Tabelas principais:
 - `system_settings` - Configurações
 - `webhook_logs` - Logs de webhooks
 - `tenant_localizacoes` - Localização dos tenants
+- `plan_change_requests` - Solicitações de mudança de plano
 
 ### **Migrações dos Tenants** (`database/migrations/tenant/`)
 

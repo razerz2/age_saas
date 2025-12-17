@@ -91,6 +91,15 @@
                                                     class="btn btn-sm btn-success">
                                                     <i class="fas fa-sign-in-alt"></i>
                                                 </a>
+                                                <form action="{{ route('Platform.tenants.send-credentials', $tenant->id) }}"
+                                                    method="POST" class="d-inline"
+                                                    onsubmit="return confirmSubmit(event, 'Deseja enviar as credenciais de acesso para {{ $tenant->email ?? 'o email do tenant' }}?', 'Enviar Credenciais')">
+                                                    @csrf
+                                                    <button type="submit" class="btn btn-sm btn-primary"
+                                                        title="Enviar credenciais de acesso por email">
+                                                        <i class="fas fa-envelope"></i>
+                                                    </button>
+                                                </form>
                                                 @if (in_array($tenant->asaas_sync_status, ['failed', 'pending']))
                                                     <form action="{{ route('Platform.tenants.sync', $tenant->id) }}"
                                                         method="POST" class="d-inline">
@@ -102,10 +111,14 @@
                                                     </form>
                                                 @endif
                                                 <form action="{{ route('Platform.tenants.destroy', $tenant->id) }}"
-                                                    method="POST" class="d-inline"> @csrf @method('DELETE') <button
-                                                        title="Exclusão" class="btn btn-sm btn-danger"
-                                                        onclick="return confirm('Deseja realmente excluir este tenant?')">
-                                                        <i class="fa fa-trash"></i> </button> </form>
+                                                    method="POST" class="d-inline"
+                                                    onsubmit="return confirmSubmit(event, 'Deseja realmente excluir este tenant? Esta ação não pode ser desfeita.', 'Confirmar Exclusão')">
+                                                    @csrf 
+                                                    @method('DELETE')
+                                                    <button type="submit" title="Exclusão" class="btn btn-sm btn-danger">
+                                                        <i class="fa fa-trash"></i>
+                                                    </button>
+                                                </form>
                                             </td>
                                         </tr>
                                     @endforeach

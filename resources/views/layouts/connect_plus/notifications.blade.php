@@ -67,7 +67,7 @@
                     $icon = $typeIcons[$notification->type] ?? 'mdi-bell';
                 @endphp
                 
-                <a href="{{ workspace_route('tenant.notifications.show', ['id' => $notification->id]) }}" 
+                <a href="{{ workspace_route('tenant.notifications.show', ['notification' => $notification->id]) }}" 
                    class="notification-item d-flex align-items-start text-decoration-none position-relative {{ $isNew ? 'notification-new' : '' }}"
                    data-notification-id="{{ $notification->id }}"
                    style="padding: 16px 20px; border-bottom: 1px solid #f0f0f0; transition: all 0.2s ease; background: {{ $isNew ? '#f8f9ff' : 'white' }}; text-decoration: none !important; color: inherit;">
@@ -238,6 +238,12 @@
 <script>
 $(document).ready(function() {
     let notificationCheckInterval;
+    
+    // Função para gerar URL de notificação
+    function getNotificationUrl(notificationId) {
+        const baseUrl = "{{ workspace_route('tenant.notifications.index') }}";
+        return baseUrl + '/' + notificationId;
+    }
 
     // Função para atualizar notificações
     function loadNotifications() {
@@ -335,7 +341,7 @@ $(document).ready(function() {
             const message = n.message.length > 80 ? n.message.substring(0, 80) + '...' : n.message;
 
             const item = 
-                '<a href="/tenant/notifications/' + n.id + '" ' +
+                '<a href="' + getNotificationUrl(n.id) + '" ' +
                 'class="notification-item d-flex align-items-start text-decoration-none position-relative ' + (isNew ? 'notification-new' : '') + '" ' +
                 'data-notification-id="' + n.id + '" ' +
                 'style="padding: 16px 20px; border-bottom: 1px solid #f0f0f0; transition: all 0.2s ease; background: ' + (isNew ? '#f8f9ff' : 'white') + '; text-decoration: none !important; color: inherit;">' +

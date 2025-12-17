@@ -20,6 +20,8 @@ class Subscription extends Model
         'starts_at',
         'ends_at',
         'due_day',
+        'billing_anchor_date',
+        'recovery_started_at',
         'status',
         'auto_renew',
         'payment_method',
@@ -35,6 +37,8 @@ class Subscription extends Model
     protected $casts = [
         'starts_at' => 'datetime',
         'ends_at' => 'datetime',
+        'billing_anchor_date' => 'date',
+        'recovery_started_at' => 'datetime',
         'auto_renew' => 'boolean',
         'asaas_last_sync_at' => 'datetime',
     ];

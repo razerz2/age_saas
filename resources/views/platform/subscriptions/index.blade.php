@@ -128,10 +128,10 @@
                                                 @if ($subscription->is_expired && !$subscription->has_pending_invoice)
                                                     <form
                                                         action="{{ route('Platform.subscriptions.renew', $subscription->id) }}"
-                                                        method="POST" class="d-inline">
+                                                        method="POST" class="d-inline"
+                                                        onsubmit="return confirmSubmit(event, 'Deseja gerar uma nova fatura para esta assinatura?', 'Gerar Nova Fatura')">
                                                         @csrf
-                                                        <button title="Nova Fatura" class="btn btn-sm btn-success"
-                                                            onclick="return confirm('Deseja gerar uma nova fatura para esta assinatura?')">
+                                                        <button type="submit" title="Nova Fatura" class="btn btn-sm btn-success">
                                                             <i class="fas fa-dollar-sign"></i>
                                                         </button>
                                                     </form>
@@ -139,11 +139,11 @@
 
                                                 <form
                                                     action="{{ route('Platform.subscriptions.destroy', $subscription->id) }}"
-                                                    method="POST" class="d-inline">
+                                                    method="POST" class="d-inline"
+                                                    onsubmit="return confirmSubmit(event, 'Deseja realmente excluir esta assinatura? Esta ação não pode ser desfeita.', 'Confirmar Exclusão')">
                                                     @csrf
                                                     @method('DELETE')
-                                                    <button title="Exclusão" type="submit" class="btn btn-sm btn-danger"
-                                                        onclick="return confirm('Deseja realmente excluir esta assinatura?')">
+                                                    <button type="submit" title="Exclusão" class="btn btn-sm btn-danger">
                                                         <i class="fa fa-trash"></i>
                                                     </button>
                                                 </form>

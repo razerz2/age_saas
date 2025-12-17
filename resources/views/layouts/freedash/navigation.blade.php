@@ -70,6 +70,8 @@
                     <span class="hide-menu"><i class="fas fa-list-alt"></i> Assinaturas</span></a></li>
                 <li class="sidebar-item"><a href="{{ route('Platform.subscriptions.create') }}" class="sidebar-link">
                     <span class="hide-menu"><i class="fas fa-plus-circle"></i> Nova Assinatura</span></a></li>
+                <li class="sidebar-item"><a href="{{ route('Platform.plan-change-requests.index') }}" class="sidebar-link">
+                    <span class="hide-menu"><i class="fas fa-exchange-alt"></i> Solicitações de Mudança</span></a></li>
             </ul>
         </li>
         @endif
@@ -135,13 +137,6 @@
             </ul>
         </li>
         @endif
-
-        {{-- Z-API --}}
-        <li class="sidebar-item">
-            <a class="sidebar-link" href="{{ route('Platform.zapi.index') }}" aria-expanded="false">
-                <i class="fab fa-whatsapp text-success"></i><span class="hide-menu"> Z-API </span>
-            </a>
-        </li>
 
         {{-- Usuários --}}
         @if(in_array('users', auth()->user()->modules ?? []))

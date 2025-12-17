@@ -52,7 +52,7 @@
                         </div>
 
                         <button type="submit" class="btn btn-primary me-2">Salvar</button>
-                        <a href="{{ workspace_route('tenant.forms.show', $question->form_id) }}" class="btn btn-light">Cancelar</a>
+                        <a href="{{ workspace_route('tenant.forms.show', ['form' => $question->form_id]) }}" class="btn btn-light">Cancelar</a>
                     </form>
 
                 </div>

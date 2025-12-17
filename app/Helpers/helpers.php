@@ -20,7 +20,7 @@ use Illuminate\Support\Facades\Artisan;
 | 
 | "autoload": {
 |     "psr-4": { "App\\": "app/" },
-|     "files": ["app/Helpers/helpers.php"]
+|     "files": ["app/Helpers/helpers.php", "app/Helpers/FinanceHelpers.php"]
 | }
 |
 | E depois rode:
@@ -149,6 +149,40 @@ if (!function_exists('testConnection')) {
                     return $response->successful()
                         ? ['status' => true, 'message' => 'Conexão Meta API OK!']
                         : ['status' => false, 'message' => 'Falha Meta: ' . $response->body()];
+
+                    // 🔸 Teste Z-API (WhatsApp)
+                case 'zapi':
+                case 'z-api':
+                    $apiUrl = env('ZAPI_API_URL', 'https://api.z-api.io');
+                    $token = env('ZAPI_TOKEN');
+                    $clientToken = env('ZAPI_CLIENT_TOKEN');
+                    $instanceId = env('ZAPI_INSTANCE_ID');
+
+                    if (!$token || !$clientToken || !$instanceId) {
+                        return ['status' => false, 'message' => 'Credenciais Z-API não configuradas completamente. Verifique Token, Client Token e Instance ID.'];
+                    }
+
+                    // Tenta verificar o status da instância
+                    $endpoint = rtrim($apiUrl, '/') . '/instances/' . $instanceId . '/status';
+                    
+                    try {
+                        $response = Http::withHeaders([
+                            'Client-Token' => $clientToken,
+                        ])->get($endpoint);
+
+                        if ($response->successful()) {
+                            $data = $response->json();
+                            if (isset($data['status']) && $data['status'] === 'connected') {
+                                return ['status' => true, 'message' => 'Conexão Z-API OK! Instância conectada.'];
+                            } else {
+                                return ['status' => false, 'message' => 'Z-API: Instância não está conectada. Status: ' . ($data['status'] ?? 'desconhecido')];
+                            }
+                        }
+
+                        return ['status' => false, 'message' => 'Falha Z-API: ' . $response->body()];
+                    } catch (\Exception $e) {
+                        return ['status' => false, 'message' => 'Erro ao testar Z-API: ' . $e->getMessage()];
+                    }
 
                     // 🔸 Teste E-mail
                 case 'email':

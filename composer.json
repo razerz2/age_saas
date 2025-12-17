@@ -36,7 +36,8 @@
         },
         "files": [
             "app/Helpers/helpers.php",
-            "app/Helpers/ProfessionalHelper.php"
+            "app/Helpers/ProfessionalHelper.php",
+            "app/Helpers/FinanceHelpers.php"
         ]
     },
     "autoload-dev": {
@@ -53,7 +54,7 @@
             "@php artisan vendor:publish --tag=laravel-assets --ansi --force"
         ],
         "post-root-package-install": [
-            "@php -r \"file_exists('.env') || copy('.env.example', '.env');\""
+            "@php -r \"file_exists('.env') || (file_exists('.env.example') && copy('.env.example', '.env'));\""
         ],
         "post-create-project-cmd": [
             "@php artisan key:generate --ansi"

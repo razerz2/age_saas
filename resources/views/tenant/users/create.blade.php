@@ -344,9 +344,10 @@
                                     </span>
                                 </div>
                                 @php
-                                    $allModules = App\Models\Tenant\Module::all();
+                                    // Buscar apenas módulos disponíveis (no plano e habilitados na tenant)
+                                    $availableModules = App\Models\Tenant\Module::available();
                                     // Sempre remover módulo "usuários" - apenas admins têm acesso, mas não podem atribuir a outros
-                                    $modules = collect($allModules)->reject(function($module) {
+                                    $modules = collect($availableModules)->reject(function($module) {
                                         return $module['key'] === 'users';
                                     })->values()->all();
                                     

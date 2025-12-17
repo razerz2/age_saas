@@ -136,6 +136,12 @@ DELETE /Platform/subscription-access/{id}             # Excluir regra
 POST /Platform/subscriptions/{id}/renew               # Renovar assinatura (onde {id} é numérico)
 POST /Platform/subscriptions/{subscription}/sync       # Sincronizar assinatura com Asaas
 
+# Solicitações de Mudança de Plano
+GET    /Platform/plan-change-requests                 # Listar solicitações de mudança de plano
+GET    /Platform/plan-change-requests/{id}            # Visualizar detalhes da solicitação
+POST   /Platform/plan-change-requests/{id}/approve    # Aprovar solicitação
+POST   /Platform/plan-change-requests/{id}/reject     # Rejeitar solicitação
+
 # Faturas
 POST /Platform/invoices/{invoice}/sync                 # Sincronizar fatura manualmente com Asaas
 
@@ -268,6 +274,26 @@ As rotas abaixo exigem o módulo correspondente no campo `modules` do usuário:
 - Renovação de assinaturas
 - Sincronização com Asaas
 - Listagem de assinaturas por tenant
+- Aplicação automática de regras de acesso ao tenant
+
+#### PlanChangeRequestController
+- Gerenciamento de solicitações de mudança de plano dos tenants
+- Listagem de todas as solicitações (pendentes, aprovadas, rejeitadas)
+- Visualização detalhada de cada solicitação
+- **Aprovação de solicitações:**
+  - Atualiza o plano da assinatura imediatamente
+  - Aplica novas regras de acesso ao tenant automaticamente
+  - Atualiza todas as faturas pendentes com o novo valor do plano
+  - Sincroniza faturas com Asaas (se tiverem provider_id)
+  - Atualiza assinatura no Asaas (se gerenciada por cartão de crédito)
+  - **Mudança de forma de pagamento:**
+    - Se mudou de PIX para Cartão: cancela assinatura PIX e cria nova com cartão
+    - Se mudou de Cartão para PIX: cancela assinatura com cartão e gera link de pagamento PIX
+    - Se já estiver na forma solicitada: não faz alterações
+    - Links de pagamento são gerados seguindo a data de vencimento da fatura
+- **Rejeição de solicitações:**
+  - Requer motivo obrigatório
+  - Registra notas do administrador
 
 #### InvoiceController
 - CRUD completo de faturas
@@ -447,6 +473,48 @@ Armazenados no **banco central (landlord)**:
 **Listar Assinaturas por Tenant:**
 - Acesse `/Platform/tenants/{tenant}/subscriptions`
 - Exibe todas as assinaturas de um tenant específico
+
+### 4.1. Solicitações de Mudança de Plano
+
+**Gerenciar Solicitações:**
+1. Acesse `/Platform/plan-change-requests` (requer módulo `subscriptions`)
+2. Visualize todas as solicitações de mudança de plano dos tenants
+3. Filtre por status (pendente, aprovada, rejeitada, cancelada)
+
+**Visualizar Detalhes:**
+- Clique em uma solicitação para ver:
+  - Dados do tenant
+  - Plano atual e plano solicitado
+  - Forma de pagamento atual e solicitada
+  - Motivo da solicitação
+  - Histórico de revisão
+
+**Aprovar Solicitação:**
+1. Acesse os detalhes da solicitação
+2. Clique em "Aprovar"
+3. Opcionalmente, adicione notas do administrador
+4. O sistema automaticamente:
+   - Atualiza o plano da assinatura
+   - Aplica novas regras de acesso ao tenant
+   - Atualiza todas as faturas pendentes com o novo valor
+   - Sincroniza faturas com Asaas (se aplicável)
+   - **Se a forma de pagamento mudou:**
+     - PIX → Cartão: Cancela assinatura PIX e cria nova com cartão no Asaas
+     - Cartão → PIX: Cancela assinatura com cartão e gera link de pagamento PIX
+     - Outras mudanças: Gera link de pagamento apropriado
+   - Atualiza assinatura no Asaas (se gerenciada por cartão)
+
+**Rejeitar Solicitação:**
+1. Acesse os detalhes da solicitação
+2. Clique em "Rejeitar"
+3. **Obrigatório:** Informe o motivo da rejeição
+4. A solicitação será marcada como rejeitada e o tenant será notificado
+
+**Importante:**
+- Apenas solicitações com status `pending` podem ser aprovadas ou rejeitadas
+- Ao aprovar, todas as mudanças são aplicadas imediatamente
+- Faturas pendentes são atualizadas automaticamente
+- Se a forma de pagamento não mudou, nenhuma alteração é feita
 
 ### 5. Faturas
 
@@ -834,6 +902,7 @@ Tabelas principais:
 - `pre_tenant_logs` - Logs de eventos dos pré-cadastros
 - `subscriptions` - Assinaturas ativas
 - `invoices` - Faturas geradas
+- `plan_change_requests` - Solicitações de mudança de plano
 - `users` - Usuários da platform
 - `paises`, `estados`, `cidades` - Dados de localização
 - `medical_specialties_catalog` - Catálogo de especialidades
@@ -842,6 +911,7 @@ Tabelas principais:
 - `system_settings` - Configurações
 - `webhook_logs` - Logs de webhooks
 - `tenant_localizacoes` - Localização dos tenants
+- `plan_change_requests` - Solicitações de mudança de plano
 
 **Executar migrações:**
 ```bash
@@ -879,7 +949,7 @@ php artisan migrate
 
 ---
 
-**Última atualização:** 2025-12-03
+**Última atualização:** 2025-12-14
 
 **Nota:** Esta documentação foi revisada e atualizada com base no código implementado, incluindo:
 - Todas as rotas atuais da Platform
@@ -898,5 +968,10 @@ php artisan migrate
 - **NOVO:** Rotas públicas `/pre-register` e `/webhook/asaas/pre-registration`
 - **NOVO:** Serviço `PreTenantProcessorService` para processamento automático
 - **NOVO:** Integração completa com Asaas para pagamentos de pré-cadastro
+- **NOVO:** Sistema de Solicitações de Mudança de Plano (`PlanChangeRequestController`)
+- **NOVO:** Model `PlanChangeRequest` para gerenciar solicitações de mudança de plano
+- **NOVO:** Aprovação automática de mudanças com atualização de faturas e forma de pagamento
+- **NOVO:** Suporte a mudança de forma de pagamento (PIX, Cartão de Crédito, etc.)
+- **NOVO:** Geração automática de links de pagamento ao mudar forma de pagamento
 - Lista completa e atualizada de módulos disponíveis
 

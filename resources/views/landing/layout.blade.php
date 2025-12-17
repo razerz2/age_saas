@@ -11,6 +11,17 @@
     
     @stack('meta')
     
+    <!-- Favicon -->
+    @php
+        $landingFavicon = sysconfig('landing.favicon');
+        $systemDefaultFavicon = sysconfig('system.default_favicon');
+        $systemDefaultFaviconUrl = $systemDefaultFavicon ? asset('storage/' . $systemDefaultFavicon) : asset('connect_plus/assets/images/favicon.png');
+        $landingFaviconUrl = $landingFavicon ? asset('storage/' . $landingFavicon) : $systemDefaultFaviconUrl;
+    @endphp
+    <link rel="shortcut icon" href="{{ $landingFaviconUrl }}">
+    <link rel="icon" type="image/png" sizes="16x16" href="{{ $landingFaviconUrl }}">
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ $landingFaviconUrl }}">
+    
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=figtree:400,500,600,700&display=swap" rel="stylesheet" />
@@ -27,8 +38,14 @@
             <div class="flex justify-between items-center h-16">
                 <!-- Logo -->
                 <div class="flex-shrink-0">
+                    @php
+                        $landingLogo = sysconfig('landing.logo');
+                        $systemDefaultLogo = sysconfig('system.default_logo');
+                        $systemDefaultLogoUrl = $systemDefaultLogo ? asset('storage/' . $systemDefaultLogo) : asset('connect_plus/assets/images/logos/landing-page/AllSync-Logo-LP.png');
+                        $landingLogoUrl = $landingLogo ? asset('storage/' . $landingLogo) : $systemDefaultLogoUrl;
+                    @endphp
                     <a href="{{ route('landing.home') }}" class="flex items-center">
-                        <img src="{{ asset('connect_plus/assets/images/logos/landing-page/AllSync-Logo-LP.png') }}" alt="AllSync Logo" class="h-10 object-contain" style="border: none; outline: none; box-shadow: none; background: transparent;">
+                        <img src="{{ $landingLogoUrl }}" alt="Logo" class="h-10 object-contain" style="border: none; outline: none; box-shadow: none; background: transparent;">
                     </a>
                 </div>
                 
@@ -139,6 +156,9 @@
             
             <div class="mt-8 pt-8 border-t border-gray-800 text-center text-gray-400">
                 <p>&copy; {{ date('Y') }} {{ config('app.name', 'SaaS Saúde') }}. Todos os direitos reservados.</p>
+                <p class="mt-2">
+                    <a href="https://www.allsync.com.br/politica-de-privacidade" class="text-gray-400 hover:text-white transition-colors underline">Política de Privacidade</a>
+                </p>
             </div>
         </div>
     </footer>

@@ -33,7 +33,7 @@
                                     <th>Agendamento</th>
                                     <th>Data de Envio</th>
                                     <th>Status</th>
-                                    <th style="width: 140px;">Ações</th>
+                                    <th style="width: 200px;">Ações</th>
                                 </tr>
                             </thead>
 
@@ -47,8 +47,18 @@
                                         <td>{{ $response->submitted_at ? $response->submitted_at->format('d/m/Y H:i') : 'N/A' }}</td>
                                         <td>{{ $response->status ?? 'N/A' }}</td>
                                         <td>
-                                            <a href="{{ workspace_route('tenant.responses.show', $response->id) }}" class="btn btn-info btn-sm">Ver</a>
-                                            <a href="{{ workspace_route('tenant.responses.edit', $response->id) }}" class="btn btn-warning btn-sm">Editar</a>
+                                            <a href="{{ workspace_route('tenant.responses.show', $response->id) }}" class="btn btn-info btn-sm mb-1">Ver</a>
+                                            <a href="{{ workspace_route('tenant.responses.edit', $response->id) }}" class="btn btn-warning btn-sm mb-1">Editar</a>
+                                            <form action="{{ workspace_route('tenant.responses.destroy', $response->id) }}" 
+                                                  method="POST" 
+                                                  class="d-inline delete-response-form"
+                                                  onsubmit="return confirmDeleteResponse(event, '{{ $response->form->name ?? 'N/A' }}', '{{ $response->patient->full_name ?? 'N/A' }}')">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" class="btn btn-danger btn-sm">
+                                                    <i class="mdi mdi-delete"></i> Excluir
+                                                </button>
+                                            </form>
                                         </td>
                                     </tr>
                                 @endforeach
@@ -72,6 +82,21 @@
             }
         });
     });
+
+    /**
+     * Confirma a exclusão da resposta de formulário
+     */
+    function confirmDeleteResponse(event, formName, patientName) {
+        event.preventDefault();
+        
+        const form = event.target.closest('form');
+        
+        if (confirm(`Tem certeza que deseja excluir a resposta do formulário "${formName}" do paciente "${patientName}"?\n\nEsta ação não pode ser desfeita e irá remover:\n- A resposta do formulário\n- Todas as respostas das perguntas relacionadas`)) {
+            form.submit();
+        }
+        
+        return false;
+    }
 </script>
 @endpush
 

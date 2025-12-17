@@ -81,32 +81,32 @@
                                                     <i class="fa fa-edit"></i>
                                                 </a>
 
-                                                <form  action="{{ route('Platform.users.toggle-status', $user->id) }}"
-                                                    method="POST" class="d-inline">
+                                                <form action="{{ route('Platform.users.toggle-status', $user->id) }}"
+                                                    method="POST" class="d-inline"
+                                                    onsubmit="return confirmSubmit(event, '{{ $user->status === 'active' ? 'Bloquear' : 'Reativar' }} este usuário?', 'Confirmar Alteração')">
                                                     @csrf
-                                                    <button title="Status"
-                                                        class="btn btn-sm {{ $user->status === 'active' ? 'btn-secondary' : 'btn-success' }}"
-                                                        onclick="return confirm('{{ $user->status === 'active' ? 'Bloquear' : 'Reativar' }} este usuário?')">
+                                                    <button type="submit" title="Status"
+                                                        class="btn btn-sm {{ $user->status === 'active' ? 'btn-secondary' : 'btn-success' }}">
                                                         <i
                                                             class="fa {{ $user->status === 'active' ? 'fa-ban' : 'fa-check' }}"></i>
                                                     </button>
                                                 </form>
 
                                                 <form action="{{ route('Platform.users.reset-password', $user->id) }}"
-                                                    method="POST" class="d-inline">
+                                                    method="POST" class="d-inline"
+                                                    onsubmit="return confirmSubmit(event, 'Deseja realmente redefinir a senha deste usuário?', 'Redefinir Senha')">
                                                     @csrf
-                                                    <button title="Reset Password" class="btn btn-sm btn-info text-white"
-                                                        onclick="return confirm('Deseja realmente redefinir a senha deste usuário?')">
+                                                    <button type="submit" title="Reset Password" class="btn btn-sm btn-info text-white">
                                                         <i class="fa fa-key"></i>
                                                     </button>
                                                 </form>
 
                                                 <form action="{{ route('Platform.users.destroy', $user->id) }}"
-                                                    method="POST" class="d-inline">
+                                                    method="POST" class="d-inline"
+                                                    onsubmit="return confirmSubmit(event, 'Deseja realmente excluir este usuário? Esta ação não pode ser desfeita.', 'Confirmar Exclusão')">
                                                     @csrf
                                                     @method('DELETE')
-                                                    <button title="Exclusão" type="submit" class="btn btn-sm btn-danger"
-                                                        onclick="return confirm('Deseja realmente excluir este usuário?')">
+                                                    <button type="submit" title="Exclusão" class="btn btn-sm btn-danger">
                                                         <i class="fa fa-trash"></i>
                                                     </button>
                                                 </form>

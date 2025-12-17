@@ -93,6 +93,11 @@ class SubscriptionFeaturesSeeder extends Seeder
                 'label' => 'Notificação por Email',
                 'is_default' => false,
             ],
+            [
+                'name' => 'finance',
+                'label' => 'Módulo Financeiro',
+                'is_default' => false,
+            ],
         ];
 
         foreach ($features as $feature) {

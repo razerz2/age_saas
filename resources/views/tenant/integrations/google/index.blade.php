@@ -192,7 +192,7 @@
                                                                 title="Status da integração">
                                                             <i class="mdi mdi-information-outline"></i>
                                                         </button>
-                                                        <form action="{{ workspace_route('tenant.integrations.google.disconnect', $doctor->id) }}" 
+                                                        <form action="{{ workspace_route('tenant.integrations.google.disconnect', ['doctor' => $doctor->id]) }}" 
                                                               method="POST" 
                                                               class="d-inline"
                                                               onsubmit="return confirm('Tem certeza que deseja desconectar a integração do Google Calendar para este médico?\n\nOs eventos já criados no Google Calendar não serão removidos automaticamente.');">
@@ -205,7 +205,7 @@
                                                         </form>
                                                     </div>
                                                 @else
-                                                    <a href="{{ workspace_route('tenant.integrations.google.connect', $doctor->id) }}" 
+                                                    <a href="{{ workspace_route('tenant.integrations.google.connect', ['doctor' => $doctor->id]) }}" 
                                                        class="btn btn-primary btn-sm">
                                                         <i class="mdi mdi-google me-1"></i>
                                                         Conectar Google

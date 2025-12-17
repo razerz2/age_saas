@@ -57,16 +57,16 @@
                                             @endif
                                         </td>
                                         <td>
-                                            <a href="{{ workspace_route('tenant.forms.show', $form->id) }}" class="btn btn-info btn-sm mb-1" title="Ver Detalhes">
+                                            <a href="{{ workspace_route('tenant.forms.show', ['form' => $form->id]) }}" class="btn btn-info btn-sm mb-1" title="Ver Detalhes">
                                                 <i class="mdi mdi-eye"></i>
                                             </a>
                                             <a href="{{ workspace_route('tenant.forms.builder', $form->id) }}" class="btn btn-primary btn-sm mb-1" title="Construir Formulário">
                                                 <i class="mdi mdi-pencil"></i>
                                             </a>
-                                            <a href="{{ workspace_route('tenant.responses.create', $form->id) }}" class="btn btn-success btn-sm mb-1" title="Preencher Formulário">
+                                            <a href="{{ workspace_route('tenant.responses.create', ['form_id' => $form->id]) }}" class="btn btn-success btn-sm mb-1" title="Preencher Formulário">
                                                 <i class="mdi mdi-file-document-edit"></i>
                                             </a>
-                                            <a href="{{ workspace_route('tenant.forms.edit', $form->id) }}" class="btn btn-warning btn-sm mb-1" title="Editar">
+                                            <a href="{{ workspace_route('tenant.forms.edit', ['form' => $form->id]) }}" class="btn btn-warning btn-sm mb-1" title="Editar">
                                                 <i class="mdi mdi-pencil-outline"></i>
                                             </a>
                                             <button type="button" class="btn btn-danger btn-sm mb-1 clear-content-btn" 
@@ -76,7 +76,7 @@
                                                     title="Excluir Apenas Conteúdo">
                                                 <i class="mdi mdi-delete-sweep"></i>
                                             </button>
-                                            <form action="{{ workspace_route('tenant.forms.destroy', $form->id) }}" method="POST" class="d-inline delete-form" id="delete-form-{{ $form->id }}">
+                                            <form action="{{ workspace_route('tenant.forms.destroy', ['form' => $form->id]) }}" method="POST" class="d-inline delete-form" id="delete-form-{{ $form->id }}">
                                                 @csrf
                                                 @method('DELETE')
                                                 <button type="button" class="btn btn-danger btn-sm mb-1 delete-form-btn" 

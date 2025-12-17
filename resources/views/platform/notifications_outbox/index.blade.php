@@ -78,11 +78,11 @@
                                                 <i class="fa fa-edit"></i>
                                             </a>
                                             <form action="{{ route('platform.notifications_outbox.destroy', $notification->id) }}"
-                                                method="POST" class="d-inline">
+                                                method="POST" class="d-inline"
+                                                onsubmit="return confirmSubmit(event, 'Deseja realmente excluir esta notificação? Esta ação não pode ser desfeita.', 'Confirmar Exclusão')">
                                                 @csrf
                                                 @method('DELETE')
-                                                <button title="Exclusão" type="submit" class="btn btn-sm btn-danger"
-                                                    onclick="return confirm('Deseja realmente excluir esta notificação?')">
+                                                <button type="submit" title="Exclusão" class="btn btn-sm btn-danger">
                                                     <i class="fa fa-trash"></i>
                                                 </button>
                                             </form>

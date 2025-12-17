@@ -128,7 +128,7 @@ return [
     ],
 
     'tenant_aware_jobs' => [
-        // ...
+        \App\Jobs\Finance\ProcessAsaasWebhookJob::class,
     ],
 
     'not_tenant_aware_jobs' => [

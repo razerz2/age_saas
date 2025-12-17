@@ -196,7 +196,7 @@ $(function() {
                                     data-pais="${row.pais_id}">
                                 <i class="fas fa-edit"></i>
                             </button>
-                            <form action="/Platform/estados/${row.id_estado}" method="POST" class="d-inline" onsubmit="return confirm('Excluir estado?')">
+                            <form action="/Platform/estados/${row.id_estado}" method="POST" class="d-inline" onsubmit="event.preventDefault(); showConfirm('Deseja realmente excluir este estado? Esta ação não pode ser desfeita.', 'Confirmar Exclusão').then(confirmed => { if(confirmed) event.target.submit(); }); return false;">
                                 @csrf
                                 @method('DELETE')
                                 <button title="Exclusão" class="btn btn-sm btn-outline-danger">

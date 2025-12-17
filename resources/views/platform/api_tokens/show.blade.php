@@ -141,7 +141,7 @@
                     button.classList.add('btn-primary');
                 }, 2000);
             } catch (err) {
-                alert('Erro ao copiar. Por favor, copie manualmente.');
+                showToast('Erro ao copiar. Por favor, copie manualmente.', 'error');
             }
         }
     </script>

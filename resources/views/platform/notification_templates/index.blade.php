@@ -87,10 +87,10 @@
                                             <i class="fas fa-pencil-alt"></i>
                                         </a>
                                         <form action="{{ route('Platform.notification-templates.restore', $template->id) }}"
-                                            method="POST" class="d-inline">
+                                            method="POST" class="d-inline"
+                                            onsubmit="return confirmSubmit(event, 'Deseja restaurar este template para os valores padrão? Todas as alterações serão perdidas.', 'Restaurar Padrão')">
                                             @csrf
-                                            <button type="submit" class="btn btn-sm btn-info" title="Restaurar Padrão"
-                                                onclick="return confirm('Deseja restaurar este template para os valores padrão?')">
+                                            <button type="submit" class="btn btn-sm btn-info" title="Restaurar Padrão">
                                                 <i class="fas fa-arrow-path"></i>
                                             </button>
                                         </form>
@@ -145,7 +145,7 @@
                         }
                     },
                     error: function() {
-                        alert('Erro ao alterar status do template');
+                        showToast('Erro ao alterar status do template', 'error');
                         location.reload();
                     }
                 });
@@ -180,12 +180,12 @@
                 const phone = $('#testPhone').val();
 
                 if (channel === 'email' && !email) {
-                    alert('Por favor, informe o email');
+                    showToast('Por favor, informe o email', 'warning');
                     return;
                 }
 
                 if (channel === 'whatsapp' && !phone) {
-                    alert('Por favor, informe o número do WhatsApp');
+                    showToast('Por favor, informe o número do WhatsApp', 'warning');
                     return;
                 }
 
@@ -200,17 +200,17 @@
                     },
                     success: function(response) {
                         if (response.success) {
-                            alert(response.message);
+                            showToast(response.message, 'success');
                             $('#testModal').modal('hide');
                             $('#testEmail').val('');
                             $('#testPhone').val('');
                         } else {
-                            alert(response.message);
+                            showToast(response.message, 'error');
                         }
                     },
                     error: function(xhr) {
                         const response = xhr.responseJSON;
-                        alert(response?.message || 'Erro ao enviar teste');
+                        showToast(response?.message || 'Erro ao enviar teste', 'error');
                     }
                 });
             });

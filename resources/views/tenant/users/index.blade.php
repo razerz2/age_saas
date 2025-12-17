@@ -75,11 +75,23 @@
                                             <!-- Botão de Gerenciar Permissões de Médicos (apenas para não médicos) -->
                                             @if (!$user->is_doctor)
                                                 <a href="{{ workspace_route('tenant.users.doctor-permissions', $user->id) }}"
-                                                    class="btn btn-info btn-sm d-block"
+                                                    class="btn btn-info btn-sm mb-1 d-block"
                                                     title="Gerenciar Permissões de Médicos">
                                                     <i class="mdi mdi-account-key"></i> Permissões
                                                 </a>
                                             @endif
+
+                                            <!-- Botão de Excluir com confirmação -->
+                                            <form action="{{ workspace_route('tenant.users.destroy', $user->id) }}" 
+                                                  method="POST" 
+                                                  class="d-inline delete-user-form"
+                                                  onsubmit="return confirmDeleteUser(event, '{{ $user->name_full }}')">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" class="btn btn-danger btn-sm d-block w-100">
+                                                    <i class="mdi mdi-delete"></i> Excluir
+                                                </button>
+                                            </form>
                                         </td>
 
                                     </tr>
@@ -106,5 +118,20 @@
                 }
             });
         });
+
+        /**
+         * Confirma a exclusão do usuário
+         */
+        function confirmDeleteUser(event, userName) {
+            event.preventDefault();
+            
+            const form = event.target.closest('form');
+            
+            if (confirm(`Tem certeza que deseja excluir o usuário "${userName}"?\n\nEsta ação não pode ser desfeita.`)) {
+                form.submit();
+            }
+            
+            return false;
+        }
     </script>
 @endpush

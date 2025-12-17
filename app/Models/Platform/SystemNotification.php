@@ -30,6 +30,10 @@ class SystemNotification extends Model
         'title', 'message', 'context', 'level', 'status'
     ];
 
+    protected $casts = [
+        'created_at' => 'datetime',
+    ];
+
     protected static function booted()
     {
         static::creating(function ($model) {

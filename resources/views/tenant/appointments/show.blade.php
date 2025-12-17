@@ -215,16 +215,25 @@
                         @endif
                         
                         @php
-                            $form = \App\Models\Tenant\Form::getFormForAppointment($appointment);
                             $tenant = \App\Models\Platform\Tenant::current();
                         @endphp
                         @if($form && $tenant)
-                            <a href="{{ tenant_route($tenant, 'public.form.response.create', ['form' => $form->id, 'appointment' => $appointment->id]) }}" 
-                               target="_blank"
-                               class="btn btn-outline-primary">
-                                <i class="mdi mdi-file-document-edit me-2"></i>
-                                Responder Formulário (Paciente)
-                            </a>
+                            @if(isset($formResponse) && $formResponse)
+                                {{-- Se já existe resposta, mostrar botão para visualizar --}}
+                                <a href="{{ workspace_route('tenant.responses.show', ['id' => $formResponse->id]) }}" 
+                                   class="btn btn-outline-primary">
+                                    <i class="mdi mdi-file-document me-2"></i>
+                                    Ver Formulário
+                                </a>
+                            @else
+                                {{-- Se não existe resposta, mostrar botão para responder --}}
+                                <a href="{{ tenant_route($tenant, 'public.form.response.create', ['form' => $form->id, 'appointment' => $appointment->id]) }}" 
+                                   target="_blank"
+                                   class="btn btn-outline-primary">
+                                    <i class="mdi mdi-file-document-edit me-2"></i>
+                                    Responder Formulário
+                                </a>
+                            @endif
                         @endif
                     </div>
                 </div>

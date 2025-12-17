@@ -294,7 +294,7 @@
                 $btnBuscar.on('click', function() {
                     let cnpj = $document.val().replace(/\D/g, '');
                     if (cnpj.length !== 14) {
-                        alert('Informe um CNPJ válido com 14 dígitos.');
+                        showToast('Informe um CNPJ válido com 14 dígitos.', 'warning');
                         return;
                     }
 
@@ -314,7 +314,7 @@
                             $('input[name="complemento"]').val(data.complemento || '');
                         })
                         .fail(function() {
-                            alert('❌ Não foi possível localizar o CNPJ informado.');
+                            showToast('Não foi possível localizar o CNPJ informado.', 'error');
                         })
                         .always(function() {
                             btn.prop('disabled', false).html('<i class="fas fa-search"></i> Buscar');

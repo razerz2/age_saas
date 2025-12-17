@@ -59,6 +59,36 @@ class FormResponseController extends Controller
         $form = Form::findOrFail($id);
         $data = $request->validated();
 
+        // Se houver appointment_id, verificar se já existe resposta para este agendamento e formulário
+        if (!empty($data['appointment_id'])) {
+            $existingResponse = FormResponse::where('appointment_id', $data['appointment_id'])
+                ->where('form_id', $form->id)
+                ->first();
+            
+            if ($existingResponse) {
+                // Atualizar resposta existente em vez de criar nova
+                $existingResponse->update([
+                    'patient_id'   => $data['patient_id'],
+                    'submitted_at' => $data['submitted_at'] ?? now(),
+                    'status'       => $data['status'] ?? 'submitted',
+                ]);
+
+                // Remover respostas antigas
+                $existingResponse->answers()->delete();
+
+                // Salvar novas respostas
+                if (!empty($data['answers'])) {
+                    foreach ($data['answers'] as $questionId => $value) {
+                        $this->saveAnswer($existingResponse->id, $questionId, $value);
+                    }
+                }
+
+                return redirect()->route('tenant.responses.index', ['slug' => $slug])
+                    ->with('success', 'Formulário atualizado com sucesso.');
+            }
+        }
+
+        // Criar nova resposta apenas se não existir
         $response = FormResponse::create([
             'id'           => Str::uuid(),
             'form_id'      => $form->id,
@@ -145,11 +175,15 @@ class FormResponseController extends Controller
     public function destroy($slug, $id)
     {
         $response = FormResponse::findOrFail($id);
+        
+        // Verificar autorização
+        $this->authorize('delete', $response);
+        
         $response->answers()->delete();
         $response->delete();
 
         return redirect()->route('tenant.responses.index', ['slug' => $slug])
-            ->with('success', 'Resposta removida.');
+            ->with('success', 'Resposta removida com sucesso.');
     }
 
 

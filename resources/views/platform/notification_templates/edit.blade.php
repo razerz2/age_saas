@@ -128,10 +128,10 @@
                         </div>
                         <div class="mt-3">
                             <form action="{{ route('Platform.notification-templates.restore', $template->id) }}"
-                                method="POST">
+                                method="POST"
+                                onsubmit="return confirmSubmit(event, 'Deseja restaurar este template para os valores padrão? Todas as alterações serão perdidas.', 'Restaurar Padrão')">
                                 @csrf
-                                <button type="submit" class="btn btn-warning w-100"
-                                    onclick="return confirm('Deseja restaurar este template para os valores padrão? Todas as alterações serão perdidas.')">
+                                <button type="submit" class="btn btn-warning w-100">
                                     <i class="fas fa-arrow-path me-2"></i>Restaurar Padrão
                                 </button>
                             </form>

@@ -12,6 +12,7 @@ use App\Models\Platform\Subscription;
 use App\Models\Platform\PreTenant;
 use App\Services\SystemNotificationService;
 use App\Services\Platform\PreTenantProcessorService;
+use App\Services\AsaasService;
 use Carbon\Carbon;
 
 class AsaasWebhookController extends Controller
@@ -160,8 +161,43 @@ class AsaasWebhookController extends Controller
                     ->first();
             }
 
+            // 🔹 Busca invoice por externalReference (para recovery)
+            // externalReference deve ser o ID da subscription recovery_pending
+            if (!$invoice && $externalReference) {
+                // Busca invoice recovery vinculada à subscription pelo externalReference
+                $invoice = Invoices::where('recovery_target_subscription_id', $externalReference)
+                    ->where(function ($query) use ($paymentId) {
+                        $query->where('provider_id', $paymentId)
+                              ->orWhere('asaas_payment_id', $paymentId)
+                              ->orWhere('asaas_payment_link_id', $paymentId);
+                    })
+                    ->where('is_recovery', true)
+                    ->first();
+                
+                if ($invoice) {
+                    Log::info("🔍 Invoice de recovery encontrada por externalReference", [
+                        'external_reference' => $externalReference,
+                        'invoice_id' => $invoice->id,
+                        'payment_id' => $paymentId,
+                    ]);
+                }
+            }
+
             $tenant       = $invoice?->tenant ?? Tenant::where('asaas_customer_id', $customerId)->first();
-            $subscription = $subscriptionId ? Subscription::where('asaas_subscription_id', $subscriptionId)->first() : null;
+            
+            // 🔹 Busca subscription: primeiro por asaas_subscription_id, depois por invoice recovery
+            $subscription = null;
+            if ($subscriptionId) {
+                $subscription = Subscription::where('asaas_subscription_id', $subscriptionId)->first();
+            }
+            // Se não encontrou e é invoice recovery, busca pela subscription recovery_target
+            if (!$subscription && $invoice && $invoice->is_recovery && $invoice->recovery_target_subscription_id) {
+                $subscription = Subscription::find($invoice->recovery_target_subscription_id);
+            }
+            // Fallback: subscription da invoice
+            if (!$subscription && $invoice) {
+                $subscription = $invoice->subscription;
+            }
 
             // 🔹 Marca entidades como "em sincronização"
             foreach ([$tenant, $subscription, $invoice] as $entity) {
@@ -322,30 +358,152 @@ class AsaasWebhookController extends Controller
                         break;
                     }
 
+                    // 🔹 Obtém data de pagamento do payload (se disponível) ou usa now()
+                    $paidAt = isset($payload['payment']['paymentDate']) 
+                        ? Carbon::parse($payload['payment']['paymentDate'])
+                        : now();
+
                     $invoice->update([
                         'status'             => 'paid',
+                        'paid_at'            => $paidAt,
                         'asaas_synced'       => true,
                         'asaas_sync_status'  => 'success',
                         'asaas_last_sync_at' => now(),
                         'asaas_last_error'   => null,
                     ]);
 
-                    if ($invoice->subscription && $invoice->subscription->status === 'pending') {
-                        $months = $invoice->subscription->plan->period_months ?? 1;
-                        $invoice->subscription->update([
-                            'status'              => 'active',
-                            'starts_at'           => now(),
-                            'ends_at'             => now()->addMonths($months),
-                            'asaas_last_sync_at'  => now(),
-                            'asaas_synced'        => true,
-                            'asaas_sync_status'   => 'success',
-                            'asaas_last_error'    => null,
+                    // 🔹 Ativa assinatura se estava pendente ou recovery_pending
+                    $subscription = $invoice->subscription;
+                    if ($subscription && in_array($subscription->status, ['pending', 'recovery_pending'])) {
+                        $months = $subscription->plan->period_months ?? 1;
+                        
+                        // 🔹 Se é recovery, cria nova assinatura recorrente no Asaas
+                        if ($subscription->status === 'recovery_pending' && $subscription->payment_method === 'CREDIT_CARD') {
+                            $plan = $subscription->plan;
+                            $tenant = $subscription->tenant;
+                            
+                            // 🔹 Calcula nextDueDate baseado na data do pagamento (paymentDate)
+                            $paidAtDate = $paidAt->copy()->startOfDay();
+                            $nextDueDate = $paidAtDate->copy()->addMonths(1)->toDateString();
+                            
+                            // Cria nova assinatura recorrente no Asaas
+                            $asaas = new AsaasService();
+                            $asaasResponse = $asaas->createSubscription([
+                                'customer' => $tenant->asaas_customer_id,
+                                'value' => $plan->price_cents / 100,
+                                'cycle' => 'MONTHLY',
+                                'nextDueDate' => $nextDueDate, // Baseado na data do pagamento
+                                'description' => "Assinatura do plano {$plan->name}",
+                            ]);
+                            
+                            if (!empty($asaasResponse['subscription']['id'])) {
+                                $months = $plan->period_months ?? 1;
+                                
+                                $subscription->update([
+                                    'asaas_subscription_id' => $asaasResponse['subscription']['id'],
+                                    'status' => 'active',
+                                    'starts_at' => $paidAtDate,
+                                    'ends_at' => $paidAtDate->copy()->addMonths($months),
+                                    'recovery_started_at' => null, // Limpa recovery
+                                    'asaas_synced' => true,
+                                    'asaas_sync_status' => 'success',
+                                    'asaas_last_sync_at' => now(),
+                                    'asaas_last_error' => null,
+                                ]);
+                                
+                                // 🔹 Atualiza invoice com ID da nova assinatura criada
+                                $invoice->update([
+                                    'asaas_recovery_subscription_id' => $asaasResponse['subscription']['id'],
+                                ]);
+                                
+                                Log::info("✅ Recovery concluído - nova assinatura criada no Asaas", [
+                                    'subscription_id' => $subscription->id,
+                                    'new_asaas_subscription_id' => $asaasResponse['subscription']['id'],
+                                    'next_due_date' => $nextDueDate,
+                                    'paid_at' => $paidAtDate->toDateString(),
+                                ]);
+                            } else {
+                                Log::error("❌ Falha ao criar assinatura no Asaas durante recovery", [
+                                    'subscription_id' => $subscription->id,
+                                    'response' => $asaasResponse,
+                                ]);
+                            }
+                        } else {
+                            // Assinatura normal pendente
+                            $subscription->update([
+                                'status'              => 'active',
+                                'starts_at'           => now(),
+                                'ends_at'             => now()->addMonths($months),
+                                'asaas_last_sync_at'  => now(),
+                                'asaas_synced'        => true,
+                                'asaas_sync_status'   => 'success',
+                                'asaas_last_error'    => null,
+                            ]);
+                        }
+                    }
+
+                    // 🔹 REGRA CRÍTICA: Só recalcula ciclo se paid_at > due_date E apenas para PIX/Boleto
+                    // Cartão: Asaas é autoridade total (não recalcula ciclo localmente)
+                    $subscription = $invoice->subscription;
+                    $paymentMethod = $invoice->payment_method ?? $subscription?->payment_method;
+                    
+                    if ($subscription && in_array($paymentMethod, ['PIX', 'BOLETO'])) {
+                        $dueDate = Carbon::parse($invoice->due_date);
+                        
+                        // Só recalcula se pagamento foi após o vencimento
+                        if ($paidAt->isAfter($dueDate)) {
+                            $months = $subscription->plan->period_months ?? 1;
+                            
+                            // 🔹 Atualiza billing_anchor_date = paid_at->toDateString()
+                            $anchorDate = $paidAt->copy();
+                            
+                            // Calcula próximo vencimento baseado no anchor date
+                            $nextDueDate = $anchorDate->copy()->addMonths($months);
+                            
+                            $subscription->update([
+                                'ends_at' => $nextDueDate,
+                                'billing_anchor_date' => $anchorDate->toDateString(),
+                                'status' => 'active',
+                                'asaas_last_sync_at' => now(),
+                            ]);
+                            
+                            Log::info("🔄 Ciclo recalculado para assinatura {$subscription->id} (pagamento após vencimento)", [
+                                'paid_at' => $paidAt->toDateString(),
+                                'due_date' => $dueDate->toDateString(),
+                                'billing_anchor_date' => $anchorDate->toDateString(),
+                                'new_ends_at' => $nextDueDate->toDateString(),
+                                'payment_method' => $paymentMethod,
+                            ]);
+                        } else {
+                            Log::info("ℹ️ Pagamento antes ou no vencimento - ciclo não recalculado", [
+                                'paid_at' => $paidAt->toDateString(),
+                                'due_date' => $dueDate->toDateString(),
+                                'payment_method' => $paymentMethod,
+                            ]);
+                        }
+                    } else {
+                        // Para cartão: Asaas é autoridade total, não recalcula
+                        Log::info("ℹ️ Pagamento de cartão - Asaas controla o ciclo, não recalcula localmente", [
+                            'payment_method' => $paymentMethod,
+                            'subscription_id' => $subscription?->id,
                         ]);
                     }
 
-                    if ($tenant && $tenant->status === 'suspended') {
-                        $tenant->update(['status' => 'active']);
-                        Log::info("✅ Tenant {$tenant->trade_name} reativado após pagamento da fatura {$paymentId}.");
+                    // 🔹 Reativação automática (apenas após recovery ou pagamento normal)
+                    // Se é recovery, já foi reativado acima. Se não, reativa normalmente.
+                    if ($tenant && $tenant->status === 'suspended' && $subscription?->status !== 'recovery_pending') {
+                        $tenant->update([
+                            'status' => 'active',
+                            'suspended_at' => null, // Limpa suspended_at
+                        ]);
+                        Log::info("✅ Tenant {$tenant->trade_name} reativado automaticamente após confirmação de pagamento da fatura {$paymentId}.");
+                    } elseif ($tenant && $tenant->status === 'suspended' && $subscription?->status === 'recovery_pending') {
+                        // Reativa tenant após recovery ser concluído
+                        $tenant->update([
+                            'status' => 'active',
+                            'suspended_at' => null,
+                        ]);
+                        Log::info("✅ Tenant {$tenant->trade_name} reativado após conclusão do recovery.");
                     }
 
                     SystemNotificationService::notify(
@@ -369,20 +527,23 @@ class AsaasWebhookController extends Controller
 
                     Log::warning("⚠️ Fatura {$invoice->id} marcada como vencida.");
 
-                    if ($tenant) {
-                        $diffDays = now()->diffInDays($invoice->due_date);
-                        if ($diffDays >= 5 && $tenant->status !== 'suspended') {
-                            $tenant->update(['status' => 'suspended']);
-                            Log::warning("⛔ Tenant {$tenant->trade_name} suspenso (atraso de {$diffDays} dias).");
-                        }
-
-                        SystemNotificationService::notify(
-                            'Fatura vencida',
-                            "Fatura #{$invoice->id} do tenant {$tenant->trade_name} está vencida há {$diffDays} dias.",
-                            'invoice',
-                            'warning'
-                        );
+                    // 🔹 Suspensão imediata (sem período de carência)
+                    if ($tenant && $tenant->status !== 'suspended') {
+                        $tenant->update(['status' => 'suspended']);
+                        Log::warning("⛔ Tenant {$tenant->trade_name} suspenso imediatamente por fatura vencida (sem período de carência).");
                     }
+
+                    // Atualiza status da assinatura
+                    if ($invoice->subscription) {
+                        $invoice->subscription->update(['status' => 'past_due']);
+                    }
+
+                    SystemNotificationService::notify(
+                        'Fatura vencida',
+                        "Fatura #{$invoice->id} do tenant {$tenant?->trade_name} está vencida. Tenant suspenso imediatamente.",
+                        'invoice',
+                        'warning'
+                    );
                     break;
 
                 case 'PAYMENT_REFUNDED':

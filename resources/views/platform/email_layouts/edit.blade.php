@@ -336,8 +336,9 @@
             });
         });
 
-        function removeLogo() {
-            if (confirm('Deseja realmente remover o logo atual?')) {
+        async function removeLogo() {
+            const confirmed = await showConfirm('Deseja realmente remover o logo atual?', 'Remover Logo');
+            if (confirmed) {
                 // Limpar campos de logo
                 $('input[name="logo_file"]').val('');
                 $('input[name="logo_url"]').val('');

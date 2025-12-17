@@ -110,6 +110,7 @@ class PublicAppointmentController extends Controller
         $data['patient_id'] = $patientId; // Usa o paciente da sessão
         $data['doctor_id'] = $calendar->doctor_id; // Garantir que doctor_id está definido
         $data['status'] = 'scheduled'; // Status padrão para agendamentos públicos
+        $data['origin'] = 'public'; // Identificar origem como público
 
         // Aplicar lógica de appointment_mode baseado na configuração
         $mode = \App\Models\Tenant\TenantSetting::get('appointments.default_appointment_mode', 'user_choice');
@@ -130,6 +131,18 @@ class PublicAppointmentController extends Controller
         // Limpa a sessão do paciente após criar o agendamento
         Session::forget('public_patient_id');
         Session::forget('public_patient_name');
+
+        // Verificar se deve redirecionar para pagamento
+        $redirectService = app(\App\Services\Finance\FinanceRedirectService::class);
+        if ($redirectService->shouldRedirectToPayment($appointment)) {
+            $charge = $redirectService->getPendingCharge($appointment);
+            if ($charge) {
+                return redirect()->route('tenant.payment.show', [
+                    'slug' => $tenant,
+                    'charge' => $charge->id
+                ]);
+            }
+        }
 
         // Redireciona para a página de detalhes do agendamento
         return redirect()->route('public.appointment.show', [

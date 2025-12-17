@@ -30,7 +30,7 @@
                     <h4 class="card-title">Formulário: {{ $form->name }}</h4>
                     <p class="card-description"> {{ $form->description ?? '' }} </p>
 
-                    <form class="forms-sample" action="{{ workspace_route('tenant.responses.store', $form->id) }}" method="POST">
+                    <form class="forms-sample" action="{{ workspace_route('tenant.responses.store', ['form_id' => $form->id]) }}" method="POST">
                         @csrf
 
                         <input type="hidden" name="form_id" value="{{ $form->id }}">

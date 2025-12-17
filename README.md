@@ -115,11 +115,7 @@ npm install
 
 ### 4. Configure o ambiente
 
-Copie o arquivo `.env.example` para `.env` (se existir) ou crie um novo:
-
-```bash
-cp .env.example .env
-```
+Crie o arquivo `.env` baseado no guia `docs/ENV.md` (seção **"Exemplo Completo de .env"**).
 
 Gere a chave da aplicação:
 
@@ -342,8 +338,8 @@ Para mais detalhes sobre a arquitetura, consulte:
 ### Primeiro Acesso
 
 Após criar um tenant, use as credenciais padrão:
-- **Email**: admin@{subdomain}
-- **Senha**: Verifique o seeder `TenantAdminSeeder`
+- **Email**: `admin@{subdomain}.com`
+- **Senha**: `admin123` (padrão; definida no `TenantAdminSeeder`)
 
 ## 🏢 Arquitetura Multitenant
 
@@ -487,13 +483,16 @@ O projeto utiliza Laravel Pint para formatação:
 ### Documentação Técnica
 
 - [ARQUITETURA.md](ARQUITETURA.md) - Documentação técnica detalhada da arquitetura
+- [docs/README.md](docs/README.md) - Índice de guias e trilha recomendada
 - [docs/ENV.md](docs/ENV.md) - Guia completo de variáveis de ambiente
+- [docs/HARDENING_PRODUCAO.md](docs/HARDENING_PRODUCAO.md) - Hardening e boas práticas para produção
 
 ### Guias Específicos
 
 - [docs/GUIA_CRIAR_FORMULARIO.md](docs/GUIA_CRIAR_FORMULARIO.md) - Guia passo a passo para criar formulários
 - [docs/GUIA_TESTE_PUBLICO.md](docs/GUIA_TESTE_PUBLICO.md) - Guia de teste da área pública de agendamento
 - [docs/INSTRUCOES_MIGRATION.md](docs/INSTRUCOES_MIGRATION.md) - Instruções para migrações manuais
+- [docs/RESUMO_MODULO_FINANCEIRO.md](docs/RESUMO_MODULO_FINANCEIRO.md) - Resumo do módulo financeiro (opcional)
 
 ### Documentação Externa
 

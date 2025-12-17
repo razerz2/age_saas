@@ -44,4 +44,15 @@ class FormResponse extends Model
     {
         return $this->hasMany(ResponseAnswer::class, 'response_id');
     }
+
+    /**
+     * Busca resposta existente para um agendamento e formulário
+     */
+    public static function findByAppointmentAndForm($appointmentId, $formId)
+    {
+        return static::where('appointment_id', $appointmentId)
+            ->where('form_id', $formId)
+            ->whereNotNull('appointment_id')
+            ->first();
+    }
 }

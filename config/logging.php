@@ -93,6 +93,14 @@ return [
             'processors' => [PsrLogMessageProcessor::class],
         ],
 
+        'finance' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/finance.log'),
+            'level' => env('LOG_LEVEL', 'info'),
+            'days' => 30,
+            'replace_placeholders' => true,
+        ],
+
         'stderr' => [
             'driver' => 'monolog',
             'level' => env('LOG_LEVEL', 'debug'),

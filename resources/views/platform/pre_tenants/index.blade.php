@@ -95,7 +95,7 @@
                                                     <form action="{{ route('Platform.pre_tenants.destroy', $preTenant->id) }}" 
                                                           method="POST" 
                                                           class="d-inline"
-                                                          onsubmit="return confirm('Tem certeza que deseja excluir este pré-cadastro? Esta ação não pode ser desfeita.');">
+                                                          onsubmit="return confirmSubmit(event, 'Tem certeza que deseja excluir este pré-cadastro? Esta ação não pode ser desfeita.', 'Confirmar Exclusão');">
                                                         @csrf
                                                         @method('DELETE')
                                                         <button type="submit" title="Excluir" class="btn btn-sm btn-danger">

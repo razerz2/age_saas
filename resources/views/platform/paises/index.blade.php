@@ -53,7 +53,7 @@
                                             </button>
                                             <form action="{{ route('Platform.paises.destroy', $pais->id_pais) }}"
                                                 method="POST" class="d-inline"
-                                                onsubmit="return confirm('Tem certeza que deseja excluir este país?')">
+                                                onsubmit="return confirmSubmit(event, 'Tem certeza que deseja excluir este país? Esta ação não pode ser desfeita.', 'Confirmar Exclusão')">
                                                 @csrf @method('DELETE')
                                                 <button title="Exclusão" class="btn btn-sm btn-outline-danger">
                                                     <i class="fas fa-trash-alt"></i>

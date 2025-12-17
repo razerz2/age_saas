@@ -16,7 +16,7 @@ class TwoFactorChallengeController extends Controller
     /**
      * Exibe a página de verificação do código 2FA
      */
-    public function create(Request $request): View
+    public function create(Request $request): View|RedirectResponse
     {
         $slug = $request->route('slug') ?? $request->route('tenant');
         

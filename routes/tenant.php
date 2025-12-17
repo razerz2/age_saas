@@ -144,6 +144,13 @@ Route::prefix('workspace/{slug}')
         Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
         Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
 
+        // Subscription
+        Route::get('/subscription', [\App\Http\Controllers\Tenant\SubscriptionController::class, 'show'])->name('subscription.show');
+
+        // Plan Change Request
+        Route::get('/plan-change-request/create', [\App\Http\Controllers\Tenant\PlanChangeRequestController::class, 'create'])->name('plan-change-request.create');
+        Route::post('/plan-change-request', [\App\Http\Controllers\Tenant\PlanChangeRequestController::class, 'store'])->name('plan-change-request.store');
+
         // Autenticação de dois fatores (2FA)
         Route::prefix('two-factor')->name('two-factor.')->group(function () {
             Route::get('/', [\App\Http\Controllers\Tenant\TwoFactorController::class, 'index'])->name('index');
@@ -689,6 +696,98 @@ Route::prefix('workspace/{slug}')
             Route::post('settings/user-defaults', [SettingsController::class, 'updateUserDefaults'])->name('settings.update.user-defaults');
             Route::post('settings/professionals', [SettingsController::class, 'updateProfessionals'])->name('settings.update.professionals');
             Route::post('settings/appearance', [SettingsController::class, 'updateAppearance'])->name('settings.update.appearance');
+        });
+
+        // =====================================================================
+        // FINANCE (Módulo Financeiro)
+        // =====================================================================
+        Route::middleware(['module.access:finance'])->group(function () {
+            // Dashboard
+            Route::get('finance', [\App\Http\Controllers\Tenant\FinanceController::class, 'index'])->name('finance.index');
+            
+            // Configurações Financeiras
+            Route::get('settings/finance', [\App\Http\Controllers\Tenant\FinanceSettingsController::class, 'index'])->name('settings.finance.index');
+            Route::post('settings/finance', [\App\Http\Controllers\Tenant\FinanceSettingsController::class, 'update'])->name('settings.finance.update');
+            
+            // Contas
+            Route::resource('finance/accounts', \App\Http\Controllers\Tenant\Finance\FinancialAccountController::class)->names([
+                'index' => 'finance.accounts.index',
+                'create' => 'finance.accounts.create',
+                'store' => 'finance.accounts.store',
+                'show' => 'finance.accounts.show',
+                'edit' => 'finance.accounts.edit',
+                'update' => 'finance.accounts.update',
+                'destroy' => 'finance.accounts.destroy',
+            ]);
+            
+            // Categorias
+            Route::resource('finance/categories', \App\Http\Controllers\Tenant\Finance\FinancialCategoryController::class)->names([
+                'index' => 'finance.categories.index',
+                'create' => 'finance.categories.create',
+                'store' => 'finance.categories.store',
+                'show' => 'finance.categories.show',
+                'edit' => 'finance.categories.edit',
+                'update' => 'finance.categories.update',
+                'destroy' => 'finance.categories.destroy',
+            ]);
+            
+            // Transações
+            Route::resource('finance/transactions', \App\Http\Controllers\Tenant\Finance\FinancialTransactionController::class)
+                ->except(['destroy'])
+                ->names([
+                    'index' => 'finance.transactions.index',
+                    'create' => 'finance.transactions.create',
+                    'store' => 'finance.transactions.store',
+                    'show' => 'finance.transactions.show',
+                    'edit' => 'finance.transactions.edit',
+                    'update' => 'finance.transactions.update',
+                ]);
+            
+            // Cobranças
+            Route::get('finance/charges', [\App\Http\Controllers\Tenant\Finance\FinancialChargeController::class, 'index'])->name('finance.charges.index');
+            Route::get('finance/charges/{charge}', [\App\Http\Controllers\Tenant\Finance\FinancialChargeController::class, 'show'])
+                ->where('charge', '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}')
+                ->name('finance.charges.show');
+            Route::post('finance/charges/{charge}/cancel', [\App\Http\Controllers\Tenant\Finance\FinancialChargeController::class, 'cancel'])
+                ->where('charge', '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}')
+                ->name('finance.charges.cancel');
+            Route::post('finance/charges/{charge}/resend-link', [\App\Http\Controllers\Tenant\Finance\FinancialChargeController::class, 'resendLink'])
+                ->where('charge', '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}')
+                ->name('finance.charges.resend');
+            
+            // Comissões
+            Route::get('finance/commissions', [\App\Http\Controllers\Tenant\Finance\DoctorCommissionController::class, 'index'])->name('finance.commissions.index');
+            Route::get('finance/commissions/{commission}', [\App\Http\Controllers\Tenant\Finance\DoctorCommissionController::class, 'show'])
+                ->where('commission', '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}')
+                ->name('finance.commissions.show');
+            Route::post('finance/commissions/{commission}/mark-paid', [\App\Http\Controllers\Tenant\Finance\DoctorCommissionController::class, 'markPaid'])
+                ->where('commission', '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}')
+                ->name('finance.commissions.markPaid');
+            
+            // Relatórios Financeiros
+            Route::prefix('finance/reports')->name('finance.reports.')->group(function () {
+                Route::get('/', [\App\Http\Controllers\Tenant\Finance\Reports\FinanceReportController::class, 'index'])->name('index');
+                
+                Route::get('cash-flow', [\App\Http\Controllers\Tenant\Finance\Reports\CashFlowReportController::class, 'index'])->name('cashflow');
+                Route::post('cash-flow/data', [\App\Http\Controllers\Tenant\Finance\Reports\CashFlowReportController::class, 'data'])->name('cashflow.data');
+                Route::get('cash-flow/export/{format}', [\App\Http\Controllers\Tenant\Finance\Reports\CashFlowReportController::class, 'export'])->name('cashflow.export');
+                
+                Route::get('income-expense', [\App\Http\Controllers\Tenant\Finance\Reports\IncomeExpenseReportController::class, 'index'])->name('incomeExpense');
+                Route::post('income-expense/data', [\App\Http\Controllers\Tenant\Finance\Reports\IncomeExpenseReportController::class, 'data'])->name('incomeExpense.data');
+                Route::get('income-expense/export/{format}', [\App\Http\Controllers\Tenant\Finance\Reports\IncomeExpenseReportController::class, 'export'])->name('incomeExpense.export');
+                
+                Route::get('charges', [\App\Http\Controllers\Tenant\Finance\Reports\ChargesReportController::class, 'index'])->name('charges');
+                Route::post('charges/data', [\App\Http\Controllers\Tenant\Finance\Reports\ChargesReportController::class, 'data'])->name('charges.data');
+                Route::get('charges/export/{format}', [\App\Http\Controllers\Tenant\Finance\Reports\ChargesReportController::class, 'export'])->name('charges.export');
+                
+                Route::get('payments', [\App\Http\Controllers\Tenant\Finance\Reports\PaymentsReportController::class, 'index'])->name('payments');
+                Route::post('payments/data', [\App\Http\Controllers\Tenant\Finance\Reports\PaymentsReportController::class, 'data'])->name('payments.data');
+                Route::get('payments/export/{format}', [\App\Http\Controllers\Tenant\Finance\Reports\PaymentsReportController::class, 'export'])->name('payments.export');
+                
+                Route::get('commissions', [\App\Http\Controllers\Tenant\Finance\Reports\CommissionsReportController::class, 'index'])->name('commissions');
+                Route::post('commissions/data', [\App\Http\Controllers\Tenant\Finance\Reports\CommissionsReportController::class, 'data'])->name('commissions.data');
+                Route::get('commissions/export/{format}', [\App\Http\Controllers\Tenant\Finance\Reports\CommissionsReportController::class, 'export'])->name('commissions.export');
+            });
         });
 
         // =====================================================================

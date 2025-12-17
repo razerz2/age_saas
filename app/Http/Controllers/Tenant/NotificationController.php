@@ -23,9 +23,10 @@ class NotificationController extends Controller
     /**
      * Exibe uma notificação específica
      */
-    public function show($slug, $id)
+    public function show($slug, $notificationId)
     {
-        $notification = Notification::findOrFail($id);
+        // O parâmetro vem da rota resource como {notification}
+        $notification = Notification::findOrFail($notificationId);
         
         // Marca como lida ao visualizar
         if ($notification->status === 'new') {
@@ -40,6 +41,7 @@ class NotificationController extends Controller
      */
     public function markAsRead($slug, $id)
     {
+        // A rota usa {id} como parâmetro, não {notification}
         $notification = Notification::findOrFail($id);
         $notification->markAsRead();
 

@@ -8,6 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Tenant\StoreUserRequest;
 use App\Http\Requests\Tenant\UpdateUserRequest;
 use App\Http\Requests\Tenant\ChangePasswordUserRequest;
+use App\Traits\HasFeatureAccess;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
@@ -15,6 +16,7 @@ use Illuminate\Support\Str;
 
 class UserController extends Controller
 {
+    use HasFeatureAccess;
     public function index()
     {
         $users = User::orderBy('name')->paginate(15);
@@ -30,6 +32,41 @@ class UserController extends Controller
     {
         $data = $request->validated();
         
+        // Garante que role tenha um valor padrão
+        $data['role'] = $data['role'] ?? 'user';
+
+        // Verifica os limites do plano antes de criar o usuário
+        $role = $data['role'];
+        $limitType = match ($role) {
+            'admin' => 'max_admin_users',
+            'user' => 'max_common_users',
+            'doctor' => 'max_doctors',
+            default => null,
+        };
+
+        if ($limitType) {
+            $maxLimit = $this->getPlanLimit($limitType);
+            
+            if ($maxLimit !== null) {
+                // Conta quantos usuários já existem com este role
+                $currentCount = User::where('role', $role)->count();
+                
+                if ($currentCount >= $maxLimit) {
+                    $roleLabel = match ($role) {
+                        'admin' => 'administradores',
+                        'user' => 'usuários comuns',
+                        'doctor' => 'médicos',
+                        default => 'usuários',
+                    };
+                    
+                    return redirect()
+                        ->back()
+                        ->withInput()
+                        ->with('error', "Limite de {$maxLimit} {$roleLabel} atingido no seu plano. Faça upgrade para adicionar mais usuários.");
+                }
+            }
+        }
+        
         // Se a senha não foi informada, gera uma senha aleatória
         if (empty($data['password'])) {
             $data['password'] = Str::random(12);
@@ -42,9 +79,6 @@ class UserController extends Controller
 
         // Verifica o role do usuário logado
         $loggedUser = Auth::guard('tenant')->user();
-
-        // Garante que role tenha um valor padrão
-        $data['role'] = $data['role'] ?? 'user';
 
         // Processar módulos: se foram selecionados manualmente, usar esses
         // Caso contrário, aplicar módulos padrão baseado no role
@@ -242,15 +276,105 @@ class UserController extends Controller
     /**
      * Remove o usuário.
      * Agora usando o ID explícito.
+     * Valida se não há registros vinculados antes de excluir.
      */
     public function destroy($slug, $id)
     {
-        $user = User::findOrFail($id);  // Utilizando o ID passado na rota
+        $user = User::findOrFail($id);
+
+        // Verifica se há registros vinculados ao usuário
+        $relatedRecords = $this->checkRelatedRecords($user);
+
+        if (!empty($relatedRecords)) {
+            $message = "Não é possível excluir o usuário porque existem registros vinculados:<br><br>";
+            $message .= implode("<br>", $relatedRecords);
+            $message .= "<br><br>Remova ou transfira esses registros antes de excluir o usuário.";
+
+            return redirect()
+                ->route('tenant.users.index', ['slug' => tenant()->subdomain])
+                ->with('error', $message);
+        }
 
         $user->delete();
 
-        return redirect()->route('tenant.users.index', ['slug' => tenant()->subdomain])
-            ->with('success', 'Usuário removido.');
+        return redirect()
+            ->route('tenant.users.index', ['slug' => tenant()->subdomain])
+            ->with('success', 'Usuário removido com sucesso.');
+    }
+
+    /**
+     * Verifica se o usuário possui registros vinculados
+     *
+     * @param User $user
+     * @return array Array com mensagens sobre registros vinculados encontrados
+     */
+    protected function checkRelatedRecords(User $user): array
+    {
+        $relatedRecords = [];
+
+        // Verifica se é médico e tem registros vinculados
+        if ($user->role === 'doctor' || $user->is_doctor) {
+            $doctor = $user->doctor;
+
+            if ($doctor) {
+                // Verifica se tem calendários
+                $calendarsCount = $doctor->calendars()->count();
+                if ($calendarsCount > 0) {
+                    $relatedRecords[] = "• {$calendarsCount} calendário(s) vinculado(s)";
+                }
+
+                // Verifica se tem agendamentos
+                $appointmentsCount = $doctor->appointments()->count();
+                if ($appointmentsCount > 0) {
+                    $relatedRecords[] = "• {$appointmentsCount} agendamento(s) vinculado(s)";
+                }
+
+                // Verifica se tem horários comerciais
+                $businessHoursCount = $doctor->businessHours()->count();
+                if ($businessHoursCount > 0) {
+                    $relatedRecords[] = "• {$businessHoursCount} horário(s) comercial(is) vinculado(s)";
+                }
+
+                // Verifica se tem tipos de atendimento
+                $appointmentTypesCount = $doctor->appointmentTypes()->count();
+                if ($appointmentTypesCount > 0) {
+                    $relatedRecords[] = "• {$appointmentTypesCount} tipo(s) de atendimento vinculado(s)";
+                }
+
+                // Verifica se tem formulários
+                $formsCount = $doctor->forms()->count();
+                if ($formsCount > 0) {
+                    $relatedRecords[] = "• {$formsCount} formulário(s) vinculado(s)";
+                }
+
+                // Verifica se tem transações financeiras
+                $transactionsCount = \App\Models\Tenant\FinancialTransaction::where('doctor_id', $doctor->id)->count();
+                if ($transactionsCount > 0) {
+                    $relatedRecords[] = "• {$transactionsCount} transação(ões) financeira(s) vinculada(s)";
+                }
+            }
+        }
+
+        // Verifica transações financeiras criadas pelo usuário
+        $createdTransactionsCount = \App\Models\Tenant\FinancialTransaction::where('created_by', $user->id)->count();
+        if ($createdTransactionsCount > 0) {
+            $relatedRecords[] = "• {$createdTransactionsCount} transação(ões) financeira(s) criada(s) por este usuário";
+        }
+
+        // Verifica contas OAuth vinculadas
+        $oauthAccountsCount = \App\Models\Tenant\OauthAccount::where('user_id', $user->id)->count();
+        if ($oauthAccountsCount > 0) {
+            $relatedRecords[] = "• {$oauthAccountsCount} conta(s) OAuth vinculada(s)";
+        }
+
+        // Verifica códigos de autenticação de dois fatores
+        $twoFactorCodesCount = \App\Models\Tenant\TwoFactorCode::where('user_id', $user->id)->count();
+        if ($twoFactorCodesCount > 0) {
+            // Códigos 2FA podem ser excluídos, mas vamos informar
+            // Na verdade, esses podem ser excluídos automaticamente, então não vamos bloquear
+        }
+
+        return $relatedRecords;
     }
 
     public function showChangePasswordForm($slug, $id)

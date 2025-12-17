@@ -167,17 +167,15 @@ class ProcessSubscriptionsCommand extends Command
             // Ignora qualquer outro tipo (boleto, débito, etc.)
         }
 
-        // 🔒 Suspende tenants com faturas vencidas há mais de 5 dias
-        $overdues = Invoices::whereIn('status', ['pending', 'overdue'])
-            ->whereDate('due_date', '<=', Carbon::today()->subDays(5))
+        // 🔒 Marca como overdue faturas pending com due_date no passado
+        // A suspensão será feita pelo comando invoices:check-overdue (suspensão imediata, sem carência)
+        $overdues = Invoices::where('status', 'pending')
+            ->whereDate('due_date', '<', Carbon::today())
             ->get();
 
         foreach ($overdues as $inv) {
             $inv->update(['status' => 'overdue']);
             Subscription::where('id', $inv->subscription_id)->update(['status' => 'past_due']);
-            Tenant::where('id', $inv->tenant_id)
-                ->where('status', '!=', 'suspended')
-                ->update(['status' => 'suspended']);
             $blockedTenants++;
         }
 

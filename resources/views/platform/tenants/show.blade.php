@@ -309,7 +309,7 @@
         function copyToClipboard(elementId, buttonId) {
             const element = document.getElementById(elementId);
             if (!element) {
-                alert('Elemento não encontrado.');
+                showToast('Elemento não encontrado.', 'error');
                 return;
             }
 
@@ -342,7 +342,7 @@
                 showCopySuccess(buttonId);
             } catch (err) {
                 console.error('Erro ao copiar:', err);
-                alert('Erro ao copiar. Por favor, copie manualmente.');
+                showToast('Erro ao copiar. Por favor, copie manualmente.', 'error');
             }
             
             document.body.removeChild(textarea);

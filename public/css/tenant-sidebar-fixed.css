@@ -188,6 +188,24 @@
     max-height: calc(100vh - 64px) !important;
     min-height: calc(100vh - 64px) !important;
   }
+
+  /* ============================================
+     SIDEBAR COLAPSADO (MODO ÍCONES APENAS)
+     Quando o menu está colapsado, ajusta larguras
+     Largura: 70px (apenas ícones)
+     ============================================ */
+  body.sidebar-fixed.sidebar-icon-only .container-scroller .sidebar.sidebar-offcanvas,
+  body.sidebar-fixed.sidebar-icon-only .container-scroller #sidebar.sidebar.sidebar-offcanvas,
+  body.sidebar-fixed.sidebar-icon-only .sidebar.sidebar-offcanvas,
+  body.sidebar-fixed.sidebar-icon-only #sidebar.sidebar.sidebar-offcanvas {
+    width: 70px !important;
+  }
+
+  /* Ajusta o page-body-wrapper quando sidebar está colapsado */
+  body.sidebar-fixed.sidebar-icon-only .page-body-wrapper {
+    margin-left: 70px !important;
+    width: calc(100% - 70px) !important;
+  }
 }
 
 /* ============================================

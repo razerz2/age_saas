@@ -16,7 +16,7 @@
                     <a href="{{ workspace_route('tenant.forms.index') }}">Formulários</a>
                 </li>
                 <li class="breadcrumb-item">
-                    <a href="{{ workspace_route('tenant.forms.show', $form->id) }}">{{ $form->name }}</a>
+                    <a href="{{ workspace_route('tenant.forms.show', ['form' => $form->id]) }}">{{ $form->name }}</a>
                 </li>
                 <li class="breadcrumb-item active" aria-current="page">Visualizar</li>
             </ol>
@@ -107,7 +107,7 @@
                     @endif
 
                     <div class="mt-4 pt-3 border-top">
-                        <a href="{{ workspace_route('tenant.forms.show', $form->id) }}" class="btn btn-light">
+                        <a href="{{ workspace_route('tenant.forms.show', ['form' => $form->id]) }}" class="btn btn-light">
                             <i class="mdi mdi-arrow-left me-1"></i>
                             Voltar
                         </a>
