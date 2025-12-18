@@ -80,13 +80,45 @@ class RouteServiceProvider extends ServiceProvider
          * ================================================================
          */
         $this->routes(function () {
+            // Rede de Clínicas (Pública e Administrativa) - DEVE VIR ANTES DE WEB.PHP
+            // para evitar que o "/" do web.php capture subdomínios da rede
+            $domain = config('app.domain');
+            if (request()) {
+                $host = request()->getHost();
+                // Se estivermos em localhost ou IP, usamos o host atual como base para subdomínios
+                if (in_array($host, ['localhost', '127.0.0.1'])) {
+                    $domain = $host;
+                } elseif (!str_ends_with($host, $domain)) {
+                    // Fallback: se o host não termina com o domínio configurado,
+                    // tenta identificar se é um subdomínio e usa o domínio base do host
+                    $parts = explode('.', $host);
+                    if (count($parts) >= 3) {
+                        array_shift($parts); // remove o primeiro subdomínio
+                        $domain = implode('.', $parts);
+                    }
+                }
+            }
+
+            Route::group([
+                'middleware' => ['web'],
+                'domain' => '{network}.' . $domain,
+                'where' => ['network' => '[a-z0-9-]+']
+            ], function () {
+                // Rotas Públicas da Rede
+                Route::group([], base_path('routes/network.php'));
+
+                // Área Administrativa da Rede
+                Route::group([
+                    'prefix' => 'admin'
+                ], base_path('routes/network_admin.php'));
+            });
 
             // API
             Route::middleware('api')
                 ->prefix('api')
                 ->group(base_path('routes/api.php'));
 
-            // Bot API (API pública para bots - protegida por token)
+            // Bot API
             Route::middleware(['api', 'platform.bot.token'])
                 ->prefix('bot')
                 ->group(base_path('routes/platform_bot_api.php'));
@@ -102,30 +134,6 @@ class RouteServiceProvider extends ServiceProvider
             // Portal do Paciente
             Route::middleware(['web'])
                 ->group(base_path('routes/patient_portal.php'));
-
-            // Rede de Clínicas (Pública e Administrativa)
-            $domain = config('app.domain');
-            if (request()) {
-                $host = request()->getHost();
-                // Se estivermos em localhost ou IP, não usamos domain restrito para facilitar testes
-                if (in_array($host, ['localhost', '127.0.0.1'])) {
-                    $domain = $host;
-                }
-            }
-
-            Route::group([
-                'middleware' => ['web'],
-                'domain' => '{network}.' . $domain,
-                'where' => ['network' => '[a-z0-9-]+'] // Permite letras, números e hífens explicitamente
-            ], function () {
-                // Rotas Públicas da Rede
-                Route::group([], base_path('routes/network.php'));
-
-                // Área Administrativa da Rede (com prefixo /admin para evitar conflitos de SSL/Subdomínios)
-                Route::group([
-                    'prefix' => 'admin'
-                ], base_path('routes/network_admin.php'));
-            });
         });
 
         /**
