@@ -57,9 +57,14 @@ class DetectClinicNetworkFromSubdomain
             ->where('is_active', true)
             ->first();
 
+        \Log::debug("DetectClinicNetwork: Buscando slug {$subdomain} no host {$host}");
+
         if ($network) {
+            \Log::debug("DetectClinicNetwork: Rede encontrada! ID: {$network->id}");
             // Disponibiliza a rede via container
             app()->instance('currentNetwork', $network);
+        } else {
+            \Log::debug("DetectClinicNetwork: Nenhuma rede ativa encontrada para o slug {$subdomain}");
         }
 
         // Nunca aborta, apenas segue o request

@@ -104,10 +104,19 @@ class RouteServiceProvider extends ServiceProvider
                 ->group(base_path('routes/patient_portal.php'));
 
             // Rede de Clínicas (Pública e Administrativa)
+            $domain = config('app.domain');
+            if (request()) {
+                $host = request()->getHost();
+                // Se estivermos em localhost ou IP, não usamos domain restrito para facilitar testes
+                if (in_array($host, ['localhost', '127.0.0.1'])) {
+                    $domain = $host;
+                }
+            }
+
             Route::group([
                 'middleware' => ['web'],
-                'domain' => '{network}.' . config('app.domain', 'agepro.com'),
-                'where' => ['network' => '^(?!www|app|platform).*$']
+                'domain' => '{network}.' . $domain,
+                'where' => ['network' => '[a-z0-9-]+'] // Permite letras, números e hífens explicitamente
             ], function () {
                 // Rotas Públicas da Rede
                 Route::group([], base_path('routes/network.php'));

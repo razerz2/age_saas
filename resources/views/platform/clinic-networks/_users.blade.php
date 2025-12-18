@@ -7,7 +7,15 @@
                         <i class="fas fa-users-cog text-primary me-2"></i> Usuários Gestores da Rede
                     </h5>
                     @php
-                        $networkDomain = $network->slug . '.' . config('app.domain', 'agepro.com');
+                        $currentHost = request()->getHost();
+                        $baseDomain = config('app.domain', 'agepro.com');
+                        
+                        // Se o host atual for localhost ou ip, usamos ele como base para facilitar o teste local
+                        if (in_array($currentHost, ['localhost', '127.0.0.1'])) {
+                            $baseDomain = $currentHost;
+                        }
+
+                        $networkDomain = $network->slug . '.' . $baseDomain;
                         $loginUrl = (request()->secure() ? 'https://' : 'http://') . $networkDomain . '/admin/login';
                     @endphp
                     <small class="text-muted">
