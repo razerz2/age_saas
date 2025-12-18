@@ -21,9 +21,15 @@
             <div class="card-body p-0">
                 {{-- Navegação de Abas --}}
                 <ul class="nav nav-tabs" id="settingsTabs" role="tablist">
+                    {{-- 0. Informações da Clínica --}}
+                    <li class="nav-item" role="presentation">
+                        <a class="nav-link active" id="registration-tab" data-bs-toggle="tab" href="#registration" role="tab" aria-controls="registration" aria-selected="true">
+                            <i class="mdi mdi-hospital-building me-2"></i>Clínica
+                        </a>
+                    </li>
                     {{-- 1. Configurações Básicas --}}
                     <li class="nav-item" role="presentation">
-                        <a class="nav-link active" id="general-tab" data-bs-toggle="tab" href="#general" role="tab" aria-controls="general" aria-selected="true">
+                        <a class="nav-link" id="general-tab" data-bs-toggle="tab" href="#general" role="tab" aria-controls="general" aria-selected="false">
                             <i class="mdi mdi-cog-outline me-2"></i>Geral
                         </a>
                     </li>
@@ -85,8 +91,83 @@
 
                 {{-- Conteúdo das Abas --}}
                 <div class="tab-content p-4" id="settingsTabsContent">
+                    {{-- Aba Informações da Clínica --}}
+                    <div class="tab-pane fade show active" id="registration" role="tabpanel">
+                        <form method="POST" action="{{ workspace_route('tenant.settings.update.registration') }}">
+                            @csrf
+                            
+                            <h4 class="mb-4">Informações da Clínica</h4>
+                            <p class="text-muted mb-4">
+                                Visualize e edite as informações básicas de cadastro da sua clínica.
+                            </p>
+
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Razão Social</label>
+                                    <input type="text" class="form-control" name="legal_name" value="{{ old('legal_name', $currentTenant->legal_name) }}" required>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Nome Fantasia</label>
+                                    <input type="text" class="form-control" name="trade_name" value="{{ old('trade_name', $currentTenant->trade_name) }}">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">E-mail de Contato</label>
+                                    <input type="email" class="form-control" name="email" value="{{ old('email', $currentTenant->email) }}" required>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Telefone</label>
+                                    <input type="text" class="form-control" name="phone" value="{{ old('phone', $currentTenant->phone) }}">
+                                </div>
+                            </div>
+
+                            <hr class="my-4">
+                            <h5 class="mb-4">Endereço</h5>
+
+                            <div class="row">
+                                <div class="col-md-12 mb-3">
+                                    <label class="form-label">Logradouro</label>
+                                    <input type="text" class="form-control" id="endereco" name="endereco" value="{{ old('endereco', $localizacao->endereco ?? '') }}" required placeholder="Rua, Av...">
+                                </div>
+                                <div class="col-md-3 mb-3">
+                                    <label class="form-label">Número</label>
+                                    <input type="text" class="form-control" name="n_endereco" value="{{ old('n_endereco', $localizacao->n_endereco ?? '') }}" required>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label">Complemento</label>
+                                    <input type="text" class="form-control" name="complemento" value="{{ old('complemento', $localizacao->complemento ?? '') }}">
+                                </div>
+                                <div class="col-md-5 mb-3">
+                                    <label class="form-label">Bairro</label>
+                                    <input type="text" class="form-control" id="bairro" name="bairro" value="{{ old('bairro', $localizacao->bairro ?? '') }}" required>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label">CEP</label>
+                                    <input type="text" class="form-control" id="cep" name="cep" value="{{ old('cep', $localizacao->cep ?? '') }}" required placeholder="00000-000">
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label">Estado</label>
+                                    <select class="form-select" id="estado_id" name="estado_id" required>
+                                        <option value="">Selecione o estado</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label">Cidade</label>
+                                    <select class="form-select" id="cidade_id" name="cidade_id" required>
+                                        <option value="">Selecione o estado primeiro</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="mt-4">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="mdi mdi-content-save me-2"></i>Salvar Alterações
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
                     {{-- Aba Geral --}}
-                    <div class="tab-pane fade show active" id="general" role="tabpanel">
+                    <div class="tab-pane fade" id="general" role="tabpanel">
                         <form method="POST" action="{{ workspace_route('tenant.settings.update.general') }}">
                             @csrf
                             
@@ -1526,6 +1607,122 @@
             }
         }
     }
+
+    // Configuração de Localização (Estados/Cidades)
+    document.addEventListener('DOMContentLoaded', function() {
+        const stateSelect = document.getElementById('estado_id');
+        const citySelect = document.getElementById('cidade_id');
+        const zipcodeField = document.getElementById('cep');
+        const addressField = document.getElementById('endereco');
+        const neighborhoodField = document.getElementById('bairro');
+
+        const currentEstadoId = '{{ $localizacao->estado_id ?? "" }}';
+        const currentCidadeId = '{{ $localizacao->cidade_id ?? "" }}';
+        const brazilId = '{{ $brazilId }}';
+
+        async function loadStates() {
+            if (!stateSelect) return;
+            stateSelect.innerHTML = '<option value="">Carregando estados...</option>';
+            try {
+                const response = await fetch('{{ route('api.public.estados', ['pais' => ':paisId']) }}'.replace(':paisId', brazilId));
+                const data = await response.json();
+                stateSelect.innerHTML = '<option value="">Selecione o estado</option>';
+                data.forEach(state => {
+                    const option = document.createElement('option');
+                    option.value = state.id_estado;
+                    option.dataset.abbr = state.uf;
+                    option.textContent = state.nome_estado;
+                    if (currentEstadoId == state.id_estado) {
+                        option.selected = true;
+                    }
+                    stateSelect.appendChild(option);
+                });
+
+                if (stateSelect.value) {
+                    loadCities(stateSelect.value);
+                }
+            } catch (error) {
+                console.error('Erro ao carregar estados:', error);
+                stateSelect.innerHTML = '<option value="">Erro ao carregar</option>';
+            }
+        }
+
+        async function loadCities(stateId) {
+            if (!citySelect) return;
+            if (!stateId) {
+                citySelect.innerHTML = '<option value="">Selecione o estado primeiro</option>';
+                return;
+            }
+            citySelect.innerHTML = '<option value="">Carregando cidades...</option>';
+            try {
+                const response = await fetch('{{ route('api.public.cidades', ['estado' => ':id']) }}'.replace(':id', stateId));
+                const data = await response.json();
+                citySelect.innerHTML = '<option value="">Selecione a cidade</option>';
+                data.forEach(city => {
+                    const option = document.createElement('option');
+                    option.value = city.id_cidade;
+                    option.dataset.name = city.nome_cidade;
+                    option.textContent = city.nome_cidade;
+                    if (currentCidadeId == city.id_cidade) {
+                        option.selected = true;
+                    }
+                    citySelect.appendChild(option);
+                });
+            } catch (error) {
+                console.error('Erro ao carregar cidades:', error);
+                citySelect.innerHTML = '<option value="">Erro ao carregar</option>';
+            }
+        }
+
+        if (stateSelect) {
+            stateSelect.addEventListener('change', function() {
+                loadCities(this.value);
+            });
+        }
+
+        if (zipcodeField) {
+            zipcodeField.addEventListener('input', function(e) {
+                let value = e.target.value.replace(/\D/g, '');
+                if (value.length > 8) value = value.substring(0, 8);
+                if (value.length > 5) {
+                    value = value.substring(0, 5) + '-' + value.substring(5);
+                }
+                e.target.value = value;
+
+                if (value.replace(/\D/g, '').length === 8) {
+                    fetch(`https://viacep.com.br/ws/${value.replace(/\D/g, '')}/json/`)
+                        .then(response => response.json())
+                        .then(data => {
+                            if (!data.erro) {
+                                if (addressField) addressField.value = data.logradouro;
+                                if (neighborhoodField) neighborhoodField.value = data.bairro;
+                                
+                                if (data.uf) {
+                                    for (let i = 0; i < stateSelect.options.length; i++) {
+                                        if (stateSelect.options[i].dataset.abbr === data.uf) {
+                                            stateSelect.selectedIndex = i;
+                                            loadCities(stateSelect.value).then(() => {
+                                                if (data.localidade) {
+                                                    for (let j = 0; j < citySelect.options.length; j++) {
+                                                        if (citySelect.options[j].dataset.name.toLowerCase() === data.localidade.toLowerCase()) {
+                                                            citySelect.selectedIndex = j;
+                                                            break;
+                                                        }
+                                                    }
+                                                }
+                                            });
+                                            break;
+                                        }
+                                    }
+                                }
+                            }
+                        });
+                }
+            });
+        }
+
+        loadStates();
+    });
 </script>
 @endpush
 @endsection

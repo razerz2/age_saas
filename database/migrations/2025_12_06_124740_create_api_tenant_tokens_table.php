@@ -16,6 +16,7 @@ return new class extends Migration
             $table->foreignUuid('tenant_id')->constrained('tenants')->cascadeOnDelete();
             $table->string('name');
             $table->string('token_hash');
+            $table->text('token_encrypted')->nullable();
             $table->boolean('active')->default(true);
             $table->timestamp('expires_at')->nullable();
             $table->json('permissions')->nullable();

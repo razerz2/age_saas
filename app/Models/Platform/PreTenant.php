@@ -31,6 +31,9 @@ class PreTenant extends Model
         'state_id',
         'city_id',
         'address',
+        'address_number',
+        'complement',
+        'neighborhood',
         'zipcode',
         'raw_payload',
     ];

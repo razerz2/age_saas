@@ -42,6 +42,23 @@
         </li>
         @endif
 
+        {{-- Rede de Clínicas --}}
+        @if(in_array('clinic_networks', auth()->user()->modules ?? []))
+        <li class="sidebar-item">
+            <a class="sidebar-link has-arrow" href="javascript:void(0)" aria-expanded="false">
+                <i class="fas fa-hospital"></i><span class="hide-menu"> Rede de Clínicas </span>
+            </a>
+            <ul aria-expanded="false" class="collapse first-level base-level-line">
+                <li class="sidebar-item"><a href="{{ route('Platform.clinic-networks.index') }}" class="sidebar-link">
+                    <span class="hide-menu"><i class="fas fa-list-alt"></i> Redes</span></a></li>
+                <li class="sidebar-item"><a href="{{ route('Platform.clinic-networks.create') }}" class="sidebar-link">
+                    <span class="hide-menu"><i class="fas fa-plus-circle"></i> Nova Rede</span></a></li>
+                <li class="sidebar-item"><a href="{{ route('Platform.clinic-networks.general-import') }}" class="sidebar-link">
+                    <span class="hide-menu"><i class="fas fa-upload"></i> Importação</span></a></li>
+            </ul>
+        </li>
+        @endif
+
         {{-- Planos --}}
         @if(in_array('plans', auth()->user()->modules ?? []))
         <li class="sidebar-item">

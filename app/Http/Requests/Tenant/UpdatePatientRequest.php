@@ -33,6 +33,9 @@ class UpdatePatientRequest extends FormRequest
             'neighborhood'  => ['nullable', 'string', 'max:255'],
             'city'           => ['nullable', 'string', 'max:255'],
             'state'          => ['nullable', 'string', 'max:2'],
+            'pais_id'        => ['nullable', 'integer'],
+            'estado_id'      => ['nullable', 'integer'],
+            'cidade_id'      => ['nullable', 'integer'],
         ];
     }
 

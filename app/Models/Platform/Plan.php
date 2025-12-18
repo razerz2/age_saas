@@ -21,9 +21,14 @@ class Plan extends Model
         'periodicity',
         'period_months',
         'price_cents',
+        'category',
         'features',
         'is_active',
     ];
+
+    const CATEGORY_COMMERCIAL = 'commercial';
+    const CATEGORY_CONTRACTUAL = 'contractual';
+    const CATEGORY_SANDBOX = 'sandbox';
 
     protected $casts = [
         'features' => 'array',

@@ -10,6 +10,7 @@ class SubscriptionFeature extends Model
 {
     use HasFactory, HasUuids;
 
+    protected $connection = 'pgsql';
     protected $table = 'subscription_features';
     protected $keyType = 'string';
     public $incrementing = false;

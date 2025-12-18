@@ -28,6 +28,9 @@ return new class extends Migration
             $table->unsignedBigInteger('state_id')->nullable();
             $table->unsignedBigInteger('city_id')->nullable();
             $table->string('address')->nullable();
+            $table->string('address_number')->nullable();
+            $table->string('complement')->nullable();
+            $table->string('neighborhood')->nullable();
             $table->string('zipcode')->nullable();
             $table->json('raw_payload')->nullable();
             $table->timestamps();

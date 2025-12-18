@@ -52,7 +52,7 @@
                                 <option value="">Selecione um plano...</option>
                                 @foreach ($plans as $plan)
                                     <option value="{{ $plan->id }}" @selected(old('plan_id') == $plan->id)>
-                                        {{ $plan->name }}
+                                        {{ $plan->name }} ({{ ucfirst($plan->category) }})
                                     </option>
                                 @endforeach
                             </select>

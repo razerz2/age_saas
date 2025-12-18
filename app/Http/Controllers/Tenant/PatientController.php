@@ -70,7 +70,7 @@ class PatientController extends Controller
 
         // Separar dados do paciente dos dados de endereço
         $addressData = [];
-        $addressFields = ['postal_code', 'street', 'number', 'complement', 'neighborhood', 'city', 'state'];
+        $addressFields = ['postal_code', 'street', 'number', 'complement', 'neighborhood', 'city', 'state', 'pais_id', 'estado_id', 'cidade_id'];
         
         foreach ($addressFields as $field) {
             if (isset($data[$field])) {
@@ -129,7 +129,7 @@ class PatientController extends Controller
 
         // Separar dados do paciente dos dados de endereço
         $addressData = [];
-        $addressFields = ['postal_code', 'street', 'number', 'complement', 'neighborhood', 'city', 'state'];
+        $addressFields = ['postal_code', 'street', 'number', 'complement', 'neighborhood', 'city', 'state', 'pais_id', 'estado_id', 'cidade_id'];
         
         foreach ($addressFields as $field) {
             if (isset($data[$field])) {

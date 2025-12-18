@@ -15,6 +15,9 @@ return new class extends Migration
             $table->uuid('id')->primary();
             $table->string('name')->default('default')->unique()->comment('Nome do layout (ex: default)');
             $table->string('display_name')->default('Layout Padrão')->comment('Nome legível');
+            $table->string('logo_url')->nullable()->comment('URL do logo para usar no cabeçalho');
+            $table->integer('logo_width')->default(200)->comment('Largura do logo em pixels (padrão: 200px)');
+            $table->integer('logo_height')->nullable()->comment('Altura do logo em pixels (null = proporcional)');
             $table->longText('header')->nullable()->comment('HTML do cabeçalho');
             $table->longText('footer')->nullable()->comment('HTML do rodapé');
             $table->string('primary_color')->default('#667eea')->comment('Cor primária do layout');

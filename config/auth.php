@@ -49,6 +49,10 @@ return [
             'driver' => 'session',
             'provider' => 'patient_logins',
         ],
+        'network' => [
+            'driver' => 'session',
+            'provider' => 'network_users',
+        ],
 
     ],
 
@@ -83,6 +87,11 @@ return [
         'patient_logins' => [
             'driver' => 'eloquent',
             'model' => App\Models\Tenant\PatientLogin::class,
+        ],
+
+        'network_users' => [
+            'driver' => 'eloquent',
+            'model' => App\Models\Platform\NetworkUser::class,
         ],
 
         // 'users' => [

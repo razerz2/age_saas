@@ -231,6 +231,7 @@ POST /workspace/{slug}/notifications/mark-all-read    # Marcar todas como lidas
 # Settings
 GET  /workspace/{slug}/settings                       # Página de configurações
 POST /workspace/{slug}/settings/general
+POST /workspace/{slug}/settings/clinic-info           # Atualizar informações básicas da clínica
 POST /workspace/{slug}/settings/appointments
 POST /workspace/{slug}/settings/calendar
 POST /workspace/{slug}/settings/notifications
@@ -490,7 +491,10 @@ O dashboard do tenant exibe uma visão geral das estatísticas e informações i
    - Data de nascimento
    - Email
    - Telefone
-   - Endereço (opcional)
+   - **Endereço (Obrigatório)**:
+     - Logradouro, Número, Complemento, Bairro
+     - CEP (após o Bairro)
+     - Estado e Cidade (Brasil fixo)
    - Habilitar login no portal (opcional)
 
 **Login do Paciente:**
@@ -1050,38 +1054,20 @@ A integração com Apple Calendar permite sincronizar automaticamente os agendam
 - Agendamentos individuais gerados por recorrências **NÃO** são sincronizados separadamente (evita duplicação)
 - Para mais detalhes, consulte: [docs/INTEGRACAO_APPLE_CALENDAR.md](docs/INTEGRACAO_APPLE_CALENDAR.md)
 
-### 16. Notificações do Tenant
+### 16. Configurações do Tenant
 
-**Visualizar Notificações:**
-1. Acesse `/workspace/{slug}/notifications`
-2. Visualize todas as notificações do sistema
-3. Marque como lidas individualmente ou todas de uma vez
-4. Filtre por tipo ou status
+As configurações do tenant são divididas em abas para facilitar a gestão da clínica:
 
-**API de Notificações:**
-- `GET /workspace/{slug}/notifications/json` - Retorna notificações em JSON
-- `POST /workspace/{slug}/notifications/{id}/read` - Marcar notificação como lida
-- `POST /workspace/{slug}/notifications/mark-all-read` - Marcar todas como lidas
+#### Aba Clínica (Informações Cadastrais)
+Permite visualizar e editar as informações básicas da clínica. Nota: Informações técnicas como credenciais de banco de dados não são exibidas aqui.
+- **Dados Básicos**: Nome Legal (Razão Social), Nome Fantasia, Documento (CNPJ/CPF), E-mail e Telefone.
+- **Endereço**: Logradouro, Número, Complemento, Bairro e CEP.
+- **Localização**: Estado e Cidade (Brasil fixo).
 
-### 17. Configurações de Agendamentos
+#### Aba Geral
+Configurações gerais de funcionamento da clínica.
 
-**Configurações de Modo de Atendimento:**
-1. Acesse `/workspace/{slug}/settings`
-2. Clique na aba "Agendamentos"
-3. Configure o **Modo Padrão de Atendimento**:
-   - **Apenas Presencial**: Todos os agendamentos serão presenciais (módulo online desabilitado)
-   - **Apenas Online**: Todos os agendamentos serão online
-   - **Escolha do Usuário**: Usuário escolhe no momento do agendamento (presencial ou online)
-
-**Impacto das Configurações:**
-- Se configurado como `presencial`: O módulo de agendamentos online fica inacessível (404)
-- Se configurado como `online`: Todos os agendamentos criados serão online por padrão
-- Se configurado como `user_choice`: Campo de seleção aparece no formulário de agendamento
-
-**Chave de Configuração:**
-- `appointments.default_appointment_mode`: Valores possíveis: `presencial`, `online`, `user_choice` (padrão: `user_choice`)
-
-### 18. Configurações de Notificações e Comunicação
+#### Aba Agendamentos
 
 O sistema possui configurações flexíveis para envio de notificações aos pacientes:
 

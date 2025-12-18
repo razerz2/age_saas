@@ -19,6 +19,10 @@ return new class extends Migration
             $table->string('email')->unique()->nullable();
             $table->string('avatar')->nullable();
             $table->string('password')->nullable();
+            $table->text('two_factor_secret')->nullable();
+            $table->text('two_factor_recovery_codes')->nullable();
+            $table->boolean('two_factor_enabled')->default(false);
+            $table->enum('two_factor_method', ['totp', 'email', 'whatsapp'])->nullable();
             $table->boolean('is_doctor')->default(false);
             $table->enum('status', ['active', 'blocked'])->default('active');
             $table->enum('role', ['admin', 'user', 'doctor'])->default('user')->after('status');

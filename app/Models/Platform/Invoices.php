@@ -10,6 +10,7 @@ class Invoices extends Model
 {
     use HasFactory, HasUuids;
 
+    protected $connection = 'pgsql';
     protected $table = 'invoices';
     protected $keyType = 'string';
     public $incrementing = false;

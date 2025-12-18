@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Estado extends Model
 {
+    protected $connection = 'pgsql';
     protected $table = 'estados';
     protected $primaryKey = 'id_estado';
     public $timestamps = false;

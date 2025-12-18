@@ -288,6 +288,9 @@ class PreTenantProcessorService
                 TenantLocalizacao::create([
                     'tenant_id' => $tenant->id,
                     'endereco' => $preTenant->address ?? '',
+                    'n_endereco' => $preTenant->address_number,
+                    'complemento' => $preTenant->complement,
+                    'bairro' => $preTenant->neighborhood,
                     'cep' => $preTenant->zipcode,
                     'pais_id' => $preTenant->country_id,
                     'estado_id' => $preTenant->state_id,

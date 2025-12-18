@@ -82,6 +82,15 @@
 
                     <div class="row mb-3">
                         <div class="col-md-4">
+                            <label class="form-label">Categoria *</label>
+                            <select name="category" class="form-select" required>
+                                <option value="commercial" @selected(old('category') == 'commercial')>Comercial (B2C/B2B Leve)</option>
+                                <option value="contractual" @selected(old('category') == 'contractual')>Contratual (Exclusivo para Redes)</option>
+                                <option value="sandbox" @selected(old('category') == 'sandbox')>Sandbox (Testes Internos)</option>
+                            </select>
+                        </div>
+
+                        <div class="col-md-4">
                             <label class="form-label">Preço (R$)</label>
                             <input type="number" step="0.01" name="price_cents" value="{{ old('price_cents') }}"
                                 class="form-control" required>

@@ -19,9 +19,17 @@ use App\Services\SystemSettingsService;
 use App\Services\AsaasService;
 use App\Http\Requests\TenantRequest;
 use App\Mail\TenantAdminCredentialsMail;
+use App\Services\Platform\TenantCreatorService;
 
 class TenantController extends Controller
 {
+    protected $tenantCreator;
+
+    public function __construct(TenantCreatorService $tenantCreator)
+    {
+        $this->tenantCreator = $tenantCreator;
+    }
+
     public function index()
     {
         $tenants = Tenant::orderBy('legal_name')->get();
@@ -32,7 +40,9 @@ class TenantController extends Controller
     {
         $defaultCountryId = sysconfig('country_id');
         $paises = Pais::orderBy('nome')->get();
-        return view('platform.tenants.create', compact('paises', 'defaultCountryId'));
+        $networks = \App\Models\Platform\ClinicNetwork::where('is_active', true)->orderBy('name')->get();
+        $plans = Plan::where('is_active', true)->orderBy('name')->get();
+        return view('platform.tenants.create', compact('paises', 'defaultCountryId', 'networks', 'plans'));
     }
 
     public function show($id)
@@ -87,114 +97,25 @@ class TenantController extends Controller
 
     public function store(TenantRequest $request)
     {
-        $validated = $request->validated();
-
-        DB::beginTransaction();
-
         try {
-            // 🔹 Gera os dados do banco automaticamente (sem salvar ainda)
-            $dbConfig = TenantProvisioner::prepareDatabaseConfig(
-                $validated['legal_name'],
-                $validated['trade_name'] ?? null
-            );
+            $data = $request->validated();
+            $data['plan_id'] = $request->plan_id; // Adiciona o plano selecionado
 
-            // 🔹 Junta as infos do banco no array antes de salvar
-            $validated = array_merge($validated, $dbConfig);
-
-            // 🔹 Cria o tenant completo no banco principal
-            $tenant = Tenant::create($validated);
-
-            // 🔹 Cria a localização se houver
-            if ($request->filled('endereco')) {
-                TenantLocalizacao::create([
-                    'tenant_id'   => $tenant->id,
-                    'endereco'    => $request->endereco,
-                    'n_endereco'  => $request->n_endereco,
-                    'complemento' => $request->complemento,
-                    'bairro'      => $request->bairro,
-                    'cep'         => $request->cep,
-                    'pais_id'     => $request->pais_id,
-                    'estado_id'   => $request->estado_id,
-                    'cidade_id'   => $request->cidade_id,
-                ]);
-            }
-
-            DB::commit();
-
-            // 🚀 Cria o banco físico e roda as migrations (retorna a senha gerada)
-            $adminPassword = TenantProvisioner::createDatabase($tenant);
-
-            // Limpar subdomínio para formato válido de domínio
-            $sanitizedSubdomain = preg_replace('/[^a-z0-9\-]/', '', Str::slug($tenant->subdomain));
-            $sanitizedSubdomain = !empty($sanitizedSubdomain) ? $sanitizedSubdomain : 'tenant';
-            $adminEmail = "admin@{$sanitizedSubdomain}.com";
-            $loginUrl = url("/t/{$tenant->subdomain}/login");
-
-            // 💾 Salvar informações do admin na tabela tenant_admins
-            TenantAdmin::updateOrCreate(
-                ['tenant_id' => $tenant->id],
-                [
-                    'email' => $adminEmail,
-                    'password' => $adminPassword,
-                    'login_url' => $loginUrl,
-                    'name' => 'Administrador',
-                    'password_visible' => true,
-                ]
-            );
-            
-            Log::info("💾 Informações do admin salvas na tabela tenant_admins", [
-                'tenant_id' => $tenant->id,
-                'admin_email' => $adminEmail,
-                'admin_password_saved' => !empty($adminPassword),
-                'admin_password_length' => strlen($adminPassword),
-                'admin_login_url' => $loginUrl,
-            ]);
-
-            // 📧 Enviar email com credenciais se SMTP estiver configurado
-            $systemSettingsService = new SystemSettingsService();
-            if ($systemSettingsService->emailIsConfigured()) {
-                try {
-                    Mail::to($tenant->email)->send(
-                        new TenantAdminCredentialsMail(
-                            $tenant,
-                            $loginUrl,
-                            $adminEmail,
-                            $adminPassword
-                        )
-                    );
-
-                    Log::info("📧 Email com credenciais enviado para tenant {$tenant->id}", [
-                        'email' => $tenant->email
-                    ]);
-                } catch (\Throwable $e) {
-                    // Não falhar a criação do tenant se o email falhar
-                    Log::error("❌ Erro ao enviar email com credenciais", [
-                        'tenant_id' => $tenant->id,
-                        'erro' => $e->getMessage()
-                    ]);
-                }
-            } else {
-                Log::info("⚠️ Email não enviado: SMTP não configurado para tenant {$tenant->id}");
-            }
+            $tenant = $this->tenantCreator->create($data);
 
             // 🔄 Sincroniza com Asaas
             $this->syncWithAsaas($tenant);
-
-            // Salvar senha temporariamente na sessão para exibir na view de show
-            session()->flash('tenant_admin_password', $adminPassword);
 
             return redirect()
                 ->route('Platform.tenants.show', $tenant->id)
                 ->with('success', '✅ Tenant criado com sucesso e sincronizado com o Asaas.');
         } catch (\Throwable $e) {
-            DB::rollBack();
-
-            Log::error('❌ Erro ao criar tenant', [
+            Log::error('❌ Erro ao criar tenant no Controller', [
                 'erro' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
             ]);
 
-            return back()->withErrors(['general' => 'Erro ao criar tenant. Consulte o log para mais detalhes.']);
+            return back()->withErrors(['general' => 'Erro ao criar tenant: ' . $e->getMessage()]);
         }
     }
 
@@ -202,6 +123,7 @@ class TenantController extends Controller
     {
         $paises = Pais::orderBy('nome')->get();
         $localizacao = $tenant->localizacao;
+        $networks = \App\Models\Platform\ClinicNetwork::where('is_active', true)->orderBy('name')->get();
 
         $estados = $localizacao
             ? Estado::where('pais_id', $localizacao->pais_id)->orderBy('nome_estado')->get()
@@ -211,7 +133,7 @@ class TenantController extends Controller
             ? Cidade::where('estado_id', $localizacao->estado_id)->orderBy('nome_cidade')->get()
             : collect();
 
-        return view('platform.tenants.edit', compact('tenant', 'paises', 'estados', 'cidades', 'localizacao'));
+        return view('platform.tenants.edit', compact('tenant', 'paises', 'estados', 'cidades', 'localizacao', 'networks'));
     }
 
     public function update(TenantRequest $request, Tenant $tenant)
@@ -326,6 +248,12 @@ class TenantController extends Controller
 
     public function syncWithAsaas(Tenant $tenant)
     {
+        // 🏢 Tenants vinculados a uma rede NUNCA devem sincronizar com o Asaas
+        if ($tenant->network_id) {
+            Log::warning("⚠️ Tentativa de sincronizar tenant de rede ({$tenant->trade_name}) com Asaas bloqueada.");
+            return back()->withErrors(['general' => 'Clínicas vinculadas a uma rede não são sincronizadas com o Asaas individualmente.']);
+        }
+
         try {
             $asaas = new AsaasService();
 

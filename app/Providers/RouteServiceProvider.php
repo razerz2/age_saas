@@ -91,17 +91,31 @@ class RouteServiceProvider extends ServiceProvider
                 ->prefix('bot')
                 ->group(base_path('routes/platform_bot_api.php'));
 
-            // Plataforma
+            // Plataforma (Landing Page)
             Route::middleware('web')
                 ->group(base_path('routes/web.php'));
 
-            // Tenants
+            // Tenants (Baseados em Path)
             Route::middleware(['web'])
                 ->group(base_path('routes/tenant.php'));
 
             // Portal do Paciente
             Route::middleware(['web'])
                 ->group(base_path('routes/patient_portal.php'));
+
+            // Rede de Clínicas (Pública - Restrita a subdomínios)
+            Route::group([
+                'middleware' => ['web'],
+                'domain' => '{network}.' . config('app.domain', 'agepro.com'),
+                'where' => ['network' => '^(?!www|app|platform).*$']
+            ], base_path('routes/network.php'));
+
+            // Área Administrativa da Rede de Clínicas
+            Route::group([
+                'middleware' => ['web'],
+                'domain' => 'admin.{network}.' . config('app.domain', 'agepro.com'),
+                'where' => ['network' => '^(?!www|app|platform).*$']
+            ], base_path('routes/network_admin.php'));
         });
 
         /**

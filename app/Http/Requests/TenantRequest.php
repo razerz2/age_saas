@@ -71,7 +71,9 @@ class TenantRequest extends FormRequest
             ],
 
             'phone' => ['nullable', 'string', 'max:20'],
-            'status' => ['required', 'in:active,inactive,pending'],
+            'status' => ['required', 'in:active,inactive,pending,trial,suspended,cancelled'],
+            'network_id' => ['nullable', 'uuid', 'exists:clinic_networks,id'],
+            'plan_id' => ['nullable', 'uuid', 'exists:plans,id'],
             'trial_ends_at' => ['nullable', 'date'],
             'asaas_customer_id' => ['nullable', 'string', 'max:100'],
         ];

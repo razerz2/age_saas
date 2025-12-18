@@ -228,6 +228,16 @@ O método `syncWithAsaas()` é responsável por sincronizar a assinatura local c
 
 ---
 
+## 🏢 Planos Contratuais (Rede de Clínicas)
+
+Tenants vinculados a uma **Rede de Clínicas** utilizam planos da categoria `contractual`. Para estes casos, as regras de pagamento do sistema são ignoradas:
+
+1.  **Sem Assinatura (Subscription)**: O sistema não cria registros na tabela `subscriptions` para estes tenants. O acesso é liberado diretamente via `plan_id` no model `Tenant`.
+2.  **Sem Cobrança Automática**: O Asaas não é utilizado para gerenciar faturas recorrentes destes tenants. A gestão financeira entre a rede e as clínicas é feita de forma externa ao sistema de pagamentos automatizado.
+3.  **Liberação de Funcionalidades**: O `FeatureAccessService` reconhece o plano contratual e libera os limites e features configurados normalmente.
+
+---
+
 ## 🔧 Regras Críticas de Billing
 
 ### Separação de Autoridade por Método de Pagamento

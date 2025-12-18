@@ -14,7 +14,9 @@ return new class extends Migration {
             $table->timestamp('starts_at');
             $table->timestamp('ends_at')->nullable();
             $table->tinyInteger('due_day'); // 1 a 28
-            $table->enum('status', ['pending', 'active', 'past_due', 'canceled', 'trialing'])->default('pending');
+            $table->date('billing_anchor_date')->nullable()->comment('Data de referência para cálculo de vencimento das faturas');
+            $table->timestamp('recovery_started_at')->nullable()->comment('Data em que o processo de recovery foi iniciado para esta assinatura');
+            $table->enum('status', ['pending', 'active', 'past_due', 'canceled', 'trialing', 'recovery_pending'])->default('pending');
             $table->boolean('auto_renew')->default(true);
             $table->enum('payment_method', ['PIX', 'BOLETO', 'CREDIT_CARD', 'DEBIT_CARD'])->default('PIX');
             $table->string('asaas_subscription_id')->nullable();

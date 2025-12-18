@@ -10,6 +10,7 @@ class PlanAccessRule extends Model
 {
     use HasFactory, HasUuids;
 
+    protected $connection = 'pgsql';
     protected $table = 'plan_access_rules';
     protected $keyType = 'string';
     public $incrementing = false;

@@ -18,6 +18,10 @@ return new class extends Migration
             $table->string('email')->unique();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
+            $table->text('two_factor_secret')->nullable();
+            $table->text('two_factor_recovery_codes')->nullable();
+            $table->boolean('two_factor_enabled')->default(false);
+            $table->enum('two_factor_method', ['totp', 'email', 'whatsapp'])->nullable();
             $table->enum('status', ['active', 'blocked'])->default('active');
             $table->json('modules')->nullable();
             $table->rememberToken();

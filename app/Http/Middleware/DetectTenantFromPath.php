@@ -34,6 +34,20 @@ class DetectTenantFromPath
 
                 if ($tenant) {
 
+                    // 🔒 Validação de Status do Tenant e da Rede
+                    if ($tenant->status !== 'active' && $tenant->status !== 'trial') {
+                        \Log::warning("🚫 Acesso bloqueado: Tenant '{$tenant->subdomain}' está com status '{$tenant->status}'");
+                        abort(403, 'O acesso a esta clínica está suspenso ou inativo. Entre em contato com o administrador.');
+                    }
+
+                    if ($tenant->network_id) {
+                        $network = $tenant->network;
+                        if ($network && !$network->is_active) {
+                            \Log::warning("🚫 Acesso bloqueado: Rede '{$network->name}' está inativa para tenant '{$tenant->subdomain}'");
+                            abort(403, 'A rede de clínicas à qual esta unidade pertence está inativa. O acesso foi bloqueado.');
+                        }
+                    }
+
                     \Log::info("✅ DetectTenantFromPath encontrou tenant", [
                         'id'  => $tenant->id,
                         'slug' => $tenant->subdomain

@@ -14,12 +14,13 @@
 
 ## 🎯 Visão Geral
 
-Este é um sistema **SaaS (Software as a Service)** de agendamento médico construído com **Laravel 10** e utilizando o pacote **Spatie Laravel Multitenancy**. O sistema possui duas áreas principais:
+Este é um sistema **SaaS (Software as a Service)** de agendamento médico construído com **Laravel 10** e utilizando o pacote **Spatie Laravel Multitenancy**. O sistema possui três áreas principais:
 
 - **Platform**: Área administrativa central para gerenciar tenants, planos, assinaturas, faturas, etc.
 - **Tenant**: Área específica de cada cliente (clínica) com funcionalidades de agendamento, pacientes, médicos, etc.
+- **Rede de Clínicas**: Área administrativa para redes de clínicas agregarem dados de múltiplos tenants (majoritariamente read-only)
 
-O sistema utiliza **multitenancy com banco de dados separado por tenant**, onde cada cliente possui seu próprio banco de dados PostgreSQL isolado.
+O sistema utiliza **multitenancy com banco de dados separado por tenant**, onde cada cliente possui seu próprio banco de dados PostgreSQL isolado. As redes de clínicas permitem que múltiplos tenants sejam agrupados e visualizados de forma unificada sem quebrar o isolamento de dados.
 
 ---
 
@@ -36,6 +37,8 @@ agendamento-saas/
 │   │   │   ├── Auth/              # Controllers de autenticação (Laravel Breeze)
 │   │   │   ├── Platform/          # Controllers da área administrativa
 │   │   │   ├── Tenant/            # Controllers da área do tenant
+│   │   │   ├── NetworkAdmin/      # Controllers da área administrativa da rede
+│   │   │   ├── Public/            # Controllers públicos (rede de clínicas)
 │   │   │   └── Webhook/           # Controllers de webhooks (Asaas)
 │   │   ├── Middleware/            # Middlewares customizados
 │   │   ├── Requests/              # Form Requests (validação)
@@ -54,7 +57,10 @@ agendamento-saas/
 │   ├── Services/                  # Serviços de negócio
 │   │   ├── AsaasService.php       # Integração com gateway de pagamento
 │   │   ├── SystemNotificationService.php
-│   │   ├── TenantProvisioner.php  # Criação/remoção de tenants
+│   │   ├── TenantProvisioner.php  # Provisionamento de banco de dados
+│   │   ├── Platform/
+│   │   │   ├── TenantCreatorService.php # Serviço central de criação de tenants
+│   │   │   └── TenantPlanService.php    # Aplicação de regras de plano
 │   │   ├── WhatsAppService.php    # Integração WhatsApp (global)
 │   │   ├── MailTenantService.php   # Envio de emails (tenant ou global)
 │   │   ├── NotificationService.php # Notificações centralizadas
@@ -73,6 +79,8 @@ agendamento-saas/
 ├── routes/
 │   ├── web.php                    # Rotas da Platform
 │   ├── tenant.php                 # Rotas dos Tenants
+│   ├── network.php                # Rotas públicas da rede de clínicas
+│   ├── network_admin.php          # Rotas administrativas da rede
 │   ├── api.php                    # Rotas da API (Sanctum)
 │   └── auth.php                   # Rotas de autenticação (Breeze)
 └── resources/views/                # Views Blade
@@ -99,7 +107,14 @@ A área administrativa central utiliza o prefixo `/Platform` e o guard `web`:
 
 // Rotas especiais:
 POST /Platform/tenants/{tenant}/sync           # Sincronizar tenant com Asaas
+POST /Platform/tenants/{tenant}/send-credentials # Enviar credenciais do tenant
+GET  /Platform/tenants/{tenant}/api-tokens     # Tokens de API do tenant
+GET  /Platform/clinic-networks/import-all      # Importação geral de tenants
+POST /Platform/clinic-networks/import-all      # Processar importação geral
+GET  /Platform/clinic-networks/{network}/import # Importação para rede específica
+POST /Platform/clinic-networks/{network}/import # Processar importação para rede
 POST /Platform/subscriptions/{id}/renew        # Renovar assinatura
+POST /Platform/subscriptions/{subscription}/sync # Sincronizar assinatura com Asaas
 POST /Platform/invoices/{invoice}/sync         # Sincronizar fatura manualmente
 GET  /Platform/plan-change-requests            # Listar solicitações de mudança de plano
 GET  /Platform/plan-change-requests/{id}       # Visualizar detalhes da solicitação
@@ -107,9 +122,19 @@ POST /Platform/plan-change-requests/{id}/approve # Aprovar solicitação
 POST /Platform/plan-change-requests/{id}/reject  # Rejeitar solicitação
 POST /Platform/whatsapp/send                   # Enviar mensagem WhatsApp
 POST /Platform/whatsapp/invoice/{invoice}      # Enviar notificação de fatura
+GET  /Platform/zapi                            # Interface Z-API
+POST /Platform/zapi/send                       # Enviar mensagem via Z-API
 GET  /Platform/api/estados/{pais}              # API: Estados por país
 GET  /Platform/api/cidades/{estado}            # API: Cidades por estado
 GET  /Platform/system_notifications/json        # API: Notificações em JSON (últimas 5)
+GET  /Platform/two-factor                      # Configuração de 2FA
+POST /Platform/two-factor/generate-secret      # Gerar secret 2FA
+POST /Platform/two-factor/confirm              # Confirmar 2FA
+POST /Platform/two-factor/disable              # Desabilitar 2FA
+GET  /Platform/email-layouts                   # Gerenciar layouts de email
+POST /Platform/notification-templates/{id}/restore # Restaurar template
+POST /Platform/notification-templates/{id}/test # Testar envio de template
+POST /Platform/notification-templates/{id}/toggle # Alternar status do template
 
 // Rotas Públicas (sem autenticação):
 GET  /                                       # Landing page (home)
@@ -118,12 +143,14 @@ GET  /planos                                 # Landing page (planos)
 GET  /planos/json/{id}                       # API: Dados do plano em JSON
 GET  /contato                                # Landing page (contato)
 GET  /manual                                 # Landing page (manual)
-POST /pre-register                           # Criar pré-cadastro (landing page)
+POST /pre-cadastro                           # Criar pré-cadastro (landing page)
 GET  /kiosk/monitor                          # Monitor de kiosk
 GET  /kiosk/monitor/data                     # Dados do monitor (API)
-POST /webhook/asaas                          # Webhook do Asaas
+POST /webhook/asaas                          # Webhook do Asaas (platform)
 POST /webhook/asaas/pre-registration         # Webhook do Asaas para pré-cadastros
 GET  /google/callback                        # Callback do Google Calendar OAuth (rota global)
+GET  /politica-de-privacidade                # Política de privacidade
+GET  /termos-de-servico                      # Termos de serviço
 ```
 
 **Middleware aplicado:**
@@ -132,93 +159,54 @@ GET  /google/callback                        # Callback do Google Calendar OAuth
 
 ### **Rotas dos Tenants** (`routes/tenant.php`)
 
-As rotas dos tenants são divididas em duas seções:
+As rotas dos tenants são divididas em seções baseadas no prefixo da URL:
 
-#### 1. **Login do Tenant** (`/t/{tenant}/login`)
+#### 1. **Login do Tenant** (`/customer/{slug}/login`)
 ```php
-GET  /t/{tenant}/login              # Formulário de login
-POST /t/{tenant}/login              # Processar login
-POST /t/{tenant}/logout             # Logout
+GET  /customer/{slug}/login              # Formulário de login
+POST /customer/{slug}/login              # Processar login
+POST /customer/{slug}/logout             # Logout
+GET  /customer/{slug}/two-factor-challenge # Desafio 2FA
+POST /customer/{slug}/two-factor-challenge # Validar 2FA
 ```
 
 **Middleware:** `tenant-web` (detecta tenant pelo path)
 
-#### 2. **Área Autenticada do Tenant** (`/tenant/*`)
+#### 2. **Área Autenticada do Tenant** (`/workspace/{slug}/*`)
 ```php
-/tenant/dashboard                   # Dashboard do tenant
-/tenant/users                       # CRUD de usuários do tenant
-/tenant/doctors                     # CRUD de médicos
-/tenant/specialties                 # CRUD de especialidades médicas
-/tenant/patients                    # CRUD de pacientes
-/tenant/calendars                   # CRUD de calendários
-/tenant/business-hours              # CRUD de horários comerciais
-/tenant/appointment-types           # CRUD de tipos de consulta
-/tenant/appointments                # CRUD de agendamentos
-/tenant/forms                       # CRUD de formulários
-/tenant/responses                   # CRUD de respostas de formulários
-/tenant/integrations                # CRUD de integrações
-/tenant/subscription                # Detalhes da assinatura (apenas admins)
-/tenant/plan-change-request/create  # Solicitar mudança de plano
-/tenant/plan-change-request        # POST: Processar solicitação
-/tenant/integrations/google         # Integração Google Calendar
-/tenant/oauth-accounts              # CRUD de contas OAuth
-/tenant/calendar-sync               # Sincronização de calendário
-/tenant/notifications               # Notificações do tenant
-/tenant/settings                    # Configurações do tenant
-/tenant/agendamentos/recorrentes    # Agendamentos recorrentes
-```
-
-#### 3. **Área Pública de Agendamento** (`/t/{tenant}/agendamento/*`)
-
-**Rotas Públicas (sem autenticação):**
-```php
-GET  /t/{tenant}/agendamento/identificar    # Identificar paciente
-POST /t/{tenant}/agendamento/identificar    # Processar identificação
-GET  /t/{tenant}/agendamento/cadastro      # Cadastro de paciente
-POST /t/{tenant}/agendamento/cadastro      # Processar cadastro
-GET  /t/{tenant}/agendamento/criar         # Criar agendamento
-POST /t/{tenant}/agendamento/criar         # Processar agendamento
-GET  /t/{tenant}/agendamento/sucesso/{appointment_id?}  # Página de sucesso
-GET  /t/{tenant}/agendamento/{appointment_id} # Visualizar agendamento
-
-# APIs públicas para agendamento
-GET  /t/{tenant}/agendamento/api/doctors/{doctorId}/calendars
-GET  /t/{tenant}/agendamento/api/doctors/{doctorId}/appointment-types
-GET  /t/{tenant}/agendamento/api/doctors/{doctorId}/specialties
-GET  /t/{tenant}/agendamento/api/doctors/{doctorId}/available-slots
-
-# Formulários públicos
-GET  /t/{tenant}/formulario/{form}/responder                    # Responder formulário
-POST /t/{tenant}/formulario/{form}/responder                    # Salvar resposta
-GET  /t/{tenant}/formulario/{form}/resposta/{response}/sucesso   # Página de sucesso
-```
-
-**Middleware:** `tenant-web` (detecta tenant pelo path)
-
-#### 4. **Portal do Paciente** (`routes/patient_portal.php`)
-
-**Rotas Públicas (com tenant na URL):**
-```php
-GET  /t/{tenant}/paciente/login              # Formulário de login
-POST /t/{tenant}/paciente/login              # Processar login
-GET  /t/{tenant}/paciente/esqueci-senha       # Formulário de recuperação de senha
-GET  /t/{tenant}/paciente/resetar-senha/{token} # Formulário de resetar senha
-```
-
-**Rotas Autenticadas (sem tenant na URL):**
-```php
-GET  /paciente/dashboard                      # Dashboard do paciente
-GET  /paciente/agendamentos                    # Lista de agendamentos
-GET  /paciente/agendamentos/criar              # Criar agendamento
-POST /paciente/agendamentos                    # Processar criação
-GET  /paciente/agendamentos/{id}/editar        # Editar agendamento
-PUT  /paciente/agendamentos/{id}               # Atualizar agendamento
-POST /paciente/agendamentos/{id}/cancelar      # Cancelar agendamento
-GET  /paciente/notificacoes                    # Notificações do paciente
-GET  /paciente/perfil                          # Perfil do paciente
-POST /paciente/perfil                           # Atualizar perfil
-POST /paciente/logout                           # Logout
-GET  /paciente/logout                           # Logout (GET)
+/workspace/{slug}/dashboard                   # Dashboard do tenant
+/workspace/{slug}/profile                     # Perfil do usuário
+/workspace/{slug}/users                       # CRUD de usuários do tenant
+/workspace/{slug}/doctors                     # CRUD de médicos
+/workspace/{slug}/specialties                 # CRUD de especialidades médicas
+/workspace/{slug}/patients                    # CRUD de pacientes
+/workspace/{slug}/calendars                   # CRUD de calendários
+/workspace/{slug}/business-hours              # CRUD de horários comerciais
+/workspace/{slug}/appointment-types           # CRUD de tipos de consulta
+/workspace/{slug}/appointments                # CRUD de agendamentos
+/workspace/{slug}/forms                       # CRUD de formulários
+/workspace/{slug}/responses                   # CRUD de respostas de formulários
+/workspace/{slug}/integrations                # CRUD de integrações
+/workspace/{slug}/integrations/google         # Integração Google Calendar
+/workspace/{slug}/integrations/apple          # Integração Apple Calendar
+/workspace/{slug}/oauth-accounts              # CRUD de contas OAuth
+/workspace/{slug}/calendar-sync               # Sincronização de calendário
+/workspace/{slug}/notifications               # Notificações do tenant
+/workspace/{slug}/settings                    # Configurações do tenant
+/workspace/{slug}/subscription                # Detalhes da assinatura (apenas admins)
+/workspace/{slug}/plan-change-request/create  # Solicitar mudança de plano
+/workspace/{slug}/plan-change-request         # POST: Processar solicitação
+/workspace/{slug}/agendamentos/recorrentes    # Agendamentos recorrentes
+/workspace/{slug}/appointments/online         # Agendamentos online
+/workspace/{slug}/atendimento                 # Atendimento médico
+/workspace/{slug}/finance                     # Dashboard financeiro
+/workspace/{slug}/finance/accounts            # Contas financeiras
+/workspace/{slug}/finance/categories          # Categorias financeiras
+/workspace/{slug}/finance/transactions        # Transações financeiras
+/workspace/{slug}/finance/charges             # Cobranças
+/workspace/{slug}/finance/commissions         # Comissões
+/workspace/{slug}/finance/reports             # Relatórios financeiros
+/workspace/{slug}/two-factor                  # Configuração 2FA
 ```
 
 **Middleware aplicado (em ordem):**
@@ -227,6 +215,127 @@ GET  /paciente/logout                           # Logout (GET)
 3. `tenant.from.guard` - Ativa tenant a partir do usuário autenticado
 4. `ensure.guard` - Garante uso do guard correto (`tenant`)
 5. `tenant.auth` - Verifica autenticação do tenant
+
+#### 3. **Área Pública de Agendamento** (`/customer/{slug}/agendamento/*`)
+
+**Rotas Públicas (sem autenticação):**
+```php
+GET  /customer/{slug}/agendamento/identificar    # Identificar paciente
+POST /customer/{slug}/agendamento/identificar    # Processar identificação
+GET  /customer/{slug}/agendamento/cadastro       # Cadastro de paciente
+POST /customer/{slug}/agendamento/cadastro       # Processar cadastro
+GET  /customer/{slug}/agendamento/criar          # Criar agendamento
+POST /customer/{slug}/agendamento/criar          # Processar agendamento
+GET  /customer/{slug}/agendamento/sucesso/{appointment_id?}  # Página de sucesso
+GET  /customer/{slug}/agendamento/{appointment_id} # Visualizar agendamento
+
+# APIs públicas para agendamento
+GET  /customer/{slug}/agendamento/api/doctors/{doctorId}/calendars
+GET  /customer/{slug}/agendamento/api/doctors/{doctorId}/appointment-types
+GET  /customer/{slug}/agendamento/api/doctors/{doctorId}/specialties
+GET  /customer/{slug}/agendamento/api/doctors/{doctorId}/available-slots
+GET  /customer/{slug}/agendamento/api/doctors/{doctorId}/business-hours
+
+# Formulários públicos
+GET  /customer/{slug}/formulario/{form}/responder                    # Responder formulário
+POST /customer/{slug}/formulario/{form}/responder                    # Salvar resposta
+GET  /customer/{slug}/formulario/{form}/resposta/{response}/sucesso   # Página de sucesso
+```
+
+**Middleware:** `tenant-web` (detecta tenant pelo path)
+
+#### 4. **Webhooks e Páginas Públicas do Financeiro** (`/t/{slug}/*`)
+
+**Rotas Públicas (webhooks e pagamentos):**
+```php
+POST /t/{slug}/webhooks/asaas                  # Webhook do Asaas (financeiro)
+GET  /t/{slug}/pagamento/{charge}              # Página pública de pagamento
+GET  /t/{slug}/pagamento/{charge}/sucesso      # Página de sucesso do pagamento
+GET  /t/{slug}/pagamento/{charge}/erro         # Página de erro do pagamento
+```
+
+**Middleware:** `tenant-web`, `throttle.asaas.webhook`, `verify.asaas.webhook.secret`, `verify.asaas.webhook.ip`
+
+#### 5. **Portal do Paciente** (`routes/patient_portal.php`)
+
+**Rotas Públicas (autenticação com slug na URL):**
+```php
+GET  /customer/{slug}/paciente/login              # Formulário de login
+POST /customer/{slug}/paciente/login              # Processar login
+GET  /customer/{slug}/paciente/esqueci-senha      # Formulário de recuperação de senha
+GET  /customer/{slug}/paciente/resetar-senha/{token} # Formulário de resetar senha
+```
+
+**Rotas Autenticadas (com slug na URL):**
+```php
+GET  /workspace/{slug}/paciente/dashboard                      # Dashboard do paciente
+GET  /workspace/{slug}/paciente/agendamentos                   # Lista de agendamentos
+GET  /workspace/{slug}/paciente/agendamentos/criar             # Criar agendamento
+POST /workspace/{slug}/paciente/agendamentos                   # Processar criação
+GET  /workspace/{slug}/paciente/agendamentos/{id}/editar       # Editar agendamento
+PUT  /workspace/{slug}/paciente/agendamentos/{id}              # Atualizar agendamento
+POST /workspace/{slug}/paciente/agendamentos/{id}/cancelar     # Cancelar agendamento
+GET  /workspace/{slug}/paciente/notificacoes                   # Notificações do paciente
+GET  /workspace/{slug}/paciente/perfil                         # Perfil do paciente
+POST /workspace/{slug}/paciente/perfil                         # Atualizar perfil
+POST /workspace/{slug}/paciente/logout                         # Logout
+GET  /workspace/{slug}/paciente/logout                         # Logout (GET)
+```
+
+**Middleware aplicado (rotas públicas):**
+- `tenant-web`, `ensure.guard`
+
+**Middleware aplicado (rotas autenticadas - em ordem):**
+1. `web` - Sessão e cookies
+2. `persist.tenant` - Persiste tenant na sessão
+3. `tenant.from.guard` - Ativa tenant a partir do usuário autenticado
+4. `ensure.guard` - Garante uso do guard correto (`tenant`)
+5. `patient.auth` - Verifica autenticação do paciente
+
+#### 6. **Rede de Clínicas - Pública** (`routes/network.php`)
+
+**Rotas Públicas (acessadas via subdomínio da rede):**
+```php
+GET  /                           # Home da rede (institucional)
+GET  /medicos                    # Lista pública de médicos (agregado)
+GET  /unidades                   # Lista de unidades (tenants da rede)
+```
+
+**Acesso:** Via subdomínio (ex: `rede.allsync.com.br`)
+**Middleware:** `require.network` - Garante que rede foi detectada
+
+#### 7. **Rede de Clínicas - Área Administrativa** (`routes/network_admin.php`)
+
+**Rotas Públicas (login):**
+```php
+GET  /login                      # Formulário de login
+POST /login                      # Processar login
+POST /logout                     # Logout
+```
+
+**Rotas Autenticadas (área administrativa):**
+```php
+GET  /dashboard                  # Dashboard com KPIs agregados
+GET  /clinicas                   # Lista de clínicas (read-only)
+GET  /medicos                    # Lista de médicos (read-only)
+GET  /agendamentos               # Métricas de agendamentos (read-only)
+GET  /financeiro                 # Indicadores financeiros (read-only, se permitido)
+GET  /configuracoes              # Configurações da rede (edição permitida)
+POST /configuracoes              # Atualizar configurações
+```
+
+**Acesso:** Via subdomínio administrativo (ex: `admin.rede.allsync.com.br`)
+**Guard:** `network` (separado de Platform e Tenant)
+**Middleware aplicado:**
+1. `web` - Sessão e cookies
+2. `ensure.network.context` - Garante que rede foi detectada
+3. `network.auth` - Verifica autenticação do usuário da rede
+
+**Características:**
+- Área **majoritariamente read-only** - apenas configurações podem ser editadas
+- Agrega dados de múltiplos tenants usando serviços especializados
+- Nunca edita dados clínicos diretamente
+- Mantém isolamento de bancos de dados
 
 ---
 
@@ -238,6 +347,8 @@ GET  /paciente/logout                           # Logout (GET)
 |------------|------------------|
 | `DashboardController` | Dashboard principal com estatísticas |
 | `TenantController` | CRUD de tenants + sincronização com Asaas |
+| `ClinicNetworkController` | CRUD de redes de clínicas + vinculação de tenants |
+| `ApiTenantTokenController` | Gerenciamento de tokens de API para bots |
 | `PlanController` | CRUD de planos de assinatura |
 | `SubscriptionController` | CRUD de assinaturas + renovação |
 | `InvoiceController` | CRUD de faturas + sincronização manual |
@@ -246,35 +357,106 @@ GET  /paciente/logout                           # Logout (GET)
 | `NotificationOutboxController` | Histórico de notificações enviadas |
 | `SystemNotificationController` | Notificações do sistema |
 | `NotificationTemplateController` | Templates de notificação |
+| `EmailLayoutController` | Gerenciamento de layouts de email |
 | `SystemSettingsController` | Configurações gerais e integrações |
 | `PaisController`, `EstadoController`, `CidadeController` | CRUD de localização |
 | `LocationController` | API de localização (estados/cidades) |
 | `WhatsAppController` | Envio de mensagens WhatsApp |
+| `ZApiController` | Integração com Z-API (WhatsApp) |
 | `PlanAccessManagerController` | Gerenciamento de regras de acesso por plano |
+| `PlanChangeRequestController` | Gerenciamento de solicitações de mudança de plano |
 | `PreTenantController` | Gerenciamento de pré-cadastros |
 | `KioskMonitorController` | Monitor de kiosk |
 | `LandingController` | Landing page pública |
+| `BotApi/AppointmentBotApiController` | API de agendamentos para bots |
+| `BotApi/AvailabilityBotApiController` | API de disponibilidade para bots |
+| `BotApi/PatientBotApiController` | API de pacientes para bots |
+
+### **Controllers da Rede de Clínicas**
+
+#### **Controllers Públicos** (`app/Http/Controllers/Public/`)
+
+| Controller | Responsabilidade |
+|------------|------------------|
+| `NetworkPublicController` | Páginas públicas da rede (home, médicos, unidades) |
+
+#### **Controllers Administrativos da Rede** (`app/Http/Controllers/NetworkAdmin/`)
+
+| Controller | Responsabilidade |
+|------------|------------------|
+| `NetworkAuthController` | Autenticação exclusiva da rede (login/logout) |
+| `NetworkDashboardController` | Dashboard com KPIs agregados |
+| `NetworkClinicController` | Lista de clínicas da rede (read-only) |
+| `NetworkDoctorController` | Lista de médicos agregados (read-only) |
+| `NetworkAppointmentController` | Métricas de agendamentos (read-only) |
+| `NetworkFinanceController` | Indicadores financeiros agregados (read-only, com permissão) |
+| `NetworkSettingsController` | Configurações da rede (edição permitida) |
 
 ### **Controllers dos Tenants** (`app/Http/Controllers/Tenant/`)
 
 | Controller | Responsabilidade |
 |------------|------------------|
 | `Auth/LoginController` | Autenticação específica do tenant |
+| `Auth/TwoFactorChallengeController` | Desafio de autenticação de dois fatores |
+| `TwoFactorController` | Configuração de 2FA |
 | `DashboardController` | Dashboard do tenant |
+| `ProfileController` | Perfil do usuário autenticado |
 | `UserController` | CRUD de usuários do tenant |
+| `UserDoctorPermissionController` | Permissões de médicos para usuários |
 | `DoctorController` | CRUD de médicos |
+| `DoctorSettingsController` | Configurações específicas de médicos |
 | `MedicalSpecialtyController` | Especialidades médicas do tenant |
-| `PatientController` | CRUD de pacientes |
+| `PatientController` | CRUD de pacientes + gerenciamento de login |
 | `CalendarController` | CRUD de calendários |
 | `BusinessHourController` | Horários comerciais |
 | `AppointmentTypeController` | Tipos de consulta |
 | `AppointmentController` | CRUD de agendamentos + eventos do calendário |
+| `RecurringAppointmentController` | Agendamentos recorrentes |
+| `OnlineAppointmentController` | Agendamentos online com instruções |
+| `MedicalAppointmentController` | Atendimento médico (sessão de atendimento) |
 | `FormController` | CRUD de formulários + seções/perguntas/opções |
 | `FormResponseController` | Respostas de formulários + respostas individuais |
 | `PublicFormController` | Formulários públicos para pacientes responderem |
-| `IntegrationController` | Integrações (Google Calendar, etc.) |
+| `PublicAppointmentController` | Agendamento público (página pública) |
+| `PublicPatientController` | Identificação de paciente (público) |
+| `PublicPatientRegisterController` | Cadastro de paciente (público) |
+| `IntegrationController` | Integrações gerais |
+| `Integrations/GoogleCalendarController` | Integração Google Calendar |
+| `Integrations/AppleCalendarController` | Integração Apple Calendar (iCloud) |
 | `OAuthAccountController` | Contas OAuth conectadas |
 | `CalendarSyncStateController` | Estado de sincronização de calendário |
+| `NotificationController` | Notificações do tenant |
+| `SettingsController` | Configurações do tenant |
+| `SubscriptionController` | Detalhes da assinatura do tenant |
+| `PlanChangeRequestController` | Solicitação de mudança de plano |
+| `PaymentController` | Páginas públicas de pagamento |
+| `AsaasWebhookController` | Webhook do Asaas (módulo financeiro) |
+| `FinanceController` | Dashboard do módulo financeiro |
+| `FinanceSettingsController` | Configurações financeiras |
+| `Finance/FinancialAccountController` | Contas financeiras |
+| `Finance/FinancialCategoryController` | Categorias financeiras |
+| `Finance/FinancialTransactionController` | Transações financeiras |
+| `Finance/FinancialChargeController` | Cobranças |
+| `Finance/DoctorCommissionController` | Comissões de médicos |
+| `Finance/Reports/FinanceReportController` | Relatórios financeiros (índice) |
+| `Finance/Reports/CashFlowReportController` | Relatório de fluxo de caixa |
+| `Finance/Reports/IncomeExpenseReportController` | Relatório de receitas e despesas |
+| `Finance/Reports/ChargesReportController` | Relatório de cobranças |
+| `Finance/Reports/PaymentsReportController` | Relatório de pagamentos |
+| `Finance/Reports/CommissionsReportController` | Relatório de comissões |
+| `Reports/ReportController` | Índice de relatórios |
+| `Reports/AppointmentReportController` | Relatório de agendamentos |
+| `Reports/DoctorReportController` | Relatório de médicos |
+| `Reports/FormReportController` | Relatório de formulários |
+| `Reports/NotificationReportController` | Relatório de notificações |
+| `Reports/PatientReportController` | Relatório de pacientes |
+| `Reports/PortalReportController` | Relatório do portal |
+| `Reports/RecurringReportController` | Relatório de agendamentos recorrentes |
+| `PatientPortal/AuthController` | Autenticação do portal do paciente |
+| `PatientPortal/DashboardController` | Dashboard do portal do paciente |
+| `PatientPortal/AppointmentController` | Agendamentos do portal do paciente |
+| `PatientPortal/NotificationController` | Notificações do portal do paciente |
+| `PatientPortal/ProfileController` | Perfil do paciente |
 
 ---
 
@@ -304,12 +486,22 @@ Armazenados no **banco central (landlord)**:
 | `PlanAccessRuleFeature` | `plan_access_rule_feature` | Relação entre regras e funcionalidades |
 | `PreTenant` | `pre_tenants` | Pré-cadastros de novos tenants |
 | `PreTenantLog` | `pre_tenant_logs` | Logs de eventos dos pré-cadastros |
+| `PlanChangeRequest` | `plan_change_requests` | Solicitações de mudança de plano |
+| `EmailLayout` | `email_layouts` | Layouts de email personalizados |
+| `ApiTenantToken` | `api_tenant_tokens` | Tokens de API para bots |
+| `TenantAdmin` | `tenant_admins` | Administradores de tenants |
+| `TwoFactorCode` | `two_factor_codes` | Códigos de autenticação de dois fatores |
+| `ClinicNetwork` | `clinic_networks` | Redes de clínicas (agrupamento de tenants) |
+| `NetworkUser` | `network_users` | Usuários da área administrativa da rede |
 | `Module` | - | Módulos de acesso (helper) |
 
 **Características importantes:**
 - `Tenant` estende `Spatie\Multitenancy\Models\Tenant`
 - `Tenant` possui métodos para configuração de banco: `getDatabaseName()`, `getDatabaseHost()`, etc.
+- `Tenant` possui relacionamento `network()` (belongsTo) e `network_id` (nullable)
 - `User` (Platform) possui campo `modules` (JSON) para controle de acesso
+- `ClinicNetwork` possui relacionamentos `tenants()` (hasMany) e `users()` (hasMany)
+- `NetworkUser` utiliza guard `network` separado (não é usuário da Platform nem do Tenant)
 
 ### **Models dos Tenants** (`app/Models/Tenant/`)
 
@@ -334,6 +526,26 @@ Armazenados no **banco do tenant** (conexão `tenant`):
 | `Integrations` | `integrations` | Integrações configuradas |
 | `OauthAccount` | `oauth_accounts` | Contas OAuth |
 | `CalendarSyncState` | `calendar_sync_states` | Estado de sincronização |
+| `GoogleCalendarToken` | `google_calendar_tokens` | Tokens do Google Calendar |
+| `AppleCalendarToken` | `apple_calendar_tokens` | Tokens do Apple Calendar |
+| `Notification` | `notifications` | Notificações do tenant |
+| `TenantSetting` | `tenant_settings` | Configurações específicas do tenant |
+| `RecurringAppointment` | `recurring_appointments` | Agendamentos recorrentes |
+| `RecurringAppointmentRule` | `recurring_appointment_rules` | Regras de recorrência |
+| `OnlineAppointmentInstruction` | `online_appointment_instructions` | Instruções de agendamento online |
+| `PatientLogin` | `patient_logins` | Credenciais de login dos pacientes |
+| `PatientAddress` | `patient_addresses` | Endereços dos pacientes |
+| `Gender` | `genders` | Gêneros (helper) |
+| `UserDoctorPermission` | `user_doctor_permissions` | Permissões de médicos para usuários |
+| `DoctorBillingPrice` | `doctor_billing_prices` | Preços de cobrança por médico |
+| `FinancialAccount` | `financial_accounts` | Contas financeiras |
+| `FinancialCategory` | `financial_categories` | Categorias financeiras |
+| `FinancialTransaction` | `financial_transactions` | Transações financeiras |
+| `FinancialCharge` | `financial_charges` | Cobranças |
+| `DoctorCommission` | `doctor_commissions` | Comissões de médicos |
+| `AsaasWebhookEvent` | `asaas_webhook_events` | Eventos de webhook do Asaas |
+| `TenantPlanLimit` | `tenant_plan_limits` | Limites do plano do tenant |
+| `TwoFactorCode` | `two_factor_codes` | Códigos de autenticação de dois fatores |
 | `Module` | - | Módulos de acesso (helper) |
 
 **Características importantes:**
@@ -348,7 +560,9 @@ Armazenados no **banco do tenant** (conexão `tenant`):
 ### **Migrações do Banco Central** (`database/migrations/`)
 
 Tabelas principais:
-- `tenants` - Registro de todos os tenants
+- `tenants` - Registro de todos os tenants (com `network_id` nullable)
+- `clinic_networks` - Redes de clínicas
+- `network_users` - Usuários da área administrativa das redes
 - `plans` - Planos de assinatura
 - `subscriptions` - Assinaturas ativas
 - `invoices` - Faturas geradas
@@ -386,13 +600,27 @@ Executadas automaticamente quando um tenant é criado via `TenantProvisioner`:
 
 | Middleware | Responsabilidade | Onde é usado |
 |------------|------------------|--------------|
-| `DetectTenantFromPath` | Detecta tenant pelo path `/t/{tenant}` e ativa | `tenant-web` group |
+| `DetectTenantFromPath` | Detecta tenant pelo path `/customer/{slug}` ou `/workspace/{slug}` e ativa | `tenant-web` group |
+| `DetectTenantForPatientPortal` | Detecta tenant para portal do paciente | Portal do paciente |
 | `PersistTenantInSession` | Persiste tenant na sessão entre requests | `tenant-web` group, `persist.tenant` alias |
 | `EnsureTenantFromGuard` | Ativa tenant a partir do usuário autenticado | `tenant.from.guard` alias |
+| `EnsureTenantFromPatientGuard` | Ativa tenant a partir do paciente autenticado | Portal do paciente |
 | `EnsureCorrectGuard` | Garante uso do guard correto (`web` ou `tenant`) | `ensure.guard` alias |
 | `RedirectIfTenantUnauthenticated` | Redireciona para login se não autenticado | `tenant.auth` alias |
+| `RedirectIfPatientUnauthenticated` | Redireciona paciente não autenticado para login | `patient.auth` alias |
 | `CheckModuleAccess` | Verifica acesso a módulos específicos | `module.access` alias |
-| `VerifyAsaasToken` | Valida token do webhook do Asaas | `verify.asaas.token` alias |
+| `TenantModulePermissions` | Verifica permissões de módulos do tenant | Tenant autenticado |
+| `EnsureFeatureAccess` | Garante acesso a funcionalidades específicas | `ensure.feature` alias |
+| `EnsureAnyFeatureAccess` | Garante acesso a pelo menos uma funcionalidade | `ensure.any.feature` alias |
+| `VerifyAsaasToken` | Valida token do webhook do Asaas (platform) | `verify.asaas.token` alias |
+| `VerifyAsaasWebhookSecret` | Valida secret do webhook do Asaas (tenant) | `verify.asaas.webhook.secret` alias |
+| `VerifyAsaasWebhookIpWhitelist` | Valida IP do webhook do Asaas | `verify.asaas.webhook.ip` alias |
+| `ThrottleAsaasWebhook` | Rate limiting para webhooks do Asaas | `throttle.asaas.webhook` alias |
+| `Platform\BotApiTokenMiddleware` | Valida token de API para bots | Rotas de API de bots |
+| `DetectClinicNetworkFromSubdomain` | Detecta rede de clínicas pelo subdomínio | `web` group (antes de tenant) |
+| `RequireNetworkContext` | Garante que rede foi detectada | `require.network` alias |
+| `EnsureNetworkContext` | Garante contexto de rede (alias) | `ensure.network.context` alias |
+| `EnsureNetworkUser` | Verifica autenticação do usuário da rede | `network.auth` alias |
 
 ### **Fluxo de Middlewares**
 
@@ -403,7 +631,7 @@ web middleware group
   → module.access:{modulo}
 ```
 
-#### **Para login do Tenant (`/t/{tenant}/login`):**
+#### **Para login do Tenant (`/customer/{slug}/login`):**
 ```
 tenant-web middleware group
   → DetectTenantFromPath (detecta e ativa tenant)
@@ -412,13 +640,47 @@ tenant-web middleware group
   → Session, Cookies, CSRF
 ```
 
-#### **Para área autenticada do Tenant (`/tenant/*`):**
+#### **Para área autenticada do Tenant (`/workspace/{slug}/*`):**
 ```
 web middleware group
   → persist.tenant (reativa tenant da sessão)
   → tenant.from.guard (ativa tenant do usuário logado)
   → ensure.guard (garante guard 'tenant')
   → tenant.auth (verifica autenticação)
+  → module.access:{modulo} (verifica acesso ao módulo, quando aplicável)
+```
+
+#### **Para portal do paciente (`/workspace/{slug}/paciente/*`):**
+```
+web middleware group
+  → persist.tenant (reativa tenant da sessão)
+  → tenant.from.guard (ativa tenant do paciente logado)
+  → ensure.guard (garante guard 'tenant')
+  → patient.auth (verifica autenticação do paciente)
+```
+
+#### **Para webhooks do Asaas (`/t/{slug}/webhooks/asaas`):**
+```
+tenant-web middleware group
+  → DetectTenantFromPath (detecta e ativa tenant)
+  → throttle.asaas.webhook (rate limiting)
+  → verify.asaas.webhook.secret (valida secret)
+  → verify.asaas.webhook.ip (valida IP whitelist)
+```
+
+#### **Para rede de clínicas (pública - `routes/network.php`):**
+```
+web middleware group
+  → DetectClinicNetworkFromSubdomain (detecta rede, NUNCA ativa tenant)
+  → require.network (garante que rede foi detectada)
+```
+
+#### **Para área administrativa da rede (`routes/network_admin.php`):**
+```
+web middleware group
+  → DetectClinicNetworkFromSubdomain (detecta rede)
+  → ensure.network.context (garante contexto)
+  → network.auth (verifica autenticação com guard 'network')
 ```
 
 ---
@@ -431,6 +693,14 @@ O sistema utiliza **multitenancy com banco de dados separado** (database-per-ten
 
 - **Banco Central (Landlord)**: PostgreSQL com dados da plataforma
 - **Bancos dos Tenants**: Cada tenant possui seu próprio banco PostgreSQL isolado
+
+### **Rede de Clínicas e Acesso Contratual**
+
+Tenants vinculados a uma **Rede de Clínicas** possuem um comportamento diferenciado:
+
+1.  **Planos Contratuais**: Utilizam obrigatoriamente planos da categoria `contractual`.
+2.  **Acesso Direto**: O acesso é liberado diretamente através do campo `plan_id` no model `Tenant`, sem a necessidade de um registro na tabela `subscriptions` (evitando cobranças recorrentes automáticas pelo sistema).
+3.  **Inativação de Rede**: Se uma rede de clínicas for marcada como **inativa**, todos os tenants vinculados a ela perdem o acesso ao sistema imediatamente, independentemente do plano configurado.
 
 ### **Componentes Principais**
 
@@ -506,11 +776,11 @@ Serviço responsável por criar/remover tenants:
 ### **Fluxo de Detecção e Ativação do Tenant**
 
 ```
-1. Request chega em /t/{tenant}/login
+1. Request chega em /customer/{slug}/login ou /workspace/{slug}/*
    ↓
-2. DetectTenantFromPath detecta segment(2) = {tenant}
+2. DetectTenantFromPath detecta segment(2) = {slug}
    ↓
-3. Busca Tenant::where('subdomain', $tenant)->first()
+3. Busca Tenant::where('subdomain', $slug)->first()
    ↓
 4. Chama $tenant->makeCurrent()
    ↓
@@ -518,19 +788,20 @@ Serviço responsável por criar/remover tenants:
    ↓
 6. Configura conexão 'tenant' com credenciais do tenant
    ↓
-7. PersistTenantInSession salva 'tenant_slug' na sessão
+7. PersistTenantInSession salva 'tenant_slug' na sessão (se aplicável)
    ↓
 8. EnsureCorrectGuard define Auth::shouldUse('tenant')
    ↓
 9. Request continua com tenant ativo
 ```
 
-### **Autenticação Dual**
+### **Autenticação Tripla**
 
-O sistema possui **dois guards de autenticação**:
+O sistema possui **três guards de autenticação**:
 
 1. **Guard `web`**: Usuários da platform (`App\Models\Platform\User`)
 2. **Guard `tenant`**: Usuários dos tenants (`App\Models\Tenant\User`)
+3. **Guard `network`**: Usuários das redes de clínicas (`App\Models\Platform\NetworkUser`)
 
 Configuração em `config/auth.php`:
 ```php
@@ -542,6 +813,10 @@ Configuração em `config/auth.php`:
     'tenant' => [
         'driver' => 'session',
         'provider' => 'tenant_users',  // Tenant\User
+    ],
+    'network' => [
+        'driver' => 'session',
+        'provider' => 'network_users',  // Platform\NetworkUser
     ],
 ],
 ```
@@ -579,22 +854,30 @@ O middleware `CheckModuleAccess` verifica se o usuário possui acesso ao módulo
 
 ## 🚀 Fluxo de Criação de Tenant
 
+O fluxo de criação foi centralizado no `TenantCreatorService` para garantir consistência entre o cadastro manual e a importação em lote:
+
 ```
-1. Admin cria tenant via Platform/TenantController
+1. Solicitação de criação (Controller Manual ou Importação)
    ↓
-2. TenantProvisioner::prepareDatabaseConfig() gera credenciais
+2. TenantCreatorService::create()
    ↓
-3. Tenant é salvo no banco central
+3. Validação de regras de negócio (Plano vs Rede, Documento Único)
    ↓
-4. TenantProvisioner::createDatabase() é chamado
+4. TenantProvisioner::prepareDatabaseConfig() gera credenciais
    ↓
-5. Banco PostgreSQL é criado
+5. Tenant é salvo no banco central
    ↓
-6. Migrations do tenant são executadas
+6. TenantProvisioner::createDatabase() cria o banco e executa migrations
    ↓
-7. Usuário admin padrão é criado
+7. Usuário admin padrão é criado no banco do tenant
    ↓
-8. Tenant está pronto para uso
+8. Se não for rede: Cria assinatura (Subscription) e sincroniza Asaas
+   ↓
+9. Se for rede: Vincula plano diretamente ao tenant (Acesso Contratual)
+   ↓
+10. TenantPlanService::applyPlanRules() configura limites no banco do tenant
+   ↓
+11. Notificação: Envia credenciais por e-mail para o administrador
 ```
 
 ---
@@ -605,17 +888,29 @@ O middleware `CheckModuleAccess` verifica se o usuário possui acesso ao módulo
 2. **Conexão Dinâmica**: A conexão `tenant` é configurada dinamicamente a cada request
 3. **Persistência na Sessão**: O tenant é persistido na sessão para evitar re-detecção a cada request
 4. **Logs Extensivos**: O sistema possui logs detalhados para debug do fluxo multitenant
-5. **Integração Asaas**: Sistema de pagamento integrado com sincronização de clientes e faturas
+5. **Integração Asaas**: Sistema de pagamento integrado com sincronização de clientes e faturas (tanto na platform quanto no módulo financeiro dos tenants)
 6. **Formulários Públicos**: Sistema de envio automático de links de formulários aos pacientes quando agendamentos são criados
 7. **Notificações Flexíveis**: Sistema de notificações com suporte a provedores globais ou específicos por tenant (email e WhatsApp)
 8. **Envio Automático**: O `AppointmentObserver` envia automaticamente links de formulários quando um agendamento é criado e existe formulário ativo correspondente
+9. **Estrutura de URLs**: O sistema utiliza diferentes prefixes baseados no contexto:
+   - `/customer/{slug}` - Área pública e login do tenant
+   - `/workspace/{slug}` - Área autenticada do tenant e portal do paciente
+   - `/t/{slug}` - Webhooks e páginas públicas de pagamento do financeiro
+10. **Autenticação de Dois Fatores (2FA)**: Implementada tanto na platform quanto nos tenants, com suporte a TOTP e SMS
+11. **Módulo Financeiro**: Sistema completo de gestão financeira com contas, categorias, transações, cobranças, comissões e relatórios
+12. **Integrações de Calendário**: Suporte a Google Calendar e Apple Calendar (iCloud) com sincronização bidirecional
+13. **Agendamentos Online**: Sistema de agendamentos online com instruções personalizáveis
+14. **Portal do Paciente**: Área autenticada para pacientes gerenciarem seus agendamentos
+15. **API para Bots**: Sistema de tokens de API para integração com bots externos
+16. **Relatórios**: Sistema extensivo de relatórios para agendamentos, financeiro, pacientes, médicos, etc.
 
 ---
 
-**Documentação gerada em:** 2025-12-03
-**Última atualização:** 2025-12-03
+**Documentação gerada em:** 2025-01-17
+**Última atualização:** 2025-01-17
 
 **Nota:** Esta documentação foi revisada e atualizada para refletir todas as rotas e funcionalidades atuais do sistema, incluindo:
+- Estrutura correta de URLs (`/customer/{slug}`, `/workspace/{slug}`, `/t/{slug}`)
 - Rotas do Portal do Paciente
 - Rota global do Google Calendar callback (`/google/callback`)
 - Rotas de agendamentos recorrentes
@@ -626,4 +921,8 @@ O middleware `CheckModuleAccess` verifica se o usuário possui acesso ao módulo
 - Sistema completo de relatórios
 - Módulo de atendimento médico
 - Agendamentos online com instruções
+- Módulo financeiro completo (contas, categorias, transações, cobranças, comissões, relatórios)
+- Autenticação de dois fatores (2FA)
+- API para bots com tokens
+- Layouts de email personalizáveis
 

@@ -53,6 +53,19 @@
                             </div>
 
                             <div class="col-md-4">
+                                <label class="fw-semibold text-muted">Rede de Clínicas:</label>
+                                <p class="mb-0">
+                                    @if($tenant->network)
+                                        <a href="{{ route('Platform.clinic-networks.edit', $tenant->network->id) }}" class="text-primary text-decoration-none">
+                                            <i class="fas fa-network-wired me-1"></i>{{ $tenant->network->name }}
+                                        </a>
+                                    @else
+                                        <span class="text-muted">Nenhuma rede</span>
+                                    @endif
+                                </p>
+                            </div>
+
+                            <div class="col-md-4">
                                 <label class="fw-semibold text-muted">Status:</label>
                                 <span
                                     class="badge bg-{{ $tenant->status === 'active' ? 'success' : ($tenant->status === 'trial' ? 'info' : ($tenant->status === 'suspended' ? 'warning' : 'danger')) }}">
@@ -242,6 +255,9 @@
                         </div>
                     </div>
                 </div>
+
+                {{-- Informações do Asaas (Apenas para venda direta / Sem Rede) --}}
+                @if(!$tenant->network_id)
                 <div class="card shadow-sm border-0 mt-4">
                     <div class="card-body">
                         <h4 class="card-title mb-4">Informações do Asaas</h4>
@@ -298,6 +314,7 @@
                         </div>
                     </div>
                 </div>
+                @endif
 
             </div>
         </div>

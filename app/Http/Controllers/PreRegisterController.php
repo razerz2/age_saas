@@ -47,11 +47,14 @@ class PreRegisterController extends Controller
                 'plan_id' => 'required|uuid|exists:plans,id',
                 'accept_terms' => 'required|accepted',
                 'subdomain_suggested' => 'nullable|string|max:100', // Mantido para compatibilidade, mas não será usado
-                'address' => 'nullable|string|max:255',
-                'zipcode' => 'nullable|string|max:20',
-                'country_id' => 'nullable|integer|exists:paises,id_pais',
-                'state_id' => 'nullable|integer|exists:estados,id_estado',
-                'city_id' => 'nullable|integer|exists:cidades,id_cidade',
+                'address' => 'required|string|max:255',
+                'address_number' => 'required|string|max:20',
+                'complement' => 'nullable|string|max:100',
+                'neighborhood' => 'required|string|max:100',
+                'zipcode' => 'required|string|max:20',
+                'country_id' => 'required|integer|exists:paises,id_pais',
+                'state_id' => 'required|integer|exists:estados,id_estado',
+                'city_id' => 'required|integer|exists:cidades,id_cidade',
             ], [
                 'name.required' => 'O nome é obrigatório.',
                 'email.required' => 'O e-mail é obrigatório.',
@@ -60,6 +63,13 @@ class PreRegisterController extends Controller
                 'plan_id.exists' => 'O plano selecionado não existe.',
                 'accept_terms.required' => 'Você deve aceitar os Termos de Uso e a Política de Privacidade para continuar.',
                 'accept_terms.accepted' => 'Você deve aceitar os Termos de Uso e a Política de Privacidade para continuar.',
+                'address.required' => 'O endereço é obrigatório.',
+                'address_number.required' => 'O número é obrigatório.',
+                'neighborhood.required' => 'O bairro é obrigatório.',
+                'zipcode.required' => 'O CEP é obrigatório.',
+                'country_id.required' => 'O país é obrigatório.',
+                'state_id.required' => 'O estado é obrigatório.',
+                'city_id.required' => 'A cidade é obrigatória.',
             ]);
 
         } catch (\Illuminate\Validation\ValidationException $e) {
@@ -122,6 +132,9 @@ class PreRegisterController extends Controller
                     'plan_id' => $request->plan_id,
                     'subdomain_suggested' => $subdomain,
                     'address' => $request->address,
+                    'address_number' => $request->address_number,
+                    'complement' => $request->complement,
+                    'neighborhood' => $request->neighborhood,
                     'zipcode' => $request->zipcode,
                     'country_id' => $request->country_id,
                     'state_id' => $request->state_id,

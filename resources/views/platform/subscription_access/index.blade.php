@@ -51,6 +51,7 @@
                                     <tr>
                                         <th>#</th>
                                         <th>Plano</th>
+                                        <th>Categoria</th>
                                         <th>Max Admins</th>
                                         <th>Max Usuários</th>
                                         <th>Max Médicos</th>
@@ -63,6 +64,27 @@
                                         <tr>
                                             <td>{{ $loop->iteration }}</td>
                                             <td>{{ $rule->plan->name ?? '-' }}</td>
+                                            <td>
+                                                @if($rule->plan)
+                                                    @php
+                                                        $categoryLabel = match($rule->plan->category) {
+                                                            'commercial' => 'Comercial',
+                                                            'contractual' => 'Contratual',
+                                                            'sandbox' => 'Sandbox',
+                                                            default => $rule->plan->category
+                                                        };
+                                                        $categoryClass = match($rule->plan->category) {
+                                                            'commercial' => 'bg-info',
+                                                            'contractual' => 'bg-primary',
+                                                            'sandbox' => 'bg-warning text-dark',
+                                                            default => 'bg-secondary'
+                                                        };
+                                                    @endphp
+                                                    <span class="badge {{ $categoryClass }}">{{ $categoryLabel }}</span>
+                                                @else
+                                                    -
+                                                @endif
+                                            </td>
                                             <td>{{ $rule->max_admin_users }}</td>
                                             <td>{{ $rule->max_common_users }}</td>
                                             <td>{{ $rule->max_doctors }}</td>

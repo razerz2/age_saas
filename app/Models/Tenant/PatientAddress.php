@@ -25,6 +25,9 @@ class PatientAddress extends Model
         'neighborhood',
         'city',
         'state',
+        'pais_id',
+        'estado_id',
+        'cidade_id',
     ];
 
     public $timestamps = true;

@@ -7,6 +7,7 @@ use Illuminate\Support\Str;
 
 class TenantLocalizacao extends Model
 {
+    protected $connection = 'pgsql';
     protected $table = 'tenant_localizacoes';
     protected $primaryKey = 'id_localizacao';
 

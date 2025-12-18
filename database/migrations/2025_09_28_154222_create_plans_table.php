@@ -13,6 +13,7 @@ return new class extends Migration {
             $table->enum('periodicity', ['monthly','yearly']);
             $table->integer('period_months')->default(1);
             $table->integer('price_cents')->unsigned();
+            $table->string('category')->default('commercial');
             $table->jsonb('features')->default(json_encode([]));
             $table->boolean('is_active')->default(true);
             $table->timestamps();

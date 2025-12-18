@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class SystemSetting extends Model
 {
+    protected $connection = 'pgsql';
     protected $fillable = ['key', 'value'];
 
     /**

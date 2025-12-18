@@ -20,8 +20,11 @@ Sistema SaaS (Software as a Service) de agendamento médico construído com Lara
 
 ### Área Platform (Administrativa)
 - ✅ Gerenciamento de tenants (clínicas)
+- ✅ **Importação em lote de tenants** via CSV vinculados a redes
+- ✅ **Módulo de Redes de Clínicas** (agrupamento e métricas agregadas)
+- ✅ **Inativação de Rede** (bloqueia acesso de todos os seus tenants)
 - ✅ **Pré-cadastro de novos tenants** (via landing page com pagamento)
-- ✅ Gestão de planos de assinatura
+- ✅ Gestão de planos de assinatura (**Comerciais, Contratuais e Sandbox**)
 - ✅ **Controle de regras de acesso por plano** (limites e funcionalidades)
 - ✅ Controle de assinaturas e renovações
 - ✅ Gerenciamento de faturas

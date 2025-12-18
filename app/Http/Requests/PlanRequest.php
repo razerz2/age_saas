@@ -56,6 +56,7 @@ class PlanRequest extends FormRequest
             'periodicity' => ['required', 'in:monthly,yearly,custom'],
             'period_months' => ['required', 'integer', 'min:1'],
             'price_cents' => ['required', 'integer', 'min:0'],
+            'category' => ['required', 'in:commercial,contractual,sandbox'],
             'features' => ['nullable', 'array'],
             'is_active' => ['boolean'],
         ];

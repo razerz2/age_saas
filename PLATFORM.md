@@ -18,7 +18,7 @@
 A **Platform** é a área administrativa central do sistema SaaS de agendamento médico. É responsável por gerenciar todos os aspectos administrativos da plataforma, incluindo:
 
 - ✅ Gerenciamento de tenants (clínicas)
-- ✅ Gestão de planos de assinatura
+- ✅ Gestão de planos de assinatura (Comerciais, Contratuais e Sandbox)
 - ✅ Controle de assinaturas e renovações
 - ✅ Gerenciamento de faturas
 - ✅ Sistema de notificações
@@ -29,6 +29,8 @@ A **Platform** é a área administrativa central do sistema SaaS de agendamento 
 - ✅ Envio de mensagens WhatsApp
 - ✅ Monitor de kiosk
 - ✅ **Módulo de Pré-Cadastro** - Gerenciamento de pré-cadastros de novos tenants
+- ✅ **Módulo de Redes de Clínicas** - Gerenciamento de redes, vinculação de tenants e importação em lote (CSV)
+- ✅ **Importação de Tenants** - Criação massiva de clínicas vinculadas a redes via CSV com resolução automática de localização.
 
 ### Banco de Dados
 
@@ -42,6 +44,8 @@ A Platform utiliza o **banco central (landlord)**, que armazena:
 - Dados de localização (países, estados, cidades)
 - Pré-cadastros de tenants (pre_tenants)
 - Logs de pré-cadastros (pre_tenant_logs)
+- Redes de clínicas (clinic_networks)
+- Usuários das redes (network_users)
 
 ---
 
@@ -64,6 +68,7 @@ http://localhost/Platform/dashboard
 Os usuários da Platform possuem um campo `modules` (JSON) que define quais módulos podem acessar:
 
 - `tenants` - Tenants
+- `clinic_networks` - Redes de Clínicas
 - `pre_tenants` - Pré-Cadastros
 - `plans` - Planos
 - `subscriptions` - Assinaturas
@@ -132,6 +137,14 @@ GET    /Platform/subscription-access/{id}/edit         # Editar regra
 PUT    /Platform/subscription-access/{id}             # Atualizar regra
 DELETE /Platform/subscription-access/{id}             # Excluir regra
 
+# Redes de Clínicas e Importação
+GET    /Platform/clinic-networks                      # Listar redes
+POST   /Platform/clinic-networks                      # Criar rede
+GET    /Platform/clinic-networks/import-all           # Importação geral (selecionar rede e arquivo)
+POST   /Platform/clinic-networks/import-all           # Processar importação geral
+GET    /Platform/clinic-networks/{network}/import      # Importação para rede específica
+POST   /Platform/clinic-networks/{network}/import      # Processar importação para rede
+
 # Assinaturas
 POST /Platform/subscriptions/{id}/renew               # Renovar assinatura (onde {id} é numérico)
 POST /Platform/subscriptions/{subscription}/sync       # Sincronizar assinatura com Asaas
@@ -199,6 +212,7 @@ POST /webhook/asaas/pre-registration                   # Webhook do Asaas para p
 As rotas abaixo exigem o módulo correspondente no campo `modules` do usuário:
 
 - `tenants` - Acesso a `/Platform/tenants/*`
+- `clinic_networks` - Acesso a `/Platform/clinic-networks/*`
 - `plans` - Acesso a `/Platform/plans/*`
 - `subscriptions` - Acesso a `/Platform/subscriptions/*`
 - `invoices` - Acesso a `/Platform/invoices/*`
@@ -221,6 +235,7 @@ As rotas abaixo exigem o módulo correspondente no campo `modules` do usuário:
 |------------|------------------|------------------|--------|
 | `DashboardController` | Dashboard principal com estatísticas e métricas | `/Platform/dashboard` | Sempre acessível |
 | `TenantController` | CRUD de tenants + sincronização com Asaas + criação de banco | `/Platform/tenants` | `tenants` |
+| `ClinicNetworkController` | CRUD de redes de clínicas + vinculação de tenants | `/Platform/clinic-networks` | `clinic_networks` |
 | `PlanController` | CRUD de planos de assinatura | `/Platform/plans` | `plans` |
 | `PlanAccessManagerController` | Gerenciamento de regras de acesso por plano | `/Platform/subscription-access` | `plans` |
 | `SubscriptionController` | CRUD de assinaturas + renovação + sincronização | `/Platform/subscriptions` | `subscriptions` |
@@ -252,11 +267,33 @@ As rotas abaixo exigem o módulo correspondente no campo `modules` do usuário:
   - Top 5 tenants mais antigos
 
 #### TenantController
-- CRUD completo de tenants
+- CRUD completo de tenants centralizado no `TenantCreatorService`
 - Criação automática de banco de dados PostgreSQL
 - Criação automática de usuário admin padrão
-- Sincronização com gateway de pagamento Asaas
+- **Localização**: Focada no Brasil (ID 31), com campos obrigatórios de endereço (Logradouro, Bairro, CEP, Estado, Cidade)
+- Sincronização com gateway de pagamento Asaas (para planos comerciais)
 - Visualização de informações do usuário admin do tenant
+
+#### ClinicNetworkController
+- CRUD de redes de clínicas
+- Vinculação de tenants a redes
+- **Regras de Acesso**: Se a rede for inativada, todos os seus tenants perdem o acesso automaticamente.
+
+#### NetworkTenantImportController
+- Importação em lote de tenants via arquivo CSV
+- **Colunas permitidas**: `legal_name`, `trade_name`, `document`, `email`, `phone`, `subdomain`, `endereco`, `n_endereco`, `complemento`, `bairro`, `cep`, `estado`, `cidade`
+- **Resolução Automática**: Identifica o ID do estado pela sigla ou nome, e a cidade pelo nome (focado no Brasil).
+- **Opção de Documento Duplicado**: Permite importar múltiplas clínicas com o mesmo CNPJ/CPF se habilitado.
+- **Segurança**: Bloqueia reimportação do mesmo arquivo (via hash) e colunas técnicas proibidas.
+- **Processamento**: Cada linha é processada de forma isolada; erros em uma linha não interrompem a importação.
+- **E-mail automático**: Envia credenciais de acesso para cada clínica criada com sucesso.
+
+#### PlanController
+- CRUD de planos com categorias:
+  - `commercial`: Planos padrão para clínicas avulsas.
+  - `contractual`: Exclusivos para redes de clínicas (liberação sem assinatura).
+  - `sandbox`: Para testes e demonstrações.
+- Filtra planos disponíveis na criação de tenant com base na vinculação ou não a uma rede.
 
 #### PlanAccessManagerController
 - Gerenciamento de regras de acesso por plano
@@ -331,8 +368,10 @@ Armazenados no **banco central (landlord)**:
 
 | Model | Tabela | Descrição |
 |-------|--------|-----------|
-| `Tenant` | `tenants` | Clientes (clínicas) - UUID como chave primária |
+| `Tenant` | `tenants` | Clientes (clínicas) - UUID como chave primária (possui `network_id` nullable) |
 | `User` | `users` | Usuários da plataforma administrativa |
+| `ClinicNetwork` | `clinic_networks` | Redes de clínicas (agrupamento de tenants) |
+| `NetworkUser` | `network_users` | Usuários da área administrativa das redes (guard separado) |
 | `Plan` | `plans` | Planos de assinatura |
 | `PlanAccessRule` | `plan_access_rules` | Regras de acesso por plano (limites e funcionalidades) |
 | `SubscriptionFeature` | `subscription_features` | Funcionalidades disponíveis para planos |
@@ -355,7 +394,10 @@ Armazenados no **banco central (landlord)**:
 
 - `Tenant` estende `Spatie\Multitenancy\Models\Tenant`
 - `Tenant` possui métodos para configuração de banco: `getDatabaseName()`, `getDatabaseHost()`, etc.
+- `Tenant` possui relacionamento `network()` (belongsTo) - pode pertencer a uma rede ou não (`network_id` nullable)
 - `User` (Platform) possui campo `modules` (JSON) para controle de acesso
+- `ClinicNetwork` possui relacionamentos `tenants()` (hasMany) e `users()` (hasMany)
+- `NetworkUser` utiliza guard `network` separado (não é usuário da Platform nem do Tenant)
 - `Tenant` usa UUID (string) como chave primária
 
 ---

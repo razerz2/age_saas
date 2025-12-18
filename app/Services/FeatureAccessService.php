@@ -27,18 +27,32 @@ class FeatureAccessService
             return false;
         }
 
-        // Busca a assinatura ativa do tenant
-        $subscription = $this->getActiveSubscription($tenant);
-
-        if (!$subscription) {
-            Log::info("FeatureAccessService: Tenant {$tenant->id} não possui assinatura ativa");
+        // 🔒 Verificação de Status Global
+        if ($tenant->status !== 'active' && $tenant->status !== 'trial') {
             return false;
         }
 
-        $plan = $subscription->plan;
+        if ($tenant->network_id) {
+            $network = $tenant->network;
+            if ($network && !$network->is_active) {
+                return false;
+            }
+        }
+
+        // 1. Tenta buscar plano via assinatura ativa (Fluxo Venda Direta)
+        $plan = null;
+        $subscription = $this->getActiveSubscription($tenant);
+        if ($subscription) {
+            $plan = $subscription->plan;
+        }
+
+        // 2. Se não tem assinatura, tenta buscar plano direto no tenant (Fluxo Contratual/Rede)
+        if (!$plan && $tenant->plan_id) {
+            $plan = $tenant->plan;
+        }
 
         if (!$plan) {
-            Log::warning("FeatureAccessService: Plano não encontrado para subscription {$subscription->id}");
+            Log::info("FeatureAccessService: Tenant {$tenant->id} não possui plano ativo (assinatura ou contratual)");
             return false;
         }
 
@@ -126,13 +140,34 @@ class FeatureAccessService
             return [];
         }
 
-        $subscription = $this->getActiveSubscription($tenant);
-
-        if (!$subscription || !$subscription->plan || !$subscription->plan->accessRule) {
+        // 🔒 Verificação de Status Global
+        if ($tenant->status !== 'active' && $tenant->status !== 'trial') {
             return [];
         }
 
-        $accessRule = $subscription->plan->accessRule;
+        if ($tenant->network_id) {
+            $network = $tenant->network;
+            if ($network && !$network->is_active) {
+                return [];
+            }
+        }
+
+        // Tenta assinatura, depois plano direto
+        $plan = null;
+        $subscription = $this->getActiveSubscription($tenant);
+        if ($subscription) {
+            $plan = $subscription->plan;
+        }
+
+        if (!$plan && $tenant->plan_id) {
+            $plan = $tenant->plan;
+        }
+
+        if (!$plan || !$plan->accessRule) {
+            return [];
+        }
+
+        $accessRule = $plan->accessRule;
 
         // Busca features na base da plataforma
         $platformConnection = config('multitenancy.landlord_database_connection_name', env('DB_CONNECTION', 'pgsql'));
@@ -187,13 +222,34 @@ class FeatureAccessService
             return null;
         }
 
-        $subscription = $this->getActiveSubscription($tenant);
+        // 🔒 Verificação de Status Global
+        if ($tenant->status !== 'active' && $tenant->status !== 'trial') {
+            return 0; // Limite zero para inativos
+        }
 
-        if (!$subscription || !$subscription->plan || !$subscription->plan->accessRule) {
+        if ($tenant->network_id) {
+            $network = $tenant->network;
+            if ($network && !$network->is_active) {
+                return 0; // Limite zero para inativos
+            }
+        }
+
+        // Tenta assinatura, depois plano direto
+        $plan = null;
+        $subscription = $this->getActiveSubscription($tenant);
+        if ($subscription) {
+            $plan = $subscription->plan;
+        }
+
+        if (!$plan && $tenant->plan_id) {
+            $plan = $tenant->plan;
+        }
+
+        if (!$plan || !$plan->accessRule) {
             return null;
         }
 
-        $accessRule = $subscription->plan->accessRule;
+        $accessRule = $plan->accessRule;
 
         return match ($limitType) {
             'max_admin_users' => $accessRule->max_admin_users,

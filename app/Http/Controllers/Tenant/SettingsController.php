@@ -6,6 +6,9 @@ use App\Http\Controllers\Controller;
 use App\Models\Tenant\TenantSetting;
 use App\Models\Tenant\Integrations;
 use App\Models\Platform\Tenant;
+use App\Models\Platform\Pais;
+use App\Models\Platform\Estado;
+use App\Models\Platform\Cidade;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -111,7 +114,62 @@ class SettingsController extends Controller
             $publicBookingUrl = url('/customer/' . $currentTenant->subdomain . '/agendamento/criar');
         }
 
-        return view('tenant.settings.index', compact('settings', 'integrations', 'hasGoogleCalendarIntegration', 'googleCalendarIntegration', 'publicBookingUrl'));
+        $localizacao = $currentTenant ? $currentTenant->localizacao : null;
+        $brazilId = Pais::where('nome', 'Brasil')->first()->id_pais ?? 31;
+
+        return view('tenant.settings.index', compact(
+            'settings', 
+            'integrations', 
+            'hasGoogleCalendarIntegration', 
+            'googleCalendarIntegration', 
+            'publicBookingUrl',
+            'currentTenant',
+            'localizacao',
+            'brazilId'
+        ));
+    }
+
+    /**
+     * Atualiza as informações de cadastro do tenant
+     */
+    public function updateRegistration(Request $request)
+    {
+        $tenant = Tenant::current();
+
+        $request->validate([
+            'legal_name' => 'required|string|max:255',
+            'trade_name' => 'nullable|string|max:255',
+            'email' => 'required|email|max:255',
+            'phone' => 'nullable|string|max:20',
+            'endereco' => 'required|string|max:255',
+            'n_endereco' => 'required|string|max:20',
+            'complemento' => 'nullable|string|max:255',
+            'bairro' => 'required|string|max:255',
+            'cep' => 'required|string|max:20',
+            'estado_id' => 'required|integer',
+            'cidade_id' => 'required|integer',
+        ]);
+
+        $tenant->update([
+            'legal_name' => $request->legal_name,
+            'trade_name' => $request->trade_name,
+            'email' => $request->email,
+            'phone' => $request->phone,
+        ]);
+
+        $tenant->localizacao()->updateOrCreate(['tenant_id' => $tenant->id], [
+            'endereco' => $request->endereco,
+            'n_endereco' => $request->n_endereco,
+            'complemento' => $request->complemento,
+            'bairro' => $request->bairro,
+            'cep' => $request->cep,
+            'pais_id' => 31, // Brasil fixo
+            'estado_id' => $request->estado_id,
+            'cidade_id' => $request->cidade_id,
+        ]);
+
+        return redirect()->to(route('tenant.settings.index', ['slug' => tenant()->subdomain]) . '#registration')
+            ->with('success', 'Informações de cadastro atualizadas com sucesso.');
     }
 
     /**

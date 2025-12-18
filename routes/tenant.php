@@ -688,6 +688,7 @@ Route::prefix('workspace/{slug}')
         // =====================================================================
         Route::middleware(['module.access:settings'])->group(function () {
             Route::get('settings', [SettingsController::class, 'index'])->name('settings.index');
+            Route::post('settings/registration', [SettingsController::class, 'updateRegistration'])->name('settings.update.registration');
             Route::post('settings/general', [SettingsController::class, 'updateGeneral'])->name('settings.update.general');
             Route::post('settings/appointments', [SettingsController::class, 'updateAppointments'])->name('settings.update.appointments');
             Route::post('settings/calendar', [SettingsController::class, 'updateCalendar'])->name('settings.update.calendar');

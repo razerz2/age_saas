@@ -24,7 +24,10 @@ return new class extends Migration
             $table->timestamp('ends_at');
             $table->enum('status', ['scheduled', 'rescheduled', 'canceled', 'attended', 'no_show'])->default('scheduled');
             $table->enum('appointment_mode', ['presencial', 'online'])->default('presencial')->after('status');
+            $table->enum('origin', ['public', 'portal', 'internal'])->default('internal')->after('appointment_mode');
             $table->text('notes')->nullable();
+
+            $table->index('origin');
             $table->string('google_event_id')->nullable();
             $table->string('apple_event_id')->nullable();
             $table->timestamps();

@@ -94,6 +94,29 @@
                                 </div>
 
                                 <div class="col-md-6">
+                                    <label class="form-label">Rede de Clínicas (opcional)</label>
+                                    <select name="network_id" id="network_id" class="form-select">
+                                        <option value="">Nenhuma rede</option>
+                                        @foreach($networks as $network)
+                                            <option value="{{ $network->id }}">{{ $network->name }} ({{ $network->slug }})</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <label class="form-label">Plano *</label>
+                                    <select name="plan_id" id="plan_id" class="form-select" required>
+                                        <option value="">Selecione um plano...</option>
+                                        @foreach($plans as $plan)
+                                            <option value="{{ $plan->id }}" data-category="{{ $plan->category }}">
+                                                {{ $plan->name }} ({{ $plan->category }})
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                    <small class="text-muted" id="plan_help">Selecione uma rede para ver planos contratuais.</small>
+                                </div>
+
+                                <div class="col-md-6">
                                     <label class="form-label">Email</label>
                                     <input type="email" name="email" class="form-control">
                                 </div>
@@ -124,26 +147,16 @@
                                     </h5>
                                 </div>
 
-                                <div class="col-md-4">
-                                    <label class="form-label">País</label>
-                                    <select id="pais" name="pais_id" class="form-select">
-                                        @foreach ($paises as $pais)
-                                            <option value="{{ $pais->id_pais }}"
-                                                {{ $defaultCountryId == $pais->id_pais ? 'selected' : '' }}>
-                                                {{ $pais->nome }}
-                                            </option>
-                                        @endforeach
-                                    </select>
-                                </div>
+                                <input type="hidden" id="pais" name="pais_id" value="{{ $defaultCountryId ?? 31 }}">
 
-                                <div class="col-md-4">
+                                <div class="col-md-6">
                                     <label class="form-label">Estado</label>
                                     <select id="estado" name="estado_id" class="form-select">
-                                        <option value="">Selecione o país primeiro</option>
+                                        <option value="">Carregando estados...</option>
                                     </select>
                                 </div>
 
-                                <div class="col-md-4">
+                                <div class="col-md-6">
                                     <label class="form-label">Cidade</label>
                                     <select id="cidade" name="cidade_id" class="form-select">
                                         <option value="">Selecione o estado primeiro</option>
@@ -292,34 +305,42 @@
 
                 // Botão buscar CNPJ
                 $btnBuscar.on('click', function() {
-                    let cnpj = $document.val().replace(/\D/g, '');
-                    if (cnpj.length !== 14) {
-                        showToast('Informe um CNPJ válido com 14 dígitos.', 'warning');
-                        return;
-                    }
-
-                    const btn = $(this);
-                    btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Buscando...');
-
-                    $.getJSON(`https://brasilapi.com.br/api/cnpj/v1/${cnpj}`)
-                        .done(function(data) {
-                            $('input[name="legal_name"]').val(data.razao_social || '');
-                            $('input[name="trade_name"]').val(data.nome_fantasia || '');
-                            $('input[name="email"]').val(data.email || '');
-                            $('input[name="phone"]').val(data.ddd_telefone_1 || '');
-                            $('input[name="endereco"]').val(data.logradouro || '');
-                            $('input[name="n_endereco"]').val(data.numero || '');
-                            $('input[name="bairro"]').val(data.bairro || '');
-                            $('input[name="cep"]').val(data.cep || '');
-                            $('input[name="complemento"]').val(data.complemento || '');
-                        })
-                        .fail(function() {
-                            showToast('Não foi possível localizar o CNPJ informado.', 'error');
-                        })
-                        .always(function() {
-                            btn.prop('disabled', false).html('<i class="fas fa-search"></i> Buscar');
-                        });
+                    // ... (keep existing code)
                 });
+
+                // -----------------------------
+                // 💎 Planos vs Rede
+                // -----------------------------
+                const $networkSelect = $('#network_id');
+                const $planSelect = $('#plan_id');
+                const $planOptions = $planSelect.find('option');
+
+                function filterPlans() {
+                    const hasNetwork = $networkSelect.val() !== "";
+                    const targetCategory = hasNetwork ? 'contractual' : ['commercial', 'sandbox'];
+                    
+                    $planSelect.val(""); // Reset selection
+                    
+                    $planOptions.each(function() {
+                        const category = $(this).data('category');
+                        if (!category) return; // Skip "Select..." option
+
+                        const isMatch = Array.isArray(targetCategory) 
+                            ? targetCategory.includes(category) 
+                            : category === targetCategory;
+
+                        $(this).toggle(isMatch);
+                    });
+
+                    if (hasNetwork) {
+                        $('#plan_help').text('Listando apenas planos contratuais para rede.');
+                    } else {
+                        $('#plan_help').text('Listando planos comerciais e sandbox.');
+                    }
+                }
+
+                $networkSelect.on('change', filterPlans);
+                filterPlans(); // Initial filter
             });
         </script>
     @endpush

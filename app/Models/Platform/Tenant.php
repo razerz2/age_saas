@@ -10,6 +10,7 @@ class Tenant extends BaseTenant
 {
     use HasFactory;
 
+    protected $connection = 'pgsql';
     public $incrementing = false;
     protected $keyType = 'string';
 
@@ -20,6 +21,8 @@ class Tenant extends BaseTenant
         'email',
         'phone',
         'subdomain',
+        'network_id',
+        'plan_id',
 
         // Credenciais do admin
         'admin_login_url',
@@ -100,6 +103,16 @@ class Tenant extends BaseTenant
      *  RELACIONAMENTOS
      * =====================================================
      */
+    public function network()
+    {
+        return $this->belongsTo(\App\Models\Platform\ClinicNetwork::class, 'network_id');
+    }
+
+    public function plan()
+    {
+        return $this->belongsTo(\App\Models\Platform\Plan::class, 'plan_id');
+    }
+
     public function localizacao()
     {
         return $this->hasOne(TenantLocalizacao::class, 'tenant_id', 'id');

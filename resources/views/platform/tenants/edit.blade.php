@@ -85,6 +85,18 @@
                                 </div>
 
                                 <div class="col-md-6">
+                                    <label class="form-label">Rede de Clínicas (opcional)</label>
+                                    <select name="network_id" class="form-select">
+                                        <option value="">Nenhuma rede</option>
+                                        @foreach($networks as $network)
+                                            <option value="{{ $network->id }}" @selected($tenant->network_id == $network->id)>
+                                                {{ $network->name }} ({{ $network->slug }})
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                </div>
+
+                                <div class="col-md-6">
                                     <label class="form-label">Email</label>
                                     <input type="email" name="email" class="form-control"
                                         value="{{ old('email', $tenant->email) }}">
@@ -121,21 +133,12 @@
 
                                 @php
                                     $loc = $localizacao ?? null;
+                                    $currentPaisId = $loc?->pais_id ?? sysconfig('country_id') ?? 31;
                                 @endphp
 
-                                <div class="col-md-4">
-                                    <label class="form-label">País</label>
-                                    <select id="pais" name="pais_id" class="form-select">
-                                        <option value="">Selecione...</option>
-                                        @foreach ($paises as $pais)
-                                            <option value="{{ $pais->id_pais }}" @selected($loc && $loc->pais_id == $pais->id_pais)>
-                                                {{ $pais->nome }}
-                                            </option>
-                                        @endforeach
-                                    </select>
-                                </div>
+                                <input type="hidden" id="pais" name="pais_id" value="{{ $currentPaisId }}">
 
-                                <div class="col-md-4">
+                                <div class="col-md-6">
                                     <label class="form-label">Estado</label>
                                     <select id="estado" name="estado_id" class="form-select">
                                         @if ($estados->isNotEmpty())
@@ -145,12 +148,12 @@
                                                 </option>
                                             @endforeach
                                         @else
-                                            <option value="">Selecione o país primeiro</option>
+                                            <option value="">Selecione o estado</option>
                                         @endif
                                     </select>
                                 </div>
 
-                                <div class="col-md-4">
+                                <div class="col-md-6">
                                     <label class="form-label">Cidade</label>
                                     <select id="cidade" name="cidade_id" class="form-select">
                                         @if ($cidades->isNotEmpty())

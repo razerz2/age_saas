@@ -323,9 +323,60 @@
                 </div>
                 
                 <div class="mb-4">
-                    <label for="document" class="block text-sm font-medium text-gray-700 mb-1">CPF/CNPJ</label>
-                    <input type="text" id="document" name="document" 
+                    <label for="document" class="block text-sm font-medium text-gray-700 mb-1">CPF/CNPJ *</label>
+                    <input type="text" id="document" name="document" required 
                         class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                </div>
+
+                <div class="mb-6 p-4 bg-gray-50 border border-gray-200 rounded-lg">
+                    <h4 class="text-sm font-bold text-gray-900 mb-3 border-b pb-2 uppercase tracking-wider">Endereço da Clínica</h4>
+                    
+                    <div class="mb-4">
+                        <label for="address" class="block text-sm font-medium text-gray-700 mb-1">Endereço *</label>
+                        <input type="text" id="address" name="address" required placeholder="Rua, Av..."
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                        <div>
+                            <label for="address_number" class="block text-sm font-medium text-gray-700 mb-1">Número *</label>
+                            <input type="text" id="address_number" name="address_number" required 
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+                        <div>
+                            <label for="complement" class="block text-sm font-medium text-gray-700 mb-1">Complemento</label>
+                            <input type="text" id="complement" name="complement" 
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+                        <div>
+                            <label for="neighborhood" class="block text-sm font-medium text-gray-700 mb-1">Bairro *</label>
+                            <input type="text" id="neighborhood" name="neighborhood" required 
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <input type="hidden" id="country_id" name="country_id" value="{{ $brazilId }}">
+                        <div>
+                            <label for="zipcode" class="block text-sm font-medium text-gray-700 mb-1">CEP *</label>
+                            <input type="text" id="zipcode" name="zipcode" required placeholder="00000-000"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+                        <div>
+                            <label for="state_id" class="block text-sm font-medium text-gray-700 mb-1">Estado *</label>
+                            <select id="state_id" name="state_id" required 
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                <option value="">Carregando...</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="city_id" class="block text-sm font-medium text-gray-700 mb-1">Cidade *</label>
+                            <select id="city_id" name="city_id" required 
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                <option value="">Selecione o estado</option>
+                            </select>
+                        </div>
+                    </div>
                 </div>
                 
                 <div class="mb-4 hidden">
@@ -534,6 +585,129 @@
         document.getElementById('preRegisterModal').classList.remove('hidden');
         document.getElementById('preRegisterModal').classList.add('flex');
         document.body.style.overflow = 'hidden';
+
+        // Carregar estados para o Brasil (fixo)
+        const countryId = document.getElementById('country_id').value;
+        if (countryId) {
+            loadStates(countryId);
+        }
+    }
+
+    // Lógica de Localização (País -> Estado -> Cidade)
+    const countrySelect = document.getElementById('country_id');
+    const stateSelect = document.getElementById('state_id');
+    const citySelect = document.getElementById('city_id');
+
+    async function loadStates(countryId) {
+        if (!countryId) {
+            stateSelect.innerHTML = '<option value="">Selecione o país primeiro</option>';
+            citySelect.innerHTML = '<option value="">Selecione o estado primeiro</option>';
+            return;
+        }
+
+        stateSelect.innerHTML = '<option value="">Carregando estados...</option>';
+        
+        try {
+            console.log('Carregando estados para o país ID:', countryId);
+            const response = await fetch(`{{ route('api.public.estados', ['pais' => ':id']) }}`.replace(':id', countryId));
+            const data = await response.json();
+            
+            console.log('Estados carregados:', data.length);
+            
+            stateSelect.innerHTML = '<option value="">Selecione o estado</option>';
+            if (data.length === 0) {
+                stateSelect.innerHTML = '<option value="">Nenhum estado encontrado</option>';
+            }
+            
+            data.forEach(state => {
+                const option = document.createElement('option');
+                option.value = state.id_estado;
+                option.textContent = state.nome_estado;
+                stateSelect.appendChild(option);
+            });
+        } catch (error) {
+            console.error('Erro ao carregar estados:', error);
+            stateSelect.innerHTML = '<option value="">Erro ao carregar estados</option>';
+        }
+    }
+
+    async function loadCities(stateId) {
+        if (!stateId) {
+            citySelect.innerHTML = '<option value="">Selecione o estado primeiro</option>';
+            return;
+        }
+
+        citySelect.innerHTML = '<option value="">Carregando...</option>';
+        
+        try {
+            const response = await fetch(`{{ route('api.public.cidades', ['estado' => ':id']) }}`.replace(':id', stateId));
+            const data = await response.json();
+            
+            citySelect.innerHTML = '<option value="">Selecione a cidade</option>';
+            data.forEach(city => {
+                const option = document.createElement('option');
+                option.value = city.id_city || city.id_cidade; // Suporta ambos os formatos se necessário
+                option.textContent = city.nome_cidade;
+                citySelect.appendChild(option);
+            });
+        } catch (error) {
+            console.error('Erro ao carregar cidades:', error);
+            citySelect.innerHTML = '<option value="">Erro ao carregar</option>';
+        }
+    }
+
+    if (stateSelect) {
+        stateSelect.addEventListener('change', (e) => loadCities(e.target.value));
+    }
+
+    // Máscaras para os campos
+    const zipcodeField = document.getElementById('zipcode');
+    const documentField = document.getElementById('document');
+
+    if (zipcodeField) {
+        zipcodeField.addEventListener('input', function(e) {
+            let value = e.target.value.replace(/\D/g, '');
+            if (value.length > 8) value = value.substring(0, 8);
+            if (value.length > 5) {
+                value = value.substring(0, 5) + '-' + value.substring(5);
+            }
+            e.target.value = value;
+
+            // Busca automática de CEP ao completar 8 dígitos
+            if (value.replace(/\D/g, '').length === 8) {
+                fetch(`https://viacep.com.br/ws/${value.replace(/\D/g, '')}/json/`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (!data.erro) {
+                            document.getElementById('address').value = data.logradouro;
+                            document.getElementById('neighborhood').value = data.bairro;
+                            // Aqui poderíamos selecionar o estado/cidade se tivéssemos os IDs, 
+                            // mas por enquanto apenas preenchemos os campos de texto.
+                        }
+                    });
+            }
+        });
+    }
+
+    if (documentField) {
+        documentField.addEventListener('input', function(e) {
+            let value = e.target.value.replace(/\D/g, '');
+            if (value.length > 14) value = value.substring(0, 14);
+            
+            if (value.length <= 11) {
+                // CPF
+                value = value.replace(/(\d{3})(\d)/, '$1.$2');
+                value = value.replace(/(\d{3})(\d)/, '$1.$2');
+                value = value.replace(/(\d{3})(\d{1,2})$/, '$1-$2');
+            } else {
+                // CNPJ
+                value = value.replace(/^(\d{2})(\d)/, '$1.$2');
+                value = value.replace(/^(\d{2})\.(\d{3})(\d)/, '$1.$2.$3');
+                value = value.replace(/\.(\d{3})(\d)/, '.$1/$2');
+                value = value.replace(/(\d{4})(\d)/, '$1-$2');
+            }
+            e.target.value = value;
+        });
     }
     
     function closePreRegisterModal() {

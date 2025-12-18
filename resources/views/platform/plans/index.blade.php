@@ -43,6 +43,7 @@
                                     <tr>
                                         <th>#</th>
                                         <th>Nome</th>
+                                        <th>Categoria</th>
                                         <th>Periodicidade</th>
                                         <th>Preço</th>
                                         <th>Status</th>
@@ -54,6 +55,23 @@
                                         <tr>
                                             <td>{{ $loop->iteration }}</td>
                                             <td>{{ $plan->name }}</td>
+                                            <td>
+                                                @php
+                                                    $categoryLabel = match($plan->category) {
+                                                        'commercial' => 'Comercial',
+                                                        'contractual' => 'Contratual',
+                                                        'sandbox' => 'Sandbox',
+                                                        default => $plan->category
+                                                    };
+                                                    $categoryClass = match($plan->category) {
+                                                        'commercial' => 'bg-info',
+                                                        'contractual' => 'bg-primary',
+                                                        'sandbox' => 'bg-warning text-dark',
+                                                        default => 'bg-secondary'
+                                                    };
+                                                @endphp
+                                                <span class="badge {{ $categoryClass }}">{{ $categoryLabel }}</span>
+                                            </td>
                                             <td>
                                                 {{ $plan->periodicity === 'monthly' ? 'Mensal' : 'Anual' }}
                                             </td>

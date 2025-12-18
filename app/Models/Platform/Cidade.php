@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Cidade extends Model
 {
+    protected $connection = 'pgsql';
     protected $table = 'cidades';
     protected $primaryKey = 'id_cidade';
     public $timestamps = false;

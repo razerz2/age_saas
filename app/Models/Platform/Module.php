@@ -12,6 +12,7 @@ class Module
     {
         return [
             ['key' => 'tenants', 'name' => 'Tenants', 'icon' => 'fa-building'],
+            ['key' => 'clinic_networks', 'name' => 'Redes de Clínicas', 'icon' => 'fa-hospital'],
             ['key' => 'pre_tenants', 'name' => 'Pré-Cadastros', 'icon' => 'fa-user-plus'],
             ['key' => 'plans', 'name' => 'Planos', 'icon' => 'fa-box'],
             ['key' => 'subscriptions', 'name' => 'Assinaturas', 'icon' => 'fa-receipt'],

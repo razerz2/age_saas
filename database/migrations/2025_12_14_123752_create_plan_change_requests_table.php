@@ -13,6 +13,7 @@ return new class extends Migration {
             $table->foreignUuid('subscription_id')->constrained('subscriptions')->cascadeOnDelete();
             $table->foreignUuid('current_plan_id')->constrained('plans');
             $table->foreignUuid('requested_plan_id')->constrained('plans');
+            $table->enum('requested_payment_method', ['PIX', 'BOLETO', 'CREDIT_CARD', 'DEBIT_CARD'])->nullable();
             $table->enum('status', ['pending', 'approved', 'rejected', 'cancelled'])->default('pending');
             $table->text('reason')->nullable(); // Motivo da solicitação
             $table->text('admin_notes')->nullable(); // Notas do administrador

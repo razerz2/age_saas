@@ -21,6 +21,7 @@ use App\Http\Controllers\Platform\PlanAccessManagerController;
 use App\Http\Controllers\Platform\PreTenantController;
 use App\Http\Controllers\Platform\NotificationTemplateController;
 use App\Http\Controllers\Platform\ApiTenantTokenController;
+use App\Http\Controllers\Platform\ClinicNetworkController;
 use App\Models\Platform\SystemNotification;
 use App\Http\Controllers\Platform\WhatsAppController;
 use App\Http\Controllers\Tenant\Integrations\GoogleCalendarController;
@@ -91,6 +92,10 @@ Route::get('/google/callback', [GoogleCalendarController::class, 'callback'])->n
 Route::view('/politica-de-privacidade', 'public.privacy')->name('public.privacy');
 Route::view('/termos-de-servico', 'public.terms')->name('public.terms');
 
+// Rotas públicas de localização para pré-cadastro
+Route::get('/api/location/estados/{pais}', [\App\Http\Controllers\Platform\LocationController::class, 'getEstados'])->name('api.public.estados');
+Route::get('/api/location/cidades/{estado}', [\App\Http\Controllers\Platform\LocationController::class, 'getCidades'])->name('api.public.cidades');
+
 
 Route::middleware(['auth'])->prefix('Platform')->name('Platform.')->group(function () {
 
@@ -132,6 +137,29 @@ Route::middleware(['auth'])->prefix('Platform')->name('Platform.')->group(functi
             Route::put('/tenants/{tenant}/api-tokens/{token}', [ApiTenantTokenController::class, 'update'])->name('tenants.api-tokens.update');
             Route::delete('/tenants/{tenant}/api-tokens/{token}', [ApiTenantTokenController::class, 'destroy'])->name('tenants.api-tokens.destroy');
         });
+    });
+
+    // 🔸 Módulo: Redes de Clínicas
+    Route::middleware('module.access:clinic_networks')->group(function () {
+        // Importação de Clínicas (Rotas específicas devem vir antes do resource)
+        Route::get('clinic-networks/import-all', [\App\Http\Controllers\Platform\NetworkTenantImportController::class, 'generalImport'])->name('clinic-networks.general-import');
+        Route::post('clinic-networks/import-all', [\App\Http\Controllers\Platform\NetworkTenantImportController::class, 'import'])->name('clinic-networks.general-import.process');
+        Route::get('clinic-networks/{network}/import', [\App\Http\Controllers\Platform\NetworkTenantImportController::class, 'index'])->name('clinic-networks.import');
+        Route::post('clinic-networks/{network}/import', [\App\Http\Controllers\Platform\NetworkTenantImportController::class, 'import'])->name('clinic-networks.import.process');
+        Route::get('import-progress/{importLog}', [\App\Http\Controllers\Platform\NetworkTenantImportController::class, 'showProgress'])->name('import.progress');
+        Route::get('import-status/{importLog}', [\App\Http\Controllers\Platform\NetworkTenantImportController::class, 'getStatus'])->name('import.status');
+
+        Route::resource('clinic-networks', ClinicNetworkController::class)->parameters([
+            'clinic-networks' => 'network'
+        ])->except(['show']);
+
+        Route::post('clinic-networks/{network}/attach-tenant', [ClinicNetworkController::class, 'attachTenant'])->name('clinic-networks.attach-tenant');
+        Route::post('clinic-networks/{network}/detach-tenant/{tenant}', [ClinicNetworkController::class, 'detachTenant'])->name('clinic-networks.detach-tenant');
+
+        // Usuários da Rede
+        Route::post('clinic-networks/{network}/users', [\App\Http\Controllers\Platform\NetworkUserController::class, 'store'])->name('clinic-networks.users.store');
+        Route::post('clinic-networks/{network}/users/{user}/toggle', [\App\Http\Controllers\Platform\NetworkUserController::class, 'toggleStatus'])->name('clinic-networks.users.toggle');
+        Route::delete('clinic-networks/{network}/users/{user}', [\App\Http\Controllers\Platform\NetworkUserController::class, 'destroy'])->name('clinic-networks.users.destroy');
     });
 
     // 🔸 Módulo: Planos

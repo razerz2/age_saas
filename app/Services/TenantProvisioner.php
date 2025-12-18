@@ -258,36 +258,38 @@ class TenantProvisioner
                 if ($catalogSpecialties->isEmpty()) {
                     Log::warning("⚠️ Nenhuma especialidade médica encontrada no catálogo da platform.");
                 } else {
-                    $inserted = 0;
-                    $skipped = 0;
+                    // 🚀 Otimização: Inserção em massa (Bulk Insert)
+                    // Filtra apenas as que não existem para ser seguro (idempotência)
+                    $existingIds = DB::connection('tenant')
+                        ->table('medical_specialties')
+                        ->pluck('id')
+                        ->toArray();
 
+                    $toInsert = [];
                     foreach ($catalogSpecialties as $catalog) {
-                        // Verificar se já existe (evita duplicatas)
-                        $exists = DB::connection('tenant')
-                            ->table('medical_specialties')
-                            ->where('id', $catalog->id)
-                            ->exists();
-
-                        if ($exists) {
-                            $skipped++;
+                        if (in_array($catalog->id, $existingIds)) {
                             continue;
                         }
 
-                        // Inserir no banco do tenant
-                        DB::connection('tenant')->table('medical_specialties')->insert([
+                        $toInsert[] = [
                             'id'         => $catalog->id,
                             'name'       => $catalog->name,
                             'code'       => $catalog->code,
                             'created_at' => $catalog->created_at ?? now(),
                             'updated_at' => $catalog->updated_at ?? now(),
-                        ]);
+                        ];
+                    }
 
-                        $inserted++;
+                    if (!empty($toInsert)) {
+                        // Divide em pedaços de 50 para evitar limites do driver
+                        foreach (array_chunk($toInsert, 50) as $chunk) {
+                            DB::connection('tenant')->table('medical_specialties')->insert($chunk);
+                        }
                     }
 
                     Log::info("🟢 Especialidades médicas copiadas para tenant {$tenant->id}", [
-                        'inseridas' => $inserted,
-                        'ignoradas' => $skipped,
+                        'inseridas' => count($toInsert),
+                        'ignoradas' => count($existingIds),
                         'total_no_catalogo' => $catalogSpecialties->count(),
                     ]);
                 }
