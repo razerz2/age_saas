@@ -103,19 +103,20 @@ class RouteServiceProvider extends ServiceProvider
             Route::middleware(['web'])
                 ->group(base_path('routes/patient_portal.php'));
 
-            // Rede de Clínicas (Pública - Restrita a subdomínios)
+            // Rede de Clínicas (Pública e Administrativa)
             Route::group([
                 'middleware' => ['web'],
                 'domain' => '{network}.' . config('app.domain', 'agepro.com'),
                 'where' => ['network' => '^(?!www|app|platform).*$']
-            ], base_path('routes/network.php'));
+            ], function () {
+                // Rotas Públicas da Rede
+                Route::group([], base_path('routes/network.php'));
 
-            // Área Administrativa da Rede de Clínicas
-            Route::group([
-                'middleware' => ['web'],
-                'domain' => 'admin.{network}.' . config('app.domain', 'agepro.com'),
-                'where' => ['network' => '^(?!www|app|platform).*$']
-            ], base_path('routes/network_admin.php'));
+                // Área Administrativa da Rede (com prefixo /admin para evitar conflitos de SSL/Subdomínios)
+                Route::group([
+                    'prefix' => 'admin'
+                ], base_path('routes/network_admin.php'));
+            });
         });
 
         /**

@@ -7,8 +7,8 @@
                         <i class="fas fa-users-cog text-primary me-2"></i> Usuários Gestores da Rede
                     </h5>
                     @php
-                        $networkDomain = 'admin.' . $network->slug . '.' . config('app.domain', 'agepro.com');
-                        $loginUrl = (request()->secure() ? 'https://' : 'http://') . $networkDomain . '/login';
+                        $networkDomain = $network->slug . '.' . config('app.domain', 'agepro.com');
+                        $loginUrl = (request()->secure() ? 'https://' : 'http://') . $networkDomain . '/admin/login';
                     @endphp
                     <small class="text-muted">
                         <i class="fas fa-link me-1"></i> Link de Acesso: 
