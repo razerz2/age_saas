@@ -2,9 +2,21 @@
     <div class="col-12">
         <div class="card shadow-sm border-0">
             <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
-                <h5 class="mb-0 fw-bold">
-                    <i class="fas fa-users-cog text-primary me-2"></i> Usuários Gestores da Rede
-                </h5>
+                <div>
+                    <h5 class="mb-1 fw-bold">
+                        <i class="fas fa-users-cog text-primary me-2"></i> Usuários Gestores da Rede
+                    </h5>
+                    @php
+                        $networkDomain = 'admin.' . $network->slug . '.' . config('app.domain', 'agepro.com');
+                        $loginUrl = (request()->secure() ? 'https://' : 'http://') . $networkDomain . '/login';
+                    @endphp
+                    <small class="text-muted">
+                        <i class="fas fa-link me-1"></i> Link de Acesso: 
+                        <a href="{{ $loginUrl }}" target="_blank" class="text-primary text-decoration-none fw-bold">
+                            {{ $loginUrl }}
+                        </a>
+                    </small>
+                </div>
                 <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addUserModal">
                     <i class="fas fa-plus me-1"></i> Novo Usuário
                 </button>
