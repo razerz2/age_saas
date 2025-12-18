@@ -63,6 +63,9 @@ class DetectClinicNetworkFromSubdomain
             \Log::debug("DetectClinicNetwork: Rede encontrada! ID: {$network->id}");
             // Disponibiliza a rede via container
             app()->instance('currentNetwork', $network);
+
+            // 🔥 Define o parâmetro padrão 'network' para geração de URLs (route())
+            \Illuminate\Support\Facades\URL::defaults(['network' => $network->slug]);
         } else {
             \Log::debug("DetectClinicNetwork: Nenhuma rede ativa encontrada para o slug {$subdomain}");
         }

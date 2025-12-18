@@ -30,7 +30,7 @@
                                 </div>
                             @endif
 
-                            <form method="POST" action="{{ route('network.login.submit') }}">
+                            <form method="POST" action="{{ route('network.login.submit', ['network' => $network->slug]) }}">
                                 @csrf
                                 <div class="form-group">
                                     <input type="email" 

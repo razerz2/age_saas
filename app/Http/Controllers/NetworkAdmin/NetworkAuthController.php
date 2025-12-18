@@ -18,7 +18,7 @@ class NetworkAuthController extends Controller
 
         // Se já estiver autenticado, redireciona para dashboard
         if (Auth::guard('network')->check()) {
-            return redirect()->route('network.dashboard');
+            return redirect()->route('network.dashboard', ['network' => $network->slug]);
         }
 
         return view('network-admin.auth.login', compact('network'));
@@ -55,7 +55,7 @@ class NetworkAuthController extends Controller
         if (Auth::guard('network')->attempt($credentials, $request->boolean('remember'))) {
             $request->session()->regenerate();
 
-            return redirect()->intended(route('network.dashboard'));
+            return redirect()->intended(route('network.dashboard', ['network' => $network->slug]));
         }
 
         return back()->withErrors([
@@ -68,12 +68,13 @@ class NetworkAuthController extends Controller
      */
     public function logout(Request $request)
     {
+        $network = app('currentNetwork');
         Auth::guard('network')->logout();
 
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        return redirect()->route('network.login');
+        return redirect()->route('network.login', ['network' => $network->slug]);
     }
 }
 

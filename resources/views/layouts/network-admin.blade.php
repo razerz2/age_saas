@@ -23,7 +23,7 @@
         {{-- NAVBAR --}}
         <nav class="navbar default-layout-navbar col-lg-12 col-12 p-0 fixed-top d-flex flex-row">
             <div class="text-center navbar-brand-wrapper d-flex align-items-center justify-content-center">
-                <a class="navbar-brand brand-logo" href="{{ route('network.dashboard') }}">
+                <a class="navbar-brand brand-logo" href="{{ route('network.dashboard', ['network' => app('currentNetwork')->slug]) }}">
                     {{ app('currentNetwork')->name ?? 'Rede de Clínicas' }}
                 </a>
             </div>
@@ -36,7 +36,7 @@
                             </div>
                         </a>
                         <div class="dropdown-menu navbar-dropdown" aria-labelledby="profileDropdown">
-                            <form action="{{ route('network.logout') }}" method="POST">
+                            <form action="{{ route('network.logout', ['network' => app('currentNetwork')->slug]) }}" method="POST">
                                 @csrf
                                 <button type="submit" class="dropdown-item">
                                     <i class="mdi mdi-logout me-2 text-primary"></i> Sair
@@ -56,39 +56,39 @@
             <nav class="sidebar sidebar-offcanvas" id="sidebar">
                 <ul class="nav">
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ route('network.dashboard') }}">
+                        <a class="nav-link" href="{{ route('network.dashboard', ['network' => app('currentNetwork')->slug]) }}">
                             <span class="menu-title">Dashboard</span>
                             <i class="mdi mdi-view-dashboard menu-icon"></i>
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ route('network.clinics.index') }}">
+                        <a class="nav-link" href="{{ route('network.clinics.index', ['network' => app('currentNetwork')->slug]) }}">
                             <span class="menu-title">Clínicas</span>
                             <i class="mdi mdi-hospital-building menu-icon"></i>
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ route('network.doctors.index') }}">
+                        <a class="nav-link" href="{{ route('network.doctors.index', ['network' => app('currentNetwork')->slug]) }}">
                             <span class="menu-title">Médicos</span>
                             <i class="mdi mdi-doctor menu-icon"></i>
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ route('network.appointments.index') }}">
+                        <a class="nav-link" href="{{ route('network.appointments.index', ['network' => app('currentNetwork')->slug]) }}">
                             <span class="menu-title">Agendamentos</span>
                             <i class="mdi mdi-calendar-clock menu-icon"></i>
                         </a>
                     </li>
                     @if(auth()->guard('network')->user()->canViewFinance())
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ route('network.finance.index') }}">
+                        <a class="nav-link" href="{{ route('network.finance.index', ['network' => app('currentNetwork')->slug]) }}">
                             <span class="menu-title">Financeiro</span>
                             <i class="mdi mdi-cash menu-icon"></i>
                         </a>
                     </li>
                     @endif
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ route('network.settings.edit') }}">
+                        <a class="nav-link" href="{{ route('network.settings.edit', ['network' => app('currentNetwork')->slug]) }}">
                             <span class="menu-title">Configurações</span>
                             <i class="mdi mdi-settings menu-icon"></i>
                         </a>
