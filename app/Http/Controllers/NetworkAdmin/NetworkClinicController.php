@@ -14,12 +14,43 @@ class NetworkClinicController extends Controller
     {
         $network = app('currentNetwork');
 
+        if (!$network) {
+            abort(404, 'Rede de clínicas não encontrada');
+        }
+
+        // Busca todas as clínicas da rede (não apenas as ativas)
+        // para permitir visualização de todas as unidades
         $clinics = Tenant::where('network_id', $network->id)
-            ->where('status', 'active')
-            ->with(['localizacao.cidade', 'localizacao.estado', 'activeSubscription.plan'])
+            ->with([
+                'localizacao.cidade', 
+                'localizacao.estado',
+                'subscriptions' => function ($query) {
+                    $query->where('status', 'active')
+                        ->where(function ($q) {
+                            $q->whereNull('ends_at')
+                                ->orWhere('ends_at', '>', now());
+                        })
+                        ->latest('starts_at')
+                        ->limit(1)
+                        ->with('plan');
+                }
+            ])
             ->orderBy('trade_name')
             ->orderBy('legal_name')
             ->get();
+
+        // Adiciona a assinatura ativa como atributo para cada clínica
+        $clinics->each(function ($clinic) {
+            $clinic->setAttribute('activeSubscription', $clinic->subscriptions->first());
+        });
+
+        // Log para debug (pode ser removido em produção)
+        \Log::debug('NetworkClinicController::index', [
+            'network_id' => $network->id,
+            'network_name' => $network->name,
+            'clinics_count' => $clinics->count(),
+            'clinic_ids' => $clinics->pluck('id')->toArray(),
+        ]);
 
         return view('network-admin.clinics.index', [
             'network' => $network,
