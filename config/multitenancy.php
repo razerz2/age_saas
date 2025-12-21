@@ -93,6 +93,8 @@ return [
     */
     'central_domains' => [
         env('APP_DOMAIN', 'app.agepro.com'),
+        'allsync.com.br',
+        'www.allsync.com.br',
     ],
 
     /*
