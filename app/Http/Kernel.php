@@ -29,6 +29,7 @@ class Kernel extends HttpKernel
          * Detecta rede de clínicas por subdomínio ANTES de qualquer middleware de tenant
          */
         'web' => [
+            \App\Http\Middleware\EnsureNoTenantForLanding::class,  // Garante que landing page não tem tenant
             \App\Http\Middleware\DetectClinicNetworkFromSubdomain::class,
             \App\Http\Middleware\EncryptCookies::class,
             \Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse::class,
