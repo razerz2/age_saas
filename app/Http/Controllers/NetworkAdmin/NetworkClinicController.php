@@ -69,6 +69,11 @@ class NetworkClinicController extends Controller
             abort(404, 'Rede de clínicas não encontrada');
         }
 
+        // Valida se o ID é um UUID válido
+        if (!preg_match('/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i', $id)) {
+            abort(404, 'Clínica não encontrada');
+        }
+
         // Busca a clínica verificando se pertence à rede
         $clinic = Tenant::where('network_id', $network->id)
             ->with([

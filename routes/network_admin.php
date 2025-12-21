@@ -39,7 +39,9 @@ Route::middleware([
 
     // Clínicas (somente leitura)
     Route::get('/clinicas', [NetworkClinicController::class, 'index'])->name('network.clinics.index');
-    Route::get('/clinicas/{id}', [NetworkClinicController::class, 'show'])->name('network.clinics.show');
+    Route::get('/clinicas/{id}', [NetworkClinicController::class, 'show'])
+        ->where('id', '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}')
+        ->name('network.clinics.show');
 
     // Médicos (somente leitura)
     Route::get('/medicos', [NetworkDoctorController::class, 'index'])->name('network.doctors.index');
