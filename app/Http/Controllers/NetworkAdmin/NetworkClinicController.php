@@ -57,5 +57,44 @@ class NetworkClinicController extends Controller
             'clinics' => $clinics,
         ]);
     }
+
+    /**
+     * Exibe detalhes de uma clínica da rede
+     */
+    public function show($id)
+    {
+        $network = app('currentNetwork');
+
+        if (!$network) {
+            abort(404, 'Rede de clínicas não encontrada');
+        }
+
+        // Busca a clínica verificando se pertence à rede
+        $clinic = Tenant::where('network_id', $network->id)
+            ->with([
+                'localizacao.cidade',
+                'localizacao.estado',
+                'localizacao.pais',
+                'subscriptions' => function ($query) {
+                    $query->where('status', 'active')
+                        ->where(function ($q) {
+                            $q->whereNull('ends_at')
+                                ->orWhere('ends_at', '>', now());
+                        })
+                        ->latest('starts_at')
+                        ->limit(1)
+                        ->with('plan');
+                }
+            ])
+            ->findOrFail($id);
+
+        // Adiciona a assinatura ativa como atributo
+        $clinic->setAttribute('activeSubscription', $clinic->subscriptions->first());
+
+        return view('network-admin.clinics.show', [
+            'network' => $network,
+            'clinic' => $clinic,
+        ]);
+    }
 }
 

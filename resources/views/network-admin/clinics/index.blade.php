@@ -45,8 +45,8 @@
                                 <td>
                                     @if($clinic->localizacao)
                                         <i class="mdi mdi-map-marker text-danger me-1"></i>
-                                        {{ $clinic->localizacao->cidade->nome ?? '' }}
-                                        @if($clinic->localizacao->estado), {{ $clinic->localizacao->estado->sigla ?? '' }}@endif
+                                        {{ $clinic->localizacao->cidade->nome_cidade ?? '' }}
+                                        @if($clinic->localizacao->estado), {{ $clinic->localizacao->estado->uf ?? '' }}@endif
                                     @else
                                         <span class="text-muted">-</span>
                                     @endif
@@ -59,8 +59,7 @@
                                     @endif
                                 </td>
                                 <td class="text-center">
-                                    <a href="{{ route('Platform.tenants.show', $clinic->id) }}" 
-                                       target="_blank"
+                                    <a href="{{ route('network.clinics.show', ['network' => app('currentNetwork')->slug, 'id' => $clinic->id]) }}" 
                                        class="btn btn-gradient-info btn-sm btn-icon-text">
                                         <i class="mdi mdi-eye btn-icon-prepend"></i> Detalhes
                                     </a>
