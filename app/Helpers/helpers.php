@@ -34,7 +34,20 @@ use Illuminate\Support\Facades\Artisan;
 if (!function_exists('sysconfig')) {
     function sysconfig(string $key, $default = null)
     {
-        return SystemSetting::where('key', $key)->value('value') ?? $default;
+        try {
+            return SystemSetting::where('key', $key)->value('value') ?? $default;
+        } catch (\Throwable $e) {
+            // Evita falhas em comandos CLI (ex.: composer install) sem banco disponível.
+            if (app()->runningInConsole()) {
+                return $default;
+            }
+
+            Log::warning('Falha ao ler sysconfig: ' . $e->getMessage(), [
+                'key' => $key,
+            ]);
+
+            return $default;
+        }
     }
 }
 

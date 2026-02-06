@@ -36,9 +36,9 @@ return new class extends Migration {
             $table->text('asaas_last_error')->nullable();
             $table->timestamps();
 
-            $table->foreign('network_id')->references('id')->on('clinic_networks')->onDelete('set null');
-            $table->foreign('plan_id')->references('id')->on('plans')->onDelete('set null');
+            // FKs adicionadas em migration posterior para garantir ordem correta
             $table->index('network_id');
+            $table->index('plan_id');
         });
     }
 

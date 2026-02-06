@@ -4,15 +4,21 @@ use App\Models\User;
 use App\Providers\RouteServiceProvider;
 
 test('login screen can be rendered', function () {
-    $response = $this->get('/login');
+    $response = $this->get('/Platform/login');
 
     $response->assertStatus(200);
+});
+
+test('legacy /login redirects to /Platform/login', function () {
+    $response = $this->get('/login');
+
+    $response->assertRedirect('/Platform/login');
 });
 
 test('users can authenticate using the login screen', function () {
     $user = User::factory()->create();
 
-    $response = $this->post('/login', [
+    $response = $this->post('/Platform/login', [
         'email' => $user->email,
         'password' => 'password',
     ]);
@@ -24,7 +30,7 @@ test('users can authenticate using the login screen', function () {
 test('users can not authenticate with invalid password', function () {
     $user = User::factory()->create();
 
-    $this->post('/login', [
+    $this->post('/Platform/login', [
         'email' => $user->email,
         'password' => 'wrong-password',
     ]);
@@ -35,7 +41,7 @@ test('users can not authenticate with invalid password', function () {
 test('users can logout', function () {
     $user = User::factory()->create();
 
-    $response = $this->actingAs($user)->post('/logout');
+    $response = $this->actingAs($user)->post('/Platform/logout');
 
     $this->assertGuest();
     $response->assertRedirect('/');

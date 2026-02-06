@@ -25,12 +25,19 @@ class AsaasService
         }
 
         // fallback: usa config() e env()
-        $this->baseUrl = rtrim(
-            $baseUrl ?: config('services.asaas.base_url', env('ASAAS_BASE_URL', env('ASAAS_API_URL'))),
-            '/'
-        ) . '/';
+        // OBS: em config/services.php a chave é "services.asaas.url" (não "base_url")
+        $rawBaseUrl = $baseUrl
+            ?: config('services.asaas.url', env('ASAAS_BASE_URL', env('ASAAS_API_URL')))
+            ?: '';
 
-        $this->apiKey = $apiKey ?: config('services.asaas.api_key', env('ASAAS_API_KEY'));
+        $this->baseUrl = rtrim((string) $rawBaseUrl, '/') . '/';
+
+        $rawApiKey = $apiKey
+            ?: config('services.asaas.api_key', env('ASAAS_API_KEY'))
+            ?: '';
+
+        // Garante string para não quebrar com typed properties (PHP 8+)
+        $this->apiKey = (string) $rawApiKey;
 
         if (empty($this->apiKey) || $this->baseUrl === '/') {
             Log::warning('⚠️ AsaasService: configuração vazia. Verifique sysconfig e .env.');

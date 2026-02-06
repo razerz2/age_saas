@@ -146,18 +146,6 @@
                     <div class="text-center">
                         <button type="submit" class="btn btn-primary w-100 py-2 fw-semibold">Entrar</button>
                     </div>
-
-                    <!-- Register -->
-                    @if (Route::has('register'))
-                        <div class="text-center mt-4">
-                            <p class="text-muted mb-0 small">
-                                Não tem uma conta?
-                                <a href="{{ route('register') }}" class="text-link fw-semibold">
-                                    Registre-se
-                                </a>
-                            </p>
-                        </div>
-                    @endif
                 </form>
             </div>
         </div>

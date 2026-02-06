@@ -96,6 +96,9 @@ Route::view('/termos-de-servico', 'public.terms')->name('public.terms');
 Route::get('/api/location/estados/{pais}', [\App\Http\Controllers\Platform\LocationController::class, 'getEstados'])->name('api.public.estados');
 Route::get('/api/location/cidades/{estado}', [\App\Http\Controllers\Platform\LocationController::class, 'getCidades'])->name('api.public.cidades');
 
+// Compatibilidade: URL antiga de login (raiz) -> padrão atual da Platform
+Route::redirect('/login', '/Platform/login', 301);
+
 
 Route::middleware(['auth'])->prefix('Platform')->name('Platform.')->group(function () {
 
