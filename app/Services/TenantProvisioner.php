@@ -361,8 +361,8 @@ class TenantProvisioner
         $slug = Str::slug($tradeName ?: $legalName, '_');
 
         return [
-            'db_host'     => env('DB_HOST', '127.0.0.1'),
-            'db_port'     => env('DB_PORT', 5432),
+            'db_host'     => env('DB_TENANT_HOST', env('DB_HOST', '127.0.0.1')),
+            'db_port'     => env('DB_TENANT_PORT', env('DB_PORT', 5432)),
             'db_name'     => 'db_' . $slug,
             'db_username' => 'usr_' . $slug,
             'db_password' => Str::random(16),

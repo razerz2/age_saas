@@ -10,6 +10,9 @@ class TenantsSeeder extends Seeder
 {
     public function run(): void
     {
+        $defaultTenantHost = env('DB_TENANT_HOST', '127.0.0.1');
+        $defaultTenantPort = env('DB_TENANT_PORT', '5432');
+
         $tenants = [
             [
                 'id' => '45f00cc3-58bf-43e7-a8b8-59ada9815c93',
@@ -19,8 +22,8 @@ class TenantsSeeder extends Seeder
                 'email' => 'contato@odontovida.com.br',
                 'phone' => '(11) 3456-7890',
                 'subdomain' => 'odontovida',
-                'db_host' => '127.0.0.1',
-                'db_port' => '5432',
+                'db_host' => $defaultTenantHost,
+                'db_port' => $defaultTenantPort,
                 'db_name' => 'odontovida_db',
                 'db_username' => 'odontovida_user',
                 'db_password' => 'senhaSegura123',
@@ -37,8 +40,8 @@ class TenantsSeeder extends Seeder
                 'email' => 'atendimento@cuidarbem.com.br',
                 'phone' => '(21) 98765-4321',
                 'subdomain' => 'cuidar-bem',
-                'db_host' => 'localhost',
-                'db_port' => '5432',
+                'db_host' => $defaultTenantHost,
+                'db_port' => $defaultTenantPort,
                 'db_name' => 'cuidarbem_db',
                 'db_username' => 'cuidarbem_user',
                 'db_password' => 'pediatria@2025',
@@ -55,8 +58,8 @@ class TenantsSeeder extends Seeder
                 'email' => 'contato@dermaplus.com.br',
                 'phone' => '(31) 2222-3344',
                 'subdomain' => 'dermaplus',
-                'db_host' => 'localhost',
-                'db_port' => '5432',
+                'db_host' => $defaultTenantHost,
+                'db_port' => $defaultTenantPort,
                 'db_name' => 'dermaplus_db',
                 'db_username' => 'dermaplus_user',
                 'db_password' => 'dermaSecure!2025',

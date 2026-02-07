@@ -8,26 +8,27 @@
 
 @section('content')
 
+<div class="dashboard-container">
 <div class="row">
     {{-- 🔹 Cards Estatísticos Principais --}}
     
     {{-- Total de Pacientes --}}
-    <div class="col-xl-3 col-lg-4 col-md-6 col-sm-12 grid-margin stretch-card">
-        <div class="card card-rounded stat-card shadow-lg border-0 card-bg-gradient-primary">
-            <div class="card-body p-3">
+    <div class="col-xl-3 col-lg-4 col-md-6 col-sm-6 col-12 grid-margin stretch-card">
+        <div class="card card-rounded stat-card shadow-lg border-0 card-bg-gradient-primary stat-card-compact">
+            <div class="card-body p-2 stat-card-body-compact">
                 <div class="d-flex align-items-center justify-content-between">
                     <div class="d-flex align-items-center flex-grow-1">
-                        <div class="icon-wrapper icon-gradient-primary me-3">
-                            <i class="mdi mdi-account-multiple icon-3d text-white"></i>
+                        <div class="icon-wrapper icon-gradient-primary me-2 icon-wrapper-compact">
+                            <i class="mdi mdi-account-multiple icon-3d text-white icon-3d-compact"></i>
                         </div>
                         <div class="flex-grow-1">
-                            <div class="stat-label mb-2">Total de Pacientes</div>
-                            <div class="stat-number">{{ number_format($stats['patients']['total']) }}</div>
+                            <div class="stat-label-compact mb-1">Total de Pacientes</div>
+                            <div class="stat-number-compact">{{ number_format($stats['patients']['total']) }}</div>
                         </div>
                     </div>
                     @if($stats['patients']['variation'] != 0)
                     <div class="ms-2">
-                        <span class="badge variation-badge {{ $stats['patients']['variation'] > 0 ? 'bg-success' : 'bg-danger' }} rounded-pill">
+                        <span class="badge variation-badge-compact {{ $stats['patients']['variation'] > 0 ? 'bg-success' : 'bg-danger' }} rounded-pill">
                             {{ $stats['patients']['variation'] > 0 ? '↑' : '↓' }} {{ abs($stats['patients']['variation']) }}%
                         </span>
                     </div>
@@ -38,22 +39,22 @@
     </div>
 
     {{-- Médicos Cadastrados --}}
-    <div class="col-xl-3 col-lg-4 col-md-6 col-sm-12 grid-margin stretch-card">
-        <div class="card card-rounded stat-card shadow-lg border-0 card-bg-gradient-info">
-            <div class="card-body p-3">
+    <div class="col-xl-3 col-lg-4 col-md-6 col-sm-6 col-12 grid-margin stretch-card">
+        <div class="card card-rounded stat-card shadow-lg border-0 card-bg-gradient-info stat-card-compact">
+            <div class="card-body p-2 stat-card-body-compact">
                 <div class="d-flex align-items-center justify-content-between">
                     <div class="d-flex align-items-center flex-grow-1">
-                        <div class="icon-wrapper icon-gradient-info me-3">
-                            <i class="mdi mdi-doctor icon-3d text-white"></i>
+                        <div class="icon-wrapper icon-gradient-info me-2 icon-wrapper-compact">
+                            <i class="mdi mdi-doctor icon-3d text-white icon-3d-compact"></i>
                         </div>
                         <div class="flex-grow-1">
-                            <div class="stat-label mb-2">Médicos Cadastrados</div>
-                            <div class="stat-number">{{ number_format($stats['doctors']['total']) }}</div>
+                            <div class="stat-label-compact mb-1">Médicos Cadastrados</div>
+                            <div class="stat-number-compact">{{ number_format($stats['doctors']['total']) }}</div>
                         </div>
                     </div>
                     @if($stats['doctors']['variation'] != 0)
                     <div class="ms-2">
-                        <span class="badge variation-badge {{ $stats['doctors']['variation'] > 0 ? 'bg-success' : 'bg-danger' }} rounded-pill">
+                        <span class="badge variation-badge-compact {{ $stats['doctors']['variation'] > 0 ? 'bg-success' : 'bg-danger' }} rounded-pill">
                             {{ $stats['doctors']['variation'] > 0 ? '↑' : '↓' }} {{ abs($stats['doctors']['variation']) }}%
                         </span>
                     </div>
@@ -64,22 +65,22 @@
     </div>
 
     {{-- Agendamentos do Dia --}}
-    <div class="col-xl-3 col-lg-4 col-md-6 col-sm-12 grid-margin stretch-card">
-        <div class="card card-rounded stat-card shadow-lg border-0 card-bg-gradient-success">
-            <div class="card-body p-3">
+    <div class="col-xl-3 col-lg-4 col-md-6 col-sm-6 col-12 grid-margin stretch-card">
+        <div class="card card-rounded stat-card shadow-lg border-0 card-bg-gradient-success stat-card-compact">
+            <div class="card-body p-2 stat-card-body-compact">
                 <div class="d-flex align-items-center justify-content-between">
                     <div class="d-flex align-items-center flex-grow-1">
-                        <div class="icon-wrapper icon-gradient-success me-3">
-                            <i class="mdi mdi-calendar-today icon-3d text-white"></i>
+                        <div class="icon-wrapper icon-gradient-success me-2 icon-wrapper-compact">
+                            <i class="mdi mdi-calendar-today icon-3d text-white icon-3d-compact"></i>
                         </div>
                         <div class="flex-grow-1">
-                            <div class="stat-label mb-2">Agendamentos do Dia</div>
-                            <div class="stat-number">{{ number_format($stats['today']['total']) }}</div>
+                            <div class="stat-label-compact mb-1">Agendamentos do Dia</div>
+                            <div class="stat-number-compact">{{ number_format($stats['today']['total']) }}</div>
                         </div>
                     </div>
                     @if($stats['today']['variation'] != 0)
                     <div class="ms-2">
-                        <span class="badge variation-badge {{ $stats['today']['variation'] > 0 ? 'bg-success' : 'bg-danger' }} rounded-pill">
+                        <span class="badge variation-badge-compact {{ $stats['today']['variation'] > 0 ? 'bg-success' : 'bg-danger' }} rounded-pill">
                             {{ $stats['today']['variation'] > 0 ? '↑' : '↓' }} {{ abs($stats['today']['variation']) }}%
                         </span>
                     </div>
@@ -90,22 +91,22 @@
     </div>
 
     {{-- Agendamentos da Semana --}}
-    <div class="col-xl-3 col-lg-4 col-md-6 col-sm-12 grid-margin stretch-card">
-        <div class="card card-rounded stat-card shadow-lg border-0 card-bg-gradient-blue">
-            <div class="card-body p-3">
+    <div class="col-xl-3 col-lg-4 col-md-6 col-sm-6 col-12 grid-margin stretch-card">
+        <div class="card card-rounded stat-card shadow-lg border-0 card-bg-gradient-blue stat-card-compact">
+            <div class="card-body p-2 stat-card-body-compact">
                 <div class="d-flex align-items-center justify-content-between">
                     <div class="d-flex align-items-center flex-grow-1">
-                        <div class="icon-wrapper icon-gradient-blue me-3">
-                            <i class="mdi mdi-calendar-week icon-3d text-white"></i>
+                        <div class="icon-wrapper icon-gradient-blue me-2 icon-wrapper-compact">
+                            <i class="mdi mdi-calendar-week icon-3d text-white icon-3d-compact"></i>
                         </div>
                         <div class="flex-grow-1">
-                            <div class="stat-label mb-2">Agendamentos da Semana</div>
-                            <div class="stat-number">{{ number_format($stats['week']['total']) }}</div>
+                            <div class="stat-label-compact mb-1">Agendamentos da Semana</div>
+                            <div class="stat-number-compact">{{ number_format($stats['week']['total']) }}</div>
                         </div>
                     </div>
                     @if($stats['week']['variation'] != 0)
                     <div class="ms-2">
-                        <span class="badge variation-badge {{ $stats['week']['variation'] > 0 ? 'bg-success' : 'bg-danger' }} rounded-pill">
+                        <span class="badge variation-badge-compact {{ $stats['week']['variation'] > 0 ? 'bg-success' : 'bg-danger' }} rounded-pill">
                             {{ $stats['week']['variation'] > 0 ? '↑' : '↓' }} {{ abs($stats['week']['variation']) }}%
                         </span>
                     </div>
@@ -116,22 +117,22 @@
     </div>
 
     {{-- Agendamentos do Mês --}}
-    <div class="col-xl-3 col-lg-4 col-md-6 col-sm-12 grid-margin stretch-card">
-        <div class="card card-rounded stat-card shadow-lg border-0 card-bg-gradient-indigo">
-            <div class="card-body p-3">
+    <div class="col-xl-3 col-lg-4 col-md-6 col-sm-6 col-12 grid-margin stretch-card">
+        <div class="card card-rounded stat-card shadow-lg border-0 card-bg-gradient-indigo stat-card-compact">
+            <div class="card-body p-2 stat-card-body-compact">
                 <div class="d-flex align-items-center justify-content-between">
                     <div class="d-flex align-items-center flex-grow-1">
-                        <div class="icon-wrapper icon-gradient-indigo me-3">
-                            <i class="mdi mdi-calendar-month icon-3d text-white"></i>
+                        <div class="icon-wrapper icon-gradient-indigo me-2 icon-wrapper-compact">
+                            <i class="mdi mdi-calendar-month icon-3d text-white icon-3d-compact"></i>
                         </div>
                         <div class="flex-grow-1">
-                            <div class="stat-label mb-2">Agendamentos do Mês</div>
-                            <div class="stat-number">{{ number_format($stats['month']['total']) }}</div>
+                            <div class="stat-label-compact mb-1">Agendamentos do Mês</div>
+                            <div class="stat-number-compact">{{ number_format($stats['month']['total']) }}</div>
                         </div>
                     </div>
                     @if($stats['month']['variation'] != 0)
                     <div class="ms-2">
-                        <span class="badge variation-badge {{ $stats['month']['variation'] > 0 ? 'bg-success' : 'bg-danger' }} rounded-pill">
+                        <span class="badge variation-badge-compact {{ $stats['month']['variation'] > 0 ? 'bg-success' : 'bg-danger' }} rounded-pill">
                             {{ $stats['month']['variation'] > 0 ? '↑' : '↓' }} {{ abs($stats['month']['variation']) }}%
                         </span>
                     </div>
@@ -143,26 +144,51 @@
 </div>
 
 {{-- 🔹 Gráfico de Linha - Agendamentos últimos 12 meses --}}
-<div class="row mt-4">
+<div class="row mt-3">
     <div class="col-12 grid-margin stretch-card">
         <div class="card card-rounded chart-card shadow-lg border-0">
             <div class="card-body">
                 <h4 class="card-title">Agendamentos nos Últimos 12 Meses</h4>
-                <canvas id="appointmentsLineChart" style="max-height: 300px;"></canvas>
+                @if(count($chartLast12Months) > 0)
+                    <canvas id="appointmentsLineChart" style="max-height: 250px;"></canvas>
+                @else
+                    <div class="text-center empty-state" style="min-height: 250px; display: flex; align-items: center; justify-content: center;">
+                        <div>
+                            <div class="empty-state-icon mb-3">
+                                <i class="mdi mdi-chart-line mdi-48px text-muted"></i>
+                            </div>
+                            <h5 class="text-muted mb-2">Nenhum agendamento encontrado</h5>
+                            <p class="text-muted small">Não há dados de agendamentos nos últimos 12 meses</p>
+                        </div>
+                    </div>
+                @endif
             </div>
         </div>
     </div>
 </div>
 
 {{-- 🔹 Gráfico de Pizza e Tabela de Próximos Agendamentos --}}
-<div class="row mt-4 dashboard-cards-row">
+<div class="row mt-3 dashboard-cards-row">
     {{-- Gráfico de Pizza - Distribuição por Especialidade --}}
     <div class="col-xl-6 col-lg-6 col-md-12 mb-4 mb-xl-0 dashboard-card-col">
         <div class="card card-rounded chart-card shadow-lg border-0 h-100">
             <div class="card-body d-flex flex-column">
                 <h4 class="card-title mb-3">Distribuição por Especialidade</h4>
-                <div class="flex-grow-1 d-flex align-items-center justify-content-center" style="min-height: 300px;">
-                    <canvas id="specialtyPieChart" style="max-width: 100%; max-height: 100%;"></canvas>
+                <div class="flex-grow-1 d-flex align-items-center justify-content-center" style="min-height: 250px;">
+                    @if(count($chartBySpecialty) > 0)
+                        <canvas id="specialtyPieChart" style="max-width: 100%; max-height: 100%;"></canvas>
+                    @else
+                        <div class="text-center empty-state">
+                            <div class="empty-state-icon mb-3">
+                                <i class="mdi mdi-chart-pie mdi-48px text-muted"></i>
+                            </div>
+                            <h5 class="text-muted mb-2">Nenhuma especialidade cadastrada</h5>
+                            <p class="text-muted small">Cadastre especialidades para ver este gráfico</p>
+                            <a href="{{ workspace_route('tenant.specialties.create') }}" class="btn btn-sm btn-primary mt-2">
+                                <i class="mdi mdi-plus me-1"></i> Cadastrar Especialidade
+                            </a>
+                        </div>
+                    @endif
                 </div>
             </div>
         </div>
@@ -246,7 +272,7 @@
 </div>
 
 {{-- 🔹 Consultórios Ativos Hoje --}}
-<div class="row mt-4">
+<div class="row mt-3">
     <div class="col-12 grid-margin stretch-card">
         <div class="card card-rounded shadow-lg border-0 consultorios-section">
             <div class="card-body">
@@ -290,61 +316,127 @@
         </div>
     </div>
 </div>
+</div>
 
 @push('scripts')
 <script>
     // 🔹 Gráfico de Linha - Agendamentos últimos 12 meses
     const ctxLine = document.getElementById('appointmentsLineChart');
     if (ctxLine) {
+        const chartData = @json(array_column($chartLast12Months, 'total'));
+        const chartLabels = @json(array_column($chartLast12Months, 'short'));
+        const currentMonth = new Date().getMonth();
+        
+        // Identificar índice do mês atual
+        const currentMonthIndex = chartLabels.findIndex(label => {
+            const monthNames = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+            return monthNames[currentMonth] === label;
+        });
+        
+        // Cores para pontos (destaque para mês atual)
+        const pointColors = chartLabels.map((_, index) => 
+            index === currentMonthIndex ? '#ff6b6b' : '#0d6efd'
+        );
+        const pointSizes = chartLabels.map((_, index) => 
+            index === currentMonthIndex ? 8 : 4
+        );
+        
         new Chart(ctxLine, {
             type: 'line',
             data: {
-                labels: @json(array_column($chartLast12Months, 'short')),
+                labels: chartLabels,
                 datasets: [{
                     label: 'Agendamentos',
-                    data: @json(array_column($chartLast12Months, 'total')),
+                    data: chartData,
                     borderColor: '#0d6efd',
                     backgroundColor: 'rgba(13, 110, 253, 0.1)',
                     tension: 0.4,
                     fill: true,
-                    borderWidth: 2,
-                    pointRadius: 4,
-                    pointBackgroundColor: '#0d6efd',
+                    borderWidth: 3,
+                    pointRadius: pointSizes,
+                    pointBackgroundColor: pointColors,
                     pointBorderColor: '#ffffff',
                     pointBorderWidth: 2,
-                    pointHoverRadius: 6,
+                    pointHoverRadius: 8,
+                    pointHoverBackgroundColor: pointColors,
+                    pointHoverBorderColor: '#ffffff',
+                    pointHoverBorderWidth: 3
                 }]
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: true,
+                interaction: {
+                    intersect: false,
+                    mode: 'index'
+                },
                 plugins: {
                     legend: {
                         display: false
                     },
                     tooltip: {
-                        backgroundColor: '#ffffff',
+                        backgroundColor: 'rgba(255, 255, 255, 0.95)',
                         titleColor: '#1f2937',
                         bodyColor: '#1f2937',
                         borderColor: '#e5e7eb',
-                        borderWidth: 1,
-                        padding: 12,
+                        borderWidth: 2,
+                        padding: 16,
                         displayColors: false,
+                        titleFont: {
+                            size: 14,
+                            weight: 'bold'
+                        },
+                        bodyFont: {
+                            size: 13
+                        },
+                        callbacks: {
+                            title: function(context) {
+                                const monthNames = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 
+                                                   'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+                                const monthIndex = chartLabels.indexOf(context[0].label);
+                                return monthNames[monthIndex] + (monthIndex === currentMonthIndex ? ' (Mês Atual)' : '');
+                            },
+                            label: function(context) {
+                                const value = context.parsed.y;
+                                const total = chartData.reduce((a, b) => a + b, 0);
+                                const percentage = ((value / total) * 100).toFixed(1);
+                                return [
+                                    `Total de agendamentos: ${value}`,
+                                    `Percentual: ${percentage}%`
+                                ];
+                            }
+                        }
                     }
                 },
                 scales: {
                     y: {
                         beginAtZero: true,
                         grid: {
-                            color: 'rgba(0, 0, 0, 0.05)'
+                            color: 'rgba(0, 0, 0, 0.08)',
+                            drawBorder: false
                         },
                         ticks: {
-                            stepSize: 1
+                            stepSize: 1,
+                            color: '#6b7280',
+                            font: {
+                                size: 11,
+                                weight: '500'
+                            },
+                            padding: 8
                         }
                     },
                     x: {
                         grid: {
-                            display: false
+                            display: false,
+                            drawBorder: false
+                        },
+                        ticks: {
+                            color: '#6b7280',
+                            font: {
+                                size: 11,
+                                weight: '500'
+                            },
+                            padding: 8
                         }
                     }
                 }
@@ -352,59 +444,98 @@
         });
     }
 
-    // 🔹 Gráfico de Pizza - Distribuição por Especialidade
+    // 🔹 Gráfico de Donut - Distribuição por Especialidade
     const ctxPie = document.getElementById('specialtyPieChart');
     if (ctxPie) {
         const specialtyData = @json($chartBySpecialty);
         const labels = specialtyData.map(item => item.label);
         const values = specialtyData.map(item => item.value);
         
-        // Paleta de cores harmoniosa
+        // Paleta de cores moderna e harmoniosa
         const colors = [
             '#0d6efd', '#5b6fe0', '#8893ff', '#c9ceff',
-            '#6c757d', '#adb5bd', '#dee2e6', '#e9ecef'
+            '#6c757d', '#adb5bd', '#dee2e6', '#e9ecef',
+            '#ff6b6b', '#4ecdc4', '#45b7d1', '#96ceb4'
         ];
 
         new Chart(ctxPie, {
-            type: 'pie',
+            type: 'doughnut',
             data: {
                 labels: labels,
                 datasets: [{
                     data: values,
                     backgroundColor: colors.slice(0, labels.length),
-                    borderWidth: 2,
-                    borderColor: '#ffffff'
+                    borderWidth: 3,
+                    borderColor: '#ffffff',
+                    hoverOffset: 8
                 }]
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
+                cutout: '65%',
                 plugins: {
                     legend: {
                         position: 'right',
                         labels: {
-                            padding: 15,
+                            padding: 20,
                             usePointStyle: true,
                             font: {
-                                size: 12
+                                size: 12,
+                                weight: '500'
+                            },
+                            generateLabels: function(chart) {
+                                const data = chart.data;
+                                if (data.labels.length && data.datasets.length) {
+                                    const dataset = data.datasets[0];
+                                    const total = dataset.data.reduce((a, b) => a + b, 0);
+                                    return data.labels.map((label, i) => {
+                                        const value = dataset.data[i];
+                                        const percentage = ((value / total) * 100).toFixed(1);
+                                        return {
+                                            text: `${label} (${percentage}%)`,
+                                            fillStyle: dataset.backgroundColor[i],
+                                            hidden: false,
+                                            index: i
+                                        };
+                                    });
+                                }
+                                return [];
                             }
                         }
                     },
                     tooltip: {
-                        backgroundColor: '#ffffff',
+                        backgroundColor: 'rgba(255, 255, 255, 0.95)',
                         titleColor: '#1f2937',
                         bodyColor: '#1f2937',
                         borderColor: '#e5e7eb',
-                        borderWidth: 1,
-                        padding: 12,
+                        borderWidth: 2,
+                        padding: 16,
+                        displayColors: true,
+                        titleFont: {
+                            size: 14,
+                            weight: 'bold'
+                        },
+                        bodyFont: {
+                            size: 13
+                        },
                         callbacks: {
                             label: function(context) {
                                 const total = context.dataset.data.reduce((a, b) => a + b, 0);
                                 const percentage = ((context.parsed / total) * 100).toFixed(1);
-                                return context.label + ': ' + context.parsed + ' (' + percentage + '%)';
+                                return [
+                                    `Agendamentos: ${context.parsed}`,
+                                    `Percentual: ${percentage}%`
+                                ];
                             }
                         }
                     }
+                },
+                animation: {
+                    animateRotate: true,
+                    animateScale: false,
+                    duration: 800,
+                    easing: 'easeInOutQuart'
                 }
             }
         });
