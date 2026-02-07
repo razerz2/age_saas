@@ -12,8 +12,8 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
       <Navbar onToggleSidebar={() => setSidebarCollapsed(!sidebarCollapsed)} />
       <Sidebar collapsed={sidebarCollapsed} />
       <main
-        className={`pt-[60px] transition-all duration-300 ${
-          sidebarCollapsed ? "pl-[70px]" : "pl-[260px]"
+        className={`min-h-screen pt-16 transition-all duration-300 ease-in-out ${
+          sidebarCollapsed ? "pl-[68px]" : "pl-[252px]"
         }`}
       >
         <div className="p-6">{children}</div>

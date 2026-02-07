@@ -1,12 +1,18 @@
-import type { Metadata } from "next"
+import type { Metadata, Viewport } from "next"
 import { Inter } from "next/font/google"
 import "./globals.css"
 
-const inter = Inter({ subsets: ["latin"], variable: "--font-inter" })
+const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "Dashboard — Sistema de Gestao",
-  description: "Painel administrativo do tenant - Sistema de Gestao de Clinicas",
+  title: "AllSync - Dashboard | Gestao Clinica",
+  description: "Painel administrativo AllSync - Sistema completo de gestao para clinicas e consultorios medicos",
+}
+
+export const viewport: Viewport = {
+  themeColor: "#0c7bb3",
+  width: "device-width",
+  initialScale: 1,
 }
 
 export default function RootLayout({
@@ -16,7 +22,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="pt-BR">
-      <body className={`${inter.variable} font-sans antialiased`}>
+      <body className={`${inter.className} font-sans`}>
         {children}
       </body>
     </html>

@@ -200,17 +200,20 @@ export function Sidebar({ collapsed }: { collapsed: boolean }) {
 
   return (
     <aside
-      className={`fixed left-0 top-[60px] bottom-0 z-40 bg-sidebar-background text-sidebar-foreground transition-all duration-300 overflow-y-auto ${
-        collapsed ? "w-[70px]" : "w-[260px]"
+      className={`fixed left-0 top-16 bottom-0 z-40 border-r border-sidebar-border bg-sidebar-background transition-all duration-300 ease-in-out overflow-y-auto ${
+        collapsed ? "w-[68px]" : "w-[252px]"
       }`}
     >
-      <nav className="py-4">
-        {navSections.map((section) => (
-          <div key={section.category} className="mb-2">
+      <nav className="py-3">
+        {navSections.map((section, sectionIdx) => (
+          <div key={section.category} className={sectionIdx > 0 ? "mt-1" : ""}>
             {!collapsed && (
-              <p className="px-6 py-2 text-[11px] font-semibold uppercase tracking-wider text-sidebar-foreground/50">
+              <p className="px-5 pb-1.5 pt-4 text-[10px] font-bold uppercase tracking-[0.08em] text-sidebar-foreground/40">
                 {section.category}
               </p>
+            )}
+            {collapsed && sectionIdx > 0 && (
+              <div className="mx-4 my-2 border-t border-sidebar-border" />
             )}
             <ul>
               {section.items.map((item) => (
@@ -219,17 +222,17 @@ export function Sidebar({ collapsed }: { collapsed: boolean }) {
                     <>
                       <button
                         onClick={() => !collapsed && toggleMenu(item.label)}
-                        className={`flex w-full items-center gap-3 px-6 py-2.5 text-sm transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground ${
+                        className={`group flex w-full items-center gap-3 px-5 py-2 text-[13px] font-medium transition-all duration-150 hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground ${
                           collapsed ? "justify-center px-0" : ""
-                        }`}
+                        } ${openMenus[item.label] ? "text-sidebar-primary" : "text-sidebar-foreground"}`}
                         title={item.label}
                       >
-                        <item.icon className="h-[18px] w-[18px] shrink-0" />
+                        <item.icon className={`h-[17px] w-[17px] shrink-0 transition-colors ${openMenus[item.label] ? "text-sidebar-primary" : "text-sidebar-foreground/60 group-hover:text-sidebar-foreground"}`} />
                         {!collapsed && (
                           <>
                             <span className="flex-1 text-left">{item.label}</span>
                             <ChevronDown
-                              className={`h-4 w-4 transition-transform ${
+                              className={`h-3.5 w-3.5 text-sidebar-foreground/40 transition-transform duration-200 ${
                                 openMenus[item.label] ? "rotate-180" : ""
                               }`}
                             />
@@ -237,12 +240,12 @@ export function Sidebar({ collapsed }: { collapsed: boolean }) {
                         )}
                       </button>
                       {!collapsed && openMenus[item.label] && (
-                        <ul className="bg-sidebar-accent/30">
+                        <ul className="overflow-hidden">
                           {item.children.map((child) => (
                             <li key={child.label}>
                               <a
                                 href={child.href}
-                                className="block px-6 py-2 pl-14 text-[13px] transition-colors hover:text-sidebar-primary"
+                                className="relative block py-1.5 pl-12 pr-5 text-[12px] text-sidebar-foreground/60 transition-all duration-150 hover:text-sidebar-primary before:absolute before:left-[30px] before:top-1/2 before:h-1 before:w-1 before:-translate-y-1/2 before:rounded-full before:bg-sidebar-foreground/20 hover:before:bg-sidebar-primary"
                               >
                                 {child.label}
                               </a>
@@ -254,16 +257,19 @@ export function Sidebar({ collapsed }: { collapsed: boolean }) {
                   ) : (
                     <a
                       href={item.href}
-                      className={`flex items-center gap-3 px-6 py-2.5 text-sm transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground ${
+                      className={`group flex items-center gap-3 px-5 py-2 text-[13px] font-medium transition-all duration-150 hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground ${
                         collapsed ? "justify-center px-0" : ""
                       } ${
                         item.active
-                          ? "bg-sidebar-accent text-sidebar-primary font-medium"
-                          : ""
+                          ? "bg-sidebar-accent text-sidebar-primary"
+                          : "text-sidebar-foreground"
                       }`}
                       title={item.label}
                     >
-                      <item.icon className="h-[18px] w-[18px] shrink-0" />
+                      {item.active && !collapsed && (
+                        <span className="absolute left-0 h-7 w-[3px] rounded-r-full bg-sidebar-primary" />
+                      )}
+                      <item.icon className={`h-[17px] w-[17px] shrink-0 transition-colors ${item.active ? "text-sidebar-primary" : "text-sidebar-foreground/60 group-hover:text-sidebar-foreground"}`} />
                       {!collapsed && <span>{item.label}</span>}
                     </a>
                   )}

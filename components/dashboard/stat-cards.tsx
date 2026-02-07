@@ -5,6 +5,8 @@ import {
   Stethoscope,
   TrendingUp,
   TrendingDown,
+  CalendarDays,
+  Target,
 } from "lucide-react"
 
 const stats = [
@@ -13,99 +15,101 @@ const stats = [
     value: "14",
     variation: "+12%",
     trend: "up" as const,
+    description: "vs ontem",
     icon: CalendarCheck,
-    gradient: "from-blue-500 to-blue-600",
-    bgGradient: "from-blue-500/10 to-blue-600/10",
-    shadowColor: "shadow-blue-500/25",
+    iconBg: "bg-[hsl(199,89%,40%)]/10",
+    iconColor: "text-[hsl(199,89%,40%)]",
   },
   {
     label: "Pacientes Ativos",
     value: "85",
     variation: "+8%",
     trend: "up" as const,
+    description: "vs mes anterior",
     icon: Users,
-    gradient: "from-emerald-500 to-emerald-600",
-    bgGradient: "from-emerald-500/10 to-emerald-600/10",
-    shadowColor: "shadow-emerald-500/25",
+    iconBg: "bg-[hsl(160,60%,42%)]/10",
+    iconColor: "text-[hsl(160,60%,42%)]",
   },
   {
-    label: "Faturamento",
+    label: "Faturamento Mensal",
     value: "R$ 8.240",
     variation: "+23%",
     trend: "up" as const,
+    description: "vs mes anterior",
     icon: DollarSign,
-    gradient: "from-amber-500 to-orange-500",
-    bgGradient: "from-amber-500/10 to-orange-500/10",
-    shadowColor: "shadow-amber-500/25",
+    iconBg: "bg-[hsl(35,92%,52%)]/10",
+    iconColor: "text-[hsl(35,92%,52%)]",
   },
   {
     label: "Profissionais",
     value: "12",
     variation: "-2%",
     trend: "down" as const,
+    description: "vs mes anterior",
     icon: Stethoscope,
-    gradient: "from-sky-500 to-blue-500",
-    bgGradient: "from-sky-500/10 to-blue-500/10",
-    shadowColor: "shadow-sky-500/25",
+    iconBg: "bg-[hsl(199,89%,40%)]/10",
+    iconColor: "text-[hsl(199,89%,40%)]",
   },
   {
-    label: "Agendamentos Mes",
+    label: "Agendamentos / Mes",
     value: "342",
     variation: "+15%",
     trend: "up" as const,
-    icon: CalendarCheck,
-    gradient: "from-indigo-500 to-indigo-600",
-    bgGradient: "from-indigo-500/10 to-indigo-600/10",
-    shadowColor: "shadow-indigo-500/25",
+    description: "vs mes anterior",
+    icon: CalendarDays,
+    iconBg: "bg-[hsl(160,60%,42%)]/10",
+    iconColor: "text-[hsl(160,60%,42%)]",
   },
   {
-    label: "Taxa Presenca",
+    label: "Taxa de Presenca",
     value: "92%",
     variation: "+3%",
     trend: "up" as const,
-    icon: TrendingUp,
-    gradient: "from-emerald-500 to-teal-500",
-    bgGradient: "from-emerald-500/10 to-teal-500/10",
-    shadowColor: "shadow-emerald-500/25",
+    description: "vs mes anterior",
+    icon: Target,
+    iconBg: "bg-[hsl(199,89%,40%)]/10",
+    iconColor: "text-[hsl(199,89%,40%)]",
   },
 ]
 
 export function StatCards() {
   return (
-    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
       {stats.map((stat) => (
         <div
           key={stat.label}
-          className={`group relative overflow-hidden rounded-xl border-0 bg-gradient-to-br ${stat.bgGradient} p-5 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg`}
+          className="group relative overflow-hidden rounded-xl border border-border/60 bg-card p-5 transition-all duration-200 hover:border-border hover:shadow-md"
         >
           <div className="flex items-start justify-between">
             <div className="flex-1">
-              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
                 {stat.label}
               </p>
-              <p className="mt-2 text-3xl font-extrabold tracking-tight text-foreground">
+              <p className="mt-2 text-3xl font-extrabold tracking-tight text-card-foreground">
                 {stat.value}
               </p>
-              <div className="mt-2 flex items-center gap-1">
-                {stat.trend === "up" ? (
-                  <TrendingUp className="h-3.5 w-3.5 text-emerald-500" />
-                ) : (
-                  <TrendingDown className="h-3.5 w-3.5 text-destructive" />
-                )}
+              <div className="mt-2 flex items-center gap-1.5">
                 <span
-                  className={`text-xs font-bold ${
-                    stat.trend === "up" ? "text-emerald-500" : "text-destructive"
+                  className={`inline-flex items-center gap-0.5 rounded-md px-1.5 py-0.5 text-[11px] font-bold ${
+                    stat.trend === "up"
+                      ? "bg-[hsl(160,60%,42%)]/10 text-[hsl(160,60%,42%)]"
+                      : "bg-destructive/10 text-destructive"
                   }`}
                 >
+                  {stat.trend === "up" ? (
+                    <TrendingUp className="h-3 w-3" />
+                  ) : (
+                    <TrendingDown className="h-3 w-3" />
+                  )}
                   {stat.variation}
                 </span>
-                <span className="text-xs text-muted-foreground">vs mes anterior</span>
+                <span className="text-[11px] text-muted-foreground">{stat.description}</span>
               </div>
             </div>
             <div
-              className={`flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br ${stat.gradient} ${stat.shadowColor} shadow-lg transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3`}
+              className={`flex h-12 w-12 items-center justify-center rounded-xl ${stat.iconBg} transition-transform duration-200 group-hover:scale-105`}
             >
-              <stat.icon className="h-7 w-7 text-white" />
+              <stat.icon className={`h-6 w-6 ${stat.iconColor}`} />
             </div>
           </div>
         </div>

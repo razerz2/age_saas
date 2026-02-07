@@ -11,16 +11,11 @@ import {
   ResponsiveContainer,
 } from "recharts"
 import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
-import {
   ChartContainer,
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart"
+import { TrendingUp } from "lucide-react"
 
 const appointmentsData = [
   { month: "Jan", agendadas: 120, realizadas: 108, canceladas: 12 },
@@ -52,121 +47,129 @@ const revenueData = [
   { month: "Dez", faturamento: 8240 },
 ]
 
+const CHART_COLORS = {
+  agendadas: "hsl(199, 89%, 40%)",
+  realizadas: "hsl(160, 60%, 42%)",
+  canceladas: "hsl(0, 72%, 55%)",
+  faturamento: "hsl(199, 89%, 40%)",
+}
+
 export function AppointmentsChart() {
   return (
-    <Card className="border-0 shadow-sm">
-      <CardHeader className="pb-2">
-        <CardTitle className="text-lg font-bold text-foreground">
-          Consultas por Mes
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
+    <div className="overflow-hidden rounded-xl border border-border/60 bg-card">
+      <div className="flex items-center justify-between border-b border-border/40 px-6 py-4">
+        <div>
+          <h3 className="text-sm font-bold text-card-foreground">Consultas por Mes</h3>
+          <p className="mt-0.5 text-[11px] text-muted-foreground">Desempenho anual de agendamentos</p>
+        </div>
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-1.5">
+            <span className="h-2.5 w-2.5 rounded-full" style={{ background: CHART_COLORS.agendadas }} />
+            <span className="text-[11px] text-muted-foreground">Agendadas</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <span className="h-2.5 w-2.5 rounded-full" style={{ background: CHART_COLORS.realizadas }} />
+            <span className="text-[11px] text-muted-foreground">Realizadas</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <span className="h-2.5 w-2.5 rounded-full" style={{ background: CHART_COLORS.canceladas }} />
+            <span className="text-[11px] text-muted-foreground">Canceladas</span>
+          </div>
+        </div>
+      </div>
+      <div className="p-4 pt-2">
         <ChartContainer
           config={{
-            agendadas: {
-              label: "Agendadas",
-              color: "#3b82f6",
-            },
-            realizadas: {
-              label: "Realizadas",
-              color: "#10b981",
-            },
-            canceladas: {
-              label: "Canceladas",
-              color: "#ef4444",
-            },
+            agendadas: { label: "Agendadas", color: CHART_COLORS.agendadas },
+            realizadas: { label: "Realizadas", color: CHART_COLORS.realizadas },
+            canceladas: { label: "Canceladas", color: CHART_COLORS.canceladas },
           }}
-          className="h-[300px] w-full"
+          className="h-[280px] w-full"
         >
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={appointmentsData} barGap={2} barCategoryGap="20%">
-              <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
+            <BarChart data={appointmentsData} barGap={1} barCategoryGap="25%">
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(214, 14%, 90%)" strokeOpacity={0.5} vertical={false} />
               <XAxis
                 dataKey="month"
-                tick={{ fontSize: 12 }}
+                tick={{ fontSize: 11, fill: "hsl(215, 12%, 50%)" }}
                 axisLine={false}
                 tickLine={false}
               />
-              <YAxis tick={{ fontSize: 12 }} axisLine={false} tickLine={false} />
+              <YAxis
+                tick={{ fontSize: 11, fill: "hsl(215, 12%, 50%)" }}
+                axisLine={false}
+                tickLine={false}
+                width={35}
+              />
               <ChartTooltip content={<ChartTooltipContent />} />
-              <Bar dataKey="agendadas" fill="#3b82f6" radius={[4, 4, 0, 0]} />
-              <Bar dataKey="realizadas" fill="#10b981" radius={[4, 4, 0, 0]} />
-              <Bar dataKey="canceladas" fill="#ef4444" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="agendadas" fill={CHART_COLORS.agendadas} radius={[4, 4, 0, 0]} />
+              <Bar dataKey="realizadas" fill={CHART_COLORS.realizadas} radius={[4, 4, 0, 0]} />
+              <Bar dataKey="canceladas" fill={CHART_COLORS.canceladas} radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </ChartContainer>
-        <div className="mt-3 flex items-center justify-center gap-6">
-          <div className="flex items-center gap-2">
-            <div className="h-3 w-3 rounded-sm" style={{ background: "#3b82f6" }} />
-            <span className="text-xs text-muted-foreground">Agendadas</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="h-3 w-3 rounded-sm" style={{ background: "#10b981" }} />
-            <span className="text-xs text-muted-foreground">Realizadas</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="h-3 w-3 rounded-sm" style={{ background: "#ef4444" }} />
-            <span className="text-xs text-muted-foreground">Canceladas</span>
-          </div>
-        </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   )
 }
 
 export function RevenueChart() {
+  const total = revenueData.reduce((sum, d) => sum + d.faturamento, 0)
   return (
-    <Card className="border-0 shadow-sm">
-      <CardHeader className="pb-2">
-        <CardTitle className="text-lg font-bold text-foreground">
-          Faturamento Mensal (R$)
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
+    <div className="overflow-hidden rounded-xl border border-border/60 bg-card">
+      <div className="flex items-center justify-between border-b border-border/40 px-6 py-4">
+        <div>
+          <h3 className="text-sm font-bold text-card-foreground">Faturamento Mensal</h3>
+          <p className="mt-0.5 text-[11px] text-muted-foreground">Receita total no periodo</p>
+        </div>
+        <div className="flex items-center gap-2 rounded-lg bg-[hsl(160,60%,42%)]/10 px-2.5 py-1">
+          <TrendingUp className="h-3.5 w-3.5 text-[hsl(160,60%,42%)]" />
+          <span className="text-xs font-bold text-[hsl(160,60%,42%)]">
+            R$ {(total / 1000).toFixed(1)}k total
+          </span>
+        </div>
+      </div>
+      <div className="p-4 pt-2">
         <ChartContainer
           config={{
-            faturamento: {
-              label: "Faturamento",
-              color: "#3b82f6",
-            },
+            faturamento: { label: "Faturamento", color: CHART_COLORS.faturamento },
           }}
-          className="h-[300px] w-full"
+          className="h-[280px] w-full"
         >
           <ResponsiveContainer width="100%" height="100%">
             <AreaChart data={revenueData}>
               <defs>
                 <linearGradient id="faturamentoGradient" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3} />
-                  <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
+                  <stop offset="0%" stopColor={CHART_COLORS.faturamento} stopOpacity={0.2} />
+                  <stop offset="100%" stopColor={CHART_COLORS.faturamento} stopOpacity={0} />
                 </linearGradient>
               </defs>
-              <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(214, 14%, 90%)" strokeOpacity={0.5} vertical={false} />
               <XAxis
                 dataKey="month"
-                tick={{ fontSize: 12 }}
+                tick={{ fontSize: 11, fill: "hsl(215, 12%, 50%)" }}
                 axisLine={false}
                 tickLine={false}
               />
               <YAxis
-                tick={{ fontSize: 12 }}
+                tick={{ fontSize: 11, fill: "hsl(215, 12%, 50%)" }}
                 axisLine={false}
                 tickLine={false}
+                width={35}
                 tickFormatter={(value) => `${(value / 1000).toFixed(0)}k`}
               />
-              <ChartTooltip
-                content={<ChartTooltipContent />}
-              />
+              <ChartTooltip content={<ChartTooltipContent />} />
               <Area
                 type="monotone"
                 dataKey="faturamento"
-                stroke="#3b82f6"
-                strokeWidth={2.5}
+                stroke={CHART_COLORS.faturamento}
+                strokeWidth={2}
                 fill="url(#faturamentoGradient)"
               />
             </AreaChart>
           </ResponsiveContainer>
         </ChartContainer>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   )
 }
