@@ -106,6 +106,19 @@ Route::prefix('customer/{slug}')
  * LOGIN DO TENANT (/customer/{slug}/login)
  * =====================================================================
  */
+// Compatibilidade: URL antiga /t/{slug}/login
+Route::prefix('t/{slug}')
+    ->middleware(['tenant-web'])
+    ->group(function () {
+        Route::get('/login', [LoginController::class, 'showLoginForm']);
+        Route::post('/login', [LoginController::class, 'login']);
+        Route::post('/logout', [LoginController::class, 'logout']);
+
+        Route::get('/two-factor-challenge', [\App\Http\Controllers\Tenant\Auth\TwoFactorChallengeController::class, 'create']);
+        Route::post('/two-factor-challenge', [\App\Http\Controllers\Tenant\Auth\TwoFactorChallengeController::class, 'store']);
+        Route::post('/two-factor-challenge/resend', [\App\Http\Controllers\Tenant\Auth\TwoFactorChallengeController::class, 'resend']);
+    });
+
 Route::prefix('customer/{slug}')
     ->as('tenant.')
     ->middleware(['tenant-web'])
