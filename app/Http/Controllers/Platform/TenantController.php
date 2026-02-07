@@ -13,6 +13,7 @@ use App\Models\Platform\TenantAdmin;
 use App\Models\Platform\Pais;
 use App\Models\Platform\Estado;
 use App\Models\Platform\Cidade;
+use App\Models\Platform\Plan;
 use App\Models\Platform\SystemSetting;
 use App\Services\TenantProvisioner;
 use App\Services\SystemSettingsService;
