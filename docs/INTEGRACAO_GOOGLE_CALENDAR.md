@@ -221,7 +221,7 @@ Quando uma recorrência é excluída:
 O sistema fornece uma API para listar eventos do Google Calendar:
 
 ```
-GET /tenant/integrations/google/api/{doctor}/events?start=2025-01-01&end=2025-01-31
+GET /workspace/{slug}/integrations/google/api/{doctor}/events?start=2025-01-01&end=2025-01-31
 ```
 
 **Resposta:**
@@ -331,19 +331,19 @@ Armazena JSON com os IDs dos eventos recorrentes criados no Google Calendar:
 
 ```php
 // Listar integrações
-GET /tenant/integrations/google
+GET /workspace/{slug}/integrations/google
 
 // Conectar
-GET /tenant/integrations/google/{doctor}/connect
+GET /workspace/{slug}/integrations/google/{doctor}/connect
 
 // Desconectar
-DELETE /tenant/integrations/google/{doctor}/disconnect
+DELETE /workspace/{slug}/integrations/google/{doctor}/disconnect
 
 // Status
-GET /tenant/integrations/google/{doctor}/status
+GET /workspace/{slug}/integrations/google/{doctor}/status
 
 // API: Eventos
-GET /tenant/integrations/google/api/{doctor}/events
+GET /workspace/{slug}/integrations/google/api/{doctor}/events
 ```
 
 #### Rota Global (OAuth Callback)

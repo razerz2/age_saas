@@ -8,12 +8,80 @@ use App\Models\Tenant\Calendar;
 use App\Models\Tenant\Doctor;
 use App\Http\Requests\Tenant\StoreCalendarRequest;
 use App\Http\Requests\Tenant\UpdateCalendarRequest;
+use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Auth;
 
 class CalendarController extends Controller
 {
     use HasDoctorFilter;
+
+    public function gridData(Request $request, $slug)
+    {
+        $query = Calendar::with('doctor.user');
+
+        // Filtro por médico (admin vê todos, outros filtrados)
+        $this->applyDoctorFilter($query, 'doctor_id');
+
+        $page  = max(1, (int) $request->input('page', 1));
+        $limit = max(1, min(100, (int) $request->input('limit', 10)));
+
+        // Busca global
+        $search = trim((string) $request->input('search', ''));
+        if ($search !== '') {
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('external_id', 'like', "%{$search}%")
+                  ->orWhereHas('doctor.user', function ($sub) use ($search) {
+                      $sub->where('name_full', 'like', "%{$search}%")
+                          ->orWhere('name', 'like', "%{$search}%");
+                  });
+            });
+        }
+
+        // Ordenação
+        $sortable = [
+            'name'        => 'name',
+            'doctor'      => 'doctor_id',
+            'external_id' => 'external_id',
+            'created_at'  => 'created_at',
+        ];
+
+        $sortField = (string) $request->input('sort', 'name');
+        $sortDir   = strtolower((string) $request->input('direction', 'asc')) === 'desc' ? 'desc' : 'asc';
+
+        if (isset($sortable[$sortField])) {
+            $query->orderBy($sortable[$sortField], $sortDir);
+        } else {
+            $query->orderBy('name', 'asc');
+        }
+
+        $paginator = $query->paginate($limit, ['*'], 'page', $page);
+
+        $data = $paginator->getCollection()->map(function (Calendar $calendar) {
+
+            $doctorUser = optional($calendar->doctor)->user;
+            $doctorName = $doctorUser->name_full ?? $doctorUser->name ?? 'N/A';
+
+            return [
+                'name'        => e($calendar->name),
+                'doctor'      => e($doctorName),
+                'external_id' => e($calendar->external_id ?? '-'),
+                'actions'     => view('tenant.calendars.partials.actions', compact('calendar'))->render(),
+            ];
+        })->all();
+
+        return response()->json([
+            'data' => $data,
+            'meta' => [
+                'current_page' => $paginator->currentPage(),
+                'last_page'    => $paginator->lastPage(),
+                'per_page'     => $paginator->perPage(),
+                'total'        => $paginator->total(),
+            ],
+        ]);
+    }
+
     public function index()
     {
         $user = Auth::guard('tenant')->user();

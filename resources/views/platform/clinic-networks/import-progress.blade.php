@@ -1,4 +1,5 @@
 @extends('layouts.freedash.main')
+@section('title', 'Import Progress Clinic Networks')
 
 @section('content')
 <div class="container-fluid">

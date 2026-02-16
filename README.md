@@ -101,7 +101,7 @@ Sistema SaaS (Software as a Service) de agendamento médico construído com Lara
 
 ```bash
 git clone <url-do-repositorio>
-cd agendamento-saas
+cd age_saas
 ```
 
 ### 2. Instale as dependências PHP
@@ -268,16 +268,20 @@ Para receber notificações do Asaas, configure o webhook apontando para:
 POST https://seu-dominio.com/webhook/asaas
 ```
 
+> **Atenção (existem 2 webhooks Asaas):**
+> - **Platform**: `POST /webhook/asaas` (assinaturas/faturas da plataforma; usa `verify.asaas.token`)
+> - **Finance (Tenant)**: `POST /t/{slug}/webhooks/asaas` (módulo financeiro do tenant; usa secret + rate limit + IP whitelist)
+
 O webhook valida o token usando o middleware `verify.asaas.token`. Gere um token seguro:
 
 ```bash
-php artisan asaas:webhook-token
+php artisan asaas:generate-token
 ```
 
 ## 📁 Estrutura do Projeto
 
 ```
-agendamento-saas/
+age_saas/
 ├── app/
 │   ├── Console/Commands/          # Comandos Artisan
 │   ├── Http/
@@ -336,7 +340,7 @@ Para mais detalhes sobre a arquitetura, consulte:
 
 1. Acesse: `http://localhost/t/{subdomain}/login`
 2. Faça login com as credenciais do tenant
-3. Após o login, você será redirecionado para `/tenant/dashboard`
+3. Após o login, você será redirecionado para `/workspace/{subdomain}/dashboard`
 
 ### Primeiro Acesso
 

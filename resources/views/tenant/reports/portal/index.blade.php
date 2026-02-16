@@ -1,40 +1,51 @@
-﻿@extends('layouts.connect_plus.app')
+@extends('layouts.tailadmin.app')
 
 @section('title', 'Relatório do Portal do Paciente')
 
 @section('content')
 
-<div class="page-header">
-    <h3 class="page-title">Relatório do Portal do Paciente</h3>
-    <nav aria-label="breadcrumb">
-        <ol class="breadcrumb">
-            <li class="breadcrumb-item"><a href="{{ workspace_route('tenant.dashboard') }}">Dashboard</a></li>
-            <li class="breadcrumb-item"><a href="{{ workspace_route('tenant.reports.index') }}">Relatórios</a></li>
-            <li class="breadcrumb-item active" aria-current="page">Portal do Paciente</li>
+<div class="page-header mb-6">
+    <div>
+        <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Relatório do Portal do Paciente</h1>
+        <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">Relatórios do portal do paciente</p>
+    </div>
+    <nav class="mt-4" aria-label="breadcrumb">
+        <ol class="flex items-center flex-wrap gap-2 text-sm text-gray-500 dark:text-gray-400">
+            <li>
+                <a href="{{ workspace_route('tenant.dashboard') }}" class="hover:text-blue-600 dark:hover:text-white">Dashboard</a>
+            </li>
+            <li class="flex items-center gap-2">
+                <svg class="h-4 w-4 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+                </svg>
+                <a href="{{ workspace_route('tenant.reports.index') }}" class="hover:text-blue-600 dark:hover:text-white">Relatórios</a>
+            </li>
+            <li class="flex items-center gap-2">
+                <svg class="h-4 w-4 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+                </svg>
+                <span class="text-gray-700 dark:text-gray-200">Portal do Paciente</span>
+            </li>
         </ol>
     </nav>
 </div>
 
-<div class="row">
-    <div class="col-12 grid-margin stretch-card">
-        <div class="card">
-            <div class="card-body">
-                <h4 class="card-title">Dados Detalhados</h4>
-                <div class="table-responsive">
-                    <table class="table table-hover" id="reports-table">
-                        <thead>
-                            <tr>
-                                <th>Paciente</th>
-                                <th>Email</th>
-                                <th>Status</th>
-                                <th>Criado em</th>
-                            </tr>
-                        </thead>
-                        <tbody></tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
+<div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
+    <div class="p-6 border-b border-gray-200 dark:border-gray-700">
+        <h4 class="text-lg font-semibold text-gray-900 dark:text-white">Dados Detalhados</h4>
+    </div>
+    <div class="p-6 overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700 text-sm" id="reports-table">
+            <thead class="bg-gray-50 dark:bg-gray-700/50">
+                <tr>
+                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-300 uppercase tracking-wider">Paciente</th>
+                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-300 uppercase tracking-wider">Email</th>
+                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-300 uppercase tracking-wider">Status</th>
+                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-300 uppercase tracking-wider">Criado em</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100 dark:divide-gray-700"></tbody>
+        </table>
     </div>
 </div>
 
@@ -55,7 +66,9 @@ $(document).ready(function() {
             { data: 'patient' },
             { data: 'email' },
             { data: 'is_active', render: function(data) {
-                return data ? '<span class="badge bg-success">Ativo</span>' : '<span class="badge bg-secondary">Inativo</span>';
+                return data 
+                    ? '<span class="inline-flex items-center rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800 dark:bg-green-900/30 dark:text-green-300">Ativo</span>' 
+                    : '<span class="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-medium text-slate-800 dark:bg-slate-900/30 dark:text-slate-300">Inativo</span>';
             }},
             { data: 'created_at' }
         ]

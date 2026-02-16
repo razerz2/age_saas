@@ -1,4 +1,4 @@
-﻿@extends('layouts.connect_plus.app')
+@extends('layouts.tailadmin.app')
 
 @section('title', 'Gerenciar Permissões de Médicos')
 
@@ -71,13 +71,14 @@
                             </div>
                         @endif
 
-                        <div class="mt-4">
-                            <button type="submit" class="btn btn-primary">
+                        <div class="mt-4 flex flex-wrap items-center gap-3">
+                            <x-tailadmin-button type="submit" variant="primary" size="md">
                                 <i class="mdi mdi-content-save"></i> Salvar Permissões
-                            </button>
-                            <a href="{{ workspace_route('tenant.users.show', $user->id) }}" class="btn btn-secondary">
+                            </x-tailadmin-button>
+                            <x-tailadmin-button variant="secondary" size="md" href="{{ workspace_route('tenant.users.show', $user->id) }}"
+                                class="bg-transparent border-gray-300 text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-white/5">
                                 <i class="mdi mdi-arrow-left"></i> Voltar
-                            </a>
+                            </x-tailadmin-button>
                         </div>
                     </form>
                 </div>

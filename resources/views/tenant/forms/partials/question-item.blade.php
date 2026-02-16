@@ -30,13 +30,13 @@
                 @endswitch
             </span>
         </div>
-        <div>
-            <button class="btn btn-sm btn-warning edit-question-btn" data-question-id="{{ $question->id }}">
+        <div class="flex items-center gap-2">
+            <x-tailadmin-button type="button" variant="warning" size="xs" class="edit-question-btn px-2 py-1" data-question-id="{{ $question->id }}">
                 <i class="mdi mdi-pencil"></i>
-            </button>
-            <button class="btn btn-sm btn-danger delete-question-btn" data-question-id="{{ $question->id }}">
+            </x-tailadmin-button>
+            <x-tailadmin-button type="button" variant="danger" size="xs" class="delete-question-btn px-2 py-1" data-question-id="{{ $question->id }}">
                 <i class="mdi mdi-delete"></i>
-            </button>
+            </x-tailadmin-button>
         </div>
     </div>
     
@@ -55,23 +55,23 @@
                     <i class="mdi mdi-circle-small me-1"></i>
                     {{ $option->label }} 
                     <span class="text-muted">({{ $option->value }})</span>
-                    <button class="btn btn-sm btn-link text-danger p-0 ms-2 delete-option-btn" data-option-id="{{ $option->id }}" title="Deletar opção">
+                    <x-tailadmin-button type="button" variant="danger" size="xs" class="delete-option-btn px-2 py-1 ms-2" data-option-id="{{ $option->id }}" title="Deletar opção">
                         <i class="mdi mdi-delete" style="font-size: 0.875rem;"></i>
-                    </button>
+                    </x-tailadmin-button>
                 </div>
             @endforeach
-            <button class="btn btn-sm btn-success mt-2 add-option-to-question-btn" data-question-id="{{ $question->id }}">
-                <i class="mdi mdi-plus me-1"></i>
+            <x-tailadmin-button type="button" variant="success" size="sm" class="mt-2 add-option-to-question-btn" data-question-id="{{ $question->id }}">
+                <i class="mdi mdi-plus"></i>
                 Adicionar Opção
-            </button>
+            </x-tailadmin-button>
         </div>
     @elseif(in_array($question->type, ['single_choice', 'multi_choice']))
         <div class="options-list">
             <p class="text-muted small mb-2">Nenhuma opção adicionada ainda.</p>
-            <button class="btn btn-sm btn-success add-option-to-question-btn" data-question-id="{{ $question->id }}">
-                <i class="mdi mdi-plus me-1"></i>
+            <x-tailadmin-button type="button" variant="success" size="sm" class="add-option-to-question-btn" data-question-id="{{ $question->id }}">
+                <i class="mdi mdi-plus"></i>
                 Adicionar Opção
-            </button>
+            </x-tailadmin-button>
         </div>
     @endif
 </div>

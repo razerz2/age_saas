@@ -1,4 +1,5 @@
 @extends('layouts.freedash.app')
+@section('title', 'Visualizar Cidades')
 
 @section('content')
 <div class="container-fluid">

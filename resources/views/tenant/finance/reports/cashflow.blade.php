@@ -1,4 +1,4 @@
-@extends('layouts.connect_plus.app')
+@extends('layouts.tailadmin.app')
 
 @section('title', 'Fluxo de Caixa')
 
@@ -61,13 +61,13 @@
                                 @endforeach
                             </select>
                         </div>
-                        <div class="col-12">
-                            <button type="submit" class="btn btn-primary">
+                        <div class="col-12 flex flex-wrap items-center gap-3">
+                            <x-tailadmin-button type="submit" variant="primary" size="sm" class="justify-center">
                                 <i class="mdi mdi-filter"></i> Filtrar
-                            </button>
-                            <button type="button" class="btn btn-secondary" onclick="exportReport('csv')">
+                            </x-tailadmin-button>
+                            <x-tailadmin-button type="button" variant="secondary" size="sm" class="justify-center" onclick="exportReport('csv')">
                                 <i class="mdi mdi-file-export"></i> Exportar CSV
-                            </button>
+                            </x-tailadmin-button>
                         </div>
                     </form>
                 </div>
@@ -161,7 +161,7 @@
         })
         .catch(error => {
             console.error('Erro:', error);
-            alert('Erro ao carregar dados');
+            showAlert({ type: 'error', title: 'Erro', message: 'Erro ao carregar dados' });
         });
     }
 

@@ -142,29 +142,6 @@ Route::middleware(['auth'])->prefix('Platform')->name('Platform.')->group(functi
         });
     });
 
-    // 🔸 Módulo: Redes de Clínicas
-    Route::middleware('module.access:clinic_networks')->group(function () {
-        // Importação de Clínicas (Rotas específicas devem vir antes do resource)
-        Route::get('clinic-networks/import-all', [\App\Http\Controllers\Platform\NetworkTenantImportController::class, 'generalImport'])->name('clinic-networks.general-import');
-        Route::post('clinic-networks/import-all', [\App\Http\Controllers\Platform\NetworkTenantImportController::class, 'import'])->name('clinic-networks.general-import.process');
-        Route::get('clinic-networks/{network}/import', [\App\Http\Controllers\Platform\NetworkTenantImportController::class, 'index'])->name('clinic-networks.import');
-        Route::post('clinic-networks/{network}/import', [\App\Http\Controllers\Platform\NetworkTenantImportController::class, 'import'])->name('clinic-networks.import.process');
-        Route::get('import-progress/{importLog}', [\App\Http\Controllers\Platform\NetworkTenantImportController::class, 'showProgress'])->name('import.progress');
-        Route::get('import-status/{importLog}', [\App\Http\Controllers\Platform\NetworkTenantImportController::class, 'getStatus'])->name('import.status');
-
-        Route::resource('clinic-networks', ClinicNetworkController::class)->parameters([
-            'clinic-networks' => 'network'
-        ])->except(['show']);
-
-        Route::post('clinic-networks/{network}/attach-tenant', [ClinicNetworkController::class, 'attachTenant'])->name('clinic-networks.attach-tenant');
-        Route::post('clinic-networks/{network}/detach-tenant/{tenant}', [ClinicNetworkController::class, 'detachTenant'])->name('clinic-networks.detach-tenant');
-
-        // Usuários da Rede
-        Route::post('clinic-networks/{network}/users', [\App\Http\Controllers\Platform\NetworkUserController::class, 'store'])->name('clinic-networks.users.store');
-        Route::post('clinic-networks/{network}/users/{user}/toggle', [\App\Http\Controllers\Platform\NetworkUserController::class, 'toggleStatus'])->name('clinic-networks.users.toggle');
-        Route::delete('clinic-networks/{network}/users/{user}', [\App\Http\Controllers\Platform\NetworkUserController::class, 'destroy'])->name('clinic-networks.users.destroy');
-    });
-
     // 🔸 Módulo: Planos
     Route::middleware('module.access:plans')->group(function () {
         Route::resource('plans', PlanController::class);
@@ -287,6 +264,9 @@ Route::middleware(['auth'])->prefix('Platform')->name('Platform.')->group(functi
         Route::get('settings/commands/available', [SystemSettingsController::class, 'getAvailableCommands'])->name('settings.commands.available');
         // Service pode ser uma string, então não precisa restrição numérica
         Route::get('settings/test/{service}', [SystemSettingsController::class, 'testConnection'])->name('settings.test');
+        Route::post('settings/test/meta/send', [SystemSettingsController::class, 'testMetaSend'])->name('settings.test.meta.send');
+        Route::post('settings/test/zapi/send', [SystemSettingsController::class, 'testZapiSend'])->name('settings.test.zapi.send');
+        Route::post('settings/test/waha/send', [SystemSettingsController::class, 'testWahaSend'])->name('settings.test.waha.send');
     });
 
     // 🔸 Módulo: Z-API (acessível a todos os usuários autenticados)

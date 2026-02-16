@@ -13,29 +13,29 @@ Antes de testar, certifique-se de que:
 
 ## 🔗 URLs das Páginas Públicas
 
-As páginas públicas seguem o padrão: `/t/{subdomain}/agendamento/{acao}`
+As páginas públicas seguem o padrão: `/customer/{slug}/agendamento/{acao}`
 
 ### 1️⃣ **Identificação do Paciente**
 ```
-GET  /t/{tenant}/agendamento/identificar
-POST /t/{tenant}/agendamento/identificar
+GET  /customer/{slug}/agendamento/identificar
+POST /customer/{slug}/agendamento/identificar
 ```
 
 ### 2️⃣ **Cadastro de Paciente**
 ```
-GET  /t/{tenant}/agendamento/cadastro
-POST /t/{tenant}/agendamento/cadastro
+GET  /customer/{slug}/agendamento/cadastro
+POST /customer/{slug}/agendamento/cadastro
 ```
 
 ### 3️⃣ **Criar Agendamento**
 ```
-GET  /t/{tenant}/agendamento/criar
-POST /t/{tenant}/agendamento/criar
+GET  /customer/{slug}/agendamento/criar
+POST /customer/{slug}/agendamento/criar
 ```
 
 ### 4️⃣ **Página de Sucesso**
 ```
-GET  /t/{tenant}/agendamento/sucesso
+GET  /customer/{slug}/agendamento/sucesso
 ```
 
 ---
@@ -52,7 +52,7 @@ SELECT subdomain, trade_name, legal_name FROM tenants;
 
 Exemplo: Se o subdomain for `odontovida`, acesse:
 ```
-http://localhost/t/odontovida/agendamento/identificar
+http://localhost/customer/odontovida/agendamento/identificar
 ```
 
 ### Opção 2: Criar um Tenant de Teste
@@ -95,12 +95,12 @@ $tenant = \App\Models\Platform\Tenant::create([
 ### **Passo 1: Acessar Identificação**
 
 ```
-http://localhost/t/{tenant}/agendamento/identificar
+http://localhost/customer/{slug}/agendamento/identificar
 ```
 
 Ou no navegador:
 ```
-http://seu-dominio.local/t/teste/agendamento/identificar
+http://seu-dominio.local/customer/teste/agendamento/identificar
 ```
 
 **O que esperar:**
@@ -125,7 +125,7 @@ http://seu-dominio.local/t/teste/agendamento/identificar
 1. Clique no botão "Criar Cadastro"
 2. Ou acesse diretamente:
    ```
-   http://localhost/t/{tenant}/agendamento/cadastro
+   http://localhost/customer/{slug}/agendamento/cadastro
    ```
 
 3. Preencha o formulário:
@@ -159,7 +159,7 @@ http://seu-dominio.local/t/teste/agendamento/identificar
 
 Acesse:
 ```
-http://localhost/t/{tenant}/agendamento/criar
+http://localhost/customer/{slug}/agendamento/criar
 ```
 
 **O que esperar:**
@@ -203,7 +203,7 @@ http://localhost/t/{tenant}/agendamento/criar
 2. **Esperado:** Mensagens de validação indicando campos obrigatórios
 
 ### ✅ **Teste 4: Acesso Sem Identificação**
-1. Tente acessar `/t/{tenant}/agendamento/criar` diretamente
+1. Tente acessar `/customer/{slug}/agendamento/criar` diretamente
 2. **Esperado:** Redirecionamento para identificação com mensagem de erro
 
 ### ✅ **Teste 5: Máscaras de Formatação**
@@ -252,20 +252,20 @@ WHERE cpf = '12345678900';
 
 ## 📱 Exemplos de URLs Completas
 
-Substitua `{tenant}` pelo subdomain do seu tenant:
+Substitua `{slug}` pelo `subdomain` do seu tenant:
 
 ```
 # Identificação
-http://localhost/t/odontovida/agendamento/identificar
+http://localhost/customer/odontovida/agendamento/identificar
 
 # Cadastro
-http://localhost/t/odontovida/agendamento/cadastro
+http://localhost/customer/odontovida/agendamento/cadastro
 
 # Agendamento
-http://localhost/t/odontovida/agendamento/criar
+http://localhost/customer/odontovida/agendamento/criar
 
 # Sucesso
-http://localhost/t/odontovida/agendamento/sucesso
+http://localhost/customer/odontovida/agendamento/sucesso
 ```
 
 ---

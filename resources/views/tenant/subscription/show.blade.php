@@ -1,4 +1,4 @@
-@extends('layouts.connect_plus.app')
+@extends('layouts.tailadmin.app')
 
 @section('title', 'Minha Assinatura')
 
@@ -131,10 +131,11 @@
                             </div>
                         @else
                             <div class="mt-3">
-                                <a href="{{ workspace_route('tenant.plan-change-request.create') }}" 
-                                   class="btn btn-primary">
-                                    <i class="mdi mdi-swap-horizontal me-2"></i>Solicitar Mudança de Plano
-                                </a>
+                                <div class="flex items-center justify-end gap-3 flex-nowrap">
+                                    <x-tailadmin-button variant="primary" size="md" href="{{ workspace_route('tenant.plan-change-request.create') }}" class="inline-flex items-center gap-2">
+                                        <i class="mdi mdi-swap-horizontal"></i> Solicitar Mudança de Plano
+                                    </x-tailadmin-button>
+                                </div>
                             </div>
                         @endif
                     </div>
@@ -201,10 +202,10 @@
                                         </td>
                                         <td>
                                             @if($invoice->payment_link)
-                                                <a href="{{ $invoice->payment_link }}" target="_blank" 
-                                                   class="btn btn-sm btn-primary">
-                                                    <i class="mdi mdi-link me-1"></i>Pagar
-                                                </a>
+                                                <x-tailadmin-button variant="primary" size="sm" href="{{ $invoice->payment_link }}" target="_blank"
+                                                    class="px-3 py-1">
+                                                    <i class="mdi mdi-link"></i> Pagar
+                                                </x-tailadmin-button>
                                             @endif
                                         </td>
                                     </tr>
@@ -227,7 +228,7 @@
                             <i class="mdi mdi-file-document-outline me-2"></i>Histórico de Faturas
                         </h4>
                         @if($invoices && $invoices->count() > 0)
-                        <div class="table-responsive">
+                        <div>
                             <table class="table table-hover" id="datatable-list">
                                 <thead>
                                     <tr>
@@ -258,10 +259,10 @@
                                         <td>{{ $invoice->payment_method ?? '—' }}</td>
                                         <td>
                                             @if($invoice->payment_link && $invoice->status != 'paid')
-                                                <a href="{{ $invoice->payment_link }}" target="_blank" 
-                                                   class="btn btn-sm btn-primary">
-                                                    <i class="mdi mdi-link me-1"></i>Pagar
-                                                </a>
+                                                <x-tailadmin-button variant="primary" size="sm" href="{{ $invoice->payment_link }}" target="_blank"
+                                                    class="px-3 py-1">
+                                                    <i class="mdi mdi-link"></i> Pagar
+                                                </x-tailadmin-button>
                                             @endif
                                         </td>
                                     </tr>
@@ -282,13 +283,21 @@
 
 @push('scripts')
 <script>
-    $(document).ready(function() {
+document.addEventListener('DOMContentLoaded', function () {
+    if (window.jQuery && $('#datatable-list').length) {
         $('#datatable-list').DataTable({
-            "language": {
-                "url": "//cdn.datatables.net/plug-ins/1.11.5/i18n/pt-BR.json"
+            pageLength: 25,
+            responsive: true,
+            autoWidth: false,
+            scrollX: false,
+            scrollCollapse: false,
+            pagingType: "simple_numbers",
+            language: {
+                url: "//cdn.datatables.net/plug-ins/1.13.8/i18n/pt-BR.json"
             }
         });
-    });
+    }
+});
 </script>
 @endpush
 

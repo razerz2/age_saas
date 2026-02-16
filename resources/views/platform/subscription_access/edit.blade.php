@@ -1,4 +1,6 @@
 @extends('layouts.freedash.app')
+@section('title', 'Editar Subscription Access')
+
 @section('content')
     <div class="page-breadcrumb">
         <div class="row">

@@ -6,14 +6,13 @@ use App\Http\Controllers\Controller;
 use App\Models\Tenant\MedicalSpecialty;
 use App\Http\Requests\Tenant\StoreMedicalSpecialtyRequest;
 use App\Http\Requests\Tenant\UpdateMedicalSpecialtyRequest;
+use Illuminate\Http\Request;
 
 class MedicalSpecialtyController extends Controller
 {
     public function index()
     {
-        $specialties = MedicalSpecialty::orderBy('name')->paginate(20);
-
-        return view('tenant.specialties.index', compact('specialties'));
+        return view('tenant.specialties.index');
     }
 
     public function create()
@@ -61,5 +60,73 @@ class MedicalSpecialtyController extends Controller
 
         return redirect()->route('tenant.specialties.index', ['slug' => $slug])
             ->with('success', 'Especialidade removida.');
+    }
+
+    /**
+     * Retorna dados para Grid.js na tela de especialidades.
+     */
+    public function gridData(Request $request, $slug)
+    {
+        $page = max(1, (int) $request->input('page', 1));
+        $limit = max(1, min(100, (int) $request->input('limit', 10)));
+
+        $query = MedicalSpecialty::query();
+
+        // Busca simples em nome e código
+        $search = $request->input('search');
+        if (is_array($search) && !empty($search['value'])) {
+            $term = trim($search['value']);
+
+            $query->where(function ($q) use ($term) {
+                $q->where('name', 'like', "%{$term}%")
+                  ->orWhere('code', 'like', "%{$term}%");
+            });
+        }
+
+        // Ordenação básica
+        $sort = $request->input('sort');
+        if (is_array($sort) && isset($sort['column'], $sort['direction'])) {
+            $column = $sort['column'];
+            $direction = strtolower($sort['direction']) === 'asc' ? 'asc' : 'desc';
+
+            $sortable = [
+                'name' => 'name',
+                'code' => 'code',
+            ];
+
+            if (isset($sortable[$column])) {
+                $query->orderBy($sortable[$column], $direction);
+            } else {
+                $query->orderBy('name');
+            }
+        } else {
+            $query->orderBy('name');
+        }
+
+        $paginator = $query->paginate($limit, ['*'], 'page', $page);
+
+        $data = [];
+
+        foreach ($paginator->items() as $specialty) {
+            $actions = view('tenant.specialties.partials.actions', [
+                'specialty' => $specialty,
+            ])->render();
+
+            $data[] = [
+                'name'    => e($specialty->name),
+                'code'    => e($specialty->code ?? '-'),
+                'actions' => $actions,
+            ];
+        }
+
+        return response()->json([
+            'data' => $data,
+            'meta' => [
+                'current_page' => $paginator->currentPage(),
+                'last_page'    => $paginator->lastPage(),
+                'per_page'     => $paginator->perPage(),
+                'total'        => $paginator->total(),
+            ],
+        ]);
     }
 }

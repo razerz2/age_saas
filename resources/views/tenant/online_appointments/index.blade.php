@@ -1,106 +1,57 @@
-﻿@extends('layouts.connect_plus.app')
+@extends('layouts.tailadmin.app')
 
 @section('title', 'Consultas Online')
 
 @section('content')
-
-    <div class="page-header">
-        <h3 class="page-title"> Consultas Online </h3>
-
-        <nav aria-label="breadcrumb">
-            <ol class="breadcrumb">
-                <li class="breadcrumb-item">
-                    <a href="{{ workspace_route('tenant.dashboard') }}">Dashboard</a>
-                </li>
-                <li class="breadcrumb-item active" aria-current="page">Consultas Online</li>
-            </ol>
-        </nav>
+    <!-- Page Header -->
+    <div class="page-header mb-6">
+        <div class="flex flex-col">
+            <h1 class="text-2xl font-semibold text-gray-900 dark:text-white">Consultas Online</h1>
+            <nav aria-label="Breadcrumb" class="mt-1">
+                <ol class="inline-flex items-center space-x-1 md:space-x-3">
+                    <li class="inline-flex items-center">
+                        <a href="{{ workspace_route('tenant.dashboard') }}" class="text-gray-700 hover:text-blue-600 dark:text-gray-300 dark:hover:text-white inline-flex items-center">
+                            <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001 1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"></path>
+                            </svg>
+                            Dashboard
+                        </a>
+                    </li>
+                    <li aria-current="page">
+                        <div class="flex items-center">
+                            <svg class="w-6 h-6 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
+                            </svg>
+                            <span class="ml-1 text-gray-500 dark:text-gray-400 md:ml-2">Consultas Online</span>
+                        </div>
+                    </li>
+                </ol>
+            </nav>
+        </div>
     </div>
 
-    <div class="row">
-        <div class="col-lg-12 grid-margin stretch-card">
-            <div class="card">
-                <div class="card-body">
-                    <h4 class="card-title">Lista de Consultas Online</h4>
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
+        <div class="p-6">
+            <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Lista de Consultas Online</h2>
 
-                    <div class="table-responsive">
-                        <table class="table table-hover" id="datatable-list">
-                            <thead>
-                                <tr>
-                                    <th>Paciente</th>
-                                    <th>Médico</th>
-                                    <th>Data/Hora</th>
-                                    <th>Status</th>
-                                    <th>Instruções Enviadas</th>
-                                    <th style="width: 140px;">Ações</th>
-                                </tr>
-                            </thead>
+            <x-tenant.grid
+                id="online-appointments-grid"
+                :columns="[
+                    ['name' => 'patient', 'label' => 'Paciente'],
+                    ['name' => 'doctor', 'label' => 'Médico'],
+                    ['name' => 'datetime', 'label' => 'Data/Hora'],
+                    ['name' => 'status_badge', 'label' => 'Status'],
+                    ['name' => 'instructions', 'label' => 'Instruções Enviadas'],
+                    ['name' => 'actions', 'label' => 'Ações'],
+                ]"
+                ajaxUrl="{{ workspace_route('tenant.online-appointments.grid-data') }}"
+                :pagination="true"
+                :search="true"
+                :sort="true"
+            />
 
-                            <tbody>
-                                @foreach ($appointments as $appointment)
-                                    <tr>
-                                        <td>{{ $appointment->patient->full_name ?? 'N/A' }}</td>
-                                        <td>
-                                            @if($appointment->calendar && $appointment->calendar->doctor && $appointment->calendar->doctor->user)
-                                                {{ $appointment->calendar->doctor->user->name }}
-                                            @else
-                                                N/A
-                                            @endif
-                                        </td>
-                                        <td>{{ $appointment->starts_at ? $appointment->starts_at->format('d/m/Y H:i') : 'N/A' }}</td>
-                                        <td>
-                                            <span class="badge bg-info">Online</span>
-                                            <span class="badge bg-{{ $appointment->status === 'scheduled' ? 'success' : ($appointment->status === 'canceled' ? 'danger' : 'warning') }}">
-                                                {{ $appointment->status_translated }}
-                                            </span>
-                                        </td>
-                                        <td>
-                                            @if($appointment->onlineInstructions)
-                                                @if($appointment->onlineInstructions->sent_by_email_at)
-                                                    <span class="badge bg-success" title="Enviado por email em {{ $appointment->onlineInstructions->sent_by_email_at->format('d/m/Y H:i') }}">
-                                                        <i class="mdi mdi-email"></i> Email
-                                                    </span>
-                                                @endif
-                                                @if($appointment->onlineInstructions->sent_by_whatsapp_at)
-                                                    <span class="badge bg-success" title="Enviado por WhatsApp em {{ $appointment->onlineInstructions->sent_by_whatsapp_at->format('d/m/Y H:i') }}">
-                                                        <i class="mdi mdi-whatsapp"></i> WhatsApp
-                                                    </span>
-                                                @endif
-                                                @if(!$appointment->onlineInstructions->sent_by_email_at && !$appointment->onlineInstructions->sent_by_whatsapp_at)
-                                                    <span class="badge bg-warning">Não enviado</span>
-                                                @endif
-                                            @else
-                                                <span class="badge bg-secondary">Sem instruções</span>
-                                            @endif
-                                        </td>
-                                        <td>
-                                            <a href="{{ workspace_route('tenant.online-appointments.show', $appointment->id) }}" class="btn btn-info btn-sm">
-                                                <i class="mdi mdi-eye"></i> Gerenciar
-                                            </a>
-                                        </td>
-                                    </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
-                    </div>
-
-                </div>
-            </div>
         </div>
     </div>
 
 @endsection
-
-@push('scripts')
-<script>
-    $(document).ready(function() {
-        $('#datatable-list').DataTable({
-            "language": {
-                "url": "//cdn.datatables.net/plug-ins/1.11.5/i18n/pt-BR.json"
-            },
-            "order": [[2, "desc"]]
-        });
-    });
-</script>
-@endpush
 

@@ -1,4 +1,4 @@
-﻿@extends('layouts.connect_plus.app')
+@extends('layouts.tailadmin.app')
 
 @section('title', 'Detalhes da Integração')
 
@@ -33,13 +33,14 @@
                             <i class="mdi mdi-link text-primary me-2"></i>
                             Informações da Integração
                         </h4>
-                        <div>
-                            <a href="{{ workspace_route('tenant.integrations.edit', $integration->id) }}" class="btn btn-warning btn-sm">
-                                <i class="mdi mdi-pencil me-1"></i> Editar
-                            </a>
-                            <a href="{{ workspace_route('tenant.integrations.index') }}" class="btn btn-secondary btn-sm">
-                                <i class="mdi mdi-arrow-left me-1"></i> Voltar
-                            </a>
+                        <div class="flex items-center justify-end gap-3 flex-nowrap">
+                            <x-tailadmin-button variant="warning" size="sm" href="{{ workspace_route('tenant.integrations.edit', $integration->id) }}" class="inline-flex items-center gap-2">
+                                <i class="mdi mdi-pencil"></i> Editar
+                            </x-tailadmin-button>
+                            <x-tailadmin-button variant="secondary" size="sm" href="{{ workspace_route('tenant.integrations.index') }}"
+                                class="inline-flex items-center gap-2 bg-transparent border-gray-300 text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-white/5">
+                                <i class="mdi mdi-arrow-left"></i> Voltar
+                            </x-tailadmin-button>
                         </div>
                     </div>
 

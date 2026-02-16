@@ -20,6 +20,7 @@ use App\Http\Requests\Tenant\Forms\UpdateQuestionRequest;
 use App\Http\Requests\Tenant\Forms\AddOptionRequest;
 use App\Http\Requests\Tenant\Forms\UpdateOptionRequest;
 
+use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Auth;
 
@@ -40,6 +41,72 @@ class FormController extends Controller
         $forms = $query->orderBy('name')->paginate(20);
 
         return view('tenant.forms.index', compact('forms'));
+    }
+
+    public function gridData(Request $request, $slug)
+    {
+        $query = Form::with(['doctor.user', 'specialty']);
+
+        $this->applyDoctorFilter($query, 'doctor_id');
+
+        $page  = max(1, (int) $request->input('page', 1));
+        $limit = max(1, min(100, (int) $request->input('limit', 10)));
+
+        // Busca global
+        $search = trim((string) $request->input('search', ''));
+        if ($search !== '') {
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhereHas('doctor.user', function ($sub) use ($search) {
+                      $sub->where('name_full', 'like', "%{$search}%")
+                          ->orWhere('name', 'like', "%{$search}%");
+                  })
+                  ->orWhereHas('specialty', function ($sub) use ($search) {
+                      $sub->where('name', 'like', "%{$search}%");
+                  });
+            });
+        }
+
+        // Ordenação
+        $sortable = [
+            'name'          => 'name',
+            'doctor'        => 'doctor_id',
+            'specialty'     => 'specialty_id',
+            'status_badge'  => 'is_active',
+            'created_at'    => 'created_at',
+        ];
+
+        $sortField = (string) $request->input('sort', 'created_at');
+        $sortDir   = strtolower((string) $request->input('direction', 'desc')) === 'asc' ? 'asc' : 'desc';
+
+        if (isset($sortable[$sortField])) {
+            $query->orderBy($sortable[$sortField], $sortDir);
+        } else {
+            $query->orderBy('created_at', 'desc');
+        }
+
+        $paginator = $query->paginate($limit, ['*'], 'page', $page);
+
+        $data = $paginator->getCollection()->map(function (Form $form) {
+            return [
+                'name'         => e($form->name),
+                'doctor'       => e(optional(optional($form->doctor)->user)->name_full ?? '-'),
+                'specialty'    => e(optional($form->specialty)->name ?? '-'),
+                'status_badge' => view('tenant.forms.partials.status', compact('form'))->render(),
+                'created_at'   => optional($form->created_at)?->format('d/m/Y H:i'),
+                'actions'      => view('tenant.forms.partials.actions', compact('form'))->render(),
+            ];
+        })->all();
+
+        return response()->json([
+            'data' => $data,
+            'meta' => [
+                'current_page' => $paginator->currentPage(),
+                'last_page'    => $paginator->lastPage(),
+                'per_page'     => $paginator->perPage(),
+                'total'        => $paginator->total(),
+            ],
+        ]);
     }
 
     public function create()

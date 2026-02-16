@@ -592,13 +592,17 @@ Armazenados no **banco central (landlord)**:
    - Idioma (ex: `pt_BR`)
 3. Configure **Integrações**:
    - **Asaas**: API Key, Ambiente (sandbox/production)
-   - **WhatsApp (Meta)**: Access Token, Phone Number ID
+   - **WhatsApp (Meta / Z-API / WAHA)**: credenciais específicas de cada provedor
    - **Email (SMTP)**: Host, Porta, Username, Password, From Address, From Name
-4. **Testar Conexões**:
-   - Use `/Platform/settings/test/{service}` para testar:
-     - `asaas` - Testa conexão com Asaas
-     - `whatsapp` - Testa conexão com WhatsApp
-     - `email` - Testa envio de email
+4. **Testes de Integração WhatsApp (Meta / Z-API / WAHA)**:
+   - Cada provedor agora possui dois botões:
+     1. **Testar Conexão** (`GET /Platform/settings/test/{service}`) que valida credenciais e resposta básica da API.
+     2. **Testar Envio** que abre um formulário inline com número, mensagem, badge de status e feedback textual (Meta/Z-API usam o mesmo layout do WAHA). O formulário envia via AJAX para:
+        - `POST /Platform/settings/test/meta/send` (Meta)
+        - `POST /Platform/settings/test/zapi/send` (Z-API)
+        - `POST /Platform/settings/test/waha/send` (WAHA)
+   - Os IDs usados na view são exatamente os esperados pelo JavaScript (`btn-toggle-*`, `*-send-form`, `*-test-number`, `*-test-message-input`, `btn-send-*-test`, `*-send-badge`, `*-send-message`), garantindo comportamento uniforme entre os três providers.
+   - Os métodos do `SystemSettingsController` (`testMetaSend`, `testZapiSend`, `testWahaSend`) respondem sempre com JSON e usam apenas o provider específico, ignorando `WHATSAPP_PROVIDER` global.
 
 **Nota:** Configurações definidas aqui têm prioridade sobre variáveis de ambiente. As configurações são salvas na tabela `system_settings` e também atualizadas no arquivo `.env`.
 

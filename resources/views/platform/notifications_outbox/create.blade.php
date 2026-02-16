@@ -1,4 +1,6 @@
 @extends('layouts.freedash.app')
+@section('title', 'Cadastrar Notificações Outbox')
+
 @section('content')
     <div class="page-breadcrumb">
         <div class="row">

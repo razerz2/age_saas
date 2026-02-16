@@ -1,4 +1,5 @@
 @extends('layouts.freedash.app')
+@section('title', 'Listar Z-API')
 
 @section('content')
     <div class="page-breadcrumb">

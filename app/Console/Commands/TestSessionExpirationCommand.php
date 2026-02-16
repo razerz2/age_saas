@@ -37,7 +37,7 @@ class TestSessionExpirationCommand extends Command
             $this->line('2. No navegador, abra o DevTools (F12)');
             $this->line('3. Vá em Application → Cookies → http://127.0.0.1:8000');
             $this->line('4. Delete o cookie laravel_session');
-            $this->line('5. Tente acessar /tenant/dashboard');
+            $this->line('5. Tente acessar /workspace/{tenant-slug}/dashboard');
             $this->line('6. Deve redirecionar para /t/{tenant-slug}/login');
             return 0;
         }

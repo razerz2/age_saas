@@ -9,33 +9,13 @@ use App\Models\Tenant\MedicalSpecialty;
 use App\Http\Requests\Tenant\StoreDoctorRequest;
 use App\Http\Requests\Tenant\UpdateDoctorRequest;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Http\Request;
 
 class DoctorController extends Controller
 {
     public function index()
     {
-        $user = Auth::guard('tenant')->user();
-        $query = Doctor::with(['user', 'specialties']);
-
-        // Aplicar filtros baseado no role
-        if ($user->role === 'doctor' && $user->doctor) {
-            // Médico só vê a si mesmo
-            $query->where('id', $user->doctor->id);
-        } elseif ($user->role === 'user') {
-            // Usuário comum só vê médicos relacionados
-            $allowedDoctorIds = $user->allowedDoctors()->pluck('doctors.id')->toArray();
-            if (!empty($allowedDoctorIds)) {
-                $query->whereIn('id', $allowedDoctorIds);
-            } else {
-                // Se não tem médicos permitidos, não mostra nada
-                $query->whereRaw('1 = 0');
-            }
-        }
-        // Admin vê tudo (sem filtro)
-
-        $doctors = $query->orderBy('created_at', 'desc')->paginate(15);
-
-        return view('tenant.doctors.index', compact('doctors'));
+        return view('tenant.doctors.index');
     }
 
     public function create()
@@ -247,5 +227,81 @@ class DoctorController extends Controller
 
         return redirect()->route('tenant.doctors.index', ['slug' => $slug])
             ->with('success', 'Médico removido com sucesso.');
+    }
+
+    /**
+     * Retorna dados para Grid.js na tela de médicos.
+     */
+    public function gridData(Request $request, $slug)
+    {
+        $page  = max(1, (int) $request->input('page', 1));
+        $limit = max(1, min(100, (int) $request->input('limit', 10)));
+
+        $query = Doctor::query()->with('specialties');
+
+        $search = $request->input('search');
+
+        if (is_array($search) && !empty($search['value'])) {
+            $term = trim($search['value']);
+
+            $query->where(function ($q) use ($term) {
+                $q->where('name', 'like', "%{$term}%")
+                  ->orWhere('email', 'like', "%{$term}%")
+                  ->orWhere('crm', 'like', "%{$term}%");
+            });
+        }
+
+        $sort = $request->input('sort');
+
+        if (is_array($sort) && isset($sort['column'], $sort['direction'])) {
+            $column = $sort['column'];
+            $direction = strtolower($sort['direction']) === 'asc' ? 'asc' : 'desc';
+
+            $sortable = [
+                'name'  => 'name',
+                'email' => 'email',
+                'crm'   => 'crm',
+            ];
+
+            if (isset($sortable[$column])) {
+                $query->orderBy($sortable[$column], $direction);
+            } else {
+                $query->orderBy('name');
+            }
+        } else {
+            $query->orderBy('name');
+        }
+
+        $paginator = $query->paginate($limit, ['*'], 'page', $page);
+
+        $data = [];
+
+        foreach ($paginator->items() as $doctor) {
+            $specialties = $doctor->specialties
+                ->pluck('name')
+                ->implode(', ');
+
+            $actions = view('tenant.doctors.partials.actions', [
+                'doctor' => $doctor,
+            ])->render();
+
+            $data[] = [
+                'name'        => e($doctor->name),
+                'email'       => e($doctor->email ?? '-'),
+                'crm'         => e($doctor->crm ?? '-'),
+                'specialties' => e($specialties ?: '-'),
+                'actions'     => $actions,
+            ];
+        }
+
+        return response()->json([
+            'data' => $data,
+            'meta' => [
+                'current_page' => $paginator->currentPage(),
+                'last_page'    => $paginator->lastPage(),
+                'per_page'     => $paginator->perPage(),
+                'total'        => $paginator->total(),
+            ],
+        ]);
     }
 }

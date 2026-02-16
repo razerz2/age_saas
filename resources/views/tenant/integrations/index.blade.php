@@ -1,4 +1,4 @@
-﻿@extends('layouts.connect_plus.app')
+@extends('layouts.tailadmin.app')
 
 @section('title', 'Integrações')
 
@@ -54,10 +54,10 @@
                                             Conta individual por médico
                                         </li>
                                     </ul>
-                                    <a href="{{ workspace_route('tenant.integrations.google.index') }}" class="btn btn-primary">
-                                        <i class="mdi mdi-google me-1"></i>
+                                    <x-tailadmin-button variant="primary" size="md" href="{{ workspace_route('tenant.integrations.google.index') }}">
+                                        <i class="mdi mdi-google"></i>
                                         Configurar Google Calendar
-                                    </a>
+                                    </x-tailadmin-button>
                                 </div>
                             </div>
                         </div>
@@ -67,11 +67,12 @@
 
                     <h5 class="mb-3">Outras Integrações</h5>
 
-                    <a href="{{ workspace_route('tenant.integrations.create') }}" class="btn btn-secondary mb-3">
+                    <x-tailadmin-button variant="secondary" size="md" href="{{ workspace_route('tenant.integrations.create') }}"
+                        class="mb-3 bg-transparent border-gray-300 text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-white/5">
                         + Nova Integração
-                    </a>
+                    </x-tailadmin-button>
 
-                    <div class="table-responsive">
+                    <div>
                         <table class="table table-hover" id="datatable-list">
                             <thead>
                                 <tr>
@@ -95,8 +96,17 @@
                                             @endif
                                         </td>
                                         <td>
-                                            <a href="{{ workspace_route('tenant.integrations.show', $integration->id) }}" class="btn btn-info btn-sm">Ver</a>
-                                            <a href="{{ workspace_route('tenant.integrations.edit', $integration->id) }}" class="btn btn-warning btn-sm">Editar</a>
+                                            <div class="flex items-center gap-2">
+                                                <x-tailadmin-button variant="secondary" size="sm"
+                                                    href="{{ workspace_route('tenant.integrations.show', $integration->id) }}"
+                                                    class="border-info text-info bg-info/10 hover:bg-info/20 dark:border-info/40 dark:text-info dark:hover:bg-info/30">
+                                                    Ver
+                                                </x-tailadmin-button>
+                                                <x-tailadmin-button variant="warning" size="sm"
+                                                    href="{{ workspace_route('tenant.integrations.edit', $integration->id) }}">
+                                                    Editar
+                                                </x-tailadmin-button>
+                                            </div>
                                         </td>
                                     </tr>
                                 @endforeach
@@ -113,13 +123,21 @@
 
 @push('scripts')
 <script>
-    $(document).ready(function() {
+document.addEventListener('DOMContentLoaded', function () {
+    if (window.jQuery && $('#datatable-list').length) {
         $('#datatable-list').DataTable({
-            "language": {
-                "url": "//cdn.datatables.net/plug-ins/1.11.5/i18n/pt-BR.json"
+            pageLength: 25,
+            responsive: true,
+            autoWidth: false,
+            scrollX: false,
+            scrollCollapse: false,
+            pagingType: "simple_numbers",
+            language: {
+                url: "//cdn.datatables.net/plug-ins/1.13.8/i18n/pt-BR.json"
             }
         });
-    });
+    }
+});
 </script>
 @endpush
 

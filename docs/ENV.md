@@ -91,31 +91,51 @@ ASAAS_ENV=sandbox
 2. Crie uma conta
 3. Acesse Configurações → API
 4. Copie a chave de API
-5. Configure o webhook apontando para: `https://seu-dominio.com/webhook/asaas`
+5. Configure o webhook conforme o contexto:
+   - **Platform**: `https://seu-dominio.com/webhook/asaas`
+   - **Finance (Tenant)**: `https://seu-dominio.com/t/{slug}/webhooks/asaas`
 
-### WhatsApp (Meta)
+### WhatsApp (Meta / Z-API)
 
 ```env
+# Escolha o provedor: 'whatsapp_business' (Meta) ou 'zapi'
+WHATSAPP_PROVIDER=whatsapp_business
+
+# Opção 1: WhatsApp Business API (Meta)
+WHATSAPP_BUSINESS_API_URL=https://graph.facebook.com/v18.0
+WHATSAPP_BUSINESS_TOKEN=seu_token_meta
+WHATSAPP_BUSINESS_PHONE_ID=seu_phone_id_meta
+
+# Configurações legadas (mantidas para compatibilidade)
 WHATSAPP_API_URL=https://graph.facebook.com/v18.0
-WHATSAPP_TOKEN=seu_token
-WHATSAPP_PHONE_ID=seu_phone_id
-META_ACCESS_TOKEN=seu_token_meta
-META_PHONE_NUMBER_ID=seu_phone_number_id
+WHATSAPP_TOKEN=seu_token_legacy
+WHATSAPP_PHONE_ID=seu_phone_id_legacy
+
+# Opção 2: Z-API
+ZAPI_API_URL=https://api.z-api.io
+ZAPI_TOKEN=seu_token_zapi
+ZAPI_INSTANCE_ID=seu_instance_id
 ```
 
 | Variável | Descrição | Obrigatório | Padrão |
 |----------|-----------|-------------|--------|
-| `WHATSAPP_API_URL` | URL da API do WhatsApp | Não | https://graph.facebook.com/v18.0 |
-| `WHATSAPP_TOKEN` | Token de acesso | Sim | - |
-| `WHATSAPP_PHONE_ID` | ID do número de telefone | Sim | - |
-| `META_ACCESS_TOKEN` | Token de acesso Meta | Sim | - |
-| `META_PHONE_NUMBER_ID` | ID do número de telefone Meta | Sim | - |
+| `WHATSAPP_PROVIDER` | Provedor (whatsapp_business, zapi) | Sim | whatsapp_business |
+| `WHATSAPP_BUSINESS_API_URL` | Base URL da API Meta | Não | https://graph.facebook.com/v18.0 |
+| `WHATSAPP_BUSINESS_TOKEN` | Token de acesso (Meta) | Sim (se Meta) | - |
+| `WHATSAPP_BUSINESS_PHONE_ID` | Phone Number ID (Meta) | Sim (se Meta) | - |
+| `ZAPI_API_URL` | Base URL da API Z-API | Não | https://api.z-api.io |
+| `ZAPI_TOKEN` | Token (Z-API) | Sim (se Z-API) | - |
+| `ZAPI_INSTANCE_ID` | Instance ID (Z-API) | Sim (se Z-API) | - |
+| `WHATSAPP_API_URL` | Legado: base URL Meta | Não | https://graph.facebook.com/v18.0 |
+| `WHATSAPP_TOKEN` | Legado: token Meta | Não | - |
+| `WHATSAPP_PHONE_ID` | Legado: phone id Meta | Não | - |
 
 **Como obter:**
 1. Acesse [Meta for Developers](https://developers.facebook.com/)
 2. Crie um app do tipo "Business"
 3. Configure WhatsApp Business API
 4. Obtenha o token de acesso e phone number ID
+5. Alternativamente, para Z-API, obtenha `ZAPI_TOKEN` e `ZAPI_INSTANCE_ID` no painel do provedor
 
 ### Google Calendar
 

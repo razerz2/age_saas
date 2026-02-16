@@ -1,20 +1,9 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
+@extends('layouts.tailadmin.public')
 
-<head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+@section('title', 'Cadastro de Paciente — ' . ($tenant->trade_name ?? $tenant->legal_name ?? 'Sistema'))
 
-    <title>Cadastro de Paciente — {{ $tenant->trade_name ?? $tenant->legal_name ?? 'Sistema' }}</title>
-
-    {{-- CSS --}}
-    <link rel="stylesheet" href="{{ asset('connect_plus/assets/vendors/mdi/css/materialdesignicons.min.css') }}">
-    <link rel="stylesheet" href="{{ asset('connect_plus/assets/vendors/flag-icon-css/css/flag-icon.min.css') }}">
-    <link rel="stylesheet" href="{{ asset('connect_plus/assets/vendors/css/vendor.bundle.base.css') }}">
-    <link rel="stylesheet" href="{{ asset('connect_plus/assets/css/style.css') }}">
-
-    <link rel="shortcut icon" href="{{ asset('connect_plus/assets/images/favicon.png') }}">
-
+@push('styles')
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@mdi/font@7.4.47/css/materialdesignicons.min.css">
     <style>
         .form-group label {
             font-weight: 600;
@@ -34,9 +23,9 @@
             font-weight: 600;
         }
     </style>
-</head>
+@endpush
 
-<body>
+@section('content')
     <div class="container-scroller">
         <div class="container-fluid page-body-wrapper full-page-wrapper">
             <div class="content-wrapper">
@@ -159,15 +148,16 @@
                                     </div>
 
                                     {{-- Botões de Ação --}}
-                                    <div class="d-flex justify-content-between align-items-center pt-3 border-top">
-                                        <a href="{{ route('public.patient.identify', ['slug' => $tenant->subdomain]) }}" class="btn btn-light">
-                                            <i class="mdi mdi-arrow-left me-1"></i>
+                                    <div class="flex flex-wrap items-center justify-between gap-3 pt-3 border-t">
+                                        <x-tailadmin-button variant="secondary" size="md" href="{{ route('public.patient.identify', ['slug' => $tenant->subdomain]) }}"
+                                            class="w-full sm:w-auto max-w-[220px] justify-center bg-transparent border-gray-300 text-gray-700 dark:border-gray-600 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-white/5">
+                                            <i class="mdi mdi-arrow-left"></i>
                                             Cancelar
-                                        </a>
-                                        <button type="submit" class="btn btn-primary btn-lg">
-                                            <i class="mdi mdi-content-save me-1"></i>
+                                        </x-tailadmin-button>
+                                        <x-tailadmin-button type="submit" variant="primary" size="md" class="w-full sm:w-auto max-w-[220px] justify-center">
+                                            <i class="mdi mdi-content-save"></i>
                                             Cadastrar
-                                        </button>
+                                        </x-tailadmin-button>
                                     </div>
                                 </form>
 
@@ -179,12 +169,7 @@
         </div>
     </div>
 
-    {{-- JS --}}
-    <script src="{{ asset('connect_plus/assets/vendors/js/vendor.bundle.base.js') }}"></script>
-    <script src="{{ asset('connect_plus/assets/js/off-canvas.js') }}"></script>
-    <script src="{{ asset('connect_plus/assets/js/hoverable-collapse.js') }}"></script>
-    <script src="{{ asset('connect_plus/assets/js/misc.js') }}"></script>
-
+    @push('scripts')
     <script>
     document.addEventListener('DOMContentLoaded', function() {
         // Máscara para CPF
@@ -224,7 +209,5 @@
         }
     });
     </script>
-
-</body>
-
-</html>
+    @endpush
+@endsection

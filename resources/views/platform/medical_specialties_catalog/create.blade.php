@@ -1,4 +1,6 @@
 @extends('layouts.freedash.app')
+@section('title', 'Cadastrar Especialidades Médicas')
+
 @section('content')
     <div class="page-breadcrumb">
         <div class="row">

@@ -1,4 +1,4 @@
-﻿@extends('layouts.connect_plus.app')
+@extends('layouts.tailadmin.app')
 
 @section('title', 'Meu Perfil')
 
@@ -17,210 +17,276 @@
     </div>
 
     @if (session('success'))
-        <div class="alert alert-success alert-dismissible fade show" role="alert">
-            <i class="mdi mdi-check-circle me-2"></i>
-            {{ session('success') }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+        <div class="bg-green-50 border border-green-200 rounded-lg p-4 mb-6 dark:bg-green-900/20 dark:border-green-800">
+            <div class="flex items-center">
+                <svg class="w-5 h-5 text-green-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+                <span class="text-green-800 dark:text-green-200">{{ session('success') }}</span>
+                <button type="button" onclick="this.parentElement.parentElement.remove()" class="ml-auto text-green-600 hover:text-green-800 dark:text-green-400 dark:hover:text-green-200">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
         </div>
     @endif
 
-    {{-- Container principal para alinhar todos os elementos --}}
-    <div class="row justify-content-center">
-        <div class="col-12 col-lg-10">
-            
-            {{-- Primeira linha: Card de Foto e Informações do Sistema lado a lado --}}
-            <div class="row mb-4 profile-info-cards">
-                {{-- Card de Foto do Perfil --}}
-                <div class="col-12 col-md-6 mb-3 mb-md-0">
-                    <div class="card h-100">
-                        <div class="card-body text-center d-flex flex-column">
-                            <div class="mb-4 flex-grow-0">
-                                <img src="{{ $user->avatar ? asset('storage/' . $user->avatar) : asset('connect_plus/assets/images/faces/default.jpg') }}" 
-                                     alt="Avatar" 
-                                     class="rounded-circle border border-3 border-primary" 
-                                     style="width: 150px; height: 150px; object-fit: cover;">
-                            </div>
-                            <h4 class="mb-1">{{ $user->name_full ?? $user->name }}</h4>
-                            <p class="text-muted mb-2">{{ $user->email }}</p>
-                            <div class="mb-3 flex-grow-0">
-                                @if($user->role === 'admin')
-                                    <span class="badge bg-danger">Administrador</span>
-                                @elseif($user->role === 'doctor')
-                                    <span class="badge bg-info">Médico</span>
-                                @else
-                                    <span class="badge bg-secondary">Usuário</span>
-                                @endif
-                                @if($user->status === 'active')
-                                    <span class="badge bg-success">Ativo</span>
-                                @else
-                                    <span class="badge bg-warning">Bloqueado</span>
-                                @endif
-                            </div>
-                            <p class="text-muted small mb-0 mt-auto">
-                                <i class="mdi mdi-phone me-1"></i>
-                                {{ $user->telefone ?? 'Não informado' }}
-                            </p>
+    {{-- Container principal TailAdmin --}}
+    <div class="max-w-6xl mx-auto">
+        
+        {{-- Cards superiores: Perfil e Informações do Sistema --}}
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+            {{-- Card de Foto do Perfil --}}
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
+                <div class="p-6">
+                    <div class="text-center">
+                        <div class="mb-4">
+                            <img src="{{ $user->avatar ? asset('storage/' . $user->avatar) : asset('tailadmin/assets/images/user/user-01.jpg') }}"
+                                 alt="Avatar" 
+                                 class="w-32 h-32 rounded-full border-4 border-blue-500 mx-auto object-cover shadow-lg">
                         </div>
+                        <h4 class="text-xl font-semibold text-gray-900 dark:text-white mb-1">{{ $user->name_full ?? $user->name }}</h4>
+                        <p class="text-gray-600 dark:text-gray-400 mb-3">{{ $user->email }}</p>
+                        <div class="flex flex-wrap justify-center gap-2 mb-3">
+                            @if($user->role === 'admin')
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300">
+                                    <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+                                    </svg>
+                                    Administrador
+                                </span>
+                            @elseif($user->role === 'doctor')
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300">
+                                    <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                                    </svg>
+                                    Médico
+                                </span>
+                            @else
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-300">
+                                    <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                                    </svg>
+                                    Usuário
+                                </span>
+                            @endif
+                            @if($user->status === 'active')
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300">
+                                    <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                    </svg>
+                                    Ativo
+                                </span>
+                            @else
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300">
+                                    <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                                    </svg>
+                                    Bloqueado
+                                </span>
+                            @endif
+                        </div>
+                        <p class="text-gray-500 dark:text-gray-400 text-sm flex items-center justify-center">
+                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path>
+                            </svg>
+                            {{ $user->telefone ?? 'Não informado' }}
+                        </p>
                     </div>
                 </div>
+            </div>
 
-                {{-- Card de Informações do Sistema --}}
-                <div class="col-12 col-md-6">
-                    <div class="card h-100">
-                        <div class="card-body d-flex flex-column">
-                            <h6 class="card-title mb-4 flex-grow-0">
-                                <i class="mdi mdi-information-outline me-2"></i>
-                                Informações do Sistema
-                            </h6>
-                            <div class="flex-grow-1 d-flex flex-column justify-content-center">
-                                <div class="d-flex justify-content-between align-items-center mb-4">
-                                    <span class="text-muted">
-                                        <i class="mdi mdi-calendar-plus me-1"></i>
-                                        Membro desde:
-                                    </span>
-                                    <span class="fw-semibold">{{ $user->created_at->format('d/m/Y') }}</span>
-                                </div>
-                                <div class="d-flex justify-content-between align-items-center mb-0">
-                                    <span class="text-muted">
-                                        <i class="mdi mdi-calendar-edit me-1"></i>
-                                        Última atualização:
-                                    </span>
-                                    <span class="fw-semibold">{{ $user->updated_at->format('d/m/Y') }}</span>
-                                </div>
+            {{-- Card de Informações do Sistema --}}
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
+                <div class="p-6">
+                    <div class="flex flex-col h-full">
+                        <h6 class="text-lg font-semibold text-gray-900 dark:text-white mb-6 flex items-center">
+                            <svg class="w-5 h-5 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                            Informações do Sistema
+                        </h6>
+                        <div class="flex-grow space-y-4">
+                            <div class="flex justify-between items-center py-3 border-b border-gray-100 dark:border-gray-700">
+                                <span class="text-gray-600 dark:text-gray-400 flex items-center">
+                                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                                    </svg>
+                                    Membro desde:
+                                </span>
+                                <span class="font-semibold text-gray-900 dark:text-white">{{ $user->created_at->format('d/m/Y') }}</span>
+                            </div>
+                            <div class="flex justify-between items-center py-3">
+                                <span class="text-gray-600 dark:text-gray-400 flex items-center">
+                                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                    </svg>
+                                    Última atualização:
+                                </span>
+                                <span class="font-semibold text-gray-900 dark:text-white">{{ $user->updated_at->format('d/m/Y') }}</span>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
+        </div>
 
-            {{-- Segunda linha: Formulário de Edição --}}
-            <div class="card">
-                <div class="card-body">
-                    <div class="d-flex align-items-center justify-content-between mb-4">
-                        <div>
-                            <h4 class="card-title mb-1">
-                                <i class="mdi mdi-account-edit text-primary me-2"></i>
-                                Editar Perfil
-                            </h4>
-                            <p class="card-description mb-0 text-muted">Atualize suas informações pessoais</p>
-                        </div>
+        {{-- Formulário de Edição --}}
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
+            <div class="p-6 border-b border-gray-200 dark:border-gray-700">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h4 class="text-xl font-semibold text-gray-900 dark:text-white flex items-center">
+                            <svg class="w-5 h-5 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                            </svg>
+                            Editar Perfil
+                        </h4>
+                        <p class="text-gray-600 dark:text-gray-400 mt-1">Atualize suas informações pessoais</p>
                     </div>
+                </div>
+            </div>
 
                     <form method="POST" action="{{ workspace_route('tenant.profile.update') }}" enctype="multipart/form-data">
                         @csrf
                         @method('PUT')
 
                         {{-- Seção: Dados Pessoais --}}
-                        <div class="mb-4">
-                            <h5 class="mb-3 text-primary">
-                                <i class="mdi mdi-account-outline me-2"></i>
+                        <div class="p-6 border-b border-gray-200 dark:border-gray-700">
+                            <h5 class="text-lg font-semibold text-gray-900 dark:text-white mb-6 flex items-center">
+                                <svg class="w-5 h-5 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                                </svg>
                                 Dados Pessoais
                             </h5>
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <div class="form-group">
-                                        <label class="fw-semibold">
-                                            <i class="mdi mdi-account me-1"></i>
-                                            Nome Completo <span class="text-danger">*</span>
-                                        </label>
-                                        <input type="text" name="name_full" class="form-control @error('name_full') is-invalid @enderror" 
-                                               value="{{ old('name_full', $user->name_full) }}" placeholder="Digite o nome completo" required>
-                                        @error('name_full')
-                                            <div class="invalid-feedback d-block">{{ $message }}</div>
-                                        @enderror
-                                    </div>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                        <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                                        </svg>
+                                        Nome Completo <span class="text-red-500">*</span>
+                                    </label>
+                                    <input type="text" name="name_full" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white @error('name_full') border-red-500 @enderror" 
+                                           value="{{ old('name_full', $user->name_full) }}" placeholder="Digite o nome completo" required>
+                                    @error('name_full')
+                                        <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+                                    @enderror
                                 </div>
-                                <div class="col-md-6">
-                                    <div class="form-group">
-                                        <label class="fw-semibold">
-                                            <i class="mdi mdi-account-circle me-1"></i>
-                                            Nome de Exibição <span class="text-danger">*</span>
-                                        </label>
-                                        <input type="text" name="name" class="form-control @error('name') is-invalid @enderror" 
-                                               value="{{ old('name', $user->name) }}" placeholder="Digite o nome de exibição" required>
-                                        @error('name')
-                                            <div class="invalid-feedback d-block">{{ $message }}</div>
-                                        @enderror
-                                    </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                        <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                                        </svg>
+                                        Nome de Exibição <span class="text-red-500">*</span>
+                                    </label>
+                                    <input type="text" name="name" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white @error('name') border-red-500 @enderror" 
+                                           value="{{ old('name', $user->name) }}" placeholder="Digite o nome de exibição" required>
+                                    @error('name')
+                                        <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+                                    @enderror
                                 </div>
                             </div>
-                            <div class="row mt-3">
-                                <div class="col-md-12">
-                                    <div class="form-group">
-                                        <label class="fw-semibold">
-                                            <i class="mdi mdi-image me-1"></i>
-                                            Foto de Perfil
-                                        </label>
-                                        <div class="d-flex gap-2 mb-2">
-                                            <input type="file" name="avatar" id="avatar-input" class="form-control @error('avatar') is-invalid @enderror" 
-                                                   accept="image/*">
-                                            <button type="button" id="webcam-btn" class="btn btn-outline-primary">
-                                                <i class="mdi mdi-camera me-1"></i>
-                                                Webcam
+                            <div class="mt-6">
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                    <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                                    </svg>
+                                    Foto de Perfil
+                                </label>
+                                <div class="flex gap-3 mb-2">
+                                    <input type="file" name="avatar" id="avatar-input" class="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 dark:file:bg-gray-600 dark:file:text-gray-200 @error('avatar') border-red-500 @enderror" 
+                                           accept="image/*">
+                                    <button type="button" id="webcam-btn" class="px-4 py-2 border border-blue-600 text-blue-600 rounded-lg hover:bg-blue-50 dark:hover:bg-gray-700 transition-colors flex items-center">
+                                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path>
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                        </svg>
+                                        Webcam
+                                    </button>
+                                </div>
+                                <p class="text-sm text-gray-500 dark:text-gray-400">Formatos aceitos: JPG, PNG, GIF. Tamanho máximo: 2MB</p>
+                                @error('avatar')
+                                    <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+                                @enderror
+                                
+                                {{-- Pré-visualização da imagem --}}
+                                <div id="avatar-preview-container" class="mt-4 hidden">
+                                    <div class="flex items-center gap-4 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                                        <div class="flex-shrink-0">
+                                            <img id="avatar-preview" src="" alt="Preview" 
+                                                 class="w-24 h-24 rounded-full border-4 border-gray-200 dark:border-gray-600 object-cover">
+                                        </div>
+                                        <div class="flex-grow">
+                                            <p class="mb-2 text-sm text-gray-600 dark:text-gray-400 flex items-center">
+                                                <svg class="w-4 h-4 mr-1 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                                </svg>
+                                                <span id="avatar-filename"></span>
+                                            </p>
+                                            <button type="button" id="avatar-remove" class="px-3 py-1.5 text-sm border border-red-600 text-red-600 rounded-lg hover:bg-red-50 dark:hover:bg-gray-600 transition-colors flex items-center">
+                                                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                                </svg>
+                                                Remover imagem
                                             </button>
                                         </div>
-                                        <small class="form-text text-muted">Formatos aceitos: JPG, PNG, GIF. Tamanho máximo: 2MB</small>
-                                        @error('avatar')
-                                            <div class="invalid-feedback d-block">{{ $message }}</div>
-                                        @enderror
-                                        
-                                        {{-- Pré-visualização da imagem --}}
-                                        <div id="avatar-preview-container" class="mt-3" style="display: none;">
-                                            <div class="d-flex align-items-center gap-3">
-                                                <div class="avatar-preview-wrapper">
-                                                    <img id="avatar-preview" src="" alt="Preview" 
-                                                         class="rounded-circle border" 
-                                                         style="width: 120px; height: 120px; object-fit: cover; border: 3px solid #e9ecef !important;">
-                                                </div>
-                                                <div class="flex-grow-1">
-                                                    <p class="mb-1 text-muted">
-                                                        <i class="mdi mdi-check-circle text-success me-1"></i>
-                                                        <span id="avatar-filename"></span>
-                                                    </p>
-                                                    <button type="button" id="avatar-remove" class="btn btn-sm btn-outline-danger">
-                                                        <i class="mdi mdi-delete me-1"></i>
-                                                        Remover imagem
-                                                    </button>
-                                                </div>
+                                    </div>
+                                </div>
+                                
+                                {{-- Modal da Webcam --}}
+                                <div id="webcam-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center p-4">
+                                    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+                                        <div class="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
+                                            <h5 class="text-xl font-semibold text-gray-900 dark:text-white flex items-center">
+                                                <svg class="w-5 h-5 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path>
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                                </svg>
+                                                Capturar Foto
+                                            </h5>
+                                            <button type="button" onclick="closeWebcamModal()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors">
+                                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                                </svg>
+                                            </button>
+                                        </div>
+                                        <div class="p-6 text-center">
+                                            <video id="webcam-video" autoplay playsinline class="w-full max-w-lg mx-auto rounded-lg" style="display: none;"></video>
+                                            <canvas id="webcam-canvas" style="display: none;"></canvas>
+                                            <div id="webcam-placeholder" class="p-8">
+                                                <svg class="w-16 h-16 mx-auto text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path>
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                                </svg>
+                                                <p class="text-gray-600 dark:text-gray-400">Clique em "Iniciar Webcam" para começar</p>
                                             </div>
                                         </div>
-                                    </div>
-                                    
-                                    {{-- Modal da Webcam --}}
-                                    <div class="modal fade" id="webcam-modal" tabindex="-1" aria-hidden="true">
-                                        <div class="modal-dialog modal-dialog-centered">
-                                            <div class="modal-content">
-                                                <div class="modal-header">
-                                                    <h5 class="modal-title">
-                                                        <i class="mdi mdi-camera me-2"></i>
-                                                        Capturar Foto
-                                                    </h5>
-                                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
-                                                </div>
-                                                <div class="modal-body text-center">
-                                                    <video id="webcam-video" autoplay playsinline style="width: 100%; max-width: 500px; border-radius: 8px; display: none;"></video>
-                                                    <canvas id="webcam-canvas" style="display: none;"></canvas>
-                                                    <div id="webcam-placeholder" class="p-4">
-                                                        <i class="mdi mdi-camera-outline" style="font-size: 48px; color: #ccc;"></i>
-                                                        <p class="text-muted mt-2">Clique em "Iniciar Webcam" para começar</p>
-                                                    </div>
-                                                </div>
-                                                <div class="modal-footer">
-                                                    <button type="button" id="webcam-start" class="btn btn-primary">
-                                                        <i class="mdi mdi-video me-1"></i>
-                                                        Iniciar Webcam
-                                                    </button>
-                                                    <button type="button" id="webcam-capture" class="btn btn-success" style="display: none;">
-                                                        <i class="mdi mdi-camera me-1"></i>
-                                                        Capturar Foto
-                                                    </button>
-                                                    <button type="button" id="webcam-stop" class="btn btn-secondary" style="display: none;">
-                                                        <i class="mdi mdi-stop me-1"></i>
-                                                        Parar
-                                                    </button>
-                                                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancelar</button>
-                                                </div>
-                                            </div>
+                                        <div class="flex items-center justify-end gap-3 p-6 border-t border-gray-200 dark:border-gray-700">
+                                            <button type="button" id="webcam-start" class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors flex items-center">
+                                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                                                </svg>
+                                                Iniciar Webcam
+                                            </button>
+                                            <button type="button" id="webcam-capture" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center" style="display: none;">
+                                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path>
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                                </svg>
+                                                Capturar Foto
+                                            </button>
+                                            <button type="button" id="webcam-stop" class="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors flex items-center" style="display: none;">
+                                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 10a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z"></path>
+                                                </svg>
+                                                Parar
+                                            </button>
+                                            <button type="button" onclick="closeWebcamModal()" class="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700 transition-colors">
+                                                Cancelar
+                                            </button>
                                         </div>
                                     </div>
                                 </div>
@@ -228,114 +294,136 @@
                         </div>
 
                         {{-- Seção: Contato --}}
-                        <div class="mb-4">
-                            <h5 class="mb-3 text-primary">
-                                <i class="mdi mdi-phone me-2"></i>
+                        <div class="p-6 border-b border-gray-200 dark:border-gray-700">
+                            <h5 class="text-lg font-semibold text-gray-900 dark:text-white mb-6 flex items-center">
+                                <svg class="w-5 h-5 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path>
+                                </svg>
                                 Informações de Contato
                             </h5>
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <div class="form-group">
-                                        <label class="fw-semibold">
-                                            <i class="mdi mdi-phone me-1"></i>
-                                            Telefone
-                                        </label>
-                                        <input type="text" name="telefone" class="form-control @error('telefone') is-invalid @enderror" 
-                                               value="{{ old('telefone', $user->telefone) }}" placeholder="(00) 00000-0000">
-                                        @error('telefone')
-                                            <div class="invalid-feedback d-block">{{ $message }}</div>
-                                        @enderror
-                                    </div>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                        <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path>
+                                        </svg>
+                                        Telefone
+                                    </label>
+                                    <input type="text" name="telefone" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white @error('telefone') border-red-500 @enderror" 
+                                           value="{{ old('telefone', $user->telefone) }}" placeholder="(00) 00000-0000">
+                                    @error('telefone')
+                                        <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+                                    @enderror
                                 </div>
-                                <div class="col-md-6">
-                                    <div class="form-group">
-                                        <label class="fw-semibold">
-                                            <i class="mdi mdi-email me-1"></i>
-                                            E-mail
-                                        </label>
-                                        <input type="email" name="email" class="form-control @error('email') is-invalid @enderror" 
-                                               value="{{ old('email', $user->email) }}" placeholder="exemplo@email.com">
-                                        @error('email')
-                                            <div class="invalid-feedback d-block">{{ $message }}</div>
-                                        @enderror
-                                    </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                        <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+                                        </svg>
+                                        E-mail
+                                    </label>
+                                    <input type="email" name="email" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white @error('email') border-red-500 @enderror" 
+                                           value="{{ old('email', $user->email) }}" placeholder="exemplo@email.com">
+                                    @error('email')
+                                        <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+                                    @enderror
                                 </div>
                             </div>
                         </div>
 
                         {{-- Seção: Segurança --}}
-                        <div class="mb-4">
-                            <h5 class="mb-3 text-primary">
-                                <i class="mdi mdi-lock me-2"></i>
+                        <div class="p-6">
+                            <h5 class="text-lg font-semibold text-gray-900 dark:text-white mb-6 flex items-center">
+                                <svg class="w-5 h-5 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+                                </svg>
                                 Segurança
                             </h5>
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <div class="form-group">
-                                        <label class="fw-semibold">
-                                            <i class="mdi mdi-lock me-1"></i>
-                                            Nova Senha
-                                        </label>
-                                        <div class="input-group">
-                                            <input type="password" name="password" id="password" class="form-control @error('password') is-invalid @enderror" 
-                                                   placeholder="Deixe em branco para manter a senha atual">
-                                            <button type="button" class="btn btn-outline-secondary" onclick="togglePasswordVisibility('password')" title="Mostrar/Ocultar senha">
-                                                <i class="mdi mdi-eye" id="password-eye-icon"></i>
-                                            </button>
-                                            <button type="button" class="btn btn-outline-secondary" onclick="generatePassword()">
-                                                <i class="mdi mdi-refresh me-1"></i> Gerar
-                                            </button>
-                                        </div>
-                                        <small class="form-text text-muted">Mínimo 8 caracteres com maiúscula, minúscula, número e caractere especial</small>
-                                        @error('password')
-                                            <div class="invalid-feedback d-block">{{ $message }}</div>
-                                        @enderror
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                        <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+                                        </svg>
+                                        Nova Senha
+                                    </label>
+                                    <div class="flex">
+                                        <input type="password" name="password" id="password" class="flex-1 px-3 py-2 border border-gray-300 rounded-l-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white @error('password') border-red-500 @enderror" 
+                                               placeholder="Deixe em branco para manter a senha atual">
+                                        <button type="button" onclick="togglePasswordVisibility('password')" class="px-3 py-2 border border-l-0 border-gray-300 bg-gray-50 rounded-r-lg hover:bg-gray-100 dark:bg-gray-600 dark:border-gray-600 dark:hover:bg-gray-500 transition-colors" title="Mostrar/Ocultar senha">
+                                            <svg id="password-eye-icon" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                                            </svg>
+                                        </button>
+                                        <button type="button" onclick="generatePassword()" class="ml-2 px-3 py-2 border border-gray-300 bg-gray-50 rounded-lg hover:bg-gray-100 dark:bg-gray-600 dark:border-gray-600 dark:hover:bg-gray-500 transition-colors flex items-center">
+                                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                                            </svg>
+                                            Gerar
+                                        </button>
                                     </div>
+                                    <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">Mínimo 8 caracteres com maiúscula, minúscula, número e caractere especial</p>
+                                    @error('password')
+                                        <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+                                    @enderror
                                 </div>
-                                <div class="col-md-6">
-                                    <div class="form-group">
-                                        <label class="fw-semibold">
-                                            <i class="mdi mdi-lock-check me-1"></i>
-                                            Confirmar Senha
-                                        </label>
-                                        <div class="input-group">
-                                            <input type="password" name="password_confirmation" id="password_confirmation" class="form-control @error('password_confirmation') is-invalid @enderror" 
-                                                   placeholder="Confirme a nova senha">
-                                            <button type="button" class="btn btn-outline-secondary" onclick="togglePasswordVisibility('password_confirmation')" title="Mostrar/Ocultar senha">
-                                                <i class="mdi mdi-eye" id="password_confirmation-eye-icon"></i>
-                                            </button>
-                                        </div>
-                                        @error('password_confirmation')
-                                            <div class="invalid-feedback d-block">{{ $message }}</div>
-                                        @enderror
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                        <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
+                                        </svg>
+                                        Confirmar Senha
+                                    </label>
+                                    <div class="flex">
+                                        <input type="password" name="password_confirmation" id="password_confirmation" class="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white @error('password_confirmation') border-red-500 @enderror" 
+                                               placeholder="Confirme a nova senha">
+                                        <button type="button" onclick="togglePasswordVisibility('password_confirmation')" class="ml-2 px-3 py-2 border border-gray-300 bg-gray-50 rounded-lg hover:bg-gray-100 dark:bg-gray-600 dark:border-gray-600 dark:hover:bg-gray-500 transition-colors" title="Mostrar/Ocultar senha">
+                                            <svg id="password_confirmation-eye-icon" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                                            </svg>
+                                        </button>
                                     </div>
+                                    @error('password_confirmation')
+                                        <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+                                    @enderror
                                 </div>
                             </div>
                             
                             {{-- Autenticação de dois fatores --}}
-                            <div class="mt-4 p-3 border rounded">
-                                <div class="d-flex justify-content-between align-items-center">
+                            <div class="mt-8 p-6 bg-gray-50 dark:bg-gray-700 rounded-xl border border-gray-200 dark:border-gray-600">
+                                <div class="flex items-center justify-between">
                                     <div>
-                                        <h6 class="mb-1">
-                                            <i class="mdi mdi-shield-account me-2"></i>
+                                        <h6 class="text-lg font-semibold text-gray-900 dark:text-white mb-2 flex items-center">
+                                            <svg class="w-5 h-5 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
+                                            </svg>
                                             Autenticação de Dois Fatores
                                         </h6>
-                                        <small class="text-muted">Adicione uma camada extra de segurança à sua conta</small>
+                                        <p class="text-sm text-gray-600 dark:text-gray-400">Adicione uma camada extra de segurança à sua conta</p>
                                     </div>
-                                    <div class="text-end">
+                                    <div class="text-right">
                                         @if($user->hasTwoFactorEnabled())
-                                            <span class="badge bg-success mb-2 d-block">
-                                                <i class="mdi mdi-shield-check me-1"></i>
+                                            <div class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300 mb-3">
+                                                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
+                                                </svg>
                                                 2FA Ativado
-                                            </span>
+                                            </div>
                                         @else
-                                            <span class="badge bg-warning mb-2 d-block">
-                                                <i class="mdi mdi-shield-alert me-1"></i>
+                                            <div class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300 mb-3">
+                                                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                                                </svg>
                                                 2FA Desativado
-                                            </span>
+                                            </div>
                                         @endif
-                                        <a href="{{ workspace_route('tenant.two-factor.index') }}" class="btn btn-sm btn-outline-primary">
-                                            <i class="mdi mdi-cog me-1"></i>
+                                        <a href="{{ workspace_route('tenant.two-factor.index') }}" class="inline-flex items-center px-4 py-2 border border-blue-600 text-blue-600 rounded-lg hover:bg-blue-50 dark:hover:bg-gray-600 transition-colors">
+                                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                            </svg>
                                             Configurar
                                         </a>
                                     </div>
@@ -344,9 +432,11 @@
                         </div>
 
                         {{-- Botões de Ação --}}
-                        <div class="d-flex justify-content-end align-items-center pt-3 border-top">
-                            <button type="submit" class="btn btn-primary btn-lg">
-                                <i class="mdi mdi-content-save me-1"></i>
+                        <div class="flex justify-end items-center pt-6 border-t border-gray-200 dark:border-gray-700">
+                            <button type="submit" class="px-6 py-3 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors flex items-center text-lg font-medium">
+                                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V2"></path>
+                                </svg>
                                 Salvar Alterações
                             </button>
                         </div>
@@ -359,31 +449,6 @@
 
 @push('styles')
     <link href="{{ asset('css/tenant-common.css') }}" rel="stylesheet">
-    <style>
-        /* Garantir que os cards da primeira linha tenham a mesma altura */
-        .profile-info-cards .card {
-            display: flex;
-            flex-direction: column;
-        }
-        .profile-info-cards .card-body {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-        }
-        /* Garantir alinhamento perfeito entre os cards superiores e o formulário */
-        .profile-info-cards {
-            margin-left: 0;
-            margin-right: 0;
-        }
-        .profile-info-cards > [class*="col-"] {
-            padding-left: calc(var(--bs-gutter-x) * 0.5);
-            padding-right: calc(var(--bs-gutter-x) * 0.5);
-        }
-        /* Garantir que o formulário tenha o mesmo padding lateral */
-        .col-lg-10 > .card {
-            width: 100%;
-        }
-    </style>
 @endpush
 
 @push('scripts')
@@ -395,12 +460,12 @@
         
         if (field.type === 'password') {
             field.type = 'text';
-            icon.classList.remove('mdi-eye');
-            icon.classList.add('mdi-eye-off');
+            // Mudar ícone para olho fechado
+            icon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"></path>';
         } else {
             field.type = 'password';
-            icon.classList.remove('mdi-eye-off');
-            icon.classList.add('mdi-eye');
+            // Mudar ícone para olho aberto
+            icon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>';
         }
     }
     
@@ -412,21 +477,35 @@
         // Mostra temporariamente
         document.getElementById('password').type = 'text';
         document.getElementById('password_confirmation').type = 'text';
-        document.getElementById('password-eye-icon').classList.remove('mdi-eye');
-        document.getElementById('password-eye-icon').classList.add('mdi-eye-off');
-        document.getElementById('password_confirmation-eye-icon').classList.remove('mdi-eye');
-        document.getElementById('password_confirmation-eye-icon').classList.add('mdi-eye-off');
+        
+        // Mudar ícones para olho fechado
+        const passwordIcon = document.getElementById('password-eye-icon');
+        const confirmIcon = document.getElementById('password_confirmation-eye-icon');
+        passwordIcon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"></path>';
+        confirmIcon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"></path>';
+        
         document.getElementById('password').select();
         
         // Volta para password após 3 segundos
         setTimeout(() => {
             document.getElementById('password').type = 'password';
             document.getElementById('password_confirmation').type = 'password';
-            document.getElementById('password-eye-icon').classList.remove('mdi-eye-off');
-            document.getElementById('password-eye-icon').classList.add('mdi-eye');
-            document.getElementById('password_confirmation-eye-icon').classList.remove('mdi-eye-off');
-            document.getElementById('password_confirmation-eye-icon').classList.add('mdi-eye');
+            passwordIcon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>';
+            confirmIcon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>';
         }, 3000);
+    }
+    
+    function closeWebcamModal() {
+        const modal = document.getElementById('webcam-modal');
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+        stopWebcam();
+    }
+    
+    function openWebcamModal() {
+        const modal = document.getElementById('webcam-modal');
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
     }
     
     document.addEventListener('DOMContentLoaded', function() {
@@ -449,7 +528,7 @@
                 
                 reader.readAsDataURL(file);
             } else {
-                alert('Por favor, selecione um arquivo de imagem válido.');
+                showAlert({ type: 'warning', title: 'Atenção', message: 'Por favor, selecione um arquivo de imagem válido.' });
                 if (avatarInput) {
                     avatarInput.value = '';
                 }
@@ -463,7 +542,7 @@
                 if (file) {
                     // Validar tamanho (2MB)
                     if (file.size > 2048 * 1024) {
-                        alert('O arquivo é muito grande. Por favor, selecione uma imagem com no máximo 2MB.');
+                        showAlert({ type: 'warning', title: 'Atenção', message: 'O arquivo é muito grande. Por favor, selecione uma imagem com no máximo 2MB.' });
                         avatarInput.value = '';
                         avatarPreviewContainer.style.display = 'none';
                         return;
@@ -485,7 +564,6 @@
 
         // Webcam functionality
         const webcamBtn = document.getElementById('webcam-btn');
-        const webcamModal = new bootstrap.Modal(document.getElementById('webcam-modal'));
         const webcamVideo = document.getElementById('webcam-video');
         const webcamCanvas = document.getElementById('webcam-canvas');
         const webcamPlaceholder = document.getElementById('webcam-placeholder');
@@ -497,7 +575,7 @@
         // Abrir modal da webcam
         if (webcamBtn) {
             webcamBtn.addEventListener('click', function() {
-                webcamModal.show();
+                openWebcamModal();
             });
         }
 
@@ -519,7 +597,7 @@
                     webcamCapture.style.display = 'inline-block';
                     webcamStop.style.display = 'inline-block';
                 } catch (err) {
-                    alert('Erro ao acessar a webcam: ' + err.message);
+                    showAlert({ type: 'error', title: 'Erro', message: 'Erro ao acessar a webcam: ' + err.message });
                     console.error('Erro ao acessar webcam:', err);
                 }
             });
@@ -549,7 +627,7 @@
                         
                         // Parar webcam e fechar modal
                         stopWebcam();
-                        webcamModal.hide();
+                        closeWebcamModal();
                     }
                 }, 'image/jpeg', 0.9);
             });
@@ -588,8 +666,18 @@
         // Parar webcam quando modal fechar
         const webcamModalElement = document.getElementById('webcam-modal');
         if (webcamModalElement) {
-            webcamModalElement.addEventListener('hidden.bs.modal', function() {
-                stopWebcam();
+            // Adiciona listener para clique fora do modal
+            webcamModalElement.addEventListener('click', function(e) {
+                if (e.target === webcamModalElement) {
+                    closeWebcamModal();
+                }
+            });
+            
+            // Adiciona listener para tecla ESC
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape' && !webcamModalElement.classList.contains('hidden')) {
+                    closeWebcamModal();
+                }
             });
         }
 

@@ -40,7 +40,7 @@ class ProcessSubscriptionsCommand extends Command
 
             SystemNotificationService::notify(
                 'Execução do processamento de assinaturas',
-                'O comando subscriptions:process foi executado, porém nenhuma assinatura estava pendente de renovação.',
+                'O comando subscriptions:subscriptions-process foi executado, porém nenhuma assinatura estava pendente de renovação.',
                 'subscription',
                 'info'
             );
@@ -168,7 +168,7 @@ class ProcessSubscriptionsCommand extends Command
         }
 
         // 🔒 Marca como overdue faturas pending com due_date no passado
-        // A suspensão será feita pelo comando invoices:check-overdue (suspensão imediata, sem carência)
+        // A suspensão será feita pelo comando invoices:invoices-check-overdue (suspensão imediata, sem carência)
         $overdues = Invoices::where('status', 'pending')
             ->whereDate('due_date', '<', Carbon::today())
             ->get();

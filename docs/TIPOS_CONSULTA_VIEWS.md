@@ -36,7 +36,7 @@ Este documento lista todas as views que fazem referência a tipos de consulta ou
 - **Uso**: Criar novo agendamento (painel administrativo)
 - **Funcionalidade**:
   - Select dinâmico de tipo de consulta
-  - Carrega tipos via AJAX: `/tenant/api/doctors/{doctorId}/appointment-types`
+  - Carrega tipos via AJAX: `/workspace/{slug}/api/doctors/{doctorId}/appointment-types`
   - Select desabilitado até selecionar médico
   - Usado para calcular duração do agendamento
 
@@ -65,7 +65,7 @@ Este documento lista todas as views que fazem referência a tipos de consulta ou
 - **Uso**: Criar agendamento recorrente
 - **Funcionalidade**:
   - Select dinâmico de tipo de consulta (`appointment_type_id`)
-  - Carrega via AJAX: `/tenant/api/doctors/{doctorId}/appointment-types`
+  - Carrega via AJAX: `/workspace/{slug}/api/doctors/{doctorId}/appointment-types`
   - Campo obrigatório
   - Select desabilitado até selecionar especialidade/médico
   - Usado para calcular horários disponíveis
@@ -95,7 +95,7 @@ Este documento lista todas as views que fazem referência a tipos de consulta ou
 - **Uso**: Formulário público de agendamento (para pacientes)
 - **Funcionalidade**:
   - Select dinâmico de tipo de consulta
-  - Carrega via AJAX: `/t/{tenant}/agendamento/api/doctors/{doctorId}/appointment-types`
+  - Carrega via AJAX: `/customer/{slug}/agendamento/api/doctors/{doctorId}/appointment-types`
   - Exibe nome e duração: `${type.name} (${type.duration_min} min)`
   - Select desabilitado até selecionar médico
   - Usado para buscar horários disponíveis
@@ -120,7 +120,7 @@ Este documento lista todas as views que fazem referência a tipos de consulta ou
 
 ## 🔌 APIs / Endpoints Utilizados
 
-### 1. **GET /tenant/api/doctors/{doctorId}/appointment-types**
+### 1. **GET /workspace/{slug}/api/doctors/{doctorId}/appointment-types**
 - **Controller**: `AppointmentController::getAppointmentTypesByDoctor()`
 - **Uso**: Retorna tipos de consulta de um médico específico
 - **Retorno JSON**: `[{id, name, duration_min}]`
@@ -128,7 +128,7 @@ Este documento lista todas as views que fazem referência a tipos de consulta ou
   - `appointments/create.blade.php`
   - `appointments/recurring/create.blade.php`
 
-### 2. **GET /t/{tenant}/agendamento/api/doctors/{doctorId}/appointment-types**
+### 2. **GET /customer/{slug}/agendamento/api/doctors/{doctorId}/appointment-types**
 - **Uso**: Versão pública do endpoint acima
 - **Usado em**: `public/appointment-create.blade.php`
 

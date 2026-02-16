@@ -1,20 +1,9 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
+@extends('layouts.tailadmin.public')
 
-<head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+@section('title', 'Agendamento Confirmado — ' . ($tenant->trade_name ?? $tenant->legal_name ?? 'Sistema'))
 
-    <title>Agendamento Confirmado — {{ $tenant->trade_name ?? $tenant->legal_name ?? 'Sistema' }}</title>
-
-    {{-- CSS --}}
-    <link rel="stylesheet" href="{{ asset('connect_plus/assets/vendors/mdi/css/materialdesignicons.min.css') }}">
-    <link rel="stylesheet" href="{{ asset('connect_plus/assets/vendors/flag-icon-css/css/flag-icon.min.css') }}">
-    <link rel="stylesheet" href="{{ asset('connect_plus/assets/vendors/css/vendor.bundle.base.css') }}">
-    <link rel="stylesheet" href="{{ asset('connect_plus/assets/css/style.css') }}">
-
-    <link rel="shortcut icon" href="{{ asset('connect_plus/assets/images/favicon.png') }}">
-
+@push('styles')
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@mdi/font@7.4.47/css/materialdesignicons.min.css">
     <style>
         .page-wrapper {
             min-height: 100vh;
@@ -35,9 +24,9 @@
             margin-bottom: 1rem;
         }
     </style>
-</head>
+@endpush
 
-<body>
+@section('content')
     <div class="page-wrapper">
         <div class="container">
             <div class="row justify-content-center">
@@ -62,17 +51,18 @@
                                 Você receberá uma confirmação por e-mail em breve.
                             </div>
 
-                            <div class="mt-4 d-flex justify-content-center gap-3">
+                            <div class="mt-4 flex flex-wrap items-center justify-center gap-3">
                                 @if(isset($appointment_id) && $appointment_id)
-                                    <a href="{{ route('public.appointment.show', ['slug' => $tenant->subdomain, 'appointment_id' => $appointment_id]) }}" class="btn btn-outline-primary btn-lg">
-                                        <i class="mdi mdi-eye me-2"></i>
+                                    <x-tailadmin-button variant="secondary" size="lg" href="{{ route('public.appointment.show', ['slug' => $tenant->subdomain, 'appointment_id' => $appointment_id]) }}"
+                                        class="border-primary text-primary bg-transparent hover:bg-primary/10">
+                                        <i class="mdi mdi-eye"></i>
                                         Ver Agendamento
-                                    </a>
+                                    </x-tailadmin-button>
                                 @endif
-                                <a href="{{ route('public.patient.identify', ['slug' => $tenant->subdomain]) }}" class="btn btn-primary btn-lg">
-                                    <i class="mdi mdi-calendar-plus me-2"></i>
+                                <x-tailadmin-button variant="primary" size="lg" href="{{ route('public.patient.identify', ['slug' => $tenant->subdomain]) }}">
+                                    <i class="mdi mdi-calendar-plus"></i>
                                     Fazer Novo Agendamento
-                                </a>
+                                </x-tailadmin-button>
                             </div>
 
                             <div class="mt-3">
@@ -89,12 +79,5 @@
     </div>
 
     {{-- JS --}}
-    <script src="{{ asset('connect_plus/assets/vendors/js/vendor.bundle.base.js') }}"></script>
-    <script src="{{ asset('connect_plus/assets/js/off-canvas.js') }}"></script>
-    <script src="{{ asset('connect_plus/assets/js/hoverable-collapse.js') }}"></script>
-    <script src="{{ asset('connect_plus/assets/js/misc.js') }}"></script>
-
-</body>
-
-</html>
+@endsection
 

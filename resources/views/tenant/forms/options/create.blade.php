@@ -1,4 +1,4 @@
-﻿@extends('layouts.connect_plus.app')
+@extends('layouts.tailadmin.app')
 
 @section('title', 'Criar Opção')
 
@@ -51,8 +51,15 @@
                             <input type="number" class="form-control" name="position" min="0" value="0">
                         </div>
 
-                        <button type="submit" class="btn btn-primary me-2">Salvar</button>
-                        <a href="{{ workspace_route('tenant.forms.show', ['form' => $question->form_id]) }}" class="btn btn-light">Cancelar</a>
+                        <div class="flex flex-wrap items-center gap-3">
+                            <x-tailadmin-button type="submit" variant="primary">
+                                Salvar
+                            </x-tailadmin-button>
+                            <x-tailadmin-button variant="secondary" size="md" href="{{ workspace_route('tenant.forms.show', ['form' => $question->form_id]) }}"
+                                class="bg-transparent border-gray-300 text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-white/5">
+                                Cancelar
+                            </x-tailadmin-button>
+                        </div>
                     </form>
 
                 </div>

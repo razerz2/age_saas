@@ -18,8 +18,11 @@ class DetectTenantFromPath
 
         $segment1 = $request->segment(1);
         
-        // Verifica se é um dos novos prefixos comerciais (customer ou workspace)
-        if (in_array($segment1, ['customer', 'workspace'])) {
+        // Verifica se é um dos prefixos que identificam o tenant pelo path
+        // - customer/{slug}/...  (público + login)
+        // - workspace/{slug}/... (área autenticada)
+        // - t/{slug}/...         (compatibilidade: rotas antigas e webhooks)
+        if (in_array($segment1, ['customer', 'workspace', 't'])) {
 
             $slug = $request->segment(2);
 

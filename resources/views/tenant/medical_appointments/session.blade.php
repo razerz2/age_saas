@@ -1,4 +1,4 @@
-﻿@extends('layouts.connect_plus.app')
+@extends('layouts.tailadmin.app')
 
 @section('title', 'Atendimento - ' . \Carbon\Carbon::parse($date)->format('d/m/Y'))
 
@@ -95,12 +95,13 @@
                         @endforelse
                     </div>
                 </div>
-                <div class="card-footer">
-                    <a href="{{ workspace_route('tenant.medical-appointments.index') }}" class="btn btn-outline-secondary w-100">
-                        <i class="mdi mdi-arrow-left me-2"></i>
-                        Voltar para Seleção
-                    </a>
-                </div>
+                    <div class="card-footer">
+                        <x-tailadmin-button variant="secondary" size="md" href="{{ workspace_route('tenant.medical-appointments.index') }}"
+                            class="w-full justify-center border-primary text-primary bg-transparent hover:bg-primary/10 dark:border-primary/40 dark:text-primary dark:hover:bg-primary/20">
+                            <i class="mdi mdi-arrow-left"></i>
+                            Voltar para Seleção
+                        </x-tailadmin-button>
+                    </div>
             </div>
         </div>
 
@@ -143,10 +144,10 @@
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                        <i class="mdi mdi-close me-1"></i>
+                    <x-tailadmin-button type="button" variant="secondary" size="sm" data-bs-dismiss="modal">
+                        <i class="mdi mdi-close"></i>
                         Fechar
-                    </button>
+                    </x-tailadmin-button>
                 </div>
             </div>
         </div>
@@ -244,67 +245,77 @@
     }
 
     function updateStatus(appointmentId, status) {
-        if (!confirm('Tem certeza que deseja alterar o status?')) {
-            return;
-        }
+        confirmAction({
+            title: 'Alterar status',
+            message: 'Tem certeza que deseja alterar o status?',
+            confirmText: 'Alterar',
+            cancelText: 'Cancelar',
+            type: 'warning',
+            onConfirm: () => {
+                const formData = new FormData();
+                formData.append('status', status);
+                formData.append('_token', '{{ csrf_token() }}');
 
-        const formData = new FormData();
-        formData.append('status', status);
-        formData.append('_token', '{{ csrf_token() }}');
-
-        fetch(`{{ workspace_route('tenant.medical-appointments.update-status', ['appointment' => '__ID__']) }}`.replace('__ID__', appointmentId), {
-            method: 'POST',
-            body: formData,
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest',
-                'Accept': 'application/json',
+                fetch(`{{ workspace_route('tenant.medical-appointments.update-status', ['appointment' => '__ID__']) }}`.replace('__ID__', appointmentId), {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json',
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Recarregar a página para atualizar a lista
+                        window.location.reload();
+                    } else {
+                        showAlert({ type: 'error', title: 'Erro', message: 'Erro ao atualizar status: ' + (data.message || 'Erro desconhecido') });
+                    }
+                })
+                .catch(error => {
+                    console.error('Erro:', error);
+                    showAlert({ type: 'error', title: 'Erro', message: 'Erro ao atualizar status' });
+                });
             }
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                // Recarregar a página para atualizar a lista
-                window.location.reload();
-            } else {
-                alert('Erro ao atualizar status: ' + (data.message || 'Erro desconhecido'));
-            }
-        })
-        .catch(error => {
-            console.error('Erro:', error);
-            alert('Erro ao atualizar status');
         });
     }
 
     function completeAppointment(appointmentId) {
-        if (!confirm('Tem certeza que deseja finalizar este atendimento?')) {
-            return;
-        }
+        confirmAction({
+            title: 'Finalizar atendimento',
+            message: 'Tem certeza que deseja finalizar este atendimento?',
+            confirmText: 'Finalizar',
+            cancelText: 'Cancelar',
+            type: 'warning',
+            onConfirm: () => {
+                const formData = new FormData();
+                formData.append('_token', '{{ csrf_token() }}');
 
-        const formData = new FormData();
-        formData.append('_token', '{{ csrf_token() }}');
-
-        fetch(`{{ workspace_route('tenant.medical-appointments.complete', ['appointment' => '__ID__']) }}`.replace('__ID__', appointmentId), {
-            method: 'POST',
-            body: formData,
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest',
+                fetch(`{{ workspace_route('tenant.medical-appointments.complete', ['appointment' => '__ID__']) }}`.replace('__ID__', appointmentId), {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                    }
+                })
+                .then(response => {
+                    if (response.redirected) {
+                        window.location.href = response.url;
+                    } else {
+                        return response.json();
+                    }
+                })
+                .then(data => {
+                    if (data && !data.success) {
+                        showAlert({ type: 'error', title: 'Erro', message: 'Erro ao finalizar atendimento: ' + (data.message || 'Erro desconhecido') });
+                    }
+                })
+                .catch(error => {
+                    console.error('Erro:', error);
+                    showAlert({ type: 'error', title: 'Erro', message: 'Erro ao finalizar atendimento' });
+                });
             }
-        })
-        .then(response => {
-            if (response.redirected) {
-                window.location.href = response.url;
-            } else {
-                return response.json();
-            }
-        })
-        .then(data => {
-            if (data && !data.success) {
-                alert('Erro ao finalizar atendimento: ' + (data.message || 'Erro desconhecido'));
-            }
-        })
-        .catch(error => {
-            console.error('Erro:', error);
-            alert('Erro ao finalizar atendimento');
         });
     }
 

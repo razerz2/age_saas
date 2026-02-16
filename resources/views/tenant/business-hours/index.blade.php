@@ -1,95 +1,68 @@
-﻿@extends('layouts.connect_plus.app')
+@extends('layouts.tailadmin.app')
 
 @section('title', 'Horários Comerciais')
 
 @section('content')
 
-    <div class="page-header">
-        <h3 class="page-title"> Horários Comerciais </h3>
-
-        <nav aria-label="breadcrumb">
-            <ol class="breadcrumb">
-                <li class="breadcrumb-item">
-                    <a href="{{ workspace_route('tenant.dashboard') }}">Dashboard</a>
-                </li>
-                <li class="breadcrumb-item active" aria-current="page">Horários Comerciais</li>
-            </ol>
-        </nav>
-    </div>
-
-    <div class="row">
-        <div class="col-lg-12 grid-margin stretch-card">
-            <div class="card">
-                <div class="card-body">
-                    <h4 class="card-title">Lista de Horários Comerciais</h4>
-
-                    <a href="{{ workspace_route('tenant.business-hours.create') }}" class="btn btn-primary mb-3">
-                        + Novo
-                    </a>
-
-                    <div class="table-responsive">
-                        <table class="table table-hover" id="datatable-list">
-                            <thead>
-                                <tr>
-                                    <th>ID</th>
-                                    <th>Médico</th>
-                                    <th>Dia da Semana</th>
-                                    <th>Horário Início</th>
-                                    <th>Horário Fim</th>
-                                    <th>Intervalo</th>
-                                    <th style="width: 140px;">Ações</th>
-                                </tr>
-                            </thead>
-
-                            <tbody>
-                                @foreach ($businessHours as $businessHour)
-                                    <tr>
-                                        <td>{{ truncate_uuid($businessHour->id) }}</td>
-                                        <td>{{ $businessHour->doctor->user->name ?? 'N/A' }}</td>
-                                        <td>
-                                            @php
-                                                $days = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
-                                            @endphp
-                                            {{ $days[$businessHour->weekday] ?? $businessHour->weekday }}
-                                        </td>
-                                        <td>{{ $businessHour->start_time }}</td>
-                                        <td>{{ $businessHour->end_time }}</td>
-                                        <td>
-                                            @if($businessHour->break_start_time && $businessHour->break_end_time)
-                                                <span class="badge bg-info">
-                                                    <i class="mdi mdi-pause-circle me-1"></i>
-                                                    {{ $businessHour->break_start_time }} - {{ $businessHour->break_end_time }}
-                                                </span>
-                                            @else
-                                                <span class="text-muted">-</span>
-                                            @endif
-                                        </td>
-                                        <td>
-                                            <a href="{{ workspace_route('tenant.business-hours.show', $businessHour->id) }}" class="btn btn-info btn-sm">Ver</a>
-                                            <a href="{{ workspace_route('tenant.business-hours.edit', $businessHour->id) }}" class="btn btn-warning btn-sm">Editar</a>
-                                        </td>
-                                    </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
-                    </div>
-
-                </div>
+    <!-- Page Header -->
+    <div class="mb-6">
+        <div class="flex items-center justify-between">
+            <div>
+                <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Horários Comerciais</h1>
+                <nav class="flex mt-2" aria-label="Breadcrumb">
+                    <ol class="inline-flex items-center space-x-1 md:space-x-3">
+                        <li class="inline-flex items-center">
+                            <a href="{{ workspace_route('tenant.dashboard') }}" class="text-gray-700 hover:text-gray-900 inline-flex items-center">
+                                <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                    <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001 1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"></path>
+                                </svg>
+                                Dashboard
+                            </a>
+                        </li>
+                        <li>
+                            <div class="flex items-center">
+                                <svg class="w-4 h-4 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
+                                </svg>
+                                <span class="ml-1 text-gray-500 dark:text-gray-400">Horários Comerciais</span>
+                            </div>
+                        </li>
+                    </ol>
+                </nav>
+            </div>
+            <div>
+                <a href="{{ workspace_route('tenant.business-hours.create') }}" class="btn-patient-primary">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                    </svg>
+                    Novo Horário
+                </a>
             </div>
         </div>
     </div>
 
-@endsection
+    <!-- Main Content -->
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
+        <div class="p-6">
+            <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Lista de Horários Comerciais</h2>
 
-@push('scripts')
-<script>
-    $(document).ready(function() {
-        $('#datatable-list').DataTable({
-            "language": {
-                "url": "//cdn.datatables.net/plug-ins/1.11.5/i18n/pt-BR.json"
-            }
-        });
-    });
-</script>
-@endpush
+            <x-tenant.grid
+                id="business-hours-grid"
+                :columns="[
+                    ['name' => 'doctor', 'label' => 'Médico'],
+                    ['name' => 'weekday', 'label' => 'Dia'],
+                    ['name' => 'start_time', 'label' => 'Início'],
+                    ['name' => 'end_time', 'label' => 'Fim'],
+                    ['name' => 'actions', 'label' => 'Ações'],
+                ]"
+                ajaxUrl="{{ workspace_route('tenant.business-hours.grid-data') }}"
+                :pagination="true"
+                :search="true"
+                :sort="true"
+            />
+
+        </div>
+    </div>
+
+@endsection
 

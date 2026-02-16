@@ -1,13 +1,9 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
-    <title>Responder Formulário — {{ $tenant->trade_name ?? $tenant->legal_name ?? 'Sistema' }}</title>
-    <link rel="stylesheet" href="{{ asset('connect_plus/assets/vendors/mdi/css/materialdesignicons.min.css') }}">
-    <link rel="stylesheet" href="{{ asset('connect_plus/assets/vendors/css/vendor.bundle.base.css') }}">
-    <link rel="stylesheet" href="{{ asset('connect_plus/assets/css/style.css') }}">
-    <link rel="shortcut icon" href="{{ asset('connect_plus/assets/images/favicon.png') }}">
+@extends('layouts.tailadmin.public')
+
+@section('title', 'Responder Formulário — ' . ($tenant->trade_name ?? $tenant->legal_name ?? 'Sistema'))
+
+@push('styles')
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@mdi/font@7.4.47/css/materialdesignicons.min.css">
     <style>
         .page-wrapper {
             min-height: 100vh;
@@ -23,8 +19,9 @@
             padding: 2rem;
         }
     </style>
-</head>
-<body>
+@endpush
+
+@section('content')
     <div class="page-wrapper">
         <div class="container">
             <div class="row justify-content-center">
@@ -142,7 +139,7 @@
                                 @endforeach
                             @endif
 
-                            <div class="mt-4 d-flex justify-content-center gap-3">
+                            <div class="mt-4 flex flex-wrap items-center justify-center gap-3">
                                 @if($existingResponse && !$editMode)
                                     {{-- Modo Visualização: Mostrar botão Editar --}}
                                     @php
@@ -153,24 +150,24 @@
                                             $editUrl .= '?edit=1';
                                         }
                                     @endphp
-                                    <a href="{{ $editUrl }}" 
-                                       class="btn btn-primary btn-lg">
-                                        <i class="mdi mdi-pencil me-2"></i>
+                                    <x-tailadmin-button variant="primary" size="lg" href="{{ $editUrl }}">
+                                        <i class="mdi mdi-pencil"></i>
                                         Editar Formulário
-                                    </a>
+                                    </x-tailadmin-button>
                                 @else
                                     {{-- Modo Edição ou Novo: Mostrar botão de submit --}}
-                                    <button type="submit" class="btn btn-primary btn-lg" id="submitBtn">
-                                        <i class="mdi {{ $existingResponse ? 'mdi-content-save' : 'mdi-send' }} me-2"></i>
+                                    <x-tailadmin-button type="submit" variant="primary" size="lg" id="submitBtn">
+                                        <i class="mdi {{ $existingResponse ? 'mdi-content-save' : 'mdi-send' }}"></i>
                                         {{ $existingResponse ? 'Atualizar Formulário' : 'Enviar Formulário' }}
-                                    </button>
+                                    </x-tailadmin-button>
                                 @endif
                                 
                                 @if($appointment)
-                                    <a href="{{ tenant_route($tenant, 'public.appointment.show', ['appointment_id' => $appointment->id]) }}" class="btn btn-light btn-lg">
-                                        <i class="mdi mdi-arrow-left me-2"></i>
+                                    <x-tailadmin-button variant="secondary" size="lg" href="{{ tenant_route($tenant, 'public.appointment.show', ['appointment_id' => $appointment->id]) }}"
+                                        class="bg-transparent border-gray-300 text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-white/5">
+                                        <i class="mdi mdi-arrow-left"></i>
                                         Voltar
-                                    </a>
+                                    </x-tailadmin-button>
                                 @endif
                             </div>
                         </form>
@@ -181,6 +178,7 @@
     </div>
     
     @if($existingResponse && !$editMode)
+    @push('scripts')
     <script>
         // Prevenir submissão do formulário em modo de visualização
         document.getElementById('formResponseForm').addEventListener('submit', function(e) {
@@ -188,7 +186,7 @@
             return false;
         });
     </script>
+    @endpush
     @endif
-</body>
-</html>
+@endsection
 

@@ -66,6 +66,16 @@ class AppServiceProvider extends ServiceProvider
             if ($tenant) {
                 $view->with('currentTenant', $tenant);
             }
+            
+            // Compartilha dados do usuário logado com todas as views
+            if ($tenant && auth()->guard('tenant')->check()) {
+                $user = auth()->guard('tenant')->user();
+                $view->with([
+                    'userName' => $user->name ?? 'Usuário',
+                    'userEmail' => $user->email ?? 'usuario@exemplo.com',
+                    'userAvatar' => $user->avatar_url ?? null
+                ]);
+            }
         });
 
         // Helper para rotas do portal do paciente que sempre inclui o tenant

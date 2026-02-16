@@ -10,7 +10,7 @@
        data-bs-toggle="dropdown" aria-expanded="false" style="padding: 0.5rem 1rem;">
 
         <div class="nav-profile-img me-2" style="position: relative;">
-            <img src="{{ asset('connect_plus/assets/images/faces/face28.png') }}" alt="{{ $patientName }}" 
+            <img src="{{ asset('tailadmin/assets/images/user/user-01.jpg') }}" alt="{{ $patientName }}" 
                  style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover; border: 2px solid #fff; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
         </div>
 
@@ -32,7 +32,7 @@
         <div class="p-4 text-center text-white" 
              style="background: linear-gradient(135deg, #0062ff 0%, #0052d4 100%); position: relative;">
             <div style="position: relative; display: inline-block;">
-                <img src="{{ asset('connect_plus/assets/images/faces/face28.png') }}" alt="{{ $patientName }}" 
+                <img src="{{ asset('tailadmin/assets/images/user/user-01.jpg') }}" alt="{{ $patientName }}"
                      style="width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 4px solid rgba(255,255,255,0.3); box-shadow: 0 4px 12px rgba(0,0,0,0.2);">
             </div>
             <h6 class="mt-3 mb-1 fw-bold" style="font-size: 1.1rem;">{{ $patientName }}</h6>

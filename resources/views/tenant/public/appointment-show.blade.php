@@ -1,20 +1,9 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
+@extends('layouts.tailadmin.public')
 
-<head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+@section('title', 'Detalhes do Agendamento — ' . ($tenant->trade_name ?? $tenant->legal_name ?? 'Sistema'))
 
-    <title>Detalhes do Agendamento — {{ $tenant->trade_name ?? $tenant->legal_name ?? 'Sistema' }}</title>
-
-    {{-- CSS --}}
-    <link rel="stylesheet" href="{{ asset('connect_plus/assets/vendors/mdi/css/materialdesignicons.min.css') }}">
-    <link rel="stylesheet" href="{{ asset('connect_plus/assets/vendors/flag-icon-css/css/flag-icon.min.css') }}">
-    <link rel="stylesheet" href="{{ asset('connect_plus/assets/vendors/css/vendor.bundle.base.css') }}">
-    <link rel="stylesheet" href="{{ asset('connect_plus/assets/css/style.css') }}">
-
-    <link rel="shortcut icon" href="{{ asset('connect_plus/assets/images/favicon.png') }}">
-
+@push('styles')
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@mdi/font@7.4.47/css/materialdesignicons.min.css">
     <style>
         .page-wrapper {
             min-height: 100vh;
@@ -80,9 +69,9 @@
             color: #212529;
         }
     </style>
-</head>
+@endpush
 
-<body>
+@section('content')
     <div class="page-wrapper">
         <div class="container">
             <div class="row justify-content-center">
@@ -183,30 +172,31 @@
                             @endphp
 
                             @if($form)
-                            <div class="mt-4 d-flex justify-content-center">
-                                <a href="{{ tenant_route($tenant, 'public.form.response.create', ['form' => $form->id, 'appointment' => $appointment->id]) }}" 
-                                   class="btn btn-primary btn-lg">
-                                    <i class="mdi mdi-file-document-edit me-2"></i>
-                                    Responder Formulário
-                                </a>
-                            </div>
+                                <div class="mt-4 flex justify-center">
+                                    <x-tailadmin-button variant="primary" size="lg" href="{{ tenant_route($tenant, 'public.form.response.create', ['form' => $form->id, 'appointment' => $appointment->id]) }}">
+                                        <i class="mdi mdi-file-document-edit"></i>
+                                        Responder Formulário
+                                    </x-tailadmin-button>
+                                </div>
                             @endif
 
-                            <div class="mt-4 d-flex justify-content-center gap-3">
-                                <a href="{{ route('public.patient.identify', ['slug' => $tenant->subdomain]) }}" class="btn btn-primary">
-                                    <i class="mdi mdi-calendar-plus me-2"></i>
+                            <div class="mt-4 flex flex-wrap items-center justify-center gap-3">
+                                <x-tailadmin-button variant="primary" size="md" href="{{ route('public.patient.identify', ['slug' => $tenant->subdomain]) }}">
+                                    <i class="mdi mdi-calendar-plus"></i>
                                     Novo Agendamento
-                                </a>
+                                </x-tailadmin-button>
                                 @if(session('last_appointment_id'))
-                                    <a href="{{ route('public.appointment.success', ['slug' => $tenant->subdomain, 'appointment_id' => session('last_appointment_id')]) }}" class="btn btn-light">
-                                        <i class="mdi mdi-arrow-left me-2"></i>
+                                    <x-tailadmin-button variant="secondary" size="md" href="{{ route('public.appointment.success', ['slug' => $tenant->subdomain, 'appointment_id' => session('last_appointment_id')]) }}"
+                                        class="bg-transparent border-gray-300 text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-white/5">
+                                        <i class="mdi mdi-arrow-left"></i>
                                         Voltar
-                                    </a>
+                                    </x-tailadmin-button>
                                 @else
-                                    <a href="{{ route('public.patient.identify', ['slug' => $tenant->subdomain]) }}" class="btn btn-light">
-                                        <i class="mdi mdi-arrow-left me-2"></i>
+                                    <x-tailadmin-button variant="secondary" size="md" href="{{ route('public.patient.identify', ['slug' => $tenant->subdomain]) }}"
+                                        class="bg-transparent border-gray-300 text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-white/5">
+                                        <i class="mdi mdi-arrow-left"></i>
                                         Voltar
-                                    </a>
+                                    </x-tailadmin-button>
                                 @endif
                             </div>
 
@@ -223,13 +213,5 @@
         </div>
     </div>
 
-    {{-- JS --}}
-    <script src="{{ asset('connect_plus/assets/vendors/js/vendor.bundle.base.js') }}"></script>
-    <script src="{{ asset('connect_plus/assets/js/off-canvas.js') }}"></script>
-    <script src="{{ asset('connect_plus/assets/js/hoverable-collapse.js') }}"></script>
-    <script src="{{ asset('connect_plus/assets/js/misc.js') }}"></script>
-
-</body>
-
-</html>
+@endsection
 

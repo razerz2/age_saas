@@ -33,6 +33,87 @@ class AppointmentController extends Controller
         $this->googleCalendarService = $googleCalendarService;
         $this->appleCalendarService = $appleCalendarService;
     }
+
+    public function gridData(Request $request, $slug)
+    {
+        $query = Appointment::with([
+            'patient',
+            'doctor.user',
+            'specialty',
+            'type',
+            'calendar',
+        ]);
+
+        // Aplicar filtro de médico usando doctor_id diretamente
+        $this->applyDoctorFilter($query, 'doctor_id');
+
+        $page  = max(1, (int) $request->input('page', 1));
+        $limit = max(1, min(100, (int) $request->input('limit', 10)));
+
+        // Busca global
+        $search = trim((string) $request->input('search', ''));
+        if ($search !== '') {
+            $query->where(function ($q) use ($search) {
+                $q->whereHas('patient', function ($sub) use ($search) {
+                    $sub->where('full_name', 'like', '%' . $search . '%');
+                })
+                ->orWhereHas('doctor.user', function ($sub) use ($search) {
+                    $sub->where('name_full', 'like', '%' . $search . '%');
+                })
+                ->orWhereHas('type', function ($sub) use ($search) {
+                    $sub->where('name', 'like', '%' . $search . '%');
+                })
+                ->orWhereHas('specialty', function ($sub) use ($search) {
+                    $sub->where('name', 'like', '%' . $search . '%');
+                })
+                ->orWhere('status', 'like', '%' . $search . '%');
+            });
+        }
+
+        // Ordenação
+        $sortable = [
+            'starts_at' => 'starts_at',
+            'patient'   => 'patient_id',
+            'doctor'    => 'doctor_id',
+            'status'    => 'status',
+        ];
+
+        $sortField = (string) $request->input('sort', 'starts_at');
+        $sortDir   = strtolower((string) $request->input('direction', 'desc')) === 'asc' ? 'asc' : 'desc';
+
+        if (isset($sortable[$sortField])) {
+            $query->orderBy($sortable[$sortField], $sortDir);
+        } else {
+            $query->orderBy('starts_at', 'desc');
+        }
+
+        $paginator = $query->paginate($limit, ['*'], 'page', $page);
+
+        $data = $paginator->getCollection()->map(function (Appointment $appointment) {
+            return [
+                'date'         => $appointment->starts_at?->format('d/m/Y'),
+                'time'         => $appointment->starts_at?->format('H:i'),
+                'patient'      => e($appointment->patient->full_name ?? '-'),
+                'doctor'       => e(optional(optional($appointment->doctor)->user)->name_full ?? '-'),
+                'specialty'    => e(optional($appointment->specialty)->name ?? '-'),
+                'type'         => e(optional($appointment->type)->name ?? '-'),
+                'mode_badge'   => view('tenant.appointments.partials.mode', compact('appointment'))->render(),
+                'status_badge' => view('tenant.appointments.partials.status', compact('appointment'))->render(),
+                'actions'      => view('tenant.appointments.partials.actions', compact('appointment'))->render(),
+            ];
+        })->all();
+
+        return response()->json([
+            'data' => $data,
+            'meta' => [
+                'current_page' => $paginator->currentPage(),
+                'last_page'    => $paginator->lastPage(),
+                'per_page'     => $paginator->perPage(),
+                'total'        => $paginator->total(),
+            ],
+        ]);
+    }
+
     public function index()
     {
         $query = Appointment::with(['doctor.user', 'calendar', 'patient', 'type', 'specialty']);

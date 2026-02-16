@@ -1,13 +1,9 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
-    <title>Formulário Enviado — {{ $tenant->trade_name ?? $tenant->legal_name ?? 'Sistema' }}</title>
-    <link rel="stylesheet" href="{{ asset('connect_plus/assets/vendors/mdi/css/materialdesignicons.min.css') }}">
-    <link rel="stylesheet" href="{{ asset('connect_plus/assets/vendors/css/vendor.bundle.base.css') }}">
-    <link rel="stylesheet" href="{{ asset('connect_plus/assets/css/style.css') }}">
-    <link rel="shortcut icon" href="{{ asset('connect_plus/assets/images/favicon.png') }}">
+@extends('layouts.tailadmin.public')
+
+@section('title', 'Formulário Enviado — ' . ($tenant->trade_name ?? $tenant->legal_name ?? 'Sistema'))
+
+@push('styles')
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@mdi/font@7.4.47/css/materialdesignicons.min.css">
     <style>
         .page-wrapper {
             min-height: 100vh;
@@ -29,8 +25,9 @@
             margin-bottom: 1rem;
         }
     </style>
-</head>
-<body>
+@endpush
+
+@section('content')
     <div class="page-wrapper">
         <div class="container">
             <div class="row justify-content-center">
@@ -41,23 +38,23 @@
                         <p class="text-muted mb-4">
                             Sua resposta foi registrada. Obrigado por preencher o formulário.
                         </p>
-                        @if($response->appointment)
-                            <a href="{{ tenant_route($tenant, 'public.appointment.show', ['appointment_id' => $response->appointment->id]) }}" class="btn btn-primary">
-                                <i class="mdi mdi-calendar-clock me-2"></i>
-                                Ver Agendamento
-                            </a>
-                        @endif
-                        <div class="mt-4">
-                            <a href="{{ tenant_route($tenant, 'public.patient.identify') }}" class="btn btn-light">
-                                <i class="mdi mdi-home me-2"></i>
+                        <div class="mt-4 flex flex-col gap-3">
+                            @if($response->appointment)
+                                <x-tailadmin-button variant="primary" size="md" href="{{ tenant_route($tenant, 'public.appointment.show', ['appointment_id' => $response->appointment->id]) }}">
+                                    <i class="mdi mdi-calendar-clock"></i>
+                                    Ver Agendamento
+                                </x-tailadmin-button>
+                            @endif
+                            <x-tailadmin-button variant="secondary" size="md" href="{{ tenant_route($tenant, 'public.patient.identify') }}"
+                                class="bg-transparent border-gray-200 text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-white/5">
+                                <i class="mdi mdi-home"></i>
                                 Voltar ao Início
-                            </a>
+                            </x-tailadmin-button>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-</body>
-</html>
+@endsection
 

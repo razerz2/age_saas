@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Illuminate\Http\Request;
 
 class UserController extends Controller
 {
@@ -122,6 +123,9 @@ class UserController extends Controller
         }
         $doctorId = $request->input('doctor_id');
         unset($data['doctor_ids'], $data['doctor_id']);
+
+        // Garantir que todo novo usuário esteja ativo por padrão
+        $data['status'] = 'active';
 
         $user = User::create($data);
 
@@ -406,5 +410,174 @@ class UserController extends Controller
         // Redireciona com sucesso
         return redirect()->route('tenant.users.index', ['slug' => tenant()->subdomain])
             ->with('success', 'Senha alterada com sucesso!');
+    }
+
+    /**
+     * Retorna dados para Grid.js na tela de usuários.
+     */
+    public function gridData(Request $request, $slug)
+    {
+        $page = max(1, (int) $request->input('page', 1));
+        $limit = max(1, min(100, (int) $request->input('limit', 10)));
+
+        $query = User::query();
+
+        // Busca simples em nome e email
+        $search = $request->input('search');
+        if (is_array($search) && !empty($search['value'])) {
+            $term = trim($search['value']);
+            $query->where(function ($q) use ($term) {
+                $q->where('name_full', 'like', "%{$term}%")
+                  ->orWhere('email', 'like', "%{$term}%");
+            });
+        }
+
+        // Ordenação básica
+        $sort = $request->input('sort');
+        if (is_array($sort) && isset($sort['column'], $sort['direction'])) {
+            $column = $sort['column'];
+            $direction = strtolower($sort['direction']) === 'asc' ? 'asc' : 'desc';
+
+            // Permitir ordenar apenas por colunas conhecidas
+            $sortable = [
+                'name_full' => 'name_full',
+                'email' => 'email',
+                'role_label' => 'role',
+            ];
+
+            if (isset($sortable[$column])) {
+                $query->orderBy($sortable[$column], $direction);
+            } else {
+                $query->orderBy('name_full');
+            }
+        } else {
+            $query->orderBy('name_full');
+        }
+
+        $paginator = $query->paginate($limit, ['*'], 'page', $page);
+
+        $rows = $paginator->items();
+
+        $data = [];
+        foreach ($rows as $user) {
+            // Badge de status (HTML)
+            if ($user->status === 'active') {
+                $statusBadge =
+                    '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400">' .
+                        '<svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">' .
+                            '<path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>' .
+                        '</svg>' .
+                        'Ativo' .
+                    '</span>';
+            } else {
+                $statusBadge =
+                    '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400">' .
+                        '<svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">' .
+                            '<path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path>' .
+                        '</svg>' .
+                        'Bloqueado' .
+                    '</span>';
+            }
+
+            $roleLabel = match ($user->role) {
+                'admin'  => 'Administrador',
+                'doctor' => 'Médico',
+                'user'   => 'Usuário',
+                default  => ucfirst($user->role ?? 'Indefinido'),
+            };
+
+            // HTML das ações (inline, compatível com gridjs.html)
+            $showUrl           = workspace_route('tenant.users.show', $user->id);
+            $editUrl           = workspace_route('tenant.users.edit', $user->id);
+            $changePasswordUrl = workspace_route('tenant.users.change-password', $user->id);
+            $doctorPermUrl     = !$user->is_doctor
+                ? workspace_route('tenant.users.doctor-permissions', $user->id)
+                : null;
+            $destroyUrl        = workspace_route('tenant.users.destroy', $user->id);
+
+            $csrf   = csrf_field();
+            $method = method_field('DELETE');
+
+            $actions = '';
+
+            // Ver
+            $actions .=
+                '<a href="' . e($showUrl) . '" ' .
+                   'title="Ver" ' .
+                   'onclick="event.stopPropagation()" ' .
+                   'class="inline-flex items-center justify-center rounded-xl border border-blue-100 bg-blue-50 px-2.5 py-1.5 text-xs font-medium text-blue-700 hover:bg-blue-100 dark:border-blue-900/40 dark:bg-blue-900/20 dark:text-blue-300 table-action-btn">' .
+                    '<svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">' .
+                        '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>' .
+                        '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>' .
+                    '</svg>' .
+                '</a>';
+
+            // Editar
+            $actions .=
+                '<a href="' . e($editUrl) . '" ' .
+                   'title="Editar" ' .
+                   'onclick="event.stopPropagation()" ' .
+                   'class="inline-flex items-center justify-center rounded-xl border border-amber-100 bg-amber-50 px-2.5 py-1.5 text-xs font-medium text-amber-700 hover:bg-amber-100 dark:border-amber-900/40 dark:bg-amber-900/20 dark:text-amber-300 table-action-btn">' .
+                    '<svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">' .
+                        '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>' .
+                    '</svg>' .
+                '</a>';
+
+            // Senha
+            $actions .=
+                '<a href="' . e($changePasswordUrl) . '" ' .
+                   'title="Senha" ' .
+                   'onclick="event.stopPropagation()" ' .
+                   'class="inline-flex items-center justify-center rounded-xl border border-purple-100 bg-purple-50 px-2.5 py-1.5 text-xs font-medium text-purple-700 hover:bg-purple-100 dark:border-purple-900/40 dark:bg-purple-900/20 dark:text-purple-300 table-action-btn">' .
+                    '<svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">' .
+                        '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"></path>' .
+                    '</svg>' .
+                '</a>';
+
+            // Permissões de médicos (se não for médico)
+            if ($doctorPermUrl) {
+                $actions .=
+                    '<a href="' . e($doctorPermUrl) . '" ' .
+                       'title="Gerenciar Permissões de Médicos" ' .
+                       'onclick="event.stopPropagation()" ' .
+                       'class="inline-flex items-center justify-center rounded-xl border border-indigo-100 bg-indigo-50 px-2.5 py-1.5 text-xs font-medium text-indigo-700 hover:bg-indigo-100 dark:border-indigo-900/40 dark:bg-indigo-900/20 dark:text-indigo-300 table-action-btn">' .
+                        '<svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">' .
+                            '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>' .
+                        '</svg>' .
+                    '</a>';
+            }
+
+            // Excluir (form)
+            $actions .=
+                '<form action="' . e($destroyUrl) . '" method="POST" class="inline-flex delete-user-form" ' .
+                      'onsubmit="return confirmDeleteUser(event, ' . "'" . e($user->name_full) . "'" . ')">' .
+                    $csrf .
+                    $method .
+                    '<button type="submit" title="Excluir" onclick="event.stopPropagation()" ' .
+                        'class="inline-flex items-center justify-center rounded-xl border border-red-100 bg-red-50 px-2.5 py-1.5 text-xs font-medium text-red-700 hover:bg-red-100 dark:border-red-900/40 dark:bg-red-900/20 dark:text-red-300 table-action-btn">' .
+                        '<svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">' .
+                            '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>' .
+                        '</svg>' .
+                    '</button>' .
+                '</form>';
+
+            $data[] = [
+                'name_full'    => e($user->name_full),
+                'email'        => e($user->email),
+                'role_label'   => e($roleLabel),
+                'status_badge' => $statusBadge,
+                'actions'      => $actions,
+            ];
+        }
+
+        return response()->json([
+            'data' => $data,
+            'meta' => [
+                'current_page' => $paginator->currentPage(),
+                'last_page' => $paginator->lastPage(),
+                'per_page' => $paginator->perPage(),
+                'total' => $paginator->total(),
+            ],
+        ]);
     }
 }

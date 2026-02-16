@@ -1,4 +1,7 @@
-@extends('layouts.freedash.app') @section('content')
+@extends('layouts.freedash.app')
+@section('title', 'Listar Tenants')
+
+@section('content')
     <div class="page-breadcrumb">
         <div class="row">
             <div class="col-7 align-self-center">

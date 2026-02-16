@@ -8,12 +8,91 @@ use App\Models\Tenant\BusinessHour;
 use App\Models\Tenant\Doctor;
 use App\Http\Requests\Tenant\StoreBusinessHourRequest;
 use App\Http\Requests\Tenant\UpdateBusinessHourRequest;
+use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Auth;
 
 class BusinessHourController extends Controller
 {
     use HasDoctorFilter;
+    
+    public function gridData(Request $request, $slug)
+    {
+        $query = BusinessHour::with('doctor.user');
+
+        // Filtro por médico (admin vê todos, outros filtrados)
+        $this->applyDoctorFilter($query, 'doctor_id');
+
+        $page  = max(1, (int) $request->input('page', 1));
+        $limit = max(1, min(100, (int) $request->input('limit', 10)));
+
+        // Busca global
+        $search = trim((string) $request->input('search', ''));
+        if ($search !== '') {
+            $query->where(function ($q) use ($search) {
+                $q->where('weekday', 'like', "%{$search}%")
+                  ->orWhereHas('doctor.user', function ($sub) use ($search) {
+                      $sub->where('name_full', 'like', "%{$search}%")
+                          ->orWhere('name', 'like', "%{$search}%");
+                  });
+            });
+        }
+
+        // Ordenação
+        $sortable = [
+            'doctor'     => 'doctor_id',
+            'weekday'    => 'weekday',
+            'start_time' => 'start_time',
+            'end_time'   => 'end_time',
+            'created_at' => 'created_at',
+        ];
+
+        $sortField = (string) $request->input('sort', 'weekday');
+        $sortDir   = strtolower((string) $request->input('direction', 'asc')) === 'desc' ? 'desc' : 'asc';
+
+        if (isset($sortable[$sortField])) {
+            $query->orderBy($sortable[$sortField], $sortDir);
+        } else {
+            $query->orderBy('weekday', 'asc')
+                  ->orderBy('start_time', 'asc');
+        }
+
+        $paginator = $query->paginate($limit, ['*'], 'page', $page);
+
+        $weekdayMap = [
+            'monday'    => 'Segunda',
+            'tuesday'   => 'Terça',
+            'wednesday' => 'Quarta',
+            'thursday'  => 'Quinta',
+            'friday'    => 'Sexta',
+            'saturday'  => 'Sábado',
+            'sunday'    => 'Domingo',
+        ];
+
+        $data = $paginator->getCollection()->map(function (BusinessHour $hour) use ($weekdayMap) {
+
+            $doctorUser = optional($hour->doctor)->user;
+            $doctorName = $doctorUser->name_full ?? $doctorUser->name ?? 'N/A';
+
+            return [
+                'doctor'     => e($doctorName),
+                'weekday'    => e($weekdayMap[$hour->weekday] ?? ucfirst($hour->weekday)),
+                'start_time' => e(substr($hour->start_time, 0, 5)),
+                'end_time'   => e(substr($hour->end_time, 0, 5)),
+                'actions'    => view('tenant.business_hours.partials.actions', compact('hour'))->render(),
+            ];
+        })->all();
+
+        return response()->json([
+            'data' => $data,
+            'meta' => [
+                'current_page' => $paginator->currentPage(),
+                'last_page'    => $paginator->lastPage(),
+                'per_page'     => $paginator->perPage(),
+                'total'        => $paginator->total(),
+            ],
+        ]);
+    }
     public function index()
     {
         $query = BusinessHour::with('doctor.user');

@@ -145,6 +145,77 @@ class AppointmentTypeController extends Controller
             ->with('success', 'Tipo de atendimento atualizado com sucesso.');
     }
 
+    public function gridData(Request $request, $slug)
+    {
+        $query = AppointmentType::with('doctor.user');
+
+        $this->applyDoctorFilter($query, 'doctor_id');
+
+        $page  = max(1, (int) $request->input('page', 1));
+        $limit = max(1, min(100, (int) $request->input('limit', 10)));
+
+        // Busca global
+        $search = trim((string) $request->input('search', ''));
+        if ($search !== '') {
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhereHas('doctor.user', function ($sub) use ($search) {
+                      $sub->where('name_full', 'like', "%{$search}%")
+                          ->orWhere('name', 'like', "%{$search}%");
+                  });
+            });
+        }
+
+        // Ordenação whitelist
+        $sortable = [
+            'name'         => 'name',
+            'doctor'       => 'doctor_id',
+            'duration_min' => 'duration_min',
+            'price'        => 'price',
+            'created_at'   => 'created_at',
+        ];
+
+        $sortField = (string) $request->input('sort', 'name');
+        $sortDir   = strtolower((string) $request->input('direction', 'asc')) === 'desc' ? 'desc' : 'asc';
+
+        if (isset($sortable[$sortField])) {
+            $query->orderBy($sortable[$sortField], $sortDir);
+        } else {
+            $query->orderBy('name', 'asc');
+        }
+
+        $paginator = $query->paginate($limit, ['*'], 'page', $page);
+
+        $data = $paginator->getCollection()->map(function (AppointmentType $type) {
+
+            $doctorUser = optional($type->doctor)->user;
+            $doctorName = $doctorUser->name_full ?? $doctorUser->name ?? 'N/A';
+
+            return [
+                'name'         => e($type->name),
+                'doctor'       => e($doctorName),
+                'duration_min' => e($type->duration_min) . ' min',
+                'price'        => isset($type->price)
+                                    ? 'R$ ' . number_format($type->price, 2, ',', '.')
+                                    : '-',
+                'color'        => $type->color
+                                    ? '<span class="inline-block w-4 h-4 rounded-full" style="background:' . e($type->color) . '"></span>'
+                                    : '-',
+                'actions'      => view('tenant.appointment_types.partials.actions', compact('type'))->render(),
+            ];
+        })->all();
+
+        return response()->json([
+            'data' => $data,
+            'meta' => [
+                'current_page' => $paginator->currentPage(),
+                'last_page'    => $paginator->lastPage(),
+                'per_page'     => $paginator->perPage(),
+                'total'        => $paginator->total(),
+            ],
+        ]);
+    }
+
     public function destroy($slug, $id)
     {
         $appointmentType = AppointmentType::findOrFail($id);

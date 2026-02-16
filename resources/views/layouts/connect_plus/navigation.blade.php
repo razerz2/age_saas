@@ -1,4 +1,24 @@
 <nav class="sidebar sidebar-offcanvas" id="sidebar">
+@php
+    $user = auth('tenant')->user();
+    
+    // Obter labels seguros com fallback garantido
+    $professionalLabelPlural = professional_label_plural();
+    $professionalLabelSingular = professional_label_singular();
+    
+    // Validação extra para garantir que nunca sejam vazios ou inválidos
+    if (empty(trim($professionalLabelPlural)) || 
+        in_array(trim($professionalLabelPlural), ['s', 'ss', ',']) || 
+        strlen(trim($professionalLabelPlural)) <= 1) {
+        $professionalLabelPlural = 'Profissionais';
+    }
+    
+    if (empty(trim($professionalLabelSingular)) || 
+        in_array(trim($professionalLabelSingular), ['s', 'ss', ',']) || 
+        strlen(trim($professionalLabelSingular)) <= 1) {
+        $professionalLabelSingular = 'Profissional';
+    }
+@endphp
     <ul class="nav">
 
         {{-- ============================================================
@@ -112,19 +132,19 @@
         {{-- MÉDICOS / PROFISSIONAIS --}}
         <li class="nav-item {{ request()->routeIs('tenant.doctors.*') ? 'active' : '' }}">
             <a class="nav-link" data-bs-toggle="collapse" href="#doctors-menu"
-                aria-expanded="{{ request()->routeIs('tenant.doctors.*') ? 'true' : 'false' }}" title="{{ professional_label_plural() }}">
+                aria-expanded="{{ request()->routeIs('tenant.doctors.*') ? 'true' : 'false' }}" title="{{ $professionalLabelPlural }}">
                 <span class="icon-bg"><i class="mdi mdi-stethoscope menu-icon"></i></span>
-                <span class="menu-title">{{ professional_label_plural() }}</span>
+                <span class="menu-title">{{ $professionalLabelPlural }}</span>
                 <i class="menu-arrow"></i>
             </a>
 
             <div class="collapse {{ request()->routeIs('tenant.doctors.*') ? 'show' : '' }}" id="doctors-menu">
                 <ul class="nav flex-column sub-menu">
                     <li class="nav-item">
-                        <a class="nav-link {{ request()->routeIs('tenant.doctors.index') ? 'active' : '' }}" href="{{ workspace_route('tenant.doctors.index') }}" title="Todos os {{ professional_label_plural() }}">Todos os {{ professional_label_plural() }}</a>
+                        <a class="nav-link {{ request()->routeIs('tenant.doctors.index') ? 'active' : '' }}" href="{{ workspace_route('tenant.doctors.index') }}" title="Todos os {{ $professionalLabelPlural }}">Todos os {{ $professionalLabelPlural }}</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link {{ request()->routeIs('tenant.doctors.create') ? 'active' : '' }}" href="{{ workspace_route('tenant.doctors.create') }}" title="Novo {{ professional_label_singular() }}">Novo {{ professional_label_singular() }}</a>
+                        <a class="nav-link {{ request()->routeIs('tenant.doctors.create') ? 'active' : '' }}" href="{{ workspace_route('tenant.doctors.create') }}" title="Novo {{ $professionalLabelSingular }}">Novo {{ $professionalLabelSingular }}</a>
                     </li>
                 </ul>
             </div>

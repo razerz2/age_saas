@@ -5,7 +5,7 @@ Este guia explica como testar se o redirecionamento para o login da tenant está
 ## 📋 Pré-requisitos
 
 1. Ter uma tenant criada e funcionando
-2. Estar logado na tenant (ex: `/tenant/dashboard`)
+2. Estar logado na tenant (ex: `/workspace/{slug}/dashboard`)
 3. Conhecer o slug da tenant (ex: `minha-clinica`)
 
 ## 🧪 Métodos de Teste
@@ -19,7 +19,7 @@ Este guia explica como testar se o redirecionamento para o login da tenant está
    - Faça login normalmente
 
 2. **Acesse uma rota protegida:**
-   - Exemplo: `http://127.0.0.1:8000/tenant/dashboard`
+   - Exemplo: `http://127.0.0.1:8000/workspace/{tenant-slug}/dashboard`
    - Confirme que está logado
 
 3. **Limpe os cookies da sessão:**
@@ -33,8 +33,8 @@ Este guia explica como testar se o redirecionamento para o login da tenant está
      - Delete o cookie da sessão
 
 4. **Tente acessar uma rota protegida novamente:**
-   - Exemplo: `http://127.0.0.1:8000/tenant/dashboard`
-   - Ou clique em qualquer link do menu (ex: `/tenant/appointments`)
+   - Exemplo: `http://127.0.0.1:8000/workspace/{tenant-slug}/dashboard`
+   - Ou clique em qualquer link do menu (ex: `/workspace/{tenant-slug}/appointments`)
 
 5. **Verifique o redirecionamento:**
    - ✅ **Esperado:** Deve redirecionar para `/t/{tenant-slug}/login`
@@ -59,7 +59,7 @@ Este guia explica como testar se o redirecionamento para o login da tenant está
    ```
 
 4. **Tente acessar uma rota protegida:**
-   - Digite na barra de endereço: `http://127.0.0.1:8000/tenant/dashboard`
+   - Digite na barra de endereço: `http://127.0.0.1:8000/workspace/{tenant-slug}/dashboard`
    - Ou recarregue a página atual
 
 5. **Verifique o redirecionamento:**
@@ -98,17 +98,22 @@ Este guia explica como testar se o redirecionamento para o login da tenant está
 
 ---
 
-### Método 4: Usar Artisan para Limpar Sessões
+### Método 4: Limpar Sessões Manualmente (recomendado)
 
 **Passos:**
 
 1. **Faça login na tenant**
 
-2. **No terminal, execute:**
-   ```bash
-   php artisan session:clear
-   ```
-   (Se este comando não existir, você pode deletar manualmente os arquivos em `storage/framework/sessions/`)
+2. **Limpe as sessões conforme o `SESSION_DRIVER`:**
+   - **Se `SESSION_DRIVER=file` (Linux/macOS):**
+     ```bash
+     rm -rf storage/framework/sessions/*
+     ```
+   - **Se `SESSION_DRIVER=file` (Windows PowerShell):**
+     ```powershell
+     Remove-Item -Force -Recurse "storage\framework\sessions\*" -ErrorAction SilentlyContinue
+     ```
+   - **Se `SESSION_DRIVER=database`:** trunque a tabela `sessions` (com cuidado em produção).
 
 3. **Tente acessar uma rota protegida**
 
@@ -123,6 +128,10 @@ Este guia explica como testar se o redirecionamento para o login da tenant está
 1. **Monitore os logs em tempo real:**
    ```bash
    tail -f storage/logs/laravel.log
+   ```
+   **Windows (PowerShell):**
+   ```powershell
+   Get-Content "storage\logs\laravel.log" -Wait
    ```
 
 2. **Faça login na tenant**
@@ -140,7 +149,7 @@ Este guia explica como testar se o redirecionamento para o login da tenant está
 
 ## ✅ Resultado Esperado
 
-Quando a sessão expira e você tenta acessar uma rota de tenant (`/tenant/*`):
+Quando a sessão expira e você tenta acessar uma rota autenticada do tenant (`/workspace/{slug}/*`):
 
 1. **URL de redirecionamento:** `http://127.0.0.1:8000/t/{tenant-slug}/login`
 2. **NÃO deve redirecionar para:** `http://127.0.0.1:8000/login`
@@ -165,7 +174,7 @@ Adicione temporariamente este código no método `redirectTo` do `Authenticate` 
 1. ✅ Sessão expirada mas `tenant_slug` ainda na sessão
 2. ✅ Sessão completamente limpa (sem cookies)
 3. ✅ Usuário ainda "logado" mas sessão expirada (token inválido)
-4. ✅ Acessar diretamente `/tenant/dashboard` sem estar logado
+4. ✅ Acessar diretamente `/workspace/{slug}/dashboard` sem estar logado
 
 ---
 

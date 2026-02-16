@@ -1,4 +1,4 @@
-﻿@extends('layouts.connect_plus.app')
+@extends('layouts.tailadmin.app')
 
 @section('title', 'Detalhes do Formulário')
 
@@ -33,13 +33,14 @@
                             <i class="mdi mdi-file-document text-primary me-2"></i>
                             Informações do Formulário
                         </h4>
-                        <div>
-                            <a href="{{ workspace_route('tenant.forms.edit', ['form' => $form->id]) }}" class="btn btn-warning btn-sm">
-                                <i class="mdi mdi-pencil me-1"></i> Editar
-                            </a>
-                            <a href="{{ workspace_route('tenant.forms.index') }}" class="btn btn-secondary btn-sm">
-                                <i class="mdi mdi-arrow-left me-1"></i> Voltar
-                            </a>
+                        <div class="flex items-center gap-2">
+                            <x-tailadmin-button variant="warning" size="sm" href="{{ workspace_route('tenant.forms.edit', ['form' => $form->id]) }}">
+                                <i class="mdi mdi-pencil"></i> Editar
+                            </x-tailadmin-button>
+                            <x-tailadmin-button variant="secondary" size="sm" href="{{ workspace_route('tenant.forms.index') }}"
+                                class="bg-transparent border-gray-300 text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-white/5">
+                                <i class="mdi mdi-arrow-left"></i> Voltar
+                            </x-tailadmin-button>
                         </div>
                     </div>
 
@@ -126,17 +127,18 @@
 
                     {{-- Botões de Ação --}}
                     <div class="border-top pt-3">
-                        <div class="d-flex gap-2 flex-wrap">
+                        <div class="flex items-center justify-end gap-3 flex-nowrap">
                             @if($sectionsCount > 0 || $questionsCount > 0)
-                                <a href="{{ workspace_route('tenant.forms.preview', $form->id) }}" class="btn btn-primary" target="_blank">
-                                    <i class="mdi mdi-eye me-1"></i>
+                                <x-tailadmin-button variant="primary" size="md" href="{{ workspace_route('tenant.forms.preview', $form->id) }}" target="_blank" class="inline-flex items-center gap-2">
+                                    <i class="mdi mdi-eye"></i>
                                     Visualizar Formulário
-                                </a>
+                                </x-tailadmin-button>
                             @endif
-                            <a href="{{ workspace_route('tenant.forms.builder', $form->id) }}" class="btn btn-info">
-                                <i class="mdi mdi-tools me-1"></i>
+                            <x-tailadmin-button variant="secondary" size="md" href="{{ workspace_route('tenant.forms.builder', $form->id) }}"
+                                class="inline-flex items-center gap-2 border-info text-info bg-info/10 hover:bg-info/20 dark:border-info/40 dark:text-info dark:hover:bg-info/30">
+                                <i class="mdi mdi-tools"></i>
                                 Construir Formulário
-                            </a>
+                            </x-tailadmin-button>
                         </div>
                     </div>
                 </div>

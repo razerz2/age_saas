@@ -30,33 +30,49 @@ if (!function_exists('professional_label_singular')) {
      */
     function professional_label_singular($doctor = null): string
     {
-        $settings = TenantSetting::getAll();
+        try {
+            $settings = TenantSetting::getAll();
 
-        // Se personalização está desabilitada, retorna sempre "Médico"
-        if (!($settings['professional.customization_enabled'] ?? false)) {
-            return 'Médico';
-        }
-
-        // 1. Prioridade: Rótulo individual do profissional
-        if ($doctor && isset($doctor->label_singular) && !empty($doctor->label_singular)) {
-            return $doctor->label_singular;
-        }
-
-        // 2. Prioridade: Rótulo da especialidade (busca automaticamente do doctor)
-        if ($doctor) {
-            $specialty = $doctor->specialties?->first();
-            if ($specialty && isset($specialty->label_singular) && !empty($specialty->label_singular)) {
-                return $specialty->label_singular;
+            // Se personalização está desabilitada, retorna sempre "Médico"
+            if (!($settings['professional.customization_enabled'] ?? false)) {
+                return 'Médico';
             }
-        }
 
-        // 3. Prioridade: Rótulo global personalizado
-        if (isset($settings['professional.label_singular']) && !empty($settings['professional.label_singular'])) {
-            return $settings['professional.label_singular'];
-        }
+            // 1. Prioridade: Rótulo individual do profissional
+            if ($doctor && isset($doctor->label_singular) && !empty(trim($doctor->label_singular))) {
+                $label = trim($doctor->label_singular);
+                if (strlen($label) > 1 && !in_array($label, ['s', 'ss', ','])) {
+                    return $label;
+                }
+            }
 
-        // Padrão quando personalização está habilitada mas não há customização
-        return 'Profissional';
+            // 2. Prioridade: Rótulo da especialidade (busca automaticamente do doctor)
+            if ($doctor) {
+                $specialty = $doctor->specialties?->first();
+                if ($specialty && isset($specialty->label_singular) && !empty(trim($specialty->label_singular))) {
+                    $label = trim($specialty->label_singular);
+                    if (strlen($label) > 1 && !in_array($label, ['s', 'ss', ','])) {
+                        return $label;
+                    }
+                }
+            }
+
+            // 3. Prioridade: Rótulo global personalizado
+            if (isset($settings['professional.label_singular']) && !empty(trim($settings['professional.label_singular']))) {
+                $label = trim($settings['professional.label_singular']);
+                if (strlen($label) > 1 && !in_array($label, ['s', 'ss', ','])) {
+                    return $label;
+                }
+            }
+
+            // Padrão quando personalização está habilitada mas não há customização
+            return 'Profissional';
+        } catch (\Exception $e) {
+            // Log do erro para debug
+            \Log::error('Erro em professional_label_singular: ' . $e->getMessage());
+            // Em caso de qualquer erro, retorna o fallback seguro
+            return 'Profissional';
+        }
     }
 }
 
@@ -69,33 +85,49 @@ if (!function_exists('professional_label_plural')) {
      */
     function professional_label_plural($doctor = null): string
     {
-        $settings = TenantSetting::getAll();
+        try {
+            $settings = TenantSetting::getAll();
 
-        // Se personalização está desabilitada, retorna sempre "Médicos"
-        if (!($settings['professional.customization_enabled'] ?? false)) {
-            return 'Médicos';
-        }
-
-        // 1. Prioridade: Rótulo individual do profissional
-        if ($doctor && isset($doctor->label_plural) && !empty($doctor->label_plural)) {
-            return $doctor->label_plural;
-        }
-
-        // 2. Prioridade: Rótulo da especialidade (busca automaticamente do doctor)
-        if ($doctor) {
-            $specialty = $doctor->specialties?->first();
-            if ($specialty && isset($specialty->label_plural) && !empty($specialty->label_plural)) {
-                return $specialty->label_plural;
+            // Se personalização está desabilitada, retorna sempre "Médicos"
+            if (!($settings['professional.customization_enabled'] ?? false)) {
+                return 'Médicos';
             }
-        }
 
-        // 3. Prioridade: Rótulo global personalizado
-        if (isset($settings['professional.label_plural']) && !empty($settings['professional.label_plural'])) {
-            return $settings['professional.label_plural'];
-        }
+            // 1. Prioridade: Rótulo individual do profissional
+            if ($doctor && isset($doctor->label_plural) && !empty(trim($doctor->label_plural))) {
+                $label = trim($doctor->label_plural);
+                if (strlen($label) > 1 && !in_array($label, ['s', 'ss', ','])) {
+                    return $label;
+                }
+            }
 
-        // Padrão quando personalização está habilitada mas não há customização
-        return 'Profissionais';
+            // 2. Prioridade: Rótulo da especialidade (busca automaticamente do doctor)
+            if ($doctor) {
+                $specialty = $doctor->specialties?->first();
+                if ($specialty && isset($specialty->label_plural) && !empty(trim($specialty->label_plural))) {
+                    $label = trim($specialty->label_plural);
+                    if (strlen($label) > 1 && !in_array($label, ['s', 'ss', ','])) {
+                        return $label;
+                    }
+                }
+            }
+
+            // 3. Prioridade: Rótulo global personalizado
+            if (isset($settings['professional.label_plural']) && !empty(trim($settings['professional.label_plural']))) {
+                $label = trim($settings['professional.label_plural']);
+                if (strlen($label) > 1 && !in_array($label, ['s', 'ss', ','])) {
+                    return $label;
+                }
+            }
+
+            // Padrão quando personalização está habilitada mas não há customização
+            return 'Profissionais';
+        } catch (\Exception $e) {
+            // Log do erro para debug
+            \Log::error('Erro em professional_label_plural: ' . $e->getMessage());
+            // Em caso de qualquer erro, retorna o fallback seguro
+            return 'Profissionais';
+        }
     }
 }
 
@@ -116,21 +148,21 @@ if (!function_exists('professional_registration_label')) {
         }
 
         // 1. Prioridade: Rótulo individual do profissional
-        if ($doctor && isset($doctor->registration_label) && !empty($doctor->registration_label)) {
-            return $doctor->registration_label;
+        if ($doctor && isset($doctor->registration_label) && !empty(trim($doctor->registration_label))) {
+            return trim($doctor->registration_label);
         }
 
         // 2. Prioridade: Rótulo da especialidade (busca automaticamente do doctor)
         if ($doctor) {
             $specialty = $doctor->specialties?->first();
-            if ($specialty && isset($specialty->registration_label) && !empty($specialty->registration_label)) {
-                return $specialty->registration_label;
+            if ($specialty && isset($specialty->registration_label) && !empty(trim($specialty->registration_label))) {
+                return trim($specialty->registration_label);
             }
         }
 
         // 3. Prioridade: Rótulo global personalizado
-        if (isset($settings['professional.registration_label']) && !empty($settings['professional.registration_label'])) {
-            return $settings['professional.registration_label'];
+        if (isset($settings['professional.registration_label']) && !empty(trim($settings['professional.registration_label']))) {
+            return trim($settings['professional.registration_label']);
         }
 
         // Padrão quando personalização está habilitada mas não há customização
@@ -148,20 +180,71 @@ if (!function_exists('professional_registration_value')) {
     function professional_registration_value($doctor = null): ?string
     {
         // 1. Prioridade: Valor individual do profissional
-        if ($doctor && isset($doctor->registration_value) && !empty($doctor->registration_value)) {
-            return $doctor->registration_value;
+        if ($doctor && isset($doctor->registration_value) && !empty(trim($doctor->registration_value))) {
+            return trim($doctor->registration_value);
         }
 
         // Se não tiver registration_value personalizado, tenta usar crm_number + crm_state
-        if ($doctor && isset($doctor->crm_number) && !empty($doctor->crm_number)) {
-            $crm = $doctor->crm_number;
-            if (isset($doctor->crm_state) && !empty($doctor->crm_state)) {
-                $crm .= '/' . $doctor->crm_state;
+        if ($doctor && isset($doctor->crm_number) && !empty(trim($doctor->crm_number))) {
+            $crm = trim($doctor->crm_number);
+            if (isset($doctor->crm_state) && !empty(trim($doctor->crm_state))) {
+                $crm .= '/' . trim($doctor->crm_state);
             }
             return $crm;
         }
 
         return null;
+    }
+}
+
+if (!function_exists('safe_menu_label')) {
+    /**
+     * Garante que um label de menu nunca seja vazio ou inválido
+     * Aplica regras de fallback para textos dinâmicos do menu
+     * 
+     * @param string $label O label a ser validado
+     * @param string $fallback Label padrão caso o original seja inválido
+     * @return string Label seguro para exibição
+     */
+    function safe_menu_label(string $label, string $fallback = 'Item'): string
+    {
+        // Verifica se o label é nulo ou não é string
+        if ($label === null || !is_string($label)) {
+            return $fallback;
+        }
+        
+        // Remove espaços em branco extras
+        $cleanLabel = trim($label);
+        
+        // Verifica se está vazio após limpar
+        if (empty($cleanLabel)) {
+            return $fallback;
+        }
+        
+        // Verifica se contém apenas caracteres inválidos (ex: apenas "s", "ss" ou vírgulas)
+        if (strlen($cleanLabel) <= 2 && !preg_match('/^[a-zA-Zá-úÁ-Ú]{2,}$/', $cleanLabel)) {
+            return $fallback;
+        }
+        
+        // Verifica se termina com vírgula (indicando concatenação incompleta)
+        if (str_ends_with($cleanLabel, ',')) {
+            return $fallback;
+        }
+        
+        // Verifica se contém apenas espaços ou caracteres especiais
+        if (!preg_match('/[a-zA-Zá-úÁ-Ú]/', $cleanLabel)) {
+            return $fallback;
+        }
+        
+        // Verifica casos específicos problemáticos
+        $invalidPatterns = ['^s$', '^ss$', '^,$', '^\s*$'];
+        foreach ($invalidPatterns as $pattern) {
+            if (preg_match('/' . $pattern . '/', $cleanLabel)) {
+                return $fallback;
+            }
+        }
+        
+        return $cleanLabel;
     }
 }
 

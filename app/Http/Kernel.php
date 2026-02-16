@@ -30,7 +30,6 @@ class Kernel extends HttpKernel
          */
         'web' => [
             \App\Http\Middleware\EnsureNoTenantForLanding::class,  // Garante que landing page não tem tenant
-            \App\Http\Middleware\DetectClinicNetworkFromSubdomain::class,
             \App\Http\Middleware\EncryptCookies::class,
             \Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse::class,
             \Illuminate\Session\Middleware\StartSession::class,
@@ -132,19 +131,6 @@ class Kernel extends HttpKernel
          */
         'feature.any' => \App\Http\Middleware\EnsureAnyFeatureAccess::class,
 
-        /**
-         * 🏥 Garante que uma rede de clínicas foi detectada
-         */
-        'require.network' => \App\Http\Middleware\RequireNetworkContext::class,
-
-        /**
-         * 🏥 Garante contexto de rede (alias para RequireNetworkContext)
-         */
-        'ensure.network.context' => \App\Http\Middleware\EnsureNetworkContext::class,
-
-        /**
-         * 🔐 Autenticação da rede de clínicas
-         */
-        'network.auth' => \App\Http\Middleware\EnsureNetworkUser::class,
+        
     ];
 }

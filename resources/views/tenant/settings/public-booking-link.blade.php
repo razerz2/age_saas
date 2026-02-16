@@ -1,4 +1,4 @@
-﻿@extends('layouts.connect_plus.app')
+@extends('layouts.tailadmin.app')
 
 @section('title', 'Link de Agendamento Público')
 
@@ -39,12 +39,11 @@
                         <div class="card-body">
                             <div class="mb-3">
                                 <label class="form-label fw-bold">Link para compartilhar:</label>
-                                <div class="input-group">
-                                    <input type="text" class="form-control" id="publicBookingLink" 
-                                           value="{{ $publicBookingUrl }}" readonly>
-                                    <button class="btn btn-primary" type="button" onclick="copyPublicBookingLink()">
-                                        <i class="mdi mdi-content-copy me-2"></i>Copiar Link
-                                    </button>
+                                <div class="flex items-stretch gap-2">
+                                    <input type="text" class="form-control flex-1" id="publicBookingLink" value="{{ $publicBookingUrl }}" readonly>
+                                    <x-tailadmin-button type="button" variant="primary" size="sm" class="py-2 px-4" onclick="copyPublicBookingLink()">
+                                        <i class="mdi mdi-content-copy"></i> Copiar Link
+                                    </x-tailadmin-button>
                                 </div>
                                 <small class="text-muted d-block mt-2">
                                     <i class="mdi mdi-information-outline me-1"></i>
@@ -176,7 +175,7 @@
     function copyPublicBookingLink() {
         const linkInput = document.getElementById('publicBookingLink');
         if (!linkInput) {
-            alert('Link não encontrado.');
+            showAlert({ type: 'error', title: 'Erro', message: 'Link não encontrado.' });
             return;
         }
 
@@ -209,7 +208,7 @@
             showCopySuccess();
         } catch (err) {
             console.error('Erro ao copiar:', err);
-            alert('Erro ao copiar. Por favor, copie manualmente.');
+            showAlert({ type: 'error', title: 'Erro', message: 'Erro ao copiar. Por favor, copie manualmente.' });
         }
         
         document.body.removeChild(textarea);

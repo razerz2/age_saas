@@ -6,6 +6,8 @@ use App\Models\Platform\Pais; // ✅ importante
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use App\Services\WhatsApp\WhatsAppBusinessProvider;
+use App\Services\WhatsApp\ZApiProvider;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Cache;
@@ -36,6 +38,9 @@ class SystemSettingsController extends Controller
             'ZAPI_TOKEN' => sysconfig('ZAPI_TOKEN', env('ZAPI_TOKEN')),
             'ZAPI_CLIENT_TOKEN' => sysconfig('ZAPI_CLIENT_TOKEN', env('ZAPI_CLIENT_TOKEN')),
             'ZAPI_INSTANCE_ID' => sysconfig('ZAPI_INSTANCE_ID', env('ZAPI_INSTANCE_ID')),
+            'WAHA_BASE_URL' => sysconfig('WAHA_BASE_URL', env('WAHA_BASE_URL')),
+            'WAHA_API_KEY' => sysconfig('WAHA_API_KEY', env('WAHA_API_KEY')),
+            'WAHA_SESSION' => sysconfig('WAHA_SESSION', env('WAHA_SESSION', 'default')),
             'MAIL_HOST' => sysconfig('MAIL_HOST', env('MAIL_HOST')),
             'MAIL_PORT' => sysconfig('MAIL_PORT', env('MAIL_PORT')),
             'MAIL_USERNAME' => sysconfig('MAIL_USERNAME', env('MAIL_USERNAME')),
@@ -105,11 +110,14 @@ class SystemSettingsController extends Controller
             'ASAAS_ENV' => 'nullable|string',
             'META_ACCESS_TOKEN' => 'nullable|string',
             'META_PHONE_NUMBER_ID' => 'nullable|string',
-            'WHATSAPP_PROVIDER' => 'nullable|string|in:whatsapp_business,zapi',
+            'WHATSAPP_PROVIDER' => 'nullable|string|in:whatsapp_business,zapi,waha',
             'ZAPI_API_URL' => 'nullable|string|url',
             'ZAPI_TOKEN' => 'nullable|string',
             'ZAPI_CLIENT_TOKEN' => 'nullable|string',
             'ZAPI_INSTANCE_ID' => 'nullable|string',
+            'WAHA_BASE_URL' => 'nullable|string|url',
+            'WAHA_API_KEY' => 'nullable|string',
+            'WAHA_SESSION' => 'nullable|string',
             'MAIL_HOST' => 'nullable|string',
             'MAIL_PORT' => 'nullable|string',
             'MAIL_USERNAME' => 'nullable|string',
@@ -129,6 +137,9 @@ class SystemSettingsController extends Controller
             'ZAPI_TOKEN',
             'ZAPI_CLIENT_TOKEN',
             'ZAPI_INSTANCE_ID',
+            'WAHA_BASE_URL',
+            'WAHA_API_KEY',
+            'WAHA_SESSION',
             'MAIL_HOST',
             'MAIL_PORT',
             'MAIL_USERNAME',
@@ -740,11 +751,187 @@ class SystemSettingsController extends Controller
     }
 
     /**
-     * Testa conexão de um serviço (ASAAS / META / EMAIL)
+     * Testa conexão de um serviço (ASAAS / META / EMAIL / WHATSAPP)
      */
-    public function testConnection($service)
+    public function testConnection(Request $request, $service)
     {
         $result = testConnection($service);
-        return back()->with($result['status'] ? 'success' : 'error', $result['message']);
+
+        if ($request->expectsJson() || $request->ajax()) {
+            return response()->json([
+                'status' => $result['status'] ? 'OK' : 'ERROR',
+                'message' => $result['message'],
+            ]);
+        }
+
+        return back()->with(
+            $result['status'] ? 'success' : 'error',
+            $result['message']
+        );
+    }
+
+    /**
+     * Envia mensagem de teste via Meta (WhatsApp Business) usando provider específico
+     */
+    public function testMetaSend(Request $request)
+    {
+        $validated = $request->validate([
+            'number' => 'required|string',
+            'message' => 'required|string|max:1000',
+        ]);
+
+        try {
+            // Instancia diretamente o provider Meta, que lê apenas as configs META
+            $provider = new WhatsAppBusinessProvider();
+
+            $ok = $provider->sendMessage($validated['number'], $validated['message']);
+
+            if ($ok) {
+                return response()->json([
+                    'status' => 'OK',
+                    'message' => 'Mensagem enviada com sucesso.',
+                ]);
+            }
+
+            return response()->json([
+                'status' => 'ERROR',
+                'message' => 'Falha ao enviar mensagem de teste Meta. Verifique as configurações.',
+            ]);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'status' => 'ERROR',
+                'message' => $e->getMessage() ?: 'Erro ao enviar mensagem de teste Meta.',
+            ]);
+        }
+    }
+
+    /**
+     * Envia mensagem de teste via Z-API usando provider específico
+     */
+    public function testZapiSend(Request $request)
+    {
+        $validated = $request->validate([
+            'number' => 'required|string',
+            'message' => 'required|string|max:1000',
+        ]);
+
+        try {
+            // Instancia diretamente o provider Z-API, que lê apenas as configs Z-API
+            $provider = new ZApiProvider();
+
+            $ok = $provider->sendMessage($validated['number'], $validated['message']);
+
+            if ($ok) {
+                return response()->json([
+                    'status' => 'OK',
+                    'message' => 'Mensagem enviada com sucesso.',
+                ]);
+            }
+
+            return response()->json([
+                'status' => 'ERROR',
+                'message' => 'Falha ao enviar mensagem de teste Z-API. Verifique as configurações.',
+            ]);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'status' => 'ERROR',
+                'message' => $e->getMessage() ?: 'Erro ao enviar mensagem de teste Z-API.',
+            ]);
+        }
+    }
+
+    /**
+     * Envia mensagem de teste via WAHA (apenas diagnóstico na Platform)
+     */
+    public function testWahaSend(Request $request)
+    {
+        $validated = $request->validate([
+            'number' => 'required|string',
+            'message' => 'required|string|max:1000',
+        ]);
+
+        $baseUrl = config('services.whatsapp.waha.base_url');
+        $apiKey  = config('services.whatsapp.waha.api_key');
+        $session = config('services.whatsapp.waha.session', 'default');
+
+        if (empty($baseUrl) || empty($apiKey) || empty($session)) {
+            return response()->json([
+                'status' => 'ERROR',
+                'message' => 'WAHA não está configurado corretamente.',
+            ]);
+        }
+
+        $sessionEndpoint = rtrim($baseUrl, '/') . '/api/sessions/' . urlencode($session);
+
+        try {
+            $verifyOption = app()->environment('local') ? false : true;
+
+            // 1) Valida sessão
+            $sessionResponse = \Illuminate\Support\Facades\Http::timeout(8)
+                ->withOptions(['verify' => $verifyOption])
+                ->withHeaders([
+                    'X-Api-Key' => $apiKey,
+                ])->get($sessionEndpoint);
+
+            $sessionData = $sessionResponse->json();
+
+            if (!$sessionResponse->successful() || !isset($sessionData['status']) || $sessionData['status'] !== 'WORKING') {
+                return response()->json([
+                    'status' => 'ERROR',
+                    'message' => 'Sessão WAHA não está WORKING.',
+                    'raw' => [
+                        'http_status' => $sessionResponse->status(),
+                        'body' => $sessionData,
+                    ],
+                ]);
+            }
+
+            // 2) Envia mensagem de teste
+            $sendEndpoint = rtrim($baseUrl, '/') . '/api/sendText';
+
+            $chatId = $validated['number'];
+            if (!str_contains($chatId, '@')) {
+                $chatId .= '@c.us';
+            }
+
+            $payload = [
+                'session' => $session,
+                'chatId' => $chatId,
+                'text' => $validated['message'],
+            ];
+
+            $sendResponse = \Illuminate\Support\Facades\Http::timeout(8)
+                ->withOptions(['verify' => $verifyOption])
+                ->withHeaders([
+                    'X-Api-Key' => $apiKey,
+                ])->post($sendEndpoint, $payload);
+
+            $sendBody = $sendResponse->json();
+
+            if ($sendResponse->successful()) {
+                return response()->json([
+                    'status' => 'OK',
+                    'message' => 'Mensagem de teste WAHA enviada com sucesso.',
+                    'raw' => [
+                        'http_status' => $sendResponse->status(),
+                        'body' => $sendBody,
+                    ],
+                ]);
+            }
+
+            return response()->json([
+                'status' => 'ERROR',
+                'message' => 'Falha ao enviar mensagem WAHA (HTTP ' . $sendResponse->status() . ').',
+                'raw' => [
+                    'http_status' => $sendResponse->status(),
+                    'body' => $sendBody,
+                ],
+            ]);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'status' => 'ERROR',
+                'message' => 'Erro ao enviar mensagem WAHA: ' . $e->getMessage(),
+            ]);
+        }
     }
 }

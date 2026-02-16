@@ -1,132 +1,147 @@
-@extends('layouts.connect_plus.app')
+@extends('layouts.tailadmin.app')
 
 @section('title', 'Detalhes da Transação')
 
 @section('content')
 
-    <div class="page-header">
-        <h3 class="page-title">
-            <i class="mdi mdi-cash text-primary me-2"></i>
-            Detalhes da Transação
-        </h3>
-
-        <nav aria-label="breadcrumb">
-            <ol class="breadcrumb">
-                <li class="breadcrumb-item">
-                    <a href="{{ workspace_route('tenant.dashboard') }}">Dashboard</a>
-                </li>
-                <li class="breadcrumb-item">
-                    <a href="{{ workspace_route('tenant.finance.index') }}">Financeiro</a>
-                </li>
-                <li class="breadcrumb-item">
-                    <a href="{{ workspace_route('tenant.finance.transactions.index') }}">Transações</a>
-                </li>
-                <li class="breadcrumb-item active" aria-current="page">Detalhes</li>
-            </ol>
-        </nav>
+    <!-- Page Header -->
+    <div class="page-header mb-6">
+        <div class="flex items-center justify-between">
+            <div>
+                <h1 class="text-2xl font-semibold text-gray-900 dark:text-white mb-2">Detalhes da Transação</h1>
+                <nav class="flex" aria-label="Breadcrumb">
+                    <ol class="inline-flex items-center space-x-1 md:space-x-3">
+                        <li class="inline-flex items-center">
+                            <a href="{{ workspace_route('tenant.dashboard') }}" class="text-gray-700 hover:text-blue-600 dark:text-gray-300 dark:hover:text-white">
+                                <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                    <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001 1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"></path>
+                                </svg>
+                                Dashboard
+                            </a>
+                        </li>
+                        <li>
+                            <div class="flex items-center">
+                                <svg class="w-6 h-6 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
+                                </svg>
+                                <a href="{{ workspace_route('tenant.finance.index') }}" class="ml-1 text-gray-700 hover:text-blue-600 dark:text-gray-300 dark:hover:text-white md:ml-2">Financeiro</a>
+                            </div>
+                        </li>
+                        <li>
+                            <div class="flex items-center">
+                                <svg class="w-6 h-6 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
+                                </svg>
+                                <a href="{{ workspace_route('tenant.finance.transactions.index') }}" class="ml-1 text-gray-700 hover:text-blue-600 dark:text-gray-300 dark:hover:text-white md:ml-2">Transações</a>
+                            </div>
+                        </li>
+                        <li aria-current="page">
+                            <div class="flex items-center">
+                                <svg class="w-6 h-6 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
+                                </svg>
+                                <span class="ml-1 text-gray-500 dark:text-gray-400 md:ml-2">Detalhes</span>
+                            </div>
+                        </li>
+                    </ol>
+                </nav>
+            </div>
+        </div>
     </div>
 
-    <div class="row">
-        <div class="col-lg-8">
-            <div class="card">
-                <div class="card-body">
-                    <h4 class="card-title">Transação #{{ substr($transaction->id, 0, 8) }}</h4>
-
-                    <div class="row mb-3">
-                        <div class="col-md-6">
-                            <strong>Tipo:</strong>
-                            <p class="mb-0">
-                                @if($transaction->type === 'income')
-                                    <span class="badge bg-success">Receita</span>
-                                @else
-                                    <span class="badge bg-danger">Despesa</span>
-                                @endif
-                            </p>
-                        </div>
-                        <div class="col-md-6">
-                            <strong>Valor:</strong>
-                            <p class="mb-0 fs-5 fw-bold {{ $transaction->type === 'income' ? 'text-success' : 'text-danger' }}">
-                                {{ $transaction->type === 'income' ? '+' : '-' }}R$ {{ number_format($transaction->amount, 2, ',', '.') }}
-                            </p>
-                        </div>
-                    </div>
-
-                    <div class="row mb-3">
-                        <div class="col-md-6">
-                            <strong>Data:</strong>
-                            <p class="mb-0">{{ $transaction->date->format('d/m/Y') }}</p>
-                        </div>
-                        <div class="col-md-6">
-                            <strong>Status:</strong>
-                            <p class="mb-0">
-                                @if($transaction->status === 'paid')
-                                    <span class="badge bg-success">Pago</span>
-                                @elseif($transaction->status === 'pending')
-                                    <span class="badge bg-warning">Pendente</span>
-                                @else
-                                    <span class="badge bg-secondary">Cancelado</span>
-                                @endif
-                            </p>
-                        </div>
-                    </div>
-
-                    <div class="mb-3">
-                        <strong>Descrição:</strong>
-                        <p class="mb-0">{{ $transaction->description }}</p>
-                    </div>
-
-                    <div class="row mb-3">
-                        <div class="col-md-6">
-                            <strong>Conta:</strong>
-                            <p class="mb-0">{{ $transaction->account->name ?? 'N/A' }}</p>
-                        </div>
-                        <div class="col-md-6">
-                            <strong>Categoria:</strong>
-                            <p class="mb-0">{{ $transaction->category->name ?? 'N/A' }}</p>
-                        </div>
-                    </div>
-
-                    @if($transaction->patient)
-                        <div class="mb-3">
-                            <strong>Paciente:</strong>
-                            <p class="mb-0">{{ $transaction->patient->full_name }}</p>
-                        </div>
-                    @endif
-
-                    @if($transaction->doctor)
-                        <div class="mb-3">
-                            <strong>Médico:</strong>
-                            <p class="mb-0">{{ $transaction->doctor->user->name ?? 'N/A' }}</p>
-                        </div>
-                    @endif
-
-                    @if($transaction->appointment)
-                        <div class="mb-3">
-                            <strong>Agendamento:</strong>
-                            <p class="mb-0">
-                                {{ $transaction->appointment->starts_at->format('d/m/Y H:i') }}
-                            </p>
-                        </div>
-                    @endif
-
-                    @if($transaction->creator)
-                        <div class="mb-3">
-                            <strong>Criado por:</strong>
-                            <p class="mb-0">{{ $transaction->creator->name }}</p>
-                        </div>
-                    @endif
-
-                    <div class="d-flex gap-2 mt-4">
-                        <a href="{{ workspace_route('tenant.finance.transactions.edit', ['slug' => tenant()->subdomain, 'transaction' => $transaction->id]) }}" 
-                           class="btn btn-primary">
-                            <i class="mdi mdi-pencil"></i> Editar
-                        </a>
-                        <a href="{{ workspace_route('tenant.finance.transactions.index', ['slug' => tenant()->subdomain]) }}" 
-                           class="btn btn-secondary">
-                            <i class="mdi mdi-arrow-left"></i> Voltar
-                        </a>
-                    </div>
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 max-w-3xl">
+        <div class="p-6">
+            <div class="flex items-start justify-between mb-6">
+                <div>
+                    <h2 class="text-xl font-semibold text-gray-900 dark:text-white">Transação #{{ substr($transaction->id, 0, 8) }}</h2>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">Detalhes completos da transação</p>
                 </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                <div>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">Tipo</p>
+                    @if($transaction->type === 'income')
+                        <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-200">Receita</span>
+                    @else
+                        <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-200">Despesa</span>
+                    @endif
+                </div>
+                <div>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">Valor</p>
+                    <p class="text-lg font-semibold {{ $transaction->type === 'income' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400' }}">
+                        {{ $transaction->type === 'income' ? '+' : '-' }}R$ {{ number_format($transaction->amount, 2, ',', '.') }}
+                    </p>
+                </div>
+                <div>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">Data</p>
+                    <p class="text-sm text-gray-900 dark:text-gray-100">{{ $transaction->date->format('d/m/Y') }}</p>
+                </div>
+                <div>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">Status</p>
+                    @if($transaction->status === 'paid')
+                        <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-200">Pago</span>
+                    @elseif($transaction->status === 'pending')
+                        <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-amber-100 text-amber-700 dark:bg-amber-900 dark:text-amber-200">Pendente</span>
+                    @else
+                        <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300">Cancelado</span>
+                    @endif
+                </div>
+            </div>
+
+            <div class="mb-6">
+                <p class="text-sm text-gray-500 dark:text-gray-400">Descrição</p>
+                <p class="text-sm text-gray-900 dark:text-gray-100">{{ $transaction->description }}</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                <div>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">Conta</p>
+                    <p class="text-sm text-gray-900 dark:text-gray-100">{{ $transaction->account->name ?? 'N/A' }}</p>
+                </div>
+                <div>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">Categoria</p>
+                    <p class="text-sm text-gray-900 dark:text-gray-100">{{ $transaction->category->name ?? 'N/A' }}</p>
+                </div>
+            </div>
+
+            @if($transaction->patient)
+                <div class="mb-6">
+                    <p class="text-sm text-gray-500 dark:text-gray-400">Paciente</p>
+                    <p class="text-sm text-gray-900 dark:text-gray-100">{{ $transaction->patient->full_name }}</p>
+                </div>
+            @endif
+
+            @if($transaction->doctor)
+                <div class="mb-6">
+                    <p class="text-sm text-gray-500 dark:text-gray-400">Médico</p>
+                    <p class="text-sm text-gray-900 dark:text-gray-100">{{ $transaction->doctor->user->name ?? 'N/A' }}</p>
+                </div>
+            @endif
+
+            @if($transaction->appointment)
+                <div class="mb-6">
+                    <p class="text-sm text-gray-500 dark:text-gray-400">Agendamento</p>
+                    <p class="text-sm text-gray-900 dark:text-gray-100">{{ $transaction->appointment->starts_at->format('d/m/Y H:i') }}</p>
+                </div>
+            @endif
+
+            @if($transaction->creator)
+                <div class="mb-6">
+                    <p class="text-sm text-gray-500 dark:text-gray-400">Criado por</p>
+                    <p class="text-sm text-gray-900 dark:text-gray-100">{{ $transaction->creator->name }}</p>
+                </div>
+            @endif
+
+            <div class="flex items-center justify-end gap-3 flex-nowrap">
+                <a href="{{ workspace_route('tenant.finance.transactions.edit', ['slug' => tenant()->subdomain, 'transaction' => $transaction->id]) }}"
+                   class="inline-flex items-center gap-2 px-4 py-2 bg-primary text-white hover:bg-primary/90 font-medium rounded-md transition-colors">
+                    Editar
+                </a>
+                <a href="{{ workspace_route('tenant.finance.transactions.index', ['slug' => tenant()->subdomain]) }}"
+                   class="inline-flex items-center gap-2 px-4 py-2 border border-gray-300 text-gray-700 bg-white hover:bg-gray-50 rounded-md font-medium transition-colors">
+                    Voltar
+                </a>
             </div>
         </div>
     </div>

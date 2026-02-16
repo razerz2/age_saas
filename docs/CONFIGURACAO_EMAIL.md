@@ -15,6 +15,8 @@ MAIL_FROM_ADDRESS=noreply@allsync.com.br
 MAIL_FROM_NAME="AllSync"
 ```
 
+> **Segurança:** não coloque credenciais reais (usuário/senha) na documentação. Use placeholders e mantenha os valores apenas no `.env`/secret manager.
+
 ## Variáveis Opcionais para SSL
 
 Para desabilitar a verificação de certificado SSL (quando o certificado não corresponde ao hostname):
@@ -61,10 +63,10 @@ Isso é útil quando:
 1. **Remova aspas da senha no `.env`**:
    ```env
    # ❌ ERRADO
-   MAIL_PASSWORD="all@0612"
+   MAIL_PASSWORD="SUA_SENHA_AQUI"
    
    # ✅ CORRETO
-   MAIL_PASSWORD=all@0612
+   MAIL_PASSWORD=SUA_SENHA_AQUI
    ```
 
 2. **Verifique se a senha está correta**: Confirme a senha no painel do seu provedor de e-mail (Titan Email, Hostinger, etc.)
@@ -75,7 +77,7 @@ Isso é útil quando:
 
 ### 2. "Sender address rejected: not logged in"
 
-**Erro:** `553 5.7.1 <notification@allsync.com.br>: Sender address rejected: not logged in`
+**Erro:** `553 5.7.1 <notification@seu-dominio.com>: Sender address rejected: not logged in`
 
 **Causa:** O servidor SMTP está rejeitando o endereço do remetente porque ele não corresponde ao usuário autenticado.
 
@@ -84,18 +86,18 @@ Isso é útil quando:
 ### Exemplo Correto:
 
 ```env
-MAIL_USERNAME=usuario@allsync.com.br
-MAIL_FROM_ADDRESS=usuario@allsync.com.br
+MAIL_USERNAME=usuario@seu-dominio.com
+MAIL_FROM_ADDRESS=usuario@seu-dominio.com
 ```
 
 ### Ou se você tem um alias configurado:
 
 ```env
-MAIL_USERNAME=usuario@allsync.com.br
-MAIL_FROM_ADDRESS=notification@allsync.com.br  # Deve ser um alias válido do usuário
+MAIL_USERNAME=usuario@seu-dominio.com
+MAIL_FROM_ADDRESS=notification@seu-dominio.com  # Deve ser um alias válido do usuário
 ```
 
-**Importante:** Se você quiser usar `notification@allsync.com.br` como remetente, você precisa:
+**Importante:** Se você quiser usar `notification@seu-dominio.com` como remetente, você precisa:
 1. Fazer login com uma conta que tenha esse endereço, OU
 2. Configurar um alias no servidor SMTP que permita que `usuario@allsync.com.br` envie como `notification@allsync.com.br`
 

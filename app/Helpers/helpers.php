@@ -197,7 +197,58 @@ if (!function_exists('testConnection')) {
                         return ['status' => false, 'message' => 'Erro ao testar Z-API: ' . $e->getMessage()];
                     }
 
-                    // 🔸 Teste E-mail
+                    // 🔸 Teste WAHA (WhatsApp Gateway)
+                case 'waha':
+                    $baseUrl = config('services.whatsapp.waha.base_url');
+                    $apiKey  = config('services.whatsapp.waha.api_key');
+                    $session = config('services.whatsapp.waha.session', 'default');
+
+                    if (empty($baseUrl) || empty($apiKey) || empty($session)) {
+                        return [
+                            'status' => false,
+                            'message' => 'WAHA não está configurado corretamente.',
+                        ];
+                    }
+
+                    $endpoint = rtrim($baseUrl, '/') . '/api/sessions/' . urlencode($session);
+
+                    try {
+                        $response = Http::timeout(8)
+                            ->withOptions([
+                                'verify' => false,
+                            ])
+                            ->withHeaders([
+                                'X-Api-Key' => $apiKey,
+                            ])
+                            ->get($endpoint);
+
+                        if (!$response->successful()) {
+                            return [
+                                'status' => false,
+                                'message' => 'HTTP ' . $response->status() . ' - ' . $response->body(),
+                            ];
+                        }
+
+                        $data = $response->json();
+
+                        if (isset($data['status']) && $data['status'] === 'WORKING') {
+                            return [
+                                'status' => true,
+                                'message' => 'Sessão WAHA está conectada (WORKING).',
+                            ];
+                        }
+
+                        return [
+                            'status' => false,
+                            'message' => 'Status retornado: ' . ($data['status'] ?? 'indefinido'),
+                        ];
+
+                    } catch (\Throwable $e) {
+                        return [
+                            'status' => false,
+                            'message' => 'Erro WAHA: ' . $e->getMessage(),
+                        ];
+                    }
                 case 'email':
                     $to = env('MAIL_FROM_ADDRESS', 'teste@localhost');
                     try {

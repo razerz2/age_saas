@@ -195,7 +195,7 @@ Quando um agendamento é excluído:
 O sistema fornece uma API para listar eventos do Apple Calendar:
 
 ```
-GET /tenant/integrations/apple/api/{doctor}/events?start=2025-01-01&end=2025-01-31
+GET /workspace/{slug}/integrations/apple/api/{doctor}/events?start=2025-01-01&end=2025-01-31
 ```
 
 **Resposta:**
@@ -327,22 +327,22 @@ END:VCALENDAR
 
 ```php
 // Listar integrações
-GET /tenant/integrations/apple
+GET /workspace/{slug}/integrations/apple
 
 // Mostrar formulário de conexão
-GET /tenant/integrations/apple/{doctor}/connect
+GET /workspace/{slug}/integrations/apple/{doctor}/connect
 
 // Conectar
-POST /tenant/integrations/apple/{doctor}/connect
+POST /workspace/{slug}/integrations/apple/{doctor}/connect
 
 // Desconectar
-DELETE /tenant/integrations/apple/{doctor}/disconnect
+DELETE /workspace/{slug}/integrations/apple/{doctor}/disconnect
 
 // Status
-GET /tenant/integrations/apple/{doctor}/status
+GET /workspace/{slug}/integrations/apple/{doctor}/status
 
 // API: Eventos
-GET /tenant/integrations/apple/api/{doctor}/events
+GET /workspace/{slug}/integrations/apple/api/{doctor}/events
 ```
 
 ---

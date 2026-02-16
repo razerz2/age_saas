@@ -1,4 +1,4 @@
-@extends('layouts.connect_plus.app')
+@extends('layouts.tailadmin.app')
 
 @section('title', 'Solicitar Mudança de Plano')
 
@@ -127,13 +127,14 @@
                             Você será notificado sobre a decisão.
                         </div>
 
-                        <div class="d-flex gap-2">
-                            <button type="submit" class="btn btn-primary">
-                                <i class="mdi mdi-send me-2"></i>Enviar Solicitação
-                            </button>
-                            <a href="{{ workspace_route('tenant.subscription.show') }}" class="btn btn-secondary">
-                                <i class="mdi mdi-close me-2"></i>Cancelar
-                            </a>
+                        <div class="flex flex-wrap items-center gap-3">
+                            <x-tailadmin-button type="submit" variant="primary">
+                                <i class="mdi mdi-send"></i> Enviar Solicitação
+                            </x-tailadmin-button>
+                            <x-tailadmin-button variant="secondary" size="md" href="{{ workspace_route('tenant.subscription.show') }}"
+                                class="bg-transparent border-gray-300 text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-white/5">
+                                <i class="mdi mdi-close"></i> Cancelar
+                            </x-tailadmin-button>
                         </div>
                     </form>
                 </div>

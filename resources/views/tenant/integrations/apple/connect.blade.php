@@ -1,4 +1,4 @@
-﻿@extends('layouts.connect_plus.app')
+@extends('layouts.tailadmin.app')
 
 @section('title', 'Conectar Apple Calendar')
 
@@ -144,15 +144,16 @@
                             </small>
                         </div>
 
-                        <div class="d-flex justify-content-between">
-                            <a href="{{ workspace_route('tenant.integrations.apple.index') }}" class="btn btn-secondary">
-                                <i class="mdi mdi-arrow-left me-1"></i>
+                        <div class="flex flex-wrap items-center justify-between gap-3">
+                            <x-tailadmin-button variant="secondary" size="md" href="{{ workspace_route('tenant.integrations.apple.index') }}"
+                                class="bg-transparent border-gray-300 text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-white/5">
+                                <i class="mdi mdi-arrow-left"></i>
                                 Cancelar
-                            </a>
-                            <button type="submit" class="btn btn-primary">
-                                <i class="mdi mdi-check me-1"></i>
+                            </x-tailadmin-button>
+                            <x-tailadmin-button type="submit" variant="primary">
+                                <i class="mdi mdi-check"></i>
                                 Conectar
-                            </button>
+                            </x-tailadmin-button>
                         </div>
                     </form>
                 </div>

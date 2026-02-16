@@ -190,6 +190,7 @@ Route::prefix('workspace/{slug}')
         Route::get('users/{id}/edit', [UserController::class, 'edit'])->where('id', '[0-9]+')->name('users.edit');
         Route::put('users/{id}', [UserController::class, 'update'])->where('id', '[0-9]+')->name('users.update');
         Route::delete('users/{id}', [UserController::class, 'destroy'])->where('id', '[0-9]+')->name('users.destroy');
+        Route::get('users/grid-data', [UserController::class, 'gridData'])->name('users.grid-data');
         // Mostrar o formulário para alterar a senha
         Route::get('users/{id}/change-password', [UserController::class, 'showChangePasswordForm'])->where('id', '[0-9]+')->name('users.change-password');
         // Alterar a senha
@@ -219,12 +220,19 @@ Route::prefix('workspace/{slug}')
             ->where('id', '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}')
             ->name('doctors.destroy');
 
+        Route::get('doctors/grid-data', [DoctorController::class, 'gridData'])
+            ->name('doctors.grid-data');
+
 
         // =====================================================================
         // SPECIALTIES
         // =====================================================================
         Route::resource('specialties', MedicalSpecialtyController::class)->except(['show', 'edit', 'update', 'destroy']);
         
+        // grid-data DEVE vir antes das rotas com {id} para evitar conflito de matching
+        Route::get('specialties/grid-data', [MedicalSpecialtyController::class, 'gridData'])
+            ->name('specialties.grid-data');
+
         Route::get('specialties/{id}', [MedicalSpecialtyController::class, 'show'])
             ->where('id', '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}')
             ->name('specialties.show');
@@ -244,6 +252,9 @@ Route::prefix('workspace/{slug}')
         // =====================================================================
         Route::resource('patients', PatientController::class)->except(['show', 'edit', 'update', 'destroy']);
         
+        Route::get('patients/grid-data', [PatientController::class, 'gridData'])
+            ->name('patients.grid-data');
+
         Route::get('patients/{id}', [PatientController::class, 'show'])
             ->where('id', '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}')
             ->name('patients.show');
@@ -310,6 +321,9 @@ Route::prefix('workspace/{slug}')
         // =====================================================================
         Route::resource('calendars', CalendarController::class)->except(['show', 'edit', 'update', 'destroy']);
 
+        Route::get('calendars/grid-data', [CalendarController::class, 'gridData'])
+            ->name('calendars.grid-data');
+
         Route::get('calendars/{id}', [CalendarController::class, 'show'])
             ->where('id', '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}')
             ->name('calendars.show');
@@ -335,7 +349,9 @@ Route::prefix('workspace/{slug}')
         // BUSINESS HOURS
         // =====================================================================
         Route::resource('business-hours', BusinessHourController::class)->except(['show', 'edit', 'update', 'destroy']);
-        
+        Route::get('business-hours/grid-data', [BusinessHourController::class, 'gridData'])
+            ->name('business-hours.grid-data');
+
         Route::get('business-hours/{id}', [BusinessHourController::class, 'show'])
             ->where('id', '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}')
             ->name('business-hours.show');
@@ -354,7 +370,9 @@ Route::prefix('workspace/{slug}')
         // APPOINTMENT TYPES
         // =====================================================================
         Route::resource('appointment-types', AppointmentTypeController::class)->except(['show', 'edit', 'update', 'destroy']);
-        
+        Route::get('appointment-types/grid-data', [AppointmentTypeController::class, 'gridData'])
+            ->name('appointment-types.grid-data');
+
         Route::get('appointment-types/{id}', [AppointmentTypeController::class, 'show'])
             ->where('id', '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}')
             ->name('appointment-types.show');
@@ -373,7 +391,11 @@ Route::prefix('workspace/{slug}')
         // APPOINTMENTS
         // =====================================================================
         Route::resource('appointments', AppointmentController::class)->except(['show', 'edit', 'update', 'destroy']);
-        
+
+        // grid-data DEVE vir antes das rotas com {id} para evitar conflito de matching
+        Route::get('appointments/grid-data', [AppointmentController::class, 'gridData'])
+            ->name('appointments.grid-data');
+
         Route::get('appointments/{id}', [AppointmentController::class, 'show'])
             ->where('id', '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}')
             ->name('appointments.show');
@@ -396,6 +418,10 @@ Route::prefix('workspace/{slug}')
             ->group(function () {
                 Route::get('/', [\App\Http\Controllers\Tenant\OnlineAppointmentController::class, 'index'])
                     ->name('index');
+
+                // grid-data DEVE vir antes das rotas com {appointment} para evitar conflito de matching
+                Route::get('consultas-online/grid-data', [\App\Http\Controllers\Tenant\OnlineAppointmentController::class, 'gridData'])
+                    ->name('grid-data');
                 
                 Route::get('/{appointment}', [\App\Http\Controllers\Tenant\OnlineAppointmentController::class, 'show'])
                     ->where('appointment', '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}')
@@ -441,6 +467,8 @@ Route::prefix('workspace/{slug}')
             ->name('recurring-appointments.create');
         Route::post('agendamentos/recorrentes', [RecurringAppointmentController::class, 'store'])
             ->name('recurring-appointments.store');
+        Route::get('agendamentos/recorrentes/grid-data', [RecurringAppointmentController::class, 'gridData'])
+            ->name('recurring-appointments.grid-data');
         Route::get('agendamentos/recorrentes/{id}', [RecurringAppointmentController::class, 'show'])
             ->where('id', '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}')
             ->name('recurring-appointments.show');
@@ -469,6 +497,9 @@ Route::prefix('workspace/{slug}')
         // =====================================================================
         // FORMS (muitos binds automáticos)
         // =====================================================================
+        Route::get('forms/grid-data', [FormController::class, 'gridData'])
+            ->name('forms.grid-data');
+
         Route::resource('forms', FormController::class);
 
         // Rota para construir o formulário (seções, perguntas, opções)
@@ -527,6 +558,10 @@ Route::prefix('workspace/{slug}')
         // =====================================================================
         // RESPONSES
         // =====================================================================
+        // grid-data DEVE vir antes das rotas com {response} para evitar conflito de matching
+        Route::get('form-responses/grid-data', [FormResponseController::class, 'gridData'])
+            ->name('form-responses.grid-data');
+
         // Rotas customizadas para criar resposta a partir de um formulário
         Route::get('forms/{form_id}/responses/create', [FormResponseController::class, 'create'])
             ->where('form_id', '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}')

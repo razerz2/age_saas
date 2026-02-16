@@ -1,177 +1,102 @@
-﻿@extends('layouts.connect_plus.app')
+@extends('layouts.tailadmin.app')
 
 @section('title', 'Agendamentos')
 
 @section('content')
-
-    <div class="page-header">
-        <h3 class="page-title"> Agendamentos </h3>
-
-        <nav aria-label="breadcrumb">
-            <ol class="breadcrumb">
-                <li class="breadcrumb-item">
-                    <a href="{{ workspace_route('tenant.dashboard') }}">Dashboard</a>
-                </li>
-                <li class="breadcrumb-item active" aria-current="page">Agendamentos</li>
-            </ol>
-        </nav>
+    <!-- Page Header -->
+    <div class="mb-6">
+        <div class="flex items-center justify-between">
+            <div>
+                <h1 class="text-2xl font-bold text-gray-900">Agendamentos</h1>
+                <nav class="flex mt-2" aria-label="Breadcrumb">
+                    <ol class="inline-flex items-center space-x-1 md:space-x-3">
+                        <li class="inline-flex items-center">
+                            <a href="{{ workspace_route('tenant.dashboard') }}" class="text-gray-700 hover:text-gray-900 inline-flex items-center">
+                                <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                    <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"></path>
+                                </svg>
+                                Dashboard
+                            </a>
+                        </li>
+                        <li>
+                            <div class="flex items-center">
+                                <svg class="w-4 h-4 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
+                                </svg>
+                                <span class="ml-1 text-gray-500">Agendamentos</span>
+                            </div>
+                        </li>
+                    </ol>
+                </nav>
+            </div>
+            <a href="{{ workspace_route('tenant.appointments.create') }}" class="btn-patient-primary">
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                </svg>
+                Novo Agendamento
+            </a>
+        </div>
     </div>
 
-    <div class="row">
-        <div class="col-lg-12 grid-margin stretch-card">
-            <div class="card">
-                <div class="card-body">
-                    <h4 class="card-title">Lista de Agendamentos</h4>
-
-                    {{-- Mensagens de Erro --}}
-                    @if (session('error'))
-                        <div class="alert alert-danger alert-dismissible fade show shadow-sm mb-3" role="alert">
-                            <div class="d-flex align-items-start">
-                                <i class="mdi mdi-alert-circle me-3" style="font-size: 1.5rem; flex-shrink: 0; margin-top: 0.25rem;"></i>
-                                <div class="flex-grow-1">
-                                    <h5 class="alert-heading mb-2">Não é possível criar agendamentos</h5>
-                                    <div class="mb-0">{!! session('error') !!}</div>
-                                </div>
-                            </div>
-                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
-                        </div>
-                    @endif
-
-                    {{-- Mensagens de Sucesso --}}
-                    @if (session('success'))
-                        <div class="alert alert-success alert-dismissible fade show shadow-sm mb-3" role="alert">
-                            <i class="mdi mdi-check-circle me-2"></i>
-                            {!! session('success') !!}
-                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
-                        </div>
-                    @endif
-
-                    <a href="{{ workspace_route('tenant.appointments.create') }}" class="btn btn-primary mb-3">
-                        <i class="mdi mdi-plus"></i> Novo Agendamento
-                    </a>
-
-                    <div class="table-responsive">
-                        <table class="table table-hover" id="datatable-list">
-                            <thead>
-                                <tr>
-                                    <th>ID</th>
-                                    <th>Paciente</th>
-                                    <th>Calendário</th>
-                                    <th>Tipo</th>
-                                    <th>Início</th>
-                                    <th>Fim</th>
-                                    <th>Modo</th>
-                                    <th>Status</th>
-                                    <th style="width: 140px;">Ações</th>
-                                </tr>
-                            </thead>
-
-                            <tbody>
-                                @foreach ($appointments as $appointment)
-                                    <tr>
-                                        <td>{{ truncate_uuid($appointment->id) }}</td>
-                                        <td>{{ $appointment->patient->full_name ?? 'N/A' }}</td>
-                                        <td>{{ $appointment->calendar->name ?? 'N/A' }}</td>
-                                        <td>{{ $appointment->type->name ?? 'N/A' }}</td>
-                                        <td>{{ $appointment->starts_at ? $appointment->starts_at->format('d/m/Y H:i') : 'N/A' }}</td>
-                                        <td>{{ $appointment->ends_at ? $appointment->ends_at->format('d/m/Y H:i') : 'N/A' }}</td>
-                                        <td>
-                                            @if($appointment->appointment_mode === 'online')
-                                                <span class="badge bg-info">Online</span>
-                                            @else
-                                                <span class="badge bg-success">Presencial</span>
-                                            @endif
-                                        </td>
-                                        <td>{{ $appointment->status_translated }}</td>
-                                        <td>
-                                            <a href="{{ workspace_route('tenant.appointments.show', $appointment->id) }}" class="btn btn-info btn-sm">
-                                                <i class="mdi mdi-eye"></i> Ver
-                                            </a>
-                                            <a href="{{ workspace_route('tenant.appointments.edit', $appointment->id) }}" class="btn btn-warning btn-sm">
-                                                <i class="mdi mdi-pencil"></i> Editar
-                                            </a>
-                                            @if (Auth::guard('tenant')->user()->role === 'admin')
-                                                <button type="button" class="btn btn-danger btn-sm" 
-                                                        data-bs-toggle="modal" 
-                                                        data-bs-target="#deleteAppointmentModal{{ $appointment->id }}">
-                                                    <i class="mdi mdi-delete"></i> Excluir
-                                                </button>
-                                                
-                                                {{-- Modal de Confirmação de Exclusão --}}
-                                                <div class="modal fade" id="deleteAppointmentModal{{ $appointment->id }}" tabindex="-1" 
-                                                     aria-labelledby="deleteAppointmentModalLabel{{ $appointment->id }}" aria-hidden="true">
-                                                    <div class="modal-dialog">
-                                                        <div class="modal-content">
-                                                            <div class="modal-header bg-danger text-white">
-                                                                <h5 class="modal-title" id="deleteAppointmentModalLabel{{ $appointment->id }}">
-                                                                    <i class="mdi mdi-alert-circle me-2"></i>
-                                                                    Confirmar Exclusão
-                                                                </h5>
-                                                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-                                                            </div>
-                                                            <div class="modal-body">
-                                                                <p class="mb-3">
-                                                                    <strong>Tem certeza que deseja excluir este agendamento?</strong>
-                                                                </p>
-                                                                <div class="alert alert-warning mb-0">
-                                                                    <i class="mdi mdi-information-outline me-2"></i>
-                                                                    <strong>Atenção:</strong> Esta ação não pode ser desfeita. O agendamento será removido permanentemente.
-                                                                </div>
-                                                                <hr>
-                                                                <div class="mb-2">
-                                                                    <strong>Paciente:</strong> {{ $appointment->patient->full_name ?? 'N/A' }}
-                                                                </div>
-                                                                <div class="mb-2">
-                                                                    <strong>Data/Hora:</strong> {{ $appointment->starts_at ? $appointment->starts_at->format('d/m/Y H:i') : 'N/A' }}
-                                                                </div>
-                                                                <div class="mb-2">
-                                                                    <strong>Médico:</strong> {{ $appointment->doctor->user->name_full ?? $appointment->doctor->user->name ?? 'N/A' }}
-                                                                </div>
-                                                                <div class="mb-0">
-                                                                    <strong>Status:</strong> {{ $appointment->status_translated }}
-                                                                </div>
-                                                            </div>
-                                                            <div class="modal-footer">
-                                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                                                                    <i class="mdi mdi-close me-1"></i>
-                                                                    Cancelar
-                                                                </button>
-                                                                <form action="{{ workspace_route('tenant.appointments.destroy', $appointment->id) }}" method="POST" class="d-inline">
-                                                                    @csrf
-                                                                    @method('DELETE')
-                                                                    <button type="submit" class="btn btn-danger">
-                                                                        <i class="mdi mdi-delete me-1"></i>
-                                                                        Sim, Excluir
-                                                                    </button>
-                                                                </form>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            @endif
-                                        </td>
-                                    </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
-                    </div>
-
+    <!-- Alertas -->
+    @if (session('error'))
+        <div class="bg-red-50 border border-red-200 rounded-md p-4 mb-6">
+            <div class="flex">
+                <div class="flex-shrink-0">
+                    <svg class="h-5 w-5 text-red-400" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path>
+                    </svg>
+                </div>
+                <div class="ml-3">
+                    <h3 class="text-sm font-medium text-red-800">Não é possível criar agendamentos</h3>
+                    <div class="mt-2 text-sm text-red-700">{!! session('error') !!}</div>
                 </div>
             </div>
+        </div>
+    @endif
+
+    @if (session('success'))
+        <div class="bg-green-50 border border-green-200 rounded-md p-4 mb-6">
+            <div class="flex">
+                <div class="flex-shrink-0">
+                    <svg class="h-5 w-5 text-green-400" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                    </svg>
+                </div>
+                <div class="ml-3">
+                    <p class="text-sm text-green-700">{!! session('success') !!}</p>
+                </div>
+            </div>
+        </div>
+    @endif
+
+    <!-- Card Principal -->
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200">
+        <div class="px-6 py-4 border-b border-gray-200">
+            <h2 class="text-lg font-semibold text-gray-900">Lista de Agendamentos</h2>
+        </div>
+
+        <div class="p-6">
+            <x-tenant.grid
+                id="appointments-grid"
+                :columns="[
+                    ['name' => 'date', 'label' => 'Data'],
+                    ['name' => 'time', 'label' => 'Hora'],
+                    ['name' => 'patient', 'label' => 'Paciente'],
+                    ['name' => 'doctor', 'label' => 'Médico'],
+                    ['name' => 'specialty', 'label' => 'Especialidade'],
+                    ['name' => 'type', 'label' => 'Tipo'],
+                    ['name' => 'mode_badge', 'label' => 'Modo'],
+                    ['name' => 'status_badge', 'label' => 'Status'],
+                    ['name' => 'actions', 'label' => 'Ações'],
+                ]"
+                ajaxUrl="{{ workspace_route('tenant.appointments.grid-data') }}"
+                :pagination="true"
+                :search="true"
+                :sort="true"
+            />
         </div>
     </div>
 
 @endsection
-
-@push('scripts')
-<script>
-    $(document).ready(function() {
-        $('#datatable-list').DataTable({
-            "language": {
-                "url": "//cdn.datatables.net/plug-ins/1.11.5/i18n/pt-BR.json"
-            }
-        });
-    });
-</script>
-@endpush
 

@@ -10,6 +10,7 @@
 @endphp
 
 @extends('layouts.freedash.app')
+@section('title', 'Dashboard')
 
 @section('content')
      @if (session('error'))

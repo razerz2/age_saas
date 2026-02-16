@@ -1,4 +1,5 @@
 @extends('layouts.freedash.app')
+@section('title', 'General Import Clinic Networks')
 
 @section('content')
     <div class="page-breadcrumb">

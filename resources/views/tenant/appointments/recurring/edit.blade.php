@@ -1,236 +1,212 @@
-﻿@extends('layouts.connect_plus.app')
+@extends('layouts.tailadmin.app')
 
 @section('title', 'Editar Agendamento Recorrente')
 
 @section('content')
-
-    <div class="page-header">
-        <h3 class="page-title"> Editar Agendamento Recorrente </h3>
-
-        <nav aria-label="breadcrumb">
-            <ol class="breadcrumb">
-                <li class="breadcrumb-item">
-                    <a href="{{ workspace_route('tenant.dashboard') }}">Dashboard</a>
-                </li>
-                <li class="breadcrumb-item">
-                    <a href="{{ workspace_route('tenant.recurring-appointments.index') }}">Agendamentos Recorrentes</a>
-                </li>
-                <li class="breadcrumb-item active" aria-current="page">Editar</li>
-            </ol>
-        </nav>
+    <!-- Page Header -->
+    <div class="page-header mb-6">
+        <div class="flex items-center justify-between">
+            <div>
+                <h1 class="text-2xl font-semibold text-gray-900 dark:text-white mb-2">Editar Agendamento Recorrente</h1>
+                <nav class="flex" aria-label="Breadcrumb">
+                    <ol class="inline-flex items-center space-x-1 md:space-x-3">
+                        <li class="inline-flex items-center">
+                            <a href="{{ workspace_route('tenant.dashboard') }}" class="text-gray-700 hover:text-blue-600 dark:text-gray-300 dark:hover:text-white">
+                                <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                    <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001 1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"></path>
+                                </svg>
+                                Dashboard
+                            </a>
+                        </li>
+                        <li>
+                            <div class="flex items-center">
+                                <svg class="w-6 h-6 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
+                                </svg>
+                                <a href="{{ workspace_route('tenant.recurring-appointments.index') }}" class="ml-1 text-gray-700 hover:text-blue-600 dark:text-gray-300 dark:hover:text-white md:ml-2">Agendamentos Recorrentes</a>
+                            </div>
+                        </li>
+                        <li aria-current="page">
+                            <div class="flex items-center">
+                                <svg class="w-6 h-6 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
+                                </svg>
+                                <span class="ml-1 text-gray-500 dark:text-gray-400 md:ml-2">Editar</span>
+                            </div>
+                        </li>
+                    </ol>
+                </nav>
+            </div>
+        </div>
     </div>
 
-    <div class="row">
-        <div class="col-12 grid-margin stretch-card">
-            <div class="card">
-                <div class="card-body">
-                    <div class="d-flex align-items-center justify-content-between mb-4">
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
+        <div class="p-6">
+            <div class="mb-6">
+                <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Editar Agendamento Recorrente</h2>
+                <p class="text-sm text-gray-500 dark:text-gray-400">Atualize as informações do agendamento recorrente</p>
+            </div>
+
+            <form class="space-y-8" action="{{ workspace_route('tenant.recurring-appointments.update', ['id' => $recurringAppointment->id]) }}" method="POST">
+                @csrf
+                @method('PUT')
+
+                <!-- Seção: Informações Básicas -->
+                <div>
+                    <h3 class="text-sm font-semibold text-gray-900 dark:text-white mb-4">Informações Básicas</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                         <div>
-                            <h4 class="card-title mb-1">
-                                <i class="mdi mdi-calendar-edit text-primary me-2"></i>
-                                Editar Agendamento Recorrente
-                            </h4>
-                            <p class="card-description mb-0 text-muted">Atualize as informações do agendamento recorrente</p>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                Paciente <span class="text-red-500">*</span>
+                            </label>
+                            <select name="patient_id" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white @error('patient_id') border-red-500 @enderror" required>
+                                <option value="">Selecione um paciente</option>
+                                @foreach($patients as $patient)
+                                    <option value="{{ $patient->id }}" {{ old('patient_id', $recurringAppointment->patient_id) == $patient->id ? 'selected' : '' }}>
+                                        {{ $patient->full_name }}
+                                    </option>
+                                @endforeach
+                            </select>
+                            @error('patient_id')
+                                <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+                            @enderror
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                Médico <span class="text-red-500">*</span>
+                            </label>
+                            <select name="doctor_id" id="doctor_id" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white @error('doctor_id') border-red-500 @enderror" required>
+                                <option value="">Selecione um médico</option>
+                                @foreach($doctors as $doctor)
+                                    <option value="{{ $doctor->id }}" {{ old('doctor_id', $recurringAppointment->doctor_id) == $doctor->id ? 'selected' : '' }}>
+                                        {{ $doctor->user->name_full ?? $doctor->user->name }}
+                                    </option>
+                                @endforeach
+                            </select>
+                            @error('doctor_id')
+                                <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+                            @enderror
+                            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Selecione o médico para ver os dias e horários disponíveis</p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                Tipo de Consulta
+                            </label>
+                            <select name="appointment_type_id" id="appointment_type_id" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white @error('appointment_type_id') border-red-500 @enderror" disabled>
+                                <option value="">Primeiro selecione um médico</option>
+                            </select>
+                            @error('appointment_type_id')
+                                <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+                            @enderror
                         </div>
                     </div>
 
-                    <form class="forms-sample" action="{{ workspace_route('tenant.recurring-appointments.update', ['id' => $recurringAppointment->id]) }}" method="POST">
-                        @csrf
-                        @method('PUT')
-
-                        {{-- Seção: Informações Básicas --}}
-                        <div class="mb-4">
-                            <h5 class="mb-3 text-primary">
-                                <i class="mdi mdi-information-outline me-2"></i>
-                                Informações Básicas
-                            </h5>
-                            <div class="row">
-                                <div class="col-md-4">
-                                    <div class="form-group">
-                                        <label class="fw-semibold">
-                                            <i class="mdi mdi-account me-1"></i>
-                                            Paciente <span class="text-danger">*</span>
-                                        </label>
-                                        <select name="patient_id" class="form-control @error('patient_id') is-invalid @enderror" required>
-                                            <option value="">Selecione um paciente</option>
-                                            @foreach($patients as $patient)
-                                                <option value="{{ $patient->id }}" {{ old('patient_id', $recurringAppointment->patient_id) == $patient->id ? 'selected' : '' }}>
-                                                    {{ $patient->full_name }}
-                                                </option>
-                                            @endforeach
-                                        </select>
-                                        @error('patient_id')
-                                            <div class="invalid-feedback d-block">{{ $message }}</div>
-                                        @enderror
-                                    </div>
-                                </div>
-                                <div class="col-md-4">
-                                    <div class="form-group">
-                                        <label class="fw-semibold">
-                                            <i class="mdi mdi-doctor me-1"></i>
-                                            Médico <span class="text-danger">*</span>
-                                        </label>
-                                        <select name="doctor_id" id="doctor_id" class="form-control @error('doctor_id') is-invalid @enderror" required>
-                                            <option value="">Selecione um médico</option>
-                                            @foreach($doctors as $doctor)
-                                                <option value="{{ $doctor->id }}" {{ old('doctor_id', $recurringAppointment->doctor_id) == $doctor->id ? 'selected' : '' }}>
-                                                    {{ $doctor->user->name_full ?? $doctor->user->name }}
-                                                </option>
-                                            @endforeach
-                                        </select>
-                                        @error('doctor_id')
-                                            <div class="invalid-feedback d-block">{{ $message }}</div>
-                                        @enderror
-                                        <small class="form-text text-muted">Selecione o médico para ver os dias e horários disponíveis</small>
-                                    </div>
-                                </div>
-                                <div class="col-md-4">
-                                    <div class="form-group">
-                                        <label class="fw-semibold">
-                                            <i class="mdi mdi-calendar-clock me-1"></i>
-                                            Tipo de Consulta
-                                        </label>
-                                        <select name="appointment_type_id" id="appointment_type_id" class="form-control @error('appointment_type_id') is-invalid @enderror" disabled>
-                                            <option value="">Primeiro selecione um médico</option>
-                                        </select>
-                                        @error('appointment_type_id')
-                                            <div class="invalid-feedback d-block">{{ $message }}</div>
-                                        @enderror
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="row">
-                                <div class="col-md-4">
-                                    <div class="form-group">
-                                        <label class="fw-semibold">
-                                            <i class="mdi mdi-calendar-start me-1"></i>
-                                            Data Inicial <span class="text-danger">*</span>
-                                        </label>
-                                        <input type="date" name="start_date" class="form-control @error('start_date') is-invalid @enderror" 
-                                               value="{{ old('start_date', $recurringAppointment->start_date->format('Y-m-d')) }}" required>
-                                        @error('start_date')
-                                            <div class="invalid-feedback d-block">{{ $message }}</div>
-                                        @enderror
-                                    </div>
-                                </div>
-                            </div>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                Data Inicial <span class="text-red-500">*</span>
+                            </label>
+                            <input type="date" name="start_date" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white @error('start_date') border-red-500 @enderror"
+                                   value="{{ old('start_date', $recurringAppointment->start_date->format('Y-m-d')) }}" required>
+                            @error('start_date')
+                                <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+                            @enderror
                         </div>
+                    </div>
+                </div>
 
-                        {{-- Seção: Tipo de Término --}}
-                        <div class="mb-4">
-                            <h5 class="mb-3 text-primary">
-                                <i class="mdi mdi-calendar-end me-2"></i>
-                                Tipo de Término
-                            </h5>
-                            <div class="row">
-                                <div class="col-md-4">
-                                    <div class="form-group">
-                                        <label class="fw-semibold">
-                                            <i class="mdi mdi-toggle-switch me-1"></i>
-                                            Término <span class="text-danger">*</span>
-                                        </label>
-                                        <select name="end_type" id="end_type" class="form-control @error('end_type') is-invalid @enderror" required>
-                                            <option value="none" {{ old('end_type', $recurringAppointment->end_type) == 'none' ? 'selected' : '' }}>Sem limite (infinito)</option>
-                                            <option value="total_sessions" {{ old('end_type', $recurringAppointment->end_type) == 'total_sessions' ? 'selected' : '' }}>Total de sessões</option>
-                                            <option value="date" {{ old('end_type', $recurringAppointment->end_type) == 'date' ? 'selected' : '' }}>Data final</option>
-                                        </select>
-                                        @error('end_type')
-                                            <div class="invalid-feedback d-block">{{ $message }}</div>
-                                        @enderror
-                                    </div>
-                                </div>
-                                <div class="col-md-4" id="total_sessions_field" style="display: {{ old('end_type', $recurringAppointment->end_type) == 'total_sessions' ? 'block' : 'none' }};">
-                                    <div class="form-group">
-                                        <label class="fw-semibold">
-                                            <i class="mdi mdi-numeric me-1"></i>
-                                            Total de Sessões <span class="text-danger">*</span>
-                                        </label>
-                                        <input type="number" name="total_sessions" class="form-control @error('total_sessions') is-invalid @enderror" 
-                                               value="{{ old('total_sessions', $recurringAppointment->total_sessions) }}" min="1">
-                                        @error('total_sessions')
-                                            <div class="invalid-feedback d-block">{{ $message }}</div>
-                                        @enderror
-                                    </div>
-                                </div>
-                                <div class="col-md-4" id="end_date_field" style="display: {{ old('end_type', $recurringAppointment->end_type) == 'date' ? 'block' : 'none' }};">
-                                    <div class="form-group">
-                                        <label class="fw-semibold">
-                                            <i class="mdi mdi-calendar-end me-1"></i>
-                                            Data Final <span class="text-danger">*</span>
-                                        </label>
-                                        <input type="date" name="end_date" class="form-control @error('end_date') is-invalid @enderror" 
-                                               value="{{ old('end_date', $recurringAppointment->end_date ? $recurringAppointment->end_date->format('Y-m-d') : '') }}">
-                                        @error('end_date')
-                                            <div class="invalid-feedback d-block">{{ $message }}</div>
-                                        @enderror
-                                    </div>
-                                </div>
-                                @php
-                                    $settings = \App\Models\Tenant\TenantSetting::getAll();
-                                    $defaultMode = $settings['appointments.default_appointment_mode'] ?? 'user_choice';
-                                @endphp
-                                @if($defaultMode === 'user_choice')
-                                    <div class="col-md-4">
-                                        @include('tenant.appointments.partials.appointment_mode_select', ['appointment' => $recurringAppointment])
-                                    </div>
-                                @endif
-                            </div>
+                <!-- Seção: Tipo de Término -->
+                <div>
+                    <h3 class="text-sm font-semibold text-gray-900 dark:text-white mb-4">Tipo de Término</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                Término <span class="text-red-500">*</span>
+                            </label>
+                            <select name="end_type" id="end_type" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white @error('end_type') border-red-500 @enderror" required>
+                                <option value="none" {{ old('end_type', $recurringAppointment->end_type) == 'none' ? 'selected' : '' }}>Sem limite (infinito)</option>
+                                <option value="total_sessions" {{ old('end_type', $recurringAppointment->end_type) == 'total_sessions' ? 'selected' : '' }}>Total de sessões</option>
+                                <option value="date" {{ old('end_type', $recurringAppointment->end_type) == 'date' ? 'selected' : '' }}>Data final</option>
+                            </select>
+                            @error('end_type')
+                                <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+                            @enderror
                         </div>
+                        <div id="total_sessions_field" style="display: {{ old('end_type', $recurringAppointment->end_type) == 'total_sessions' ? 'block' : 'none' }};">
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                Total de Sessões <span class="text-red-500">*</span>
+                            </label>
+                            <input type="number" name="total_sessions" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white @error('total_sessions') border-red-500 @enderror"
+                                   value="{{ old('total_sessions', $recurringAppointment->total_sessions) }}" min="1">
+                            @error('total_sessions')
+                                <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+                            @enderror
+                        </div>
+                        <div id="end_date_field" style="display: {{ old('end_type', $recurringAppointment->end_type) == 'date' ? 'block' : 'none' }};">
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                Data Final <span class="text-red-500">*</span>
+                            </label>
+                            <input type="date" name="end_date" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white @error('end_date') border-red-500 @enderror"
+                                   value="{{ old('end_date', $recurringAppointment->end_date ? $recurringAppointment->end_date->format('Y-m-d') : '') }}">
+                            @error('end_date')
+                                <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+                            @enderror
+                        </div>
+                        @php
+                            $settings = \App\Models\Tenant\TenantSetting::getAll();
+                            $defaultMode = $settings['appointments.default_appointment_mode'] ?? 'user_choice';
+                        @endphp
+                        @if($defaultMode === 'user_choice')
+                            @include('tenant.appointments.partials.appointment_mode_select', ['appointment' => $recurringAppointment])
+                        @endif
+                    </div>
+                </div>
 
-                        {{-- Seção: Regras de Recorrência --}}
-                        <div class="mb-4">
-                            <h5 class="mb-3 text-primary">
-                                <i class="mdi mdi-calendar-repeat me-2"></i>
-                                Regras de Recorrência
-                            </h5>
-                            <div id="rules-container">
-                                @foreach($recurringAppointment->rules as $index => $rule)
-                                    <div class="rule-item mb-3 p-3 border rounded">
-                                        <div class="row">
-                                            <div class="col-md-4">
-                                                <div class="form-group">
-                                                    <label class="fw-semibold">Dia da Semana <span class="text-danger">*</span></label>
-                                                    <select name="rules[{{ $index }}][weekday]" class="form-control rule-weekday" required data-selected="{{ $rule->weekday }}">
-                                                        <option value="">Carregando...</option>
-                                                    </select>
-                                                </div>
-                                            </div>
-                                            <div class="col-md-4">
-                                                <div class="form-group">
-                                                    <label class="fw-semibold">Horário Disponível <span class="text-danger">*</span></label>
-                                                    <select name="rules[{{ $index }}][time_slot]" class="form-control rule-time-slot" required data-selected="{{ $rule->start_time }}|{{ $rule->end_time }}">
-                                                        <option value="">Carregando...</option>
-                                                    </select>
-                                                    <input type="hidden" name="rules[{{ $index }}][start_time]" class="rule-start-time" value="{{ $rule->start_time }}">
-                                                    <input type="hidden" name="rules[{{ $index }}][end_time]" class="rule-end-time" value="{{ $rule->end_time }}">
-                                                </div>
-                                            </div>
-                                            <input type="hidden" name="rules[{{ $index }}][frequency]" value="{{ $rule->frequency ?? 'weekly' }}">
-                                            <input type="hidden" name="rules[{{ $index }}][interval]" value="{{ $rule->interval ?? 1 }}">
-                                            <div class="col-md-4 d-flex align-items-end">
-                                                <div class="form-group w-100">
-                                                    <label class="fw-semibold">&nbsp;</label>
-                                                    <button type="button" class="btn btn-danger w-100 remove-rule" {{ count($recurringAppointment->rules) <= 1 ? 'style="display: none;"' : '' }}>
-                                                        <i class="mdi mdi-delete"></i> Remover
-                                                    </button>
-                                                </div>
-                                            </div>
+                <!-- Seção: Regras de Recorrência -->
+                <div>
+                    <h3 class="text-sm font-semibold text-gray-900 dark:text-white mb-4">Regras de Recorrência</h3>
+                    <div id="rules-container">
+                        @foreach($recurringAppointment->rules as $index => $rule)
+                            <div class="rule-item mb-4 p-4 border border-gray-200 dark:border-gray-700 rounded-md">
+                                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Dia da Semana <span class="text-red-500">*</span></label>
+                                        <select name="rules[{{ $index }}][weekday]" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white rule-weekday" required data-selected="{{ $rule->weekday }}">
+                                            <option value="">Carregando...</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Horário Disponível <span class="text-red-500">*</span></label>
+                                        <select name="rules[{{ $index }}][time_slot]" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white rule-time-slot" required data-selected="{{ $rule->start_time }}|{{ $rule->end_time }}">
+                                            <option value="">Carregando...</option>
+                                        </select>
+                                        <input type="hidden" name="rules[{{ $index }}][start_time]" class="rule-start-time" value="{{ $rule->start_time }}">
+                                        <input type="hidden" name="rules[{{ $index }}][end_time]" class="rule-end-time" value="{{ $rule->end_time }}">
+                                    </div>
+                                    <input type="hidden" name="rules[{{ $index }}][frequency]" value="{{ $rule->frequency ?? 'weekly' }}">
+                                    <input type="hidden" name="rules[{{ $index }}][interval]" value="{{ $rule->interval ?? 1 }}">
+                                    <div class="flex items-end">
+                                        <div class="w-full">
+                                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">&nbsp;</label>
+                                            <button type="button" class="inline-flex items-center justify-center w-full px-3 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded-md transition-colors remove-rule" {{ count($recurringAppointment->rules) <= 1 ? 'style="display: none;"' : '' }}>
+                                                <i class="mdi mdi-delete mr-1"></i> Remover
+                                            </button>
                                         </div>
                                     </div>
-                                @endforeach
+                                </div>
                             </div>
-                            <button type="button" class="btn btn-success" id="add-rule">
-                                <i class="mdi mdi-plus"></i> Adicionar Regra
-                            </button>
-                        </div>
-
-                        <div class="d-flex justify-content-end">
-                            <a href="{{ workspace_route('tenant.recurring-appointments.index') }}" class="btn btn-light me-2">Cancelar</a>
-                            <button type="submit" class="btn btn-primary">Atualizar Agendamento Recorrente</button>
-                        </div>
-                    </form>
+                        @endforeach
+                    </div>
+                    <button type="button" class="inline-flex items-center px-3 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-md transition-colors" id="add-rule">
+                        <i class="mdi mdi-plus mr-1"></i> Adicionar Regra
+                    </button>
                 </div>
-            </div>
+
+                <div class="flex items-center justify-end gap-2">
+                    <a href="{{ workspace_route('tenant.recurring-appointments.index') }}" class="inline-flex items-center px-4 py-2 border border-gray-300 text-gray-700 bg-white hover:bg-gray-50 rounded-md text-sm font-medium transition-colors">Cancelar</a>
+                    <button type="submit" class="inline-flex items-center px-4 py-2 bg-primary text-white hover:bg-primary/90 text-sm font-medium rounded-md transition-colors">Atualizar Agendamento Recorrente</button>
+                </div>
+            </form>
         </div>
     </div>
 
@@ -323,7 +299,7 @@
             },
             error: function(xhr) {
                 console.error('Erro ao buscar horários do médico:', xhr);
-                alert('Erro ao carregar horários do médico. Por favor, tente novamente.');
+                showAlert({ type: 'error', title: 'Erro', message: 'Erro ao carregar horários do médico. Por favor, tente novamente.' });
             }
         });
     }
@@ -536,7 +512,7 @@
                     <div class="col-md-4 d-flex align-items-end">
                         <div class="form-group w-100">
                             <label class="fw-semibold">&nbsp;</label>
-                            <button type="button" class="btn btn-danger w-100 remove-rule">
+                            <button type="button" class="remove-rule w-100 inline-flex items-center justify-center gap-1 rounded-md bg-error text-white text-sm font-semibold transition hover:bg-error/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-error/50 focus-visible:ring-offset-white dark:focus-visible:ring-offset-gray-900">
                                 <i class="mdi mdi-delete"></i> Remover
                             </button>
                         </div>

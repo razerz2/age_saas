@@ -1,53 +1,79 @@
-﻿@extends('layouts.connect_plus.app')
+@extends('layouts.tailadmin.app')
 
 @section('title', 'Editar Agendamento')
 
 @section('content')
 
-    <div class="page-header">
-        <div class="d-flex justify-content-between align-items-center">
-            <h3 class="page-title mb-0"> Editar Agendamento </h3>
-            <x-help-button module="appointments" />
+    <!-- Page Header -->
+    <div class="page-header mb-6">
+        <div class="flex items-center justify-between">
+            <div>
+                <h1 class="text-2xl font-semibold text-gray-900 dark:text-white mb-2">Editar Agendamento</h1>
+                <nav class="flex" aria-label="Breadcrumb">
+                    <ol class="inline-flex items-center space-x-1 md:space-x-3">
+                        <li class="inline-flex items-center">
+                            <a href="{{ workspace_route('tenant.dashboard') }}" class="text-gray-700 hover:text-blue-600 dark:text-gray-300 dark:hover:text-white">
+                                <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                    <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001 1h2a1 1 0 001 1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"></path>
+                                </svg>
+                                Dashboard
+                            </a>
+                        </li>
+                        <li>
+                            <div class="flex items-center">
+                                <svg class="w-6 h-6 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
+                                </svg>
+                                <a href="{{ workspace_route('tenant.appointments.index') }}" class="ml-1 text-gray-700 hover:text-blue-600 dark:text-gray-300 dark:hover:text-white md:ml-2">Agendamentos</a>
+                            </div>
+                        </li>
+                        <li aria-current="page">
+                            <div class="flex items-center">
+                                <svg class="w-6 h-6 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
+                                </svg>
+                                <span class="ml-1 text-gray-500 dark:text-gray-400 md:ml-2">Editar</span>
+                            </div>
+                        </li>
+                    </ol>
+                </nav>
+            </div>
+            <div>
+                <x-help-button module="appointments" />
+            </div>
         </div>
-
-        <nav aria-label="breadcrumb">
-            <ol class="breadcrumb">
-                <li class="breadcrumb-item">
-                    <a href="{{ workspace_route('tenant.dashboard') }}">Dashboard</a>
-                </li>
-                <li class="breadcrumb-item">
-                    <a href="{{ workspace_route('tenant.appointments.index') }}">Agendamentos</a>
-                </li>
-                <li class="breadcrumb-item active" aria-current="page">Editar</li>
-            </ol>
-        </nav>
     </div>
 
-    <div class="row">
-        <div class="col-12 grid-margin stretch-card">
-            <div class="card">
-                <div class="card-body">
-                    <div class="d-flex align-items-center justify-content-between mb-4">
-                        <div>
-                            <h4 class="card-title mb-1">
-                                <i class="mdi mdi-calendar-edit text-primary me-2"></i>
-                                Editar Agendamento
-                            </h4>
-                            <p class="card-description mb-0 text-muted">Atualize as informações do agendamento abaixo</p>
-                        </div>
-                    </div>
+    <!-- Main Content -->
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
+        <div class="p-6 border-b border-gray-200 dark:border-gray-700">
+            <div class="flex items-center">
+                <div>
+                    <h2 class="text-xl font-semibold text-gray-900 dark:text-white flex items-center">
+                        <svg class="w-6 h-6 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                        </svg>
+                        Editar Agendamento
+                    </h2>
+                    <p class="text-gray-600 dark:text-gray-400 mt-1">Atualize as informações do agendamento abaixo</p>
+                </div>
+            </div>
+        </div>
 
-                    <form class="forms-sample" action="{{ workspace_route('tenant.appointments.update', $appointment->id) }}" method="POST">
-                        @csrf
-                        @method('PUT')
+        <div class="p-6">
+            <form class="space-y-8" action="{{ workspace_route('tenant.appointments.update', $appointment->id) }}" method="POST">
+                @csrf
+                @method('PUT')
 
-                        {{-- Seção: Informações Básicas --}}
-                        <div class="mb-4">
-                            <h5 class="mb-3 text-primary">
-                                <i class="mdi mdi-information-outline me-2"></i>
-                                Informações Básicas
-                            </h5>
-                            <div class="row">
+                <!-- Seção: Informações Básicas -->
+                <div>
+                    <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
+                        <svg class="w-5 h-5 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        Informações Básicas
+                    </h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div class="col-md-6">
                                     <div class="form-group">
                                         <label class="fw-semibold">
@@ -132,16 +158,16 @@
                                             <i class="mdi mdi-calendar-start me-1"></i>
                                             Data <span class="text-danger">*</span>
                                         </label>
-                                        <div class="d-flex gap-2">
-                                            <input type="date" id="appointment_date" class="form-control @error('appointment_date') is-invalid @enderror @error('starts_at') is-invalid @enderror" 
-                                                   name="appointment_date" value="{{ old('appointment_date', $appointment->starts_at ? $appointment->starts_at->format('Y-m-d') : '') }}" 
-                                                   min="{{ date('Y-m-d') }}" required>
-                                            <button type="button" class="btn btn-info btn-sm" id="btn-show-business-hours" 
-                                                    data-bs-toggle="modal" data-bs-target="#businessHoursModal" 
+                                            <div class="flex gap-2">
+                                                <input type="date" id="appointment_date" class="form-control @error('appointment_date') is-invalid @enderror @error('starts_at') is-invalid @enderror" 
+                                                       name="appointment_date" value="{{ old('appointment_date', $appointment->starts_at ? $appointment->starts_at->format('Y-m-d') : '') }}" 
+                                                       min="{{ date('Y-m-d') }}" required>
+                                                <x-tailadmin-button type="button" variant="secondary" size="sm" id="btn-show-business-hours"
+                                                    class="px-2 py-2" data-bs-toggle="modal" data-bs-target="#businessHoursModal"
                                                     title="Ver dias trabalhados do médico">
-                                                <i class="mdi mdi-calendar-clock"></i>
-                                            </button>
-                                        </div>
+                                                    <i class="mdi mdi-calendar-clock"></i>
+                                                </x-tailadmin-button>
+                                            </div>
                                         @error('appointment_date')
                                             <div class="invalid-feedback d-block">{{ $message }}</div>
                                         @enderror
@@ -222,15 +248,16 @@
                         </div>
 
                         {{-- Botões de Ação --}}
-                        <div class="d-flex justify-content-between align-items-center pt-3 border-top">
-                            <a href="{{ workspace_route('tenant.appointments.index') }}" class="btn btn-light">
-                                <i class="mdi mdi-arrow-left me-1"></i>
+                        <div class="flex flex-wrap items-center justify-between gap-3 pt-3 border-t">
+                            <x-tailadmin-button variant="secondary" size="md" href="{{ workspace_route('tenant.appointments.index') }}"
+                                class="bg-transparent border-gray-300 text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-white/5">
+                                <i class="mdi mdi-arrow-left"></i>
                                 Cancelar
-                            </a>
-                            <button type="submit" class="btn btn-primary btn-lg">
-                                <i class="mdi mdi-content-save me-1"></i>
+                            </x-tailadmin-button>
+                            <x-tailadmin-button type="submit" variant="primary" size="lg">
+                                <i class="mdi mdi-content-save"></i>
                                 Atualizar Agendamento
-                            </button>
+                            </x-tailadmin-button>
                         </div>
                     </form>
 
@@ -275,7 +302,9 @@
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                    <x-tailadmin-button type="button" variant="secondary" size="sm" data-bs-dismiss="modal">
+                        Fechar
+                    </x-tailadmin-button>
                 </div>
             </div>
         </div>
@@ -773,7 +802,7 @@ document.addEventListener('DOMContentLoaded', function() {
     document.querySelector('form').addEventListener('submit', function(e) {
         if (!startsAtInput.value || !endsAtInput.value) {
             e.preventDefault();
-            alert('Por favor, selecione um horário disponível.');
+            showAlert({ type: 'warning', title: 'Atenção', message: 'Por favor, selecione um horário disponível.' });
             return false;
         }
     });

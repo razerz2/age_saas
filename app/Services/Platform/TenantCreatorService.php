@@ -23,21 +23,7 @@ class TenantCreatorService
      */
     public function create(array $data): Tenant
     {
-        // 🔒 Validação de Categoria de Plano vs Rede
-        $networkId = $data['network_id'] ?? null;
         $planId = $data['plan_id'] ?? null;
-
-        if ($planId) {
-            $plan = Plan::findOrFail($planId);
-            
-            if ($networkId === null && $plan->category === Plan::CATEGORY_CONTRACTUAL) {
-                abort(422, 'Planos contratuais são exclusivos para redes de clínicas.');
-            }
-
-            if ($networkId !== null && $plan->category !== Plan::CATEGORY_CONTRACTUAL) {
-                abort(422, 'Tenants vinculados a uma rede devem usar plano contratual.');
-            }
-        }
 
         DB::beginTransaction();
 
@@ -50,11 +36,6 @@ class TenantCreatorService
 
             // 2. Criar o Tenant
             $tenantData = array_merge($data, $dbConfig);
-            
-            // Se for rede, salvamos o plano diretamente no tenant para controle de acesso contratual
-            if ($networkId && $planId) {
-                $tenantData['plan_id'] = $planId;
-            }
 
             $tenant = Tenant::create($tenantData);
 
@@ -100,17 +81,8 @@ class TenantCreatorService
 
             // 7. Configuração de Plano / Acesso
             if ($planId) {
-                $plan = Plan::find($planId);
-                
-                if ($networkId) {
-                    // 🏢 CASO REDE: Não cria assinatura, apenas aplica as regras de acesso ao banco do tenant
-                    $planService = new TenantPlanService();
-                    $planService->applyPlanRules($tenant, $plan);
-                    Log::info("🏢 Tenant de Rede {$tenant->id}: Acesso configurado via plano contratual {$plan->name} (Sem Assinatura)");
-                } else {
-                    // 👤 CASO COMUM: Cria assinatura ativa (fluxo padrão de cobrança)
-                    $this->createActiveSubscription($tenant, $planId);
-                }
+                // Sempre cria uma assinatura ativa quando um plano é informado
+                $this->createActiveSubscription($tenant, $planId);
             }
 
             // 8. Sincronizar com Asaas (Apenas Cliente, sem cobrança se for rede)
@@ -184,10 +156,6 @@ class TenantCreatorService
     private function syncAsaas(Tenant $tenant): void
     {
         try {
-            // 🏢 Tenants vinculados a uma rede NUNCA devem sincronizar com o Asaas
-            if ($tenant->network_id) {
-                return;
-            }
             // A sincronização real de cliente é chamada pelo Controller se necessário.
         } catch (\Throwable $e) {
             Log::error("❌ Erro na sincronia Asaas via Service: " . $e->getMessage());

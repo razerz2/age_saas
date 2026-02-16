@@ -1,4 +1,4 @@
-@extends('layouts.connect_plus.app')
+@extends('layouts.tailadmin.app')
 
 @section('title', 'Relatório de Cobranças')
 
@@ -61,13 +61,13 @@
                                 <option value="internal">Interno</option>
                             </select>
                         </div>
-                        <div class="col-md-2 d-flex align-items-end">
-                            <button type="submit" class="btn btn-primary me-2">
+                        <div class="col-md-2 flex flex-wrap items-end justify-end gap-2">
+                            <x-tailadmin-button type="submit" variant="primary" size="sm" class="flex-1 max-w-[160px] justify-center">
                                 <i class="mdi mdi-filter"></i> Filtrar
-                            </button>
-                            <button type="button" class="btn btn-secondary" onclick="exportReport('csv')">
+                            </x-tailadmin-button>
+                            <x-tailadmin-button type="button" variant="secondary" size="sm" class="flex-1 max-w-[140px] justify-center" onclick="exportReport('csv')">
                                 <i class="mdi mdi-file-export"></i> CSV
-                            </button>
+                            </x-tailadmin-button>
                         </div>
                     </form>
                 </div>

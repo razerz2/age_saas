@@ -1,231 +1,205 @@
-﻿@extends('layouts.connect_plus.app')
+@extends('layouts.tailadmin.app')
 
 @section('title', 'Criar Agendamento Recorrente')
 
 @section('content')
-
-    <div class="page-header">
-        <h3 class="page-title"> Criar Agendamento Recorrente </h3>
-
-        <nav aria-label="breadcrumb">
-            <ol class="breadcrumb">
-                <li class="breadcrumb-item">
-                    <a href="{{ workspace_route('tenant.dashboard') }}">Dashboard</a>
-                </li>
-                <li class="breadcrumb-item">
-                    <a href="{{ workspace_route('tenant.recurring-appointments.index') }}">Agendamentos Recorrentes</a>
-                </li>
-                <li class="breadcrumb-item active" aria-current="page">Criar</li>
-            </ol>
-        </nav>
+    <!-- Page Header -->
+    <div class="page-header mb-6">
+        <div class="flex items-center justify-between">
+            <nav class="min-w-0 flex-1" aria-label="breadcrumb">
+                <ol class="flex flex-wrap items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
+                    <li>
+                        <a href="{{ workspace_route('tenant.dashboard') }}" class="text-gray-700 hover:text-blue-600 dark:text-gray-300 dark:hover:text-white inline-flex items-center gap-2">
+                            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                                <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001 1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"></path>
+                            </svg>
+                            Dashboard
+                        </a>
+                    </li>
+                    <li class="flex items-center gap-2">
+                        <svg class="w-4 h-4 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
+                        </svg>
+                        <a href="{{ workspace_route('tenant.recurring-appointments.index') }}" class="text-gray-700 hover:text-blue-600 dark:text-gray-300 dark:hover:text-white">Agendamentos Recorrentes</a>
+                    </li>
+                    <li class="flex items-center gap-2">
+                        <svg class="w-4 h-4 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
+                        </svg>
+                        <span class="text-gray-900 dark:text-white font-semibold">Criar</span>
+                    </li>
+                </ol>
+            </nav>
+        </div>
     </div>
 
-    <div class="row">
-        <div class="col-12 grid-margin stretch-card">
-            <div class="card">
-                <div class="card-body">
-                    <div class="d-flex align-items-center justify-content-between mb-4">
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
+        <div class="p-6">
+            <div class="mb-6">
+                <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Novo Agendamento Recorrente</h2>
+                <p class="text-sm text-gray-500 dark:text-gray-400">Configure um agendamento que se repete automaticamente</p>
+            </div>
+
+            @if ($errors->any())
+                <div class="bg-red-50 border border-red-200 text-red-700 rounded-md p-4 mb-6">
+                    <strong>Erro de Validação:</strong>
+                    <ul class="mt-2 list-disc list-inside">
+                        @foreach ($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
+
+            <form class="space-y-8" id="recurring-appointment-form" action="{{ workspace_route('tenant.recurring-appointments.store') }}" method="POST">
+                @csrf
+
+                <!-- Seção: Informações Básicas -->
+                <div>
+                    <h3 class="text-sm font-semibold text-gray-900 dark:text-white mb-4">Informações Básicas</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
-                            <h4 class="card-title mb-1">
-                                <i class="mdi mdi-calendar-repeat text-primary me-2"></i>
-                                Novo Agendamento Recorrente
-                            </h4>
-                            <p class="card-description mb-0 text-muted">Configure um agendamento que se repete automaticamente</p>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                Paciente <span class="text-red-500">*</span>
+                            </label>
+                            <select name="patient_id" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white @error('patient_id') border-red-500 @enderror" required>
+                                <option value="">Selecione um paciente</option>
+                                @foreach($patients as $patient)
+                                    <option value="{{ $patient->id }}" {{ old('patient_id') == $patient->id ? 'selected' : '' }}>
+                                        {{ $patient->full_name }}
+                                    </option>
+                                @endforeach
+                            </select>
+                            @error('patient_id')
+                                <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+                            @enderror
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                Médico <span class="text-red-500">*</span>
+                            </label>
+                            <select name="doctor_id" id="doctor_id" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white @error('doctor_id') border-red-500 @enderror" required>
+                                <option value="">Selecione um médico</option>
+                                @foreach($doctors as $doctor)
+                                    <option value="{{ $doctor->id }}" {{ old('doctor_id') == $doctor->id ? 'selected' : '' }}>
+                                        {{ $doctor->user->name_full ?? $doctor->user->name }}
+                                    </option>
+                                @endforeach
+                            </select>
+                            @error('doctor_id')
+                                <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+                            @enderror
+                            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Selecione o médico para ver os dias e horários disponíveis</p>
                         </div>
                     </div>
 
-                    {{-- Exibição de erros de validação --}}
-                    @if ($errors->any())
-                        <div class="alert alert-danger alert-dismissible fade show mb-4" role="alert">
-                            <strong><i class="mdi mdi-alert-circle me-2"></i>Erro de Validação:</strong>
-                            <ul class="mt-2 mb-0">
-                                @foreach ($errors->all() as $error)
-                                    <li>{{ $error }}</li>
-                                @endforeach
-                            </ul>
-                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                Especialidade
+                            </label>
+                            <select name="specialty_id" id="specialty_id" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white @error('specialty_id') border-red-500 @enderror" disabled>
+                                <option value="">Primeiro selecione um médico</option>
+                            </select>
+                            @error('specialty_id')
+                                <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+                            @enderror
                         </div>
-                    @endif
-
-                    <form class="forms-sample" id="recurring-appointment-form" action="{{ workspace_route('tenant.recurring-appointments.store') }}" method="POST">
-                        @csrf
-
-                        {{-- Seção: Informações Básicas --}}
-                        <div class="mb-4">
-                            <h5 class="mb-3 text-primary">
-                                <i class="mdi mdi-information-outline me-2"></i>
-                                Informações Básicas
-                            </h5>
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <div class="form-group">
-                                        <label class="fw-semibold">
-                                            <i class="mdi mdi-account me-1"></i>
-                                            Paciente <span class="text-danger">*</span>
-                                        </label>
-                                        <select name="patient_id" class="form-control @error('patient_id') is-invalid @enderror" required>
-                                            <option value="">Selecione um paciente</option>
-                                            @foreach($patients as $patient)
-                                                <option value="{{ $patient->id }}" {{ old('patient_id') == $patient->id ? 'selected' : '' }}>
-                                                    {{ $patient->full_name }}
-                                                </option>
-                                            @endforeach
-                                        </select>
-                                        @error('patient_id')
-                                            <div class="invalid-feedback d-block">{{ $message }}</div>
-                                        @enderror
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="form-group">
-                                        <label class="fw-semibold">
-                                            <i class="mdi mdi-doctor me-1"></i>
-                                            Médico <span class="text-danger">*</span>
-                                        </label>
-                                        <select name="doctor_id" id="doctor_id" class="form-control @error('doctor_id') is-invalid @enderror" required>
-                                            <option value="">Selecione um médico</option>
-                                            @foreach($doctors as $doctor)
-                                                <option value="{{ $doctor->id }}" {{ old('doctor_id') == $doctor->id ? 'selected' : '' }}>
-                                                    {{ $doctor->user->name_full ?? $doctor->user->name }}
-                                                </option>
-                                            @endforeach
-                                        </select>
-                                        @error('doctor_id')
-                                            <div class="invalid-feedback d-block">{{ $message }}</div>
-                                        @enderror
-                                        <small class="form-text text-muted">Selecione o médico para ver os dias e horários disponíveis</small>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <div class="form-group">
-                                        <label class="fw-semibold">
-                                            <i class="mdi mdi-stethoscope me-1"></i>
-                                            Especialidade
-                                        </label>
-                                        <select name="specialty_id" id="specialty_id" class="form-control @error('specialty_id') is-invalid @enderror" disabled>
-                                            <option value="">Primeiro selecione um médico</option>
-                                        </select>
-                                        @error('specialty_id')
-                                            <div class="invalid-feedback d-block">{{ $message }}</div>
-                                        @enderror
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="form-group">
-                                        <label class="fw-semibold">
-                                            <i class="mdi mdi-calendar-clock me-1"></i>
-                                            Tipo de Consulta <span class="text-danger">*</span>
-                                        </label>
-                                        <select name="appointment_type_id" id="appointment_type_id" class="form-control @error('appointment_type_id') is-invalid @enderror" required disabled>
-                                            <option value="">Primeiro selecione uma especialidade</option>
-                                        </select>
-                                        @error('appointment_type_id')
-                                            <div class="invalid-feedback d-block">{{ $message }}</div>
-                                        @enderror
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <div class="form-group">
-                                        <label class="fw-semibold">
-                                            <i class="mdi mdi-toggle-switch me-1"></i>
-                                            Tipo de Término <span class="text-danger">*</span>
-                                        </label>
-                                        <select name="end_type" id="end_type" class="form-control @error('end_type') is-invalid @enderror" required>
-                                            <option value="none" {{ old('end_type', 'none') == 'none' ? 'selected' : '' }}>Sem limite (infinito)</option>
-                                            <option value="date" {{ old('end_type') == 'date' ? 'selected' : '' }}>Data final</option>
-                                        </select>
-                                        @error('end_type')
-                                            <div class="invalid-feedback d-block">{{ $message }}</div>
-                                        @enderror
-                                    </div>
-                                </div>
-                                @php
-                                    $settings = \App\Models\Tenant\TenantSetting::getAll();
-                                    $defaultMode = $settings['appointments.default_appointment_mode'] ?? 'user_choice';
-                                @endphp
-                                @if($defaultMode === 'user_choice')
-                                    @include('tenant.appointments.partials.appointment_mode_select', ['appointment' => null])
-                                @endif
-                            </div>
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <div class="form-group">
-                                        <label class="fw-semibold">
-                                            <i class="mdi mdi-calendar-start me-1"></i>
-                                            Data Inicial <span class="text-danger">*</span>
-                                        </label>
-                                        <input type="date" name="start_date" id="start_date" class="form-control @error('start_date') is-invalid @enderror" 
-                                               value="{{ old('start_date', date('Y-m-d')) }}" required>
-                                        @error('start_date')
-                                            <div class="invalid-feedback d-block">{{ $message }}</div>
-                                        @enderror
-                                    </div>
-                                </div>
-                                <div class="col-md-6" id="end_date_field" style="display: none;">
-                                    <div class="form-group">
-                                        <label class="fw-semibold">
-                                            <i class="mdi mdi-calendar-end me-1"></i>
-                                            Data Final <span class="text-danger">*</span>
-                                        </label>
-                                        <input type="date" name="end_date" class="form-control @error('end_date') is-invalid @enderror" 
-                                               value="{{ old('end_date') }}">
-                                        @error('end_date')
-                                            <div class="invalid-feedback d-block">{{ $message }}</div>
-                                        @enderror
-                                    </div>
-                                </div>
-                            </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                Tipo de Consulta <span class="text-red-500">*</span>
+                            </label>
+                            <select name="appointment_type_id" id="appointment_type_id" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white @error('appointment_type_id') border-red-500 @enderror" required disabled>
+                                <option value="">Primeiro selecione uma especialidade</option>
+                            </select>
+                            @error('appointment_type_id')
+                                <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+                            @enderror
                         </div>
+                    </div>
 
-                        {{-- Seção: Regras de Recorrência --}}
-                        <div class="mb-4">
-                            <h5 class="mb-3 text-primary">
-                                <i class="mdi mdi-calendar-repeat me-2"></i>
-                                Regras de Recorrência
-                            </h5>
-                            <div id="rules-container">
-                                <div class="rule-item mb-3 p-3 border rounded">
-                                    <div class="row">
-                                        <div class="col-md-4">
-                                            <div class="form-group mb-0">
-                                                <label class="fw-semibold mb-2">Dia da Semana <span class="text-danger rule-required-indicator">*</span></label>
-                                                <select name="rules[0][weekday]" class="form-control rule-weekday" disabled>
-                                                    <option value="">Selecione o tipo de consulta primeiro</option>
-                                                </select>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-4">
-                                            <div class="form-group mb-0">
-                                                <label class="fw-semibold mb-2">Horário Disponível <span class="text-danger rule-required-indicator">*</span></label>
-                                                <select name="rules[0][time_slot]" class="form-control rule-time-slot" disabled>
-                                                    <option value="">Selecione o dia da semana primeiro</option>
-                                                </select>
-                                                <input type="hidden" name="rules[0][start_time]" class="rule-start-time">
-                                                <input type="hidden" name="rules[0][end_time]" class="rule-end-time">
-                                            </div>
-                                        </div>
-                                        <div class="col-md-4 d-flex align-items-end rule-button-col">
-                                            <label class="fw-semibold mb-2 rule-label-spacer" style="visibility: hidden;">&nbsp;</label>
-                                            <button type="button" class="btn btn-success btn-sm rule-action-btn" id="add-rule">
-                                                <i class="mdi mdi-plus"></i> Adicionar Regra
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                Tipo de Término <span class="text-red-500">*</span>
+                            </label>
+                            <select name="end_type" id="end_type" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white @error('end_type') border-red-500 @enderror" required>
+                                <option value="none" {{ old('end_type', 'none') == 'none' ? 'selected' : '' }}>Sem limite (infinito)</option>
+                                <option value="date" {{ old('end_type') == 'date' ? 'selected' : '' }}>Data final</option>
+                            </select>
+                            @error('end_type')
+                                <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+                            @enderror
                         </div>
+                        @php
+                            $settings = \App\Models\Tenant\TenantSetting::getAll();
+                            $defaultMode = $settings['appointments.default_appointment_mode'] ?? 'user_choice';
+                        @endphp
+                        @if($defaultMode === 'user_choice')
+                            @include('tenant.appointments.partials.appointment_mode_select', ['appointment' => null])
+                        @endif
+                    </div>
 
-                        <div class="d-flex justify-content-end">
-                            <a href="{{ workspace_route('tenant.recurring-appointments.index') }}" class="btn btn-light me-2">Cancelar</a>
-                            <button type="submit" class="btn btn-primary">Criar Agendamento Recorrente</button>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                Data Inicial <span class="text-red-500">*</span>
+                            </label>
+                            <input type="date" name="start_date" id="start_date" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white @error('start_date') border-red-500 @enderror"
+                                   value="{{ old('start_date', date('Y-m-d')) }}" required>
+                            @error('start_date')
+                                <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+                            @enderror
                         </div>
-                    </form>
+                        <div id="end_date_field" style="display: none;">
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                Data Final <span class="text-red-500">*</span>
+                            </label>
+                            <input type="date" name="end_date" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white @error('end_date') border-red-500 @enderror"
+                                   value="{{ old('end_date') }}">
+                            @error('end_date')
+                                <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+                            @enderror
+                        </div>
+                    </div>
                 </div>
-            </div>
+
+                <!-- Seção: Regras de Recorrência -->
+                <div>
+                    <h3 class="text-sm font-semibold text-gray-900 dark:text-white mb-4">Regras de Recorrência</h3>
+                    <div id="rules-container">
+                        <div class="rule-item mb-4 p-4 border border-gray-200 dark:border-gray-700 rounded-md">
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Dia da Semana <span class="text-red-500 rule-required-indicator">*</span></label>
+                                    <select name="rules[0][weekday]" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white rule-weekday" disabled>
+                                        <option value="">Selecione o tipo de consulta primeiro</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Horário Disponível <span class="text-red-500 rule-required-indicator">*</span></label>
+                                    <select name="rules[0][time_slot]" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white rule-time-slot" disabled>
+                                        <option value="">Selecione o dia da semana primeiro</option>
+                                    </select>
+                                    <input type="hidden" name="rules[0][start_time]" class="rule-start-time">
+                                    <input type="hidden" name="rules[0][end_time]" class="rule-end-time">
+                                </div>
+                                <div class="flex items-end rule-button-col">
+                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 rule-label-spacer" style="visibility: hidden;">&nbsp;</label>
+                                    <button type="button" class="inline-flex items-center px-3 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-md transition-colors rule-action-btn" id="add-rule">
+                                        <i class="mdi mdi-plus mr-1"></i> Adicionar Regra
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex items-center justify-end gap-2">
+                    <a href="{{ workspace_route('tenant.recurring-appointments.index') }}" class="inline-flex items-center px-4 py-2 border border-gray-300 text-gray-700 bg-white hover:bg-gray-50 rounded-md text-sm font-medium transition-colors">Cancelar</a>
+                    <button type="submit" class="inline-flex items-center px-4 py-2 bg-primary text-white hover:bg-primary/90 text-sm font-medium rounded-md transition-colors">Criar Agendamento Recorrente</button>
+                </div>
+            </form>
         </div>
     </div>
 
@@ -308,7 +282,7 @@
             },
             error: function(xhr) {
                 console.error('Erro ao buscar horários do médico:', xhr);
-                alert('Erro ao carregar horários do médico. Por favor, tente novamente.');
+                showAlert({ type: 'error', title: 'Erro', message: 'Erro ao carregar horários do médico. Por favor, tente novamente.' });
             }
         });
     }
@@ -681,7 +655,7 @@
         
         // Validar se a primeira regra tem dia e horário selecionados
         if (!currentWeekday || !currentTimeSlot || !currentStartTime || !currentEndTime) {
-            alert('Por favor, selecione um dia da semana e um horário na primeira regra antes de adicionar outra.');
+            showAlert({ type: 'warning', title: 'Atenção', message: 'Por favor, selecione um dia da semana e um horário na primeira regra antes de adicionar outra.' });
             return;
         }
         
@@ -696,7 +670,7 @@
         
         // Verificar se o dia atual já foi selecionado em outra regra confirmada
         if (selectedWeekdays.includes(currentWeekday)) {
-            alert('Este dia da semana já foi adicionado em outra regra. Não é possível duplicar dias.');
+            showAlert({ type: 'warning', title: 'Atenção', message: 'Este dia da semana já foi adicionado em outra regra. Não é possível duplicar dias.' });
             return;
         }
         
@@ -729,7 +703,7 @@
                     </div>
                     <div class="col-md-4 d-flex align-items-end rule-button-col">
                         <label class="fw-semibold mb-2 rule-label-spacer" style="visibility: hidden;">&nbsp;</label>
-                        <button type="button" class="btn btn-danger btn-sm rule-action-btn remove-rule">
+                        <button type="button" class="rule-action-btn remove-rule inline-flex items-center justify-center gap-1 rounded-md bg-error text-white text-xs font-semibold transition hover:bg-error/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-error/50 focus-visible:ring-offset-white dark:focus-visible:ring-offset-gray-900">
                             <i class="mdi mdi-delete"></i> Remover
                         </button>
                     </div>
@@ -788,7 +762,7 @@
         // Validar que há pelo menos uma regra completa
         if (validConfirmedRules === 0) {
             e.preventDefault();
-            alert('Por favor, adicione pelo menos uma regra de recorrência completa (dia da semana e horário).');
+            showAlert({ type: 'warning', title: 'Atenção', message: 'Por favor, adicione pelo menos uma regra de recorrência completa (dia da semana e horário).' });
             return false;
         }
         

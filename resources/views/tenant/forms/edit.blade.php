@@ -1,4 +1,4 @@
-﻿@extends('layouts.connect_plus.app')
+@extends('layouts.tailadmin.app')
 
 @section('title', 'Editar Formulário')
 
@@ -150,13 +150,17 @@
                         </div>
 
                         {{-- Botões de Ação --}}
-                        <div class="d-flex justify-content-between align-items-center pt-3 border-top">
-                            <a href="{{ workspace_route('tenant.forms.index') }}" class="btn btn-light">
-                                <i class="mdi mdi-arrow-left me-1"></i>
+                        <div class="flex flex-col gap-3 pt-3 border-t border-gray-200 dark:border-gray-700 sm:flex-row sm:items-center sm:justify-between">
+                            <a href="{{ workspace_route('tenant.forms.index') }}" class="btn-patient-secondary">
+                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                                </svg>
                                 Cancelar
                             </a>
-                            <button type="submit" class="btn btn-primary btn-lg">
-                                <i class="mdi mdi-content-save me-1"></i>
+                            <button type="submit" class="btn-patient-primary">
+                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V2"></path>
+                                </svg>
                                 Atualizar Formulário
                             </button>
                         </div>
@@ -169,6 +173,94 @@
 
 @push('styles')
     <link href="{{ asset('css/tenant-forms.css') }}" rel="stylesheet">
+    <style>
+        /* Botões padrão com suporte a modo claro e escuro */
+        .btn-patient-primary {
+            background-color: #2563eb;
+            color: white;
+            border: 1px solid #d1d5db;
+            padding: 0.625rem 1.25rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+            border-radius: 0.375rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            text-decoration: none;
+        }
+        
+        .btn-patient-primary:hover {
+            background-color: #1d4ed8;
+        }
+        
+        .btn-patient-secondary {
+            background-color: transparent;
+            color: #374151;
+            border: 1px solid #d1d5db;
+            padding: 0.5rem 1rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+            border-radius: 0.375rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            text-decoration: none;
+        }
+        
+        .btn-patient-secondary:hover {
+            background-color: #f9fafb;
+        }
+        
+        /* Modo escuro via preferência do sistema */
+        @media (prefers-color-scheme: dark) {
+            .btn-patient-primary {
+                background-color: transparent;
+                color: white;
+                border-color: #d1d5db;
+            }
+            
+            .btn-patient-primary:hover {
+                background-color: #1f2937;
+            }
+            
+            .btn-patient-secondary {
+                background-color: transparent;
+                color: white;
+                border-color: #d1d5db;
+            }
+            
+            .btn-patient-secondary:hover {
+                background-color: #1f2937;
+            }
+        }
+        
+        /* Modo escuro via classe */
+        .dark .btn-patient-primary {
+            background-color: transparent;
+            color: white;
+            border-color: #d1d5db;
+        }
+        
+        .dark .btn-patient-primary:hover {
+            background-color: #1f2937;
+        }
+        
+        .dark .btn-patient-secondary {
+            background-color: transparent;
+            color: white;
+            border-color: #d1d5db;
+        }
+        
+        .dark .btn-patient-secondary:hover {
+            background-color: #1f2937;
+        }
+    </style>
 @endpush
 
 @push('scripts')

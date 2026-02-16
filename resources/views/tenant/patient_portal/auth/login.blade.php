@@ -1,56 +1,75 @@
-@extends('tenant.patient_portal.layouts.auth')
+@extends('layouts.tailadmin.public')
 
 @section('title', 'Login - Portal do Paciente')
 
 @section('content')
-<h4>Bem-vindo ao Portal do Paciente!</h4>
-<h6 class="font-weight-light mb-4">Entre para continuar</h6>
+    <div class="min-h-screen flex items-center justify-center px-4 py-8 bg-gray-50">
+        <div class="w-full max-w-md">
+            <div class="mb-8 text-center">
+                <img src="{{ asset('tailadmin/assets/images/logo/logo.svg') }}" alt="Logo" class="mx-auto h-10 w-auto mb-4">
+                <h1 class="text-2xl font-bold text-gray-900">Portal do Paciente</h1>
+                <p class="mt-1 text-sm text-gray-600">Entre para acessar seus agendamentos e notificações.</p>
+            </div>
 
-{{-- FORM LOGIN --}}
-<form method="POST" action="{{ route('patient.login.submit', ['slug' => $tenant->subdomain ?? $tenant]) }}" class="pt-3">
-    @csrf
+            @if ($errors->any())
+                <div class="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                    <ul class="list-disc pl-5 space-y-1">
+                        @foreach ($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
 
-    {{-- EMAIL --}}
-    <div class="form-group">
-        <input type="email" name="email"
-            class="form-control form-control-lg @error('email') is-invalid @enderror"
-            placeholder="E-mail" value="{{ old('email') }}" required autofocus>
-        @error('email')
-            <span class="invalid-feedback d-block">{{ $message }}</span>
-        @enderror
-    </div>
+            <div class="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+                <form method="POST" action="{{ route('patient.login.submit', ['slug' => $tenant->subdomain ?? $tenant]) }}" class="space-y-4">
+                    @csrf
 
-    {{-- SENHA --}}
-    <div class="form-group">
-        <input type="password" name="password"
-            class="form-control form-control-lg @error('password') is-invalid @enderror"
-            placeholder="Senha" required>
-        @error('password')
-            <span class="invalid-feedback d-block">{{ $message }}</span>
-        @enderror
-    </div>
+                    <div>
+                        <label for="email" class="block text-sm font-medium text-gray-700">E-mail</label>
+                        <input
+                            id="email"
+                            type="email"
+                            name="email"
+                            value="{{ old('email') }}"
+                            required
+                            autofocus
+                            class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            placeholder="seu@email.com"
+                        >
+                    </div>
 
-    {{-- BOTÃO LOGIN --}}
-    <div class="mt-3">
-        <button type="submit"
-            class="btn btn-block btn-primary btn-lg font-weight-medium auth-form-btn">
-            Entrar
-        </button>
-    </div>
+                    <div>
+                        <label for="password" class="block text-sm font-medium text-gray-700">Senha</label>
+                        <input
+                            id="password"
+                            type="password"
+                            name="password"
+                            required
+                            class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            placeholder="••••••••"
+                        >
+                    </div>
 
-    {{-- MANTER CONECTADO + ESQUECEU A SENHA --}}
-    <div class="my-2 d-flex justify-content-between align-items-center">
-        <div class="form-check">
-            <label class="form-check-label text-muted">
-                <input type="checkbox" name="remember" class="form-check-input">
-                Manter conectado
-            </label>
+                    <div class="flex items-center justify-between text-sm">
+                        <label class="inline-flex items-center gap-2 text-gray-600">
+                            <input type="checkbox" name="remember" class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                            <span>Manter conectado</span>
+                        </label>
+
+                        <a href="{{ route('patient.forgot-password', ['slug' => $tenant->subdomain ?? $tenant]) }}" class="font-medium text-blue-600 hover:text-blue-700">
+                            Esqueceu a senha?
+                        </a>
+                    </div>
+
+                    <div class="pt-2">
+                        <x-tailadmin-button type="submit" variant="primary" size="lg" class="w-full justify-center">
+                            Entrar
+                        </x-tailadmin-button>
+                    </div>
+                </form>
+            </div>
         </div>
-
-        <a href="{{ route('patient.forgot-password', ['slug' => $tenant->subdomain ?? $tenant]) }}" class="auth-link text-black">
-            Esqueceu a senha?
-        </a>
     </div>
-</form>
 @endsection
 

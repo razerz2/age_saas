@@ -1,20 +1,9 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
+@extends('layouts.tailadmin.public')
 
-<head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+@section('title', 'Novo Agendamento — ' . ($tenant->trade_name ?? $tenant->legal_name ?? 'Sistema'))
 
-    <title>Novo Agendamento — {{ $tenant->trade_name ?? $tenant->legal_name ?? 'Sistema' }}</title>
-
-    {{-- CSS --}}
-    <link rel="stylesheet" href="{{ asset('connect_plus/assets/vendors/mdi/css/materialdesignicons.min.css') }}">
-    <link rel="stylesheet" href="{{ asset('connect_plus/assets/vendors/flag-icon-css/css/flag-icon.min.css') }}">
-    <link rel="stylesheet" href="{{ asset('connect_plus/assets/vendors/css/vendor.bundle.base.css') }}">
-    <link rel="stylesheet" href="{{ asset('connect_plus/assets/css/style.css') }}">
-
-    <link rel="shortcut icon" href="{{ asset('connect_plus/assets/images/favicon.png') }}">
-
+@push('styles')
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@mdi/font@7.4.47/css/materialdesignicons.min.css">
     <style>
         .form-group label {
             font-weight: 600;
@@ -50,9 +39,9 @@
             box-shadow: 0 10px 30px rgba(0,0,0,0.2);
         }
     </style>
-</head>
+@endpush
 
-<body>
+@section('content')
     <div class="page-wrapper">
         <div class="container">
             <div class="row justify-content-center">
@@ -197,15 +186,15 @@
                                                     <i class="mdi mdi-calendar-start me-1"></i>
                                                     Data <span class="text-danger">*</span>
                                                 </label>
-                                                <div class="d-flex gap-2">
+                                                <div class="flex gap-2">
                                                     <input type="date" id="appointment_date" class="form-control @error('appointment_date') is-invalid @enderror" 
                                                            name="appointment_date" value="{{ old('appointment_date') }}" 
                                                            min="{{ date('Y-m-d') }}" required>
-                                                    <button type="button" class="btn btn-info btn-sm" id="btn-show-business-hours" 
-                                                            data-bs-toggle="modal" data-bs-target="#businessHoursModal" 
-                                                            title="Ver dias trabalhados do médico" disabled>
+                                                    <x-tailadmin-button type="button" variant="secondary" size="sm" id="btn-show-business-hours"
+                                                        class="min-w-[44px] px-2 py-2" data-bs-toggle="modal" data-bs-target="#businessHoursModal"
+                                                        title="Ver dias trabalhados do médico" disabled>
                                                         <i class="mdi mdi-calendar-clock"></i>
-                                                    </button>
+                                                    </x-tailadmin-button>
                                                 </div>
                                                 @error('appointment_date')
                                                     <div class="invalid-feedback d-block">{{ $message }}</div>
@@ -258,15 +247,16 @@
                                 </div>
 
                                 {{-- Botões de Ação --}}
-                                <div class="d-flex justify-content-between align-items-center pt-3 border-top">
-                                    <a href="{{ route('public.patient.identify', ['slug' => $tenant->subdomain]) }}" class="btn btn-light">
-                                        <i class="mdi mdi-arrow-left me-1"></i>
+                                <div class="flex flex-wrap items-center justify-between gap-3 pt-3 border-t">
+                                    <x-tailadmin-button variant="secondary" size="md" href="{{ route('public.patient.identify', ['slug' => $tenant->subdomain]) }}"
+                                        class="bg-transparent border-gray-300 text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-white/5">
+                                        <i class="mdi mdi-arrow-left"></i>
                                         Voltar
-                                    </a>
-                                    <button type="submit" class="btn btn-primary btn-lg">
-                                        <i class="mdi mdi-content-save me-1"></i>
+                                    </x-tailadmin-button>
+                                    <x-tailadmin-button type="submit" variant="primary" size="lg">
+                                        <i class="mdi mdi-content-save"></i>
                                         Confirmar Agendamento
-                                    </button>
+                                    </x-tailadmin-button>
                                 </div>
                             </form>
 
@@ -313,18 +303,15 @@
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                    <x-tailadmin-button type="button" variant="secondary" size="sm" data-bs-dismiss="modal">
+                        Fechar
+                    </x-tailadmin-button>
                 </div>
             </div>
         </div>
     </div>
 
-    {{-- JS --}}
-    <script src="{{ asset('connect_plus/assets/vendors/js/vendor.bundle.base.js') }}"></script>
-    <script src="{{ asset('connect_plus/assets/js/off-canvas.js') }}"></script>
-    <script src="{{ asset('connect_plus/assets/js/hoverable-collapse.js') }}"></script>
-    <script src="{{ asset('connect_plus/assets/js/misc.js') }}"></script>
-
+    @push('scripts')
     <script>
     document.addEventListener('DOMContentLoaded', function() {
         const tenant = '{{ $tenant->subdomain }}';
@@ -385,13 +372,13 @@
         document.querySelector('form').addEventListener('submit', function(e) {
             if (!calendarIdInput.value) {
                 e.preventDefault();
-                alert('Erro: Calendário não foi selecionado. Por favor, selecione um médico novamente.');
+                showAlert({ type: 'error', title: 'Erro', message: 'Calendário não foi selecionado. Por favor, selecione um médico novamente.' });
                 return false;
             }
             
             if (!startsAtInput.value || !endsAtInput.value) {
                 e.preventDefault();
-                alert('Por favor, selecione um horário disponível.');
+                showAlert({ type: 'warning', title: 'Atenção', message: 'Por favor, selecione um horário disponível.' });
                 return false;
             }
         });
@@ -676,8 +663,6 @@
         }
     });
     </script>
-
-</body>
-
-</html>
+    @endpush
+@endsection
 

@@ -272,7 +272,7 @@ O sistema **NÃO adota período de tolerância** para inadimplência. Qualquer f
 - **Sem exceções:** Não existe prazo de tolerância, contagem de dias em atraso ou exceção por método de pagamento
 
 **Implementação:**
-- Comando `invoices:check-overdue` marca faturas como `overdue` e suspende tenants imediatamente
+- Comando `invoices:invoices-check-overdue` marca faturas como `overdue` e suspende tenants imediatamente
 - Webhook `PAYMENT_OVERDUE` suspende tenant imediatamente
 - Webhook `PAYMENT_RECEIVED`/`PAYMENT_CONFIRMED` reativa tenant automaticamente
 
@@ -1010,10 +1010,10 @@ O sistema possui os seguintes comandos agendados para gestão automática de fat
 
 | Comando | Horário | Descrição |
 |---------|---------|-----------|
-| `subscriptions:process` | 01:00 | Processa assinaturas vencidas |
+| `subscriptions:subscriptions-process` | 01:00 | Processa assinaturas vencidas |
 | `invoices:generate` | 01:30 | Gera faturas X dias antes do vencimento (PIX/Boleto) |
 | `invoices:notify-upcoming` | 01:45 | Notifica sobre faturas próximas do vencimento |
-| `invoices:check-overdue` | 02:00 | Marca faturas vencidas e suspende tenants imediatamente (sem período de carência) |
+| `invoices:invoices-check-overdue` | 02:00 | Marca faturas vencidas e suspende tenants imediatamente (sem período de carência) |
 | `subscriptions:process-recovery` | 02:30 | Processa recovery de assinaturas de cartão suspensas ≥ 5 dias |
 | `tenants:purge-canceled` | 03:00 | Remove dados e banco de tenants cancelados há ≥ 90 dias |
 

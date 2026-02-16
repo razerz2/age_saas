@@ -1,23 +1,25 @@
-@extends('layouts.connect_plus.app')
+@extends('layouts.tailadmin.app')
 
 @section('title', 'Configurações Financeiras')
 
 @section('content')
 <div class="page-header">
-    <div class="d-flex justify-content-between align-items-center">
-        <h3 class="page-title mb-0">
-            <span class="page-title-icon bg-gradient-primary text-white me-2">
-                <i class="mdi mdi-currency-usd"></i>
-            </span>
-            Configurações Financeiras
-        </h3>
-        <div>
-            <a href="{{ workspace_route('tenant.settings.index') }}" class="btn btn-outline-secondary">
-                <i class="mdi mdi-arrow-left me-2"></i>Voltar para Configurações
-            </a>
-            <x-help-button module="settings" />
+        <div class="d-flex justify-content-between align-items-center">
+            <h3 class="page-title mb-0">
+                <span class="page-title-icon bg-gradient-primary text-white me-2">
+                    <i class="mdi mdi-currency-usd"></i>
+                </span>
+                Configurações Financeiras
+            </h3>
+            <div class="flex items-center gap-3">
+                <x-tailadmin-button variant="secondary" size="md" href="{{ workspace_route('tenant.settings.index') }}"
+                    class="bg-transparent border-gray-300 text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-white/5">
+                    <i class="mdi mdi-arrow-left"></i>
+                    Voltar para Configurações
+                </x-tailadmin-button>
+                <x-help-button module="settings" />
+            </div>
         </div>
-    </div>
 </div>
 
 <div class="row">
@@ -100,14 +102,14 @@
 
                                 <div class="col-md-12 mb-3">
                                     <label class="form-label">Webhook Secret</label>
-                                    <div class="input-group">
-                                        <input type="text" class="form-control" name="asaas_webhook_secret" 
+                                    <div class="flex gap-2">
+                                        <input type="text" class="form-control flex-1" name="asaas_webhook_secret" 
                                                value="{{ $settings['finance.asaas.webhook_secret'] }}" 
                                                placeholder="Secret para validar webhooks"
                                                readonly>
-                                        <button type="button" class="btn btn-outline-secondary" onclick="regenerateSecret()">
-                                            <i class="mdi mdi-refresh me-2"></i>Gerar Novo
-                                        </button>
+                                        <x-tailadmin-button type="button" variant="secondary" size="sm" class="px-3 py-2" onclick="regenerateSecret()">
+                                            <i class="mdi mdi-refresh"></i> Gerar Novo
+                                        </x-tailadmin-button>
                                     </div>
                                     <input type="hidden" name="regenerate_webhook_secret" id="regenerate_webhook_secret" value="0">
                                     <small class="text-muted">Configure este secret no painel do Asaas na URL do webhook: 
@@ -249,9 +251,9 @@
                                                         </td>
                                                         <td>
                                                             @if($price)
-                                                                <button type="button" class="btn btn-sm btn-danger remove-price" data-price-id="{{ $price->id }}">
+                                                                <x-tailadmin-button type="button" variant="danger" size="xs" class="remove-price px-2 py-1" data-price-id="{{ $price->id }}">
                                                                     <i class="mdi mdi-delete"></i>
-                                                                </button>
+                                                                </x-tailadmin-button>
                                                             @endif
                                                         </td>
                                                     </tr>
@@ -297,9 +299,9 @@
                                                             </td>
                                                             <td>
                                                                 @if($price)
-                                                                    <button type="button" class="btn btn-sm btn-danger remove-price" data-price-id="{{ $price->id }}">
+                                                                    <x-tailadmin-button type="button" variant="danger" size="xs" class="remove-price px-2 py-1" data-price-id="{{ $price->id }}">
                                                                         <i class="mdi mdi-delete"></i>
-                                                                    </button>
+                                                                    </x-tailadmin-button>
                                                                 @endif
                                                             </td>
                                                         </tr>
@@ -536,12 +538,18 @@
                         </div>
                     </div>
 
-                    <div class="d-flex justify-content-between align-items-center mt-4">
-                        <a href="{{ workspace_route('tenant.settings.index') }}" class="btn btn-outline-secondary">
-                            <i class="mdi mdi-arrow-left me-2"></i>Cancelar
+                    <div class="flex flex-col gap-3 pt-3 border-t border-gray-200 dark:border-gray-700 sm:flex-row sm:items-center sm:justify-between">
+                        <a href="{{ workspace_route('tenant.settings.index') }}" class="btn-patient-secondary">
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                            </svg>
+                            Cancelar
                         </a>
-                        <button type="submit" class="btn btn-primary">
-                            <i class="mdi mdi-content-save me-2"></i>Salvar Configurações
+                        <button type="submit" class="btn-patient-primary">
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V2"></path>
+                            </svg>
+                            Salvar Configurações
                         </button>
                     </div>
                 </form>
@@ -549,6 +557,97 @@
         </div>
     </div>
 </div>
+
+@push('styles')
+    <style>
+        /* Botões padrão com suporte a modo claro e escuro */
+        .btn-patient-primary {
+            background-color: #2563eb;
+            color: white;
+            border: 1px solid #d1d5db;
+            padding: 0.625rem 1.25rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+            border-radius: 0.375rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            text-decoration: none;
+        }
+        
+        .btn-patient-primary:hover {
+            background-color: #1d4ed8;
+        }
+        
+        .btn-patient-secondary {
+            background-color: transparent;
+            color: #374151;
+            border: 1px solid #d1d5db;
+            padding: 0.5rem 1rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+            border-radius: 0.375rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            text-decoration: none;
+        }
+        
+        .btn-patient-secondary:hover {
+            background-color: #f9fafb;
+        }
+        
+        /* Modo escuro via preferência do sistema */
+        @media (prefers-color-scheme: dark) {
+            .btn-patient-primary {
+                background-color: transparent;
+                color: white;
+                border-color: #d1d5db;
+            }
+            
+            .btn-patient-primary:hover {
+                background-color: #1f2937;
+            }
+            
+            .btn-patient-secondary {
+                background-color: transparent;
+                color: white;
+                border-color: #d1d5db;
+            }
+            
+            .btn-patient-secondary:hover {
+                background-color: #1f2937;
+            }
+        }
+        
+        /* Modo escuro via classe */
+        .dark .btn-patient-primary {
+            background-color: transparent;
+            color: white;
+            border-color: #d1d5db;
+        }
+        
+        .dark .btn-patient-primary:hover {
+            background-color: #1f2937;
+        }
+        
+        .dark .btn-patient-secondary {
+            background-color: transparent;
+            color: white;
+            border-color: #d1d5db;
+        }
+        
+        .dark .btn-patient-secondary:hover {
+            background-color: #1f2937;
+        }
+    </style>
+@endpush
 
 @push('scripts')
 <script>
@@ -609,19 +708,36 @@
         let removedPrices = [];
         $(document).on('click', '.remove-price', function() {
             const priceId = $(this).data('price-id');
-            if (priceId && confirm('Tem certeza que deseja remover este preço?')) {
-                removedPrices.push(priceId);
-                $('#removed_prices').val(removedPrices.join(','));
-                $(this).closest('tr').find('.reservation-amount, .full-amount').val('0.00');
-            }
+            if (!priceId) return;
+
+            const row = $(this).closest('tr');
+            confirmAction({
+                title: 'Remover preço',
+                message: 'Tem certeza que deseja remover este preço?',
+                confirmText: 'Remover',
+                cancelText: 'Cancelar',
+                type: 'warning',
+                onConfirm: () => {
+                    removedPrices.push(priceId);
+                    $('#removed_prices').val(removedPrices.join(','));
+                    row.find('.reservation-amount, .full-amount').val('0.00');
+                }
+            });
         });
 
         // Função para regenerar secret
         window.regenerateSecret = function() {
-            if (confirm('Tem certeza que deseja gerar um novo secret? Você precisará atualizar a configuração no Asaas.')) {
-                $('#regenerate_webhook_secret').val('1');
-                $('input[name="asaas_webhook_secret"]').val('');
-            }
+            confirmAction({
+                title: 'Gerar novo secret',
+                message: 'Tem certeza que deseja gerar um novo secret? Você precisará atualizar a configuração no Asaas.',
+                confirmText: 'Gerar',
+                cancelText: 'Cancelar',
+                type: 'warning',
+                onConfirm: () => {
+                    $('#regenerate_webhook_secret').val('1');
+                    $('input[name="asaas_webhook_secret"]').val('');
+                }
+            });
         };
     });
 </script>

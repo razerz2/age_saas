@@ -80,39 +80,6 @@ class RouteServiceProvider extends ServiceProvider
          * ================================================================
          */
         $this->routes(function () {
-            // Rede de Clínicas (Pública e Administrativa) - DEVE VIR ANTES DE WEB.PHP
-            // para evitar que o "/" do web.php capture subdomínios da rede
-            $domain = config('app.domain');
-            if (request()) {
-                $host = request()->getHost();
-                // Se estivermos em localhost ou IP, usamos o host atual como base para subdomínios
-                if (in_array($host, ['localhost', '127.0.0.1'])) {
-                    $domain = $host;
-                } elseif (!str_ends_with($host, $domain)) {
-                    // Fallback: se o host não termina com o domínio configurado,
-                    // tenta identificar se é um subdomínio e usa o domínio base do host
-                    $parts = explode('.', $host);
-                    if (count($parts) >= 3) {
-                        array_shift($parts); // remove o primeiro subdomínio
-                        $domain = implode('.', $parts);
-                    }
-                }
-            }
-
-            Route::group([
-                'middleware' => ['web'],
-                'domain' => '{network}.' . $domain,
-                'where' => ['network' => '[a-z0-9-]+']
-            ], function () {
-                // Rotas Públicas da Rede
-                Route::group([], base_path('routes/network.php'));
-
-                // Área Administrativa da Rede
-                Route::group([
-                    'prefix' => 'admin'
-                ], base_path('routes/network_admin.php'));
-            });
-
             // API
             Route::middleware('api')
                 ->prefix('api')

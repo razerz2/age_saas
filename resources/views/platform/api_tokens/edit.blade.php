@@ -1,4 +1,5 @@
 @extends('layouts.freedash.app')
+@section('title', 'Editar Token de API')
 
 @section('content')
     <div class="container-fluid">

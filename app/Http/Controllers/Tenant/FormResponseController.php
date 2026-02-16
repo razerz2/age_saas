@@ -34,7 +34,74 @@ class FormResponseController extends Controller
 
         $responses = $query->orderBy('submitted_at', 'desc')->paginate(20);
 
-        return view('tenant.responses.index', compact('responses'));
+        return view('tenant.form_responses.index');
+    }
+
+
+    public function gridData(Request $request, $slug)
+    {
+        $query = FormResponse::with([
+            'form',
+            'patient',
+            'appointment'
+        ]);
+
+        $page  = max(1, (int) $request->input('page', 1));
+        $limit = max(1, min(100, (int) $request->input('limit', 10)));
+
+        // Busca global
+        $search = trim((string) $request->input('search', ''));
+        if ($search !== '') {
+            $query->where(function ($q) use ($search) {
+                $q->whereHas('form', function ($sub) use ($search) {
+                    $sub->where('name', 'like', "%{$search}%");
+                })
+                ->orWhereHas('patient', function ($sub) use ($search) {
+                    $sub->where('full_name', 'like', "%{$search}%");
+                });
+            });
+        }
+
+        // Ordenação whitelist
+        $sortable = [
+            'form'        => 'form_id',
+            'patient'     => 'patient_id',
+            'created_at'  => 'created_at',
+        ];
+
+        $sortField = (string) $request->input('sort', 'created_at');
+        $sortDir   = strtolower((string) $request->input('direction', 'desc')) === 'asc' ? 'asc' : 'desc';
+
+        if (isset($sortable[$sortField])) {
+            $query->orderBy($sortable[$sortField], $sortDir);
+        } else {
+            $query->orderBy('created_at', 'desc');
+        }
+
+        $paginator = $query->paginate($limit, ['*'], 'page', $page);
+
+        $data = $paginator->getCollection()->map(function (FormResponse $response) {
+
+            return [
+                'form'        => e(optional($response->form)->name ?? '-'),
+                'patient'     => e(optional($response->patient)->full_name ?? '-'),
+                'appointment' => $response->appointment
+                    ? $response->appointment->starts_at?->format('d/m/Y H:i')
+                    : '-',
+                'created_at'  => optional($response->created_at)?->format('d/m/Y H:i'),
+                'actions'     => view('tenant.form_responses.partials.actions', compact('response'))->render(),
+            ];
+        })->all();
+
+        return response()->json([
+            'data' => $data,
+            'meta' => [
+                'current_page' => $paginator->currentPage(),
+                'last_page'    => $paginator->lastPage(),
+                'per_page'     => $paginator->perPage(),
+                'total'        => $paginator->total(),
+            ],
+        ]);
     }
 
 

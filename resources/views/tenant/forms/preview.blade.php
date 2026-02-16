@@ -1,4 +1,4 @@
-﻿@extends('layouts.connect_plus.app')
+@extends('layouts.tailadmin.app')
 
 @section('title', 'Visualizar Formulário')
 
@@ -37,18 +37,18 @@
                                 <p class="card-description mb-0 text-muted">{{ $form->description }}</p>
                             @endif
                         </div>
-                        <div>
+                        <div class="flex items-center gap-2">
                             <span class="badge bg-{{ $form->is_active ? 'success' : 'danger' }} me-2">
                                 {{ $form->is_active ? 'Ativo' : 'Inativo' }}
                             </span>
-                            <button onclick="window.print()" class="btn btn-sm btn-light">
-                                <i class="mdi mdi-printer me-1"></i>
+                            <x-tailadmin-button type="button" variant="secondary" size="sm" class="bg-transparent border-gray-300 text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-white/5" onclick="window.print()">
+                                <i class="mdi mdi-printer"></i>
                                 Imprimir
-                            </button>
-                            <button onclick="window.close()" class="btn btn-sm btn-light">
-                                <i class="mdi mdi-close me-1"></i>
+                            </x-tailadmin-button>
+                            <x-tailadmin-button type="button" variant="secondary" size="sm" class="bg-transparent border-gray-300 text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-white/5" onclick="window.close()">
+                                <i class="mdi mdi-close"></i>
                                 Fechar
-                            </button>
+                            </x-tailadmin-button>
                         </div>
                     </div>
 
@@ -107,10 +107,11 @@
                     @endif
 
                     <div class="mt-4 pt-3 border-top">
-                        <a href="{{ workspace_route('tenant.forms.show', ['form' => $form->id]) }}" class="btn btn-light">
-                            <i class="mdi mdi-arrow-left me-1"></i>
+                        <x-tailadmin-button variant="secondary" size="md" href="{{ workspace_route('tenant.forms.show', ['form' => $form->id]) }}"
+                            class="bg-transparent border-gray-300 text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-white/5">
+                            <i class="mdi mdi-arrow-left"></i>
                             Voltar
-                        </a>
+                        </x-tailadmin-button>
                     </div>
                 </div>
             </div>

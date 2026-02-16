@@ -76,30 +76,30 @@ O **Módulo Financeiro** é um sistema completo e **opcional** para gestão fina
 
 ### 1. CRUDs Completos
 
-#### Contas Financeiras (`/tenant/finance/accounts`)
+#### Contas Financeiras (`/workspace/{slug}/finance/accounts`)
 - ✅ Listar, criar, editar, visualizar contas
 - ✅ Tipos: dinheiro, banco, PIX, crédito
 - ✅ Saldo inicial e atual
 - ✅ Ativação/desativação
 
-#### Categorias Financeiras (`/tenant/finance/categories`)
+#### Categorias Financeiras (`/workspace/{slug}/finance/categories`)
 - ✅ Listar, criar, editar, visualizar categorias
 - ✅ Tipos: receita (income) e despesa (expense)
 - ✅ Ativação/desativação
 
-#### Transações Financeiras (`/tenant/finance/transactions`)
+#### Transações Financeiras (`/workspace/{slug}/finance/transactions`)
 - ✅ Listar, criar, editar, visualizar transações
 - ✅ Tipos: receita e despesa
 - ✅ Vinculação com contas, categorias, agendamentos, médicos, pacientes
 - ✅ Status: pending, paid, cancelled
 
-#### Cobranças (`/tenant/finance/charges`)
+#### Cobranças (`/workspace/{slug}/finance/charges`)
 - ✅ Listar e visualizar cobranças
 - ✅ Cancelar cobranças
 - ✅ Reenviar link de pagamento
 - ✅ Filtros por status, origem, período, médico
 
-#### Comissões Médicas (`/tenant/finance/commissions`)
+#### Comissões Médicas (`/workspace/{slug}/finance/commissions`)
 - ✅ Listar e visualizar comissões
 - ✅ Marcar como paga
 - ✅ Filtros por médico, status, período
@@ -115,7 +115,7 @@ O **Módulo Financeiro** é um sistema completo e **opcional** para gestão fina
 - ✅ Suporte a ambiente sandbox e produção
 
 #### Webhook do Asaas
-- ✅ Endpoint: `/t/{tenant}/webhooks/asaas`
+- ✅ Endpoint: `/t/{slug}/webhooks/asaas`
 - ✅ Validação de secret
 - ✅ Rate limiting (60 req/min)
 - ✅ IP whitelist (opcional)
@@ -309,7 +309,7 @@ O **Módulo Financeiro** é um sistema completo e **opcional** para gestão fina
 
 ## 📊 Relatórios
 
-### Dashboard Financeiro (`/tenant/finance/reports`)
+### Dashboard Financeiro (`/workspace/{slug}/finance/reports`)
 
 - ✅ Cards de resumo:
   - Receita do dia
@@ -324,27 +324,27 @@ O **Módulo Financeiro** é um sistema completo e **opcional** para gestão fina
 
 ### Relatórios Disponíveis
 
-1. **Fluxo de Caixa** (`/tenant/finance/reports/cash-flow`)
+1. **Fluxo de Caixa** (`/workspace/{slug}/finance/reports/cash-flow`)
    - Transações com saldo acumulado
    - Filtros: período, conta, médico
    - Exportação: CSV
 
-2. **Receitas x Despesas** (`/tenant/finance/reports/income-expense`)
+2. **Receitas x Despesas** (`/workspace/{slug}/finance/reports/income-expense`)
    - Comparativo com gráficos
    - Agrupamento por dia/mês
    - Exportação: CSV
 
-3. **Cobranças** (`/tenant/finance/reports/charges`)
+3. **Cobranças** (`/workspace/{slug}/finance/reports/charges`)
    - Status, origem, período
    - Filtros avançados
    - Exportação: CSV
 
-4. **Pagamentos Recebidos** (`/tenant/finance/reports/payments`)
+4. **Pagamentos Recebidos** (`/workspace/{slug}/finance/reports/payments`)
    - Lista de pagamentos confirmados
    - Método de pagamento
    - Exportação: CSV
 
-5. **Comissões** (`/tenant/finance/reports/commissions`)
+5. **Comissões** (`/workspace/{slug}/finance/reports/commissions`)
    - Comissões por médico
    - Status e período
    - Exportação: CSV

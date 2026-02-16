@@ -1,4 +1,6 @@
 @extends('layouts.freedash.app')
+@section('title', 'Editar Notification Template')
+
 @section('content')
     {{-- Importar Trix Editor --}}
     <link rel="stylesheet" href="https://unpkg.com/trix@2.0.0/dist/trix.css">

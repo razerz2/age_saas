@@ -1,4 +1,4 @@
-@extends('layouts.connect_plus.app')
+@extends('layouts.tailadmin.app')
 
 @section('title', 'Dashboard Financeiro')
 
@@ -108,29 +108,34 @@
                     <h4 class="card-title">Relatórios Disponíveis</h4>
                     <div class="row">
                         <div class="col-md-4 mb-3">
-                            <a href="{{ workspace_route('tenant.finance.reports.cashflow') }}" class="btn btn-outline-primary w-100">
+                            <x-tailadmin-button variant="secondary" size="sm" href="{{ workspace_route('tenant.finance.reports.cashflow') }}"
+                                class="w-full justify-center border-primary text-primary bg-transparent hover:bg-primary/10 dark:border-primary/40 dark:text-primary dark:hover:bg-primary/20">
                                 <i class="mdi mdi-cash-multiple"></i> Fluxo de Caixa
-                            </a>
+                            </x-tailadmin-button>
                         </div>
                         <div class="col-md-4 mb-3">
-                            <a href="{{ workspace_route('tenant.finance.reports.incomeExpense') }}" class="btn btn-outline-primary w-100">
+                            <x-tailadmin-button variant="secondary" size="sm" href="{{ workspace_route('tenant.finance.reports.incomeExpense') }}"
+                                class="w-full justify-center border-primary text-primary bg-transparent hover:bg-primary/10 dark:border-primary/40 dark:text-primary dark:hover:bg-primary/20">
                                 <i class="mdi mdi-chart-bar"></i> Receitas x Despesas
-                            </a>
+                            </x-tailadmin-button>
                         </div>
                         <div class="col-md-4 mb-3">
-                            <a href="{{ workspace_route('tenant.finance.reports.charges') }}" class="btn btn-outline-primary w-100">
+                            <x-tailadmin-button variant="secondary" size="sm" href="{{ workspace_route('tenant.finance.reports.charges') }}"
+                                class="w-full justify-center border-primary text-primary bg-transparent hover:bg-primary/10 dark:border-primary/40 dark:text-primary dark:hover:bg-primary/20">
                                 <i class="mdi mdi-credit-card"></i> Cobranças
-                            </a>
+                            </x-tailadmin-button>
                         </div>
                         <div class="col-md-4 mb-3">
-                            <a href="{{ workspace_route('tenant.finance.reports.payments') }}" class="btn btn-outline-primary w-100">
+                            <x-tailadmin-button variant="secondary" size="sm" href="{{ workspace_route('tenant.finance.reports.payments') }}"
+                                class="w-full justify-center border-primary text-primary bg-transparent hover:bg-primary/10 dark:border-primary/40 dark:text-primary dark:hover:bg-primary/20">
                                 <i class="mdi mdi-cash-check"></i> Pagamentos Recebidos
-                            </a>
+                            </x-tailadmin-button>
                         </div>
                         <div class="col-md-4 mb-3">
-                            <a href="{{ workspace_route('tenant.finance.reports.commissions') }}" class="btn btn-outline-primary w-100">
+                            <x-tailadmin-button variant="secondary" size="sm" href="{{ workspace_route('tenant.finance.reports.commissions') }}"
+                                class="w-full justify-center border-primary text-primary bg-transparent hover:bg-primary/10 dark:border-primary/40 dark:text-primary dark:hover:bg-primary/20">
                                 <i class="mdi mdi-cash-usd"></i> Comissões
-                            </a>
+                            </x-tailadmin-button>
                         </div>
                     </div>
                 </div>

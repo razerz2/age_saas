@@ -1,4 +1,5 @@
 @extends('layouts.freedash.app')
+@section('title', 'Listar Paises')
 
 @section('content')
     <div class="container-fluid">

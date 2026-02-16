@@ -1,226 +1,285 @@
-﻿@extends('layouts.connect_plus.app')
+@extends('layouts.tailadmin.app')
 
 @section('title', 'Criar Horário Comercial')
 
 @section('content')
 
-    <div class="page-header">
-        <div class="d-flex justify-content-between align-items-center">
-            <h3 class="page-title mb-0"> Criar Horário Comercial </h3>
-            <x-help-button module="business-hours" />
+    <div class="page-header mb-6">
+        <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <nav class="min-w-0 flex-1" aria-label="breadcrumb">
+                <ol class="flex flex-wrap items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
+                    <li>
+                        <a href="{{ workspace_route('tenant.dashboard') }}" class="hover:text-blue-600 dark:hover:text-white">Dashboard</a>
+                    </li>
+                    <li class="flex items-center gap-2">
+                        <svg class="h-4 w-4 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+                        </svg>
+                        <a href="{{ workspace_route('tenant.business-hours.index') }}" class="hover:text-blue-600 dark:hover:text-white">Horários Comerciais</a>
+                    </li>
+                    <li class="flex items-center gap-2">
+                        <svg class="h-4 w-4 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+                        </svg>
+                        <span class="text-gray-900 dark:text-white font-semibold">Criar</span>
+                    </li>
+                </ol>
+            </nav>
+            <div class="flex-shrink-0">
+                <x-help-button module="business-hours" />
+            </div>
         </div>
-
-        <nav aria-label="breadcrumb">
-            <ol class="breadcrumb">
-                <li class="breadcrumb-item">
-                    <a href="{{ workspace_route('tenant.dashboard') }}">Dashboard</a>
-                </li>
-                <li class="breadcrumb-item">
-                    <a href="{{ workspace_route('tenant.business-hours.index') }}">Horários Comerciais</a>
-                </li>
-                <li class="breadcrumb-item active" aria-current="page">Criar</li>
-            </ol>
-        </nav>
     </div>
 
-    <div class="row">
-        <div class="col-12 grid-margin stretch-card">
-            <div class="card">
-                <div class="card-body">
-                    <div class="d-flex align-items-center justify-content-between mb-4">
+    <div class="max-w-6xl mx-auto">
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
+            <div class="p-6 border-b border-gray-200 dark:border-gray-700">
+                <h4 class="text-xl font-semibold text-gray-900 dark:text-white">Novo Horário Comercial</h4>
+                <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">Preencha os dados abaixo para criar um novo horário comercial</p>
+            </div>
+
+            <form action="{{ workspace_route('tenant.business-hours.store') }}" method="POST" class="p-6 space-y-8">
+                @csrf
+
+                <div>
+                    <h5 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Informações do Horário</h5>
+                    <div class="grid grid-cols-1 gap-6">
                         <div>
-                            <h4 class="card-title mb-1">
-                                <i class="mdi mdi-clock-plus text-primary me-2"></i>
-                                Novo Horário Comercial
-                            </h4>
-                            <p class="card-description mb-0 text-muted">Preencha os dados abaixo para criar um novo horário comercial</p>
+                            <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                                Médico <span class="text-red-500">*</span>
+                            </label>
+                            <select name="doctor_id" class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white @error('doctor_id') border-red-500 @enderror" required>
+                                <option value="">Selecione um médico</option>
+                                @foreach($doctors as $doctor)
+                                    <option value="{{ $doctor->id }}" {{ old('doctor_id') == $doctor->id ? 'selected' : '' }}>{{ $doctor->user->name ?? 'N/A' }}</option>
+                                @endforeach
+                            </select>
+                            @error('doctor_id')
+                                <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+                            @enderror
                         </div>
                     </div>
-
-                    <form class="forms-sample" action="{{ workspace_route('tenant.business-hours.store') }}" method="POST">
-                        @csrf
-
-                        {{-- Seção: Informações do Horário --}}
-                        <div class="mb-4">
-                            <h5 class="mb-3 text-primary">
-                                <i class="mdi mdi-information-outline me-2"></i>
-                                Informações do Horário
-                            </h5>
-                            <div class="row">
-                                <div class="col-md-12">
-                                    <div class="form-group">
-                                        <label class="fw-semibold">
-                                            <i class="mdi mdi-doctor me-1"></i>
-                                            Médico <span class="text-danger">*</span>
-                                        </label>
-                                        <select name="doctor_id" class="form-control @error('doctor_id') is-invalid @enderror" required>
-                                            <option value="">Selecione um médico</option>
-                                            @foreach($doctors as $doctor)
-                                                <option value="{{ $doctor->id }}" {{ old('doctor_id') == $doctor->id ? 'selected' : '' }}>{{ $doctor->user->name ?? 'N/A' }}</option>
-                                            @endforeach
-                                        </select>
-                                        @error('doctor_id')
-                                            <div class="invalid-feedback d-block">{{ $message }}</div>
-                                        @enderror
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            {{-- Seção: Dias da Semana --}}
-                            <div class="mb-4">
-                                <h5 class="mb-3 text-primary">
-                                    <i class="mdi mdi-calendar-week me-2"></i>
-                                    Dias da Semana
-                                </h5>
-                                <div class="form-group">
-                                    <label class="fw-semibold mb-2">Selecione os dias da semana de atendimento</label>
-                                    <div class="row mb-3">
-                                        <div class="col-md-8">
-                                            <select id="weekday-select" class="form-control @error('weekdays') is-invalid @enderror">
-                                                <option value="">Selecione um dia da semana</option>
-                                                <option value="0" data-name="Domingo">Domingo</option>
-                                                <option value="1" data-name="Segunda-feira">Segunda-feira</option>
-                                                <option value="2" data-name="Terça-feira">Terça-feira</option>
-                                                <option value="3" data-name="Quarta-feira">Quarta-feira</option>
-                                                <option value="4" data-name="Quinta-feira">Quinta-feira</option>
-                                                <option value="5" data-name="Sexta-feira">Sexta-feira</option>
-                                                <option value="6" data-name="Sábado">Sábado</option>
-                                            </select>
-                                        </div>
-                                        <div class="col-md-4">
-                                            <div class="d-flex gap-2">
-                                                <button type="button" id="add-weekday-btn" class="btn btn-primary flex-fill">
-                                                    <i class="mdi mdi-plus me-1"></i> Adicionar
-                                                </button>
-                                                <button type="button" id="clear-weekdays-btn" class="btn btn-outline-secondary">
-                                                    <i class="mdi mdi-delete-sweep"></i>
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    
-                                    {{-- Área para exibir dias selecionados --}}
-                                    <div id="selected-weekdays" class="border rounded p-3 bg-light" style="min-height: 60px;">
-                                        @if(old('weekdays'))
-                                            @php
-                                                $weekdayNames = [
-                                                    0 => 'Domingo',
-                                                    1 => 'Segunda-feira',
-                                                    2 => 'Terça-feira',
-                                                    3 => 'Quarta-feira',
-                                                    4 => 'Quinta-feira',
-                                                    5 => 'Sexta-feira',
-                                                    6 => 'Sábado'
-                                                ];
-                                            @endphp
-                                            @foreach(old('weekdays') as $weekday)
-                                                <span class="badge bg-primary me-2 mb-2 weekday-badge" data-id="{{ $weekday }}" 
-                                                      style="font-size: 13px; padding: 8px 14px; display: inline-flex; align-items: center; gap: 6px;">
-                                                    <i class="mdi mdi-calendar-week"></i>
-                                                    {{ $weekdayNames[$weekday] ?? 'Dia ' . $weekday }}
-                                                    <button type="button" class="btn-close btn-close-white ms-1" 
-                                                            style="font-size: 10px; opacity: 0.8;" 
-                                                            aria-label="Remover"></button>
-                                                </span>
-                                            @endforeach
-                                        @else
-                                            <p class="text-muted mb-0">
-                                                <i class="mdi mdi-information-outline me-1"></i>
-                                                Nenhum dia selecionado
-                                            </p>
-                                        @endif
-                                    </div>
-                                    
-                                    {{-- Campos hidden para enviar os IDs (serão criados dinamicamente pelo JavaScript) --}}
-                                    <div id="weekdays-inputs"></div>
-                                    
-                                    @error('weekdays')
-                                        <div class="invalid-feedback d-block mt-2">{{ $message }}</div>
-                                    @enderror
-                                    @error('weekdays.*')
-                                        <div class="invalid-feedback d-block mt-2">{{ $message }}</div>
-                                    @enderror
-                                </div>
-                            </div>
-                            <div class="row business-hours-form-layout">
-                                <div class="col-md-6">
-                                    <div class="form-group mb-3">
-                                        <label class="fw-semibold">
-                                            <i class="mdi mdi-clock-start me-1"></i>
-                                            Horário Início <span class="text-danger">*</span>
-                                        </label>
-                                        <input type="time" class="form-control @error('start_time') is-invalid @enderror" 
-                                               name="start_time" value="{{ old('start_time') }}" required>
-                                        <small class="form-text text-muted" style="visibility: hidden;">Opcional</small>
-                                        @error('start_time')
-                                            <div class="invalid-feedback d-block">{{ $message }}</div>
-                                        @enderror
-                                    </div>
-                                    <div class="form-group mb-3">
-                                        <label class="fw-semibold">
-                                            <i class="mdi mdi-clock-end me-1"></i>
-                                            Horário Fim <span class="text-danger">*</span>
-                                        </label>
-                                        <input type="time" class="form-control @error('end_time') is-invalid @enderror" 
-                                               name="end_time" value="{{ old('end_time') }}" required>
-                                        <small class="form-text text-muted" style="visibility: hidden;">Opcional</small>
-                                        @error('end_time')
-                                            <div class="invalid-feedback d-block">{{ $message }}</div>
-                                        @enderror
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="form-group mb-3">
-                                        <label class="fw-semibold">
-                                            <i class="mdi mdi-pause-circle-outline me-1"></i>
-                                            Início do Intervalo
-                                        </label>
-                                        <input type="time" class="form-control @error('break_start_time') is-invalid @enderror" 
-                                               name="break_start_time" value="{{ old('break_start_time') }}" 
-                                               id="break_start_time">
-                                        <small class="form-text text-muted">Opcional</small>
-                                        @error('break_start_time')
-                                            <div class="invalid-feedback d-block">{{ $message }}</div>
-                                        @enderror
-                                    </div>
-                                    <div class="form-group mb-3">
-                                        <label class="fw-semibold">
-                                            <i class="mdi mdi-pause-circle me-1"></i>
-                                            Fim do Intervalo
-                                        </label>
-                                        <input type="time" class="form-control @error('break_end_time') is-invalid @enderror" 
-                                               name="break_end_time" value="{{ old('break_end_time') }}" 
-                                               id="break_end_time">
-                                        <small class="form-text text-muted">Opcional</small>
-                                        @error('break_end_time')
-                                            <div class="invalid-feedback d-block">{{ $message }}</div>
-                                        @enderror
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        {{-- Botões de Ação --}}
-                        <div class="d-flex justify-content-between align-items-center pt-3 border-top">
-                            <a href="{{ workspace_route('tenant.business-hours.index') }}" class="btn btn-light">
-                                <i class="mdi mdi-arrow-left me-1"></i>
-                                Cancelar
-                            </a>
-                            <button type="submit" class="btn btn-primary btn-lg">
-                                <i class="mdi mdi-content-save me-1"></i>
-                                Salvar Horário Comercial
-                            </button>
-                        </div>
-                    </form>
-
                 </div>
-            </div>
+
+                <div>
+                    <h5 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Dias da Semana</h5>
+                    <div class="space-y-4">
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Selecione os dias da semana de atendimento</label>
+                        <div class="grid grid-cols-1 gap-4 lg:grid-cols-[1fr_auto]">
+                            <select id="weekday-select" class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white @error('weekdays') border-red-500 @enderror">
+                                <option value="">Selecione um dia da semana</option>
+                                <option value="0" data-name="Domingo">Domingo</option>
+                                <option value="1" data-name="Segunda-feira">Segunda-feira</option>
+                                <option value="2" data-name="Terça-feira">Terça-feira</option>
+                                <option value="3" data-name="Quarta-feira">Quarta-feira</option>
+                                <option value="4" data-name="Quinta-feira">Quinta-feira</option>
+                                <option value="5" data-name="Sexta-feira">Sexta-feira</option>
+                                <option value="6" data-name="Sábado">Sábado</option>
+                            </select>
+                            <div class="flex flex-wrap gap-2">
+                                <button type="button" id="add-weekday-btn" class="inline-flex items-center justify-center rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary/90 transition-colors">
+                                    Adicionar
+                                </button>
+                                <button type="button" id="clear-weekdays-btn" class="inline-flex items-center justify-center rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700 transition-colors">
+                                    Limpar
+                                </button>
+                            </div>
+                        </div>
+
+                        <div id="selected-weekdays" class="min-h-[60px] rounded-lg border border-dashed border-gray-300 bg-gray-50 p-4 text-sm text-gray-600 dark:border-gray-600 dark:bg-gray-700/40 dark:text-gray-300">
+                            @if(old('weekdays'))
+                                @php
+                                    $weekdayNames = [
+                                        0 => 'Domingo',
+                                        1 => 'Segunda-feira',
+                                        2 => 'Terça-feira',
+                                        3 => 'Quarta-feira',
+                                        4 => 'Quinta-feira',
+                                        5 => 'Sexta-feira',
+                                        6 => 'Sábado'
+                                    ];
+                                @endphp
+                                @foreach(old('weekdays') as $weekday)
+                                    <span class="weekday-badge inline-flex items-center gap-2 rounded-full bg-primary px-3 py-1 text-sm font-medium text-white mr-2 mb-2" data-id="{{ $weekday }}">
+                                        {{ $weekdayNames[$weekday] ?? 'Dia ' . $weekday }}
+                                        <button type="button" class="weekday-remove inline-flex h-4 w-4 items-center justify-center rounded-full bg-white/20 text-white hover:bg-white/30" aria-label="Remover">×</button>
+                                    </span>
+                                @endforeach
+                            @else
+                                <p class="text-sm text-gray-500 dark:text-gray-400">Nenhum dia selecionado</p>
+                            @endif
+                        </div>
+
+                        <div id="weekdays-inputs"></div>
+
+                        @error('weekdays')
+                            <p class="text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+                        @enderror
+                        @error('weekdays.*')
+                            <p class="text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+                        @enderror
+                    </div>
+                </div>
+
+                <div>
+                    <h5 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Horários</h5>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                                Horário Início <span class="text-red-500">*</span>
+                            </label>
+                            <input type="time" class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white @error('start_time') border-red-500 @enderror"
+                                   name="start_time" value="{{ old('start_time') }}" required>
+                            @error('start_time')
+                                <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+                            @enderror
+                        </div>
+                        <div>
+                            <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                                Horário Fim <span class="text-red-500">*</span>
+                            </label>
+                            <input type="time" class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white @error('end_time') border-red-500 @enderror"
+                                   name="end_time" value="{{ old('end_time') }}" required>
+                            @error('end_time')
+                                <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+                            @enderror
+                        </div>
+                        <div>
+                            <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                                Início do Intervalo
+                            </label>
+                            <input type="time" class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white @error('break_start_time') border-red-500 @enderror"
+                                   name="break_start_time" value="{{ old('break_start_time') }}"
+                                   id="break_start_time">
+                            <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">Opcional</p>
+                            @error('break_start_time')
+                                <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+                            @enderror
+                        </div>
+                        <div>
+                            <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                                Fim do Intervalo
+                            </label>
+                            <input type="time" class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white @error('break_end_time') border-red-500 @enderror"
+                                   name="break_end_time" value="{{ old('break_end_time') }}"
+                                   id="break_end_time">
+                            <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">Opcional</p>
+                            @error('break_end_time')
+                                <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+                            @enderror
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex flex-col gap-3 pt-6 border-t border-gray-200 dark:border-gray-700 sm:flex-row sm:items-center sm:justify-between">
+                    <a href="{{ workspace_route('tenant.business-hours.index') }}" class="btn-patient-secondary">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                        </svg>
+                        Cancelar
+                    </a>
+                    <button type="submit" class="btn-patient-primary">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V2"></path>
+                        </svg>
+                        Salvar Horário Comercial
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
 
 @push('styles')
     <link href="{{ asset('css/tenant-common.css') }}" rel="stylesheet">
     <link href="{{ asset('css/tenant-business-hours.css') }}" rel="stylesheet">
+    <style>
+        /* Botões padrão com suporte a modo claro e escuro */
+        .btn-patient-primary {
+            background-color: #2563eb;
+            color: white;
+            border: 1px solid #d1d5db;
+            padding: 0.625rem 1.25rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+            border-radius: 0.375rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            text-decoration: none;
+        }
+        
+        .btn-patient-primary:hover {
+            background-color: #1d4ed8;
+        }
+        
+        .btn-patient-secondary {
+            background-color: transparent;
+            color: #374151;
+            border: 1px solid #d1d5db;
+            padding: 0.5rem 1rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+            border-radius: 0.375rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            text-decoration: none;
+        }
+        
+        .btn-patient-secondary:hover {
+            background-color: #f9fafb;
+        }
+        
+        /* Modo escuro via preferência do sistema */
+        @media (prefers-color-scheme: dark) {
+            .btn-patient-primary {
+                background-color: transparent;
+                color: white;
+                border-color: #d1d5db;
+            }
+            
+            .btn-patient-primary:hover {
+                background-color: #1f2937;
+            }
+            
+            .btn-patient-secondary {
+                background-color: transparent;
+                color: white;
+                border-color: #d1d5db;
+            }
+            
+            .btn-patient-secondary:hover {
+                background-color: #1f2937;
+            }
+        }
+        
+        /* Modo escuro via classe */
+        .dark .btn-patient-primary {
+            background-color: transparent;
+            color: white;
+            border-color: #d1d5db;
+        }
+        
+        .dark .btn-patient-primary:hover {
+            background-color: #1f2937;
+        }
+        
+        .dark .btn-patient-secondary {
+            background-color: transparent;
+            color: white;
+            border-color: #d1d5db;
+        }
+        
+        .dark .btn-patient-secondary:hover {
+            background-color: #1f2937;
+        }
+    </style>
 @endpush
 
 @push('scripts')
@@ -252,23 +311,16 @@
             container.empty();
             
             if (selectedWeekdays.length === 0) {
-                container.html('<p class="text-muted mb-0"><i class="mdi mdi-information-outline me-1"></i>Nenhum dia selecionado</p>');
+                container.html('<p class="text-sm text-gray-500 dark:text-gray-400">Nenhum dia selecionado</p>');
                 return;
             }
             
             selectedWeekdays.forEach(function(weekday) {
                 const name = weekdayNames[weekday] || 'Dia ' + weekday;
                 const badge = $('<span>')
-                    .addClass('badge bg-primary me-2 mb-2 weekday-badge')
+                    .addClass('weekday-badge inline-flex items-center gap-2 rounded-full bg-primary px-3 py-1 text-sm font-medium text-white mr-2 mb-2')
                     .attr('data-id', weekday)
-                    .css({
-                        'font-size': '13px', 
-                        'padding': '8px 14px', 
-                        'display': 'inline-flex', 
-                        'align-items': 'center', 
-                        'gap': '6px'
-                    })
-                    .html('<i class="mdi mdi-calendar-week"></i>' + name + '<button type="button" class="btn-close btn-close-white ms-1" style="font-size: 10px; opacity: 0.8;" aria-label="Remover"></button>');
+                    .html('<span>' + name + '</span><button type="button" class="weekday-remove inline-flex h-4 w-4 items-center justify-center rounded-full bg-white/20 text-white hover:bg-white/30" aria-label="Remover">×</button>');
                 container.append(badge);
             });
             
@@ -290,13 +342,13 @@
             const weekday = select.val();
             
             if (weekday === '') {
-                alert('Por favor, selecione um dia da semana');
+                showAlert({ type: 'warning', title: 'Atenção', message: 'Por favor, selecione um dia da semana' });
                 return;
             }
             
             // Verificar se já foi adicionado
             if (selectedWeekdays.includes(weekday)) {
-                alert('Este dia já foi adicionado');
+                showAlert({ type: 'warning', title: 'Atenção', message: 'Este dia já foi adicionado' });
                 return;
             }
             
@@ -306,7 +358,7 @@
         });
         
         // Remover dia (delegation para elementos dinâmicos)
-        $(document).on('click', '.weekday-badge .btn-close', function(e) {
+        $(document).on('click', '.weekday-badge .weekday-remove', function(e) {
             e.preventDefault();
             const badge = $(this).closest('.weekday-badge');
             const weekday = badge.data('id');
@@ -324,10 +376,17 @@
                 return;
             }
             
-            if (confirm('Deseja remover todos os dias selecionados?')) {
-                selectedWeekdays = [];
-                updateWeekdaysDisplay();
-            }
+            confirmAction({
+                title: 'Remover dias selecionados',
+                message: 'Deseja remover todos os dias selecionados?',
+                confirmText: 'Remover',
+                cancelText: 'Cancelar',
+                type: 'warning',
+                onConfirm: () => {
+                    selectedWeekdays = [];
+                    updateWeekdaysDisplay();
+                }
+            });
         });
         
         // Permitir adicionar com Enter no select

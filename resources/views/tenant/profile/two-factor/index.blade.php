@@ -1,4 +1,4 @@
-@extends('layouts.connect_plus.app')
+@extends('layouts.tailadmin.app')
 
 @section('title', 'Autenticação de Dois Fatores')
 
@@ -152,10 +152,10 @@
                             @if(!$user->two_factor_secret)
                                 <form method="POST" action="{{ workspace_route('tenant.two-factor.generate-secret') }}">
                                     @csrf
-                                    <button type="submit" class="btn btn-primary">
-                                        <i class="mdi mdi-qrcode-scan me-1"></i>
+                                    <x-tailadmin-button type="submit" variant="primary">
+                                        <i class="mdi mdi-qrcode-scan"></i>
                                         Gerar QR Code
-                                    </button>
+                                    </x-tailadmin-button>
                                 </form>
                             @else
                                 <div class="mb-4">
@@ -184,10 +184,10 @@
                                             <div class="invalid-feedback">{{ $message }}</div>
                                         @enderror
                                     </div>
-                                    <button type="submit" class="btn btn-success">
-                                        <i class="mdi mdi-check-circle me-1"></i>
+                                    <x-tailadmin-button type="submit" variant="success">
+                                        <i class="mdi mdi-check-circle"></i>
                                         Confirmar e Ativar
-                                    </button>
+                                    </x-tailadmin-button>
                                 </form>
                             @endif
                         @elseif($user->two_factor_method === 'email' || $user->two_factor_method === 'whatsapp')
@@ -217,18 +217,19 @@
                                             Digite o código de 6 dígitos que foi enviado via {{ $user->two_factor_method === 'email' ? 'e-mail' : 'WhatsApp' }}.
                                         </small>
                                     </div>
-                                    <div class="d-flex gap-2">
-                                        <button type="submit" class="btn btn-success">
-                                            <i class="mdi mdi-check-circle me-1"></i>
+                                    <div class="flex flex-wrap items-center gap-2">
+                                        <x-tailadmin-button type="submit" variant="success" size="sm">
+                                            <i class="mdi mdi-check-circle"></i>
                                             Confirmar e Ativar 2FA
-                                        </button>
+                                        </x-tailadmin-button>
                                         <form method="POST" action="{{ workspace_route('tenant.two-factor.activate-with-code') }}" class="d-inline">
                                             @csrf
                                             <input type="hidden" name="method" value="{{ $user->two_factor_method }}">
-                                            <button type="submit" class="btn btn-outline-secondary">
-                                                <i class="mdi mdi-refresh me-1"></i>
+                                            <x-tailadmin-button type="submit" variant="secondary" size="sm"
+                                                class="bg-transparent border-gray-300 text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-white/5">
+                                                <i class="mdi mdi-refresh"></i>
                                                 Reenviar Código
-                                            </button>
+                                            </x-tailadmin-button>
                                         </form>
                                     </div>
                                 </form>
@@ -244,10 +245,10 @@
                                 <form method="POST" action="{{ workspace_route('tenant.two-factor.activate-with-code') }}">
                                     @csrf
                                     <input type="hidden" name="method" value="{{ $user->two_factor_method }}">
-                                    <button type="submit" class="btn btn-primary">
-                                        <i class="mdi mdi-{{ $user->two_factor_method === 'email' ? 'email' : 'whatsapp' }} me-1"></i>
+                                    <x-tailadmin-button type="submit" variant="primary">
+                                        <i class="mdi mdi-{{ $user->two_factor_method === 'email' ? 'email' : 'whatsapp' }}"></i>
                                         Enviar Código via {{ ucfirst($user->two_factor_method) }}
-                                    </button>
+                                    </x-tailadmin-button>
                                 </form>
                             @endif
                         @endif
@@ -277,10 +278,10 @@
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
                             </div>
-                            <button type="submit" class="btn btn-danger">
-                                <i class="mdi mdi-shield-off me-1"></i>
+                            <x-tailadmin-button type="submit" variant="danger">
+                                <i class="mdi mdi-shield-off"></i>
                                 Desativar 2FA
-                            </button>
+                            </x-tailadmin-button>
                         </form>
                     </div>
                 </div>
@@ -334,10 +335,10 @@
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
                             </div>
-                            <button type="submit" class="btn btn-warning">
-                                <i class="mdi mdi-refresh me-1"></i>
+                            <x-tailadmin-button type="submit" variant="warning">
+                                <i class="mdi mdi-refresh"></i>
                                 Regenerar Códigos de Recuperação
-                            </button>
+                            </x-tailadmin-button>
                         </form>
                     </div>
                 </div>

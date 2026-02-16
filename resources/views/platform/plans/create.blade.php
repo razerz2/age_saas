@@ -1,4 +1,6 @@
 @extends('layouts.freedash.app')
+@section('title', 'Cadastrar Plans')
+
 @section('content')
     <div class="page-breadcrumb">
         <div class="row">

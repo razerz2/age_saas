@@ -1,117 +1,90 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
+@extends('layouts.tailadmin.auth')
 
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+@section('title', 'Registrar — Sistema')
 
-    <title>Registrar — Sistema</title>
+@section('content')
+<div class="min-h-screen flex items-center justify-center px-4">
+    <div class="max-w-md w-full">
+        <!-- Logo -->
+        <div class="text-center mb-8">
+            <img src="{{ asset('tailadmin/src/logo.svg') }}" alt="Logo" class="mx-auto h-12 w-auto">
+        </div>
 
-    {{-- CSS --}}
-    <link rel="stylesheet" href="{{ asset('connect_plus/assets/vendors/mdi/css/materialdesignicons.min.css') }}">
-    <link rel="stylesheet" href="{{ asset('connect_plus/assets/vendors/flag-icon-css/css/flag-icon.min.css') }}">
-    <link rel="stylesheet" href="{{ asset('connect_plus/assets/vendors/css/vendor.bundle.base.css') }}">
-    <link rel="stylesheet" href="{{ asset('connect_plus/assets/css/style.css') }}">
-    <link rel="shortcut icon" href="{{ asset('connect_plus/assets/images/favicon.png') }}">
-</head>
+        <!-- Formulário de Registro -->
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
+            <div class="text-center mb-6">
+                <h2 class="text-2xl font-bold text-gray-900">Crie sua conta</h2>
+                <p class="text-sm text-gray-500 mt-1">Leva apenas alguns segundos.</p>
+            </div>
 
-<body>
-    <div class="container-scroller">
-        <div class="container-fluid page-body-wrapper full-page-wrapper">
-            <div class="content-wrapper d-flex align-items-center auth">
-                <div class="row flex-grow">
-                    <div class="col-lg-4 mx-auto">
-                        <div class="auth-form-light text-left p-5">
+            <!-- Form de Registro -->
+            <form method="POST" action="{{ route('register') }}">
+                @csrf
 
-                            {{-- LOGO --}}
-                            <div class="brand-logo text-center mb-4">
-                                <img src="{{ asset('connect_plus/assets/images/logo-dark.svg') }}" alt="Logo">
-                            </div>
+                <!-- Name -->
+                <div class="mb-4">
+                    <label for="name" class="block text-sm font-medium text-gray-700 mb-2">Nome completo</label>
+                    <input type="text" name="name" id="name"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 @error('name') border-red-300 @enderror"
+                        placeholder="Nome completo" value="{{ old('name') }}" required autofocus>
+                    @error('name')
+                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                    @enderror
+                </div>
 
-                            <h4>Crie sua conta</h4>
-                            <h6 class="font-weight-light">Leva apenas alguns segundos.</h6>
+                <!-- Email -->
+                <div class="mb-4">
+                    <label for="email" class="block text-sm font-medium text-gray-700 mb-2">E-mail</label>
+                    <input type="email" name="email" id="email"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 @error('email') border-red-300 @enderror"
+                        placeholder="E-mail" value="{{ old('email') }}" required>
+                    @error('email')
+                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                    @enderror
+                </div>
 
-                            {{-- FORM DE REGISTRO --}}
-                            <form method="POST" action="{{ route('register') }}" class="pt-3">
-                                @csrf
+                <!-- Password -->
+                <div class="mb-4">
+                    <label for="password" class="block text-sm font-medium text-gray-700 mb-2">Senha</label>
+                    <input type="password" name="password" id="password"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 @error('password') border-red-300 @enderror"
+                        placeholder="Senha" required>
+                    @error('password')
+                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                    @enderror
+                </div>
 
-                                {{-- NAME --}}
-                                <div class="form-group">
-                                    <input type="text" name="name"
-                                        class="form-control form-control-lg @error('name') is-invalid @enderror"
-                                        placeholder="Nome completo" value="{{ old('name') }}" required autofocus>
+                <!-- Password Confirm -->
+                <div class="mb-4">
+                    <label for="password_confirmation" class="block text-sm font-medium text-gray-700 mb-2">Confirme a senha</label>
+                    <input type="password" name="password_confirmation" id="password_confirmation"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
+                        placeholder="Confirme a senha" required>
+                </div>
 
-                                    @error('name')
-                                        <span class="invalid-feedback d-block">{{ $message }}</span>
-                                    @enderror
-                                </div>
-
-                                {{-- EMAIL --}}
-                                <div class="form-group">
-                                    <input type="email" name="email"
-                                        class="form-control form-control-lg @error('email') is-invalid @enderror"
-                                        placeholder="E-mail" value="{{ old('email') }}" required>
-
-                                    @error('email')
-                                        <span class="invalid-feedback d-block">{{ $message }}</span>
-                                    @enderror
-                                </div>
-
-                                {{-- PASSWORD --}}
-                                <div class="form-group">
-                                    <input type="password" name="password"
-                                        class="form-control form-control-lg @error('password') is-invalid @enderror"
-                                        placeholder="Senha" required>
-
-                                    @error('password')
-                                        <span class="invalid-feedback d-block">{{ $message }}</span>
-                                    @enderror
-                                </div>
-
-                                {{-- PASSWORD CONFIRM --}}
-                                <div class="form-group">
-                                    <input type="password" name="password_confirmation"
-                                        class="form-control form-control-lg" placeholder="Confirme a senha" required>
-                                </div>
-
-                                {{-- TERMOS --}}
-                                <div class="mb-4">
-                                    <div class="form-check">
-                                        <label class="form-check-label text-muted">
-                                            <input type="checkbox" class="form-check-input" required>
-                                            Eu concordo com os Termos & Condições
-                                        </label>
-                                    </div>
-                                </div>
-
-                                {{-- BOTÃO REGISTRAR --}}
-                                <div class="mt-3">
-                                    <button type="submit"
-                                        class="btn btn-block btn-primary btn-lg font-weight-medium auth-form-btn">
-                                        Registrar
-                                    </button>
-                                </div>
-
-                                {{-- LOGIN --}}
-                                <div class="text-center mt-4 font-weight-light">
-                                    Já possui conta?
-                                    <a href="{{ route('login') }}" class="text-primary">Entrar</a>
-                                </div>
-                            </form>
-
-                        </div>
+                <!-- Termos -->
+                <div class="mb-6">
+                    <div class="flex items-center">
+                        <input type="checkbox" name="terms" id="terms" class="h-4 w-4 text-brand-600 focus:ring-brand-500 border-gray-300 rounded" required>
+                        <label for="terms" class="ml-2 block text-sm text-gray-700">
+                            Eu concordo com os Termos & Condições
+                        </label>
                     </div>
                 </div>
-            </div>
+
+                <!-- Botão Registrar -->
+                <button type="submit" class="w-full bg-brand-600 text-white py-2 px-4 rounded-md hover:bg-brand-700 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2 transition duration-200">
+                    Registrar
+                </button>
+
+                <!-- Login -->
+                <div class="mt-6 text-center">
+                    <span class="text-sm text-gray-600">Já possui conta?</span>
+                    <a href="{{ route('login') }}" class="ml-1 text-sm text-brand-600 hover:text-brand-500">Entrar</a>
+                </div>
+            </form>
         </div>
     </div>
+</div>
 
-    {{-- JS --}}
-    <script src="{{ asset('connect_plus/assets/vendors/js/vendor.bundle.base.js') }}"></script>
-    <script src="{{ asset('connect_plus/assets/js/off-canvas.js') }}"></script>
-    <script src="{{ asset('connect_plus/assets/js/hoverable-collapse.js') }}"></script>
-    <script src="{{ asset('connect_plus/assets/js/misc.js') }}"></script>
-
-</body>
-
-</html>
+@endsection

@@ -116,14 +116,14 @@
                             </p>
                         @endif
                     </div>
-                    @if(isset($formResponse) && $formResponse)
-                        <button type="button" 
-                                class="btn btn-info"
+                        @if(isset($formResponse) && $formResponse)
+                            <x-tailadmin-button type="button" variant="secondary" size="md"
+                                class="border-info text-info bg-info/10 hover:bg-info/20 dark:border-info/40 dark:text-info dark:hover:bg-info/30"
                                 onclick="viewFormResponse('{{ $appointment->id }}')">
-                            <i class="mdi mdi-eye me-2"></i>
-                            Visualizar Resposta
-                        </button>
-                    @endif
+                                <i class="mdi mdi-eye"></i>
+                                Visualizar Resposta
+                            </x-tailadmin-button>
+                        @endif
                 </div>
             </div>
         @endif
@@ -131,41 +131,37 @@
         <hr>
 
         {{-- Ações --}}
-        <div class="d-flex flex-wrap gap-2">
+        <div class="flex flex-wrap gap-2">
             @if($appointment->status === 'scheduled' || $appointment->status === 'confirmed')
-                <button type="button" 
-                        class="btn btn-warning"
-                        onclick="updateStatus('{{ $appointment->id }}', 'arrived')">
-                    <i class="mdi mdi-account-check me-2"></i>
+                <x-tailadmin-button type="button" variant="warning" size="md"
+                    onclick="updateStatus('{{ $appointment->id }}', 'arrived')">
+                    <i class="mdi mdi-account-check"></i>
                     Paciente Chegou
-                </button>
+                </x-tailadmin-button>
             @endif
 
             @if($appointment->status === 'arrived')
-                <button type="button" 
-                        class="btn btn-success"
-                        onclick="updateStatus('{{ $appointment->id }}', 'in_service')">
-                    <i class="mdi mdi-play-circle me-2"></i>
+                <x-tailadmin-button type="button" variant="success" size="md"
+                    onclick="updateStatus('{{ $appointment->id }}', 'in_service')">
+                    <i class="mdi mdi-play-circle"></i>
                     Iniciar Atendimento
-                </button>
+                </x-tailadmin-button>
             @endif
 
             @if($appointment->status === 'in_service')
-                <button type="button" 
-                        class="btn btn-primary"
-                        onclick="completeAppointment('{{ $appointment->id }}')">
-                    <i class="mdi mdi-check-circle me-2"></i>
+                <x-tailadmin-button type="button" variant="primary" size="md"
+                    onclick="completeAppointment('{{ $appointment->id }}')">
+                    <i class="mdi mdi-check-circle"></i>
                     Finalizar Atendimento
-                </button>
+                </x-tailadmin-button>
             @endif
 
             @if(!in_array($appointment->status, ['completed', 'cancelled']))
-                <button type="button" 
-                        class="btn btn-danger"
-                        onclick="updateStatus('{{ $appointment->id }}', 'cancelled')">
-                    <i class="mdi mdi-cancel me-2"></i>
+                <x-tailadmin-button type="button" variant="danger" size="md"
+                    onclick="updateStatus('{{ $appointment->id }}', 'cancelled')">
+                    <i class="mdi mdi-cancel"></i>
                     Cancelar
-                </button>
+                </x-tailadmin-button>
             @endif
         </div>
     </div>

@@ -1,170 +1,136 @@
-﻿@extends('layouts.connect_plus.app')
+@extends('layouts.tailadmin.app')
 
 @section('title', 'Editar Horário Comercial')
 
 @section('content')
-
-    <div class="page-header">
-        <div class="d-flex justify-content-between align-items-center">
-            <h3 class="page-title mb-0"> Editar Horário Comercial </h3>
+    <div class="page-header mb-6">
+        <div class="flex items-center justify-between">
+            <div>
+                <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Editar Horário Comercial</h1>
+                <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">Atualize as informações do horário comercial abaixo.</p>
+            </div>
             <x-help-button module="business-hours" />
         </div>
-
-        <nav aria-label="breadcrumb">
-            <ol class="breadcrumb">
-                <li class="breadcrumb-item">
-                    <a href="{{ workspace_route('tenant.dashboard') }}">Dashboard</a>
+        <nav class="flex mt-3" aria-label="breadcrumb">
+            <ol class="inline-flex items-center space-x-1 md:space-x-3 text-sm text-gray-500 dark:text-gray-400">
+                <li class="inline-flex items-center">
+                    <a href="{{ workspace_route('tenant.dashboard') }}" class="hover:text-gray-900 dark:hover:text-white">Dashboard</a>
                 </li>
-                <li class="breadcrumb-item">
-                    <a href="{{ workspace_route('tenant.business-hours.index') }}">Horários Comerciais</a>
+                <li>
+                    <div class="flex items-center">
+                        <svg class="w-4 h-4 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
+                        </svg>
+                        <a href="{{ workspace_route('tenant.business-hours.index') }}" class="ml-1 hover:text-gray-900 dark:hover:text-white">Horários Comerciais</a>
+                    </div>
                 </li>
-                <li class="breadcrumb-item active" aria-current="page">Editar</li>
+                <li>
+                    <div class="flex items-center">
+                        <svg class="w-4 h-4 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
+                        </svg>
+                        <span class="ml-1 text-gray-500 dark:text-gray-400">Editar</span>
+                    </div>
+                </li>
             </ol>
         </nav>
     </div>
 
-    <div class="row">
-        <div class="col-12 grid-margin stretch-card">
-            <div class="card">
-                <div class="card-body">
-                    <div class="d-flex align-items-center justify-content-between mb-4">
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
+        <div class="p-6">
+            <form action="{{ workspace_route('tenant.business-hours.update', $businessHour->id) }}" method="POST" class="space-y-6">
+                @csrf
+                @method('PUT')
+
+                <div class="space-y-5">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
-                            <h4 class="card-title mb-1">
-                                <i class="mdi mdi-clock-edit text-primary me-2"></i>
-                                Editar Horário Comercial
-                            </h4>
-                            <p class="card-description mb-0 text-muted">Atualize as informações do horário comercial abaixo</p>
+                            <label class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block">
+                                Médico <span class="text-red-500">*</span>
+                            </label>
+                            <select name="doctor_id" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 @error('doctor_id') border-red-500 @enderror" required>
+                                <option value="">Selecione um médico</option>
+                                @foreach($doctors as $doctor)
+                                    <option value="{{ $doctor->id }}" {{ old('doctor_id', $businessHour->doctor_id) == $doctor->id ? 'selected' : '' }}>{{ $doctor->user->name ?? 'N/A' }}</option>
+                                @endforeach
+                            </select>
+                            @error('doctor_id')
+                                <p class="text-xs text-red-600 mt-1">{{ $message }}</p>
+                            @enderror
+                        </div>
+                        <div>
+                            <label class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block">
+                                Dia da Semana <span class="text-red-500">*</span>
+                            </label>
+                            <select name="weekday" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 @error('weekday') border-red-500 @enderror" required>
+                                @foreach(['Domingo','Segunda-feira','Terça-feira','Quarta-feira','Quinta-feira','Sexta-feira','Sábado'] as $index => $label)
+                                    <option value="{{ $index }}" {{ old('weekday', $businessHour->weekday) == $index ? 'selected' : '' }}>{{ $label }}</option>
+                                @endforeach
+                            </select>
+                            @error('weekday')
+                                <p class="text-xs text-red-600 mt-1">{{ $message }}</p>
+                            @enderror
                         </div>
                     </div>
 
-                    <form class="forms-sample" action="{{ workspace_route('tenant.business-hours.update', $businessHour->id) }}" method="POST">
-                        @csrf
-                        @method('PUT')
-
-                        {{-- Seção: Informações do Horário --}}
-                        <div class="mb-4">
-                            <h5 class="mb-3 text-primary">
-                                <i class="mdi mdi-information-outline me-2"></i>
-                                Informações do Horário
-                            </h5>
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <div class="form-group">
-                                        <label class="fw-semibold">
-                                            <i class="mdi mdi-doctor me-1"></i>
-                                            Médico <span class="text-danger">*</span>
-                                        </label>
-                                        <select name="doctor_id" class="form-control @error('doctor_id') is-invalid @enderror" required>
-                                            <option value="">Selecione um médico</option>
-                                            @foreach($doctors as $doctor)
-                                                <option value="{{ $doctor->id }}" {{ old('doctor_id', $businessHour->doctor_id) == $doctor->id ? 'selected' : '' }}>{{ $doctor->user->name ?? 'N/A' }}</option>
-                                            @endforeach
-                                        </select>
-                                        @error('doctor_id')
-                                            <div class="invalid-feedback d-block">{{ $message }}</div>
-                                        @enderror
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="form-group">
-                                        <label class="fw-semibold">
-                                            <i class="mdi mdi-calendar-week me-1"></i>
-                                            Dia da Semana <span class="text-danger">*</span>
-                                        </label>
-                                        <select name="weekday" class="form-control @error('weekday') is-invalid @enderror" required>
-                                            <option value="0" {{ old('weekday', $businessHour->weekday) == 0 ? 'selected' : '' }}>Domingo</option>
-                                            <option value="1" {{ old('weekday', $businessHour->weekday) == 1 ? 'selected' : '' }}>Segunda-feira</option>
-                                            <option value="2" {{ old('weekday', $businessHour->weekday) == 2 ? 'selected' : '' }}>Terça-feira</option>
-                                            <option value="3" {{ old('weekday', $businessHour->weekday) == 3 ? 'selected' : '' }}>Quarta-feira</option>
-                                            <option value="4" {{ old('weekday', $businessHour->weekday) == 4 ? 'selected' : '' }}>Quinta-feira</option>
-                                            <option value="5" {{ old('weekday', $businessHour->weekday) == 5 ? 'selected' : '' }}>Sexta-feira</option>
-                                            <option value="6" {{ old('weekday', $businessHour->weekday) == 6 ? 'selected' : '' }}>Sábado</option>
-                                        </select>
-                                        @error('weekday')
-                                            <div class="invalid-feedback d-block">{{ $message }}</div>
-                                        @enderror
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="row business-hours-form-layout">
-                                <div class="col-md-6">
-                                    <div class="form-group mb-3">
-                                        <label class="fw-semibold">
-                                            <i class="mdi mdi-clock-start me-1"></i>
-                                            Horário Início <span class="text-danger">*</span>
-                                        </label>
-                                        <input type="time" class="form-control @error('start_time') is-invalid @enderror" 
-                                               name="start_time" value="{{ old('start_time', $businessHour->start_time) }}" required>
-                                        <small class="form-text text-muted" style="visibility: hidden;">Opcional</small>
-                                        @error('start_time')
-                                            <div class="invalid-feedback d-block">{{ $message }}</div>
-                                        @enderror
-                                    </div>
-                                    <div class="form-group mb-3">
-                                        <label class="fw-semibold">
-                                            <i class="mdi mdi-clock-end me-1"></i>
-                                            Horário Fim <span class="text-danger">*</span>
-                                        </label>
-                                        <input type="time" class="form-control @error('end_time') is-invalid @enderror" 
-                                               name="end_time" value="{{ old('end_time', $businessHour->end_time) }}" required>
-                                        <small class="form-text text-muted" style="visibility: hidden;">Opcional</small>
-                                        @error('end_time')
-                                            <div class="invalid-feedback d-block">{{ $message }}</div>
-                                        @enderror
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="form-group mb-3">
-                                        <label class="fw-semibold">
-                                            <i class="mdi mdi-pause-circle-outline me-1"></i>
-                                            Início do Intervalo
-                                        </label>
-                                        <input type="time" class="form-control @error('break_start_time') is-invalid @enderror" 
-                                               name="break_start_time" value="{{ old('break_start_time', $businessHour->break_start_time) }}" 
-                                               id="break_start_time">
-                                        <small class="form-text text-muted">Opcional</small>
-                                        @error('break_start_time')
-                                            <div class="invalid-feedback d-block">{{ $message }}</div>
-                                        @enderror
-                                    </div>
-                                    <div class="form-group mb-3">
-                                        <label class="fw-semibold">
-                                            <i class="mdi mdi-pause-circle me-1"></i>
-                                            Fim do Intervalo
-                                        </label>
-                                        <input type="time" class="form-control @error('break_end_time') is-invalid @enderror" 
-                                               name="break_end_time" value="{{ old('break_end_time', $businessHour->break_end_time) }}" 
-                                               id="break_end_time">
-                                        <small class="form-text text-muted">Opcional</small>
-                                        @error('break_end_time')
-                                            <div class="invalid-feedback d-block">{{ $message }}</div>
-                                        @enderror
-                                    </div>
-                                </div>
-                            </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block">
+                                Horário Início <span class="text-red-500">*</span>
+                            </label>
+                            <input type="time" name="start_time" value="{{ old('start_time', $businessHour->start_time) }}" required class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 @error('start_time') border-red-500 @enderror">
+                            @error('start_time')
+                                <p class="text-xs text-red-600 mt-1">{{ $message }}</p>
+                            @enderror
                         </div>
-
-                        {{-- Botões de Ação --}}
-                        <div class="d-flex justify-content-between align-items-center pt-3 border-top">
-                            <a href="{{ workspace_route('tenant.business-hours.index') }}" class="btn btn-light">
-                                <i class="mdi mdi-arrow-left me-1"></i>
-                                Cancelar
-                            </a>
-                            <button type="submit" class="btn btn-primary btn-lg">
-                                <i class="mdi mdi-content-save me-1"></i>
-                                Atualizar Horário Comercial
-                            </button>
+                        <div>
+                            <label class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block">
+                                Horário Fim <span class="text-red-500">*</span>
+                            </label>
+                            <input type="time" name="end_time" value="{{ old('end_time', $businessHour->end_time) }}" required class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 @error('end_time') border-red-500 @enderror">
+                            @error('end_time')
+                                <p class="text-xs text-red-600 mt-1">{{ $message }}</p>
+                            @enderror
                         </div>
-                    </form>
+                    </div>
 
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block">
+                                Início do Intervalo
+                            </label>
+                            <input type="time" name="break_start_time" value="{{ old('break_start_time', $businessHour->break_start_time) }}" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 @error('break_start_time') border-red-500 @enderror">
+                            @error('break_start_time')
+                                <p class="text-xs text-red-600 mt-1">{{ $message }}</p>
+                            @enderror
+                        </div>
+                        <div>
+                            <label class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block">
+                                Fim do Intervalo
+                            </label>
+                            <input type="time" name="break_end_time" value="{{ old('break_end_time', $businessHour->break_end_time) }}" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 @error('break_end_time') border-red-500 @enderror">
+                            @error('break_end_time')
+                                <p class="text-xs text-red-600 mt-1">{{ $message }}</p>
+                            @enderror
+                        </div>
+                    </div>
                 </div>
-            </div>
+
+                <div class="flex flex-col gap-3 pt-3 border-t border-gray-200 dark:border-gray-700 sm:flex-row sm:items-center sm:justify-between flex-wrap">
+                    <a href="{{ workspace_route('tenant.business-hours.index') }}" class="btn-patient-secondary">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                        </svg>
+                        Cancelar
+                    </a>
+                    <button type="submit" class="btn-patient-primary">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V2"></path>
+                        </svg>
+                        Atualizar Horário Comercial
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
-
-@push('styles')
-    <link href="{{ asset('css/tenant-common.css') }}" rel="stylesheet">
-    <link href="{{ asset('css/tenant-business-hours.css') }}" rel="stylesheet">
-@endpush
-
 @endsection

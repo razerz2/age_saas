@@ -1,4 +1,6 @@
 @extends('layouts.freedash.app')
+@section('title', 'Editar Layout de Email')
+
 @section('content')
     {{-- Importar CodeMirror para edição de HTML --}}
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.css">

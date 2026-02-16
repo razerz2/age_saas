@@ -1,4 +1,5 @@
 @extends('layouts.freedash.app')
+@section('title', 'Visualizar Solicitações de Mudança de Plano')
 @section('content')
     <div class="page-breadcrumb">
         <div class="row">

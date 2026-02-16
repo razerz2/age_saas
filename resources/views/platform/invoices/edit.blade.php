@@ -1,4 +1,6 @@
 @extends('layouts.freedash.app')
+@section('title', 'Editar Invoices')
+
 @section('content')
     <div class="page-breadcrumb">
         <div class="row">

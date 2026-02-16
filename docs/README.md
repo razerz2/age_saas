@@ -20,6 +20,7 @@ Esta pasta contém documentação complementar e guias específicos do projeto.
 
 ### 🔍 Análises e Diagnósticos
 
+- **[FRONTEND_TENANT.md](FRONTEND_TENANT.md)** - Documentário do frontend atual do tenant (views, rotas, JS/CSS, personalização)
 - **[DIAGNOSTICO_GOOGLE_CALLBACK.md](DIAGNOSTICO_GOOGLE_CALLBACK.md)** - Diagnóstico de problemas com callback do Google OAuth
 - **[TIPOS_CONSULTA_VIEWS.md](TIPOS_CONSULTA_VIEWS.md)** - Análise de todas as views que utilizam tipos de consulta
 - **[SOLUCAO_ERRO_419.md](SOLUCAO_ERRO_419.md)** - Solução para erro 419 (CSRF / sessão)

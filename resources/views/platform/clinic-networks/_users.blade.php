@@ -1,3 +1,5 @@
+@section('title', 'Usuários da Rede de Clínicas')
+
 <div class="row mt-4">
     <div class="col-12">
         <div class="card shadow-sm border-0">

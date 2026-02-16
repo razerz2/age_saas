@@ -12,411 +12,106 @@
 @endphp
 
 <li class="nav-item dropdown">
-    <a class="nav-link count-indicator dropdown-toggle position-relative" 
-       id="notificationDropdown" 
-       href="#" 
-       data-bs-toggle="dropdown"
-       aria-haspopup="true" 
-       aria-expanded="false">
-        <i class="mdi mdi-bell-outline"></i>
-        @if($unreadCount > 0)
-            <span class="count-symbol bg-danger notification-badge">
-                <span class="notification-count">{{ $unreadCount > 99 ? '99+' : $unreadCount }}</span>
+    <div class="relative" x-data="{ notificationOpen: false, notifying: true }" @click.outside="notificationOpen = false">
+        <button class="hover:text-dark-900 relative flex h-11 w-11 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-white" @click.prevent="notificationOpen = ! notificationOpen; notifying = false" data-bs-toggle="dropdown">
+            <span :class="!notifying ? 'hidden' : 'flex'" class="absolute top-0.5 right-0 z-1 h-2 w-2 rounded-full bg-orange-400">
+                <span class="absolute -z-1 inline-flex h-full w-full animate-ping rounded-full bg-orange-400 opacity-75"></span>
             </span>
-        @endif
-    </a>
+            <svg class="fill-current text-gray-500 dark:text-gray-400" width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path fill-rule="evenodd" clip-rule="evenodd" d="M10.75 2.29248C10.75 1.87827 10.4143 1.54248 10 1.54248C9.58583 1.54248 9.25004 1.87827 9.25004 2.29248V2.83613C6.08266 3.20733 3.62504 5.9004 3.62504 9.16748V14.4591H3.33337C2.91916 14.4591 2.58337 14.7949 2.58337 15.2091C2.58337 15.6234 2.91916 15.9591 3.33337 15.9591H4.37504H15.625H16.6667C17.0809 15.9591 17.4167 15.6234 17.4167 15.2091C17.4167 14.7949 17.0809 14.4591 16.6667 14.4591H16.375V9.16748C16.375 5.9004 13.9174 3.20733 10.75 2.83613V2.29248ZM14.875 14.4591V9.16748C14.875 6.47509 12.6924 4.29248 10 4.29248C7.30765 4.29248 5.12504 6.47509 5.12504 9.16748V14.4591H14.875ZM8.00004 17.7085C8.00004 18.1228 8.33583 18.4585 8.75004 18.4585H11.25C11.6643 18.4585 12 18.1228 12 17.7085C12 17.2943 11.6643 16.9585 11.25 16.9585H8.75004C8.33583 16.9585 8.00004 17.2943 8.00004 17.7085Z" fill=""/>
+            </svg>
+        </button>
 
-    <div class="dropdown-menu dropdown-menu-end navbar-dropdown notification-dropdown" 
-         aria-labelledby="notificationDropdown"
-         style="width: 400px; max-width: 90vw; border-radius: 12px; box-shadow: 0 8px 32px rgba(0,0,0,0.12); border: none; padding: 0; overflow: hidden;">
-        
-        {{-- Cabeçalho --}}
-        <div class="notification-header" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 20px; color: white;">
-            <div class="d-flex justify-content-between align-items-center">
-                <div>
-                    <h6 class="mb-0 fw-bold" style="font-size: 16px; letter-spacing: 0.5px;">
-                        <i class="mdi mdi-bell-ring-outline me-2"></i>Notificações
-                    </h6>
-                    @if($unreadCount > 0)
-                        <small class="opacity-75" style="font-size: 12px;">
-                            {{ $unreadCount }} {{ $unreadCount === 1 ? 'nova' : 'novas' }}
-                        </small>
-                    @endif
-                </div>
+        <!-- Dropdown Start -->
+        <div x-show="notificationOpen" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100" x-transition:leave="transition ease-in duration-150" x-transition:leave-start="opacity-100 scale-100" x-transition:leave-end="opacity-0 scale-95" class="shadow-theme-lg dark:bg-gray-900 absolute -right-[240px] mt-[17px] flex h-[480px] w-[350px] flex-col rounded-2xl border border-gray-200 bg-white p-3 sm:w-[361px] lg:right-0 dark:border-gray-800 z-50" data-bs-dropdown="true">
+            <div class="mb-3 flex items-center justify-between border-b border-gray-100 pb-3 dark:border-gray-800">
+                    <h5 class="text-lg font-semibold text-gray-800 dark:text-white/90">
+                        Notificações
+                        @if($unreadCount > 0)
+                            <small class="text-xs text-gray-500 dark:text-gray-400 ml-2">
+                                ({{ $unreadCount }} {{ $unreadCount === 1 ? 'nova' : 'novas' }})
+                            </small>
+                        @endif
+                    </h5>
+
+                <button @click="notificationOpen = false" class="text-gray-500 dark:text-gray-400">
+                    <svg class="fill-current text-gray-500 dark:text-gray-400" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path fill-rule="evenodd" clip-rule="evenodd" d="M6.21967 7.28131C5.92678 6.98841 5.92678 6.51354 6.21967 6.22065C6.51256 5.92775 6.98744 5.92775 7.28033 6.22065L11.999 10.9393L16.7176 6.22078C17.0105 5.92789 17.4854 5.92788 17.7782 6.22078C18.0711 6.51367 18.0711 6.98855 17.7782 7.28144L13.0597 12L17.7782 16.7186C18.0711 17.0115 18.0711 17.4863 17.7782 17.7792C17.4854 18.0721 17.0105 18.0721 16.7176 17.7792L11.999 13.0607L7.28033 17.7794C6.98744 18.0722 6.51256 18.0722 6.21967 17.7794C5.92678 17.4865 5.92678 17.0116 6.21967 16.7187L10.9384 12L6.21967 7.28131Z" fill=""/>
+                    </svg>
+                </button>
             </div>
-        </div>
 
-        {{-- Lista de Notificações --}}
-        <div class="notification-list" style="max-height: 450px; overflow-y: auto;">
-            @forelse($notifications as $notification)
-                @php
-                    $levelColors = [
-                        'error' => ['bg' => '#f44336', 'icon' => 'mdi-alert-circle'],
-                        'warning' => ['bg' => '#ff9800', 'icon' => 'mdi-alert'],
-                        'info' => ['bg' => '#2196f3', 'icon' => 'mdi-information'],
-                        'success' => ['bg' => '#4caf50', 'icon' => 'mdi-check-circle']
-                    ];
-                    $color = $levelColors[$notification->level] ?? $levelColors['info'];
-                    $isNew = $notification->status === 'new';
-                    
-                    // Ícone baseado no tipo
-                    $typeIcons = [
-                        'appointment' => 'mdi-calendar-check',
-                        'form_response' => 'mdi-file-document-edit',
-                    ];
-                    $icon = $typeIcons[$notification->type] ?? 'mdi-bell';
-                @endphp
+            <ul class="custom-scrollbar flex h-auto flex-col overflow-y-auto">
+                @forelse($notifications as $notification)
+                    @php
+                        $levelColors = [
+                            'error' => ['bgClass' => 'bg-red-500', 'icon' => 'mdi-alert-circle'],
+                            'warning' => ['bgClass' => 'bg-orange-500', 'icon' => 'mdi-alert'],
+                            'info' => ['bgClass' => 'bg-blue-600', 'icon' => 'mdi-information'],
+                            'success' => ['bgClass' => 'bg-emerald-500', 'icon' => 'mdi-check-circle']
+                        ];
+                        $color = $levelColors[$notification->level] ?? $levelColors['info'];
+                        $isNew = $notification->status === 'new';
+                        
+                        // Ícone baseado no tipo
+                        $typeIcons = [
+                            'appointment' => 'mdi-calendar-check',
+                            'form_response' => 'mdi-file-document-edit',
+                        ];
+                        $icon = $typeIcons[$notification->type] ?? 'mdi-bell';
+                    @endphp
                 
-                <a href="{{ workspace_route('tenant.notifications.show', ['notification' => $notification->id]) }}" 
-                   class="notification-item d-flex align-items-start text-decoration-none position-relative {{ $isNew ? 'notification-new' : '' }}"
-                   data-notification-id="{{ $notification->id }}"
-                   style="padding: 16px 20px; border-bottom: 1px solid #f0f0f0; transition: all 0.2s ease; background: {{ $isNew ? '#f8f9ff' : 'white' }}; text-decoration: none !important; color: inherit;">
-                    
-                    {{-- Indicador de nova notificação --}}
-                    @if($isNew)
-                        <div class="notification-indicator" 
-                             style="position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: linear-gradient(180deg, #667eea 0%, #764ba2 100%);"></div>
-                    @endif
-                    
-                    {{-- Ícone --}}
-                    <div class="notification-icon-wrapper me-3 flex-shrink-0">
-                        <div class="notification-icon" 
-                             style="width: 48px; height: 48px; border-radius: 12px; background: {{ $color['bg'] }}; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
-                            <i class="mdi {{ $icon }} text-white" style="font-size: 22px;"></i>
-                        </div>
-                    </div>
-                    
-                    {{-- Conteúdo --}}
-                    <div class="notification-content flex-grow-1" style="min-width: 0;">
-                        <div class="d-flex justify-content-between align-items-start mb-1">
-                            <h6 class="notification-title mb-0 fw-semibold" 
-                                style="font-size: 14px; color: #1a1a1a; line-height: 1.4; margin-bottom: 4px;">
-                                {{ $notification->title }}
-                            </h6>
+                <li>
+                    <a href="{{ workspace_route('tenant.notifications.show', ['notification' => $notification->id]) }}" 
+                       class="flex gap-3 rounded-lg border-b border-gray-100 p-3 px-4.5 py-3 hover:bg-gray-100 dark:border-gray-800 dark:hover:bg-white/5 {{ $isNew ? 'bg-blue-50 dark:bg-blue-900/20' : '' }}"
+                       data-notification-id="{{ $notification->id }}">
+                        
+                        <span class="relative z-1 block h-10 w-full max-w-10 rounded-full">
+                                <div class="flex h-10 w-10 items-center justify-center rounded-full {{ $color['bgClass'] }} shadow-lg shadow-black/20 dark:shadow-lg">
+                                    <i class="mdi {{ $icon }} text-white text-lg"></i>
+                            </div>
                             @if($isNew)
-                                <span class="badge bg-primary rounded-pill" 
-                                      style="font-size: 9px; padding: 2px 6px; margin-left: 8px;">
-                                    Nova
-                                </span>
+                                <span class="bg-success-500 absolute right-0 bottom-0 z-10 h-2.5 w-full max-w-2.5 rounded-full border-[1.5px] border-white dark:border-gray-900"></span>
                             @endif
-                        </div>
-                        <p class="notification-message mb-2 text-muted" 
-                           style="font-size: 13px; line-height: 1.5; color: #666; margin: 0; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
-                            {{ Str::limit($notification->message, 80) }}
-                        </p>
-                        <small class="notification-time text-muted d-flex align-items-center" 
-                               style="font-size: 11px; color: #999;">
-                            <i class="mdi mdi-clock-outline me-1" style="font-size: 12px;"></i>
-                            {{ $notification->created_at->diffForHumans() }}
-                        </small>
-                    </div>
-                </a>
-            @empty
-                <div class="notification-empty text-center py-5" style="color: #999;">
-                    <i class="mdi mdi-bell-off-outline" style="font-size: 48px; opacity: 0.3; margin-bottom: 12px;"></i>
-                    <p class="mb-0" style="font-size: 14px;">Nenhuma notificação encontrada</p>
-                    <small style="font-size: 12px; opacity: 0.7;">Você está em dia!</small>
-                </div>
-            @endforelse
-        </div>
+                        </span>
 
-        {{-- Rodapé --}}
-        @if($notifications->count() > 0)
-            <div class="notification-footer text-center" 
-                 style="padding: 16px; background: #f8f9fa; border-top: 1px solid #e9ecef;">
-                <a href="{{ workspace_route('tenant.notifications.index') }}" 
-                   class="text-decoration-none fw-semibold"
-                   style="color: #667eea; font-size: 13px; transition: color 0.2s;">
-                    <i class="mdi mdi-eye-outline me-1"></i>
-                    Ver todas as notificações
-                    <i class="mdi mdi-chevron-right ms-1" style="font-size: 16px;"></i>
-                </a>
-            </div>
-        @endif
+                        <span class="block">
+                            <span class="text-theme-sm mb-1.5 block text-gray-500 dark:text-gray-400">
+                                <span class="font-medium text-gray-800 dark:text-white/90">{{ $notification->title }}</span>
+                                {{ Str::limit($notification->message, 60) }}
+                            </span>
+
+                            <span class="text-theme-xs flex items-center gap-2 text-gray-500 dark:text-gray-400">
+                                <span>{{ $notification->type ?? 'Geral' }}</span>
+                                <span class="h-1 w-1 rounded-full bg-gray-400 dark:bg-gray-500"></span>
+                                <span>{{ $notification->created_at->diffForHumans() }}</span>
+                            </span>
+                        </span>
+                    </a>
+                </li>
+            @empty
+                <li class="text-center py-8">
+                    <div class="text-gray-400 dark:text-gray-500">
+                        <i class="mdi mdi-bell-off-outline text-4xl"></i>
+                        <p class="mt-2 text-sm">Nenhuma notificação encontrada</p>
+                        <p class="text-xs opacity-70">Você está em dia!</p>
+                    </div>
+                </li>
+            @endforelse
+            </ul>
+
+            <a href="{{ workspace_route('tenant.notifications.index') }}" class="text-theme-sm shadow-theme-xs mt-3 flex justify-center rounded-lg border border-gray-300 bg-white p-3 font-medium text-gray-700 hover:bg-gray-50 hover:text-gray-800 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-white/[0.03] dark:hover:text-gray-200">
+                Ver todas as notificações
+            </a>
+        </div>
     </div>
 </li>
 
-{{-- Estilos CSS --}}
-<style>
-    .notification-dropdown {
-        animation: slideDown 0.3s ease-out;
-    }
-
-    @keyframes slideDown {
-        from {
-            opacity: 0;
-            transform: translateY(-10px);
-        }
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
-
-    .notification-item:hover {
-        background: #f5f7ff !important;
-        transform: translateX(2px);
-    }
-
-    .notification-item:active {
-        transform: translateX(0);
-    }
-
-    .notification-list::-webkit-scrollbar {
-        width: 6px;
-    }
-
-    .notification-list::-webkit-scrollbar-track {
-        background: #f1f1f1;
-    }
-
-    .notification-list::-webkit-scrollbar-thumb {
-        background: #c1c1c1;
-        border-radius: 3px;
-    }
-
-    .notification-list::-webkit-scrollbar-thumb:hover {
-        background: #a8a8a8;
-    }
-
-    .notification-badge {
-        position: absolute;
-        top: 6px;
-        right: 6px;
-        width: 18px;
-        height: 18px;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 10px;
-        font-weight: bold;
-        color: white;
-        animation: pulse 2s infinite;
-    }
-
-    .notification-count {
-        line-height: 1;
-        font-size: 10px;
-    }
-
-    @keyframes pulse {
-        0%, 100% {
-            transform: scale(1);
-        }
-        50% {
-            transform: scale(1.1);
-        }
-    }
-
-    .notification-new {
-        animation: newNotification 0.5s ease-out;
-    }
-
-    @keyframes newNotification {
-        0% {
-            background: rgba(102, 126, 234, 0.2);
-        }
-        100% {
-            background: #f8f9ff;
-        }
-    }
-
-    /* Responsividade */
-    @media (max-width: 576px) {
-        .notification-dropdown {
-            width: 100vw !important;
-            max-width: 100vw !important;
-            margin-left: -10px !important;
-            margin-right: -10px !important;
-        }
-    }
-</style>
 
 {{-- Scripts JavaScript --}}
 @push('scripts')
 <script>
-$(document).ready(function() {
-    let notificationCheckInterval;
-    
-    // Função para gerar URL de notificação
-    function getNotificationUrl(notificationId) {
-        const baseUrl = "{{ workspace_route('tenant.notifications.index') }}";
-        return baseUrl + '/' + notificationId;
-    }
-
-    // Função para atualizar notificações
-    function loadNotifications() {
-        $.ajax({
-            url: "{{ workspace_route('tenant.notifications.json') }}",
-            type: "GET",
-            dataType: "json",
-            headers: {
-                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-            },
-            success: function(data) {
-                updateNotificationBadge(data.unread_count);
-                updateNotificationList(data.notifications);
-            },
-            error: function(xhr, status, error) {
-                console.error('Erro ao buscar notificações:', error);
-            }
-        });
-    }
-
-    // Atualiza o badge de contagem
-    function updateNotificationBadge(count) {
-        const $badge = $('.notification-badge');
-        const $count = $('.notification-count');
-        
-        if (count > 0) {
-            if ($badge.length === 0) {
-                // Cria o badge se não existir
-                $('#notificationDropdown').append(
-                    '<span class="count-symbol bg-danger notification-badge">' +
-                    '<span class="notification-count">' + (count > 99 ? '99+' : count) + '</span>' +
-                    '</span>'
-                );
-            } else {
-                $count.text(count > 99 ? '99+' : count);
-                $badge.show();
-            }
-        } else {
-            $badge.hide();
-        }
-
-        // Atualiza o texto do cabeçalho
-        const $headerText = $('.notification-header small');
-        if (count > 0) {
-            const text = count === 1 ? 'nova' : 'novas';
-            if ($headerText.length === 0) {
-                $('.notification-header h6').after(
-                    '<small class="opacity-75" style="font-size: 12px;">' + count + ' ' + text + '</small>'
-                );
-            } else {
-                $headerText.text(count + ' ' + text);
-            }
-        } else {
-            $headerText.remove();
-        }
-    }
-
-    // Atualiza a lista de notificações
-    function updateNotificationList(notifications) {
-        const $list = $('.notification-list');
-        
-        if (notifications.length === 0) {
-            $list.html(
-                '<div class="notification-empty text-center py-5" style="color: #999;">' +
-                '<i class="mdi mdi-bell-off-outline" style="font-size: 48px; opacity: 0.3; margin-bottom: 12px;"></i>' +
-                '<p class="mb-0" style="font-size: 14px;">Nenhuma notificação encontrada</p>' +
-                '<small style="font-size: 12px; opacity: 0.7;">Você está em dia!</small>' +
-                '</div>'
-            );
-            $('.notification-footer').hide();
-            return;
-        }
-
-        $list.empty();
-        $('.notification-footer').show();
-
-        const levelColors = {
-            'error': { bg: '#f44336', icon: 'mdi-alert-circle' },
-            'warning': { bg: '#ff9800', icon: 'mdi-alert' },
-            'info': { bg: '#2196f3', icon: 'mdi-information' },
-            'success': { bg: '#4caf50', icon: 'mdi-check-circle' }
-        };
-
-        const typeIcons = {
-            'appointment': 'mdi-calendar-check',
-            'form_response': 'mdi-file-document-edit',
-        };
-
-        notifications.forEach(function(n) {
-            const color = levelColors[n.level] || levelColors['info'];
-            const isNew = n.status === 'new';
-            const icon = typeIcons[n.type] || 'mdi-bell';
-            const createdDate = new Date(n.created_at);
-            const timeAgo = getTimeAgo(createdDate);
-            const message = n.message.length > 80 ? n.message.substring(0, 80) + '...' : n.message;
-
-            const item = 
-                '<a href="' + getNotificationUrl(n.id) + '" ' +
-                'class="notification-item d-flex align-items-start text-decoration-none position-relative ' + (isNew ? 'notification-new' : '') + '" ' +
-                'data-notification-id="' + n.id + '" ' +
-                'style="padding: 16px 20px; border-bottom: 1px solid #f0f0f0; transition: all 0.2s ease; background: ' + (isNew ? '#f8f9ff' : 'white') + '; text-decoration: none !important; color: inherit;">' +
-                (isNew ? '<div class="notification-indicator" style="position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: linear-gradient(180deg, #667eea 0%, #764ba2 100%);"></div>' : '') +
-                '<div class="notification-icon-wrapper me-3 flex-shrink-0">' +
-                '<div class="notification-icon" style="width: 48px; height: 48px; border-radius: 12px; background: ' + color.bg + '; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">' +
-                '<i class="mdi ' + icon + ' text-white" style="font-size: 22px;"></i>' +
-                '</div>' +
-                '</div>' +
-                '<div class="notification-content flex-grow-1" style="min-width: 0;">' +
-                '<div class="d-flex justify-content-between align-items-start mb-1">' +
-                '<h6 class="notification-title mb-0 fw-semibold" style="font-size: 14px; color: #1a1a1a; line-height: 1.4; margin-bottom: 4px;">' +
-                escapeHtml(n.title) +
-                '</h6>' +
-                (isNew ? '<span class="badge bg-primary rounded-pill" style="font-size: 9px; padding: 2px 6px; margin-left: 8px;">Nova</span>' : '') +
-                '</div>' +
-                '<p class="notification-message mb-2 text-muted" style="font-size: 13px; line-height: 1.5; color: #666; margin: 0; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">' +
-                escapeHtml(message) +
-                '</p>' +
-                '<small class="notification-time text-muted d-flex align-items-center" style="font-size: 11px; color: #999;">' +
-                '<i class="mdi mdi-clock-outline me-1" style="font-size: 12px;"></i>' +
-                timeAgo +
-                '</small>' +
-                '</div>' +
-                '</a>';
-
-            $list.append(item);
-        });
-    }
-
-    // Função para calcular tempo relativo
-    function getTimeAgo(date) {
-        const now = new Date();
-        const diff = Math.floor((now - date) / 1000); // diferença em segundos
-
-        if (diff < 60) return 'agora';
-        if (diff < 3600) return Math.floor(diff / 60) + ' min atrás';
-        if (diff < 86400) return Math.floor(diff / 3600) + 'h atrás';
-        if (diff < 604800) return Math.floor(diff / 86400) + ' dias atrás';
-        
-        return date.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' });
-    }
-
-    // Função para escapar HTML
-    function escapeHtml(text) {
-        const map = {
-            '&': '&amp;',
-            '<': '&lt;',
-            '>': '&gt;',
-            '"': '&quot;',
-            "'": '&#039;'
-        };
-        return text.replace(/[&<>"']/g, m => map[m]);
-    }
-
-    // Quando o dropdown é aberto, atualiza as notificações
-    $('#notificationDropdown').on('click', function() {
-        loadNotifications();
-    });
-
-    // Carrega notificações ao inicializar
-    loadNotifications();
-
-    // Atualiza a cada 30 segundos
-    notificationCheckInterval = setInterval(loadNotifications, 30000);
-
-    // Pausa a atualização quando a página não está visível
-    document.addEventListener('visibilitychange', function() {
-        if (document.hidden) {
-            clearInterval(notificationCheckInterval);
-        } else {
-            loadNotifications();
-            notificationCheckInterval = setInterval(loadNotifications, 30000);
-        }
-    });
-});
+// O Alpine.js já está configurado no projeto
+// As notificações serão atualizadas via Blade template e Alpine.js reativo
 </script>
 @endpush

@@ -1,4 +1,4 @@
-﻿@extends('layouts.connect_plus.app')
+@extends('layouts.tailadmin.app')
 
 @section('title', 'Criar Integração')
 
@@ -107,15 +107,16 @@
                         </div>
 
                         {{-- Botões de Ação --}}
-                        <div class="d-flex justify-content-between align-items-center pt-3 border-top">
-                            <a href="{{ workspace_route('tenant.integrations.index') }}" class="btn btn-light">
-                                <i class="mdi mdi-arrow-left me-1"></i>
+                        <div class="flex flex-wrap items-center justify-between gap-3 pt-3 border-t">
+                            <x-tailadmin-button variant="secondary" size="md" href="{{ workspace_route('tenant.integrations.index') }}"
+                                class="bg-transparent border-gray-300 text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-white/5">
+                                <i class="mdi mdi-arrow-left"></i>
                                 Cancelar
-                            </a>
-                            <button type="submit" class="btn btn-primary btn-lg">
-                                <i class="mdi mdi-content-save me-1"></i>
+                            </x-tailadmin-button>
+                            <x-tailadmin-button type="submit" variant="primary" size="lg">
+                                <i class="mdi mdi-content-save"></i>
                                 Salvar Integração
-                            </button>
+                            </x-tailadmin-button>
                         </div>
                     </form>
 

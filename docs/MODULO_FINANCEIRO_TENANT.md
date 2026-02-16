@@ -400,13 +400,13 @@ if ($price) {
 **Namespace:** `App\Http\Controllers\Tenant\Finance`
 
 **Rotas:**
-- `GET /tenant/finance/accounts` - Listar contas
-- `GET /tenant/finance/accounts/create` - Formulário de criação
-- `POST /tenant/finance/accounts` - Criar conta
-- `GET /tenant/finance/accounts/{account}` - Detalhes da conta
-- `GET /tenant/finance/accounts/{account}/edit` - Formulário de edição
-- `PUT /tenant/finance/accounts/{account}` - Atualizar conta
-- `DELETE /tenant/finance/accounts/{account}` - Excluir conta
+- `GET /workspace/{slug}/finance/accounts` - Listar contas
+- `GET /workspace/{slug}/finance/accounts/create` - Formulário de criação
+- `POST /workspace/{slug}/finance/accounts` - Criar conta
+- `GET /workspace/{slug}/finance/accounts/{account}` - Detalhes da conta
+- `GET /workspace/{slug}/finance/accounts/{account}/edit` - Formulário de edição
+- `PUT /workspace/{slug}/finance/accounts/{account}` - Atualizar conta
+- `DELETE /workspace/{slug}/finance/accounts/{account}` - Excluir conta
 
 **Permissões:**
 - Apenas usuários com role `admin` podem gerenciar contas
@@ -427,13 +427,13 @@ if ($price) {
 **Namespace:** `App\Http\Controllers\Tenant\Finance`
 
 **Rotas:**
-- `GET /tenant/finance/categories` - Listar categorias
-- `GET /tenant/finance/categories/create` - Formulário de criação
-- `POST /tenant/finance/categories` - Criar categoria
-- `GET /tenant/finance/categories/{category}` - Detalhes da categoria
-- `GET /tenant/finance/categories/{category}/edit` - Formulário de edição
-- `PUT /tenant/finance/categories/{category}` - Atualizar categoria
-- `DELETE /tenant/finance/categories/{category}` - Excluir categoria
+- `GET /workspace/{slug}/finance/categories` - Listar categorias
+- `GET /workspace/{slug}/finance/categories/create` - Formulário de criação
+- `POST /workspace/{slug}/finance/categories` - Criar categoria
+- `GET /workspace/{slug}/finance/categories/{category}` - Detalhes da categoria
+- `GET /workspace/{slug}/finance/categories/{category}/edit` - Formulário de edição
+- `PUT /workspace/{slug}/finance/categories/{category}` - Atualizar categoria
+- `DELETE /workspace/{slug}/finance/categories/{category}` - Excluir categoria
 
 **Permissões:**
 - Apenas usuários com role `admin` podem gerenciar categorias
@@ -454,12 +454,12 @@ if ($price) {
 **Namespace:** `App\Http\Controllers\Tenant\Finance`
 
 **Rotas:**
-- `GET /tenant/finance/transactions` - Listar transações
-- `GET /tenant/finance/transactions/create` - Formulário de criação
-- `POST /tenant/finance/transactions` - Criar transação
-- `GET /tenant/finance/transactions/{transaction}` - Detalhes da transação
-- `GET /tenant/finance/transactions/{transaction}/edit` - Formulário de edição
-- `PUT /tenant/finance/transactions/{transaction}` - Atualizar transação
+- `GET /workspace/{slug}/finance/transactions` - Listar transações
+- `GET /workspace/{slug}/finance/transactions/create` - Formulário de criação
+- `POST /workspace/{slug}/finance/transactions` - Criar transação
+- `GET /workspace/{slug}/finance/transactions/{transaction}` - Detalhes da transação
+- `GET /workspace/{slug}/finance/transactions/{transaction}/edit` - Formulário de edição
+- `PUT /workspace/{slug}/finance/transactions/{transaction}` - Atualizar transação
 
 **Permissões:**
 - `admin` - Acesso total
@@ -487,10 +487,10 @@ if ($price) {
 **Namespace:** `App\Http\Controllers\Tenant\Finance`
 
 **Rotas:**
-- `GET /tenant/finance/charges` - Listar cobranças
-- `GET /tenant/finance/charges/{charge}` - Detalhes da cobrança
-- `POST /tenant/finance/charges/{charge}/cancel` - Cancelar cobrança
-- `POST /tenant/finance/charges/{charge}/resend-link` - Reenviar link de pagamento
+- `GET /workspace/{slug}/finance/charges` - Listar cobranças
+- `GET /workspace/{slug}/finance/charges/{charge}` - Detalhes da cobrança
+- `POST /workspace/{slug}/finance/charges/{charge}/cancel` - Cancelar cobrança
+- `POST /workspace/{slug}/finance/charges/{charge}/resend-link` - Reenviar link de pagamento
 
 **Permissões:**
 - `admin` - Acesso total
@@ -952,27 +952,27 @@ tenant_setting('finance.auto_send_payment_link', 'true');
 O módulo oferece diversos relatórios financeiros:
 
 ### 1. Fluxo de Caixa
-- **Rota:** `GET /tenant/finance/reports/cash-flow`
+- **Rota:** `GET /workspace/{slug}/finance/reports/cash-flow`
 - **Controller:** `CashFlowReportController`
 - **Exportação:** CSV, Excel, PDF
 
 ### 2. Receitas e Despesas
-- **Rota:** `GET /tenant/finance/reports/income-expense`
+- **Rota:** `GET /workspace/{slug}/finance/reports/income-expense`
 - **Controller:** `IncomeExpenseReportController`
 - **Exportação:** CSV, Excel, PDF
 
 ### 3. Cobranças
-- **Rota:** `GET /tenant/finance/reports/charges`
+- **Rota:** `GET /workspace/{slug}/finance/reports/charges`
 - **Controller:** `ChargesReportController`
 - **Exportação:** CSV, Excel, PDF
 
 ### 4. Pagamentos
-- **Rota:** `GET /tenant/finance/reports/payments`
+- **Rota:** `GET /workspace/{slug}/finance/reports/payments`
 - **Controller:** `PaymentsReportController`
 - **Exportação:** CSV, Excel, PDF
 
 ### 5. Comissões
-- **Rota:** `GET /tenant/finance/reports/commissions`
+- **Rota:** `GET /workspace/{slug}/finance/reports/commissions`
 - **Controller:** `CommissionsReportController`
 - **Exportação:** CSV, Excel, PDF
 

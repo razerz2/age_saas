@@ -7,13 +7,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="description" content="">
     <meta name="author" content="">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <!-- Favicon icon -->
     @php
         $platformFavicon = sysconfig('platform.favicon');
         $faviconUrl = $platformFavicon ? asset('storage/' . $platformFavicon) : asset('freedash/assets/images/favicon.png');
     @endphp
     <link rel="icon" type="image/png" sizes="16x16" href="{{ $faviconUrl }}">
-    <title>AgeClin - Sistema de Agendamento para Clínicas </title>
+    <title>@yield('title', 'Dashboard - AllSync')</title>
     <!-- Custom CSS -->
     <link href="{{ asset('freedash/assets/extra-libs/c3/c3.min.css') }}" rel="stylesheet">
     <link href="{{ asset('freedash/assets/libs/chartist/dist/chartist.min.css') }}" rel="stylesheet">

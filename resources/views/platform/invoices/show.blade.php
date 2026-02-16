@@ -1,4 +1,5 @@
 @extends('layouts.freedash.app')
+@section('title', 'Visualizar Faturas')
 @section('content')
     <div class="page-breadcrumb">
         <div class="row">

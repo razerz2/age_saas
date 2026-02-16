@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Services\WhatsApp\WhatsAppProviderInterface;
 use App\Services\WhatsApp\WhatsAppBusinessProvider;
 use App\Services\WhatsApp\ZApiProvider;
+use App\Services\WhatsApp\WahaProvider;
 use Illuminate\Support\Facades\Log;
 
 class WhatsAppService
@@ -27,6 +28,7 @@ class WhatsAppService
 
         return match ($provider) {
             'zapi', 'z-api' => new ZApiProvider(),
+            'waha' => new WahaProvider(),
             'whatsapp_business', 'business' => new WhatsAppBusinessProvider(),
             default => new WhatsAppBusinessProvider(), // Fallback para WhatsApp Business
         };

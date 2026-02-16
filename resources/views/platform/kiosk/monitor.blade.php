@@ -1,3 +1,5 @@
+@section('title', 'Monitor')
+
 <!DOCTYPE html>
 <html lang="pt-BR">
 

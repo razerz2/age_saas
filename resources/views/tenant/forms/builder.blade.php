@@ -1,4 +1,4 @@
-﻿@extends('layouts.connect_plus.app')
+@extends('layouts.tailadmin.app')
 
 @section('title', 'Construir Formulário')
 
@@ -35,25 +35,26 @@
                             </h4>
                             <p class="card-description mb-0 text-muted">Adicione seções, perguntas e opções ao formulário</p>
                         </div>
-                        <a href="{{ workspace_route('tenant.forms.show', ['form' => $form->id]) }}" class="btn btn-light">
-                            <i class="mdi mdi-arrow-left me-1"></i>
+                        <x-tailadmin-button variant="secondary" size="md" href="{{ workspace_route('tenant.forms.show', ['form' => $form->id]) }}"
+                            class="bg-transparent border-gray-300 text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-white/5">
+                            <i class="mdi mdi-arrow-left"></i>
                             Voltar
-                        </a>
+                        </x-tailadmin-button>
                     </div>
 
                     {{-- Alertas --}}
                     <div id="alert-container"></div>
 
                     {{-- Botões de Ação --}}
-                    <div class="mb-4">
-                        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addSectionModal">
-                            <i class="mdi mdi-plus me-1"></i>
+                    <div class="mb-4 flex flex-wrap items-center gap-2">
+                        <x-tailadmin-button type="button" variant="primary" size="md" data-bs-toggle="modal" data-bs-target="#addSectionModal">
+                            <i class="mdi mdi-plus"></i>
                             Adicionar Seção
-                        </button>
-                        <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addQuestionModal" id="addQuestionBtn" disabled>
-                            <i class="mdi mdi-plus-circle me-1"></i>
+                        </x-tailadmin-button>
+                        <x-tailadmin-button type="button" variant="success" size="md" data-bs-toggle="modal" data-bs-target="#addQuestionModal" id="addQuestionBtn" disabled>
+                            <i class="mdi mdi-plus-circle"></i>
                             Adicionar Pergunta
-                        </button>
+                        </x-tailadmin-button>
                     </div>
 
                     {{-- Lista de Seções e Perguntas --}}
@@ -94,13 +95,15 @@
                                                 <i class="mdi mdi-folder me-2"></i>
                                                 <span class="section-title">{{ $section->title ?: 'Seção sem título' }}</span>
                                             </h5>
-                                            <div>
-                                                <button class="btn btn-sm btn-warning edit-section-btn" data-section-id="{{ $section->id }}" data-section-title="{{ $section->title }}">
+                                            <div class="flex items-center gap-2">
+                                                <x-tailadmin-button type="button" variant="warning" size="xs"
+                                                    class="edit-section-btn px-2 py-1" data-section-id="{{ $section->id }}" data-section-title="{{ $section->title }}">
                                                     <i class="mdi mdi-pencil"></i>
-                                                </button>
-                                                <button class="btn btn-sm btn-danger delete-section-btn" data-section-id="{{ $section->id }}">
+                                                </x-tailadmin-button>
+                                                <x-tailadmin-button type="button" variant="danger" size="xs"
+                                                    class="delete-section-btn px-2 py-1" data-section-id="{{ $section->id }}">
                                                     <i class="mdi mdi-delete"></i>
-                                                </button>
+                                                </x-tailadmin-button>
                                             </div>
                                         </div>
                                         <div class="card-body">
@@ -141,8 +144,12 @@
                         </div>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancelar</button>
-                        <button type="submit" class="btn btn-primary">Adicionar</button>
+                        <x-tailadmin-button type="button" variant="secondary" size="md" class="bg-transparent border-gray-300 text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-white/5" data-bs-dismiss="modal">
+                            Cancelar
+                        </x-tailadmin-button>
+                        <x-tailadmin-button type="submit" variant="primary" size="md">
+                            Adicionar
+                        </x-tailadmin-button>
                     </div>
                 </form>
             </div>
@@ -166,8 +173,12 @@
                         </div>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancelar</button>
-                        <button type="submit" class="btn btn-primary">Salvar</button>
+                        <x-tailadmin-button type="button" variant="secondary" size="md" class="bg-transparent border-gray-300 text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-white/5" data-bs-dismiss="modal">
+                            Cancelar
+                        </x-tailadmin-button>
+                        <x-tailadmin-button type="submit" variant="primary" size="md">
+                            Salvar
+                        </x-tailadmin-button>
                     </div>
                 </form>
             </div>
@@ -225,15 +236,19 @@
                             <hr>
                             <h6>Opções de Resposta</h6>
                             <div id="options-list"></div>
-                            <button type="button" class="btn btn-sm btn-success mt-2" id="add-option-btn">
-                                <i class="mdi mdi-plus me-1"></i>
+                            <x-tailadmin-button type="button" variant="success" size="sm" class="mt-2" id="add-option-btn">
+                                <i class="mdi mdi-plus"></i>
                                 Adicionar Opção
-                            </button>
+                            </x-tailadmin-button>
                         </div>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancelar</button>
-                        <button type="submit" class="btn btn-primary">Adicionar</button>
+                        <x-tailadmin-button type="button" variant="secondary" size="md" class="bg-transparent border-gray-300 text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-white/5" data-bs-dismiss="modal">
+                            Cancelar
+                        </x-tailadmin-button>
+                        <x-tailadmin-button type="submit" variant="primary" size="md">
+                            Adicionar
+                        </x-tailadmin-button>
                     </div>
                 </form>
             </div>
@@ -262,8 +277,12 @@
                         </div>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancelar</button>
-                        <button type="submit" class="btn btn-primary">Adicionar</button>
+                        <x-tailadmin-button type="button" variant="secondary" size="md" class="bg-transparent border-gray-300 text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-white/5" data-bs-dismiss="modal">
+                            Cancelar
+                        </x-tailadmin-button>
+                        <x-tailadmin-button type="submit" variant="primary" size="md">
+                            Adicionar
+                        </x-tailadmin-button>
                     </div>
                 </form>
             </div>
@@ -321,15 +340,19 @@
                             <hr>
                             <h6>Opções de Resposta</h6>
                             <div id="edit-options-list"></div>
-                            <button type="button" class="btn btn-sm btn-success mt-2" id="add-edit-option-btn">
-                                <i class="mdi mdi-plus me-1"></i>
+                            <x-tailadmin-button type="button" variant="success" size="sm" class="mt-2" id="add-edit-option-btn">
+                                <i class="mdi mdi-plus"></i>
                                 Adicionar Opção
-                            </button>
+                            </x-tailadmin-button>
                         </div>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancelar</button>
-                        <button type="submit" class="btn btn-primary">Salvar</button>
+                        <x-tailadmin-button type="button" variant="secondary" size="md" class="bg-transparent border-gray-300 text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-white/5" data-bs-dismiss="modal">
+                            Cancelar
+                        </x-tailadmin-button>
+                        <x-tailadmin-button type="submit" variant="primary" size="md">
+                            Salvar
+                        </x-tailadmin-button>
                     </div>
                 </form>
             </div>
@@ -430,28 +453,33 @@ document.getElementById('editSectionForm').addEventListener('submit', async func
 // Deletar Seção
 document.querySelectorAll('.delete-section-btn').forEach(btn => {
     btn.addEventListener('click', async function() {
-        if (!confirm('Tem certeza que deseja deletar esta seção? Todas as perguntas serão movidas para "Perguntas Gerais".')) {
-            return;
-        }
-
         const sectionId = this.dataset.sectionId;
-        try {
-            const response = await fetch(`/workspace/${tenantSlug}/sections/${sectionId}`, {
-                method: 'DELETE',
-                headers: {
-                    'X-CSRF-TOKEN': csrfToken
-                }
-            });
+        confirmAction({
+            title: 'Deletar seção',
+            message: 'Tem certeza que deseja deletar esta seção? Todas as perguntas serão movidas para "Perguntas Gerais".',
+            confirmText: 'Deletar',
+            cancelText: 'Cancelar',
+            type: 'error',
+            onConfirm: async () => {
+                try {
+                    const response = await fetch(`/workspace/${tenantSlug}/sections/${sectionId}`, {
+                        method: 'DELETE',
+                        headers: {
+                            'X-CSRF-TOKEN': csrfToken
+                        }
+                    });
 
-            const data = await response.json();
-            if (response.ok) {
-                location.reload();
-            } else {
-                showAlert('Erro ao deletar seção: ' + (data.message || 'Erro desconhecido'), 'danger');
+                    const data = await response.json();
+                    if (response.ok) {
+                        location.reload();
+                    } else {
+                        showAlert('Erro ao deletar seção: ' + (data.message || 'Erro desconhecido'), 'danger');
+                    }
+                } catch (error) {
+                    showAlert('Erro ao deletar seção: ' + error.message, 'danger');
+                }
             }
-        } catch (error) {
-            showAlert('Erro ao deletar seção: ' + error.message, 'danger');
-        }
+        });
     });
 });
 
@@ -493,7 +521,7 @@ document.getElementById('add-option-btn').addEventListener('click', function() {
     optionDiv.innerHTML = `
         <input type="text" class="form-control" name="options[${optionIndex}][label]" placeholder="Rótulo" required>
         <input type="text" class="form-control" name="options[${optionIndex}][value]" placeholder="Valor" required>
-        <button type="button" class="btn btn-sm btn-danger remove-option-btn">
+        <button type="button" class="remove-option-btn inline-flex items-center justify-center gap-1 rounded-md bg-error text-white text-xs font-semibold transition hover:bg-error/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-error/50 focus-visible:ring-offset-white dark:focus-visible:ring-offset-gray-900">
             <i class="mdi mdi-delete"></i>
         </button>
     `;
@@ -610,7 +638,7 @@ document.querySelectorAll('.edit-question-btn').forEach(btn => {
                 optionDiv.innerHTML = `
                     <input type="text" class="form-control" name="edit_options[${editOptionIndex}][label]" value="${text}" placeholder="Rótulo" required>
                     <input type="text" class="form-control" name="edit_options[${editOptionIndex}][value]" value="${text.toLowerCase().replace(/\s+/g, '_')}" placeholder="Valor" required>
-                    <button type="button" class="btn btn-sm btn-danger remove-option-btn">
+                    <button type="button" class="remove-option-btn inline-flex items-center justify-center gap-1 rounded-md bg-error text-white text-xs font-semibold transition hover:bg-error/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-error/50 focus-visible:ring-offset-white dark:focus-visible:ring-offset-gray-900">
                         <i class="mdi mdi-delete"></i>
                     </button>
                 `;
@@ -640,28 +668,33 @@ document.querySelectorAll('.edit-question-btn').forEach(btn => {
 // Deletar Pergunta
 document.querySelectorAll('.delete-question-btn').forEach(btn => {
     btn.addEventListener('click', async function() {
-        if (!confirm('Tem certeza que deseja deletar esta pergunta?')) {
-            return;
-        }
-
         const questionId = this.dataset.questionId;
-        try {
-            const response = await fetch(`/workspace/${tenantSlug}/questions/${questionId}`, {
-                method: 'DELETE',
-                headers: {
-                    'X-CSRF-TOKEN': csrfToken
-                }
-            });
+        confirmAction({
+            title: 'Deletar pergunta',
+            message: 'Tem certeza que deseja deletar esta pergunta?',
+            confirmText: 'Deletar',
+            cancelText: 'Cancelar',
+            type: 'error',
+            onConfirm: async () => {
+                try {
+                    const response = await fetch(`/workspace/${tenantSlug}/questions/${questionId}`, {
+                        method: 'DELETE',
+                        headers: {
+                            'X-CSRF-TOKEN': csrfToken
+                        }
+                    });
 
-            const data = await response.json();
-            if (response.ok) {
-                location.reload();
-            } else {
-                showAlert('Erro ao deletar pergunta: ' + (data.message || 'Erro desconhecido'), 'danger');
+                    const data = await response.json();
+                    if (response.ok) {
+                        location.reload();
+                    } else {
+                        showAlert('Erro ao deletar pergunta: ' + (data.message || 'Erro desconhecido'), 'danger');
+                    }
+                } catch (error) {
+                    showAlert('Erro ao deletar pergunta: ' + error.message, 'danger');
+                }
             }
-        } catch (error) {
-            showAlert('Erro ao deletar pergunta: ' + error.message, 'danger');
-        }
+        });
     });
 });
 
@@ -711,27 +744,32 @@ document.getElementById('addOptionForm').addEventListener('submit', async functi
 document.addEventListener('click', function(e) {
     if (e.target.closest('.delete-option-btn')) {
         const btn = e.target.closest('.delete-option-btn');
-        if (!confirm('Tem certeza que deseja deletar esta opção?')) {
-            return;
-        }
-
         const optionId = btn.dataset.optionId;
-        fetch(`/workspace/${tenantSlug}/options/${optionId}`, {
-            method: 'DELETE',
-            headers: {
-                'X-CSRF-TOKEN': csrfToken
+        confirmAction({
+            title: 'Deletar opção',
+            message: 'Tem certeza que deseja deletar esta opção?',
+            confirmText: 'Deletar',
+            cancelText: 'Cancelar',
+            type: 'error',
+            onConfirm: () => {
+                fetch(`/workspace/${tenantSlug}/options/${optionId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'X-CSRF-TOKEN': csrfToken
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.message) {
+                        location.reload();
+                    } else {
+                        showAlert('Erro ao deletar opção: ' + (data.message || 'Erro desconhecido'), 'danger');
+                    }
+                })
+                .catch(error => {
+                    showAlert('Erro ao deletar opção: ' + error.message, 'danger');
+                });
             }
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.message) {
-                location.reload();
-            } else {
-                showAlert('Erro ao deletar opção: ' + (data.message || 'Erro desconhecido'), 'danger');
-            }
-        })
-        .catch(error => {
-            showAlert('Erro ao deletar opção: ' + error.message, 'danger');
         });
     }
 });

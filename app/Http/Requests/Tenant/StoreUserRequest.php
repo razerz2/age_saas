@@ -26,7 +26,6 @@ class StoreUserRequest extends FormRequest
             'avatar'     => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif', 'max:2048'],
             'is_doctor' => ['nullable', 'boolean'],
             'role'       => ['required', 'in:admin,user,doctor'],
-            'status'     => ['required', 'in:active,blocked'],
             'doctor_id'  => ['nullable', 'exists:tenant.doctors,id'],
         ];
 
@@ -88,8 +87,6 @@ class StoreUserRequest extends FormRequest
 
             'is_doctor.boolean' => 'O campo "É médico?" deve ser verdadeiro ou falso.',
 
-            'status.required' => 'O status é obrigatório.',
-            'status.in' => 'O status deve ser "ativo" ou "bloqueado".',
 
             'modules.array' => 'Os módulos devem ser passados como um array.',
         ];

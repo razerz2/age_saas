@@ -25,10 +25,10 @@ Conforme informações do suporte do Gator/Hostinger/Titan Email:
 MAIL_MAILER=smtp
 MAIL_HOST=smtp.titan.email
 MAIL_PORT=587
-MAIL_USERNAME=notification@allsync.com.br
-MAIL_PASSWORD=all@0612
+MAIL_USERNAME=seu_email@seu-dominio.com
+MAIL_PASSWORD=SUA_SENHA_AQUI
 MAIL_ENCRYPTION=tls
-MAIL_FROM_ADDRESS=notification@allsync.com.br
+MAIL_FROM_ADDRESS=seu_email@seu-dominio.com
 MAIL_FROM_NAME="AllSync Notifications"
 ```
 
@@ -40,25 +40,27 @@ Se a porta 587 não funcionar, tente a porta 465 com SSL:
 MAIL_MAILER=smtp
 MAIL_HOST=smtp.titan.email
 MAIL_PORT=465
-MAIL_USERNAME=notification@allsync.com.br
-MAIL_PASSWORD=all@0612
+MAIL_USERNAME=seu_email@seu-dominio.com
+MAIL_PASSWORD=SUA_SENHA_AQUI
 MAIL_ENCRYPTION=ssl
-MAIL_FROM_ADDRESS=notification@allsync.com.br
+MAIL_FROM_ADDRESS=seu_email@seu-dominio.com
 MAIL_FROM_NAME="AllSync Notifications"
 ```
 
 ## ⚠️ Pontos Importantes
 
+> **Segurança:** nunca versione e-mails/senhas reais em documentação. Use placeholders e armazene credenciais em variáveis de ambiente (ou um secret manager).
+
 ### 1. Senha SEM Aspas
 
 **❌ ERRADO:**
 ```env
-MAIL_PASSWORD="all@0612"
+MAIL_PASSWORD="SUA_SENHA_AQUI"
 ```
 
 **✅ CORRETO:**
 ```env
-MAIL_PASSWORD=all@0612
+MAIL_PASSWORD=SUA_SENHA_AQUI
 ```
 
 ### 2. Usuário e Remetente Devem Ser Iguais
@@ -66,8 +68,8 @@ MAIL_PASSWORD=all@0612
 O `MAIL_USERNAME` e `MAIL_FROM_ADDRESS` devem ser iguais:
 
 ```env
-MAIL_USERNAME=notification@allsync.com.br
-MAIL_FROM_ADDRESS=notification@allsync.com.br
+MAIL_USERNAME=seu_email@seu-dominio.com
+MAIL_FROM_ADDRESS=seu_email@seu-dominio.com
 ```
 
 ### 3. Criptografia e Porta

@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Produtos - Template Laravel</title>
+    <link rel="stylesheet" href="../public/assets/css/style.css">
+    <script src="../public/assets/js/bundle.js" defer></script>
+</head>
+<body class="bg-gray-50">
+    <div class="flex h-screen">
+        <!-- Sidebar -->
+        <div class="w-64 bg-white shadow-lg">
+            <div class="p-6">
+                <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 bg-indigo-600 rounded-full flex items-center justify-center">
+                        <i class="fas fa-cube text-white"></i>
+                    </div>
+                    <h1 class="text-xl font-bold text-gray-800">Template App</h1>
+                </div>
+            </div>
+            
+            <nav class="mt-6">
+                <a href="dashboard.html" class="flex items-center px-6 py-3 text-gray-600 hover:bg-gray-100">
+                    <i class="fas fa-home w-5"></i>
+                    <span class="mx-3">Dashboard</span>
+                </a>
+                <a href="users.html" class="flex items-center px-6 py-3 text-gray-600 hover:bg-gray-100">
+                    <i class="fas fa-users w-5"></i>
+                    <span class="mx-3">Usuários</span>
+                </a>
+                <a href="products.html" class="flex items-center px-6 py-3 text-gray-700 bg-gray-100 border-r-4 border-indigo-600">
+                    <i class="fas fa-box w-5"></i>
+                    <span class="mx-3">Produtos</span>
+                </a>
+                <a href="reports.html" class="flex items-center px-6 py-3 text-gray-600 hover:bg-gray-100">
+                    <i class="fas fa-chart-bar w-5"></i>
+                    <span class="mx-3">Relatórios</span>
+                </a>
+                <a href="settings.html" class="flex items-center px-6 py-3 text-gray-600 hover:bg-gray-100">
+                    <i class="fas fa-cog w-5"></i>
+                    <span class="mx-3">Configurações</span>
+                </a>
+            </nav>
+        </div>
+
+        <!-- Main Content -->
+        <div class="flex-1 flex flex-col overflow-hidden">
+            <!-- Header -->
+            <header class="bg-white shadow-sm border-b border-gray-200">
+                <div class="flex items-center justify-between px-6 py-4">
+                    <div class="flex items-center">
+                        <button class="text-gray-500 hover:text-gray-600 focus:outline-none">
+                            <i class="fas fa-bars text-xl"></i>
+                        </button>
+                        <h2 class="ml-4 text-2xl font-semibold text-gray-800">Produtos</h2>
+                    </div>
+                    
+                    <div class="flex items-center space-x-4">
+                        <button onclick="openModal()" class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 flex items-center">
+                            <i class="fas fa-plus mr-2"></i>
+                            Novo Produto
+                        </button>
+                        
+                        <div class="relative">
+                            <input type="text" placeholder="Pesquisar..." 
+                                   class="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                            <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
+                        </div>
+                        
+                        <div class="flex items-center space-x-3">
+                            <img src="../public/assets/images/user/user-01.jpg" alt="User" class="w-10 h-10 rounded-full">
+                            <div>
+                                <p class="text-sm font-medium text-gray-800">João Silva</p>
+                                <p class="text-xs text-gray-500">Administrador</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Main Content Area -->
+            <main class="flex-1 overflow-x-hidden overflow-y-auto bg-gray-50">
+                <div class="container mx-auto px-6 py-8">
+                    <!-- Stats Cards -->
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                        <div class="bg-white rounded-lg shadow p-6">
+                            <div class="flex items-center">
+                                <div class="p-3 rounded-full bg-blue-100 text-blue-600">
+                                    <i class="fas fa-box text-xl"></i>
+                                </div>
+                                <div class="ml-4">
+                                    <p class="text-sm text-gray-500">Total de Produtos</p>
+                                    <p class="text-2xl font-semibold text-gray-800">456</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bg-white rounded-lg shadow p-6">
+                            <div class="flex items-center">
+                                <div class="p-3 rounded-full bg-green-100 text-green-600">
+                                    <i class="fas fa-check-circle text-xl"></i>
+                                </div>
+                                <div class="ml-4">
+                                    <p class="text-sm text-gray-500">Em Estoque</p>
+                                    <p class="text-2xl font-semibold text-gray-800">342</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bg-white rounded-lg shadow p-6">
+                            <div class="flex items-center">
+                                <div class="p-3 rounded-full bg-yellow-100 text-yellow-600">
+                                    <i class="fas fa-exclamation-triangle text-xl"></i>
+                                </div>
+                                <div class="ml-4">
+                                    <p class="text-sm text-gray-500">Estoque Baixo</p>
+                                    <p class="text-2xl font-semibold text-gray-800">28</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bg-white rounded-lg shadow p-6">
+                            <div class="flex items-center">
+                                <div class="p-3 rounded-full bg-red-100 text-red-600">
+                                    <i class="fas fa-times-circle text-xl"></i>
+                                </div>
+                                <div class="ml-4">
+                                    <p class="text-sm text-gray-500">Fora de Estoque</p>
+                                    <p class="text-2xl font-semibold text-gray-800">86</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Products Grid -->
+                    <div class="bg-white rounded-lg shadow p-6">
+                        <div class="flex justify-between items-center mb-6">
+                            <h3 class="text-lg font-semibold text-gray-800">Catálogo de Produtos</h3>
+                            <div class="flex space-x-2">
+                                <button class="px-3 py-1 bg-indigo-600 text-white rounded-lg text-sm">Grid</button>
+                                <button class="px-3 py-1 bg-gray-200 text-gray-700 rounded-lg text-sm">Lista</button>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                            <!-- Product Card 1 -->
+                            <div class="bg-white border border-gray-200 rounded-lg overflow-hidden hover:shadow-lg transition-shadow">
+                                <div class="relative">
+                                    <img src="../public/assets/images/product/product-01.jpg" alt="Product" class="w-full h-48 object-cover">
+                                    <span class="absolute top-2 right-2 bg-green-500 text-white px-2 py-1 rounded text-xs">Em Estoque</span>
+                                </div>
+                                <div class="p-4">
+                                    <h4 class="font-semibold text-gray-800 mb-2">Notebook Pro Max</h4>
+                                    <p class="text-sm text-gray-600 mb-3">Notebook de alta performance com processador Intel i7</p>
+                                    <div class="flex justify-between items-center mb-3">
+                                        <span class="text-2xl font-bold text-indigo-600">R$ 4.999</span>
+                                        <span class="text-sm text-gray-500">15 unidades</span>
+                                    </div>
+                                    <div class="flex space-x-2">
+                                        <button class="flex-1 bg-indigo-600 text-white px-3 py-2 rounded text-sm hover:bg-indigo-700">
+                                            <i class="fas fa-edit mr-1"></i> Editar
+                                        </button>
+                                        <button class="flex-1 bg-red-600 text-white px-3 py-2 rounded text-sm hover:bg-red-700">
+                                            <i class="fas fa-trash mr-1"></i> Excluir
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Product Card 2 -->
+                            <div class="bg-white border border-gray-200 rounded-lg overflow-hidden hover:shadow-lg transition-shadow">
+                                <div class="relative">
+                                    <img src="../public/assets/images/product/product-02.jpg" alt="Product" class="w-full h-48 object-cover">
+                                    <span class="absolute top-2 right-2 bg-yellow-500 text-white px-2 py-1 rounded text-xs">Estoque Baixo</span>
+                                </div>
+                                <div class="p-4">
+                                    <h4 class="font-semibold text-gray-800 mb-2">Mouse Wireless</h4>
+                                    <p class="text-sm text-gray-600 mb-3">Mouse sem fio com receptor USB</p>
+                                    <div class="flex justify-between items-center mb-3">
+                                        <span class="text-2xl font-bold text-indigo-600">R$ 89</span>
+                                        <span class="text-sm text-gray-500">3 unidades</span>
+                                    </div>
+                                    <div class="flex space-x-2">
+                                        <button class="flex-1 bg-indigo-600 text-white px-3 py-2 rounded text-sm hover:bg-indigo-700">
+                                            <i class="fas fa-edit mr-1"></i> Editar
+                                        </button>
+                                        <button class="flex-1 bg-red-600 text-white px-3 py-2 rounded text-sm hover:bg-red-700">
+                                            <i class="fas fa-trash mr-1"></i> Excluir
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Product Card 3 -->
+                            <div class="bg-white border border-gray-200 rounded-lg overflow-hidden hover:shadow-lg transition-shadow">
+                                <div class="relative">
+                                    <img src="../public/assets/images/product/product-03.jpg" alt="Product" class="w-full h-48 object-cover">
+                                    <span class="absolute top-2 right-2 bg-red-500 text-white px-2 py-1 rounded text-xs">Fora de Estoque</span>
+                                </div>
+                                <div class="p-4">
+                                    <h4 class="font-semibold text-gray-800 mb-2">Teclado Mecânico</h4>
+                                    <p class="text-sm text-gray-600 mb-3">Teclado mecânico RGB com switches blue</p>
+                                    <div class="flex justify-between items-center mb-3">
+                                        <span class="text-2xl font-bold text-indigo-600">R$ 299</span>
+                                        <span class="text-sm text-gray-500">0 unidades</span>
+                                    </div>
+                                    <div class="flex space-x-2">
+                                        <button class="flex-1 bg-indigo-600 text-white px-3 py-2 rounded text-sm hover:bg-indigo-700">
+                                            <i class="fas fa-edit mr-1"></i> Editar
+                                        </button>
+                                        <button class="flex-1 bg-red-600 text-white px-3 py-2 rounded text-sm hover:bg-red-700">
+                                            <i class="fas fa-trash mr-1"></i> Excluir
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Product Card 4 -->
+                            <div class="bg-white border border-gray-200 rounded-lg overflow-hidden hover:shadow-lg transition-shadow">
+                                <div class="relative">
+                                    <img src="../public/assets/images/product/product-04.jpg" alt="Product" class="w-full h-48 object-cover">
+                                    <span class="absolute top-2 right-2 bg-green-500 text-white px-2 py-1 rounded text-xs">Em Estoque</span>
+                                </div>
+                                <div class="p-4">
+                                    <h4 class="font-semibold text-gray-800 mb-2">Monitor 4K</h4>
+                                    <p class="text-sm text-gray-600 mb-3">Monitor LED 27 polegadas 4K UHD</p>
+                                    <div class="flex justify-between items-center mb-3">
+                                        <span class="text-2xl font-bold text-indigo-600">R$ 1.899</span>
+                                        <span class="text-sm text-gray-500">8 unidades</span>
+                                    </div>
+                                    <div class="flex space-x-2">
+                                        <button class="flex-1 bg-indigo-600 text-white px-3 py-2 rounded text-sm hover:bg-indigo-700">
+                                            <i class="fas fa-edit mr-1"></i> Editar
+                                        </button>
+                                        <button class="flex-1 bg-red-600 text-white px-3 py-2 rounded text-sm hover:bg-red-700">
+                                            <i class="fas fa-trash mr-1"></i> Excluir
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Product Card 5 -->
+                            <div class="bg-white border border-gray-200 rounded-lg overflow-hidden hover:shadow-lg transition-shadow">
+                                <div class="relative">
+                                    <img src="../public/assets/images/product/product-05.jpg" alt="Product" class="w-full h-48 object-cover">
+                                    <span class="absolute top-2 right-2 bg-green-500 text-white px-2 py-1 rounded text-xs">Em Estoque</span>
+                                </div>
+                                <div class="p-4">
+                                    <h4 class="font-semibold text-gray-800 mb-2">Headphones Bluetooth</h4>
+                                    <p class="text-sm text-gray-600 mb-3">Fones de ouvido sem fio com cancelamento de ruído</p>
+                                    <div class="flex justify-between items-center mb-3">
+                                        <span class="text-2xl font-bold text-indigo-600">R$ 599</span>
+                                        <span class="text-sm text-gray-500">12 unidades</span>
+                                    </div>
+                                    <div class="flex space-x-2">
+                                        <button class="flex-1 bg-indigo-600 text-white px-3 py-2 rounded text-sm hover:bg-indigo-700">
+                                            <i class="fas fa-edit mr-1"></i> Editar
+                                        </button>
+                                        <button class="flex-1 bg-red-600 text-white px-3 py-2 rounded text-sm hover:bg-red-700">
+                                            <i class="fas fa-trash mr-1"></i> Excluir
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Product Card 6 -->
+                            <div class="bg-white border border-gray-200 rounded-lg overflow-hidden hover:shadow-lg transition-shadow">
+                                <div class="relative">
+                                    <img src="../public/assets/images/product/product-01.jpg" alt="Product" class="w-full h-48 object-cover">
+                                    <span class="absolute top-2 right-2 bg-green-500 text-white px-2 py-1 rounded text-xs">Em Estoque</span>
+                                </div>
+                                <div class="p-4">
+                                    <h4 class="font-semibold text-gray-800 mb-2">Webcam HD</h4>
+                                    <p class="text-sm text-gray-600 mb-3">Webcam 1080p com microfone embutido</p>
+                                    <div class="flex justify-between items-center mb-3">
+                                        <span class="text-2xl font-bold text-indigo-600">R$ 199</span>
+                                        <span class="text-sm text-gray-500">25 unidades</span>
+                                    </div>
+                                    <div class="flex space-x-2">
+                                        <button class="flex-1 bg-indigo-600 text-white px-3 py-2 rounded text-sm hover:bg-indigo-700">
+                                            <i class="fas fa-edit mr-1"></i> Editar
+                                        </button>
+                                        <button class="flex-1 bg-red-600 text-white px-3 py-2 rounded text-sm hover:bg-red-700">
+                                            <i class="fas fa-trash mr-1"></i> Excluir
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Pagination -->
+                        <div class="flex justify-center mt-8">
+                            <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px">
+                                <button class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                                    <i class="fas fa-chevron-left"></i>
+                                </button>
+                                <button class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-indigo-50 text-sm font-medium text-indigo-600">
+                                    1
+                                </button>
+                                <button class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
+                                    2
+                                </button>
+                                <button class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
+                                    3
+                                </button>
+                                <button class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                                    <i class="fas fa-chevron-right"></i>
+                                </button>
+                            </nav>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Modal -->
+    <div id="productModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden">
+        <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+            <div class="mt-3">
+                <div class="flex items-center justify-between">
+                    <h3 class="text-lg font-medium text-gray-900">Novo Produto</h3>
+                    <button onclick="closeModal()" class="text-gray-400 hover:text-gray-600">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                
+                <form class="mt-4 space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Nome do Produto</label>
+                        <input type="text" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Descrição</label>
+                        <textarea rows="3" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"></textarea>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Preço</label>
+                        <input type="number" step="0.01" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Quantidade em Estoque</label>
+                        <input type="number" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Categoria</label>
+                        <select class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                            <option>Eletrônicos</option>
+                            <option>Periféricos</option>
+                            <option>Acessórios</option>
+                        </select>
+                    </div>
+                    
+                    <div class="flex justify-end space-x-3 pt-4">
+                        <button type="button" onclick="closeModal()" class="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400">
+                            Cancelar
+                        </button>
+                        <button type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700">
+                            Salvar
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function openModal() {
+            document.getElementById('productModal').classList.remove('hidden');
+        }
+        
+        function closeModal() {
+            document.getElementById('productModal').classList.add('hidden');
+        }
+    </script>
+</body>
+</html>

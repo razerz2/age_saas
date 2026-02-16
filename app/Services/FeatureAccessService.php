@@ -32,35 +32,18 @@ class FeatureAccessService
             return false;
         }
 
-        if ($tenant->network_id) {
-            $network = $tenant->network;
-            if ($network && !$network->is_active) {
-                return false;
-            }
-        }
-
-        // 1. Tenta buscar plano via assinatura ativa (Fluxo Venda Direta)
-        $plan = null;
+        // 1. Busca plano EXCLUSIVAMENTE via assinatura ativa
         $subscription = $this->getActiveSubscription($tenant);
-        if ($subscription) {
-            $plan = $subscription->plan;
-        }
-
-        // 2. Se não tem assinatura, tenta buscar plano direto no tenant (Fluxo Contratual/Rede)
-        if (!$plan && $tenant->plan_id) {
-            $plan = $tenant->plan;
-        }
-
-        if (!$plan) {
-            Log::info("FeatureAccessService: Tenant {$tenant->id} não possui plano ativo (assinatura ou contratual)");
+        if (!$subscription || !$subscription->plan) {
+            Log::info("FeatureAccessService: Tenant {$tenant->id} não possui assinatura ativa");
             return false;
         }
 
-        // Verifica se o plano tem regra de acesso
-        $accessRule = $plan->accessRule;
+        // Verifica se o plano da assinatura tem regra de acesso
+        $accessRule = $subscription->plan->accessRule;
 
         if (!$accessRule) {
-            Log::info("FeatureAccessService: Plano {$plan->id} não possui regra de acesso");
+            Log::info("FeatureAccessService: Plano {$subscription->plan->id} não possui regra de acesso");
             return false;
         }
 
@@ -145,29 +128,13 @@ class FeatureAccessService
             return [];
         }
 
-        if ($tenant->network_id) {
-            $network = $tenant->network;
-            if ($network && !$network->is_active) {
-                return [];
-            }
-        }
-
-        // Tenta assinatura, depois plano direto
-        $plan = null;
+        // Usa apenas assinatura ativa para determinar plano/regra de acesso
         $subscription = $this->getActiveSubscription($tenant);
-        if ($subscription) {
-            $plan = $subscription->plan;
-        }
-
-        if (!$plan && $tenant->plan_id) {
-            $plan = $tenant->plan;
-        }
-
-        if (!$plan || !$plan->accessRule) {
+        if (!$subscription || !$subscription->plan || !$subscription->plan->accessRule) {
             return [];
         }
 
-        $accessRule = $plan->accessRule;
+        $accessRule = $subscription->plan->accessRule;
 
         // Busca features na base da plataforma
         $platformConnection = config('multitenancy.landlord_database_connection_name', env('DB_CONNECTION', 'pgsql'));
@@ -227,29 +194,13 @@ class FeatureAccessService
             return 0; // Limite zero para inativos
         }
 
-        if ($tenant->network_id) {
-            $network = $tenant->network;
-            if ($network && !$network->is_active) {
-                return 0; // Limite zero para inativos
-            }
-        }
-
-        // Tenta assinatura, depois plano direto
-        $plan = null;
+        // Usa apenas assinatura ativa para determinar plano/regra de acesso
         $subscription = $this->getActiveSubscription($tenant);
-        if ($subscription) {
-            $plan = $subscription->plan;
-        }
-
-        if (!$plan && $tenant->plan_id) {
-            $plan = $tenant->plan;
-        }
-
-        if (!$plan || !$plan->accessRule) {
+        if (!$subscription || !$subscription->plan || !$subscription->plan->accessRule) {
             return null;
         }
 
-        $accessRule = $plan->accessRule;
+        $accessRule = $subscription->plan->accessRule;
 
         return match ($limitType) {
             'max_admin_users' => $accessRule->max_admin_users,

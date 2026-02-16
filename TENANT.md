@@ -704,6 +704,254 @@ O módulo de **Atendimento Médico** permite realizar sessões de atendimento do
 
 **Importante:**
 - Agendamentos recorrentes também suportam modo online/presencial
+
+---
+
+## Frontend Architecture — Tenant Area
+
+### 🎨 Estrutura de Assets
+
+Toda a camada frontend da área **Tenant** é organizada exclusivamente via assets versionados em `resources/`, compilados pelo Vite/Laravel Mix. A estrutura oficial é:
+
+```text
+resources/
+ ├── css/
+ │    └── tenant/
+ │         ├── app.css
+ │         ├── base/
+ │         ├── components/
+ │         └── pages/
+ │
+ └── js/
+      └── tenant/
+           ├── app.js
+           ├── utils/
+           ├── components/
+           └── pages/
+```
+
+#### CSS
+
+- `tenant/app.css`  
+  Arquivo **raiz** de estilos da área Tenant. Deve apenas:
+  - importar os módulos de `base/`, `components/` e `pages/`;
+  - conter, no máximo, pequenos ajustes globais.
+
+- `tenant/base/`  
+  Regras **globais** e de baixo nível:
+  - reset/normalização,
+  - tokens de design (cores, tipografia),
+  - helpers utilitários não-específicos de componente.
+
+- `tenant/components/`  
+  Estilos de **componentes reutilizáveis**:
+  - botões padrão, badges, chips,
+  - cards, tabelas, alertas,
+  - formulários genéricos (`forms.css`), etc.
+
+- `tenant/pages/`  
+  Estilos **específicos de página/módulo**, por exemplo:
+  - `appointments.css`
+  - `calendars.css`
+  - `settings.css`  
+  Tudo o que é particular a um módulo e não faz sentido ser compartilhado entra aqui.
+
+#### JavaScript
+
+- `tenant/app.js`  
+  Entry point global de JS da área Tenant. Responsabilidades:
+  - inicializar comportamentos globais,
+  - carregar dinamicamente o JS por página, com base em `data-page`.
+
+- `tenant/utils/`  
+  Funções utilitárias **sem conhecimento de DOM específico**:
+  - formatadores,
+  - helpers de datas, números,
+  - funções de request genéricas, etc.
+
+- `tenant/components/`  
+  Comportamentos JS **reutilizáveis**:
+  - modais genéricos,
+  - tooltips, dropdowns,
+  - componentes de formulário reutilizáveis.
+
+- `tenant/pages/`  
+  Lógica JS **específica de cada módulo/página**, por exemplo:
+  - `appointments.js` (agendamentos),
+  - `calendars.js` (calendários),
+  - `settings.js` (configurações),
+  - etc.
+
+Cada arquivo `pages/*.js` conhece apenas:
+- o HTML da sua própria página,
+- os componentes globais que consome (via imports),
+- a API/backend necessária para sua funcionalidade.
+
+---
+
+### 🚫 Regras Oficiais: Proibições
+
+**É expressamente proibido** em novas implementações e em código migrado:
+
+- `<style>` dentro de arquivos Blade.
+- `<script>` dentro de arquivos Blade.
+- `onclick=""` ou qualquer outro handler inline (`onchange`, `onblur`, etc.).
+- Qualquer **JS inline** em Blade.
+- Qualquer **CSS inline** em Blade.
+- `@push('styles')` e `@push('scripts')` nas views Tenant.
+
+> Observação:  
+> As stacks (`@stack`) ainda existem temporariamente no layout por **compatibilidade com legado**, mas **novos módulos não devem utilizá-las**. Toda lógica e estilo devem estar em arquivos de `resources/css/tenant` e `resources/js/tenant`.
+
+---
+
+### 📄 Padrão de Página — Tenant
+
+Toda view da área Tenant **deve**:
+
+1. Definir a seção de página:
+
+   ```blade
+   @section('page', '<nome-do-modulo>')
+   ```
+
+   Exemplos:
+   - `@section('page', 'appointments')`
+   - `@section('page', 'calendars')`
+   - `@section('page', 'settings')`
+
+2. Ser renderizada por um layout que exponha `data-page` no `<body>`:
+
+   ```blade
+   <body data-page="@yield('page')" ...>
+   ```
+
+3. Ter o JS da página carregado dinamicamente em `resources/js/tenant/app.js`:
+
+   ```js
+   document.addEventListener('DOMContentLoaded', async () => {
+       const body = document.body;
+       const page = body.dataset.page;
+
+       if (!page) return;
+
+       try {
+           const module = await import(`./pages/${page}.js`);
+           if (module && typeof module.init === 'function') {
+               module.init();
+           }
+       } catch (e) {
+           console.error(`Erro ao carregar módulo da página: ${page}`, e);
+       }
+   });
+   ```
+
+4. Cada arquivo `resources/js/tenant/pages/*.js` **deve exportar**:
+
+   ```js
+   export function init() {
+       // inicialização da página
+   }
+   ```
+
+Nenhuma view deve depender de `<script>` ou `@push('scripts')` para registrar handlers; tudo deve estar encapsulado no `init()` da respectiva página ou em componentes/utilitários importados.
+
+---
+
+### 🧩 Regras para Novos Módulos
+
+Ao criar um novo módulo na área Tenant:
+
+1. Criar os arquivos de página:
+
+   ```text
+   resources/js/tenant/pages/<modulo>.js
+   resources/css/tenant/pages/<modulo>.css
+   ```
+
+2. Na(s) view(s) do módulo, sempre adicionar:
+
+   ```blade
+   @section('page', '<modulo>')
+   ```
+
+3. Em `tenant/app.css`, importar o CSS da página se necessário:
+
+   ```css
+   @import './pages/<modulo>.css';
+   ```
+
+4. **Nunca** usar:
+
+   - `@push('styles')`
+   - `@push('scripts')`
+   - `<script>`
+   - `<style>`
+   - `onclick=""` ou qualquer outro handler inline.
+
+Toda a lógica deve viver em `resources/js/tenant/...` e ser chamada via `init()`.
+
+---
+
+### 📌 Estado Atual da Migração
+
+- **Módulo Appointments**:
+  - Migrado para o novo padrão (create/edit/index + recurring*, conforme escopo da migração).
+  - Lógica JS centralizada em `resources/js/tenant/pages/appointments.js`.
+  - Estilos específicos em `resources/css/tenant/pages/appointments.css`.
+  - Views sem `<script>`, `<style>`, `@push`, `onclick`.
+
+- **Layout base TailAdmin**:
+  - Ainda contém `@stack('styles')` e `@stack('scripts')` **por compatibilidade** com módulos legados.
+  - A remoção completa dessas stacks será feita **apenas após** todos os módulos relevantes estarem migrados para o padrão de assets.
+
+---
+
+### 🚀 Migration Strategy
+
+A migração para o novo padrão frontend da área Tenant é feita **módulo por módulo**, seguindo as diretrizes:
+
+1. **Nunca** remover stacks (`@stack`) do layout enquanto existirem views usando `@push`.
+2. Para cada módulo (ex.: Appointments, Calendars, Settings):
+
+   - Passo 1 — Mapeamento:
+     - Rodar `grep` nas views do módulo para encontrar:
+       - `<script`
+       - `<style`
+       - `@push('styles')`
+       - `@push('scripts')`
+       - `onclick=`
+
+   - Passo 2 — Extração:
+     - Mover toda lógica JS inline para:
+       - `resources/js/tenant/pages/<modulo>.js`
+       - ou, quando fizer sentido, para `components/` e `utils/`.
+     - Mover todo CSS inline ou específico para:
+       - `resources/css/tenant/pages/<modulo>.css`
+       - ou para `components/`/`base/` se for compartilhável.
+
+   - Passo 3 — Adequação da View:
+     - Garantir `@section('page', '<modulo>')`.
+     - Remover completamente:
+       - `<script>`
+       - `<style>`
+       - `@push('styles')`
+       - `@push('scripts')`
+       - `onclick=` (substituindo por classes/data-* com handlers em JS).
+
+   - Passo 4 — Validação:
+     - Só considerar o módulo **migrado** quando o `grep` para aquele módulo retornar:
+       - **zero `<script>`**
+       - **zero `<style>`**
+       - **zero `@push`**
+       - **zero `onclick`**
+
+3. Após todos os módulos alvo estarem migrados:
+
+   - Remover `@stack('styles')` e `@stack('scripts')` do layout Tenant.
+   - Deixar o carregamento de CSS/JS **100%** baseado em:
+     - `resources/css/tenant/app.css`
+     - `resources/js/tenant/app.js` + `pages/*.js`.
 - Se o modo padrão estiver configurado como `presencial` ou `online`, todos os agendamentos gerados seguirão esse modo
 - Se o modo padrão for `user_choice`, você pode escolher o modo ao criar a recorrência
 

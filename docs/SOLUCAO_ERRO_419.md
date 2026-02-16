@@ -16,14 +16,23 @@ php artisan cache:clear
 php artisan config:clear
 php artisan route:clear
 php artisan view:clear
-php artisan session:clear  # Se disponível
 ```
+
+> **Nota:** o Laravel não vem com `php artisan session:clear` por padrão. A limpeza depende do `SESSION_DRIVER` (ex.: `file`, `database`, `redis`).
 
 ### 2. Limpar Sessões Manualmente
 ```bash
 # Limpar arquivos de sessão (se usar driver 'file')
 rm -rf storage/framework/sessions/*
 ```
+
+**Windows (PowerShell), se `SESSION_DRIVER=file`:**
+```powershell
+Remove-Item -Force -Recurse "storage\framework\sessions\*" -ErrorAction SilentlyContinue
+```
+
+**Se `SESSION_DRIVER=database`:**
+- Trunque a tabela `sessions` (após garantir que não impactará usuários em produção).
 
 ### 3. Verificar Configuração de Sessão
 No arquivo `.env`, verifique:
@@ -45,6 +54,8 @@ SESSION_SECURE_COOKIE=false  # Para desenvolvimento local
 chmod -R 775 storage/framework/sessions
 chown -R www-data:www-data storage/framework/sessions  # Linux
 ```
+
+> Em **Windows**, permissões (`chmod/chown`) não se aplicam da mesma forma; valide as permissões NTFS do diretório `storage/`.
 
 ## Para Desenvolvimento Local
 
@@ -96,5 +107,10 @@ php artisan migrate
 3. **Verificar logs:**
 ```bash
 tail -f storage/logs/laravel.log
+```
+
+**Windows (PowerShell):**
+```powershell
+Get-Content "storage\logs\laravel.log" -Wait
 ```
 

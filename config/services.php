@@ -56,6 +56,13 @@ return [
             'instance_id' => env('ZAPI_INSTANCE_ID'),
         ],
 
+        // Configurações para WAHA
+        'waha' => [
+            'base_url' => env('WAHA_BASE_URL'),
+            'api_key' => env('WAHA_API_KEY'),
+            'session' => env('WAHA_SESSION', 'default'),
+        ],
+
         // Configurações legadas (mantidas para compatibilidade)
         'api_url' => env('WHATSAPP_API_URL'),
         'token' => env('WHATSAPP_TOKEN'),

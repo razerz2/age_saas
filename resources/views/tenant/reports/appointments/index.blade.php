@@ -1,242 +1,179 @@
-﻿@extends('layouts.connect_plus.app')
+@extends('layouts.tailadmin.app')
 
 @section('title', 'Relatório de Agendamentos')
 
-@push('styles')
-<style>
-    .stat-card {
-        border-left: 4px solid;
-        transition: transform 0.2s;
-    }
-    .stat-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-    }
-    .stat-card.primary { border-left-color: #4F8DF9; }
-    .stat-card.success { border-left-color: #28a745; }
-    .stat-card.danger { border-left-color: #dc3545; }
-    .stat-card.info { border-left-color: #17a2b8; }
-    .stat-card.warning { border-left-color: #ffc107; }
-    .stat-card.secondary { border-left-color: #6c757d; }
-    .chart-container {
-        position: relative;
-        height: 300px;
-    }
-    .heatmap-cell {
-        display: inline-block;
-        width: 40px;
-        height: 40px;
-        margin: 2px;
-        text-align: center;
-        line-height: 40px;
-        border-radius: 4px;
-        font-size: 12px;
-        color: white;
-    }
-</style>
-@endpush
-
 @section('content')
 
-<div class="page-header">
-    <h3 class="page-title">Relatório de Agendamentos</h3>
-    <nav aria-label="breadcrumb">
-        <ol class="breadcrumb">
-            <li class="breadcrumb-item"><a href="{{ workspace_route('tenant.dashboard') }}">Dashboard</a></li>
-            <li class="breadcrumb-item"><a href="{{ workspace_route('tenant.reports.index') }}">Relatórios</a></li>
-            <li class="breadcrumb-item active" aria-current="page">Agendamentos</li>
+<div class="page-header mb-6">
+    <div>
+        <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Relatório de Agendamentos</h1>
+        <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">Relatórios de agendamentos</p>
+    </div>
+    <nav class="mt-4" aria-label="breadcrumb">
+        <ol class="flex items-center flex-wrap gap-2 text-sm text-gray-500 dark:text-gray-400">
+            <li>
+                <a href="{{ workspace_route('tenant.dashboard') }}" class="hover:text-blue-600 dark:hover:text-white">Dashboard</a>
+            </li>
+            <li class="flex items-center gap-2">
+                <svg class="h-4 w-4 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+                </svg>
+                <a href="{{ workspace_route('tenant.reports.index') }}" class="hover:text-blue-600 dark:hover:text-white">Relatórios</a>
+            </li>
+            <li class="flex items-center gap-2">
+                <svg class="h-4 w-4 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+                </svg>
+                <span class="text-gray-700 dark:text-gray-200">Agendamentos</span>
+            </li>
         </ol>
     </nav>
 </div>
 
-{{-- Filtros --}}
-@include('tenant.reports.appointments.partials.filters')
+<div class="space-y-6">
+    @include('tenant.reports.appointments.partials.filters')
 
-{{-- Cards de Resumo --}}
-<div class="row mb-4" id="summary-cards">
-    <div class="col-md-2 grid-margin stretch-card">
-        <div class="card stat-card primary">
-            <div class="card-body">
-                <div class="d-flex align-items-center">
-                    <div class="flex-grow-1">
-                        <h6 class="text-muted mb-1">Total</h6>
-                        <h3 class="mb-0" id="summary-total">0</h3>
-                    </div>
-                    <div class="flex-shrink-0">
-                        <i class="mdi mdi-calendar-multiple text-primary" style="font-size: 2rem;"></i>
-                    </div>
+    <div id="summary-cards" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
+        <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 shadow-sm border-l-4 border-blue-600">
+            <p class="text-sm text-gray-500 dark:text-gray-400">Total</p>
+            <div class="mt-3 flex items-center justify-between">
+                <h3 class="text-2xl font-semibold text-gray-900 dark:text-white" id="summary-total">0</h3>
+                <svg class="h-6 w-6 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+            </div>
+        </div>
+
+        <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 shadow-sm border-l-4 border-green-600">
+            <p class="text-sm text-gray-500 dark:text-gray-400">Agendados</p>
+            <div class="mt-3 flex items-center justify-between">
+                <h3 class="text-2xl font-semibold text-gray-900 dark:text-white" id="summary-scheduled">0</h3>
+                <svg class="h-6 w-6 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+            </div>
+        </div>
+
+        <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 shadow-sm border-l-4 border-cyan-600">
+            <p class="text-sm text-gray-500 dark:text-gray-400">Atendidos</p>
+            <div class="mt-3 flex items-center justify-between">
+                <h3 class="text-2xl font-semibold text-gray-900 dark:text-white" id="summary-attended">0</h3>
+                <svg class="h-6 w-6 text-cyan-600 dark:text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+            </div>
+        </div>
+
+        <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 shadow-sm border-l-4 border-red-600">
+            <p class="text-sm text-gray-500 dark:text-gray-400">Cancelados</p>
+            <div class="mt-3 flex items-center justify-between">
+                <h3 class="text-2xl font-semibold text-gray-900 dark:text-white" id="summary-canceled">0</h3>
+                <svg class="h-6 w-6 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </div>
+        </div>
+
+        <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 shadow-sm border-l-4 border-amber-500">
+            <p class="text-sm text-gray-500 dark:text-gray-400">Online</p>
+            <div class="mt-3 flex items-center justify-between">
+                <h3 class="text-2xl font-semibold text-gray-900 dark:text-white" id="summary-online">0</h3>
+                <svg class="h-6 w-6 text-amber-500 dark:text-amber-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                </svg>
+            </div>
+        </div>
+
+        <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 shadow-sm border-l-4 border-gray-500">
+            <p class="text-sm text-gray-500 dark:text-gray-400">Presencial</p>
+            <div class="mt-3 flex items-center justify-between">
+                <h3 class="text-2xl font-semibold text-gray-900 dark:text-white" id="summary-presencial">0</h3>
+                <svg class="h-6 w-6 text-gray-600 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+            </div>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
+            <div class="p-6 border-b border-gray-200 dark:border-gray-700">
+                <h4 class="text-lg font-semibold text-gray-900 dark:text-white">Evolução de Agendamentos</h4>
+            </div>
+            <div class="p-6">
+                <div class="h-72">
+                    <canvas id="evolutionChart" class="w-full h-full"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
+            <div class="p-6 border-b border-gray-200 dark:border-gray-700">
+                <h4 class="text-lg font-semibold text-gray-900 dark:text-white">Online x Presencial</h4>
+            </div>
+            <div class="p-6">
+                <div class="h-72">
+                    <canvas id="modeChart" class="w-full h-full"></canvas>
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="col-md-2 grid-margin stretch-card">
-        <div class="card stat-card success">
-            <div class="card-body">
-                <div class="d-flex align-items-center">
-                    <div class="flex-grow-1">
-                        <h6 class="text-muted mb-1">Agendados</h6>
-                        <h3 class="mb-0" id="summary-scheduled">0</h3>
-                    </div>
-                    <div class="flex-shrink-0">
-                        <i class="mdi mdi-calendar-check text-success" style="font-size: 2rem;"></i>
-                    </div>
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
+            <div class="p-6 border-b border-gray-200 dark:border-gray-700">
+                <h4 class="text-lg font-semibold text-gray-900 dark:text-white">Agendamentos por Médico</h4>
+            </div>
+            <div class="p-6">
+                <div class="h-72">
+                    <canvas id="byDoctorChart" class="w-full h-full"></canvas>
                 </div>
+            </div>
+        </div>
+
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
+            <div class="p-6 border-b border-gray-200 dark:border-gray-700">
+                <h4 class="text-lg font-semibold text-gray-900 dark:text-white">Heatmap - Horários por Dia da Semana</h4>
+            </div>
+            <div class="p-6">
+                <div id="heatmap-container" class="mt-3 overflow-x-auto"></div>
             </div>
         </div>
     </div>
 
-    <div class="col-md-2 grid-margin stretch-card">
-        <div class="card stat-card info">
-            <div class="card-body">
-                <div class="d-flex align-items-center">
-                    <div class="flex-grow-1">
-                        <h6 class="text-muted mb-1">Atendidos</h6>
-                        <h3 class="mb-0" id="summary-attended">0</h3>
-                    </div>
-                    <div class="flex-shrink-0">
-                        <i class="mdi mdi-check-circle text-info" style="font-size: 2rem;"></i>
-                    </div>
-                </div>
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
+        <div class="p-6 border-b border-gray-200 dark:border-gray-700 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <h4 class="text-lg font-semibold text-gray-900 dark:text-white">Dados Detalhados</h4>
+            <div class="flex flex-wrap gap-2">
+                <button class="inline-flex items-center justify-center rounded-lg bg-emerald-600 px-3 py-2 text-sm font-medium text-white hover:bg-emerald-700 transition-colors" onclick="exportData('excel')">
+                    Excel
+                </button>
+                <button class="inline-flex items-center justify-center rounded-lg bg-red-600 px-3 py-2 text-sm font-medium text-white hover:bg-red-700 transition-colors" onclick="exportData('pdf')">
+                    PDF
+                </button>
+                <button class="inline-flex items-center justify-center rounded-lg bg-slate-600 px-3 py-2 text-sm font-medium text-white hover:bg-slate-700 transition-colors" onclick="exportData('csv')">
+                    CSV
+                </button>
             </div>
         </div>
-    </div>
-
-    <div class="col-md-2 grid-margin stretch-card">
-        <div class="card stat-card danger">
-            <div class="card-body">
-                <div class="d-flex align-items-center">
-                    <div class="flex-grow-1">
-                        <h6 class="text-muted mb-1">Cancelados</h6>
-                        <h3 class="mb-0" id="summary-canceled">0</h3>
-                    </div>
-                    <div class="flex-shrink-0">
-                        <i class="mdi mdi-close-circle text-danger" style="font-size: 2rem;"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="col-md-2 grid-margin stretch-card">
-        <div class="card stat-card warning">
-            <div class="card-body">
-                <div class="d-flex align-items-center">
-                    <div class="flex-grow-1">
-                        <h6 class="text-muted mb-1">Online</h6>
-                        <h3 class="mb-0" id="summary-online">0</h3>
-                    </div>
-                    <div class="flex-shrink-0">
-                        <i class="mdi mdi-video text-warning" style="font-size: 2rem;"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="col-md-2 grid-margin stretch-card">
-        <div class="card stat-card secondary">
-            <div class="card-body">
-                <div class="d-flex align-items-center">
-                    <div class="flex-grow-1">
-                        <h6 class="text-muted mb-1">Presencial</h6>
-                        <h3 class="mb-0" id="summary-presencial">0</h3>
-                    </div>
-                    <div class="flex-shrink-0">
-                        <i class="mdi mdi-hospital-building text-secondary" style="font-size: 2rem;"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-{{-- Gráficos --}}
-<div class="row mb-4">
-    <div class="col-md-6 grid-margin stretch-card">
-        <div class="card">
-            <div class="card-body">
-                <h4 class="card-title">Evolução de Agendamentos</h4>
-                <div class="chart-container">
-                    <canvas id="evolutionChart"></canvas>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="col-md-6 grid-margin stretch-card">
-        <div class="card">
-            <div class="card-body">
-                <h4 class="card-title">Online x Presencial</h4>
-                <div class="chart-container">
-                    <canvas id="modeChart"></canvas>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<div class="row mb-4">
-    <div class="col-md-6 grid-margin stretch-card">
-        <div class="card">
-            <div class="card-body">
-                <h4 class="card-title">Agendamentos por Médico</h4>
-                <div class="chart-container">
-                    <canvas id="byDoctorChart"></canvas>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="col-md-6 grid-margin stretch-card">
-        <div class="card">
-            <div class="card-body">
-                <h4 class="card-title">Heatmap - Horários por Dia da Semana</h4>
-                <div id="heatmap-container" class="mt-3"></div>
-            </div>
-        </div>
-    </div>
-</div>
-
-{{-- Tabela --}}
-<div class="row">
-    <div class="col-12 grid-margin stretch-card">
-        <div class="card">
-            <div class="card-body">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h4 class="card-title mb-0">Dados Detalhados</h4>
-                    <div>
-                        <button class="btn btn-success btn-sm" onclick="exportData('excel')">
-                            <i class="mdi mdi-file-excel"></i> Excel
-                        </button>
-                        <button class="btn btn-danger btn-sm" onclick="exportData('pdf')">
-                            <i class="mdi mdi-file-pdf"></i> PDF
-                        </button>
-                        <button class="btn btn-info btn-sm" onclick="exportData('csv')">
-                            <i class="mdi mdi-file-delimited"></i> CSV
-                        </button>
-                    </div>
-                </div>
-                <div class="table-responsive">
-                    <table class="table table-hover" id="reports-table">
-                        <thead>
-                            <tr>
-                                <th>Paciente</th>
-                                <th>Médico</th>
-                                <th>Especialidade</th>
-                                <th>Tipo</th>
-                                <th>Data</th>
-                                <th>Hora</th>
-                                <th>Modo</th>
-                                <th>Status</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <!-- Dados serão carregados via Ajax -->
-                        </tbody>
-                    </table>
-                </div>
-            </div>
+        <div class="p-6 overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700 text-sm" id="reports-table">
+                <thead class="bg-gray-50 dark:bg-gray-700/50">
+                    <tr>
+                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-300 uppercase tracking-wider">Paciente</th>
+                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-300 uppercase tracking-wider">Médico</th>
+                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-300 uppercase tracking-wider">Especialidade</th>
+                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-300 uppercase tracking-wider">Tipo</th>
+                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-300 uppercase tracking-wider">Data</th>
+                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-300 uppercase tracking-wider">Hora</th>
+                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-300 uppercase tracking-wider">Modo</th>
+                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-300 uppercase tracking-wider">Status</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
+                    <!-- Dados serão carregados via Ajax -->
+                </tbody>
+            </table>
         </div>
     </div>
 </div>
@@ -305,7 +242,7 @@ function loadData() {
                 responseText: xhr.responseText,
                 error: error
             });
-            alert('Erro ao carregar dados do relatório. Verifique o console para mais detalhes.');
+            showAlert({ type: 'error', title: 'Erro', message: 'Erro ao carregar dados do relatório. Verifique o console para mais detalhes.' });
         }
     });
 }
@@ -357,7 +294,7 @@ function updateCharts(chartData) {
             labels: ['Online', 'Presencial'],
             datasets: [{
                 data: [chartData.mode.online || 0, chartData.mode.presencial || 0],
-                backgroundColor: ['#ffc107', '#6c757d']
+                backgroundColor: ['#f59e0b', '#64748b']
             }]
         },
         options: {
@@ -379,7 +316,7 @@ function updateCharts(chartData) {
             datasets: [{
                 label: 'Agendamentos',
                 data: doctorValues,
-                backgroundColor: '#17a2b8'
+                backgroundColor: '#0891b2'
             }]
         },
         options: {
@@ -409,18 +346,19 @@ function updateHeatmap(heatmapData) {
         });
     });
 
-    let html = '<table class="table table-sm table-bordered">';
-    html += '<thead><tr><th>Hora</th>';
-    daysOfWeek.forEach(day => html += `<th>${day}</th>`);
-    html += '</tr></thead><tbody>';
+    let html = '<table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700 text-xs">';
+    html += '<thead class="bg-gray-50 dark:bg-gray-700/50"><tr>';
+    html += '<th class="px-3 py-2 text-left font-semibold text-gray-600 dark:text-gray-300">Hora</th>';
+    daysOfWeek.forEach(day => html += `<th class="px-3 py-2 text-left font-semibold text-gray-600 dark:text-gray-300">${day}</th>`);
+    html += '</tr></thead><tbody class="divide-y divide-gray-100 dark:divide-gray-700">';
     
     hours.forEach(hour => {
-        html += `<tr><td><strong>${hour}h</strong></td>`;
+        html += `<tr><td class="px-3 py-2 font-semibold text-gray-700 dark:text-gray-200">${hour}h</td>`;
         daysOfWeek.forEach(day => {
             const value = heatmapData[day] && heatmapData[day][hour] ? heatmapData[day][hour] : 0;
             const intensity = maxValue > 0 ? Math.round((value / maxValue) * 100) : 0;
             const bgColor = `rgba(79, 141, 249, ${0.3 + (intensity / 100) * 0.7})`;
-            html += `<td class="text-center" style="background-color: ${bgColor};">${value}</td>`;
+            html += `<td class="px-3 py-2 text-center text-gray-900 dark:text-gray-100" style="background-color: ${bgColor};">${value}</td>`;
         });
         html += '</tr>';
     });
@@ -440,10 +378,10 @@ function updateTable(tableData) {
     if (tableData && tableData.length > 0) {
         tableData.forEach(row => {
             const modeBadge = row.mode === 'online' 
-                ? '<span class="badge bg-warning">Online</span>'
-                : '<span class="badge bg-secondary">Presencial</span>';
+                ? '<span class="inline-flex items-center rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-medium text-amber-800 dark:bg-amber-900/30 dark:text-amber-300">Online</span>'
+                : '<span class="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-medium text-slate-800 dark:bg-slate-900/30 dark:text-slate-300">Presencial</span>';
             
-            const statusBadge = `<span class="badge bg-info">${row.status_translated || row.status || 'N/A'}</span>`;
+            const statusBadge = `<span class="inline-flex items-center rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-800 dark:bg-blue-900/30 dark:text-blue-300">${row.status_translated || row.status || 'N/A'}</span>`;
             
             table.row.add([
                 row.patient || 'N/A',

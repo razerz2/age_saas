@@ -278,5 +278,80 @@ class OnlineAppointmentController extends Controller
                 ->with('error', 'Erro ao enviar WhatsApp: ' . $e->getMessage());
         }
     }
+
+    public function gridData(Request $request, $slug)
+    {
+        $query = Appointment::where('appointment_mode', 'online')
+            ->with([
+                'patient',
+                'calendar.doctor.user',
+                'type',
+                'specialty',
+                'onlineInstructions',
+            ]);
+
+        $this->applyDoctorFilterWhereHas($query, 'calendar', 'doctor_id');
+
+        $page  = max(1, (int) $request->input('page', 1));
+        $limit = max(1, min(100, (int) $request->input('limit', 10)));
+
+        // 🔎 Busca global
+        $search = trim((string) $request->input('search', ''));
+
+        if ($search !== '') {
+            $query->where(function ($q) use ($search) {
+                $q->whereHas('patient', function ($sub) use ($search) {
+                    $sub->where('full_name', 'like', "%{$search}%");
+                })
+                ->orWhereHas('calendar.doctor.user', function ($sub) use ($search) {
+                    $sub->where('name_full', 'like', "%{$search}%")
+                        ->orWhere('name', 'like', "%{$search}%");
+                })
+                ->orWhere('status', 'like', "%{$search}%");
+            });
+        }
+
+        // 📊 Ordenação whitelist
+        $sortable = [
+            'patient'     => 'patient_id',
+            'doctor'      => 'doctor_id',
+            'starts_at'   => 'starts_at',
+            'status'      => 'status',
+            'created_at'  => 'created_at',
+        ];
+
+        $sortField = (string) $request->input('sort', 'starts_at');
+        $sortDir   = strtolower((string) $request->input('direction', 'desc')) === 'asc' ? 'asc' : 'desc';
+
+        if (isset($sortable[$sortField])) {
+            $query->orderBy($sortable[$sortField], $sortDir);
+        } else {
+            $query->orderBy('starts_at', 'desc');
+        }
+
+        $paginator = $query->paginate($limit, ['*'], 'page', $page);
+
+        $data = $paginator->getCollection()->map(function (Appointment $appointment) {
+
+            return [
+                'patient'        => e($appointment->patient->full_name ?? 'N/A'),
+                'doctor'         => e(optional(optional($appointment->calendar)->doctor)->user->name_full ?? 'N/A'),
+                'datetime'       => optional($appointment->starts_at)->format('d/m/Y H:i'),
+                'status_badge'   => view('tenant.online_appointments.partials.status', compact('appointment'))->render(),
+                'instructions'   => view('tenant.online_appointments.partials.instructions', compact('appointment'))->render(),
+                'actions'        => view('tenant.online_appointments.partials.actions', compact('appointment'))->render(),
+            ];
+        })->all();
+
+        return response()->json([
+            'data' => $data,
+            'meta' => [
+                'current_page' => $paginator->currentPage(),
+                'last_page'    => $paginator->lastPage(),
+                'per_page'     => $paginator->perPage(),
+                'total'        => $paginator->total(),
+            ],
+        ]);
+    }
 }
 

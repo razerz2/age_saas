@@ -1,4 +1,6 @@
 @extends('layouts.freedash.app')
+@section('title', 'Configurações')
+
 @section('content')
     <div class="page-breadcrumb">
         <div class="row">
@@ -98,63 +100,183 @@
                     <a href="{{ route('Platform.settings.test', 'asaas') }}" class="btn btn-secondary mb-4">
                         <i class="fas fa-plug me-1"></i> Testar Conexão ASAAS</a>
 
-                    <h5>💬 Meta (WhatsApp Business)</h5>
-                    <div class="mb-3">
-                        <label>Access Token</label>
-                        <input type="text" class="form-control" name="META_ACCESS_TOKEN"
-                            value="{{ $settings['META_ACCESS_TOKEN'] }}">
-                    </div>
-                    <div class="mb-3">
-                        <label>Phone Number ID</label>
-                        <input type="text" class="form-control" name="META_PHONE_NUMBER_ID"
-                            value="{{ $settings['META_PHONE_NUMBER_ID'] }}">
-                    </div>
-                    <div class="d-flex gap-2 mb-4">
-                        <a href="{{ route('Platform.settings.test', 'meta') }}" class="btn btn-outline-secondary">
-                            <i class="fas fa-plug me-1"></i> Testar Conexão Meta
-                        </a>
-                    </div>
-
-                    <h5>📱 Z-API (WhatsApp)</h5>
+                    <h5>💬 WhatsApp</h5>
                     <div class="mb-3">
                         <label>Provedor WhatsApp</label>
-                        <select class="form-select" name="WHATSAPP_PROVIDER">
+                        <select class="form-select" name="WHATSAPP_PROVIDER" id="whatsapp-provider-select">
                             <option value="whatsapp_business" {{ $settings['WHATSAPP_PROVIDER'] == 'whatsapp_business' ? 'selected' : '' }}>
                                 WhatsApp Business (Meta)
                             </option>
                             <option value="zapi" {{ $settings['WHATSAPP_PROVIDER'] == 'zapi' ? 'selected' : '' }}>
                                 Z-API
                             </option>
+                            <option value="waha" {{ $settings['WHATSAPP_PROVIDER'] == 'waha' ? 'selected' : '' }}>
+                                WAHA
+                            </option>
                         </select>
                         <small class="text-muted">Escolha qual provedor de WhatsApp será usado pelo sistema.</small>
                     </div>
-                    <div class="mb-3">
-                        <label>API URL</label>
-                        <input type="text" class="form-control" name="ZAPI_API_URL"
-                            value="{{ $settings['ZAPI_API_URL'] }}" placeholder="https://api.z-api.io">
+
+                    {{-- Meta / WhatsApp Business --}}
+                    <div class="border rounded p-3 mb-3 whatsapp-provider-section" data-provider="whatsapp_business">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <h6 class="mb-0">💬 Meta (WhatsApp Business)</h6>
+                            <span id="meta-test-badge" class="badge bg-secondary d-none">Aguardando teste</span>
+                        </div>
+                        <div class="mb-3">
+                            <label>Access Token</label>
+                            <input type="text" class="form-control" name="META_ACCESS_TOKEN"
+                                   value="{{ $settings['META_ACCESS_TOKEN'] }}">
+                        </div>
+                        <div class="mb-3">
+                            <label>Phone Number ID</label>
+                            <input type="text" class="form-control" name="META_PHONE_NUMBER_ID"
+                                   value="{{ $settings['META_PHONE_NUMBER_ID'] }}">
+                        </div>
+                        <div class="d-flex flex-column flex-sm-row gap-2 mb-2">
+                            <button type="button" class="btn btn-outline-secondary" id="btn-test-meta"
+                                    data-test-url="{{ route('Platform.settings.test', 'meta') }}">
+                                <i class="fas fa-plug me-1"></i> Testar Conexão Meta
+                            </button>
+                            <button type="button" class="btn btn-outline-primary" id="btn-toggle-meta-send">
+                                <i class="fas fa-paper-plane me-1"></i> Testar Envio Meta
+                            </button>
+                        </div>
+                        <small id="meta-test-message" class="text-muted d-block mb-2"></small>
+
+                        <div id="meta-send-form" class="border rounded p-3 bg-light d-none">
+                            <div class="mb-2">
+                                <label for="meta-test-number" class="form-label">Número de destino</label>
+                                <input type="text" id="meta-test-number" class="form-control" placeholder="Ex: 5511999999999">
+                            </div>
+                            <div class="mb-2">
+                                <label for="meta-test-message-input" class="form-label">Mensagem</label>
+                                <textarea id="meta-test-message-input" class="form-control" rows="3">Teste de envio Meta - Plataforma AgeClin</textarea>
+                            </div>
+                            <div class="d-flex flex-column flex-sm-row gap-2 align-items-start align-items-sm-center">
+                                <button type="button" class="btn btn-success" id="btn-send-meta-test"
+                                        data-send-url="{{ route('Platform.settings.test.meta.send') }}">
+                                    <i class="fas fa-paper-plane me-1"></i> Enviar teste
+                                </button>
+                                <span id="meta-send-badge" class="badge bg-secondary d-none">Aguardando envio</span>
+                            </div>
+                            <small id="meta-send-message" class="text-muted d-block mt-2"></small>
+                        </div>
                     </div>
-                    <div class="mb-3">
-                        <label>Token</label>
-                        <input type="text" class="form-control" name="ZAPI_TOKEN"
-                            value="{{ $settings['ZAPI_TOKEN'] }}" placeholder="Token da instância">
-                        <small class="text-muted">Token da instância Z-API (usado na URL).</small>
+
+                    {{-- Z-API --}}
+                    <div class="border rounded p-3 mb-3 whatsapp-provider-section" data-provider="zapi">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <h6 class="mb-0">📱 Z-API (WhatsApp)</h6>
+                            <span id="zapi-test-badge" class="badge bg-secondary d-none">Aguardando teste</span>
+                        </div>
+                        <div class="mb-3">
+                            <label>API URL</label>
+                            <input type="text" class="form-control" name="ZAPI_API_URL"
+                                   value="{{ $settings['ZAPI_API_URL'] }}" placeholder="https://api.z-api.io">
+                        </div>
+                        <div class="mb-3">
+                            <label>Token</label>
+                            <input type="text" class="form-control" name="ZAPI_TOKEN"
+                                   value="{{ $settings['ZAPI_TOKEN'] }}" placeholder="Token da instância">
+                            <small class="text-muted">Token da instância Z-API (usado na URL).</small>
+                        </div>
+                        <div class="mb-3">
+                            <label>Client Token</label>
+                            <input type="text" class="form-control" name="ZAPI_CLIENT_TOKEN"
+                                   value="{{ $settings['ZAPI_CLIENT_TOKEN'] }}" placeholder="Client-Token de segurança">
+                            <small class="text-muted">Client-Token de segurança da conta (usado no header).</small>
+                        </div>
+                        <div class="mb-3">
+                            <label>Instance ID</label>
+                            <input type="text" class="form-control" name="ZAPI_INSTANCE_ID"
+                                   value="{{ $settings['ZAPI_INSTANCE_ID'] }}" placeholder="ID da instância">
+                            <small class="text-muted">ID da instância Z-API.</small>
+                        </div>
+                        <div class="d-flex flex-column flex-sm-row gap-2 mb-2">
+                            <button type="button" class="btn btn-outline-secondary" id="btn-test-zapi"
+                                    data-test-url="{{ route('Platform.settings.test', 'zapi') }}">
+                                <i class="fas fa-plug me-1"></i> Testar Conexão Z-API
+                            </button>
+                            <button type="button" class="btn btn-outline-primary" id="btn-toggle-zapi-send">
+                                <i class="fas fa-paper-plane me-1"></i> Testar Envio Z-API
+                            </button>
+                        </div>
+                        <small id="zapi-test-message" class="text-muted d-block mb-2"></small>
+
+                        <div id="zapi-send-form" class="border rounded p-3 bg-light d-none">
+                            <div class="mb-2">
+                                <label for="zapi-test-number" class="form-label">Número de destino</label>
+                                <input type="text" id="zapi-test-number" class="form-control" placeholder="Ex: 5511999999999">
+                            </div>
+                            <div class="mb-2">
+                                <label for="zapi-test-message-input" class="form-label">Mensagem</label>
+                                <textarea id="zapi-test-message-input" class="form-control" rows="3">Teste de envio Z-API - Plataforma AgeClin</textarea>
+                            </div>
+                            <div class="d-flex flex-column flex-sm-row gap-2 align-items-start align-items-sm-center">
+                                <button type="button" class="btn btn-success" id="btn-send-zapi-test"
+                                        data-send-url="{{ route('Platform.settings.test.zapi.send') }}">
+                                    <i class="fas fa-paper-plane me-1"></i> Enviar teste
+                                </button>
+                                <span id="zapi-send-badge" class="badge bg-secondary d-none">Aguardando envio</span>
+                            </div>
+                            <small id="zapi-send-message" class="text-muted d-block mt-2"></small>
+                        </div>
                     </div>
-                    <div class="mb-3">
-                        <label>Client Token</label>
-                        <input type="text" class="form-control" name="ZAPI_CLIENT_TOKEN"
-                            value="{{ $settings['ZAPI_CLIENT_TOKEN'] }}" placeholder="Client-Token de segurança">
-                        <small class="text-muted">Client-Token de segurança da conta (usado no header).</small>
+
+                    {{-- WAHA --}}
+                    <div class="border rounded p-3 mb-3 whatsapp-provider-section" data-provider="waha">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <h6 class="mb-0">🔄 WAHA (WhatsApp Gateway)</h6>
+                            <span id="waha-test-badge" class="badge bg-secondary d-none">Aguardando teste</span>
+                        </div>
+                        <div class="mb-3">
+                            <label>Base URL</label>
+                            <input type="text" class="form-control" name="WAHA_BASE_URL"
+                                   value="{{ $settings['WAHA_BASE_URL'] }}" placeholder="https://seu-servidor-waha">
+                        </div>
+                        <div class="mb-3">
+                            <label>API Key</label>
+                            <input type="text" class="form-control" name="WAHA_API_KEY"
+                                   value="{{ $settings['WAHA_API_KEY'] }}" placeholder="X-Api-Key">
+                        </div>
+                        <div class="mb-3">
+                            <label>Nome da Sessão</label>
+                            <input type="text" class="form-control" name="WAHA_SESSION"
+                                   value="{{ $settings['WAHA_SESSION'] }}" placeholder="default">
+                        </div>
+                        <div class="d-flex flex-column flex-sm-row gap-2 mb-2">
+                            <button type="button" class="btn btn-outline-secondary" id="btn-test-waha"
+                                    data-test-url="{{ route('Platform.settings.test', 'waha') }}">
+                                <i class="fas fa-plug me-1"></i> Testar Sessão WAHA
+                            </button>
+                            <button type="button" class="btn btn-outline-primary" id="btn-toggle-waha-send">
+                                <i class="fas fa-paper-plane me-1"></i> Testar Envio WAHA
+                            </button>
+                        </div>
+                        <small id="waha-test-message" class="text-muted d-block mb-2"></small>
+
+                        <div id="waha-send-form" class="border rounded p-3 bg-light d-none">
+                            <div class="mb-2">
+                                <label for="waha-test-number" class="form-label">Número de destino</label>
+                                <input type="text" id="waha-test-number" class="form-control" placeholder="Ex: 5511999999999">
+                            </div>
+                            <div class="mb-2">
+                                <label for="waha-test-message-input" class="form-label">Mensagem</label>
+                                <textarea id="waha-test-message-input" class="form-control" rows="3">Teste de envio WAHA - Plataforma AgeClin</textarea>
+                            </div>
+                            <div class="d-flex flex-column flex-sm-row gap-2 align-items-start align-items-sm-center">
+                                <button type="button" class="btn btn-success" id="btn-send-waha-test"
+                                        data-send-url="{{ route('Platform.settings.test.waha.send') }}">
+                                    <i class="fas fa-paper-plane me-1"></i> Enviar teste
+                                </button>
+                                <span id="waha-send-badge" class="badge bg-secondary d-none">Aguardando envio</span>
+                            </div>
+                            <small id="waha-send-message" class="text-muted d-block mt-2"></small>
+                        </div>
                     </div>
-                    <div class="mb-3">
-                        <label>Instance ID</label>
-                        <input type="text" class="form-control" name="ZAPI_INSTANCE_ID"
-                            value="{{ $settings['ZAPI_INSTANCE_ID'] }}" placeholder="ID da instância">
-                        <small class="text-muted">ID da instância Z-API.</small>
-                    </div>
+
                     <div class="d-flex gap-2">
-                        <a href="{{ route('Platform.settings.test', 'zapi') }}" class="btn btn-outline-secondary">
-                            <i class="fas fa-plug me-1"></i> Testar Conexão Z-API
-                        </a>
                         <button type="submit" class="btn btn-primary">
                             <i class="fas fa-save me-1"></i> Salvar Integrações
                         </button>
@@ -1393,3 +1515,318 @@
         }
     </script>
 @endsection
+
+@push('scripts')
+    <script>
+        (function () {
+            function updateWhatsAppProviderVisibility() {
+                var select = document.getElementById('whatsapp-provider-select');
+                if (!select) return;
+
+                var provider = select.value;
+                var sections = document.querySelectorAll('.whatsapp-provider-section');
+                sections.forEach(function (section) {
+                    var sectionProvider = section.getAttribute('data-provider');
+                    if (sectionProvider === provider) {
+                        section.style.display = '';
+                    } else {
+                        section.style.display = 'none';
+                    }
+                });
+            }
+
+            function setupProviderToggle() {
+                var select = document.getElementById('whatsapp-provider-select');
+                if (!select) return;
+                select.addEventListener('change', updateWhatsAppProviderVisibility);
+                updateWhatsAppProviderVisibility();
+            }
+
+            function setupTestButton(buttonId, badgeId, messageId) {
+                var btn = document.getElementById(buttonId);
+                if (!btn) return;
+
+                btn.addEventListener('click', function (e) {
+                    e.preventDefault();
+
+                    var url = btn.getAttribute('data-test-url');
+                    if (!url) return;
+
+                    var badge = document.getElementById(badgeId);
+                    var message = document.getElementById(messageId);
+
+                    if (badge) {
+                        badge.classList.remove('bg-success', 'bg-danger', 'd-none');
+                        badge.classList.add('bg-secondary');
+                        badge.textContent = 'Testando...';
+                    }
+                    if (message) {
+                        message.textContent = '';
+                    }
+
+                    var csrfMeta = document.querySelector('meta[name="csrf-token"]');
+                    var csrfToken = csrfMeta ? csrfMeta.getAttribute('content') : '';
+
+                    fetch(url, {
+                        method: 'GET',
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'Accept': 'application/json',
+                            'X-CSRF-TOKEN': csrfToken
+                        },
+                        credentials: 'same-origin'
+                    })
+                        .then(function (response) {
+                            return response.json().catch(function () {
+                                return { status: 'ERROR', message: 'Resposta inválida do servidor.' };
+                            });
+                        })
+                        .then(function (data) {
+                            var status = (data && data.status) ? String(data.status).toUpperCase() : 'ERROR';
+                            var ok = (status === 'OK' || status === 'WORKING' || status === 'SUCCESS');
+
+                            if (badge) {
+                                badge.classList.remove('bg-secondary', 'bg-success', 'bg-danger', 'd-none');
+                                badge.classList.add(ok ? 'bg-success' : 'bg-danger');
+                                badge.textContent = ok ? 'Conectado' : 'Erro';
+                            }
+
+                            if (message) {
+                                var friendly = data && data.message ? data.message : (ok
+                                    ? 'Conexão realizada com sucesso.'
+                                    : 'Falha ao testar conexão. Verifique as configurações.');
+                                message.textContent = friendly;
+                            }
+                        })
+                        .catch(function () {
+                            if (badge) {
+                                badge.classList.remove('bg-secondary', 'bg-success');
+                                badge.classList.add('bg-danger');
+                                badge.textContent = 'Erro';
+                            }
+                            if (message) {
+                                message.textContent = 'Erro ao comunicar com o servidor. Tente novamente.';
+                            }
+                        });
+                });
+            }
+
+            document.addEventListener('DOMContentLoaded', function () {
+                setupProviderToggle();
+                setupTestButton('btn-test-meta', 'meta-test-badge', 'meta-test-message');
+                setupTestButton('btn-test-zapi', 'zapi-test-badge', 'zapi-test-message');
+                setupTestButton('btn-test-waha', 'waha-test-badge', 'waha-test-message');
+
+                // Toggle formulário de envio Meta
+                var toggleMetaSendBtn = document.getElementById('btn-toggle-meta-send');
+                var metaSendForm = document.getElementById('meta-send-form');
+                if (toggleMetaSendBtn && metaSendForm) {
+                    toggleMetaSendBtn.addEventListener('click', function () {
+                        if (metaSendForm.classList.contains('d-none')) {
+                            metaSendForm.classList.remove('d-none');
+                        } else {
+                            metaSendForm.classList.add('d-none');
+                        }
+                    });
+                }
+
+                // Toggle formulário de envio Z-API
+                var toggleZapiSendBtn = document.getElementById('btn-toggle-zapi-send');
+                var zapiSendForm = document.getElementById('zapi-send-form');
+                if (toggleZapiSendBtn && zapiSendForm) {
+                    toggleZapiSendBtn.addEventListener('click', function () {
+                        if (zapiSendForm.classList.contains('d-none')) {
+                            zapiSendForm.classList.remove('d-none');
+                        } else {
+                            zapiSendForm.classList.add('d-none');
+                        }
+                    });
+                }
+
+                function setupSendTest(buttonId, numberId, messageId, badgeId, messageLabelId) {
+                    var sendBtn = document.getElementById(buttonId);
+                    if (!sendBtn) return;
+
+                    sendBtn.addEventListener('click', function (e) {
+                        e.preventDefault();
+
+                        var url = sendBtn.getAttribute('data-send-url');
+                        if (!url) return;
+
+                        var numberInput = document.getElementById(numberId);
+                        var messageInput = document.getElementById(messageId);
+                        var badge = document.getElementById(badgeId);
+                        var messageLabel = document.getElementById(messageLabelId);
+
+                        var number = numberInput ? numberInput.value.trim() : '';
+                        var text = messageInput ? messageInput.value.trim() : '';
+
+                        if (!number || !text) {
+                            if (messageLabel) {
+                                messageLabel.textContent = 'Preencha o número de destino e a mensagem para enviar o teste.';
+                            }
+                            return;
+                        }
+
+                        if (badge) {
+                            badge.classList.remove('bg-success', 'bg-danger', 'd-none');
+                            badge.classList.add('bg-secondary');
+                            badge.textContent = 'Enviando...';
+                        }
+                        if (messageLabel) {
+                            messageLabel.textContent = '';
+                        }
+
+                        var csrfMeta = document.querySelector('meta[name="csrf-token"]');
+                        var csrfToken = csrfMeta ? csrfMeta.getAttribute('content') : '';
+
+                        fetch(url, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-Requested-With': 'XMLHttpRequest',
+                                'X-CSRF-TOKEN': csrfToken
+                            },
+                            credentials: 'same-origin',
+                            body: JSON.stringify({
+                                number: number,
+                                message: text
+                            })
+                        })
+                            .then(function (response) {
+                                return response.json();
+                            })
+                            .then(function (data) {
+                                var status = (data && data.status) ? String(data.status).toUpperCase() : 'ERROR';
+                                var ok = (status === 'OK' || status === 'WORKING' || status === 'SUCCESS');
+
+                                if (badge) {
+                                    badge.classList.remove('bg-secondary', 'bg-success', 'bg-danger', 'd-none');
+                                    badge.classList.add(ok ? 'bg-success' : 'bg-danger');
+                                    badge.textContent = ok ? 'Enviado' : 'Erro';
+                                }
+
+                                if (messageLabel) {
+                                    var friendly = data && data.message ? data.message : (ok
+                                        ? 'Mensagem enviada com sucesso.'
+                                        : 'Falha ao enviar mensagem de teste. Verifique as configurações.');
+                                    messageLabel.textContent = friendly;
+                                }
+                            })
+                            .catch(function () {
+                                if (badge) {
+                                    badge.classList.remove('bg-secondary', 'bg-success');
+                                    badge.classList.add('bg-danger');
+                                    badge.textContent = 'Erro';
+                                }
+                                if (messageLabel) {
+                                    messageLabel.textContent = 'Erro ao comunicar com o servidor. Tente novamente.';
+                                }
+                            });
+                    });
+                }
+
+                setupSendTest('btn-send-meta-test', 'meta-test-number', 'meta-test-message-input', 'meta-send-badge', 'meta-send-message');
+                setupSendTest('btn-send-zapi-test', 'zapi-test-number', 'zapi-test-message-input', 'zapi-send-badge', 'zapi-send-message');
+
+                // Toggle formulário de envio WAHA
+                var toggleSendBtn = document.getElementById('btn-toggle-waha-send');
+                var sendForm = document.getElementById('waha-send-form');
+                if (toggleSendBtn && sendForm) {
+                    toggleSendBtn.addEventListener('click', function () {
+                        if (sendForm.classList.contains('d-none')) {
+                            sendForm.classList.remove('d-none');
+                        } else {
+                            sendForm.classList.add('d-none');
+                        }
+                    });
+                }
+
+                // Envio de mensagem de teste WAHA
+                var sendBtn = document.getElementById('btn-send-waha-test');
+                if (sendBtn) {
+                    sendBtn.addEventListener('click', function (e) {
+                        e.preventDefault();
+
+                        var url = sendBtn.getAttribute('data-send-url');
+                        if (!url) return;
+
+                        var numberInput = document.getElementById('waha-test-number');
+                        var messageInput = document.getElementById('waha-test-message-input');
+                        var badge = document.getElementById('waha-send-badge');
+                        var message = document.getElementById('waha-send-message');
+
+                        var number = numberInput ? numberInput.value.trim() : '';
+                        var text = messageInput ? messageInput.value.trim() : '';
+
+                        if (!number || !text) {
+                            if (message) {
+                                message.textContent = 'Preencha o número de destino e a mensagem para enviar o teste.';
+                            }
+                            return;
+                        }
+
+                        if (badge) {
+                            badge.classList.remove('bg-success', 'bg-danger', 'd-none');
+                            badge.classList.add('bg-secondary');
+                            badge.textContent = 'Enviando...';
+                        }
+                        if (message) {
+                            message.textContent = '';
+                        }
+
+                        var csrfMeta = document.querySelector('meta[name="csrf-token"]');
+                        var csrfToken = csrfMeta ? csrfMeta.getAttribute('content') : '';
+
+                        fetch(url, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Accept': 'application/json',
+                                'X-Requested-With': 'XMLHttpRequest',
+                                'X-CSRF-TOKEN': csrfToken
+                            },
+                            credentials: 'same-origin',
+                            body: JSON.stringify({
+                                number: number,
+                                message: text
+                            })
+                        })
+                            .then(function (response) {
+                                return response.json().catch(function () {
+                                    return { status: 'ERROR', message: 'Resposta inválida do servidor.' };
+                                });
+                            })
+                            .then(function (data) {
+                                var status = (data && data.status) ? String(data.status).toUpperCase() : 'ERROR';
+                                var ok = (status === 'OK' || status === 'WORKING' || status === 'SUCCESS');
+
+                                if (badge) {
+                                    badge.classList.remove('bg-secondary', 'bg-success', 'bg-danger', 'd-none');
+                                    badge.classList.add(ok ? 'bg-success' : 'bg-danger');
+                                    badge.textContent = ok ? 'Enviado' : 'Erro';
+                                }
+
+                                if (message) {
+                                    var friendly = data && data.message ? data.message : (ok
+                                        ? 'Mensagem de teste enviada com sucesso.'
+                                        : 'Falha ao enviar mensagem de teste. Verifique as configurações.');
+                                    message.textContent = friendly;
+                                }
+                            })
+                            .catch(function () {
+                                if (badge) {
+                                    badge.classList.remove('bg-secondary', 'bg-success');
+                                    badge.classList.add('bg-danger');
+                                    badge.textContent = 'Erro';
+                                }
+                                if (message) {
+                                    message.textContent = 'Erro ao comunicar com o servidor. Tente novamente.';
+                                }
+                            });
+                    });
+                }
+            });
+        })();
+    </script>
+@endpush

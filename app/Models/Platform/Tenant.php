@@ -21,7 +21,6 @@ class Tenant extends BaseTenant
         'email',
         'phone',
         'subdomain',
-        'network_id',
         'plan_id',
 
         // Credenciais do admin
@@ -103,11 +102,6 @@ class Tenant extends BaseTenant
      *  RELACIONAMENTOS
      * =====================================================
      */
-    public function network()
-    {
-        return $this->belongsTo(\App\Models\Platform\ClinicNetwork::class, 'network_id');
-    }
-
     public function plan()
     {
         return $this->belongsTo(\App\Models\Platform\Plan::class, 'plan_id');

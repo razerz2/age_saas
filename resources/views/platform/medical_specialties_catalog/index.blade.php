@@ -1,4 +1,6 @@
 @extends('layouts.freedash.app')
+@section('title', 'Listar Medical Specialties Catalog')
+
 @section('content')
     <div class="page-breadcrumb">
         <div class="row">

@@ -167,6 +167,79 @@ class PatientController extends Controller
             ->with('success', 'Paciente removido.');
     }
 
+    public function gridData(Request $request, $slug)
+    {
+        $page  = max(1, (int) $request->input('page', 1));
+        $limit = max(1, min(100, (int) $request->input('limit', 10)));
+
+        $query = Patient::query();
+
+        // Busca simples
+        $search = $request->input('search');
+        if (is_array($search) && !empty($search['value'])) {
+            $term = trim($search['value']);
+            $query->where(function ($q) use ($term) {
+                $q->where('full_name', 'like', "%{$term}%")
+                  ->orWhere('email', 'like', "%{$term}%")
+                  ->orWhere('cpf', 'like', "%{$term}%");
+            });
+        }
+
+        // Ordenação
+        $sort = $request->input('sort');
+        $sortable = [
+            'name'         => 'full_name',
+            'email'        => 'email',
+            'cpf'          => 'cpf',
+            'status_badge' => 'status',
+        ];
+
+        if (is_array($sort) && isset($sort['column'], $sort['direction'])) {
+            $column = $sort['column'];
+            $direction = strtolower($sort['direction']) === 'asc' ? 'asc' : 'desc';
+
+            if (isset($sortable[$column])) {
+                $query->orderBy($sortable[$column], $direction);
+            } else {
+                $query->orderBy('full_name');
+            }
+        } else {
+            $query->orderBy('full_name');
+        }
+
+        $paginator = $query->paginate($limit, ['*'], 'page', $page);
+
+        $data = [];
+
+        foreach ($paginator->items() as $patient) {
+            $statusBadge = view('tenant.patients.partials.status', [
+                'patient' => $patient,
+            ])->render();
+
+            $actions = view('tenant.patients.partials.actions', [
+                'patient' => $patient,
+            ])->render();
+
+            $data[] = [
+                'name'         => e($patient->full_name),
+                'email'        => e($patient->email ?? '-'),
+                'cpf'          => e($patient->cpf ?? '-'),
+                'status_badge' => $statusBadge,
+                'actions'      => $actions,
+            ];
+        }
+
+        return response()->json([
+            'data' => $data,
+            'meta' => [
+                'current_page' => $paginator->currentPage(),
+                'last_page'    => $paginator->lastPage(),
+                'per_page'     => $paginator->perPage(),
+                'total'        => $paginator->total(),
+            ],
+        ]);
+    }
+
     /**
      * Mostra formulário para criar/editar login do paciente
      */

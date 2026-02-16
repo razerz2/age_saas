@@ -1,82 +1,103 @@
-@extends('layouts.connect_plus.app')
+@extends('layouts.tailadmin.app')
 
 @section('title', 'Detalhes da Conta')
 
 @section('content')
 
-    <div class="page-header">
-        <h3 class="page-title">
-            <i class="mdi mdi-wallet text-primary me-2"></i>
-            Detalhes da Conta
-        </h3>
-
-        <nav aria-label="breadcrumb">
-            <ol class="breadcrumb">
-                <li class="breadcrumb-item">
-                    <a href="{{ workspace_route('tenant.dashboard') }}">Dashboard</a>
-                </li>
-                <li class="breadcrumb-item">
-                    <a href="{{ workspace_route('tenant.finance.index') }}">Financeiro</a>
-                </li>
-                <li class="breadcrumb-item">
-                    <a href="{{ workspace_route('tenant.finance.accounts.index') }}">Contas</a>
-                </li>
-                <li class="breadcrumb-item active" aria-current="page">Detalhes</li>
-            </ol>
-        </nav>
+    <!-- Page Header -->
+    <div class="page-header mb-6">
+        <div class="flex items-center justify-between">
+            <div>
+                <h1 class="text-2xl font-semibold text-gray-900 dark:text-white mb-2">Detalhes da Conta</h1>
+                <nav class="flex" aria-label="Breadcrumb">
+                    <ol class="inline-flex items-center space-x-1 md:space-x-3">
+                        <li class="inline-flex items-center">
+                            <a href="{{ workspace_route('tenant.dashboard') }}" class="text-gray-700 hover:text-blue-600 dark:text-gray-300 dark:hover:text-white">
+                                <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                    <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001 1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"></path>
+                                </svg>
+                                Dashboard
+                            </a>
+                        </li>
+                        <li>
+                            <div class="flex items-center">
+                                <svg class="w-6 h-6 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
+                                </svg>
+                                <a href="{{ workspace_route('tenant.finance.index') }}" class="ml-1 text-gray-700 hover:text-blue-600 dark:text-gray-300 dark:hover:text-white md:ml-2">Financeiro</a>
+                            </div>
+                        </li>
+                        <li>
+                            <div class="flex items-center">
+                                <svg class="w-6 h-6 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
+                                </svg>
+                                <a href="{{ workspace_route('tenant.finance.accounts.index') }}" class="ml-1 text-gray-700 hover:text-blue-600 dark:text-gray-300 dark:hover:text-white md:ml-2">Contas</a>
+                            </div>
+                        </li>
+                        <li aria-current="page">
+                            <div class="flex items-center">
+                                <svg class="w-6 h-6 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
+                                </svg>
+                                <span class="ml-1 text-gray-500 dark:text-gray-400 md:ml-2">Detalhes</span>
+                            </div>
+                        </li>
+                    </ol>
+                </nav>
+            </div>
+        </div>
     </div>
 
-    <div class="row">
-        <div class="col-lg-8">
-            <div class="card">
-                <div class="card-body">
-                    <h4 class="card-title">{{ $account->name }}</h4>
-
-                    <div class="row mb-3">
-                        <div class="col-md-6">
-                            <strong>Tipo:</strong>
-                            @if($account->type === 'cash')
-                                <span class="badge bg-info">Dinheiro</span>
-                            @elseif($account->type === 'bank')
-                                <span class="badge bg-primary">Banco</span>
-                            @elseif($account->type === 'pix')
-                                <span class="badge bg-success">PIX</span>
-                            @else
-                                <span class="badge bg-warning">Crédito</span>
-                            @endif
-                        </div>
-                        <div class="col-md-6">
-                            <strong>Status:</strong>
-                            @if($account->active)
-                                <span class="badge bg-success">Ativa</span>
-                            @else
-                                <span class="badge bg-secondary">Inativa</span>
-                            @endif
-                        </div>
-                    </div>
-
-                    <div class="row mb-3">
-                        <div class="col-md-6">
-                            <strong>Saldo Inicial:</strong>
-                            <p class="mb-0">R$ {{ number_format($account->initial_balance, 2, ',', '.') }}</p>
-                        </div>
-                        <div class="col-md-6">
-                            <strong>Saldo Atual:</strong>
-                            <p class="mb-0 fs-5 fw-bold text-primary">R$ {{ number_format($account->current_balance, 2, ',', '.') }}</p>
-                        </div>
-                    </div>
-
-                    <div class="d-flex gap-2 mt-4">
-                        <a href="{{ workspace_route('tenant.finance.accounts.edit', ['slug' => tenant()->subdomain, 'account' => $account->id]) }}" 
-                           class="btn btn-primary">
-                            <i class="mdi mdi-pencil"></i> Editar
-                        </a>
-                        <a href="{{ workspace_route('tenant.finance.accounts.index', ['slug' => tenant()->subdomain]) }}" 
-                           class="btn btn-secondary">
-                            <i class="mdi mdi-arrow-left"></i> Voltar
-                        </a>
-                    </div>
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 max-w-3xl">
+        <div class="p-6">
+            <div class="flex items-start justify-between mb-6">
+                <div>
+                    <h2 class="text-xl font-semibold text-gray-900 dark:text-white">{{ $account->name }}</h2>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">Informações da conta financeira</p>
                 </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                <div>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">Tipo</p>
+                    @if($account->type === 'cash')
+                        <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-200">Dinheiro</span>
+                    @elseif($account->type === 'bank')
+                        <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-indigo-100 text-indigo-700 dark:bg-indigo-900 dark:text-indigo-200">Banco</span>
+                    @elseif($account->type === 'pix')
+                        <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-200">PIX</span>
+                    @else
+                        <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-amber-100 text-amber-700 dark:bg-amber-900 dark:text-amber-200">Crédito</span>
+                    @endif
+                </div>
+                <div>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">Status</p>
+                    @if($account->active)
+                        <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-200">Ativa</span>
+                    @else
+                        <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300">Inativa</span>
+                    @endif
+                </div>
+                <div>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">Saldo Inicial</p>
+                    <p class="text-sm text-gray-900 dark:text-gray-100">R$ {{ number_format($account->initial_balance, 2, ',', '.') }}</p>
+                </div>
+                <div>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">Saldo Atual</p>
+                    <p class="text-lg font-semibold text-blue-600 dark:text-blue-400">R$ {{ number_format($account->current_balance, 2, ',', '.') }}</p>
+                </div>
+            </div>
+
+            <div class="flex items-center justify-end gap-3 flex-nowrap">
+                <a href="{{ workspace_route('tenant.finance.accounts.edit', ['slug' => tenant()->subdomain, 'account' => $account->id]) }}"
+                   class="inline-flex items-center gap-2 px-4 py-2 bg-primary text-white hover:bg-primary/90 font-medium rounded-md transition-colors">
+                    Editar
+                </a>
+                <a href="{{ workspace_route('tenant.finance.accounts.index', ['slug' => tenant()->subdomain]) }}"
+                   class="inline-flex items-center gap-2 px-4 py-2 border border-gray-300 text-gray-700 bg-white hover:bg-gray-50 rounded-md font-medium transition-colors">
+                    Voltar
+                </a>
             </div>
         </div>
     </div>
