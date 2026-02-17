@@ -1,6 +1,7 @@
 @extends('layouts.tailadmin.app')
 
 @section('title', 'Usuários')
+@section('page', 'users')
 
 @section('content')
 <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6">
@@ -107,77 +108,3 @@
 </div>
 
 @endsection
-
-@push('styles')
-    <style>
-        .btn-patient-primary {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 0.5rem;
-            padding: 0.625rem 1.25rem;
-            font-size: 0.875rem;
-            font-weight: 500;
-            transition: all 0.2s;
-            border: 1px solid #d1d5db;
-            background-color: #2563eb;
-            color: white;
-            text-decoration: none;
-        }
-        
-        .btn-patient-primary:hover {
-            background-color: #1d4ed8;
-            border-color: #1d4ed8;
-        }
-        
-        /* Dark mode styles */
-        @media (prefers-color-scheme: dark) {
-            .btn-patient-primary {
-                background-color: transparent;
-                border-color: #d1d5db;
-                color: white;
-            }
-            
-            .btn-patient-primary:hover {
-                background-color: #1f2937;
-                border-color: #9ca3af;
-            }
-        }
-        
-        /* For TailAdmin dark mode class */
-        .dark .btn-patient-primary {
-            background-color: transparent;
-            border-color: #d1d5db;
-            color: white;
-        }
-        
-        .dark .btn-patient-primary:hover {
-            background-color: #1f2937;
-            border-color: #9ca3af;
-        }
-    </style>
-@endpush
-
-@push('scripts')
-<script>
-    /**
-     * Confirma a exclusão do usuário (usado tanto na tabela antiga quanto em Grid.js)
-     */
-    function confirmDeleteUser(event, userName) {
-        event.preventDefault();
-        
-        const form = event.target.closest('form');
-        
-        confirmAction({
-            title: 'Excluir usuário',
-            message: `Tem certeza que deseja excluir o usuário "${userName}"?\n\nEsta ação não pode ser desfeita.`,
-            confirmText: 'Excluir',
-            cancelText: 'Cancelar',
-            type: 'error',
-            onConfirm: () => form.submit()
-        });
-        
-        return false;
-    }
-</script>
-@endpush

@@ -1,6 +1,7 @@
-@extends('layouts.tailadmin.app')
+﻿@extends('layouts.tailadmin.app')
 
-@section('title', 'Criar Calendário')
+@section('title', 'Criar CalendÃ¡rio')
+@section('page', 'calendars')
 
 @section('content')
 
@@ -21,7 +22,7 @@
                         <svg class="w-4 h-4 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
                             <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
                         </svg>
-                        <a href="{{ workspace_route('tenant.calendars.index') }}" class="text-gray-700 hover:text-blue-600 dark:text-gray-300 dark:hover:text-white">Calendários</a>
+                        <a href="{{ workspace_route('tenant.calendars.index') }}" class="text-gray-700 hover:text-blue-600 dark:text-gray-300 dark:hover:text-white">CalendÃ¡rios</a>
                     </li>
                     <li class="flex items-center gap-2">
                         <svg class="w-4 h-4 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
@@ -46,9 +47,9 @@
                         <svg class="w-6 h-6 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
                         </svg>
-                        Novo Calendário
+                        Novo CalendÃ¡rio
                     </h2>
-                    <p class="text-gray-600 dark:text-gray-400 mt-1">Preencha os dados abaixo para criar um novo calendário</p>
+                    <p class="text-gray-600 dark:text-gray-400 mt-1">Preencha os dados abaixo para criar um novo calendÃ¡rio</p>
                 </div>
             </div>
         </div>
@@ -57,13 +58,13 @@
             <form class="space-y-8" action="{{ workspace_route('tenant.calendars.store') }}" method="POST">
                 @csrf
 
-                <!-- Seção: Informações do Calendário -->
+                <!-- SeÃ§Ã£o: InformaÃ§Ãµes do CalendÃ¡rio -->
                 <div>
                     <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
                         <svg class="w-5 h-5 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                         </svg>
-                        Informações do Calendário
+                        InformaÃ§Ãµes do CalendÃ¡rio
                     </h3>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
@@ -71,10 +72,10 @@
                                 <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
                                 </svg>
-                                Médico <span class="text-red-500">*</span>
+                                MÃ©dico <span class="text-red-500">*</span>
                             </label>
                             <select name="doctor_id" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white @error('doctor_id') border-red-500 @enderror" required>
-                                <option value="">Selecione um médico</option>
+                                <option value="">Selecione um mÃ©dico</option>
                                 @foreach($doctors as $doctor)
                                     <option value="{{ $doctor->id }}" {{ old('doctor_id') == $doctor->id ? 'selected' : '' }}>{{ $doctor->user->name ?? 'N/A' }}</option>
                                 @endforeach
@@ -92,7 +93,7 @@
                             </label>
                             <input type="text" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white @error('name') border-red-500 @enderror" 
                                    name="name" value="{{ old('name') }}" 
-                                   placeholder="Ex: Calendário Principal" required>
+                                   placeholder="Ex: CalendÃ¡rio Principal" required>
                             @error('name')
                                 <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
                             @enderror
@@ -108,8 +109,8 @@
                             </label>
                             <input type="text" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white @error('external_id') border-red-500 @enderror" 
                                    name="external_id" value="{{ old('external_id') }}" 
-                                   placeholder="ID do calendário em sistema externo (opcional)">
-                            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">ID usado para sincronização com calendários externos</p>
+                                   placeholder="ID do calendÃ¡rio em sistema externo (opcional)">
+                            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">ID usado para sincronizaÃ§Ã£o com calendÃ¡rios externos</p>
                             @error('external_id')
                                 <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
                             @enderror
@@ -117,7 +118,7 @@
                     </div>
                 </div>
 
-                <!-- Botões de Ação -->
+                <!-- BotÃµes de AÃ§Ã£o -->
                 <div class="flex flex-col gap-3 pt-6 border-t border-gray-200 dark:border-gray-700 sm:flex-row sm:items-center sm:justify-between">
                     <a href="{{ workspace_route('tenant.calendars.index') }}" class="btn-patient-secondary">
                         <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -129,104 +130,11 @@
                         <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V2"></path>
                         </svg>
-                        Salvar Calendário
+                        Salvar CalendÃ¡rio
                     </button>
                 </div>
             </form>
         </div>
     </div>
 
-@push('styles')
-    <link href="{{ asset('css/tenant-common.css') }}" rel="stylesheet">
-    <style>
-        /* Botões padrão com suporte a modo claro e escuro */
-        .btn-patient-primary {
-            background-color: #2563eb;
-            color: white;
-            border: 1px solid #d1d5db;
-            padding: 0.625rem 1.25rem;
-            font-size: 0.875rem;
-            font-weight: 500;
-            border-radius: 0.375rem;
-            cursor: pointer;
-            transition: all 0.2s;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 0.5rem;
-            text-decoration: none;
-        }
-        
-        .btn-patient-primary:hover {
-            background-color: #1d4ed8;
-        }
-        
-        .btn-patient-secondary {
-            background-color: transparent;
-            color: #374151;
-            border: 1px solid #d1d5db;
-            padding: 0.5rem 1rem;
-            font-size: 0.875rem;
-            font-weight: 500;
-            border-radius: 0.375rem;
-            cursor: pointer;
-            transition: all 0.2s;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 0.5rem;
-            text-decoration: none;
-        }
-        
-        .btn-patient-secondary:hover {
-            background-color: #f9fafb;
-        }
-        
-        /* Modo escuro via preferência do sistema */
-        @media (prefers-color-scheme: dark) {
-            .btn-patient-primary {
-                background-color: transparent;
-                color: white;
-                border-color: #d1d5db;
-            }
-            
-            .btn-patient-primary:hover {
-                background-color: #1f2937;
-            }
-            
-            .btn-patient-secondary {
-                background-color: transparent;
-                color: white;
-                border-color: #d1d5db;
-            }
-            
-            .btn-patient-secondary:hover {
-                background-color: #1f2937;
-            }
-        }
-        
-        /* Modo escuro via classe */
-        .dark .btn-patient-primary {
-            background-color: transparent;
-            color: white;
-            border-color: #d1d5db;
-        }
-        
-        .dark .btn-patient-primary:hover {
-            background-color: #1f2937;
-        }
-        
-        .dark .btn-patient-secondary {
-            background-color: transparent;
-            color: white;
-            border-color: #d1d5db;
-        }
-        
-        .dark .btn-patient-secondary:hover {
-            background-color: #1f2937;
-        }
-    </style>
-@endpush
-
 @endsection
-

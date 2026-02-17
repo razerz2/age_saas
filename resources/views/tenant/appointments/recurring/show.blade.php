@@ -1,6 +1,7 @@
 @extends('layouts.tailadmin.app')
 
 @section('title', 'Detalhes do Agendamento Recorrente')
+@section('page', 'appointments')
 
 @section('content')
     <!-- Page Header -->
@@ -153,4 +154,3 @@
     </div>
 
 @endsection
-

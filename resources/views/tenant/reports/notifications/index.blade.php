@@ -1,8 +1,12 @@
 @extends('layouts.tailadmin.app')
 
 @section('title', 'Relatório de Notificações')
+@section('page', 'reports')
 
 @section('content')
+
+
+<div id="reports-notifications-config" data-report-type="notifications" data-data-url="{{ workspace_route('tenant.reports.notifications.data') }}"></div>
 
 <div class="page-header mb-6">
     <div>
@@ -51,25 +55,4 @@
 
 @endsection
 
-@push('scripts')
-<script>
-$(document).ready(function() {
-    $('#reports-table').DataTable({
-        language: { url: "//cdn.datatables.net/plug-ins/1.11.5/i18n/pt-BR.json" },
-        ajax: {
-            url: '{{ workspace_route("tenant.reports.notifications.data") }}',
-            method: 'POST',
-            headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
-            dataSrc: 'table'
-        },
-        columns: [
-            { data: 'title' },
-            { data: 'type' },
-            { data: 'read_at' },
-            { data: 'created_at' }
-        ]
-    });
-});
-</script>
-@endpush
 

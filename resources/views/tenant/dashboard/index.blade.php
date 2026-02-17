@@ -177,7 +177,7 @@
                     <span class="text-xs text-gray-400 dark:text-gray-300">Dados reais</span>
             </div>
             <div class="relative mt-4 h-72 overflow-hidden rounded-xl border border-gray-200 bg-gradient-to-br from-primary/5 via-transparent to-secondary/10 dark:border-gray-800">
-                <canvas id="appointmentsChart" width="400" height="250"></canvas>
+                <canvas id="appointmentsChart" width="400" height="250" data-chart-points='@json($chartLast12Months)'></canvas>
             </div>
         </div>
 
@@ -313,10 +313,3 @@
     </div>
 </div>
 @endsection
-
-@push('scripts')
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script>
-	window.dashboardChartData = @json($chartLast12Months);
-</script>
-@endpush

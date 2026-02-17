@@ -1,6 +1,7 @@
 @extends('layouts.tailadmin.app')
 
 @section('title', 'Meu Perfil')
+@section('page', 'profile')
 
 @section('content')
 
@@ -23,7 +24,7 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                 </svg>
                 <span class="text-green-800 dark:text-green-200">{{ session('success') }}</span>
-                <button type="button" onclick="this.parentElement.parentElement.remove()" class="ml-auto text-green-600 hover:text-green-800 dark:text-green-400 dark:hover:text-green-200">
+                <button type="button" data-dismiss-alert="true" class="ml-auto text-green-600 hover:text-green-800 dark:text-green-400 dark:hover:text-green-200">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                     </svg>
@@ -246,7 +247,7 @@
                                                 </svg>
                                                 Capturar Foto
                                             </h5>
-                                            <button type="button" onclick="closeWebcamModal()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors">
+                                            <button type="button" data-webcam-close="true" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors">
                                                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                                                 </svg>
@@ -284,7 +285,7 @@
                                                 </svg>
                                                 Parar
                                             </button>
-                                            <button type="button" onclick="closeWebcamModal()" class="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700 transition-colors">
+                                            <button type="button" data-webcam-close="true" class="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700 transition-colors">
                                                 Cancelar
                                             </button>
                                         </div>
@@ -350,13 +351,13 @@
                                     <div class="flex">
                                         <input type="password" name="password" id="password" class="flex-1 px-3 py-2 border border-gray-300 rounded-l-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white @error('password') border-red-500 @enderror" 
                                                placeholder="Deixe em branco para manter a senha atual">
-                                        <button type="button" onclick="togglePasswordVisibility('password')" class="px-3 py-2 border border-l-0 border-gray-300 bg-gray-50 rounded-r-lg hover:bg-gray-100 dark:bg-gray-600 dark:border-gray-600 dark:hover:bg-gray-500 transition-colors" title="Mostrar/Ocultar senha">
+                                        <button type="button" data-toggle-password-target="password" class="px-3 py-2 border border-l-0 border-gray-300 bg-gray-50 rounded-r-lg hover:bg-gray-100 dark:bg-gray-600 dark:border-gray-600 dark:hover:bg-gray-500 transition-colors" title="Mostrar/Ocultar senha">
                                             <svg id="password-eye-icon" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
                                             </svg>
                                         </button>
-                                        <button type="button" onclick="generatePassword()" class="ml-2 px-3 py-2 border border-gray-300 bg-gray-50 rounded-lg hover:bg-gray-100 dark:bg-gray-600 dark:border-gray-600 dark:hover:bg-gray-500 transition-colors flex items-center">
+                                        <button type="button" data-generate-password="true" class="ml-2 px-3 py-2 border border-gray-300 bg-gray-50 rounded-lg hover:bg-gray-100 dark:bg-gray-600 dark:border-gray-600 dark:hover:bg-gray-500 transition-colors flex items-center">
                                             <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
                                             </svg>
@@ -378,7 +379,7 @@
                                     <div class="flex">
                                         <input type="password" name="password_confirmation" id="password_confirmation" class="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white @error('password_confirmation') border-red-500 @enderror" 
                                                placeholder="Confirme a nova senha">
-                                        <button type="button" onclick="togglePasswordVisibility('password_confirmation')" class="ml-2 px-3 py-2 border border-gray-300 bg-gray-50 rounded-lg hover:bg-gray-100 dark:bg-gray-600 dark:border-gray-600 dark:hover:bg-gray-500 transition-colors" title="Mostrar/Ocultar senha">
+                                        <button type="button" data-toggle-password-target="password_confirmation" class="ml-2 px-3 py-2 border border-gray-300 bg-gray-50 rounded-lg hover:bg-gray-100 dark:bg-gray-600 dark:border-gray-600 dark:hover:bg-gray-500 transition-colors" title="Mostrar/Ocultar senha">
                                             <svg id="password_confirmation-eye-icon" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
@@ -447,243 +448,7 @@
         </div>
     </div>
 
-@push('styles')
-    <link href="{{ asset('css/tenant-common.css') }}" rel="stylesheet">
-@endpush
 
-@push('scripts')
-<script src="{{ asset('js/password-generator.js') }}"></script>
-<script>
-    function togglePasswordVisibility(fieldId) {
-        const field = document.getElementById(fieldId);
-        const icon = document.getElementById(fieldId + '-eye-icon');
-        
-        if (field.type === 'password') {
-            field.type = 'text';
-            // Mudar ícone para olho fechado
-            icon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"></path>';
-        } else {
-            field.type = 'password';
-            // Mudar ícone para olho aberto
-            icon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>';
-        }
-    }
-    
-    function generatePassword() {
-        const password = generateStrongPassword();
-        document.getElementById('password').value = password;
-        document.getElementById('password_confirmation').value = password;
-        
-        // Mostra temporariamente
-        document.getElementById('password').type = 'text';
-        document.getElementById('password_confirmation').type = 'text';
-        
-        // Mudar ícones para olho fechado
-        const passwordIcon = document.getElementById('password-eye-icon');
-        const confirmIcon = document.getElementById('password_confirmation-eye-icon');
-        passwordIcon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"></path>';
-        confirmIcon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"></path>';
-        
-        document.getElementById('password').select();
-        
-        // Volta para password após 3 segundos
-        setTimeout(() => {
-            document.getElementById('password').type = 'password';
-            document.getElementById('password_confirmation').type = 'password';
-            passwordIcon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>';
-            confirmIcon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>';
-        }, 3000);
-    }
-    
-    function closeWebcamModal() {
-        const modal = document.getElementById('webcam-modal');
-        modal.classList.add('hidden');
-        modal.classList.remove('flex');
-        stopWebcam();
-    }
-    
-    function openWebcamModal() {
-        const modal = document.getElementById('webcam-modal');
-        modal.classList.remove('hidden');
-        modal.classList.add('flex');
-    }
-    
-    document.addEventListener('DOMContentLoaded', function() {
-        const avatarInput = document.getElementById('avatar-input');
-        const avatarPreviewContainer = document.getElementById('avatar-preview-container');
-        const avatarPreview = document.getElementById('avatar-preview');
-        const avatarFilename = document.getElementById('avatar-filename');
-        const avatarRemove = document.getElementById('avatar-remove');
-
-        // Função para exibir pré-visualização
-        function showPreview(file) {
-            if (file && file.type.startsWith('image/')) {
-                const reader = new FileReader();
-                
-                reader.onload = function(e) {
-                    avatarPreview.src = e.target.result;
-                    avatarFilename.textContent = file.name;
-                    avatarPreviewContainer.style.display = 'block';
-                };
-                
-                reader.readAsDataURL(file);
-            } else {
-                showAlert({ type: 'warning', title: 'Atenção', message: 'Por favor, selecione um arquivo de imagem válido.' });
-                if (avatarInput) {
-                    avatarInput.value = '';
-                }
-            }
-        }
-
-        // Event listener para mudança no input
-        if (avatarInput) {
-            avatarInput.addEventListener('change', function(e) {
-                const file = e.target.files[0];
-                if (file) {
-                    // Validar tamanho (2MB)
-                    if (file.size > 2048 * 1024) {
-                        showAlert({ type: 'warning', title: 'Atenção', message: 'O arquivo é muito grande. Por favor, selecione uma imagem com no máximo 2MB.' });
-                        avatarInput.value = '';
-                        avatarPreviewContainer.style.display = 'none';
-                        return;
-                    }
-                    showPreview(file);
-                }
-            });
-        }
-
-        // Botão para remover imagem
-        if (avatarRemove) {
-            avatarRemove.addEventListener('click', function() {
-                avatarInput.value = '';
-                avatarPreviewContainer.style.display = 'none';
-                avatarPreview.src = '';
-                avatarFilename.textContent = '';
-            });
-        }
-
-        // Webcam functionality
-        const webcamBtn = document.getElementById('webcam-btn');
-        const webcamVideo = document.getElementById('webcam-video');
-        const webcamCanvas = document.getElementById('webcam-canvas');
-        const webcamPlaceholder = document.getElementById('webcam-placeholder');
-        const webcamStart = document.getElementById('webcam-start');
-        const webcamCapture = document.getElementById('webcam-capture');
-        const webcamStop = document.getElementById('webcam-stop');
-        let stream = null;
-
-        // Abrir modal da webcam
-        if (webcamBtn) {
-            webcamBtn.addEventListener('click', function() {
-                openWebcamModal();
-            });
-        }
-
-        // Iniciar webcam
-        if (webcamStart) {
-            webcamStart.addEventListener('click', async function() {
-                try {
-                    stream = await navigator.mediaDevices.getUserMedia({ 
-                        video: { 
-                            width: { ideal: 640 },
-                            height: { ideal: 480 },
-                            facingMode: 'user'
-                        } 
-                    });
-                    webcamVideo.srcObject = stream;
-                    webcamVideo.style.display = 'block';
-                    webcamPlaceholder.style.display = 'none';
-                    webcamStart.style.display = 'none';
-                    webcamCapture.style.display = 'inline-block';
-                    webcamStop.style.display = 'inline-block';
-                } catch (err) {
-                    showAlert({ type: 'error', title: 'Erro', message: 'Erro ao acessar a webcam: ' + err.message });
-                    console.error('Erro ao acessar webcam:', err);
-                }
-            });
-        }
-
-        // Capturar foto
-        if (webcamCapture) {
-            webcamCapture.addEventListener('click', function() {
-                const context = webcamCanvas.getContext('2d');
-                webcamCanvas.width = webcamVideo.videoWidth;
-                webcamCanvas.height = webcamVideo.videoHeight;
-                context.drawImage(webcamVideo, 0, 0);
-                
-                // Converter canvas para blob
-                webcamCanvas.toBlob(function(blob) {
-                    if (blob) {
-                        // Criar arquivo a partir do blob
-                        const file = new File([blob], 'webcam-photo.jpg', { type: 'image/jpeg' });
-                        
-                        // Criar DataTransfer para adicionar ao input
-                        const dataTransfer = new DataTransfer();
-                        dataTransfer.items.add(file);
-                        avatarInput.files = dataTransfer.files;
-                        
-                        // Mostrar preview
-                        showPreview(file);
-                        
-                        // Parar webcam e fechar modal
-                        stopWebcam();
-                        closeWebcamModal();
-                    }
-                }, 'image/jpeg', 0.9);
-            });
-        }
-
-        // Parar webcam
-        if (webcamStop) {
-            webcamStop.addEventListener('click', function() {
-                stopWebcam();
-            });
-        }
-
-        function stopWebcam() {
-            if (stream) {
-                stream.getTracks().forEach(track => track.stop());
-                stream = null;
-            }
-            if (webcamVideo) {
-                webcamVideo.srcObject = null;
-                webcamVideo.style.display = 'none';
-            }
-            if (webcamPlaceholder) {
-                webcamPlaceholder.style.display = 'block';
-            }
-            if (webcamStart) {
-                webcamStart.style.display = 'inline-block';
-            }
-            if (webcamCapture) {
-                webcamCapture.style.display = 'none';
-            }
-            if (webcamStop) {
-                webcamStop.style.display = 'none';
-            }
-        }
-
-        // Parar webcam quando modal fechar
-        const webcamModalElement = document.getElementById('webcam-modal');
-        if (webcamModalElement) {
-            // Adiciona listener para clique fora do modal
-            webcamModalElement.addEventListener('click', function(e) {
-                if (e.target === webcamModalElement) {
-                    closeWebcamModal();
-                }
-            });
-            
-            // Adiciona listener para tecla ESC
-            document.addEventListener('keydown', function(e) {
-                if (e.key === 'Escape' && !webcamModalElement.classList.contains('hidden')) {
-                    closeWebcamModal();
-                }
-            });
-        }
-
-    });
-</script>
-@endpush
 
 @endsection
 

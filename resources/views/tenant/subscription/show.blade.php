@@ -1,6 +1,7 @@
 @extends('layouts.tailadmin.app')
 
 @section('title', 'Minha Assinatura')
+@section('page', 'subscription')
 
 @section('content')
 
@@ -281,23 +282,4 @@
 
 @endsection
 
-@push('scripts')
-<script>
-document.addEventListener('DOMContentLoaded', function () {
-    if (window.jQuery && $('#datatable-list').length) {
-        $('#datatable-list').DataTable({
-            pageLength: 25,
-            responsive: true,
-            autoWidth: false,
-            scrollX: false,
-            scrollCollapse: false,
-            pagingType: "simple_numbers",
-            language: {
-                url: "//cdn.datatables.net/plug-ins/1.13.8/i18n/pt-BR.json"
-            }
-        });
-    }
-});
-</script>
-@endpush
 

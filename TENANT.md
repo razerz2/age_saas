@@ -829,20 +829,19 @@ Toda view da área Tenant **deve**:
 3. Ter o JS da página carregado dinamicamente em `resources/js/tenant/app.js`:
 
    ```js
-   document.addEventListener('DOMContentLoaded', async () => {
-       const body = document.body;
-       const page = body.dataset.page;
-
+   document.addEventListener('DOMContentLoaded', () => {
+       const page = document.body?.dataset?.page;
        if (!page) return;
 
-       try {
-           const module = await import(`./pages/${page}.js`);
-           if (module && typeof module.init === 'function') {
-               module.init();
-           }
-       } catch (e) {
-           console.error(`Erro ao carregar módulo da página: ${page}`, e);
-       }
+       import(`./pages/${page}.js`)
+           .then((module) => {
+               if (typeof module.init === 'function') {
+                   module.init();
+               }
+           })
+           .catch(() => {
+               // Falha silenciosa se a página não tiver módulo dedicado.
+           });
    });
    ```
 
@@ -1744,7 +1743,7 @@ web middleware group
 
 ---
 
-**Última atualização:** 2025-12-14
+**Última atualização:** 2026-02-17
 
 **Nota:** Esta documentação foi completamente revisada e atualizada para refletir todas as funcionalidades atuais, incluindo:
 - **Dashboard atualizado** com cards otimizados e layout responsivo
@@ -1835,4 +1834,3 @@ web middleware group
 - Personalização de labels (singular, plural) e label de registro
 - Configuração disponível em `/workspace/{slug}/settings` (aba **Profissionais**)
 - Permite adaptar terminologia do sistema para diferentes tipos de clínicas
-

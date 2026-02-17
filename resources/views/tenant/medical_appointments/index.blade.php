@@ -2,6 +2,8 @@
 
 @section('title', 'Atendimento Médico')
 
+@section('page', 'medical_appointments')
+
 @section('content')
 <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6">
     <!-- Page Header -->
@@ -107,7 +109,4 @@
 
 @endsection
 
-@push('styles')
-    <link href="{{ asset('css/tenant-medical-appointments.css') }}" rel="stylesheet">
-@endpush
 

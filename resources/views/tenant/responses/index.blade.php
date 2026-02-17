@@ -1,6 +1,7 @@
 @extends('layouts.tailadmin.app')
 
 @section('title', 'Respostas de Formulários')
+@section('page', 'responses')
 
 @section('content')
 <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6">
@@ -74,7 +75,7 @@
                                             <form action="{{ workspace_route('tenant.responses.destroy', $response->id) }}"
                                                   method="POST"
                                                   class="delete-response-form"
-                                                  onsubmit="return confirmDeleteResponse(event, '{{ $response->form->name ?? 'N/A' }}', '{{ $response->patient->full_name ?? 'N/A' }}')">
+                                                  data-confirm-delete="true" data-form-name="{{ $response->form->name ?? 'N/A' }}" data-patient-name="{{ $response->patient->full_name ?? 'N/A' }}">
                                                 @csrf
                                                 @method('DELETE')
                                                 <button type="submit" class="inline-flex items-center px-3 py-1.5 rounded-lg text-sm font-medium bg-red-50 text-red-700 hover:bg-red-100 dark:bg-red-900/30 dark:text-red-300">
@@ -98,43 +99,4 @@
 
 @endsection
 
-@push('scripts')
-<script>
-document.addEventListener('DOMContentLoaded', function () {
-    if (window.jQuery && $('#datatable-list').length) {
-        $('#datatable-list').DataTable({
-            pageLength: 25,
-            responsive: true,
-            autoWidth: false,
-            scrollX: false,
-            scrollCollapse: false,
-            pagingType: "simple_numbers",
-            language: {
-                url: "//cdn.datatables.net/plug-ins/1.13.8/i18n/pt-BR.json"
-            }
-        });
-    }
-});
-
-    /**
-     * Confirma a exclusão da resposta de formulário
-     */
-    function confirmDeleteResponse(event, formName, patientName) {
-        event.preventDefault();
-        
-        const form = event.target.closest('form');
-        
-        confirmAction({
-            title: 'Excluir resposta',
-            message: `Tem certeza que deseja excluir a resposta do formulário "${formName}" do paciente "${patientName}"?\n\nEsta ação não pode ser desfeita e irá remover:\n- A resposta do formulário\n- Todas as respostas das perguntas relacionadas`,
-            confirmText: 'Excluir',
-            cancelText: 'Cancelar',
-            type: 'error',
-            onConfirm: () => form.submit()
-        });
-        
-        return false;
-    }
-</script>
-@endpush
 

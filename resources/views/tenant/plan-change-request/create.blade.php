@@ -1,6 +1,7 @@
 @extends('layouts.tailadmin.app')
 
 @section('title', 'Solicitar Mudança de Plano')
+@section('page', 'plan-change-request')
 
 @section('content')
 
@@ -141,22 +142,6 @@
             </div>
         </div>
     </div>
-
-    @push('scripts')
-    <script>
-        document.getElementById('requested_plan_id').addEventListener('change', function() {
-            const selectedOption = this.options[this.selectedIndex];
-            const description = selectedOption.getAttribute('data-description');
-            const descriptionDiv = document.getElementById('plan-description');
-            
-            if (description) {
-                descriptionDiv.textContent = description;
-            } else {
-                descriptionDiv.textContent = '';
-            }
-        });
-    </script>
-    @endpush
 
 @endsection
 

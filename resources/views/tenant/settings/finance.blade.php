@@ -1,6 +1,7 @@
 @extends('layouts.tailadmin.app')
 
 @section('title', 'Configurações Financeiras')
+@section('page', 'settings')
 
 @section('content')
 <div class="page-header">
@@ -107,7 +108,7 @@
                                                value="{{ $settings['finance.asaas.webhook_secret'] }}" 
                                                placeholder="Secret para validar webhooks"
                                                readonly>
-                                        <x-tailadmin-button type="button" variant="secondary" size="sm" class="px-3 py-2" onclick="regenerateSecret()">
+                                        <x-tailadmin-button type="button" variant="secondary" size="sm" class="px-3 py-2" data-settings-action="regenerate-secret">
                                             <i class="mdi mdi-refresh"></i> Gerar Novo
                                         </x-tailadmin-button>
                                     </div>
@@ -558,189 +559,6 @@
     </div>
 </div>
 
-@push('styles')
-    <style>
-        /* Botões padrão com suporte a modo claro e escuro */
-        .btn-patient-primary {
-            background-color: #2563eb;
-            color: white;
-            border: 1px solid #d1d5db;
-            padding: 0.625rem 1.25rem;
-            font-size: 0.875rem;
-            font-weight: 500;
-            border-radius: 0.375rem;
-            cursor: pointer;
-            transition: all 0.2s;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 0.5rem;
-            text-decoration: none;
-        }
-        
-        .btn-patient-primary:hover {
-            background-color: #1d4ed8;
-        }
-        
-        .btn-patient-secondary {
-            background-color: transparent;
-            color: #374151;
-            border: 1px solid #d1d5db;
-            padding: 0.5rem 1rem;
-            font-size: 0.875rem;
-            font-weight: 500;
-            border-radius: 0.375rem;
-            cursor: pointer;
-            transition: all 0.2s;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 0.5rem;
-            text-decoration: none;
-        }
-        
-        .btn-patient-secondary:hover {
-            background-color: #f9fafb;
-        }
-        
-        /* Modo escuro via preferência do sistema */
-        @media (prefers-color-scheme: dark) {
-            .btn-patient-primary {
-                background-color: transparent;
-                color: white;
-                border-color: #d1d5db;
-            }
-            
-            .btn-patient-primary:hover {
-                background-color: #1f2937;
-            }
-            
-            .btn-patient-secondary {
-                background-color: transparent;
-                color: white;
-                border-color: #d1d5db;
-            }
-            
-            .btn-patient-secondary:hover {
-                background-color: #1f2937;
-            }
-        }
-        
-        /* Modo escuro via classe */
-        .dark .btn-patient-primary {
-            background-color: transparent;
-            color: white;
-            border-color: #d1d5db;
-        }
-        
-        .dark .btn-patient-primary:hover {
-            background-color: #1f2937;
-        }
-        
-        .dark .btn-patient-secondary {
-            background-color: transparent;
-            color: white;
-            border-color: #d1d5db;
-        }
-        
-        .dark .btn-patient-secondary:hover {
-            background-color: #1f2937;
-        }
-    </style>
-@endpush
 
-@push('scripts')
-<script>
-    $(document).ready(function() {
-        // Função para atualizar exibição dos campos baseado no modo de cobrança
-        function updateBillingModeFields() {
-            const mode = $('#billing_mode').val();
-            
-            // Esconder todos os grupos
-            $('#billing_amounts_global').hide();
-            $('#billing_prices_management').hide();
-            
-            // Mostrar grupo apropriado
-            if (mode === 'global') {
-                $('#billing_amounts_global').show();
-            } else if (mode === 'per_doctor' || mode === 'per_doctor_specialty') {
-                $('#billing_prices_management').show();
-            }
-        }
-
-        // Executar na mudança do modo de cobrança
-        $('#billing_mode').on('change', updateBillingModeFields);
-        
-        // Executar na carga inicial
-        updateBillingModeFields();
-
-        // Mostrar/ocultar campo de percentual de comissão
-        $('#doctor_commission_enabled').on('change', function() {
-            if ($(this).is(':checked')) {
-                $('#commission_percentage_group').show();
-            } else {
-                $('#commission_percentage_group').hide();
-            }
-        });
-
-        // Controlar campos baseado no tipo de cobrança selecionado
-        $(document).on('change', '.billing-type', function() {
-            const row = $(this).closest('tr');
-            const type = $(this).val();
-            const reservationInput = row.find('.reservation-amount');
-            const fullInput = row.find('.full-amount');
-            
-            if (type === 'reservation') {
-                fullInput.prop('disabled', true).val('0.00');
-                reservationInput.prop('disabled', false);
-            } else if (type === 'full') {
-                reservationInput.prop('disabled', true).val('0.00');
-                fullInput.prop('disabled', false);
-            }
-        });
-
-        // Inicializar campos baseado nos valores existentes
-        $('.billing-type').each(function() {
-            $(this).trigger('change');
-        });
-
-        // Remover preço
-        let removedPrices = [];
-        $(document).on('click', '.remove-price', function() {
-            const priceId = $(this).data('price-id');
-            if (!priceId) return;
-
-            const row = $(this).closest('tr');
-            confirmAction({
-                title: 'Remover preço',
-                message: 'Tem certeza que deseja remover este preço?',
-                confirmText: 'Remover',
-                cancelText: 'Cancelar',
-                type: 'warning',
-                onConfirm: () => {
-                    removedPrices.push(priceId);
-                    $('#removed_prices').val(removedPrices.join(','));
-                    row.find('.reservation-amount, .full-amount').val('0.00');
-                }
-            });
-        });
-
-        // Função para regenerar secret
-        window.regenerateSecret = function() {
-            confirmAction({
-                title: 'Gerar novo secret',
-                message: 'Tem certeza que deseja gerar um novo secret? Você precisará atualizar a configuração no Asaas.',
-                confirmText: 'Gerar',
-                cancelText: 'Cancelar',
-                type: 'warning',
-                onConfirm: () => {
-                    $('#regenerate_webhook_secret').val('1');
-                    $('input[name="asaas_webhook_secret"]').val('');
-                }
-            });
-        };
-    });
-</script>
-@endpush
 @endsection
 

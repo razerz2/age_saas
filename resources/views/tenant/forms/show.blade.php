@@ -1,6 +1,7 @@
 @extends('layouts.tailadmin.app')
 
 @section('title', 'Detalhes do Formulário')
+@section('page', 'forms')
 
 @section('content')
 
@@ -147,4 +148,3 @@
     </div>
 
 @endsection
-

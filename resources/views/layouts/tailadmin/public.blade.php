@@ -10,6 +10,10 @@
     <title>@yield('title', 'Agendamento | ' . ($tenant->trade_name ?? $tenant->legal_name ?? 'Sistema'))</title>
     <link rel="icon" href="{{ asset('tailadmin/src/favicon.ico') }}">
     <link href="{{ asset('tailadmin/assets/css/style.css') }}" rel="stylesheet">
+    @vite([
+        'resources/css/tenant/app.css',
+        'resources/js/tenant/app.js',
+    ])
     @stack('styles')
     <style>
         [x-cloak] { display: none !important; }
@@ -44,7 +48,7 @@
         body.dark .btn-patient-secondary.hover\:text-red-900:hover { color: #fecaca; }
     </style>
 </head>
-<body class="bg-gray-50">
+<body class="bg-gray-50" data-page="@yield('page', 'public')">
     <!-- ===== Preloader Start ===== -->
     <div
         x-data="{ loaded: true }"

@@ -79,10 +79,10 @@
             </div>
 
             <div class="flex flex-wrap items-center gap-3">
-                <button type="button" class="inline-flex items-center justify-center rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary/90 transition-colors" onclick="loadData()">
+                <button type="button" class="inline-flex items-center justify-center rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary/90 transition-colors" data-reports-action="apply-filters">
                     Aplicar Filtros
                 </button>
-                <button type="reset" class="inline-flex items-center justify-center rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700 transition-colors" onclick="$('#filter-form')[0].reset(); loadData();">
+                <button type="reset" class="inline-flex items-center justify-center rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700 transition-colors" data-reports-action="reset-filters">
                     Limpar
                 </button>
             </div>

@@ -1,6 +1,7 @@
 @extends('layouts.tailadmin.app')
 
 @section('title', 'Comissões Médicas')
+@section('page', 'finance')
 
 @section('content')
 
@@ -32,7 +33,7 @@
                 <div class="card-body">
                     <h4 class="card-title">Filtros</h4>
                     
-                    <form id="filterForm" class="row g-3">
+                    <form id="filterForm" class="row g-3" data-report="commissions" data-fetch-url="{{ workspace_route('tenant.finance.reports.commissions.data') }}" data-export-url-template="{{ workspace_route('tenant.finance.reports.commissions.export', ['format' => 'FORMAT']) }}">
                         <div class="col-md-3">
                             <label for="start_date" class="form-label">Data Inicial</label>
                             <input type="date" class="form-control" id="start_date" name="start_date" 
@@ -66,7 +67,7 @@
                             <x-tailadmin-button type="submit" variant="primary" size="sm" class="flex-1 max-w-[160px] justify-center">
                                 <i class="mdi mdi-filter"></i> Filtrar
                             </x-tailadmin-button>
-                            <x-tailadmin-button type="button" variant="secondary" size="sm" class="flex-1 max-w-[140px] justify-center" onclick="exportReport('csv')">
+                            <x-tailadmin-button type="button" variant="secondary" size="sm" class="flex-1 max-w-[140px] justify-center" data-export-format="csv">
                                 <i class="mdi mdi-file-export"></i> CSV
                             </x-tailadmin-button>
                         </div>
@@ -107,63 +108,3 @@
     </div>
 
 @endsection
-
-@push('scripts')
-<script>
-    document.getElementById('filterForm').addEventListener('submit', function(e) {
-        e.preventDefault();
-        loadData();
-    });
-
-    function loadData() {
-        const formData = new FormData(document.getElementById('filterForm'));
-        
-        fetch('{{ workspace_route("tenant.finance.reports.commissions.data") }}', {
-            method: 'POST',
-            body: formData,
-            headers: {
-                'X-CSRF-TOKEN': '{{ csrf_token() }}'
-            }
-        })
-        .then(response => response.json())
-        .then(data => {
-            const tbody = document.getElementById('resultsBody');
-            tbody.innerHTML = '';
-            
-            if (data.data && data.data.length > 0) {
-                data.data.forEach(item => {
-                    const row = tbody.insertRow();
-                    row.innerHTML = `
-                        <td>${item.doctor}</td>
-                        <td>${item.appointment}</td>
-                        <td>R$ ${item.amount}</td>
-                        <td>${item.percentage}</td>
-                        <td><span class="badge ${item.status === 'paid' ? 'bg-success' : 'bg-warning'}">${item.status}</span></td>
-                        <td>${item.paid_at}</td>
-                    `;
-                });
-            } else {
-                tbody.innerHTML = '<tr><td colspan="6" class="text-center">Nenhum resultado encontrado</td></tr>';
-            }
-            
-            if (data.summary) {
-                document.getElementById('summary').innerHTML = `
-                    <div class="alert alert-info">
-                        <strong>Resumo:</strong>
-                        Total: R$ ${parseFloat(data.summary.total).toFixed(2).replace('.', ',')} | 
-                        Pago: R$ ${parseFloat(data.summary.paid).toFixed(2).replace('.', ',')} | 
-                        Pendente: R$ ${parseFloat(data.summary.pending).toFixed(2).replace('.', ',')}
-                    </div>
-                `;
-            }
-        });
-    }
-
-    function exportReport(format) {
-        const formData = new FormData(document.getElementById('filterForm'));
-        const params = new URLSearchParams(formData);
-        window.location.href = `{{ workspace_route("tenant.finance.reports.commissions.export", ["format" => "FORMAT"]) }}`.replace('FORMAT', format) + '?' + params.toString();
-    }
-</script>
-@endpush
-

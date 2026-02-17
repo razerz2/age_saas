@@ -1,29 +1,8 @@
 @extends('layouts.tailadmin.public')
 
 @section('title', 'Cadastro de Paciente — ' . ($tenant->trade_name ?? $tenant->legal_name ?? 'Sistema'))
+@section('page', 'public')
 
-@push('styles')
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@mdi/font@7.4.47/css/materialdesignicons.min.css">
-    <style>
-        .form-group label {
-            font-weight: 600;
-            color: #2c3e50;
-            margin-bottom: 0.5rem;
-        }
-        .card-title {
-            font-weight: 600;
-        }
-        h5.text-primary {
-            font-weight: 600;
-            padding-bottom: 0.5rem;
-            border-bottom: 2px solid #e9ecef;
-        }
-        .btn-lg {
-            padding: 0.75rem 2rem;
-            font-weight: 600;
-        }
-    </style>
-@endpush
 
 @section('content')
     <div class="container-scroller">
@@ -85,7 +64,7 @@
                                                         CPF <span class="text-danger">*</span>
                                                     </label>
                                                     <input type="text" class="form-control @error('cpf') is-invalid @enderror" 
-                                                           name="cpf" id="cpf" value="{{ old('cpf') }}" 
+                                                           name="cpf" id="cpf" data-mask="cpf" value="{{ old('cpf') }}" 
                                                            maxlength="14" placeholder="000.000.000-00" required>
                                                     @error('cpf')
                                                         <div class="invalid-feedback d-block">{{ $message }}</div>
@@ -137,7 +116,7 @@
                                                         Telefone
                                                     </label>
                                                     <input type="text" class="form-control @error('phone') is-invalid @enderror" 
-                                                           name="phone" id="phone" value="{{ old('phone') }}" 
+                                                           name="phone" id="phone" data-mask="phone" value="{{ old('phone') }}" 
                                                            maxlength="20" placeholder="(00) 00000-0000">
                                                     @error('phone')
                                                         <div class="invalid-feedback d-block">{{ $message }}</div>
@@ -168,46 +147,4 @@
             </div>
         </div>
     </div>
-
-    @push('scripts')
-    <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Máscara para CPF
-        const cpfInput = document.getElementById('cpf');
-        if (cpfInput) {
-            cpfInput.addEventListener('input', function(e) {
-                let value = e.target.value.replace(/\D/g, '');
-                
-                if (value.length <= 11) {
-                    value = value.replace(/(\d{3})(\d)/, '$1.$2');
-                    value = value.replace(/(\d{3})(\d)/, '$1.$2');
-                    value = value.replace(/(\d{3})(\d{1,2})$/, '$1-$2');
-                    e.target.value = value;
-                }
-            });
-        }
-
-        // Máscara para Telefone
-        const phoneInput = document.getElementById('phone');
-        if (phoneInput) {
-            phoneInput.addEventListener('input', function(e) {
-                let value = e.target.value.replace(/\D/g, '');
-                
-                if (value.length <= 11) {
-                    if (value.length <= 10) {
-                        // Telefone fixo (10 dígitos)
-                        value = value.replace(/(\d{2})(\d)/, '($1) $2');
-                        value = value.replace(/(\d{4})(\d)/, '$1-$2');
-                    } else {
-                        // Celular (11 dígitos)
-                        value = value.replace(/(\d{2})(\d)/, '($1) $2');
-                        value = value.replace(/(\d{5})(\d)/, '$1-$2');
-                    }
-                    e.target.value = value;
-                }
-            });
-        }
-    });
-    </script>
-    @endpush
 @endsection

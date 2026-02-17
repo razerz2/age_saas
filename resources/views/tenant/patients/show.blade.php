@@ -1,6 +1,7 @@
 @extends('layouts.tailadmin.app')
 
 @section('title', 'Detalhes do Paciente')
+@section('page', 'patients')
 
 @section('content')
 <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6">
@@ -271,7 +272,7 @@
                         </a>
                     @endcan
                     <form action="{{ workspace_route('tenant.patients.destroy', $patient->id) }}" method="POST" class="inline"
-                          onsubmit="event.preventDefault(); confirmAction({ title: 'Excluir paciente', message: 'Tem certeza que deseja excluir este paciente? Esta ação não pode ser desfeita.', confirmText: 'Excluir', cancelText: 'Cancelar', type: 'error', onConfirm: () => event.target.submit() }); return false;">
+                          data-confirm-submit="true" data-confirm-title="Excluir paciente" data-confirm-message="Tem certeza que deseja excluir este paciente? Esta a??o n?o pode ser desfeita." data-confirm-confirm-text="Excluir" data-confirm-cancel-text="Cancelar" data-confirm-type="error">
                         @csrf
                         @method('DELETE')
                         <button type="submit"
@@ -290,94 +291,3 @@
 
 @endsection
 
-@push('styles')
-    <style>
-        .btn-patient-primary {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 0.5rem;
-            padding: 0.625rem 1.25rem;
-            font-size: 0.875rem;
-            font-weight: 500;
-            transition: all 0.2s;
-            border: 1px solid #d1d5db;
-            background-color: #2563eb;
-            color: white;
-            text-decoration: none;
-        }
-        
-        .btn-patient-primary:hover {
-            background-color: #1d4ed8;
-            border-color: #1d4ed8;
-        }
-        
-        .btn-patient-secondary {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 0.5rem;
-            padding: 0.5rem 1rem;
-            font-size: 0.875rem;
-            font-weight: 500;
-            transition: all 0.2s;
-            border: 1px solid #d1d5db;
-            background-color: transparent;
-            color: #374151;
-            text-decoration: none;
-        }
-        
-        .btn-patient-secondary:hover {
-            background-color: #f9fafb;
-            border-color: #9ca3af;
-        }
-        
-        /* Dark mode styles */
-        @media (prefers-color-scheme: dark) {
-            .btn-patient-primary {
-                background-color: #1d4ed8;
-                border-color: #1d4ed8;
-                color: white;
-            }
-            
-            .btn-patient-primary:hover {
-                background-color: #1d4ed8;
-                border-color: #1d4ed8;
-            }
-            
-            .btn-patient-secondary {
-                background-color: #111827;
-                border-color: #1f2937;
-                color: #f9fafb;
-            }
-            
-            .btn-patient-secondary:hover {
-                background-color: #1f2937;
-                border-color: #4b5563;
-            }
-        }
-        
-        /* For TailAdmin dark mode class */
-        .dark .btn-patient-primary {
-            background-color: #1d4ed8;
-            border-color: #1d4ed8;
-            color: white;
-        }
-        
-        .dark .btn-patient-primary:hover {
-            background-color: #1d4ed8;
-            border-color: #1d4ed8;
-        }
-        
-        .dark .btn-patient-secondary {
-            background-color: #111827;
-            border-color: #1f2937;
-            color: #f9fafb;
-        }
-        
-        .dark .btn-patient-secondary:hover {
-            background-color: #1f2937;
-            border-color: #4b5563;
-        }
-    </style>
-@endpush

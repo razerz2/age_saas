@@ -66,7 +66,7 @@
 
         <div class="p-6">
             <!-- Card informativo sobre agendamento público -->
-            <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 mb-6">
+            <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 mb-6" data-dismissible="alert">
                 <div class="flex items-start">
                     <svg class="w-6 h-6 text-blue-600 dark:text-blue-400 mt-0.5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path>
@@ -90,7 +90,7 @@
                             Ver e Copiar Link de Agendamento
                         </a>
                     </div>
-                    <button type="button" class="ml-4 text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-200" onclick="this.parentElement.parentElement.style.display='none'">
+                    <button type="button" class="ml-4 text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-200 js-dismiss">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                         </svg>
@@ -100,7 +100,7 @@
 
             <!-- Exibição de erros de validação -->
             @if ($errors->any())
-                <div class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4 mb-6">
+                <div class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4 mb-6" data-dismissible="alert">
                     <div class="flex items-start">
                         <svg class="w-6 h-6 text-red-600 dark:text-red-400 mt-0.5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
@@ -113,7 +113,7 @@
                                 @endforeach
                             </ul>
                         </div>
-                        <button type="button" class="ml-4 text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-200" onclick="this.parentElement.parentElement.style.display='none'">
+                        <button type="button" class="ml-4 text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-200 js-dismiss">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                             </svg>
@@ -323,7 +323,7 @@
                     </svg>
                     Dias Trabalhados do Médico
                 </h3>
-                <button type="button" onclick="closeBusinessHoursModal()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+                <button type="button" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 js-close-business-hours-modal">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                     </svg>

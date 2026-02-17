@@ -237,7 +237,10 @@ class DoctorController extends Controller
         $page  = max(1, (int) $request->input('page', 1));
         $limit = max(1, min(100, (int) $request->input('limit', 10)));
 
-        $query = Doctor::query()->with('specialties');
+        $query = Doctor::query()
+            ->with(['specialties', 'user'])
+            ->join('users', 'users.id', '=', 'doctors.user_id')
+            ->select('doctors.*');
 
         $search = $request->input('search');
 
@@ -245,9 +248,9 @@ class DoctorController extends Controller
             $term = trim($search['value']);
 
             $query->where(function ($q) use ($term) {
-                $q->where('name', 'like', "%{$term}%")
-                  ->orWhere('email', 'like', "%{$term}%")
-                  ->orWhere('crm', 'like', "%{$term}%");
+                $q->where('users.name', 'like', "%{$term}%")
+                  ->orWhere('users.email', 'like', "%{$term}%")
+                  ->orWhere('doctors.crm_number', 'like', "%{$term}%");
             });
         }
 
@@ -258,18 +261,18 @@ class DoctorController extends Controller
             $direction = strtolower($sort['direction']) === 'asc' ? 'asc' : 'desc';
 
             $sortable = [
-                'name'  => 'name',
-                'email' => 'email',
-                'crm'   => 'crm',
+                'name'  => 'users.name',
+                'email' => 'users.email',
+                'crm'   => 'doctors.crm_number',
             ];
 
             if (isset($sortable[$column])) {
                 $query->orderBy($sortable[$column], $direction);
             } else {
-                $query->orderBy('name');
+                $query->orderBy('users.name');
             }
         } else {
-            $query->orderBy('name');
+            $query->orderBy('users.name');
         }
 
         $paginator = $query->paginate($limit, ['*'], 'page', $page);
@@ -286,9 +289,9 @@ class DoctorController extends Controller
             ])->render();
 
             $data[] = [
-                'name'        => e($doctor->name),
-                'email'       => e($doctor->email ?? '-'),
-                'crm'         => e($doctor->crm ?? '-'),
+                'name'        => e(optional($doctor->user)->name ?? '-'),
+                'email'       => e(optional($doctor->user)->email ?? '-'),
+                'crm'         => e($doctor->registration_value ?? $doctor->crm_number ?? '-'),
                 'specialties' => e($specialties ?: '-'),
                 'actions'     => $actions,
             ];

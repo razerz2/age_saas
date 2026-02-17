@@ -1,2 +1,95 @@
+/* Tenant common styles (migrated from public/css/tenant-common.css) */
+.form-group label {
+    font-weight: 600;
+    color: #2c3e50;
+    margin-bottom: 0.5rem;
+}
+
+.card-title {
+    font-weight: 600;
+}
+
+h5.text-primary {
+    font-weight: 600;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid #e9ecef;
+}
+
+.btn-lg {
+    padding: 0.75rem 2rem;
+    font-weight: 600;
+}
+
+.patient-address-section .row,
+.patient-address-section .row.patient-address-row {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    margin-bottom: 1rem !important;
+}
+
+.patient-address-section .row:last-child,
+.patient-address-section .row.patient-address-row:last-child {
+    margin-bottom: 0 !important;
+}
+
+.patient-address-section .row > [class*="col-"],
+.patient-address-section .row.patient-address-row > [class*="col-"] {
+    padding-left: 0.75rem !important;
+    padding-right: 0.75rem !important;
+}
+
+.patient-address-section .row > [class*="col-"]:first-child,
+.patient-address-section .row.patient-address-row > [class*="col-"]:first-child {
+    padding-left: 0 !important;
+    padding-right: 0.75rem !important;
+}
+
+.patient-address-section .row > [class*="col-"]:last-child,
+.patient-address-section .row.patient-address-row > [class*="col-"]:last-child {
+    padding-right: 0 !important;
+    padding-left: 0.75rem !important;
+}
+
+.patient-address-section .row > [class*="col-"]:not(:first-child):not(:last-child),
+.patient-address-section .row.patient-address-row > [class*="col-"]:not(:first-child):not(:last-child) {
+    padding-left: 0.75rem !important;
+    padding-right: 0.75rem !important;
+}
+
+.patient-address-section .form-group {
+    margin-bottom: 0;
+}
+
+.patient-address-section .form-control {
+    width: 100%;
+    box-sizing: border-box;
+}
+
 @import './pages/dashboard.css';
+@import './pages/appointments.css';
+@import './pages/appointment-types.css';
+@import './pages/business-hours.css';
+@import './pages/calendars.css';
+@import './pages/doctor-settings.css';
+@import './pages/auth.css';
+@import './pages/forms.css';
+@import './pages/doctors.css';
+@import './pages/integrations.css';
+@import './pages/medical_appointments.css';
+@import './pages/oauth-accounts.css';
+@import './pages/patients.css';
+@import './pages/form_responses.css';
+@import './pages/notifications.css';
+@import './pages/online_appointments.css';
+@import './pages/plan-change-request.css';
+@import './pages/profile.css';
+@import './pages/public.css';
+@import './pages/public-appointments.css';
+@import './pages/reports.css';
+@import './pages/responses.css';
+@import './pages/settings.css';
+@import './pages/specialties.css';
+@import './pages/subscription.css';
+@import './pages/users.css';
+@import './pages/user-doctor-permissions.css';
 

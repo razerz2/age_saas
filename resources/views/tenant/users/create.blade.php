@@ -1,8 +1,21 @@
 @extends('layouts.tailadmin.app')
 
 @section('title', 'Criar Usuário')
+@section('page', 'users')
 
 @section('content')
+@php
+    $commonUserDefaultModules = json_decode(App\Models\Tenant\TenantSetting::get('user_defaults.modules_common_user', '[]'), true) ?? [];
+    $doctorDefaultModules = json_decode(App\Models\Tenant\TenantSetting::get('user_defaults.modules_doctor', '[]'), true) ?? [];
+@endphp
+<div id="users-config" class="hidden"
+    data-default-modules-user='@json($commonUserDefaultModules)'
+    data-default-modules-doctor='@json($doctorDefaultModules)'
+    data-logged-role='{{ Auth::guard("tenant")->user()->role ?? "" }}'
+    data-settings-url="{{ workspace_route('tenant.settings.index') }}"
+    data-initial-role="{{ old('role', 'user') }}">
+</div>
+
     <!-- Page Header -->
     <div class="page-header mb-6">
         <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -180,7 +193,7 @@
                                 <input type="password" name="password" id="password"
                                     class="w-full min-w-0 flex-1 px-3 py-2.5 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 rounded-l-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:text-white @error('password') border-red-300 @enderror"
                                     placeholder="Digite a senha">
-                                <button type="button" onclick="togglePasswordVisibility('password')" 
+                                <button type="button" data-toggle-password-target="password" 
                                     class="shrink-0 w-11 inline-flex items-center justify-center px-0 py-2.5 border-t border-r border-b border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-600 text-gray-500 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
                                     title="Mostrar/Ocultar senha">
                                     <svg class="w-4 h-4" id="password-eye-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -188,7 +201,7 @@
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
                                     </svg>
                                 </button>
-                                <button type="button" onclick="generatePassword()" 
+                                <button type="button" data-generate-password="password" data-generate-password-confirm="password_confirmation" 
                                     class="shrink-0 w-24 inline-flex items-center justify-center gap-1.5 px-0 py-2.5 border-t border-r border-b border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-600 text-gray-500 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-r-lg">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
@@ -209,7 +222,7 @@
                                 <input type="password" name="password_confirmation" id="password_confirmation"
                                     class="w-full min-w-0 flex-1 px-3 py-2.5 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 rounded-l-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:text-white @error('password_confirmation') border-red-300 @enderror"
                                     placeholder="Confirme a senha">
-                                <button type="button" onclick="togglePasswordVisibility('password_confirmation')" 
+                                <button type="button" data-toggle-password-target="password_confirmation" 
                                     class="shrink-0 w-11 inline-flex items-center justify-center px-0 py-2.5 border-t border-r border-b border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-600 text-gray-500 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
                                     title="Mostrar/Ocultar senha">
                                     <svg class="w-4 h-4" id="password_confirmation-eye-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -400,7 +413,7 @@
                     </svg>
                     Capturar Foto
                 </h3>
-                <button onclick="closeWebcamModal()" class="absolute top-3 right-2.5 text-gray-400 bg-transparent hover:bg-gray-200 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-white rounded-lg text-sm p-1.5 ml-auto inline-flex items-center">
+                <button data-webcam-close="true" class="absolute top-3 right-2.5 text-gray-400 bg-transparent hover:bg-gray-200 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-white rounded-lg text-sm p-1.5 ml-auto inline-flex items-center">
                     <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
                         <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293 4.293a1 1 0 001.414 1.414L10 10.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10l-4.293-4.293a1 1 0 00-1.414 0L2.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
                     </svg>
@@ -418,533 +431,34 @@
                 </div>
             </div>
             <div class="mt-6 flex justify-center space-x-6">
-                <button type="button" id="webcam-start" class="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-blue-500" style="margin-right: 12px !important;">
+                <button type="button" id="webcam-start" class="webcam-action-button px-4 py-2 bg-primary text-white rounded-md hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-blue-500">
                     <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0021 8.618v6.764a1 1 0 01-1.447.894L15 14V10z"></path>
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 18h16"></path>
                     </svg>
                     Iniciar Webcam
                 </button>
-                <button type="button" id="webcam-capture" class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 hidden" style="margin-right: 12px !important;">
+                <button type="button" id="webcam-capture" class="webcam-action-button px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 hidden">
                     <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path>
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path>
                     </svg>
                     Capturar Foto
                 </button>
-                <button type="button" id="webcam-stop" class="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 hidden" style="margin-right: 12px !important;">
+                <button type="button" id="webcam-stop" class="webcam-action-button px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 hidden">
                     <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 10a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z"></path>
                     </svg>
                     Parar
                 </button>
-                <button type="button" onclick="closeWebcamModal()" class="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <button type="button" data-webcam-close="true" class="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500">
                     Cancelar
                 </button>
             </div>
         </div>
     </div>
 
-@push('styles')
-    <link href="{{ asset('css/tenant-common.css') }}" rel="stylesheet">
-    <link href="{{ asset('css/tenant-users.css') }}" rel="stylesheet">
-    <style>
-        .btn-patient-primary {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 0.5rem;
-            padding: 0.625rem 1.25rem;
-            font-size: 0.875rem;
-            font-weight: 500;
-            transition: all 0.2s;
-            border: 1px solid #d1d5db;
-            background-color: #2563eb;
-            color: white;
-        }
-        
-        .btn-patient-primary:hover {
-            background-color: #1d4ed8;
-            border-color: #1d4ed8;
-        }
-        
-        .btn-patient-secondary {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 0.5rem;
-            padding: 0.5rem 1rem;
-            font-size: 0.875rem;
-            font-weight: 500;
-            transition: all 0.2s;
-            border: 1px solid #d1d5db;
-            background-color: transparent;
-            color: #374151;
-            text-decoration: none;
-        }
-        
-        .btn-patient-secondary:hover {
-            background-color: #f9fafb;
-            border-color: #9ca3af;
-        }
-        
-        /* Dark mode styles */
-        @media (prefers-color-scheme: dark) {
-            .btn-patient-primary {
-                background-color: transparent;
-                border-color: #d1d5db;
-                color: white;
-            }
-            
-            .btn-patient-primary:hover {
-                background-color: #1f2937;
-                border-color: #9ca3af;
-            }
-            
-            .btn-patient-secondary {
-                background-color: transparent;
-                border-color: #d1d5db;
-                color: white;
-            }
-            
-            .btn-patient-secondary:hover {
-                background-color: #1f2937;
-                border-color: #9ca3af;
-            }
-        }
-        
-        /* For TailAdmin dark mode class */
-        .dark .btn-patient-primary {
-            background-color: transparent;
-            border-color: #d1d5db;
-            color: white;
-        }
-        
-        .dark .btn-patient-primary:hover {
-            background-color: #1f2937;
-            border-color: #9ca3af;
-        }
-        
-        .dark .btn-patient-secondary {
-            background-color: transparent;
-            border-color: #d1d5db;
-            color: white;
-        }
-        
-        .dark .btn-patient-secondary:hover {
-            background-color: #1f2937;
-            border-color: #9ca3af;
-        }
-        
-        /* Ensure webcam buttons are visible */
-        #webcam-start, #webcam-capture, #webcam-stop {
-            display: inline-flex !important;
-            align-items: center;
-            justify-content: center;
-            visibility: visible !important;
-            opacity: 1 !important;
-            position: relative !important;
-            z-index: 10 !important;
-        }
-        
-        #webcam-start.hidden, #webcam-capture.hidden, #webcam-stop.hidden {
-            display: none !important;
-        }
-        
-        /* Force button visibility in light mode */
-        #webcam-start {
-            background-color: #2563eb !important;
-            color: white !important;
-            border: none !important;
-            padding: 0.5rem 1rem !important;
-            border-radius: 0.375rem !important;
-            font-weight: 500 !important;
-        }
-        
-        #webcam-start:hover {
-            background-color: #1d4ed8 !important;
-        }
-    </style>
-@endpush
 
-@push('scripts')
-<script src="{{ asset('js/password-generator.js') }}"></script>
-<script>
-    function togglePasswordVisibility(fieldId) {
-        const field = document.getElementById(fieldId);
-        const icon = document.getElementById(fieldId + '-eye-icon');
-        
-        if (field.type === 'password') {
-            field.type = 'text';
-            icon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"></path>';
-        } else {
-            field.type = 'password';
-            icon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>';
-        }
-    }
-    
-    function generatePassword() {
-        const password = generateStrongPassword();
-        document.getElementById('password').value = password;
-        document.getElementById('password_confirmation').value = password;
-        
-        // Mostra temporariamente
-        document.getElementById('password').type = 'text';
-        document.getElementById('password_confirmation').type = 'text';
-        document.getElementById('password-eye-icon').innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"></path>';
-        document.getElementById('password_confirmation-eye-icon').innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"></path>';
-        document.getElementById('password').select();
-        
-        // Volta para password após 3 segundos
-        setTimeout(() => {
-            document.getElementById('password').type = 'password';
-            document.getElementById('password_confirmation').type = 'password';
-            document.getElementById('password-eye-icon').innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>';
-            document.getElementById('password_confirmation-eye-icon').innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>';
-        }, 3000);
-    }
-    
-    function closeWebcamModal() {
-        document.getElementById('webcam-modal').classList.add('hidden');
-        stopWebcam();
-    }
-    
-    document.addEventListener('DOMContentLoaded', function() {
-        const avatarInput = document.getElementById('avatar-input');
-        const avatarPreviewContainer = document.getElementById('avatar-preview-container');
-        const avatarPreview = document.getElementById('avatar-preview');
-        const avatarFilename = document.getElementById('avatar-filename');
-        const avatarRemove = document.getElementById('avatar-remove');
-        const roleSelect = document.getElementById('role-select');
-        const isDoctorSelect = document.getElementById('is-doctor-select');
-        const doctorPermissionsSection = document.getElementById('doctor-permissions-section');
-        const modulesSection = document.getElementById('modules-section');
-        const loggedUserRole = '{{ Auth::guard("tenant")->user()->role ?? "" }}';
-
-        // Função para exibir pré-visualização
-        function showPreview(file) {
-            if (file && file.type.startsWith('image/')) {
-                const reader = new FileReader();
-                
-                reader.onload = function(e) {
-                    avatarPreview.src = e.target.result;
-                    avatarFilename.textContent = file.name;
-                    avatarPreviewContainer.classList.remove('hidden');
-                };
-                
-                reader.readAsDataURL(file);
-            } else {
-                showAlert({ type: 'warning', title: 'Atenção', message: 'Por favor, selecione um arquivo de imagem válido.' });
-                avatarInput.value = '';
-            }
-        }
-
-        // Event listener para mudança no input
-        avatarInput.addEventListener('change', function(e) {
-            const file = e.target.files[0];
-            if (file) {
-                // Validar tamanho (2MB)
-                if (file.size > 2048 * 1024) {
-                    showAlert({ type: 'warning', title: 'Atenção', message: 'O arquivo é muito grande. Por favor, selecione uma imagem com no máximo 2MB.' });
-                    avatarInput.value = '';
-                    avatarPreviewContainer.classList.add('hidden');
-                    return;
-                }
-                showPreview(file);
-            }
-        });
-
-        // Botão para remover imagem
-        avatarRemove.addEventListener('click', function() {
-            avatarInput.value = '';
-            avatarPreviewContainer.classList.add('hidden');
-            avatarPreview.src = '';
-            avatarFilename.textContent = '';
-        });
-
-        // Webcam functionality
-        const webcamBtn = document.getElementById('webcam-btn');
-        const webcamVideo = document.getElementById('webcam-video');
-        const webcamCanvas = document.getElementById('webcam-canvas');
-        const webcamPlaceholder = document.getElementById('webcam-placeholder');
-        const webcamStart = document.getElementById('webcam-start');
-        const webcamCapture = document.getElementById('webcam-capture');
-        const webcamStop = document.getElementById('webcam-stop');
-        let stream = null;
-
-        // Debug: Verificar se todos os elementos foram encontrados
-        console.log('Webcam elements found:', {
-            webcamBtn: !!webcamBtn,
-            webcamVideo: !!webcamVideo,
-            webcamCanvas: !!webcamCanvas,
-            webcamPlaceholder: !!webcamPlaceholder,
-            webcamStart: !!webcamStart,
-            webcamCapture: !!webcamCapture,
-            webcamStop: !!webcamStop
-        });
-
-        // Abrir modal da webcam
-        if (webcamBtn) {
-            webcamBtn.addEventListener('click', function() {
-                console.log('Opening webcam modal');
-                const modal = document.getElementById('webcam-modal');
-                if (modal) {
-                    modal.classList.remove('hidden');
-                    
-                    // Forçar visibilidade do botão Iniciar Webcam
-                    setTimeout(() => {
-                        if (webcamStart) {
-                            webcamStart.classList.remove('hidden');
-                            webcamStart.style.display = 'inline-flex !important';
-                            webcamStart.style.visibility = 'visible !important';
-                            webcamStart.style.opacity = '1 !important';
-                            
-                            // Verificar se o botão está realmente visível
-                            const rect = webcamStart.getBoundingClientRect();
-                            console.log('webcam-start button dimensions:', {
-                                width: rect.width,
-                                height: rect.height,
-                                visible: rect.width > 0 && rect.height > 0,
-                                display: window.getComputedStyle(webcamStart).display,
-                                visibility: window.getComputedStyle(webcamStart).visibility,
-                                opacity: window.getComputedStyle(webcamStart).opacity
-                            });
-                            console.log('webcam-start button should be visible now');
-                        } else {
-                            console.error('webcam-start button element not found');
-                        }
-                    }, 100);
-                } else {
-                    console.error('Webcam modal not found');
-                }
-            });
-        } else {
-            console.error('webcam-btn not found');
-        }
-
-        // Iniciar webcam
-        if (webcamStart) {
-            webcamStart.addEventListener('click', async function() {
-                console.log('Starting webcam...');
-                console.log('User agent:', navigator.userAgent);
-                console.log('Protocol:', window.location.protocol);
-                console.log('navigator.mediaDevices:', !!navigator.mediaDevices);
-                
-                try {
-                    // Verificar se está em HTTPS (requerido para webcam)
-                    if (window.location.protocol !== 'https:' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
-                        throw new Error('Acesso à webcam requer conexão HTTPS. Por favor, acesse esta página através de HTTPS.');
-                    }
-                    
-                    // Verificar se o navegador suporta getUserMedia
-                    if (!navigator.mediaDevices) {
-                        // Tentar detectar navegadores antigos
-                        const isOldBrowser = /MSIE|Trident|Edge\/12|Edge\/13/.test(navigator.userAgent);
-                        if (isOldBrowser) {
-                            throw new Error('Seu navegador é muito antigo e não suporta acesso à webcam. Por favor, atualize para uma versão recente do Chrome, Firefox ou Edge.');
-                        } else {
-                            throw new Error('Seu navegador não suporta acesso à webcam. Verifique se você está usando um navegador moderno e se a página está acessada via HTTPS.');
-                        }
-                    }
-                    
-                    // Verificar se getUserMedia está disponível
-                    if (typeof navigator.mediaDevices.getUserMedia !== 'function') {
-                        throw new Error('A função getUserMedia não está disponível. Isso pode ser um problema de compatibilidade do navegador.');
-                    }
-                    
-                    console.log('Attempting to getUserMedia...');
-                    stream = await navigator.mediaDevices.getUserMedia({ 
-                        video: { 
-                            width: { ideal: 640 },
-                            height: { ideal: 480 },
-                            facingMode: 'user'
-                        } 
-                    });
-                    
-                    console.log('Webcam access granted');
-                    webcamVideo.srcObject = stream;
-                    webcamVideo.classList.remove('hidden');
-                    webcamPlaceholder.classList.add('hidden');
-                    webcamStart.classList.add('hidden');
-                    webcamCapture.classList.remove('hidden');
-                    webcamStop.classList.remove('hidden');
-                } catch (err) {
-                    console.error('Webcam error details:', {
-                        name: err.name,
-                        message: err.message,
-                        stack: err.stack
-                    });
-                    
-                    let errorMessage = 'Erro ao acessar a webcam: ';
-                    
-                    if (err.name === 'NotAllowedError') {
-                        errorMessage += 'Permissão negada. Por favor, clique no ícone de câmera na barra de endereço e permita o acesso à webcam.';
-                    } else if (err.name === 'NotFoundError') {
-                        errorMessage += 'Nenhuma webcam encontrada. Verifique se sua webcam está conectada e funcionando.';
-                    } else if (err.name === 'NotReadableError') {
-                        errorMessage += 'A webcam já está sendo usada por outro aplicativo. Feche outros aplicativos que possam estar usando a câmera.';
-                    } else if (err.name === 'OverconstrainedError') {
-                        errorMessage += 'A webcam não suporta as configurações solicitadas. Tente novamente.';
-                    } else if (err.name === 'SecurityError') {
-                        errorMessage += 'Erro de segurança. Verifique se a página está acessada via HTTPS.';
-                    } else {
-                        errorMessage += err.message;
-                    }
-                    
-                    showAlert({ type: 'error', title: 'Erro', message: errorMessage });
-                }
-            });
-        } else {
-            console.error('webcam-start button not found');
-        }
-
-        // Capturar foto
-        if (webcamCapture) {
-            webcamCapture.addEventListener('click', function() {
-                console.log('Capturing photo...');
-                const context = webcamCanvas.getContext('2d');
-                webcamCanvas.width = webcamVideo.videoWidth;
-                webcamCanvas.height = webcamVideo.videoHeight;
-                context.drawImage(webcamVideo, 0, 0);
-                
-                // Converter canvas para blob
-                webcamCanvas.toBlob(function(blob) {
-                    if (blob) {
-                        // Criar arquivo a partir do blob
-                        const file = new File([blob], 'webcam-photo.jpg', { type: 'image/jpeg' });
-                        
-                        // Criar DataTransfer para adicionar ao input
-                        const dataTransfer = new DataTransfer();
-                        dataTransfer.items.add(file);
-                        avatarInput.files = dataTransfer.files;
-                        
-                        // Mostrar preview
-                        showPreview(file);
-                        
-                        // Parar webcam e fechar modal
-                        stopWebcam();
-                        document.getElementById('webcam-modal').classList.add('hidden');
-                    }
-                }, 'image/jpeg', 0.9);
-            });
-        } else {
-            console.error('webcam-capture button not found');
-        }
-
-        // Parar webcam
-        if (webcamStop) {
-            webcamStop.addEventListener('click', function() {
-                console.log('Stopping webcam...');
-                stopWebcam();
-            });
-        } else {
-            console.error('webcam-stop button not found');
-        }
-
-        function stopWebcam() {
-            if (stream) {
-                stream.getTracks().forEach(track => track.stop());
-                stream = null;
-            }
-            webcamVideo.srcObject = null;
-            webcamVideo.classList.add('hidden');
-            webcamPlaceholder.classList.remove('hidden');
-            webcamStart.classList.remove('hidden');
-            webcamCapture.classList.add('hidden');
-            webcamStop.classList.add('hidden');
-        }
-
-        // Controlar exibição de seções baseado no role
-        function toggleRoleSections() {
-            const role = roleSelect.value;
-            const isDoctorSection = document.getElementById('is-doctor-section');
-            
-            // Campo "É Médico?" - só aparece quando role é "admin"
-            if (isDoctorSection) {
-                if (role === 'admin') {
-                    isDoctorSection.classList.remove('hidden');
-                } else {
-                    isDoctorSection.classList.add('hidden');
-                    // Resetar valor quando ocultar
-                    if (isDoctorSelect) {
-                        isDoctorSelect.value = '0';
-                    }
-                }
-            }
-            
-            // Ajustar campo "é médico" automaticamente quando role é doctor
-            if (isDoctorSelect && role === 'doctor') {
-                isDoctorSelect.value = '1'; // Marca como "Sim"
-            }
-            
-            // Controlar exibição de "Médicos Permitidos"
-            // Aparece se: role selecionado é "user" E usuário logado não é médico
-            // NÃO aparece se role é "admin"
-            if (doctorPermissionsSection) {
-                if (role === 'user' && loggedUserRole !== 'doctor') {
-                    doctorPermissionsSection.classList.remove('hidden');
-                } else {
-                    doctorPermissionsSection.classList.add('hidden');
-                }
-            }
-            
-            // Controlar exibição e pré-seleção de "Módulos"
-            // NÃO aparece se role é "admin"
-            if (modulesSection) {
-                if (role === 'admin') {
-                    modulesSection.classList.add('hidden');
-                } else {
-                    modulesSection.classList.remove('hidden');
-                    
-                    // Atualizar mensagem informativa
-                    const modulesInfoText = document.getElementById('modules-info-text');
-                    if (modulesInfoText) {
-                        if (role === 'doctor') {
-                            modulesInfoText.innerHTML = '<strong>Nota:</strong> Os módulos foram pré-selecionados conforme as configurações padrão para médicos em <a href="{{ workspace_route("tenant.settings.index") }}" target="_blank" class="text-blue-600 underline hover:text-blue-800">Configurações → Usuários & Permissões</a>. Você pode ajustar manualmente se necessário.';
-                        } else {
-                            modulesInfoText.innerHTML = '<strong>Nota:</strong> Os módulos foram pré-selecionados conforme as configurações padrão para usuários comuns em <a href="{{ workspace_route("tenant.settings.index") }}" target="_blank" class="text-blue-600 underline hover:text-blue-800">Configurações → Usuários & Permissões</a>. Você pode ajustar manualmente se necessário.';
-                        }
-                    }
-                    
-                    // Pré-selecionar módulos padrão baseado no role
-                    updateModulesSelection(role);
-                }
-            }
-        }
-
-        // Dados dos módulos padrão carregados do servidor
-        @php
-            $commonUserDefaultModules = json_decode(App\Models\Tenant\TenantSetting::get('user_defaults.modules_common_user', '[]'), true) ?? [];
-            $doctorDefaultModules = json_decode(App\Models\Tenant\TenantSetting::get('user_defaults.modules_doctor', '[]'), true) ?? [];
-        @endphp
-        
-        const defaultModulesData = {
-            'user': @json($commonUserDefaultModules),
-            'doctor': @json($doctorDefaultModules),
-            'admin': []
-        };
-
-        // Função para atualizar seleção de módulos baseado no role
-        function updateModulesSelection(role) {
-            const defaultModules = defaultModulesData[role] || [];
-            const moduleCheckboxes = document.querySelectorAll('.module-checkbox');
-            
-            moduleCheckboxes.forEach(checkbox => {
-                const moduleKey = checkbox.getAttribute('data-module-key');
-                checkbox.checked = defaultModules.includes(moduleKey);
-            });
-        }
-
-        if (roleSelect) {
-            roleSelect.addEventListener('change', toggleRoleSections);
-            // Executar na carga inicial
-            toggleRoleSections();
-        } else {
-            console.error('roleSelect não encontrado');
-        }
-    });
-</script>
-@endpush
 
 @endsection

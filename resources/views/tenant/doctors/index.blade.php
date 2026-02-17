@@ -1,6 +1,7 @@
 @extends('layouts.tailadmin.app')
 
 @section('title', 'Médicos')
+@section('page', 'doctors')
 
 @section('content')
     <div class="mb-6">
@@ -61,4 +62,3 @@
         </div>
     </div>
 @endsection
-

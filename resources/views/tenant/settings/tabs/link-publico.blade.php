@@ -50,10 +50,10 @@
                     <div class="flex gap-2">
                         <input type="text" 
                                readonly
-                               value="{{ route('public.appointment.create', ['slug' => tenant()->subdomain]) }}" 
+                               value="{{ route('public.appointment.create', ['slug' => tenant()->subdomain]) }}" data-copy-source="public-booking-url" 
                                class="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white">
                         <button type="button" 
-                                onclick="navigator.clipboard.writeText('{{ route('public.appointment.create', ['slug' => tenant()->subdomain]) }}')"
+                                data-copy-link="public-booking-url"
                                 class="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors duration-200 flex items-center gap-2">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
@@ -137,7 +137,7 @@
                                     <p class="text-xs text-gray-500 dark:text-gray-400">Clique em "Remover" para usar o logo padrão</p>
                                 </div>
                                 <button type="button" 
-                                        onclick="document.getElementById('remove_logo').value = '1'; this.closest('form').submit()"
+                                        data-settings-action="remove-logo" data-remove-target="remove_logo"
                                         class="px-3 py-1.5 bg-red-600 text-white text-xs font-medium rounded hover:bg-red-700 transition-colors duration-200">
                                     Remover
                                 </button>

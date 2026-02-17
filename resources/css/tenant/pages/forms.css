@@ -1,0 +1,239 @@
+/* Forms page-specific styles (migrated from tenant-forms.css and inline styles) */
+
+/* Form builder */
+.section-container {
+    margin-bottom: 1.5rem;
+}
+
+.question-item {
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    background: #f9f9f9;
+}
+
+.question-item:hover {
+    background: #f0f0f0;
+}
+
+.question-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: start;
+    margin-bottom: 0.5rem;
+}
+
+.question-label {
+    font-weight: 600;
+    color: #2c3e50;
+}
+
+.question-type-badge {
+    font-size: 0.75rem;
+}
+
+.options-list {
+    margin-top: 0.5rem;
+    padding-left: 1.5rem;
+}
+
+.option-item {
+    padding: 0.25rem 0;
+    color: #666;
+}
+
+.option-input-group {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+}
+
+/* Form preview */
+@media print {
+    .page-header,
+    .breadcrumb,
+    .btn,
+    .card-header {
+        display: none !important;
+    }
+    .card {
+        border: none !important;
+        box-shadow: none !important;
+    }
+}
+
+.preview-question {
+    margin-bottom: 1.5rem;
+    padding: 1.5rem;
+    background: #ffffff;
+    border-radius: 8px;
+    border-left: 4px solid #0062ff;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.preview-question > label {
+    font-weight: 600;
+    color: #2c3e50;
+    margin-bottom: 1rem;
+    display: block;
+    font-size: 1rem;
+    line-height: 1.5;
+}
+
+.preview-question .help-text {
+    font-size: 0.875rem;
+    color: #6c757d;
+    margin-bottom: 1rem;
+    display: block;
+    line-height: 1.5;
+}
+
+.preview-question .form-control {
+    pointer-events: none;
+    background-color: #f8f9fa;
+    border: 1px solid #dee2e6;
+    padding: 0.5rem 0.75rem;
+}
+
+.preview-question .form-check {
+    pointer-events: none;
+    margin-bottom: 0.75rem;
+    padding-left: 1.75rem;
+}
+
+.preview-question .form-check:last-child {
+    margin-bottom: 0;
+}
+
+.preview-question .form-check-input {
+    pointer-events: none;
+    cursor: not-allowed;
+    margin-top: 0.25rem;
+}
+
+.preview-question .form-check-label {
+    cursor: default;
+    margin-left: 0.5rem;
+    font-weight: 400;
+    color: #495057;
+}
+
+.preview-question .boolean-options {
+    margin-top: 0.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.preview-question .boolean-options .form-check {
+    display: inline-block;
+    margin-right: 2rem;
+    margin-bottom: 0;
+    padding-left: 1.75rem;
+}
+
+.preview-question .boolean-options .form-check:last-child {
+    margin-right: 0;
+}
+
+.preview-question small {
+    margin-top: 1rem;
+    display: block;
+    font-size: 0.8rem;
+    color: #6c757d;
+    padding-top: 0.75rem;
+    padding-left: 0.25rem;
+}
+
+.preview-question .options-container {
+    margin-top: 0.75rem;
+    margin-bottom: 0.5rem;
+}
+
+.preview-question .options-container .form-check {
+    padding-left: 1.75rem;
+}
+
+/* Form create/edit buttons */
+.btn-patient-primary {
+    background-color: #2563eb;
+    color: #ffffff;
+    border: 1px solid #d1d5db;
+    padding: 0.625rem 1.25rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    border-radius: 0.375rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    text-decoration: none;
+}
+
+.btn-patient-primary:hover {
+    background-color: #1d4ed8;
+}
+
+.btn-patient-secondary {
+    background-color: transparent;
+    color: #374151;
+    border: 1px solid #d1d5db;
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    border-radius: 0.375rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    text-decoration: none;
+}
+
+.btn-patient-secondary:hover {
+    background-color: #f9fafb;
+}
+
+@media (prefers-color-scheme: dark) {
+    .btn-patient-primary {
+        background-color: transparent;
+        color: #ffffff;
+        border-color: #d1d5db;
+    }
+
+    .btn-patient-primary:hover {
+        background-color: #1f2937;
+    }
+
+    .btn-patient-secondary {
+        background-color: transparent;
+        color: #ffffff;
+        border-color: #d1d5db;
+    }
+
+    .btn-patient-secondary:hover {
+        background-color: #1f2937;
+    }
+}
+
+.dark .btn-patient-primary {
+    background-color: transparent;
+    color: #ffffff;
+    border-color: #d1d5db;
+}
+
+.dark .btn-patient-primary:hover {
+    background-color: #1f2937;
+}
+
+.dark .btn-patient-secondary {
+    background-color: transparent;
+    color: #ffffff;
+    border-color: #d1d5db;
+}
+
+.dark .btn-patient-secondary:hover {
+    background-color: #1f2937;
+}

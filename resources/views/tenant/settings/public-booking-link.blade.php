@@ -1,6 +1,7 @@
 @extends('layouts.tailadmin.app')
 
 @section('title', 'Link de Agendamento Público')
+@section('page', 'settings')
 
 @section('content')
 <div class="page-header">
@@ -41,7 +42,7 @@
                                 <label class="form-label fw-bold">Link para compartilhar:</label>
                                 <div class="flex items-stretch gap-2">
                                     <input type="text" class="form-control flex-1" id="publicBookingLink" value="{{ $publicBookingUrl }}" readonly>
-                                    <x-tailadmin-button type="button" variant="primary" size="sm" class="py-2 px-4" onclick="copyPublicBookingLink()">
+                                    <x-tailadmin-button type="button" variant="primary" size="sm" class="py-2 px-4" data-copy-link="publicBookingLink">
                                         <i class="mdi mdi-content-copy"></i> Copiar Link
                                     </x-tailadmin-button>
                                 </div>
@@ -169,61 +170,5 @@
     </div>
 </div>
 
-@push('scripts')
-<script>
-    // Função para copiar o link de agendamento público
-    function copyPublicBookingLink() {
-        const linkInput = document.getElementById('publicBookingLink');
-        if (!linkInput) {
-            showAlert({ type: 'error', title: 'Erro', message: 'Link não encontrado.' });
-            return;
-        }
-
-        const link = linkInput.value;
-
-        // Tentar usar a API Clipboard moderna
-        if (navigator.clipboard && navigator.clipboard.writeText) {
-            navigator.clipboard.writeText(link).then(function() {
-                showCopySuccess();
-            }).catch(function(err) {
-                console.error('Erro ao copiar:', err);
-                fallbackCopy(link);
-            });
-        } else {
-            // Fallback para navegadores mais antigos
-            fallbackCopy(link);
-        }
-    }
-
-    function fallbackCopy(text) {
-        const textarea = document.createElement('textarea');
-        textarea.value = text;
-        textarea.style.position = 'fixed';
-        textarea.style.opacity = '0';
-        document.body.appendChild(textarea);
-        textarea.select();
-        
-        try {
-            document.execCommand('copy');
-            showCopySuccess();
-        } catch (err) {
-            console.error('Erro ao copiar:', err);
-            showAlert({ type: 'error', title: 'Erro', message: 'Erro ao copiar. Por favor, copie manualmente.' });
-        }
-        
-        document.body.removeChild(textarea);
-    }
-
-    function showCopySuccess() {
-        const alert = document.getElementById('copySuccessAlert');
-        if (alert) {
-            alert.style.display = 'flex';
-            setTimeout(function() {
-                alert.style.display = 'none';
-            }, 3000);
-        }
-    }
-</script>
-@endpush
 @endsection
 

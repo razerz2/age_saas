@@ -1,6 +1,7 @@
-@extends('layouts.tailadmin.app')
+﻿@extends('layouts.tailadmin.app')
 
-@section('title', 'Editar Estado de Sincronização')
+@section('title', 'Editar Estado de SincronizaÃ§Ã£o')
+@section('page', 'calendars')
 
 @section('content')
 
@@ -8,7 +9,7 @@
     <div class="page-header mb-6">
         <div class="flex items-center justify-between">
             <div>
-                <h1 class="text-2xl font-semibold text-gray-900 dark:text-white mb-2">Editar Estado de Sincronização</h1>
+                <h1 class="text-2xl font-semibold text-gray-900 dark:text-white mb-2">Editar Estado de SincronizaÃ§Ã£o</h1>
                 <nav class="flex" aria-label="Breadcrumb">
                     <ol class="inline-flex items-center space-x-1 md:space-x-3">
                         <li class="inline-flex items-center">
@@ -24,7 +25,7 @@
                                 <svg class="w-6 h-6 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
                                     <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
                                 </svg>
-                                <a href="{{ workspace_route('tenant.calendar-sync.index') }}" class="ml-1 text-gray-700 hover:text-blue-600 dark:text-gray-300 dark:hover:text-white md:ml-2">Sincronização de Calendário</a>
+                                <a href="{{ workspace_route('tenant.calendar-sync.index') }}" class="ml-1 text-gray-700 hover:text-blue-600 dark:text-gray-300 dark:hover:text-white md:ml-2">SincronizaÃ§Ã£o de CalendÃ¡rio</a>
                             </div>
                         </li>
                         <li aria-current="page">
@@ -50,9 +51,9 @@
                         <svg class="w-6 h-6 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
                         </svg>
-                        Editar Estado de Sincronização
+                        Editar Estado de SincronizaÃ§Ã£o
                     </h2>
-                    <p class="text-gray-600 dark:text-gray-400 mt-1">Atualize as informações do estado de sincronização abaixo</p>
+                    <p class="text-gray-600 dark:text-gray-400 mt-1">Atualize as informaÃ§Ãµes do estado de sincronizaÃ§Ã£o abaixo</p>
                 </div>
             </div>
         </div>
@@ -80,13 +81,13 @@
                 @csrf
                 @method('PUT')
 
-                <!-- Seção: Informações Básicas -->
+                <!-- SeÃ§Ã£o: InformaÃ§Ãµes BÃ¡sicas -->
                 <div>
                     <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
                         <svg class="w-5 h-5 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                         </svg>
-                        Informações Básicas
+                        InformaÃ§Ãµes BÃ¡sicas
                     </h3>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
@@ -109,7 +110,7 @@
                                     @endif
                                 </option>
                             </select>
-                            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">O agendamento não pode ser alterado após a criação.</p>
+                            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">O agendamento nÃ£o pode ser alterado apÃ³s a criaÃ§Ã£o.</p>
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -130,13 +131,13 @@
                     </div>
                 </div>
 
-                <!-- Seção: Sincronização -->
+                <!-- SeÃ§Ã£o: SincronizaÃ§Ã£o -->
                 <div>
                     <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
                         <svg class="w-5 h-5 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m16 9v-5m0 0h-5m5 0v5m-5 0h-5"></path>
                         </svg>
-                        Dados de Sincronização
+                        Dados de SincronizaÃ§Ã£o
                     </h3>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
@@ -150,8 +151,8 @@
                                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white @error('external_event_id') border-red-500 @enderror" 
                                    name="external_event_id" 
                                    value="{{ old('external_event_id', $calendarSyncState->external_event_id) }}"
-                                   placeholder="ID do evento no calendário externo">
-                            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">ID do evento no calendário do provedor</p>
+                                   placeholder="ID do evento no calendÃ¡rio externo">
+                            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">ID do evento no calendÃ¡rio do provedor</p>
                             @error('external_event_id')
                                 <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
                             @enderror
@@ -161,13 +162,13 @@
                                 <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                                 </svg>
-                                Última Sincronização
+                                Ãšltima SincronizaÃ§Ã£o
                             </label>
                             <input type="datetime-local" 
                                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white @error('last_sync_at') border-red-500 @enderror" 
                                    name="last_sync_at" 
                                    value="{{ old('last_sync_at', $calendarSyncState->last_sync_at ? $calendarSyncState->last_sync_at->format('Y-m-d\TH:i') : '') }}">
-                            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Data e hora da última sincronização</p>
+                            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Data e hora da Ãºltima sincronizaÃ§Ã£o</p>
                             @error('last_sync_at')
                                 <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
                             @enderror
@@ -175,7 +176,7 @@
                     </div>
                 </div>
 
-                <!-- Botões de Ação -->
+                <!-- BotÃµes de AÃ§Ã£o -->
                 <div class="flex items-center justify-between pt-6 border-t border-gray-200 dark:border-gray-700">
                     <a href="{{ workspace_route('tenant.calendar-sync.index') }}" class="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors">
                         <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -187,15 +188,12 @@
                         <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V2"></path>
                         </svg>
-                        Atualizar Estado de Sincronização
+                        Atualizar Estado de SincronizaÃ§Ã£o
                     </button>
                 </div>
             </form>
         </div>
     </div>
 
-@push('styles')
-    <link href="{{ asset('css/tenant-common.css') }}" rel="stylesheet">
-@endpush
 
 @endsection

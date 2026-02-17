@@ -1,6 +1,7 @@
 @extends('layouts.tailadmin.auth')
 
 @section('title', 'Login — Sistema')
+@section('page', 'auth')
 
 @section('content')
 <div class="min-h-screen flex items-center justify-center px-4">
@@ -45,9 +46,9 @@
             <!-- Formulário de Login -->
             <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 p-8">
                 <div class="text-center mb-8">
-                    <h2 class="text-3xl font-bold mb-2" style="color: #111827;">Bem-vindo!</h2>
-                    <p class="text-sm mb-2" style="color: #6b7280;">Tenant: {{ $tenant->subdomain }}</p>
-                    <p class="text-sm mt-1" style="color: #6b7280;">Entre para continuar</p>
+                    <h2 class="text-3xl font-bold mb-2 auth-heading">Bem-vindo!</h2>
+                    <p class="text-sm mb-2 auth-subtext">Tenant: {{ $tenant->subdomain }}</p>
+                    <p class="text-sm mt-1 auth-subtext">Entre para continuar</p>
                 </div>
 
                 <!-- Alerta de erro 419 -->
@@ -88,18 +89,15 @@
                 @endif
 
                 <!-- Form Login -->
-                <form method="POST" action="{{ route('tenant.login.submit', ['slug' => $tenant->subdomain]) }}" id="login-form">
+                <form method="POST" action="{{ route('tenant.login.submit', ['slug' => $tenant->subdomain]) }}" id="login-form" data-refresh-url="{{ route('tenant.login', ['slug' => $tenant->subdomain]) }}">
                     @csrf
 
                     <!-- Email -->
                     <div class="mb-6">
-                        <label for="email" class="block text-sm font-semibold mb-2" style="color: #374151;">E-mail</label>
+                        <label for="email" class="block text-sm font-semibold mb-2 auth-label">E-mail</label>
                         <div class="relative">
                             <input type="email" name="email" id="email"
-                                class="w-full px-4 py-3 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2"
-                            style="border-color: #d1d5db; background-color: white; color: #111827;"
-                            onfocus="this.style.borderColor='#2563eb'; this.style.outline='none'; this.style.boxShadow='0 0 0 3px rgba(37, 99, 235, 0.1)'"
-                            onblur="this.style.borderColor='#d1d5db'; this.style.boxShadow='none'"
+                                class="w-full px-4 py-3 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 auth-input"
                                 placeholder="seu@email.com" value="{{ old('email') }}" required autofocus>
                         </div>
                         @error('email')
@@ -114,13 +112,10 @@
 
                     <!-- Senha -->
                     <div class="mb-8">
-                        <label for="password" class="block text-sm font-semibold mb-2" style="color: #374151;">Senha</label>
+                        <label for="password" class="block text-sm font-semibold mb-2 auth-label">Senha</label>
                         <div class="relative">
                             <input type="password" name="password" id="password"
-                                class="w-full px-4 py-3 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2"
-                            style="border-color: #d1d5db; background-color: white; color: #111827;"
-                            onfocus="this.style.borderColor='#2563eb'; this.style.outline='none'; this.style.boxShadow='0 0 0 3px rgba(37, 99, 235, 0.1)'"
-                            onblur="this.style.borderColor='#d1d5db'; this.style.boxShadow='none'"
+                                class="w-full px-4 py-3 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 auth-input"
                                 placeholder="••••••••" required>
                         </div>
                         @error('password')
@@ -134,10 +129,7 @@
                     </div>
 
                     <!-- Botão Login -->
-                    <button type="submit" class="w-full font-semibold py-3 px-4 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 transition duration-200 transform hover:scale-[1.02] flex items-center justify-center gap-2"
-                            style="background-color: #2563eb; color: white; border: none;"
-                            onmouseover="this.style.backgroundColor='#1d4ed8'"
-                            onmouseout="this.style.backgroundColor='#2563eb'">
+                    <button type="submit" class="w-full font-semibold py-3 px-4 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 transition duration-200 transform hover:scale-[1.02] flex items-center justify-center gap-2 auth-submit">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"></path>
                         </svg>
@@ -148,13 +140,13 @@
                     <div class="mt-6 flex items-center justify-between">
                         <div class="flex items-center">
                             <input type="checkbox" name="remember" id="remember" class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded dark:border-gray-600 dark:bg-gray-700">
-                            <label for="remember" class="ml-2 block text-sm" style="color: #374151;">
+                            <label for="remember" class="ml-2 block text-sm auth-label">
                                 Manter conectado
                             </label>
                         </div>
 
                         @if (Route::has('password.request'))
-                            <a href="#" class="text-sm font-medium" style="color: #2563eb;">
+                            <a href="#" class="text-sm font-medium text-blue-600">
                                 Esqueceu a senha?
                             </a>
                         @endif
@@ -163,8 +155,8 @@
                     <!-- Criar conta -->
                     @if (Route::has('register'))
                         <div class="mt-8 text-center pt-6 border-t border-gray-200 dark:border-gray-700">
-                            <span class="text-sm" style="color: #6b7280;">Não tem uma conta?</span>
-                            <a href="#" class="ml-1 text-sm font-semibold" style="color: #2563eb;">Criar conta</a>
+                            <span class="text-sm auth-subtext">Não tem uma conta?</span>
+                            <a href="#" class="ml-1 text-sm font-semibold text-blue-600">Criar conta</a>
                         </div>
                     @endif
                 </form>
@@ -172,54 +164,5 @@
         @endif
     </div>
 </div>
-
-@push('scripts')
-    {{-- Script para prevenir erro 419 --}}
-    @if ($tenant)
-    <script>
-        (function() {
-            // Atualizar token CSRF periodicamente (a cada 4 minutos)
-            setInterval(function() {
-                fetch('{{ route("tenant.login", ["slug" => $tenant->subdomain]) }}', {
-                    method: 'GET',
-                    headers: {
-                        'X-Requested-With': 'XMLHttpRequest',
-                        'Accept': 'text/html'
-                    },
-                    credentials: 'same-origin'
-                })
-                .then(response => {
-                    if (response.ok) {
-                        return response.text();
-                    }
-                    throw new Error('Resposta não OK');
-                })
-                .then(html => {
-                    try {
-                        // Extrair novo token CSRF do HTML
-                        const parser = new DOMParser();
-                        const doc = parser.parseFromString(html, 'text/html');
-                        const newToken = doc.querySelector('input[name="_token"]')?.value;
-                        
-                        if (newToken) {
-                            // Atualizar token no formulário
-                            const formToken = document.querySelector('#login-form input[name="_token"]');
-                            if (formToken && formToken.value !== newToken) {
-                                formToken.value = newToken;
-                                console.log('Token CSRF atualizado automaticamente');
-                            }
-                        }
-                    } catch (e) {
-                        // Ignorar erros de parsing silenciosamente
-                    }
-                })
-                .catch(function() {
-                    // Ignorar erros silenciosamente
-                });
-            }, 4 * 60 * 1000); // 4 minutos (antes dos 120 minutos padrão de expiração)
-        })();
-    </script>
-    @endif
-@endpush
 
 @endsection

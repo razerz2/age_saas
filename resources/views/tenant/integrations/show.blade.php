@@ -1,6 +1,7 @@
 @extends('layouts.tailadmin.app')
 
 @section('title', 'Detalhes da Integração')
+@section('page', 'integrations')
 
 @section('content')
 
@@ -110,4 +111,3 @@
     </div>
 
 @endsection
-

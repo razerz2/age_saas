@@ -1,8 +1,12 @@
 @extends('layouts.tailadmin.app')
 
 @section('title', 'Relatório do Portal do Paciente')
+@section('page', 'reports')
 
 @section('content')
+
+
+<div id="reports-portal-config" data-report-type="portal" data-data-url="{{ workspace_route('tenant.reports.portal.data') }}"></div>
 
 <div class="page-header mb-6">
     <div>
@@ -51,29 +55,4 @@
 
 @endsection
 
-@push('scripts')
-<script>
-$(document).ready(function() {
-    $('#reports-table').DataTable({
-        language: { url: "//cdn.datatables.net/plug-ins/1.11.5/i18n/pt-BR.json" },
-        ajax: {
-            url: '{{ workspace_route("tenant.reports.portal.data") }}',
-            method: 'POST',
-            headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
-            dataSrc: 'table'
-        },
-        columns: [
-            { data: 'patient' },
-            { data: 'email' },
-            { data: 'is_active', render: function(data) {
-                return data 
-                    ? '<span class="inline-flex items-center rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800 dark:bg-green-900/30 dark:text-green-300">Ativo</span>' 
-                    : '<span class="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-medium text-slate-800 dark:bg-slate-900/30 dark:text-slate-300">Inativo</span>';
-            }},
-            { data: 'created_at' }
-        ]
-    });
-});
-</script>
-@endpush
 

@@ -1,8 +1,17 @@
 @extends('layouts.tailadmin.app')
 
 @section('title', 'Editar Paciente')
+@section('page', 'patients')
 
 @section('content')
+
+
+    <div id="patients-address-config"
+         data-states-url="{{ route('api.public.estados', ['pais' => 31]) }}"
+         data-cities-url-template="{{ route('api.public.cidades', ['estado' => '__ID__']) }}"
+         data-current-state-id="{{ $patient->address->estado_id ?? '' }}"
+         data-current-city-id="{{ $patient->address->cidade_id ?? '' }}">
+    </div>
 
     <div class="page-header mb-6">
         <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -270,141 +279,6 @@
         </div>
     </div>
 
-@push('styles')
-    <link href="{{ asset('css/tenant-common.css') }}" rel="stylesheet">
-@endpush
 
-@push('scripts')
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const stateSelect = document.getElementById('state_id');
-            const citySelect = document.getElementById('city_id');
-            const zipcodeField = document.getElementById('zipcode');
-            const addressField = document.getElementById('address');
-            const neighborhoodField = document.getElementById('neighborhood');
-            const stateAbbrInput = document.getElementById('state_abbr');
-            const cityNameInput = document.getElementById('city_name');
-
-            const currentEstadoId = '{{ $patient->address->estado_id ?? "" }}';
-            const currentCidadeId = '{{ $patient->address->cidade_id ?? "" }}';
-
-            async function loadStates() {
-                stateSelect.innerHTML = '<option value="">Carregando estados...</option>';
-                try {
-                    const response = await fetch('{{ route('api.public.estados', ['pais' => 31]) }}');
-                    const data = await response.json();
-                    stateSelect.innerHTML = '<option value="">Selecione o estado</option>';
-                    data.forEach(state => {
-                        const option = document.createElement('option');
-                        option.value = state.id_estado;
-                        option.dataset.abbr = state.uf;
-                        option.textContent = state.nome_estado;
-                        if (currentEstadoId == state.id_estado) {
-                            option.selected = true;
-                        }
-                        stateSelect.appendChild(option);
-                    });
-
-                    if (stateSelect.value) {
-                        loadCities(stateSelect.value);
-                    }
-                } catch (error) {
-                    console.error('Erro ao carregar estados:', error);
-                    stateSelect.innerHTML = '<option value="">Erro ao carregar</option>';
-                }
-            }
-
-            async function loadCities(stateId) {
-                if (!stateId) {
-                    citySelect.innerHTML = '<option value="">Selecione o estado primeiro</option>';
-                    return;
-                }
-                citySelect.innerHTML = '<option value="">Carregando cidades...</option>';
-                try {
-                    const response = await fetch('{{ route('api.public.cidades', ['estado' => ':id']) }}'.replace(':id', stateId));
-                    const data = await response.json();
-                    citySelect.innerHTML = '<option value="">Selecione a cidade</option>';
-                    data.forEach(city => {
-                        const option = document.createElement('option');
-                        option.value = city.id_cidade;
-                        option.dataset.name = city.nome_cidade;
-                        option.textContent = city.nome_cidade;
-                        if (currentCidadeId == city.id_cidade) {
-                            option.selected = true;
-                        }
-                        citySelect.appendChild(option);
-                    });
-                } catch (error) {
-                    console.error('Erro ao carregar cidades:', error);
-                    citySelect.innerHTML = '<option value="">Erro ao carregar</option>';
-                }
-            }
-
-            if (stateSelect) {
-                stateSelect.addEventListener('change', function() {
-                    loadCities(this.value);
-                    const selectedOption = this.options[this.selectedIndex];
-                    if (selectedOption && selectedOption.dataset.abbr) {
-                        stateAbbrInput.value = selectedOption.dataset.abbr;
-                    }
-                });
-            }
-
-            if (citySelect) {
-                citySelect.addEventListener('change', function() {
-                    const selectedOption = this.options[this.selectedIndex];
-                    if (selectedOption && selectedOption.dataset.name) {
-                        cityNameInput.value = selectedOption.dataset.name;
-                    }
-                });
-            }
-
-            if (zipcodeField) {
-                zipcodeField.addEventListener('input', function(e) {
-                    let value = e.target.value.replace(/\D/g, '');
-                    if (value.length > 8) value = value.substring(0, 8);
-                    if (value.length > 5) {
-                        value = value.substring(0, 5) + '-' + value.substring(5);
-                    }
-                    e.target.value = value;
-
-                    if (value.replace(/\D/g, '').length === 8) {
-                        fetch(`https://viacep.com.br/ws/${value.replace(/\D/g, '')}/json/`)
-                            .then(response => response.json())
-                            .then(data => {
-                                if (!data.erro) {
-                                    if (addressField) addressField.value = data.logradouro;
-                                    if (neighborhoodField) neighborhoodField.value = data.bairro;
-                                    
-                                    if (data.uf) {
-                                        for (let i = 0; i < stateSelect.options.length; i++) {
-                                            if (stateSelect.options[i].dataset.abbr === data.uf) {
-                                                stateSelect.selectedIndex = i;
-                                                stateAbbrInput.value = data.uf;
-                                                loadCities(stateSelect.value).then(() => {
-                                                    if (data.localidade) {
-                                                        for (let j = 0; j < citySelect.options.length; j++) {
-                                                            if (citySelect.options[j].dataset.name.toLowerCase() === data.localidade.toLowerCase()) {
-                                                                citySelect.selectedIndex = j;
-                                                                cityNameInput.value = data.localidade;
-                                                                break;
-                                                            }
-                                                        }
-                                                    }
-                                                });
-                                                break;
-                                            }
-                                        }
-                                    }
-                                }
-                            });
-                    }
-                });
-            }
-
-            loadStates();
-        });
-    </script>
-@endpush
 
 @endsection

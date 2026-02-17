@@ -1,0 +1,71 @@
+/* Estilos específicos para página pública de agendamento - melhora profundidade e contraste */
+
+/* Fundo com mais contraste */
+[data-page="public-appointment-create"] body {
+    background-color: #f8fafc;
+}
+
+/* Cards com sombras mais fortes para destacar */
+[data-page="public-appointment-create"] .bg-white {
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+[data-page="public-appointment-create"] .card {
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+
+/* Cards principais com profundidade extra */
+[data-page="public-appointment-create"] .appointment-card {
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+/* Resumo do agendamento com destaque especial */
+[data-page="public-appointment-create"] .summary-card {
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    border: 1px solid rgba(229, 231, 235, 0.5);
+}
+
+/* Inputs com mais contraste */
+[data-page="public-appointment-create"] input,
+[data-page="public-appointment-create"] select,
+[data-page="public-appointment-create"] textarea {
+    background-color: #ffffff;
+    border-color: #d1d5db;
+}
+
+/* Botões com mais profundidade */
+[data-page="public-appointment-create"] .btn-primary {
+    box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.3), 0 2px 4px -1px rgba(37, 99, 235, 0.2);
+}
+
+[data-page="public-appointment-create"] .btn-primary:hover {
+    box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.3), 0 4px 6px -2px rgba(37, 99, 235, 0.2);
+}
+
+/* Mobile: ajustes de sombra para não sobrecarregar */
+@media (max-width: 768px) {
+    [data-page="public-appointment-create"] .appointment-card {
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    }
+    
+    [data-page="public-appointment-create"] .summary-card {
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    }
+}
+
+/* Dark mode: ajustar sombras para tema escuro */
+@media (prefers-color-scheme: dark) {
+    [data-page="public-appointment-create"] body.dark {
+        background-color: #0f172a;
+    }
+    
+    [data-page="public-appointment-create"] body.dark .bg-white {
+        background-color: #1e293b;
+        border-color: #334155;
+    }
+    
+    [data-page="public-appointment-create"] body.dark .appointment-card,
+    [data-page="public-appointment-create"] body.dark .summary-card {
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    }
+}

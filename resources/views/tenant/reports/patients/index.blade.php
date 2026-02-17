@@ -1,8 +1,12 @@
 @extends('layouts.tailadmin.app')
 
 @section('title', 'Relatório de Pacientes')
+@section('page', 'reports')
 
 @section('content')
+
+
+<div id="reports-patients-config" data-report-type="patients" data-data-url="{{ workspace_route('tenant.reports.patients.data') }}"></div>
 
 <div class="page-header mb-6">
     <div>
@@ -46,7 +50,7 @@
                     <input type="date" name="date_to" class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white">
                 </div>
                 <div class="flex items-end">
-                    <button type="button" class="inline-flex items-center justify-center rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary/90 transition-colors" onclick="loadData()">
+                    <button type="button" class="inline-flex items-center justify-center rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary/90 transition-colors" data-reports-action="apply-filters">
                         Aplicar
                     </button>
                 </div>
@@ -92,35 +96,4 @@
 
 @endsection
 
-@push('scripts')
-<script>
-let table;
-$(document).ready(function() {
-    table = $('#reports-table').DataTable({
-        language: { url: "//cdn.datatables.net/plug-ins/1.11.5/i18n/pt-BR.json" }
-    });
-    loadData();
-});
-
-function loadData() {
-    $.ajax({
-        url: '{{ workspace_route("tenant.reports.patients.data") }}',
-        method: 'POST',
-        data: $('#filter-form').serialize(),
-        headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
-        success: function(response) {
-            $('#summary-total').text(response.summary.total || 0);
-            $('#summary-with-appointments').text(response.summary.with_appointments || 0);
-            $('#summary-new-this-month').text(response.summary.new_this_month || 0);
-            
-            table.clear();
-            response.table.forEach(row => {
-                table.row.add([row.name, row.email, row.phone, row.appointments_count, row.created_at]);
-            });
-            table.draw();
-        }
-    });
-}
-</script>
-@endpush
 

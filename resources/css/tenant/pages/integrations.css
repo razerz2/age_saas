@@ -1,0 +1,6 @@
+/* Integrations page-specific styles */
+
+#datatable-list_wrapper .dataTables_length,
+#datatable-list_wrapper .dataTables_filter {
+    margin-bottom: 1rem;
+}

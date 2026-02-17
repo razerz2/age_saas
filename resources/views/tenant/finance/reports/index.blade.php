@@ -1,6 +1,7 @@
 @extends('layouts.tailadmin.app')
 
 @section('title', 'Dashboard Financeiro')
+@section('page', 'finance')
 
 @section('content')
 
@@ -86,7 +87,7 @@
             <div class="card">
                 <div class="card-body">
                     <h4 class="card-title">Receitas - Últimos 12 Meses</h4>
-                    <canvas id="monthlyIncomeChart" height="100"></canvas>
+                    <canvas id="monthlyIncomeChart" height="100" data-series='@json($monthlyIncomeData)'></canvas>
                 </div>
             </div>
         </div>
@@ -94,7 +95,7 @@
             <div class="card">
                 <div class="card-body">
                     <h4 class="card-title">Receitas por Categoria (Mês Atual)</h4>
-                    <canvas id="incomeByCategoryChart" height="200"></canvas>
+                    <canvas id="incomeByCategoryChart" height="200" data-series='@json($incomeByCategory->map(fn($item) => ["name" => $item->name, "total" => $item->total])->values())'></canvas>
                 </div>
             </div>
         </div>
@@ -144,57 +145,3 @@
     </div>
 
 @endsection
-
-@push('scripts')
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script>
-    // Gráfico de Receitas - Últimos 12 Meses
-    const monthlyIncomeCtx = document.getElementById('monthlyIncomeChart').getContext('2d');
-    new Chart(monthlyIncomeCtx, {
-        type: 'line',
-        data: {
-            labels: {!! json_encode(array_column($monthlyIncomeData, 'month')) !!},
-            datasets: [{
-                label: 'Receitas',
-                data: {!! json_encode(array_column($monthlyIncomeData, 'value')) !!},
-                borderColor: 'rgb(75, 192, 192)',
-                backgroundColor: 'rgba(75, 192, 192, 0.2)',
-                tension: 0.1
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: true,
-            scales: {
-                y: {
-                    beginAtZero: true
-                }
-            }
-        }
-    });
-
-    // Gráfico de Receitas por Categoria
-    const incomeByCategoryCtx = document.getElementById('incomeByCategoryChart').getContext('2d');
-    new Chart(incomeByCategoryCtx, {
-        type: 'pie',
-        data: {
-            labels: {!! json_encode($incomeByCategory->pluck('name')->toArray()) !!},
-            datasets: [{
-                data: {!! json_encode($incomeByCategory->pluck('total')->toArray()) !!},
-                backgroundColor: [
-                    'rgba(255, 99, 132, 0.8)',
-                    'rgba(54, 162, 235, 0.8)',
-                    'rgba(255, 206, 86, 0.8)',
-                    'rgba(75, 192, 192, 0.8)',
-                    'rgba(153, 102, 255, 0.8)',
-                ]
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: true
-        }
-    });
-</script>
-@endpush
-

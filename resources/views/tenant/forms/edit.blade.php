@@ -1,6 +1,7 @@
 @extends('layouts.tailadmin.app')
 
 @section('title', 'Editar Formulário')
+@section('page', 'forms')
 
 @section('content')
 
@@ -94,7 +95,7 @@
                                             <i class="mdi mdi-doctor me-1"></i>
                                             Médico <span class="text-danger">*</span>
                                         </label>
-                                        <select name="doctor_id" id="doctor_id" class="form-control @error('doctor_id') is-invalid @enderror" required>
+                                        <select name="doctor_id" id="doctor_id" class="form-control @error('doctor_id') is-invalid @enderror" data-specialties-url-template="{{ workspace_route('tenant.forms.doctors.specialties', ['doctorId' => '__DOCTOR_ID__']) }}" required>
                                             <option value="">Selecione um médico</option>
                                             @foreach($doctors as $doctor)
                                                 <option value="{{ $doctor->id }}" {{ old('doctor_id', $form->doctor_id) == $doctor->id ? 'selected' : '' }}>{{ $doctor->user->name ?? 'N/A' }}</option>
@@ -112,7 +113,7 @@
                                             <i class="mdi mdi-stethoscope me-1"></i>
                                             Especialidade
                                         </label>
-                                        <select name="specialty_id" id="specialty_id" class="form-control @error('specialty_id') is-invalid @enderror">
+                                        <select name="specialty_id" id="specialty_id" class="form-control @error('specialty_id') is-invalid @enderror" data-initial-specialty-id="{{ old('specialty_id', $form->specialty_id) }}">
                                             <option value="">Carregando especialidades...</option>
                                         </select>
                                         <small class="form-text text-muted">Selecione uma especialidade relacionada ao médico (opcional)</small>
@@ -170,155 +171,5 @@
             </div>
         </div>
     </div>
-
-@push('styles')
-    <link href="{{ asset('css/tenant-forms.css') }}" rel="stylesheet">
-    <style>
-        /* Botões padrão com suporte a modo claro e escuro */
-        .btn-patient-primary {
-            background-color: #2563eb;
-            color: white;
-            border: 1px solid #d1d5db;
-            padding: 0.625rem 1.25rem;
-            font-size: 0.875rem;
-            font-weight: 500;
-            border-radius: 0.375rem;
-            cursor: pointer;
-            transition: all 0.2s;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 0.5rem;
-            text-decoration: none;
-        }
-        
-        .btn-patient-primary:hover {
-            background-color: #1d4ed8;
-        }
-        
-        .btn-patient-secondary {
-            background-color: transparent;
-            color: #374151;
-            border: 1px solid #d1d5db;
-            padding: 0.5rem 1rem;
-            font-size: 0.875rem;
-            font-weight: 500;
-            border-radius: 0.375rem;
-            cursor: pointer;
-            transition: all 0.2s;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 0.5rem;
-            text-decoration: none;
-        }
-        
-        .btn-patient-secondary:hover {
-            background-color: #f9fafb;
-        }
-        
-        /* Modo escuro via preferência do sistema */
-        @media (prefers-color-scheme: dark) {
-            .btn-patient-primary {
-                background-color: transparent;
-                color: white;
-                border-color: #d1d5db;
-            }
-            
-            .btn-patient-primary:hover {
-                background-color: #1f2937;
-            }
-            
-            .btn-patient-secondary {
-                background-color: transparent;
-                color: white;
-                border-color: #d1d5db;
-            }
-            
-            .btn-patient-secondary:hover {
-                background-color: #1f2937;
-            }
-        }
-        
-        /* Modo escuro via classe */
-        .dark .btn-patient-primary {
-            background-color: transparent;
-            color: white;
-            border-color: #d1d5db;
-        }
-        
-        .dark .btn-patient-primary:hover {
-            background-color: #1f2937;
-        }
-        
-        .dark .btn-patient-secondary {
-            background-color: transparent;
-            color: white;
-            border-color: #d1d5db;
-        }
-        
-        .dark .btn-patient-secondary:hover {
-            background-color: #1f2937;
-        }
-    </style>
-@endpush
-
-@push('scripts')
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const doctorSelect = document.getElementById('doctor_id');
-        const specialtySelect = document.getElementById('specialty_id');
-        const currentDoctorId = '{{ old("doctor_id", $form->doctor_id) }}';
-        const currentSpecialtyId = '{{ old("specialty_id", $form->specialty_id) }}';
-
-        function loadSpecialties(doctorId, selectedSpecialtyId = null) {
-            specialtySelect.innerHTML = '<option value="">Carregando especialidades...</option>';
-            specialtySelect.disabled = true;
-
-            if (!doctorId) {
-                specialtySelect.innerHTML = '<option value="">Primeiro selecione um médico</option>';
-                return;
-            }
-
-            fetch(`{{ workspace_route('tenant.forms.doctors.specialties', ['doctorId' => '__DOCTOR_ID__']) }}`.replace('__DOCTOR_ID__', doctorId))
-                .then(response => response.json())
-                .then(data => {
-                    specialtySelect.innerHTML = '<option value="">Selecione uma especialidade</option>';
-                    
-                    if (data.length === 0) {
-                        specialtySelect.innerHTML = '<option value="">Este médico não possui especialidades cadastradas</option>';
-                    } else {
-                        data.forEach(specialty => {
-                            const option = document.createElement('option');
-                            option.value = specialty.id;
-                            option.textContent = specialty.name;
-                            if (selectedSpecialtyId && selectedSpecialtyId === specialty.id) {
-                                option.selected = true;
-                            }
-                            specialtySelect.appendChild(option);
-                        });
-                        specialtySelect.disabled = false;
-                    }
-                })
-                .catch(error => {
-                    console.error('Erro ao carregar especialidades:', error);
-                    specialtySelect.innerHTML = '<option value="">Erro ao carregar especialidades</option>';
-                });
-        }
-
-        doctorSelect.addEventListener('change', function() {
-            loadSpecialties(this.value);
-        });
-
-        // Carregar especialidades do médico atual ao carregar a página
-        if (currentDoctorId) {
-            loadSpecialties(currentDoctorId, currentSpecialtyId);
-        } else {
-            specialtySelect.innerHTML = '<option value="">Primeiro selecione um médico</option>';
-            specialtySelect.disabled = true;
-        }
-    });
-</script>
-@endpush
 
 @endsection

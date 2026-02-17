@@ -119,7 +119,7 @@
                         @if(isset($formResponse) && $formResponse)
                             <x-tailadmin-button type="button" variant="secondary" size="md"
                                 class="border-info text-info bg-info/10 hover:bg-info/20 dark:border-info/40 dark:text-info dark:hover:bg-info/30"
-                                onclick="viewFormResponse('{{ $appointment->id }}')">
+                                data-medical-action="view-form-response" data-appointment-id="{{ $appointment->id }}">
                                 <i class="mdi mdi-eye"></i>
                                 Visualizar Resposta
                             </x-tailadmin-button>
@@ -134,7 +134,7 @@
         <div class="flex flex-wrap gap-2">
             @if($appointment->status === 'scheduled' || $appointment->status === 'confirmed')
                 <x-tailadmin-button type="button" variant="warning" size="md"
-                    onclick="updateStatus('{{ $appointment->id }}', 'arrived')">
+                    data-medical-action="update-status" data-appointment-id="{{ $appointment->id }}" data-status="arrived">
                     <i class="mdi mdi-account-check"></i>
                     Paciente Chegou
                 </x-tailadmin-button>
@@ -142,7 +142,7 @@
 
             @if($appointment->status === 'arrived')
                 <x-tailadmin-button type="button" variant="success" size="md"
-                    onclick="updateStatus('{{ $appointment->id }}', 'in_service')">
+                    data-medical-action="update-status" data-appointment-id="{{ $appointment->id }}" data-status="in_service">
                     <i class="mdi mdi-play-circle"></i>
                     Iniciar Atendimento
                 </x-tailadmin-button>
@@ -150,7 +150,7 @@
 
             @if($appointment->status === 'in_service')
                 <x-tailadmin-button type="button" variant="primary" size="md"
-                    onclick="completeAppointment('{{ $appointment->id }}')">
+                    data-medical-action="complete-appointment" data-appointment-id="{{ $appointment->id }}">
                     <i class="mdi mdi-check-circle"></i>
                     Finalizar Atendimento
                 </x-tailadmin-button>
@@ -158,7 +158,7 @@
 
             @if(!in_array($appointment->status, ['completed', 'cancelled']))
                 <x-tailadmin-button type="button" variant="danger" size="md"
-                    onclick="updateStatus('{{ $appointment->id }}', 'cancelled')">
+                    data-medical-action="update-status" data-appointment-id="{{ $appointment->id }}" data-status="cancelled">
                     <i class="mdi mdi-cancel"></i>
                     Cancelar
                 </x-tailadmin-button>

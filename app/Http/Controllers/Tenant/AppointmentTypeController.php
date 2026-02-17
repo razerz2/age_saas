@@ -201,7 +201,7 @@ class AppointmentTypeController extends Controller
                 'color'        => $type->color
                                     ? '<span class="inline-block w-4 h-4 rounded-full" style="background:' . e($type->color) . '"></span>'
                                     : '-',
-                'actions'      => view('tenant.appointment_types.partials.actions', compact('type'))->render(),
+                'actions'      => view('tenant.appointment-types.partials.actions', compact('type'))->render(),
             ];
         })->all();
 

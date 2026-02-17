@@ -4,6 +4,21 @@ export function init() {
 		return;
 	}
 
+	document.querySelectorAll('.js-stop-propagation').forEach((el) => {
+		el.addEventListener('click', (event) => {
+			event.stopPropagation();
+		});
+	});
+
+	document.querySelectorAll('.js-dismiss').forEach((btn) => {
+		btn.addEventListener('click', () => {
+			const wrapper = btn.closest('[data-dismissible]');
+			if (wrapper) {
+				wrapper.style.display = 'none';
+			}
+		});
+	});
+
 	const doctorSelect = document.getElementById('doctor_id');
 	const appointmentTypeSelect = document.getElementById('appointment_type');
 	const specialtySelect = document.getElementById('specialty_id');
@@ -109,7 +124,15 @@ export function init() {
 			});
 	}
 
-	function loadAvailableSlots(doctorId, appointmentTypeId, initial = false, initialTimeStart = null, initialTimeEnd = null) {
+	function loadAvailableSlots(
+		doctorId,
+		appointmentTypeId,
+		initial = false,
+		initialTimeStart = null,
+		initialTimeEnd = null,
+		initialStartsAt = null,
+		initialEndsAt = null
+	) {
 		const date = dateInput.value;
 		if (!doctorId || !date) {
 			timeSelect.innerHTML = '<option value="">Primeiro selecione médico e data</option>';
@@ -136,11 +159,21 @@ export function init() {
 
 				let selectedFound = false;
 				data.forEach((slot) => {
+					const slotStart = slot.datetime_start || slot.start || slot.start_time;
+					const slotEnd = slot.datetime_end || slot.end || slot.end_time;
+					const slotLabel =
+						slot.label ||
+						(slot.start_time && slot.end_time
+							? `${slot.start_time} - ${slot.end_time}`
+							: slot.start && slot.end
+								? `${slot.start} - ${slot.end}`
+								: slot.start);
+
 					const option = document.createElement('option');
-					option.value = slot.label || slot.start;
-					option.textContent = slot.label || `${slot.start_time} - ${slot.end_time}`;
-					option.dataset.start = slot.start;
-					option.dataset.end = slot.end;
+					option.value = slot.label || slot.start || slotStart || '';
+					option.textContent = slotLabel || '';
+					option.dataset.start = slotStart || '';
+					option.dataset.end = slotEnd || '';
 
 					if (
 						initial &&
@@ -150,8 +183,8 @@ export function init() {
 							(slot.start && slot.end && slot.start.includes(initialTimeStart)))
 					) {
 						option.selected = true;
-						startsAtInput.value = slot.start;
-						endsAtInput.value = slot.end;
+						startsAtInput.value = slotStart || '';
+						endsAtInput.value = slotEnd || '';
 						selectedFound = true;
 					}
 
@@ -159,6 +192,19 @@ export function init() {
 				});
 
 				timeSelect.disabled = false;
+
+				if (initial && !selectedFound && initialTimeStart && initialTimeEnd && initialStartsAt && initialEndsAt) {
+					const option = document.createElement('option');
+					option.value = `${initialTimeStart}-${initialTimeEnd}`;
+					option.textContent = `${initialTimeStart} - ${initialTimeEnd} (horÃ¡rio atual)`;
+					option.dataset.start = initialStartsAt;
+					option.dataset.end = initialEndsAt;
+					option.selected = true;
+					option.style.color = '#dc3545';
+					timeSelect.insertBefore(option, timeSelect.firstChild.nextSibling);
+					startsAtInput.value = initialStartsAt;
+					endsAtInput.value = initialEndsAt;
+				}
 
 				if (!selectedFound && !initial) {
 					startsAtInput.value = '';
@@ -246,6 +292,15 @@ export function init() {
 		});
 	}
 
+	const isEditMode = form && form.dataset && form.dataset.appointmentEdit === 'true';
+	const currentAppointmentTypeId = form ? form.dataset.currentAppointmentTypeId : null;
+	const currentSpecialtyId = form ? form.dataset.currentSpecialtyId : null;
+	const initialDate = form ? form.dataset.initialDate : null;
+	const initialTimeStart = form ? form.dataset.initialTimeStart : null;
+	const initialTimeEnd = form ? form.dataset.initialTimeEnd : null;
+	const initialStartsAt = form ? form.dataset.initialStartsAt : null;
+	const initialEndsAt = form ? form.dataset.initialEndsAt : null;
+
 	// Fechar modal de dias trabalhados (create: Tailwind overlay, edit: Bootstrap modal)
 	document.querySelectorAll('.js-close-business-hours-modal').forEach((btn) => {
 		btn.addEventListener('click', () => {
@@ -269,6 +324,24 @@ export function init() {
 			doctorSelect.value = doctorSelect.dataset.initialValue;
 		}
 		doctorSelect.dispatchEvent(new Event('change'));
+	}
+
+	// Inicializa dados de ediÃ§Ã£o
+	if (isEditMode && doctorSelect && doctorSelect.value) {
+		loadAppointmentTypes(doctorSelect.value, currentAppointmentTypeId);
+		loadSpecialties(doctorSelect.value, currentSpecialtyId);
+		if (initialDate) {
+			dateInput.value = initialDate;
+			loadAvailableSlots(
+				doctorSelect.value,
+				currentAppointmentTypeId,
+				true,
+				initialTimeStart,
+				initialTimeEnd,
+				initialStartsAt,
+				initialEndsAt
+			);
+		}
 	}
 
 	// Modal de dias trabalhados (Tailwind ou Bootstrap, dependendo da view)
@@ -296,6 +369,17 @@ export function init() {
 			if (emptyEl) {
 				emptyEl.classList.add('d-none');
 				emptyEl.style.display = 'none';
+			}
+
+			if (!doctorId) {
+				if (loadingEl) loadingEl.style.display = 'none';
+				if (errorEl) {
+					errorEl.classList.remove('d-none');
+					errorEl.style.display = 'block';
+					const msgEl = document.getElementById('business-hours-error-message');
+					if (msgEl) msgEl.textContent = 'Por favor, selecione um mÃ©dico primeiro.';
+				}
+				return;
 			}
 
 			fetch(`/workspace/${tenantSlug}/api/doctors/${doctorId}/business-hours`)
@@ -396,5 +480,980 @@ export function init() {
 				});
 		};
 	}
+
+	if (businessHoursModal && window.bootstrap && typeof window.bootstrap.Modal !== 'undefined') {
+		businessHoursModal.addEventListener('show.bs.modal', () => {
+			if (doctorSelect && typeof window.loadBusinessHours === 'function') {
+				window.loadBusinessHours(doctorSelect.value);
+			}
+		});
+	}
+
+	if (btnShowBusinessHours && businessHoursModal) {
+		btnShowBusinessHours.addEventListener('click', () => {
+			if (doctorSelect && !doctorSelect.value) {
+				if (typeof window.showAlert === 'function') {
+					window.showAlert({
+						type: 'warning',
+						title: 'AtenÃ§Ã£o',
+						message: 'Selecione um mÃ©dico primeiro para ver os dias trabalhados.',
+					});
+				}
+				return;
+			}
+
+			businessHoursModal.classList.remove('hidden');
+			if (typeof window.loadBusinessHours === 'function') {
+				window.loadBusinessHours(doctorSelect.value);
+			}
+		});
+	}
+
+	const $ = window.jQuery || window.$;
+	if ($) {
+		initRecurringCreate($, tenantSlug);
+		initRecurringEdit($, tenantSlug);
+	}
+}
+
+function initRecurringCreate($, tenantSlug) {
+	const form = document.getElementById('recurring-appointment-form');
+	if (!form) return;
+
+	let ruleIndex = 1;
+	let businessHours = [];
+	let doctorId = null;
+	let appointmentTypeId = null;
+	let startDate = null;
+
+	function initState() {
+		doctorId = $('#doctor_id').val();
+		appointmentTypeId = $('#appointment_type_id').val();
+		startDate = $('#start_date').val();
+
+		resetRules();
+		updateFirstRuleRequired();
+
+		if (doctorId) {
+			loadBusinessHours();
+			loadSpecialties();
+
+			const specialtyId = $('#specialty_id').val();
+			if (specialtyId) {
+				$('#specialty_id').trigger('change');
+			}
+
+			if (appointmentTypeId) {
+				updateAllRules();
+			}
+		}
+	}
+
+	$('#end_type')
+		.off('change.recurringCreate')
+		.on('change.recurringCreate', function () {
+			const endType = $(this).val();
+			const showEndDate = endType === 'date';
+			$('#end_date_field').toggle(showEndDate);
+		})
+		.trigger('change');
+
+	$('#doctor_id')
+		.off('change.recurringCreate')
+		.on('change.recurringCreate', function () {
+			doctorId = $(this).val();
+
+			if (!doctorId) {
+				businessHours = [];
+				$('#specialty_id')
+					.html('<option value="">Primeiro selecione um mÃ©dico</option>')
+					.prop('disabled', true);
+				$('#appointment_type_id')
+					.html('<option value="">Primeiro selecione uma especialidade</option>')
+					.prop('disabled', true);
+				resetRules();
+				return;
+			}
+
+			loadBusinessHours();
+			loadSpecialties();
+		});
+
+	$('#specialty_id')
+		.off('change.recurringCreate')
+		.on('change.recurringCreate', function () {
+			const specialtyId = $(this).val();
+
+			if (!doctorId || !specialtyId) {
+				$('#appointment_type_id')
+					.html('<option value="">Primeiro selecione uma especialidade</option>')
+					.prop('disabled', true);
+				resetRules();
+				return;
+			}
+
+			const $appointmentTypeSelect = $('#appointment_type_id');
+			$appointmentTypeSelect.html('<option value="">Carregando...</option>').prop('disabled', true);
+
+			$.ajax({
+				url: `/workspace/${tenantSlug}/api/doctors/${doctorId}/appointment-types`,
+				method: 'GET',
+				success: function (data) {
+					$appointmentTypeSelect.empty();
+
+					if (data.length === 0) {
+						$appointmentTypeSelect.append('<option value="">Nenhum tipo de consulta disponÃ­vel</option>');
+						$appointmentTypeSelect.prop('disabled', true);
+						return;
+					}
+
+					$appointmentTypeSelect.append('<option value="">Selecione um tipo</option>');
+					data.forEach(function (type) {
+						$appointmentTypeSelect.append(
+							`<option value="${type.id}">${type.name} (${type.duration_min} min)</option>`
+						);
+					});
+
+					$appointmentTypeSelect.prop('disabled', false);
+				},
+				error: function (xhr) {
+					console.error('Erro ao buscar tipos de consulta:', xhr);
+					$appointmentTypeSelect.html('<option value="">Erro ao carregar tipos de consulta</option>');
+				},
+			});
+		});
+
+	$('#appointment_type_id')
+		.off('change.recurringCreate')
+		.on('change.recurringCreate', function () {
+			appointmentTypeId = $(this).val();
+			updateAllRules();
+		});
+
+	$('#start_date')
+		.off('change.recurringCreate')
+		.on('change.recurringCreate', function () {
+			startDate = $(this).val();
+			updateAllRules();
+		});
+
+	function loadBusinessHours() {
+		if (!doctorId) return;
+
+		$.ajax({
+			url: `/workspace/${tenantSlug}/api/doctors/${doctorId}/business-hours`,
+			method: 'GET',
+			success: function (data) {
+				businessHours = data;
+				updateAllRules();
+			},
+			error: function (xhr) {
+				console.error('Erro ao buscar horÃ¡rios do mÃ©dico:', xhr);
+				showAlert({
+					type: 'error',
+					title: 'Erro',
+					message: 'Erro ao carregar horÃ¡rios do mÃ©dico. Por favor, tente novamente.',
+				});
+			},
+		});
+	}
+
+	function loadSpecialties() {
+		if (!doctorId) return;
+
+		const $specialtySelect = $('#specialty_id');
+		$specialtySelect.html('<option value="">Carregando...</option>').prop('disabled', true);
+
+		$.ajax({
+			url: `/workspace/${tenantSlug}/api/doctors/${doctorId}/specialties`,
+			method: 'GET',
+			success: function (data) {
+				$specialtySelect.empty();
+
+				if (data.length === 0) {
+					$specialtySelect.append('<option value="">Nenhuma especialidade cadastrada</option>');
+				} else {
+					$specialtySelect.append('<option value="">Selecione uma especialidade</option>');
+					data.forEach(function (specialty) {
+						$specialtySelect.append(`<option value="${specialty.id}">${specialty.name}</option>`);
+					});
+				}
+
+				$specialtySelect.prop('disabled', false);
+				$('#appointment_type_id')
+					.html('<option value="">Primeiro selecione uma especialidade</option>')
+					.prop('disabled', true);
+			},
+			error: function (xhr) {
+				console.error('Erro ao buscar especialidades:', xhr);
+				$specialtySelect.html('<option value="">Erro ao carregar especialidades</option>').prop('disabled', false);
+			},
+		});
+	}
+
+	function resetRules() {
+		$('.rule-item').each(function () {
+			const $ruleItem = $(this);
+			const $weekdaySelect = $ruleItem.find('.rule-weekday');
+			const $timeSlotSelect = $ruleItem.find('.rule-time-slot');
+
+			$weekdaySelect
+				.empty()
+				.append('<option value="">Selecione o tipo de consulta primeiro</option>')
+				.prop('disabled', true);
+			$timeSlotSelect
+				.empty()
+				.append('<option value="">Selecione o dia da semana primeiro</option>')
+				.prop('disabled', true);
+			$ruleItem.find('.rule-start-time').val('');
+			$ruleItem.find('.rule-end-time').val('');
+		});
+	}
+
+	function updateAllRules() {
+		$('.rule-item').each(function () {
+			const $item = $(this);
+			if (!$item.hasClass('rule-confirmed')) {
+				updateRule($item);
+			}
+		});
+	}
+
+	function updateOtherRules(excludeRuleItem) {
+		$('.rule-item').each(function () {
+			const $item = $(this);
+			if (!$item.hasClass('rule-confirmed') && (!excludeRuleItem || !$item.is(excludeRuleItem))) {
+				updateRule($item);
+			}
+		});
+	}
+
+	function getSelectedWeekdays(excludeRuleItem) {
+		const selectedWeekdays = [];
+		$('.rule-item').each(function () {
+			const $item = $(this);
+			if (excludeRuleItem && $item.is(excludeRuleItem)) {
+				return;
+			}
+			const isConfirmed = $item.hasClass('rule-confirmed');
+			const isFirstRule = $item.is($('.rule-item').first());
+
+			if (isConfirmed || isFirstRule) {
+				const weekday = $item.find('.rule-weekday').val();
+				if (weekday && weekday !== '') {
+					selectedWeekdays.push(weekday);
+				}
+			}
+		});
+		return selectedWeekdays;
+	}
+
+	function updateRule($ruleItem) {
+		if ($ruleItem.hasClass('rule-confirmed')) {
+			return;
+		}
+
+		doctorId = $('#doctor_id').val();
+		appointmentTypeId = $('#appointment_type_id').val();
+		startDate = $('#start_date').val();
+
+		const $weekdaySelect = $ruleItem.find('.rule-weekday');
+		const $timeSlotSelect = $ruleItem.find('.rule-time-slot');
+
+		const currentSelectedWeekday = $weekdaySelect.val();
+		$weekdaySelect.empty();
+		$timeSlotSelect.empty();
+		$timeSlotSelect.prop('disabled', true);
+
+		if (!appointmentTypeId) {
+			$weekdaySelect.append('<option value="">Selecione o tipo de consulta primeiro</option>');
+			$weekdaySelect.prop('disabled', true);
+			return;
+		}
+
+		if (!doctorId || businessHours.length === 0) {
+			$weekdaySelect.append('<option value="">Primeiro selecione um mÃ©dico</option>');
+			$weekdaySelect.prop('disabled', true);
+			return;
+		}
+
+		const selectedWeekdays = getSelectedWeekdays($ruleItem);
+
+		let availableWeekdays = [];
+		businessHours.forEach(function (bh) {
+			if (!selectedWeekdays.includes(bh.weekday_string) || bh.weekday_string === currentSelectedWeekday) {
+				availableWeekdays.push(bh);
+				$weekdaySelect.append(`<option value="${bh.weekday_string}">${bh.weekday_name}</option>`);
+			}
+		});
+
+		$weekdaySelect.prop('disabled', false);
+
+		if (currentSelectedWeekday && availableWeekdays.find((bh) => bh.weekday_string === currentSelectedWeekday)) {
+			$weekdaySelect.val(currentSelectedWeekday);
+		}
+
+		setupRuleHandlers($ruleItem);
+
+		if ($ruleItem.is($('.rule-item').first())) {
+			updateFirstRuleRequired();
+		}
+
+		if (!currentSelectedWeekday && availableWeekdays.length > 0) {
+			const firstWeekday = availableWeekdays[0].weekday_string;
+			$weekdaySelect.val(firstWeekday);
+			loadTimeSlotsForDay($ruleItem, firstWeekday);
+		} else if (currentSelectedWeekday) {
+			loadTimeSlotsForDay($ruleItem, currentSelectedWeekday);
+		}
+	}
+
+	function loadTimeSlotsForDay($ruleItem, weekdayString) {
+		const $timeSlotSelect = $ruleItem.find('.rule-time-slot');
+		const $startTimeInput = $ruleItem.find('.rule-start-time');
+		const $endTimeInput = $ruleItem.find('.rule-end-time');
+
+		$timeSlotSelect.empty();
+		$timeSlotSelect.append('<option value="">Carregando...</option>');
+		$timeSlotSelect.prop('disabled', true);
+		$startTimeInput.val('');
+		$endTimeInput.val('');
+
+		doctorId = $('#doctor_id').val();
+		appointmentTypeId = $('#appointment_type_id').val();
+		startDate = $('#start_date').val();
+
+		if (!doctorId || !appointmentTypeId || !startDate) {
+			$timeSlotSelect.empty();
+			const missingFields = [];
+			if (!doctorId) missingFields.push('mÃ©dico');
+			if (!appointmentTypeId) missingFields.push('tipo de consulta');
+			if (!startDate) missingFields.push('data inicial');
+			$timeSlotSelect.append(`<option value="">Selecione: ${missingFields.join(', ')}</option>`);
+			return;
+		}
+
+		$.ajax({
+			url: `/workspace/${tenantSlug}/api/doctors/${doctorId}/available-slots-recurring`,
+			method: 'GET',
+			data: {
+				weekday: weekdayString,
+				appointment_type_id: appointmentTypeId,
+				start_date: startDate,
+			},
+			success: function (slots) {
+				$timeSlotSelect.empty();
+
+				if (slots.length === 0) {
+					$timeSlotSelect.append('<option value="">Nenhum horÃ¡rio disponÃ­vel</option>');
+					$timeSlotSelect.prop('disabled', true);
+					return;
+				}
+
+				$timeSlotSelect.append('<option value="">Selecione um horÃ¡rio</option>');
+				slots.forEach(function (slot) {
+					$timeSlotSelect.append(
+						`<option value="${slot.start}|${slot.end}" data-start="${slot.start}" data-end="${slot.end}">${slot.display}</option>`
+					);
+				});
+
+				$timeSlotSelect.prop('disabled', false);
+			},
+			error: function (xhr) {
+				console.error('Erro ao buscar horÃ¡rios disponÃ­veis:', xhr);
+				$timeSlotSelect.empty();
+				$timeSlotSelect.append('<option value="">Erro ao carregar horÃ¡rios</option>');
+				$timeSlotSelect.prop('disabled', true);
+			},
+		});
+	}
+
+	function setupRuleHandlers($ruleItem) {
+		const $weekdaySelect = $ruleItem.find('.rule-weekday');
+		const $timeSlotSelect = $ruleItem.find('.rule-time-slot');
+		const $startTimeInput = $ruleItem.find('.rule-start-time');
+		const $endTimeInput = $ruleItem.find('.rule-end-time');
+
+		$weekdaySelect.off('change').on('change', function () {
+			doctorId = $('#doctor_id').val();
+			appointmentTypeId = $('#appointment_type_id').val();
+			startDate = $('#start_date').val();
+
+			const weekdayString = $(this).val();
+			if ($ruleItem.hasClass('rule-confirmed')) {
+				return;
+			}
+
+			if (weekdayString) {
+				loadTimeSlotsForDay($ruleItem, weekdayString);
+				setTimeout(function () {
+					updateOtherRules($ruleItem);
+				}, 100);
+			} else {
+				$timeSlotSelect.empty();
+				$timeSlotSelect.append('<option value="">Selecione o dia</option>');
+				$timeSlotSelect.prop('disabled', true);
+				setTimeout(function () {
+					updateOtherRules($ruleItem);
+				}, 100);
+			}
+		});
+
+		$timeSlotSelect.off('change').on('change', function () {
+			const selectedOption = $(this).find('option:selected');
+			const startTime = selectedOption.data('start');
+			const endTime = selectedOption.data('end');
+
+			if (startTime && endTime) {
+				$startTimeInput.val(startTime);
+				$endTimeInput.val(endTime);
+			} else {
+				$startTimeInput.val('');
+				$endTimeInput.val('');
+			}
+		});
+	}
+
+	$('#add-rule')
+		.off('click.recurringCreate')
+		.on('click.recurringCreate', function () {
+			const $firstRule = $('.rule-item').first();
+
+			const currentWeekday = $firstRule.find('.rule-weekday').val();
+			const currentTimeSlot = $firstRule.find('.rule-time-slot').val();
+			const currentStartTime = $firstRule.find('.rule-start-time').val();
+			const currentEndTime = $firstRule.find('.rule-end-time').val();
+			const currentTimeSlotText = $firstRule.find('.rule-time-slot option:selected').text();
+
+			if (!currentWeekday || !currentTimeSlot || !currentStartTime || !currentEndTime) {
+				showAlert({
+					type: 'warning',
+					title: 'AtenÃ§Ã£o',
+					message:
+						'Por favor, selecione um dia da semana e um horÃ¡rio na primeira regra antes de adicionar outra.',
+				});
+				return;
+			}
+
+			const selectedWeekdays = [];
+			$('.rule-item.rule-confirmed').each(function () {
+				const weekday = $(this).find('.rule-weekday').val();
+				if (weekday && weekday !== '') {
+					selectedWeekdays.push(weekday);
+				}
+			});
+
+			if (selectedWeekdays.includes(currentWeekday)) {
+				showAlert({
+					type: 'warning',
+					title: 'AtenÃ§Ã£o',
+					message: 'Este dia da semana jÃ¡ foi adicionado em outra regra. NÃ£o Ã© possÃ­vel duplicar dias.',
+				});
+				return;
+			}
+
+			const currentWeekdayName = $firstRule.find('.rule-weekday option:selected').text();
+
+			const ruleHtml = `
+            <div class="rule-item mb-3 p-3 border rounded rule-confirmed">
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="form-group mb-0">
+                            <label class="fw-semibold mb-2">Dia da Semana <span class="text-danger">*</span></label>
+                            <select class="form-control rule-weekday" disabled>
+                                <option value="${currentWeekday}" selected>${currentWeekdayName}</option>
+                            </select>
+                            <input type="hidden" name="rules[${ruleIndex}][weekday]" value="${currentWeekday}">
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group mb-0">
+                            <label class="fw-semibold mb-2">HorÃ¡rio DisponÃ­vel <span class="text-danger">*</span></label>
+                            <select class="form-control rule-time-slot" disabled>
+                                <option value="${currentTimeSlot}" selected>${currentTimeSlotText}</option>
+                            </select>
+                            <input type="hidden" name="rules[${ruleIndex}][start_time]" value="${currentStartTime}">
+                            <input type="hidden" name="rules[${ruleIndex}][end_time]" value="${currentEndTime}">
+                        </div>
+                    </div>
+                    <div class="col-md-4 d-flex align-items-end rule-button-col">
+                        <label class="fw-semibold mb-2 rule-label-spacer" style="visibility: hidden;">&nbsp;</label>
+                        <button type="button" class="rule-action-btn remove-rule inline-flex items-center justify-center gap-1 rounded-md bg-error text-white text-xs font-semibold transition hover:bg-error/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-error/50 focus-visible:ring-offset-white dark:focus-visible:ring-offset-gray-900">
+                            <i class="mdi mdi-delete"></i> Remover
+                        </button>
+                    </div>
+                    <input type="hidden" name="rules[${ruleIndex}][frequency]" value="weekly">
+                    <input type="hidden" name="rules[${ruleIndex}][interval]" value="1">
+                </div>
+            </div>
+        `;
+
+			const $newRule = $(ruleHtml);
+			$('#rules-container').append($newRule);
+
+			$firstRule.find('.rule-weekday').val('');
+			$firstRule.find('.rule-time-slot').val('').prop('disabled', true);
+			$firstRule.find('.rule-start-time').val('');
+			$firstRule.find('.rule-end-time').val('');
+
+			updateRule($firstRule);
+
+			ruleIndex++;
+			updateRemoveButtons();
+			updateFirstRuleRequired();
+		});
+
+	$('#recurring-appointment-form')
+		.off('submit.recurringCreate')
+		.on('submit.recurringCreate', function (e) {
+			let validConfirmedRules = 0;
+			$('.rule-item.rule-confirmed').each(function () {
+				const weekday = $(this).find('input[name*="[weekday]"]').val();
+				const startTime = $(this).find('input[name*="[start_time]"]').val();
+				const endTime = $(this).find('input[name*="[end_time]"]').val();
+
+				if (weekday && startTime && endTime) {
+					validConfirmedRules++;
+				}
+			});
+
+			const $firstRule = $('.rule-item').first();
+			if (!$firstRule.hasClass('rule-confirmed')) {
+				const firstWeekday = $firstRule.find('.rule-weekday').val();
+				const firstStartTime = $firstRule.find('.rule-start-time').val();
+				const firstEndTime = $firstRule.find('.rule-end-time').val();
+
+				if (firstWeekday && firstStartTime && firstEndTime) {
+					validConfirmedRules++;
+				}
+			}
+
+			if (validConfirmedRules === 0) {
+				e.preventDefault();
+				showAlert({
+					type: 'warning',
+					title: 'AtenÃ§Ã£o',
+					message:
+						'Por favor, adicione pelo menos uma regra de recorrÃªncia completa (dia da semana e horÃ¡rio).',
+				});
+				return false;
+			}
+
+			const $firstRuleInputs = $firstRule.find('input[name*="rules[0]"], select[name*="rules[0]"]');
+			if (validConfirmedRules > 0 && $firstRuleInputs.length > 0) {
+				const firstWeekday = $firstRule.find('.rule-weekday').val();
+				const firstStartTime = $firstRule.find('.rule-start-time').val();
+				const firstEndTime = $firstRule.find('.rule-end-time').val();
+
+				if (!firstWeekday || !firstStartTime || !firstEndTime) {
+					$firstRuleInputs.each(function () {
+						if ($(this).attr('name')) {
+							$(this).removeAttr('name');
+						}
+					});
+				}
+			}
+
+			return true;
+		});
+
+	function updateFirstRuleRequired() {
+		const $firstRule = $('.rule-item').first();
+		const $firstWeekday = $firstRule.find('.rule-weekday');
+		const $firstTimeSlot = $firstRule.find('.rule-time-slot');
+		const $requiredIndicators = $firstRule.find('.rule-required-indicator');
+
+		const confirmedRulesCount = $('.rule-item.rule-confirmed').length;
+
+		if (confirmedRulesCount > 0) {
+			$firstWeekday.removeAttr('required');
+			$firstTimeSlot.removeAttr('required');
+			$requiredIndicators.hide();
+		} else {
+			$firstWeekday.attr('required', 'required');
+			$firstTimeSlot.attr('required', 'required');
+			$requiredIndicators.show();
+		}
+	}
+
+	$(document)
+		.off('click.recurringCreateRemove', '.remove-rule')
+		.on('click.recurringCreateRemove', '.remove-rule', function () {
+			$(this).closest('.rule-item').remove();
+			updateRemoveButtons();
+			$('.rule-item').each(function () {
+				const $item = $(this);
+				if (!$item.hasClass('rule-confirmed')) {
+					updateRule($item);
+				}
+			});
+			updateFirstRuleRequired();
+		});
+
+	function updateRemoveButtons() {
+		const ruleCount = $('.rule-item').length;
+		$('.rule-item').each(function (index) {
+			const $addBtn = $(this).find('#add-rule');
+			const $removeBtn = $(this).find('.remove-rule');
+
+			if (index === 0) {
+				$addBtn.show();
+				$removeBtn.hide();
+			} else {
+				$addBtn.hide();
+				$removeBtn.show();
+			}
+		});
+	}
+
+	initState();
+	updateRemoveButtons();
+}
+
+function initRecurringEdit($, tenantSlug) {
+	const form = document.querySelector('form[data-recurring-edit=\"true\"]');
+	if (!form) return;
+
+	let ruleIndex = $('.rule-item').length;
+	let businessHours = [];
+	let doctorId = null;
+	let appointmentTypeId = null;
+	let startDate = null;
+	const recurringAppointmentId = form.dataset.recurringId;
+	const currentAppointmentTypeId = form.dataset.currentAppointmentTypeId;
+
+	$('#end_type')
+		.off('change.recurringEdit')
+		.on('change.recurringEdit', function () {
+			const endType = $(this).val();
+			$('#total_sessions_field').toggle(endType === 'total_sessions');
+			$('#end_date_field').toggle(endType === 'date');
+		});
+
+	function loadAppointmentTypes(doctorId) {
+		const $appointmentTypeSelect = $('#appointment_type_id');
+
+		if (!doctorId) {
+			$appointmentTypeSelect.html('<option value="">Primeiro selecione um mÃ©dico</option>').prop('disabled', true);
+			return;
+		}
+
+		$appointmentTypeSelect.html('<option value="">Carregando...</option>').prop('disabled', true);
+
+		$.ajax({
+			url: `/workspace/${tenantSlug}/api/doctors/${doctorId}/appointment-types`,
+			method: 'GET',
+			success: function (data) {
+				$appointmentTypeSelect.empty();
+
+				if (!data || data.length === 0) {
+					$appointmentTypeSelect.append('<option value="">Nenhum tipo de consulta disponÃ­vel</option>');
+					$appointmentTypeSelect.prop('disabled', true);
+					return;
+				}
+
+				$appointmentTypeSelect.append('<option value="">Selecione um tipo</option>');
+
+				let currentTypeFound = false;
+				data.forEach(function (type) {
+					const selected = currentAppointmentTypeId && type.id === currentAppointmentTypeId ? 'selected' : '';
+					if (selected) currentTypeFound = true;
+					$appointmentTypeSelect.append(
+						`<option value="${type.id}" ${selected}>${type.name} (${type.duration_min} min)</option>`
+					);
+				});
+
+				$appointmentTypeSelect.prop('disabled', false);
+
+				if (currentAppointmentTypeId && !currentTypeFound) {
+					$appointmentTypeSelect.val('');
+					appointmentTypeId = null;
+				} else if (currentTypeFound) {
+					appointmentTypeId = currentAppointmentTypeId;
+				}
+			},
+			error: function (xhr) {
+				console.error('Erro ao buscar tipos de consulta:', xhr);
+				$appointmentTypeSelect.html('<option value="">Erro ao carregar tipos de consulta</option>');
+			},
+		});
+	}
+
+	function loadBusinessHours() {
+		doctorId = $('#doctor_id').val();
+
+		if (!doctorId) {
+			businessHours = [];
+			updateAllRules();
+			return;
+		}
+
+		$.ajax({
+			url: `/workspace/${tenantSlug}/api/doctors/${doctorId}/business-hours`,
+			method: 'GET',
+			success: function (data) {
+				businessHours = data;
+				updateAllRules();
+			},
+			error: function (xhr) {
+				console.error('Erro ao buscar horÃ¡rios do mÃ©dico:', xhr);
+				showAlert({
+					type: 'error',
+					title: 'Erro',
+					message: 'Erro ao carregar horÃ¡rios do mÃ©dico. Por favor, tente novamente.',
+				});
+			},
+		});
+	}
+
+	$('#appointment_type_id')
+		.off('change.recurringEdit')
+		.on('change.recurringEdit', function () {
+			appointmentTypeId = $(this).val();
+			updateAllRules();
+		});
+
+	$('#start_date')
+		.off('change.recurringEdit')
+		.on('change.recurringEdit', function () {
+			startDate = $(this).val();
+			updateAllRules();
+		});
+
+	$('#doctor_id')
+		.off('change.recurringEdit')
+		.on('change.recurringEdit', function () {
+			const selectedDoctorId = $(this).val();
+			loadAppointmentTypes(selectedDoctorId);
+			loadBusinessHours();
+		});
+
+	function initState() {
+		doctorId = $('#doctor_id').val();
+		appointmentTypeId = $('#appointment_type_id').val();
+		startDate = $('#start_date').val();
+
+		if (doctorId) {
+			loadAppointmentTypes(doctorId);
+			loadBusinessHours();
+		}
+	}
+
+	function updateAllRules() {
+		$('.rule-item').each(function () {
+			updateRule($(this));
+		});
+	}
+
+	function updateRule($ruleItem) {
+		const $weekdaySelect = $ruleItem.find('.rule-weekday');
+		const $timeSlotSelect = $ruleItem.find('.rule-time-slot');
+		const selectedWeekday = $weekdaySelect.data('selected');
+		const selectedTimeSlot = $timeSlotSelect.data('selected');
+
+		$weekdaySelect.empty();
+		$timeSlotSelect.empty();
+		$timeSlotSelect.prop('disabled', true);
+
+		if (!doctorId || businessHours.length === 0) {
+			$weekdaySelect.append('<option value="">Primeiro selecione um mÃ©dico</option>');
+			$weekdaySelect.prop('disabled', true);
+			return;
+		}
+
+		businessHours.forEach(function (bh) {
+			const selected = selectedWeekday === bh.weekday_string ? 'selected' : '';
+			$weekdaySelect.append(`<option value="${bh.weekday_string}" ${selected}>${bh.weekday_name}</option>`);
+		});
+
+		$weekdaySelect.prop('disabled', false);
+		setupRuleHandlers($ruleItem);
+
+		if (selectedWeekday) {
+			loadTimeSlotsForDay($ruleItem, selectedWeekday, selectedTimeSlot);
+		}
+	}
+
+	function loadTimeSlotsForDay($ruleItem, weekdayString, selectedTimeSlot = null) {
+		const $timeSlotSelect = $ruleItem.find('.rule-time-slot');
+		const $startTimeInput = $ruleItem.find('.rule-start-time');
+		const $endTimeInput = $ruleItem.find('.rule-end-time');
+
+		$timeSlotSelect.empty();
+		$timeSlotSelect.append('<option value="">Carregando...</option>');
+		$timeSlotSelect.prop('disabled', true);
+
+		if (!doctorId || !appointmentTypeId || !startDate) {
+			$timeSlotSelect.empty();
+			$timeSlotSelect.append('<option value="">Selecione mÃ©dico, tipo de consulta e data inicial</option>');
+			return;
+		}
+
+		$.ajax({
+			url: `/workspace/${tenantSlug}/api/doctors/${doctorId}/available-slots-recurring`,
+			method: 'GET',
+			data: {
+				weekday: weekdayString,
+				appointment_type_id: appointmentTypeId,
+				start_date: startDate,
+				recurring_appointment_id: recurringAppointmentId,
+			},
+			success: function (slots) {
+				$timeSlotSelect.empty();
+
+				if (slots.length === 0) {
+					$timeSlotSelect.append('<option value="">Nenhum horÃ¡rio disponÃ­vel</option>');
+					$timeSlotSelect.prop('disabled', true);
+					return;
+				}
+
+				$timeSlotSelect.append('<option value="">Selecione um horÃ¡rio</option>');
+				slots.forEach(function (slot) {
+					const timeSlotValue = `${slot.start}|${slot.end}`;
+					const selected = selectedTimeSlot === timeSlotValue ? 'selected' : '';
+					$timeSlotSelect.append(
+						`<option value="${timeSlotValue}" data-start="${slot.start}" data-end="${slot.end}" ${selected}>${slot.display}</option>`
+					);
+				});
+
+				$timeSlotSelect.prop('disabled', false);
+
+				if (selectedTimeSlot) {
+					const selectedOption = $timeSlotSelect.find(`option[value="${selectedTimeSlot}"]`);
+					if (selectedOption.length) {
+						$startTimeInput.val(selectedOption.data('start'));
+						$endTimeInput.val(selectedOption.data('end'));
+					}
+				}
+			},
+			error: function (xhr) {
+				console.error('Erro ao buscar horÃ¡rios disponÃ­veis:', xhr);
+				$timeSlotSelect.empty();
+				$timeSlotSelect.append('<option value="">Erro ao carregar horÃ¡rios</option>');
+				$timeSlotSelect.prop('disabled', true);
+			},
+		});
+	}
+
+	function setupRuleHandlers($ruleItem) {
+		const $weekdaySelect = $ruleItem.find('.rule-weekday');
+		const $timeSlotSelect = $ruleItem.find('.rule-time-slot');
+		const $startTimeInput = $ruleItem.find('.rule-start-time');
+		const $endTimeInput = $ruleItem.find('.rule-end-time');
+
+		$weekdaySelect.off('change').on('change', function () {
+			const weekdayString = $(this).val();
+			if (weekdayString) {
+				loadTimeSlotsForDay($ruleItem, weekdayString);
+			} else {
+				$timeSlotSelect.empty();
+				$timeSlotSelect.append('<option value="">Selecione o dia</option>');
+				$timeSlotSelect.prop('disabled', true);
+			}
+		});
+
+		$timeSlotSelect.off('change').on('change', function () {
+			const selectedOption = $(this).find('option:selected');
+			const startTime = selectedOption.data('start');
+			const endTime = selectedOption.data('end');
+
+			if (startTime && endTime) {
+				$startTimeInput.val(startTime);
+				$endTimeInput.val(endTime);
+			} else {
+				$startTimeInput.val('');
+				$endTimeInput.val('');
+			}
+		});
+	}
+
+	$('#add-rule')
+		.off('click.recurringEdit')
+		.on('click.recurringEdit', function () {
+			const $lastRule = $('.rule-item').last();
+
+			const currentWeekday = $lastRule.find('.rule-weekday').val();
+			const currentTimeSlot = $lastRule.find('.rule-time-slot').val();
+			const currentStartTime = $lastRule.find('.rule-start-time').val();
+			const currentEndTime = $lastRule.find('.rule-end-time').val();
+
+			const ruleHtml = `
+            <div class="rule-item mb-3 p-3 border rounded">
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label class="fw-semibold">Dia da Semana <span class="text-danger">*</span></label>
+                            <select name="rules[${ruleIndex}][weekday]" class="form-control rule-weekday" required>
+                                ${businessHours.length > 0 ? businessHours.map(bh => `<option value="${bh.weekday_string}" ${bh.weekday_string === currentWeekday ? 'selected' : ''}>${bh.weekday_name}</option>`).join('') : '<option value="">Primeiro selecione um mÃ©dico</option>'}
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label class="fw-semibold">HorÃ¡rio DisponÃ­vel <span class="text-danger">*</span></label>
+                            <select name="rules[${ruleIndex}][time_slot]" class="form-control rule-time-slot" required>
+                                <option value="">Selecione o dia e tipo de consulta</option>
+                            </select>
+                            <input type="hidden" name="rules[${ruleIndex}][start_time]" class="rule-start-time" value="${currentStartTime || ''}">
+                            <input type="hidden" name="rules[${ruleIndex}][end_time]" class="rule-end-time" value="${currentEndTime || ''}">
+                        </div>
+                    </div>
+                    <input type="hidden" name="rules[${ruleIndex}][frequency]" value="weekly">
+                    <input type="hidden" name="rules[${ruleIndex}][interval]" value="1">
+                    <div class="col-md-4 d-flex align-items-end">
+                        <div class="form-group w-100">
+                            <label class="fw-semibold">&nbsp;</label>
+                            <button type="button" class="remove-rule w-100 inline-flex items-center justify-center gap-1 rounded-md bg-error text-white text-sm font-semibold transition hover:bg-error/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-error/50 focus-visible:ring-offset-white dark:focus-visible:ring-offset-gray-900">
+                                <i class="mdi mdi-delete"></i> Remover
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+
+			const $newRule = $(ruleHtml);
+			$('#rules-container').append($newRule);
+
+			setupRuleHandlers($newRule);
+
+			if (currentWeekday) {
+				loadTimeSlotsForDay($newRule, currentWeekday, currentTimeSlot);
+			} else {
+				updateRule($newRule);
+			}
+
+			$lastRule.find('.rule-weekday').val('');
+			$lastRule.find('.rule-time-slot').val('').prop('disabled', true);
+			$lastRule.find('.rule-start-time').val('');
+			$lastRule.find('.rule-end-time').val('');
+
+			ruleIndex++;
+			updateRemoveButtons();
+		});
+
+	$(document)
+		.off('click.recurringEditRemove', '.remove-rule')
+		.on('click.recurringEditRemove', '.remove-rule', function () {
+			$(this).closest('.rule-item').remove();
+			updateRemoveButtons();
+		});
+
+	function updateRemoveButtons() {
+		const ruleCount = $('.rule-item').length;
+		$('.rule-item').each(function (index) {
+			const $removeBtn = $(this).find('.remove-rule');
+			if (index === 0 && ruleCount === 1) {
+				$removeBtn.hide();
+			} else if (index === 0 && ruleCount > 1) {
+				$removeBtn.show();
+			} else {
+				$removeBtn.show();
+			}
+		});
+	}
+
+	initState();
+	updateRemoveButtons();
 }
 

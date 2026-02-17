@@ -1,668 +1,404 @@
 @extends('layouts.tailadmin.public')
 
 @section('title', 'Novo Agendamento — ' . ($tenant->trade_name ?? $tenant->legal_name ?? 'Sistema'))
+@section('page', 'public-appointment-create')
 
-@push('styles')
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@mdi/font@7.4.47/css/materialdesignicons.min.css">
-    <style>
-        .form-group label {
-            font-weight: 600;
-            color: #2c3e50;
-            margin-bottom: 0.5rem;
-        }
-        .card-title {
-            font-weight: 600;
-        }
-        h5.text-primary {
-            font-weight: 600;
-            padding-bottom: 0.5rem;
-            border-bottom: 2px solid #e9ecef;
-        }
-        .btn-lg {
-            padding: 0.75rem 2rem;
-            font-weight: 600;
-        }
-        #appointment_time:disabled {
-            background-color: #e9ecef;
-            cursor: not-allowed;
-        }
-        .page-wrapper {
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            padding: 2rem 0;
-        }
-        .public-card {
-            background: white;
-            border-radius: 10px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-        }
-    </style>
-@endpush
 
 @section('content')
-    <div class="page-wrapper">
-        <div class="container">
-            <div class="row justify-content-center">
-                <div class="col-lg-10">
-                    <div class="card public-card">
-                        <div class="card-body p-5">
-                            
-                            {{-- Cabeçalho --}}
-                            <div class="text-center mb-4">
-                                <h3 class="card-title mb-2">
-                                    <i class="mdi mdi-calendar-plus text-primary me-2"></i>
-                                    Novo Agendamento
-                                </h3>
-                                <p class="text-muted mb-0">Preencha os dados abaixo para realizar seu agendamento</p>
-                            </div>
 
-                            {{-- Nome do Paciente --}}
-                            @if(isset($patientName) && $patientName)
-                                <div class="alert alert-info d-flex align-items-center mb-4" role="alert">
-                                    <i class="mdi mdi-account-circle me-2" style="font-size: 24px;"></i>
-                                    <div>
-                                        <strong>Paciente:</strong> {{ $patientName }}
-                                    </div>
-                                </div>
-                            @endif
+    <div id="public-appointment-create-config"
+         data-tenant="{{ $tenant->subdomain }}"
+         data-calendars-url-template="/customer/{{ $tenant->subdomain }}/agendamento/api/doctors/__ID__/calendars"
+         data-appointment-types-url-template="/customer/{{ $tenant->subdomain }}/agendamento/api/doctors/__ID__/appointment-types"
+         data-specialties-url-template="/customer/{{ $tenant->subdomain }}/agendamento/api/doctors/__ID__/specialties"
+         data-available-slots-url-template="/customer/{{ $tenant->subdomain }}/agendamento/api/doctors/__ID__/available-slots?date=__DATE__"
+         data-business-hours-url-template="/customer/{{ $tenant->subdomain }}/agendamento/api/doctors/__ID__/business-hours"
+         data-old-doctor-id="{{ old('doctor_id') }}"
+         data-old-date="{{ old('appointment_date') }}"
+         data-old-appointment-type="{{ old('appointment_type') }}"
+         data-old-specialty="{{ old('specialty_id') }}"></div>
 
-                            {{-- Mensagens --}}
-                            @if (session('error'))
-                                <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                                    <i class="mdi mdi-alert-circle me-2"></i>
-                                    {{ session('error') }}
-                                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                                </div>
-                            @endif
+    <div class="min-h-screen bg-slate-50">
+        <div class="mx-auto w-full max-w-4xl px-4 sm:px-6 lg:px-8 py-10">
 
-                            @if ($errors->any())
-                                <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                                    <i class="mdi mdi-alert-circle me-2"></i>
-                                    <strong>Erro!</strong> Por favor, verifique os campos abaixo.
-                                    <ul class="mb-0 mt-2">
-                                        @foreach ($errors->all() as $error)
-                                            <li>{{ $error }}</li>
-                                        @endforeach
-                                    </ul>
-                                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                                </div>
-                            @endif
+            {{-- Cabeçalho --}}
+            <div class="mb-6 sm:mb-8">
+                <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                        <h1 class="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900 flex items-center gap-2">
+                            <span class="inline-flex h-9 w-9 items-center justify-center rounded-full bg-indigo-100 text-indigo-600">
+                                <i class="mdi mdi-calendar-plus text-lg"></i>
+                            </span>
+                            <span>Novo Agendamento</span>
+                        </h1>
+                        <p class="mt-1 text-sm text-slate-600">
+                            Preencha os dados abaixo para realizar seu agendamento.
+                        </p>
+                    </div>
 
-                            <form class="forms-sample" action="{{ route('public.appointment.store', ['slug' => $tenant->subdomain]) }}" method="POST">
-                                @csrf
+                    @if(isset($patientName) && $patientName)
+                        <div class="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs sm:text-sm font-medium text-slate-700 shadow-sm">
+                            <span class="inline-flex h-6 w-6 items-center justify-center rounded-full bg-indigo-50 text-indigo-600">
+                                <i class="mdi mdi-account-circle text-base"></i>
+                            </span>
+                            <span class="uppercase tracking-wide text-[0.7rem] text-slate-500">Paciente</span>
+                            <span class="text-slate-900">{{ $patientName }}</span>
+                        </div>
+                    @endif
+                </div>
+            </div>
 
-                                {{-- Seção: Informações Básicas --}}
-                                <div class="mb-4">
-                                    <h5 class="mb-3 text-primary">
-                                        <i class="mdi mdi-information-outline me-2"></i>
-                                        Informações Básicas
-                                    </h5>
-                                    <div class="row">
-                                        <div class="col-md-12">
-                                            <div class="form-group">
-                                                <label class="fw-semibold">
-                                                    <i class="mdi mdi-doctor me-1"></i>
-                                                    Médico <span class="text-danger">*</span>
-                                                </label>
-                                                <select name="doctor_id" id="doctor_id" class="form-control @error('doctor_id') is-invalid @enderror" required>
-                                                    <option value="">Selecione um médico</option>
-                                                    @foreach($doctors as $doctor)
-                                                        <option value="{{ $doctor->id }}" {{ old('doctor_id') == $doctor->id ? 'selected' : '' }}>
-                                                            {{ $doctor->user->name_full ?? $doctor->user->name }}
-                                                        </option>
-                                                    @endforeach
-                                                </select>
-                                                @error('doctor_id')
-                                                    <div class="invalid-feedback d-block">{{ $message }}</div>
-                                                @enderror
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="row">
-                                        <div class="col-md-6">
-                                            <div class="form-group">
-                                                <label class="fw-semibold">
-                                                    <i class="mdi mdi-stethoscope me-1"></i>
-                                                    Especialidade
-                                                </label>
-                                                <select name="specialty_id" id="specialty_id" class="form-control @error('specialty_id') is-invalid @enderror" disabled>
-                                                    <option value="">Primeiro selecione um médico</option>
-                                                </select>
-                                                @error('specialty_id')
-                                                    <div class="invalid-feedback d-block">{{ $message }}</div>
-                                                @enderror
-                                            </div>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <div class="form-group">
-                                                <label class="fw-semibold">
-                                                    <i class="mdi mdi-calendar-clock me-1"></i>
-                                                    Tipo de Consulta
-                                                </label>
-                                                <select name="appointment_type" id="appointment_type" class="form-control @error('appointment_type') is-invalid @enderror" disabled>
-                                                    <option value="">Primeiro selecione um médico</option>
-                                                </select>
-                                                @error('appointment_type')
-                                                    <div class="invalid-feedback d-block">{{ $message }}</div>
-                                                @enderror
-                                            </div>
-                                        </div>
-                                        @php
-                                            $settings = \App\Models\Tenant\TenantSetting::getAll();
-                                            $defaultMode = $settings['appointments.default_appointment_mode'] ?? 'user_choice';
-                                        @endphp
-                                        @if($defaultMode === 'user_choice')
-                                            <div class="col-md-12">
-                                                <div class="form-group">
-                                                    <label class="fw-semibold">
-                                                        <i class="mdi mdi-video-account me-1"></i>
-                                                        Modo de Consulta <span class="text-danger">*</span>
-                                                    </label>
-                                                    <select name="appointment_mode" class="form-control @error('appointment_mode') is-invalid @enderror" required>
-                                                        <option value="presencial" {{ old('appointment_mode', 'presencial') == 'presencial' ? 'selected' : '' }}>Presencial</option>
-                                                        <option value="online" {{ old('appointment_mode') == 'online' ? 'selected' : '' }}>Online</option>
-                                                    </select>
-                                                    @error('appointment_mode')
-                                                        <div class="invalid-feedback d-block">{{ $message }}</div>
-                                                    @enderror
-                                                </div>
-                                            </div>
-                                        @endif
-                                    </div>
-                                </div>
-
-                                {{-- Seção: Data e Hora --}}
-                                <div class="mb-4">
-                                    <h5 class="mb-3 text-primary">
-                                        <i class="mdi mdi-clock-outline me-2"></i>
-                                        Data e Horário
-                                    </h5>
-                                    <div class="row">
-                                        <div class="col-md-6">
-                                            <div class="form-group">
-                                                <label class="fw-semibold">
-                                                    <i class="mdi mdi-calendar-start me-1"></i>
-                                                    Data <span class="text-danger">*</span>
-                                                </label>
-                                                <div class="flex gap-2">
-                                                    <input type="date" id="appointment_date" class="form-control @error('appointment_date') is-invalid @enderror" 
-                                                           name="appointment_date" value="{{ old('appointment_date') }}" 
-                                                           min="{{ date('Y-m-d') }}" required>
-                                                    <x-tailadmin-button type="button" variant="secondary" size="sm" id="btn-show-business-hours"
-                                                        class="min-w-[44px] px-2 py-2" data-bs-toggle="modal" data-bs-target="#businessHoursModal"
-                                                        title="Ver dias trabalhados do médico" disabled>
-                                                        <i class="mdi mdi-calendar-clock"></i>
-                                                    </x-tailadmin-button>
-                                                </div>
-                                                @error('appointment_date')
-                                                    <div class="invalid-feedback d-block">{{ $message }}</div>
-                                                @enderror
-                                            </div>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <div class="form-group">
-                                                <label class="fw-semibold">
-                                                    <i class="mdi mdi-clock-outline me-1"></i>
-                                                    Horário Disponível <span class="text-danger">*</span>
-                                                </label>
-                                                <select name="appointment_time" id="appointment_time" class="form-control @error('appointment_time') is-invalid @enderror" required disabled>
-                                                    <option value="">Primeiro selecione a data</option>
-                                                </select>
-                                                @error('appointment_time')
-                                                    <div class="invalid-feedback d-block">{{ $message }}</div>
-                                                @enderror
-                                                <small class="form-text text-muted">Horários disponíveis baseados nas configurações do médico</small>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <input type="hidden" name="starts_at" id="starts_at">
-                                    <input type="hidden" name="ends_at" id="ends_at">
-                                    <input type="hidden" name="calendar_id" id="calendar_id">
-                                </div>
-
-                                {{-- Seção: Observações --}}
-                                <div class="mb-4">
-                                    <h5 class="mb-3 text-primary">
-                                        <i class="mdi mdi-information me-2"></i>
-                                        Observações
-                                    </h5>
-                                    <div class="row">
-                                        <div class="col-md-12">
-                                            <div class="form-group">
-                                                <label class="fw-semibold">
-                                                    <i class="mdi mdi-note-text me-1"></i>
-                                                    Observações
-                                                </label>
-                                                <textarea class="form-control @error('notes') is-invalid @enderror" 
-                                                          name="notes" rows="4" 
-                                                          placeholder="Digite observações sobre o agendamento (opcional)">{{ old('notes') }}</textarea>
-                                                @error('notes')
-                                                    <div class="invalid-feedback d-block">{{ $message }}</div>
-                                                @enderror
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {{-- Botões de Ação --}}
-                                <div class="flex flex-wrap items-center justify-between gap-3 pt-3 border-t">
-                                    <x-tailadmin-button variant="secondary" size="md" href="{{ route('public.patient.identify', ['slug' => $tenant->subdomain]) }}"
-                                        class="bg-transparent border-gray-300 text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-white/5">
-                                        <i class="mdi mdi-arrow-left"></i>
-                                        Voltar
-                                    </x-tailadmin-button>
-                                    <x-tailadmin-button type="submit" variant="primary" size="lg">
-                                        <i class="mdi mdi-content-save"></i>
-                                        Confirmar Agendamento
-                                    </x-tailadmin-button>
-                                </div>
-                            </form>
-
+            {{-- Mensagens --}}
+            <div class="mb-6 space-y-3">
+                @if (session('error'))
+                    <div class="flex items-start gap-3 rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-800">
+                        <span class="mt-0.5 inline-flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-red-100 text-red-600">
+                            <i class="mdi mdi-alert-circle text-base"></i>
+                        </span>
+                        <div class="flex-1">
+                            <p class="font-semibold">Ocorreu um problema</p>
+                            <p class="mt-0.5">{{ session('error') }}</p>
                         </div>
                     </div>
-                </div>
+                @endif
+
+                @if ($errors->any())
+                    <div class="flex items-start gap-3 rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-800">
+                        <span class="mt-0.5 inline-flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-red-100 text-red-600">
+                            <i class="mdi mdi-alert-circle text-base"></i>
+                        </span>
+                        <div class="flex-1">
+                            <p class="font-semibold">Erro ao enviar o formulário</p>
+                            <p class="mt-0.5">Por favor, verifique os campos abaixo.</p>
+                            <ul class="mt-1 list-disc space-y-0.5 pl-5">
+                                @foreach ($errors->all() as $error)
+                                    <li>{{ $error }}</li>
+                                @endforeach
+                            </ul>
+                        </div>
+                    </div>
+                @endif
+            </div>
+
+            <div class="space-y-5 sm:space-y-6">
+
+                    <form class="space-y-5 sm:space-y-6" action="{{ route('public.appointment.store', ['slug' => $tenant->subdomain]) }}" method="POST">
+                        @csrf
+
+                        {{-- Card 1: Informações Básicas --}}
+                        <div class="rounded-2xl bg-white p-5 sm:p-6 shadow-sm ring-1 ring-slate-200 appointment-card">
+                            <div class="flex items-start justify-between gap-3 mb-4">
+                                <div>
+                                    <h2 class="text-base font-semibold leading-6 text-slate-900 flex items-center gap-2">
+                                        <span class="inline-flex h-8 w-8 items-center justify-center rounded-full bg-indigo-50 text-indigo-600">
+                                            <i class="mdi mdi-information-outline text-base"></i>
+                                        </span>
+                                        <span>Informações Básicas</span>
+                                    </h2>
+                                    <p class="mt-1 text-xs sm:text-sm text-slate-600">Selecione o médico, especialidade, tipo e modo de consulta.</p>
+                                </div>
+                            </div>
+
+                            <div class="space-y-4">
+                                {{-- Médico --}}
+                                <div>
+                                    <label for="doctor_id" class="block text-sm font-medium text-slate-700 mb-1.5">
+                                        <span class="inline-flex items-center gap-1">
+                                            <i class="mdi mdi-doctor text-slate-500 text-base"></i>
+                                            <span>Médico</span>
+                                            <span class="text-red-500">*</span>
+                                        </span>
+                                    </label>
+                                    <select
+                                        name="doctor_id"
+                                        id="doctor_id"
+                                        class="w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 shadow-sm focus:border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 @error('doctor_id') border-red-300 focus:ring-red-500 @enderror"
+                                        required
+                                    >
+                                        <option value="">Selecione um médico</option>
+                                        @foreach($doctors as $doctor)
+                                            <option value="{{ $doctor->id }}" {{ old('doctor_id') == $doctor->id ? 'selected' : '' }}>
+                                                {{ $doctor->user->name_full ?? $doctor->user->name }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                    @error('doctor_id')
+                                        <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
+                                    @enderror
+                                </div>
+
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    {{-- Especialidade --}}
+                                    <div>
+                                        <label for="specialty_id" class="block text-sm font-medium text-slate-700 mb-1.5">
+                                            <span class="inline-flex items-center gap-1">
+                                                <i class="mdi mdi-stethoscope text-slate-500 text-base"></i>
+                                                <span>Especialidade</span>
+                                            </span>
+                                        </label>
+                                        <select
+                                            name="specialty_id"
+                                            id="specialty_id"
+                                            class="w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 shadow-sm focus:border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:bg-slate-50 disabled:text-slate-500 @error('specialty_id') border-red-300 focus:ring-red-500 @enderror"
+                                            disabled
+                                        >
+                                            <option value="">Primeiro selecione um médico</option>
+                                        </select>
+                                        @error('specialty_id')
+                                            <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
+                                        @enderror
+                                    </div>
+
+                                    {{-- Tipo de Consulta --}}
+                                    <div>
+                                        <label for="appointment_type" class="block text-sm font-medium text-slate-700 mb-1.5">
+                                            <span class="inline-flex items-center gap-1">
+                                                <i class="mdi mdi-calendar-clock text-slate-500 text-base"></i>
+                                                <span>Tipo de Consulta</span>
+                                            </span>
+                                        </label>
+                                        <select
+                                            name="appointment_type"
+                                            id="appointment_type"
+                                            class="w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 shadow-sm focus:border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:bg-slate-50 disabled:text-slate-500 @error('appointment_type') border-red-300 focus:ring-red-500 @enderror"
+                                            disabled
+                                        >
+                                            <option value="">Primeiro selecione um médico</option>
+                                        </select>
+                                        @error('appointment_type')
+                                            <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
+                                        @enderror
+                                    </div>
+                                </div>
+
+                                @php
+                                    $settings = \App\Models\Tenant\TenantSetting::getAll();
+                                    $defaultMode = $settings['appointments.default_appointment_mode'] ?? 'user_choice';
+                                @endphp
+                                @if($defaultMode === 'user_choice')
+                                    {{-- Modo de Consulta --}}
+                                    <div>
+                                        <label for="appointment_mode" class="block text-sm font-medium text-slate-700 mb-1.5">
+                                            <span class="inline-flex items-center gap-1">
+                                                <i class="mdi mdi-video-account text-slate-500 text-base"></i>
+                                                <span>Modo de Consulta</span>
+                                                <span class="text-red-500">*</span>
+                                            </span>
+                                        </label>
+                                        <select
+                                            name="appointment_mode"
+                                            id="appointment_mode"
+                                            class="w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 shadow-sm focus:border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 @error('appointment_mode') border-red-300 focus:ring-red-500 @enderror"
+                                            required
+                                        >
+                                            <option value="presencial" {{ old('appointment_mode', 'presencial') == 'presencial' ? 'selected' : '' }}>Presencial</option>
+                                            <option value="online" {{ old('appointment_mode') == 'online' ? 'selected' : '' }}>Online</option>
+                                        </select>
+                                        @error('appointment_mode')
+                                            <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
+                                        @enderror
+                                    </div>
+                                @endif
+                            </div>
+                        </div>
+
+                        {{-- Card 2: Data e Horário --}}
+                        <div class="rounded-2xl bg-white p-5 sm:p-6 shadow-sm ring-1 ring-slate-200 appointment-card">
+                            <div class="flex items-start justify-between gap-3 mb-4">
+                                <div>
+                                    <h2 class="text-base font-semibold leading-6 text-slate-900 flex items-center gap-2">
+                                        <span class="inline-flex h-8 w-8 items-center justify-center rounded-full bg-indigo-50 text-indigo-600">
+                                            <i class="mdi mdi-clock-outline text-base"></i>
+                                        </span>
+                                        <span>Data e Horário</span>
+                                    </h2>
+                                    <p class="mt-1 text-xs sm:text-sm text-slate-600">Escolha a melhor data e horário com base na agenda do médico.</p>
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                {{-- Data --}}
+                                <div>
+                                    <label for="appointment_date" class="block text-sm font-medium text-slate-700 mb-1.5">
+                                        <span class="inline-flex items-center gap-1">
+                                            <i class="mdi mdi-calendar-start text-slate-500 text-base"></i>
+                                            <span>Data</span>
+                                            <span class="text-red-500">*</span>
+                                        </span>
+                                    </label>
+                                    <div class="flex items-stretch gap-2">
+                                        <input
+                                            type="date"
+                                            id="appointment_date"
+                                            name="appointment_date"
+                                            value="{{ old('appointment_date') }}"
+                                            min="{{ date('Y-m-d') }}"
+                                            required
+                                            class="flex-1 rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 shadow-sm focus:border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 @error('appointment_date') border-red-300 focus:ring-red-500 @enderror"
+                                        >
+                                        <x-tailadmin-button
+                                            type="button"
+                                            variant="secondary"
+                                            size="sm"
+                                            id="btn-show-business-hours"
+                                            class="min-w-[44px] px-2 py-2 flex items-center justify-center"
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#businessHoursModal"
+                                            title="Ver dias trabalhados do médico"
+                                            disabled
+                                        >
+                                            <i class="mdi mdi-calendar-clock text-base"></i>
+                                        </x-tailadmin-button>
+                                    </div>
+                                    @error('appointment_date')
+                                        <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
+                                    @enderror
+                                </div>
+
+                                {{-- Horário Disponível --}}
+                                <div>
+                                    <label for="appointment_time" class="block text-sm font-medium text-slate-700 mb-1.5">
+                                        <span class="inline-flex items-center gap-1">
+                                            <i class="mdi mdi-clock-outline text-slate-500 text-base"></i>
+                                            <span>Horário Disponível</span>
+                                            <span class="text-red-500">*</span>
+                                        </span>
+                                    </label>
+                                    <select
+                                        name="appointment_time"
+                                        id="appointment_time"
+                                        required
+                                        disabled
+                                        class="w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 shadow-sm focus:border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:bg-slate-50 disabled:text-slate-500 @error('appointment_time') border-red-300 focus:ring-red-500 @enderror"
+                                    >
+                                        <option value="">Primeiro selecione a data</option>
+                                    </select>
+                                    @error('appointment_time')
+                                        <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
+                                    @enderror
+                                    <p class="mt-1 text-xs text-slate-500">Horários disponíveis baseados nas configurações do médico.</p>
+                                </div>
+                            </div>
+
+                            <input type="hidden" name="starts_at" id="starts_at">
+                            <input type="hidden" name="ends_at" id="ends_at">
+                            <input type="hidden" name="calendar_id" id="calendar_id">
+                        </div>
+
+                        {{-- Card 3: Observações --}}
+                        <div class="rounded-2xl bg-white p-5 sm:p-6 shadow-sm ring-1 ring-slate-200 appointment-card">
+                            <div class="flex items-start justify-between gap-3 mb-4">
+                                <div>
+                                    <h2 class="text-base font-semibold leading-6 text-slate-900 flex items-center gap-2">
+                                        <span class="inline-flex h-8 w-8 items-center justify-center rounded-full bg-indigo-50 text-indigo-600">
+                                            <i class="mdi mdi-information text-base"></i>
+                                        </span>
+                                        <span>Observações</span>
+                                    </h2>
+                                    <p class="mt-1 text-xs sm:text-sm text-slate-600">Adicione informações adicionais importantes para o atendimento.</p>
+                                </div>
+                            </div>
+
+                            <div>
+                                <label for="notes" class="block text-sm font-medium text-slate-700 mb-1.5">
+                                    <span class="inline-flex items-center gap-1">
+                                        <i class="mdi mdi-note-text text-slate-500 text-base"></i>
+                                        <span>Observações</span>
+                                    </span>
+                                </label>
+                                <textarea
+                                    id="notes"
+                                    name="notes"
+                                    rows="4"
+                                    placeholder="Digite observações sobre o agendamento (opcional)"
+                                    class="w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 shadow-sm focus:border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 @error('notes') border-red-300 focus:ring-red-500 @enderror"
+                                >{{ old('notes') }}</textarea>
+                                @error('notes')
+                                    <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
+                                @enderror
+                            </div>
+                        </div>
+
+                        {{-- Ações --}}
+                        <div class="mt-8 flex items-center justify-between">
+                            <a
+                                href="{{ route('public.patient.identify', ['slug' => $tenant->subdomain]) }}"
+                                class="inline-flex items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-1"
+                            >
+                                <i class="mdi mdi-arrow-left text-base"></i>
+                                <span>Voltar</span>
+                            </a>
+
+                            <button
+                                type="submit"
+                                class="inline-flex items-center justify-center rounded-lg bg-indigo-600 px-6 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                <i class="mdi mdi-content-save text-base"></i>
+                                <span>Confirmar Agendamento</span>
+                            </button>
+                        </div>
+
+                    </form>
+
             </div>
         </div>
     </div>
 
     {{-- Modal de Dias Trabalhados --}}
-    <div class="modal fade" id="businessHoursModal" tabindex="-1" aria-labelledby="businessHoursModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="businessHoursModalLabel">
-                        <i class="mdi mdi-calendar-clock me-2"></i>
-                        Dias Trabalhados do Médico
-                    </h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+    <div id="businessHoursModal" class="fixed inset-0 z-999999 hidden" tabindex="-1" aria-labelledby="businessHoursModalLabel" aria-hidden="true">
+        <div class="flex min-h-screen items-center justify-center p-4">
+            <div class="fixed inset-0 bg-black/50" data-bs-dismiss="modal" aria-hidden="true"></div>
+
+            <div class="relative w-full max-w-3xl overflow-hidden rounded-2xl bg-white shadow-xl ring-1 ring-slate-200 dark:bg-slate-900 dark:ring-slate-800">
+                <div class="flex items-center justify-between gap-4 border-b border-slate-200 px-5 py-4 dark:border-slate-800">
+                    <h2 class="text-base font-semibold leading-6 text-slate-900 flex items-center gap-2 dark:text-white" id="businessHoursModalLabel">
+                        <span class="inline-flex h-8 w-8 items-center justify-center rounded-full bg-indigo-50 text-indigo-600 dark:bg-indigo-500/10 dark:text-indigo-400">
+                            <i class="mdi mdi-calendar-clock text-base"></i>
+                        </span>
+                        <span>Dias Trabalhados do Médico</span>
+                    </h2>
+
+                    <button type="button" class="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600 shadow-sm hover:bg-slate-50 hover:text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-1 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800" data-bs-dismiss="modal" aria-label="Fechar">
+                        <i class="mdi mdi-close text-lg"></i>
+                    </button>
                 </div>
-                <div class="modal-body">
-                    <div id="business-hours-loading" class="text-center py-4">
-                        <div class="spinner-border text-primary" role="status">
-                            <span class="visually-hidden">Carregando...</span>
-                        </div>
-                        <p class="mt-2 text-muted">Carregando informações...</p>
+
+                <div class="px-5 py-4">
+                    <div id="business-hours-loading" class="text-center py-6">
+                        <div class="mx-auto h-10 w-10 animate-spin rounded-full border-4 border-solid border-indigo-500 border-t-transparent"></div>
+                        <p class="mt-3 text-sm text-slate-600 dark:text-slate-300">Carregando informações...</p>
                     </div>
-                    <div id="business-hours-content" class="d-none">
-                        <div class="mb-3">
-                            <strong>Médico:</strong> <span id="business-hours-doctor-name">-</span>
+
+                    <div id="business-hours-content" class="hidden">
+                        <div class="mb-4 text-sm text-slate-700 dark:text-slate-200">
+                            <span class="font-semibold">Médico:</span> <span id="business-hours-doctor-name">-</span>
                         </div>
-                        <div id="business-hours-list">
-                            <!-- Conteúdo será preenchido via JavaScript -->
-                        </div>
-                        <div id="business-hours-empty" class="alert alert-info d-none">
-                            <i class="mdi mdi-information-outline me-2"></i>
-                            Nenhum dia trabalhado configurado para este médico.
+
+                        <div id="business-hours-list"></div>
+
+                        <div id="business-hours-empty" class="hidden rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200">
+                            <div class="flex items-start gap-2">
+                                <i class="mdi mdi-information-outline text-lg text-indigo-600 dark:text-indigo-400"></i>
+                                <span>Nenhum dia trabalhado configurado para este médico.</span>
+                            </div>
                         </div>
                     </div>
-                    <div id="business-hours-error" class="alert alert-danger d-none">
-                        <i class="mdi mdi-alert-circle me-2"></i>
-                        <span id="business-hours-error-message">Erro ao carregar informações.</span>
+
+                    <div id="business-hours-error" class="hidden rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800 dark:border-red-900/40 dark:bg-red-900/20 dark:text-red-200">
+                        <div class="flex items-start gap-2">
+                            <i class="mdi mdi-alert-circle text-lg"></i>
+                            <span id="business-hours-error-message">Erro ao carregar informações.</span>
+                        </div>
                     </div>
                 </div>
-                <div class="modal-footer">
-                    <x-tailadmin-button type="button" variant="secondary" size="sm" data-bs-dismiss="modal">
+
+                <div class="flex items-center justify-end gap-3 border-t border-slate-200 px-5 py-4 dark:border-slate-800">
+                    <button type="button" class="inline-flex items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-1 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800" data-bs-dismiss="modal">
                         Fechar
-                    </x-tailadmin-button>
+                    </button>
                 </div>
             </div>
         </div>
     </div>
-
-    @push('scripts')
-    <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const tenant = '{{ $tenant->subdomain }}';
-        const doctorSelect = document.getElementById('doctor_id');
-        const calendarIdInput = document.getElementById('calendar_id'); // Campo hidden
-        const appointmentTypeSelect = document.getElementById('appointment_type');
-        const specialtySelect = document.getElementById('specialty_id');
-        const dateInput = document.getElementById('appointment_date');
-        const timeSelect = document.getElementById('appointment_time');
-        const startsAtInput = document.getElementById('starts_at');
-        const endsAtInput = document.getElementById('ends_at');
-
-        // Setar data mínima como hoje
-        const today = new Date().toISOString().split('T')[0];
-        dateInput.setAttribute('min', today);
-
-        // Carregar calendário (automático), tipos e especialidades quando médico for selecionado
-        doctorSelect.addEventListener('change', function() {
-            const doctorId = this.value;
-            
-            if (!doctorId) {
-                resetDependentFields();
-                document.getElementById('btn-show-business-hours').disabled = true;
-                return;
-            }
-
-            // Habilitar botão de ver dias trabalhados
-            document.getElementById('btn-show-business-hours').disabled = false;
-
-            // Seleciona automaticamente o primeiro calendário do médico
-            loadCalendarAuto(doctorId);
-            loadAppointmentTypes(doctorId);
-            loadSpecialties(doctorId);
-        });
-
-        // Carregar horários disponíveis quando data ou tipo de consulta mudar
-        dateInput.addEventListener('change', function() {
-            loadAvailableSlots();
-        });
-
-        appointmentTypeSelect.addEventListener('change', function() {
-            loadAvailableSlots();
-        });
-
-        // Atualizar campos hidden quando horário for selecionado
-        timeSelect.addEventListener('change', function() {
-            const selectedOption = this.options[this.selectedIndex];
-            if (selectedOption.value) {
-                startsAtInput.value = selectedOption.dataset.start;
-                endsAtInput.value = selectedOption.dataset.end;
-            } else {
-                startsAtInput.value = '';
-                endsAtInput.value = '';
-            }
-        });
-
-        // Validação antes de enviar o formulário
-        document.querySelector('form').addEventListener('submit', function(e) {
-            if (!calendarIdInput.value) {
-                e.preventDefault();
-                showAlert({ type: 'error', title: 'Erro', message: 'Calendário não foi selecionado. Por favor, selecione um médico novamente.' });
-                return false;
-            }
-            
-            if (!startsAtInput.value || !endsAtInput.value) {
-                e.preventDefault();
-                showAlert({ type: 'warning', title: 'Atenção', message: 'Por favor, selecione um horário disponível.' });
-                return false;
-            }
-        });
-
-        function resetDependentFields() {
-            calendarIdInput.value = '';
-            
-            appointmentTypeSelect.innerHTML = '<option value="">Primeiro selecione um médico</option>';
-            appointmentTypeSelect.disabled = true;
-            
-            specialtySelect.innerHTML = '<option value="">Primeiro selecione um médico</option>';
-            specialtySelect.disabled = true;
-            
-            timeSelect.innerHTML = '<option value="">Primeiro selecione a data</option>';
-            timeSelect.disabled = true;
-        }
-
-        function loadCalendarAuto(doctorId) {
-            // Carrega o primeiro calendário do médico automaticamente
-            fetch(`/customer/${tenant}/agendamento/api/doctors/${doctorId}/calendars`)
-                .then(response => response.json())
-                .then(data => {
-                    if (data && data.length > 0) {
-                        // Seleciona automaticamente o primeiro calendário
-                        calendarIdInput.value = data[0].id;
-                        console.log('Calendário selecionado automaticamente:', data[0].name);
-                    } else {
-                        console.error('Nenhum calendário encontrado para este médico');
-                        calendarIdInput.value = '';
-                    }
-                })
-                .catch(error => {
-                    console.error('Erro ao carregar calendário:', error);
-                    calendarIdInput.value = '';
-                });
-        }
-
-        function loadAppointmentTypes(doctorId) {
-            fetch(`/customer/${tenant}/agendamento/api/doctors/${doctorId}/appointment-types`)
-                .then(response => response.json())
-                .then(data => {
-                    appointmentTypeSelect.innerHTML = '<option value="">Selecione um tipo</option>';
-                    data.forEach(type => {
-                        const option = document.createElement('option');
-                        option.value = type.id;
-                        option.textContent = `${type.name} (${type.duration_min} min)`;
-                        option.dataset.duration = type.duration_min;
-                        appointmentTypeSelect.appendChild(option);
-                    });
-                    appointmentTypeSelect.disabled = false;
-                })
-                .catch(error => {
-                    console.error('Erro ao carregar tipos de consulta:', error);
-                    appointmentTypeSelect.innerHTML = '<option value="">Erro ao carregar tipos</option>';
-                });
-        }
-
-        function loadSpecialties(doctorId) {
-            fetch(`/customer/${tenant}/agendamento/api/doctors/${doctorId}/specialties`)
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error(`HTTP error! status: ${response.status}`);
-                    }
-                    return response.json();
-                })
-                .then(data => {
-                    specialtySelect.innerHTML = '<option value="">Selecione uma especialidade</option>';
-                    
-                    if (data && data.length > 0) {
-                        data.forEach(specialty => {
-                            const option = document.createElement('option');
-                            option.value = specialty.id;
-                            option.textContent = specialty.name;
-                            specialtySelect.appendChild(option);
-                        });
-                    } else {
-                        specialtySelect.innerHTML = '<option value="">Nenhuma especialidade cadastrada para este médico</option>';
-                    }
-                    
-                    specialtySelect.disabled = false;
-                })
-                .catch(error => {
-                    console.error('Erro ao carregar especialidades:', error);
-                    specialtySelect.innerHTML = '<option value="">Erro ao carregar especialidades</option>';
-                    specialtySelect.disabled = false;
-                });
-        }
-
-        function loadAvailableSlots() {
-            const doctorId = doctorSelect.value;
-            const date = dateInput.value;
-            const appointmentTypeId = appointmentTypeSelect.value;
-
-            if (!doctorId || !date) {
-                timeSelect.innerHTML = '<option value="">Primeiro selecione médico e data</option>';
-                timeSelect.disabled = true;
-                return;
-            }
-
-            timeSelect.disabled = true;
-            timeSelect.innerHTML = '<option value="">Carregando horários...</option>';
-
-            const url = `/customer/${tenant}/agendamento/api/doctors/${doctorId}/available-slots?date=${date}`;
-            const finalUrl = appointmentTypeId ? `${url}&appointment_type_id=${appointmentTypeId}` : url;
-
-            fetch(finalUrl)
-                .then(response => response.json())
-                .then(data => {
-                    timeSelect.innerHTML = '<option value="">Selecione um horário</option>';
-                    
-                    if (data.length === 0) {
-                        timeSelect.innerHTML = '<option value="">Nenhum horário disponível para esta data</option>';
-                    } else {
-                        data.forEach(slot => {
-                            const option = document.createElement('option');
-                            option.value = `${slot.start}-${slot.end}`;
-                            option.textContent = `${slot.start} - ${slot.end}`;
-                            option.dataset.start = slot.datetime_start;
-                            option.dataset.end = slot.datetime_end;
-                            timeSelect.appendChild(option);
-                        });
-                    }
-                    
-                    timeSelect.disabled = false;
-                })
-                .catch(error => {
-                    console.error('Erro ao carregar horários disponíveis:', error);
-                    timeSelect.innerHTML = '<option value="">Erro ao carregar horários</option>';
-                });
-        }
-
-        // Se houver valores antigos (old), carregar os campos
-        @if(old('doctor_id'))
-            doctorSelect.dispatchEvent(new Event('change'));
-        @endif
-
-        // Carregar dias trabalhados quando o modal for aberto
-        const businessHoursModal = document.getElementById('businessHoursModal');
-        businessHoursModal.addEventListener('show.bs.modal', function() {
-            const doctorId = doctorSelect.value;
-            if (doctorId) {
-                loadBusinessHours(doctorId);
-            }
-        });
-
-        function loadBusinessHours(doctorId) {
-            const loadingEl = document.getElementById('business-hours-loading');
-            const contentEl = document.getElementById('business-hours-content');
-            const errorEl = document.getElementById('business-hours-error');
-            const emptyEl = document.getElementById('business-hours-empty');
-            const listEl = document.getElementById('business-hours-list');
-            const doctorNameEl = document.getElementById('business-hours-doctor-name');
-
-            // Mostrar loading e esconder outros
-            if (loadingEl) {
-                loadingEl.classList.remove('d-none');
-                loadingEl.style.display = 'block';
-            }
-            if (contentEl) {
-                contentEl.classList.add('d-none');
-                contentEl.style.display = 'none';
-            }
-            if (errorEl) {
-                errorEl.classList.add('d-none');
-                errorEl.style.display = 'none';
-            }
-            if (emptyEl) {
-                emptyEl.classList.add('d-none');
-                emptyEl.style.display = 'none';
-            }
-
-            fetch(`/customer/${tenant}/agendamento/api/doctors/${doctorId}/business-hours`)
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error(`HTTP error! status: ${response.status}`);
-                    }
-                    return response.json();
-                })
-                .then(data => {
-                    if (loadingEl) {
-                        loadingEl.classList.add('d-none');
-                        loadingEl.style.display = 'none';
-                    }
-
-                    // Verificar se os dados são um array direto ou um objeto
-                    let businessHoursArray = null;
-                    let doctorInfo = null;
-
-                    if (Array.isArray(data)) {
-                        // Se for um array direto, usar ele
-                        businessHoursArray = data;
-                        // Buscar o nome do médico do select
-                        const selectedOption = doctorSelect.options[doctorSelect.selectedIndex];
-                        const doctorName = selectedOption ? selectedOption.textContent.trim() : 'N/A';
-                        doctorInfo = { name: doctorName };
-                    } else if (data && typeof data === 'object') {
-                        if (data.error) {
-                            if (errorEl) {
-                                errorEl.classList.remove('d-none');
-                                errorEl.style.display = 'block';
-                                document.getElementById('business-hours-error-message').textContent = data.error;
-                            }
-                            return;
-                        }
-                        // Se for um objeto, extrair business_hours
-                        businessHoursArray = data.business_hours;
-                        doctorInfo = data.doctor;
-                    } else {
-                        if (errorEl) {
-                            errorEl.classList.remove('d-none');
-                            errorEl.style.display = 'block';
-                            document.getElementById('business-hours-error-message').textContent = 'Formato de dados inválido recebido da API.';
-                        }
-                        return;
-                    }
-
-                    if (!businessHoursArray || businessHoursArray.length === 0) {
-                        if (emptyEl) {
-                            emptyEl.classList.remove('d-none');
-                            emptyEl.style.display = 'block';
-                        }
-                        return;
-                    }
-
-                    // Exibir informações
-                    if (doctorNameEl && doctorInfo) {
-                        doctorNameEl.textContent = doctorInfo.name || 'N/A';
-                    }
-                    
-                    let html = '<div class="table-responsive"><table class="table table-bordered table-hover">';
-                    html += '<thead class="table-light"><tr><th>Dia da Semana</th><th>Horários</th></tr></thead>';
-                    html += '<tbody>';
-
-                    businessHoursArray.forEach((day) => {
-                        html += '<tr>';
-                        html += `<td><strong>${day.weekday_name || 'N/A'}</strong></td>`;
-                        html += '<td>';
-                        
-                        if (day.hours && Array.isArray(day.hours) && day.hours.length > 0) {
-                            day.hours.forEach((hour, index) => {
-                                if (index > 0) html += '<br>';
-                                html += `<span class="badge bg-primary me-1">${hour.start_time || 'N/A'}</span> até <span class="badge bg-primary">${hour.end_time || 'N/A'}</span>`;
-                                
-                                if (hour.break_start_time && hour.break_end_time) {
-                                    html += ` <small class="text-muted">(Intervalo: ${hour.break_start_time} - ${hour.break_end_time})</small>`;
-                                }
-                            });
-                        } else {
-                            html += '<span class="text-muted">Não trabalha neste dia</span>';
-                        }
-                        
-                        html += '</td>';
-                        html += '</tr>';
-                    });
-
-                    html += '</tbody></table></div>';
-                    
-                    if (listEl) {
-                        listEl.innerHTML = html;
-                    } else {
-                        return;
-                    }
-                    
-                    if (contentEl) {
-                        contentEl.classList.remove('d-none');
-                        contentEl.style.display = 'block';
-                    } else {
-                        return;
-                    }
-                })
-                .catch(error => {
-                    if (loadingEl) {
-                        loadingEl.classList.add('d-none');
-                        loadingEl.style.display = 'none';
-                    }
-                    if (errorEl) {
-                        errorEl.classList.remove('d-none');
-                        errorEl.style.display = 'block';
-                        document.getElementById('business-hours-error-message').textContent = 'Erro ao carregar informações: ' + error.message;
-                    }
-                });
-        }
-    });
-    </script>
-    @endpush
 @endsection
 

@@ -1,8 +1,16 @@
 @extends('layouts.tailadmin.app')
 
 @section('title', 'Relatório de Agendamentos')
+@section('page', 'reports')
 
 @section('content')
+
+
+<div id="reports-appointments-config"
+     data-data-url="{{ workspace_route('tenant.reports.appointments.data') }}"
+     data-export-excel-url="{{ workspace_route('tenant.reports.appointments.export.excel') }}"
+     data-export-pdf-url="{{ workspace_route('tenant.reports.appointments.export.pdf') }}"
+     data-export-csv-url="{{ workspace_route('tenant.reports.appointments.export.csv') }}"></div>
 
 <div class="page-header mb-6">
     <div>
@@ -145,13 +153,13 @@
         <div class="p-6 border-b border-gray-200 dark:border-gray-700 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <h4 class="text-lg font-semibold text-gray-900 dark:text-white">Dados Detalhados</h4>
             <div class="flex flex-wrap gap-2">
-                <button class="inline-flex items-center justify-center rounded-lg bg-emerald-600 px-3 py-2 text-sm font-medium text-white hover:bg-emerald-700 transition-colors" onclick="exportData('excel')">
+                <button class="inline-flex items-center justify-center rounded-lg bg-emerald-600 px-3 py-2 text-sm font-medium text-white hover:bg-emerald-700 transition-colors" data-export-format="excel">
                     Excel
                 </button>
-                <button class="inline-flex items-center justify-center rounded-lg bg-red-600 px-3 py-2 text-sm font-medium text-white hover:bg-red-700 transition-colors" onclick="exportData('pdf')">
+                <button class="inline-flex items-center justify-center rounded-lg bg-red-600 px-3 py-2 text-sm font-medium text-white hover:bg-red-700 transition-colors" data-export-format="pdf">
                     PDF
                 </button>
-                <button class="inline-flex items-center justify-center rounded-lg bg-slate-600 px-3 py-2 text-sm font-medium text-white hover:bg-slate-700 transition-colors" onclick="exportData('csv')">
+                <button class="inline-flex items-center justify-center rounded-lg bg-slate-600 px-3 py-2 text-sm font-medium text-white hover:bg-slate-700 transition-colors" data-export-format="csv">
                     CSV
                 </button>
             </div>
@@ -180,240 +188,4 @@
 
 @endsection
 
-@push('scripts')
-<script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
-<script>
-let evolutionChart, modeChart, byDoctorChart;
-let table;
-
-$(document).ready(function() {
-    // Inicializar DataTable sem Ajax (dados serão carregados manualmente)
-    table = $('#reports-table').DataTable({
-        language: {
-            url: "//cdn.datatables.net/plug-ins/1.11.5/i18n/pt-BR.json"
-        },
-        order: [[4, 'desc']],
-        pageLength: 25,
-        data: [],
-        processing: false,
-        serverSide: false,
-        searching: true,
-        ordering: true,
-        info: true,
-        paging: true,
-        autoWidth: false,
-        deferRender: true
-    });
-    
-    // Carregar dados após inicializar a tabela
-    loadData();
-});
-
-function loadData() {
-    const formData = $('#filter-form').serialize();
-    
-    // Mostrar indicador de carregamento
-    if (table) {
-        table.processing(true);
-    }
-    
-    $.ajax({
-        url: '{{ workspace_route("tenant.reports.appointments.data") }}',
-        method: 'POST',
-        data: formData,
-        headers: {
-            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-        },
-        success: function(response) {
-            if (table) {
-                table.processing(false);
-            }
-            updateSummary(response.summary);
-            updateCharts(response.chart);
-            updateTable(response.table);
-        },
-        error: function(xhr, status, error) {
-            if (table) {
-                table.processing(false);
-            }
-            console.error('Erro ao carregar dados:', {
-                status: xhr.status,
-                statusText: xhr.statusText,
-                responseText: xhr.responseText,
-                error: error
-            });
-            showAlert({ type: 'error', title: 'Erro', message: 'Erro ao carregar dados do relatório. Verifique o console para mais detalhes.' });
-        }
-    });
-}
-
-function updateSummary(summary) {
-    $('#summary-total').text(summary.total || 0);
-    $('#summary-scheduled').text(summary.scheduled || 0);
-    $('#summary-attended').text(summary.attended || 0);
-    $('#summary-canceled').text(summary.canceled || 0);
-    $('#summary-online').text(summary.online || 0);
-    $('#summary-presencial').text(summary.presencial || 0);
-}
-
-function updateCharts(chartData) {
-    // Gráfico de Evolução (Linha)
-    const evolutionCtx = document.getElementById('evolutionChart').getContext('2d');
-    const evolutionLabels = Object.keys(chartData.evolution || {}).sort();
-    const evolutionValues = evolutionLabels.map(date => chartData.evolution[date] || 0);
-    
-    if (evolutionChart) evolutionChart.destroy();
-    evolutionChart = new Chart(evolutionCtx, {
-        type: 'line',
-        data: {
-            labels: evolutionLabels,
-            datasets: [{
-                label: 'Agendamentos',
-                data: evolutionValues,
-                borderColor: '#4F8DF9',
-                backgroundColor: 'rgba(79, 141, 249, 0.1)',
-                tension: 0.4,
-                fill: true
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: { display: false }
-            }
-        }
-    });
-
-    // Gráfico de Pizza (Online x Presencial)
-    const modeCtx = document.getElementById('modeChart').getContext('2d');
-    if (modeChart) modeChart.destroy();
-    modeChart = new Chart(modeCtx, {
-        type: 'pie',
-        data: {
-            labels: ['Online', 'Presencial'],
-            datasets: [{
-                data: [chartData.mode.online || 0, chartData.mode.presencial || 0],
-                backgroundColor: ['#f59e0b', '#64748b']
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false
-        }
-    });
-
-    // Gráfico de Barras (Por Médico)
-    const byDoctorCtx = document.getElementById('byDoctorChart').getContext('2d');
-    const doctorLabels = Object.keys(chartData.byDoctor || {});
-    const doctorValues = doctorLabels.map(doctor => chartData.byDoctor[doctor] || 0);
-    
-    if (byDoctorChart) byDoctorChart.destroy();
-    byDoctorChart = new Chart(byDoctorCtx, {
-        type: 'bar',
-        data: {
-            labels: doctorLabels,
-            datasets: [{
-                label: 'Agendamentos',
-                data: doctorValues,
-                backgroundColor: '#0891b2'
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: { display: false }
-            }
-        }
-    });
-
-    // Heatmap
-    updateHeatmap(chartData.heatmap || {});
-}
-
-function updateHeatmap(heatmapData) {
-    const container = $('#heatmap-container');
-    container.empty();
-    
-    const daysOfWeek = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
-    const hours = [8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18];
-    
-    let maxValue = 0;
-    Object.values(heatmapData).forEach(day => {
-        Object.values(day).forEach(val => {
-            if (val > maxValue) maxValue = val;
-        });
-    });
-
-    let html = '<table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700 text-xs">';
-    html += '<thead class="bg-gray-50 dark:bg-gray-700/50"><tr>';
-    html += '<th class="px-3 py-2 text-left font-semibold text-gray-600 dark:text-gray-300">Hora</th>';
-    daysOfWeek.forEach(day => html += `<th class="px-3 py-2 text-left font-semibold text-gray-600 dark:text-gray-300">${day}</th>`);
-    html += '</tr></thead><tbody class="divide-y divide-gray-100 dark:divide-gray-700">';
-    
-    hours.forEach(hour => {
-        html += `<tr><td class="px-3 py-2 font-semibold text-gray-700 dark:text-gray-200">${hour}h</td>`;
-        daysOfWeek.forEach(day => {
-            const value = heatmapData[day] && heatmapData[day][hour] ? heatmapData[day][hour] : 0;
-            const intensity = maxValue > 0 ? Math.round((value / maxValue) * 100) : 0;
-            const bgColor = `rgba(79, 141, 249, ${0.3 + (intensity / 100) * 0.7})`;
-            html += `<td class="px-3 py-2 text-center text-gray-900 dark:text-gray-100" style="background-color: ${bgColor};">${value}</td>`;
-        });
-        html += '</tr>';
-    });
-    html += '</tbody></table>';
-    
-    container.html(html);
-}
-
-function updateTable(tableData) {
-    if (!table) {
-        console.error('DataTable não foi inicializado');
-        return;
-    }
-    
-    table.clear();
-    
-    if (tableData && tableData.length > 0) {
-        tableData.forEach(row => {
-            const modeBadge = row.mode === 'online' 
-                ? '<span class="inline-flex items-center rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-medium text-amber-800 dark:bg-amber-900/30 dark:text-amber-300">Online</span>'
-                : '<span class="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-medium text-slate-800 dark:bg-slate-900/30 dark:text-slate-300">Presencial</span>';
-            
-            const statusBadge = `<span class="inline-flex items-center rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-800 dark:bg-blue-900/30 dark:text-blue-300">${row.status_translated || row.status || 'N/A'}</span>`;
-            
-            table.row.add([
-                row.patient || 'N/A',
-                row.doctor || 'N/A',
-                row.specialty || 'N/A',
-                row.type || 'N/A',
-                row.date || 'N/A',
-                row.time || 'N/A',
-                modeBadge,
-                statusBadge
-            ]);
-        });
-    }
-    
-    table.draw();
-}
-
-function exportData(format) {
-    const formData = $('#filter-form').serialize();
-    const routes = {
-        'excel': '{{ workspace_route("tenant.reports.appointments.export.excel") }}',
-        'pdf': '{{ workspace_route("tenant.reports.appointments.export.pdf") }}',
-        'csv': '{{ workspace_route("tenant.reports.appointments.export.csv") }}'
-    };
-    const url = routes[format] || routes['excel'];
-    window.open(`${url}?${formData}`, '_blank');
-}
-
-// Atualizar ao mudar filtros
-$('#filter-form').on('change', 'select, input', function() {
-    loadData();
-});
-</script>
-@endpush
 

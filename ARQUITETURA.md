@@ -3,12 +3,13 @@
 ## 📋 Índice
 1. [Visão Geral](#visão-geral)
 2. [Estrutura de Pastas](#estrutura-de-pastas)
-3. [Rotas (Platform e Tenant)](#rotas-platform-e-tenant)
-4. [Controllers](#controllers)
-5. [Models](#models)
-6. [Migrações](#migrações)
-7. [Middlewares](#middlewares)
-8. [Lógica Multitenant](#lógica-multitenant)
+3. [Frontend Tenant (Views/Assets)](#frontend-tenant-viewsassets)
+4. [Rotas (Platform e Tenant)](#rotas-platform-e-tenant)
+5. [Controllers](#controllers)
+6. [Models](#models)
+7. [Migrações](#migrações)
+8. [Middlewares](#middlewares)
+9. [Lógica Multitenant](#lógica-multitenant)
 
 ---
 
@@ -84,7 +85,27 @@ agendamento-saas/
 │   ├── api.php                    # Rotas da API (Sanctum)
 │   └── auth.php                   # Rotas de autenticação (Breeze)
 └── resources/views/                # Views Blade
+|-- resources/css/tenant/           # CSS da area tenant (app.css + pages/*.css)
+|-- resources/js/tenant/            # JS da area tenant (app.js + pages/*.js)
 ```
+
+---
+
+## 🎨 Frontend Tenant (Views/Assets)
+
+### Padrão de Views
+- Cada view Tenant deve declarar `@section('page', '<modulo>')`.
+- Não usar `<style>`/`<script>` inline nas views migradas.
+- Não usar `@push('styles')`/`@push('scripts')` nas views migradas.
+- Eventos devem usar `data-*` e serem vinculados no JS do módulo.
+
+### Assets por Módulo
+- JS: `resources/js/tenant/pages/<modulo>.js` com `export function init()`.
+- CSS: `resources/css/tenant/pages/<modulo>.css`.
+- Imports CSS centralizados em `resources/css/tenant/app.css`.
+
+### Carregamento Dinâmico
+- `resources/js/tenant/app.js` lê `data-page` e faz import dinâmico do módulo.
 
 ---
 
@@ -906,8 +927,8 @@ O fluxo de criação foi centralizado no `TenantCreatorService` para garantir co
 
 ---
 
-**Documentação gerada em:** 2025-01-17
-**Última atualização:** 2025-01-17
+**Documentação gerada em:** 2026-02-17
+**Última atualização:** 2026-02-17
 
 **Nota:** Esta documentação foi revisada e atualizada para refletir todas as rotas e funcionalidades atuais do sistema, incluindo:
 - Estrutura correta de URLs (`/customer/{slug}`, `/workspace/{slug}`, `/t/{slug}`)
@@ -925,4 +946,3 @@ O fluxo de criação foi centralizado no `TenantCreatorService` para garantir co
 - Autenticação de dois fatores (2FA)
 - API para bots com tokens
 - Layouts de email personalizáveis
-

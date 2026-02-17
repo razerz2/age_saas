@@ -1,6 +1,7 @@
 @extends('layouts.tailadmin.app')
 
 @section('title', 'Gerenciar Permissões de Médicos')
+@section('page', 'user-doctor-permissions')
 
 @section('content')
 
@@ -87,4 +88,3 @@
     </div>
 
 @endsection
-

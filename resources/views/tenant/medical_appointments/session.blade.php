@@ -1,8 +1,21 @@
 @extends('layouts.tailadmin.app')
 
 @section('title', 'Atendimento - ' . \Carbon\Carbon::parse($date)->format('d/m/Y'))
+@section('page', 'medical_appointments')
 
 @section('content')
+
+    @php
+        $initialAppointmentId = session('selected_appointment') ?? ($appointments && $appointments->count() > 0 ? $appointments->first()->id : null);
+    @endphp
+
+    <div id="medical-appointments-config"
+         data-details-url-template="{{ workspace_route('tenant.medical-appointments.details', ['appointment' => '__ID__']) }}"
+         data-update-status-url-template="{{ workspace_route('tenant.medical-appointments.update-status', ['appointment' => '__ID__']) }}"
+         data-complete-url-template="{{ workspace_route('tenant.medical-appointments.complete', ['appointment' => '__ID__']) }}"
+         data-form-response-url-template="{{ workspace_route('tenant.medical-appointments.form-response', ['appointment' => '__ID__']) }}"
+         data-csrf="{{ csrf_token() }}"
+         data-initial-id="{{ $initialAppointmentId }}"></div>
 
     <div class="page-header">
         <h3 class="page-title">
@@ -58,8 +71,7 @@
                             @endphp
                             <a href="#" 
                                class="list-group-item list-group-item-action appointment-item {{ $isSelected ? 'active-item' : '' }} {{ $isLate ? 'bg-danger-subtle' : '' }}"
-                               data-appointment-id="{{ $appointment->id }}"
-                               onclick="loadAppointmentDetails('{{ $appointment->id }}'); return false;">
+                               data-appointment-id="{{ $appointment->id }}">
                                 <div class="d-flex w-100 justify-content-between align-items-start">
                                     <div class="flex-grow-1">
                                         <h6 class="mb-1 fw-semibold">
@@ -155,265 +167,4 @@
 
 @endsection
 
-@push('scripts')
-<script>
-    // Carregar detalhes do primeiro agendamento se houver um selecionado
-    @if(session('selected_appointment'))
-        loadAppointmentDetails('{{ session('selected_appointment') }}');
-    @elseif($appointments && $appointments->count() > 0)
-        loadAppointmentDetails('{{ $appointments->first()->id }}');
-    @endif
-
-    function loadAppointmentDetails(appointmentId) {
-        // Remover classe active de todos os itens
-        document.querySelectorAll('.appointment-item').forEach(item => {
-            item.classList.remove('active-item');
-        });
-
-        // Adicionar classe active ao item clicado
-        const clickedItem = document.querySelector(`[data-appointment-id="${appointmentId}"]`);
-        if (clickedItem) {
-            clickedItem.classList.add('active-item');
-        }
-
-        // Carregar detalhes via AJAX
-        fetch(`{{ workspace_route('tenant.medical-appointments.details', ['appointment' => '__ID__']) }}`.replace('__ID__', appointmentId), {
-            method: 'GET',
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest',
-                'Accept': 'text/html, application/json',
-            },
-            credentials: 'same-origin'
-        })
-        .then(async response => {
-            const contentType = response.headers.get('content-type');
-            
-            // Se for JSON (erro), tratar como JSON
-            if (contentType && contentType.includes('application/json')) {
-                const data = await response.json();
-                if (!data.success) {
-                    throw new Error(data.message || 'Erro ao carregar detalhes');
-                }
-                return data.html || data;
-            }
-            
-            // Se não for OK, tratar como erro
-            if (!response.ok) {
-                const text = await response.text();
-                
-                // Se for HTML (página de erro), extrair mensagem
-                if (text.includes('<!DOCTYPE') || text.includes('<html')) {
-                    // Tentar extrair mensagem do HTML
-                    const match = text.match(/403|Forbidden|não tem permissão/i);
-                    if (match) {
-                        throw new Error('Você não tem permissão para visualizar este agendamento.');
-                    }
-                    throw new Error('Erro ao carregar detalhes. Verifique se você tem permissão para visualizar este agendamento.');
-                }
-                
-                // Se for texto simples, usar como mensagem
-                throw new Error(text || 'Erro ao carregar detalhes');
-            }
-            
-            return response.text();
-        })
-        .then(html => {
-            document.getElementById('appointment-details').innerHTML = html;
-        })
-        .catch(error => {
-            console.error('Erro ao carregar detalhes:', error);
-            let errorMessage = 'Erro ao carregar detalhes do agendamento.';
-            
-            // Extrair mensagem de erro mais específica
-            if (error.message) {
-                if (error.message.includes('permissão') || error.message.includes('403') || error.message.includes('Forbidden')) {
-                    errorMessage = 'Você não tem permissão para visualizar este agendamento.';
-                } else if (error.message.includes('404') || error.message.includes('não encontrado')) {
-                    errorMessage = 'Agendamento não encontrado.';
-                } else if (!error.message.includes('<!DOCTYPE') && !error.message.includes('<html')) {
-                    errorMessage = error.message;
-                }
-            }
-            
-            document.getElementById('appointment-details').innerHTML = `
-                <div class="alert alert-danger">
-                    <i class="mdi mdi-alert-circle me-1"></i>
-                    ${errorMessage}
-                </div>
-            `;
-        });
-    }
-
-    function updateStatus(appointmentId, status) {
-        confirmAction({
-            title: 'Alterar status',
-            message: 'Tem certeza que deseja alterar o status?',
-            confirmText: 'Alterar',
-            cancelText: 'Cancelar',
-            type: 'warning',
-            onConfirm: () => {
-                const formData = new FormData();
-                formData.append('status', status);
-                formData.append('_token', '{{ csrf_token() }}');
-
-                fetch(`{{ workspace_route('tenant.medical-appointments.update-status', ['appointment' => '__ID__']) }}`.replace('__ID__', appointmentId), {
-                    method: 'POST',
-                    body: formData,
-                    headers: {
-                        'X-Requested-With': 'XMLHttpRequest',
-                        'Accept': 'application/json',
-                    }
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        // Recarregar a página para atualizar a lista
-                        window.location.reload();
-                    } else {
-                        showAlert({ type: 'error', title: 'Erro', message: 'Erro ao atualizar status: ' + (data.message || 'Erro desconhecido') });
-                    }
-                })
-                .catch(error => {
-                    console.error('Erro:', error);
-                    showAlert({ type: 'error', title: 'Erro', message: 'Erro ao atualizar status' });
-                });
-            }
-        });
-    }
-
-    function completeAppointment(appointmentId) {
-        confirmAction({
-            title: 'Finalizar atendimento',
-            message: 'Tem certeza que deseja finalizar este atendimento?',
-            confirmText: 'Finalizar',
-            cancelText: 'Cancelar',
-            type: 'warning',
-            onConfirm: () => {
-                const formData = new FormData();
-                formData.append('_token', '{{ csrf_token() }}');
-
-                fetch(`{{ workspace_route('tenant.medical-appointments.complete', ['appointment' => '__ID__']) }}`.replace('__ID__', appointmentId), {
-                    method: 'POST',
-                    body: formData,
-                    headers: {
-                        'X-Requested-With': 'XMLHttpRequest',
-                    }
-                })
-                .then(response => {
-                    if (response.redirected) {
-                        window.location.href = response.url;
-                    } else {
-                        return response.json();
-                    }
-                })
-                .then(data => {
-                    if (data && !data.success) {
-                        showAlert({ type: 'error', title: 'Erro', message: 'Erro ao finalizar atendimento: ' + (data.message || 'Erro desconhecido') });
-                    }
-                })
-                .catch(error => {
-                    console.error('Erro:', error);
-                    showAlert({ type: 'error', title: 'Erro', message: 'Erro ao finalizar atendimento' });
-                });
-            }
-        });
-    }
-
-    function viewFormResponse(appointmentId) {
-        // Mostrar loading no modal
-        const modalBody = document.getElementById('form-response-modal-body');
-        modalBody.innerHTML = `
-            <div class="text-center py-4">
-                <div class="spinner-border text-primary" role="status">
-                    <span class="visually-hidden">Carregando...</span>
-                </div>
-                <p class="mt-2 text-muted">Carregando formulário...</p>
-            </div>
-        `;
-
-        // Abrir modal
-        const modal = new bootstrap.Modal(document.getElementById('form-response-modal'));
-        modal.show();
-
-        // Buscar resposta do formulário
-        fetch(`{{ workspace_route('tenant.medical-appointments.form-response', ['appointment' => '__ID__']) }}`.replace('__ID__', appointmentId), {
-            method: 'GET',
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest',
-                'Accept': 'application/json',
-            }
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                modalBody.innerHTML = data.html;
-            } else {
-                modalBody.innerHTML = `
-                    <div class="alert alert-danger">
-                        <i class="mdi mdi-alert-circle me-1"></i>
-                        ${data.message || 'Erro ao carregar formulário.'}
-                    </div>
-                `;
-            }
-        })
-        .catch(error => {
-            console.error('Erro:', error);
-            modalBody.innerHTML = `
-                <div class="alert alert-danger">
-                    <i class="mdi mdi-alert-circle me-1"></i>
-                    Erro ao carregar formulário. Tente novamente.
-                </div>
-            `;
-        });
-    }
-</script>
-
-<style>
-    .active-item {
-        background-color: #e3f2fd !important;
-        border-left: 4px solid #2196F3 !important;
-        font-weight: 600;
-    }
-
-    .bg-danger-subtle {
-        background-color: #ffebee !important;
-    }
-
-    .appointment-item:hover {
-        background-color: #f5f5f5;
-        cursor: pointer;
-        transition: background-color 0.2s ease;
-    }
-
-    .appointment-item {
-        transition: all 0.2s ease;
-    }
-
-    /* Garantir que as colunas fiquem lado a lado */
-    @media (min-width: 768px) {
-        .row.g-3 {
-            display: flex;
-            flex-wrap: nowrap;
-        }
-    }
-
-    /* Scrollbar customizada para a lista de agendamentos */
-    .card-body::-webkit-scrollbar {
-        width: 6px;
-    }
-
-    .card-body::-webkit-scrollbar-track {
-        background: #f1f1f1;
-    }
-
-    .card-body::-webkit-scrollbar-thumb {
-        background: #888;
-        border-radius: 3px;
-    }
-
-    .card-body::-webkit-scrollbar-thumb:hover {
-        background: #555;
-    }
-</style>
-@endpush
 

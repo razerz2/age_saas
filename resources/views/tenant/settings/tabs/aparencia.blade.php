@@ -34,7 +34,7 @@
                                     <p class="text-xs text-gray-500 dark:text-gray-400">Clique em "Remover" para usar o logo padrão</p>
                                 </div>
                                 <button type="button" 
-                                        onclick="document.getElementById('remove_main_logo').value = '1'; this.closest('form').submit()"
+                                        data-settings-action="remove-logo" data-remove-target="remove_main_logo"
                                         class="px-3 py-1.5 bg-red-600 text-white text-xs font-medium rounded hover:bg-red-700 transition-colors duration-200">
                                     Remover
                                 </button>
@@ -64,7 +64,7 @@
                                     <p class="text-xs text-gray-500 dark:text-gray-400">Clique em "Remover" para usar o logo padrão</p>
                                 </div>
                                 <button type="button" 
-                                        onclick="document.getElementById('remove_mini_logo').value = '1'; this.closest('form').submit()"
+                                        data-settings-action="remove-logo" data-remove-target="remove_mini_logo"
                                         class="px-3 py-1.5 bg-red-600 text-white text-xs font-medium rounded hover:bg-red-700 transition-colors duration-200">
                                     Remover
                                 </button>
@@ -94,7 +94,7 @@
                                     <p class="text-xs text-gray-500 dark:text-gray-400">Clique em "Remover" para usar o favicon padrão</p>
                                 </div>
                                 <button type="button" 
-                                        onclick="document.getElementById('remove_favicon').value = '1'; this.closest('form').submit()"
+                                        data-settings-action="remove-logo" data-remove-target="remove_favicon"
                                         class="px-3 py-1.5 bg-red-600 text-white text-xs font-medium rounded hover:bg-red-700 transition-colors duration-200">
                                     Remover
                                 </button>

@@ -1,6 +1,7 @@
 @extends('layouts.tailadmin.app')
 
 @section('title', 'Criar Pergunta')
+@section('page', 'forms')
 
 @section('content')
 
@@ -100,4 +101,3 @@
     </div>
 
 @endsection
-

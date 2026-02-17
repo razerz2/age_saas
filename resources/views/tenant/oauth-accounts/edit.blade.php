@@ -1,6 +1,7 @@
 @extends('layouts.tailadmin.app')
 
 @section('title', 'Editar Conta OAuth')
+@section('page', 'oauth-accounts')
 
 @section('content')
     <!-- Page Header -->
@@ -155,8 +156,5 @@
         </div>
     </div>
 
-@push('styles')
-    <link href="{{ asset('css/tenant-common.css') }}" rel="stylesheet">
-@endpush
 
 @endsection

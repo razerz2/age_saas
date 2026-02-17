@@ -1,6 +1,7 @@
 @extends('layouts.tailadmin.app')
 
 @section('title', 'Notificações')
+@section('page', 'notifications')
 
 @section('content')
     <!-- Page Header -->

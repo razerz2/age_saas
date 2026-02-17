@@ -1,6 +1,7 @@
 @extends('layouts.tailadmin.app')
 
 @section('title', 'Agendamentos Recorrentes')
+@section('page', 'appointments')
 
 @section('content')
 

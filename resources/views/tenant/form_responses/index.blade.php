@@ -1,6 +1,7 @@
 @extends('layouts.tailadmin.app')
 
 @section('title', 'Respostas de Formulários')
+@section('page', 'form_responses')
 
 @section('content')
 

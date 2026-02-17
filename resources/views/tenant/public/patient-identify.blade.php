@@ -1,6 +1,7 @@
 @extends('layouts.tailadmin.public')
 
 @section('title', 'Identificação — ' . ($tenant->trade_name ?? $tenant->legal_name ?? 'Sistema'))
+@section('page', 'public')
 
 @section('content')
 <div class="min-h-screen flex items-center justify-center px-4 py-8">
@@ -81,7 +82,7 @@
                     <label for="identifier" class="block text-sm font-medium text-gray-700 mb-2">CPF ou E-mail</label>
                     <input 
                         type="text" 
-                        id="identifier"
+                        id="identifier" data-mask="cpf"
                         name="identifier"
                         class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 @error('identifier') border-red-300 @enderror"
                         placeholder="000.000.000-00 ou seu@email.com" 
@@ -145,25 +146,5 @@
     </div>
 </div>
 
-@push('scripts')
-<script>
-    // Máscara para CPF
-    document.addEventListener('DOMContentLoaded', function() {
-        const identifierInput = document.getElementById('identifier');
-        
-        identifierInput.addEventListener('input', function(e) {
-            let value = e.target.value.replace(/\D/g, '');
-            
-            // Se parece com CPF (11 dígitos ou menos), aplica máscara de CPF
-            if (value.length <= 11) {
-                value = value.replace(/(\d{3})(\d)/, '$1.$2');
-                value = value.replace(/(\d{3})(\d)/, '$1.$2');
-                value = value.replace(/(\d{3})(\d{1,2})$/, '$1-$2');
-                e.target.value = value;
-            }
-        });
-    });
-</script>
-@endpush
 
 @endsection

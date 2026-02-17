@@ -1,25 +1,8 @@
 @extends('layouts.tailadmin.public')
 
 @section('title', 'Responder Formulário — ' . ($tenant->trade_name ?? $tenant->legal_name ?? 'Sistema'))
+@section('page', 'public')
 
-@push('styles')
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@mdi/font@7.4.47/css/materialdesignicons.min.css">
-    <style>
-        .page-wrapper {
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            padding: 2rem 0;
-        }
-        .form-card {
-            background: white;
-            border-radius: 10px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-            padding: 2rem;
-        }
-    </style>
-@endpush
 
 @section('content')
     <div class="page-wrapper">
@@ -61,7 +44,7 @@
                             </div>
                         @endif
 
-                        <form action="{{ tenant_route($tenant, 'public.form.response.store', ['form' => $form->id]) }}" method="POST" id="formResponseForm">
+                        <form action="{{ tenant_route($tenant, 'public.form.response.store', ['form' => $form->id]) }}" method="POST" id="formResponseForm" data-readonly-form="{{ ($existingResponse && !$editMode) ? 'true' : 'false' }}">
                             @csrf
                             <input type="hidden" name="form_id" value="{{ $form->id }}">
                             
@@ -178,15 +161,6 @@
     </div>
     
     @if($existingResponse && !$editMode)
-    @push('scripts')
-    <script>
-        // Prevenir submissão do formulário em modo de visualização
-        document.getElementById('formResponseForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            return false;
-        });
-    </script>
-    @endpush
     @endif
 @endsection
 

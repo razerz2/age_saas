@@ -1,6 +1,7 @@
 @extends('layouts.tailadmin.app')
 
 @section('title', 'Visualizar Formulário')
+@section('page', 'forms')
 
 @section('content')
 
@@ -41,11 +42,11 @@
                             <span class="badge bg-{{ $form->is_active ? 'success' : 'danger' }} me-2">
                                 {{ $form->is_active ? 'Ativo' : 'Inativo' }}
                             </span>
-                            <x-tailadmin-button type="button" variant="secondary" size="sm" class="bg-transparent border-gray-300 text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-white/5" onclick="window.print()">
+                            <x-tailadmin-button type="button" variant="secondary" size="sm" class="bg-transparent border-gray-300 text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-white/5" data-form-preview-action="print">
                                 <i class="mdi mdi-printer"></i>
                                 Imprimir
                             </x-tailadmin-button>
-                            <x-tailadmin-button type="button" variant="secondary" size="sm" class="bg-transparent border-gray-300 text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-white/5" onclick="window.close()">
+                            <x-tailadmin-button type="button" variant="secondary" size="sm" class="bg-transparent border-gray-300 text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-white/5" data-form-preview-action="close">
                                 <i class="mdi mdi-close"></i>
                                 Fechar
                             </x-tailadmin-button>
@@ -119,8 +120,3 @@
     </div>
 
 @endsection
-
-@push('styles')
-    <link href="{{ asset('css/tenant-forms.css') }}" rel="stylesheet">
-@endpush
-

@@ -1,6 +1,7 @@
 @extends('layouts.tailadmin.app')
 
 @section('title', 'Instruções de Consulta Online')
+@section('page', 'online_appointments')
 
 @section('content')
     <!-- Page Header -->

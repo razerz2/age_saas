@@ -1,6 +1,7 @@
 @extends('layouts.tailadmin.app')
 
 @section('title', 'Fluxo de Caixa')
+@section('page', 'finance')
 
 @section('content')
 
@@ -32,7 +33,7 @@
                 <div class="card-body">
                     <h4 class="card-title">Filtros</h4>
                     
-                    <form id="filterForm" class="row g-3">
+                    <form id="filterForm" class="row g-3" data-report="cashflow" data-fetch-url="{{ workspace_route('tenant.finance.reports.cashflow.data') }}" data-export-url-template="{{ workspace_route('tenant.finance.reports.cashflow.export', ['format' => 'FORMAT']) }}">
                         <div class="col-md-3">
                             <label for="start_date" class="form-label">Data Inicial</label>
                             <input type="date" class="form-control" id="start_date" name="start_date" 
@@ -65,7 +66,7 @@
                             <x-tailadmin-button type="submit" variant="primary" size="sm" class="justify-center">
                                 <i class="mdi mdi-filter"></i> Filtrar
                             </x-tailadmin-button>
-                            <x-tailadmin-button type="button" variant="secondary" size="sm" class="justify-center" onclick="exportReport('csv')">
+                            <x-tailadmin-button type="button" variant="secondary" size="sm" class="justify-center" data-export-format="csv">
                                 <i class="mdi mdi-file-export"></i> Exportar CSV
                             </x-tailadmin-button>
                         </div>
@@ -107,69 +108,3 @@
     </div>
 
 @endsection
-
-@push('scripts')
-<script>
-    document.getElementById('filterForm').addEventListener('submit', function(e) {
-        e.preventDefault();
-        loadData();
-    });
-
-    function loadData() {
-        const formData = new FormData(document.getElementById('filterForm'));
-        
-        fetch('{{ workspace_route("tenant.finance.reports.cashflow.data") }}', {
-            method: 'POST',
-            body: formData,
-            headers: {
-                'X-CSRF-TOKEN': '{{ csrf_token() }}'
-            }
-        })
-        .then(response => response.json())
-        .then(data => {
-            const tbody = document.getElementById('resultsBody');
-            tbody.innerHTML = '';
-            
-            if (data.data && data.data.length > 0) {
-                data.data.forEach(item => {
-                    const row = tbody.insertRow();
-                    row.innerHTML = `
-                        <td>${item.date}</td>
-                        <td><span class="badge ${item.type === 'Receita' ? 'bg-success' : 'bg-danger'}">${item.type}</span></td>
-                        <td>${item.category}</td>
-                        <td>${item.account}</td>
-                        <td>R$ ${item.amount}</td>
-                        <td>R$ ${item.balance}</td>
-                        <td><span class="badge ${item.status === 'paid' ? 'bg-success' : 'bg-warning'}">${item.status}</span></td>
-                    `;
-                });
-            } else {
-                tbody.innerHTML = '<tr><td colspan="7" class="text-center">Nenhum resultado encontrado</td></tr>';
-            }
-            
-            // Exibir resumo
-            if (data.summary) {
-                document.getElementById('summary').innerHTML = `
-                    <div class="alert alert-info">
-                        <strong>Resumo:</strong>
-                        Receitas: R$ ${parseFloat(data.summary.total_income).toFixed(2).replace('.', ',')} | 
-                        Despesas: R$ ${parseFloat(data.summary.total_expense).toFixed(2).replace('.', ',')} | 
-                        Saldo Final: R$ ${parseFloat(data.summary.final_balance).toFixed(2).replace('.', ',')}
-                    </div>
-                `;
-            }
-        })
-        .catch(error => {
-            console.error('Erro:', error);
-            showAlert({ type: 'error', title: 'Erro', message: 'Erro ao carregar dados' });
-        });
-    }
-
-    function exportReport(format) {
-        const formData = new FormData(document.getElementById('filterForm'));
-        const params = new URLSearchParams(formData);
-        window.location.href = `{{ workspace_route("tenant.finance.reports.cashflow.export", ["format" => "FORMAT"]) }}`.replace('FORMAT', format) + '?' + params.toString();
-    }
-</script>
-@endpush
-

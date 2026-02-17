@@ -1,6 +1,7 @@
 @extends('layouts.tailadmin.auth')
 
 @section('title', 'Registrar — Sistema')
+@section('page', 'auth')
 
 @section('content')
 <div class="min-h-screen flex items-center justify-center px-4">

@@ -1,6 +1,7 @@
 @extends('layouts.tailadmin.app')
 
 @section('title', 'Criar Opção')
+@section('page', 'forms')
 
 @section('content')
 
@@ -68,4 +69,3 @@
     </div>
 
 @endsection
-

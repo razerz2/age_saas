@@ -1,0 +1,120 @@
+[data-page="users"] .btn-patient-primary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 0.5rem;
+    padding: 0.625rem 1.25rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    transition: all 0.2s;
+    border: 1px solid #d1d5db;
+    background-color: #2563eb;
+    color: white;
+    text-decoration: none;
+}
+
+[data-page="users"] .btn-patient-primary:hover {
+    background-color: #1d4ed8;
+    border-color: #1d4ed8;
+}
+
+[data-page="users"] .btn-patient-secondary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 0.5rem;
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    transition: all 0.2s;
+    border: 1px solid #d1d5db;
+    background-color: transparent;
+    color: #374151;
+    text-decoration: none;
+}
+
+[data-page="users"] .btn-patient-secondary:hover {
+    background-color: #f9fafb;
+    border-color: #9ca3af;
+}
+
+@media (prefers-color-scheme: dark) {
+    [data-page="users"] .btn-patient-primary {
+        background-color: transparent;
+        border-color: #d1d5db;
+        color: white;
+    }
+
+    [data-page="users"] .btn-patient-primary:hover {
+        background-color: #1f2937;
+        border-color: #9ca3af;
+    }
+
+    [data-page="users"] .btn-patient-secondary {
+        background-color: transparent;
+        border-color: #d1d5db;
+        color: white;
+    }
+
+    [data-page="users"] .btn-patient-secondary:hover {
+        background-color: #1f2937;
+        border-color: #9ca3af;
+    }
+}
+
+[data-page="users"].dark .btn-patient-primary,
+.dark [data-page="users"] .btn-patient-primary {
+    background-color: transparent;
+    border-color: #d1d5db;
+    color: white;
+}
+
+[data-page="users"].dark .btn-patient-primary:hover,
+.dark [data-page="users"] .btn-patient-primary:hover {
+    background-color: #1f2937;
+    border-color: #9ca3af;
+}
+
+[data-page="users"].dark .btn-patient-secondary,
+.dark [data-page="users"] .btn-patient-secondary {
+    background-color: transparent;
+    border-color: #d1d5db;
+    color: white;
+}
+
+[data-page="users"].dark .btn-patient-secondary:hover,
+.dark [data-page="users"] .btn-patient-secondary:hover {
+    background-color: #1f2937;
+    border-color: #9ca3af;
+}
+
+[data-page="users"] .webcam-action-button {
+    margin-right: 12px;
+}
+
+[data-page="users"] #webcam-start,
+[data-page="users"] #webcam-capture,
+[data-page="users"] #webcam-stop {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    z-index: 10;
+}
+
+[data-page="users"] #webcam-start.hidden,
+[data-page="users"] #webcam-capture.hidden,
+[data-page="users"] #webcam-stop.hidden {
+    display: none;
+}
+
+[data-page="users"] #webcam-start {
+    background-color: #2563eb;
+    color: white;
+    border: none;
+    font-weight: 500;
+}
+
+[data-page="users"] #webcam-start:hover {
+    background-color: #1d4ed8;
+}

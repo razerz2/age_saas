@@ -79,7 +79,7 @@ class BusinessHourController extends Controller
                 'weekday'    => e($weekdayMap[$hour->weekday] ?? ucfirst($hour->weekday)),
                 'start_time' => e(substr($hour->start_time, 0, 5)),
                 'end_time'   => e(substr($hour->end_time, 0, 5)),
-                'actions'    => view('tenant.business_hours.partials.actions', compact('hour'))->render(),
+                'actions'    => view('tenant.business-hours.partials.actions', compact('hour'))->render(),
             ];
         })->all();
 

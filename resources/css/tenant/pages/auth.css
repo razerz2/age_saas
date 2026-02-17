@@ -1,0 +1,42 @@
+/* Auth (tenant) page-specific styles */
+
+.auth-heading {
+    color: #111827;
+}
+
+.auth-subtext {
+    color: #6b7280;
+}
+
+.auth-label {
+    color: #374151;
+}
+
+.auth-input {
+    border-color: #d1d5db;
+    background-color: #ffffff;
+    color: #111827;
+}
+
+.auth-input:focus {
+    border-color: #2563eb;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.auth-submit {
+    background-color: #2563eb;
+    color: #ffffff;
+    border: none;
+}
+
+.auth-submit:hover {
+    background-color: #1d4ed8;
+}
+
+.auth-code-input {
+    font-size: 1.5rem;
+    text-align: center;
+    letter-spacing: 0.5rem;
+    font-weight: 600;
+}

@@ -1,6 +1,7 @@
 @extends('layouts.tailadmin.app')
 
 @section('title', 'Relatórios')
+@section('page', 'reports')
 
 @section('content')
 

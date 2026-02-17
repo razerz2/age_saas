@@ -1,6 +1,7 @@
-@extends('layouts.tailadmin.app')
+﻿@extends('layouts.tailadmin.app')
 
-@section('title', 'Sincronização de Calendário')
+@section('title', 'SincronizaÃ§Ã£o de CalendÃ¡rio')
+@section('page', 'calendars')
 
 @section('content')
 
@@ -8,7 +9,7 @@
     <div class="page-header mb-6">
         <div class="flex items-center justify-between">
             <div>
-                <h1 class="text-2xl font-semibold text-gray-900 dark:text-white mb-2">Sincronização de Calendário</h1>
+                <h1 class="text-2xl font-semibold text-gray-900 dark:text-white mb-2">SincronizaÃ§Ã£o de CalendÃ¡rio</h1>
                 <nav class="flex" aria-label="Breadcrumb">
                     <ol class="inline-flex items-center space-x-1 md:space-x-3">
                         <li class="inline-flex items-center">
@@ -24,7 +25,7 @@
                                 <svg class="w-6 h-6 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
                                     <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
                                 </svg>
-                                <span class="ml-1 text-gray-500 dark:text-gray-400 md:ml-2">Sincronização de Calendário</span>
+                                <span class="ml-1 text-gray-500 dark:text-gray-400 md:ml-2">SincronizaÃ§Ã£o de CalendÃ¡rio</span>
                             </div>
                         </li>
                     </ol>
@@ -36,7 +37,7 @@
     <!-- Main Content -->
     <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
         <div class="p-6">
-            <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Lista de Estados de Sincronização</h2>
+            <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Lista de Estados de SincronizaÃ§Ã£o</h2>
 
             <div>
                 <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700" id="datatable-list">
@@ -46,8 +47,8 @@
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Agendamento</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">ID Evento Externo</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Provedor</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Última Sincronização</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider" style="width: 140px;">Ações</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Ãšltima SincronizaÃ§Ã£o</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider" style="width: 140px;">AÃ§Ãµes</th>
                         </tr>
                     </thead>
                     <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
@@ -78,23 +79,4 @@
 
 @endsection
 
-@push('scripts')
-<script>
-document.addEventListener('DOMContentLoaded', function () {
-    if (window.jQuery && $('#datatable-list').length) {
-        $('#datatable-list').DataTable({
-            pageLength: 25,
-            responsive: true,
-            autoWidth: false,
-            scrollX: false,
-            scrollCollapse: false,
-            pagingType: "simple_numbers",
-            language: {
-                url: "//cdn.datatables.net/plug-ins/1.13.8/i18n/pt-BR.json"
-            }
-        });
-    }
-});
-</script>
-@endpush
 

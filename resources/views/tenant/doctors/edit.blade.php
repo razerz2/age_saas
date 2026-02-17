@@ -1,6 +1,7 @@
 @extends('layouts.tailadmin.app')
 
 @section('title', 'Editar Médico')
+@section('page', 'doctors')
 
 @section('content')
 
@@ -268,11 +269,11 @@
                         </div>
 
                         <!-- Área para exibir especialidades selecionadas -->
-                        <div id="selected-specialties" class="p-4 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700" style="min-height: 60px;">
-                            @php
-                                $doctorSpecialties = $doctor->specialties->pluck('id')->toArray();
-                                $selectedIds = old('specialties', $doctorSpecialties);
-                            @endphp
+                        @php
+                            $doctorSpecialties = $doctor->specialties->pluck('id')->toArray();
+                            $selectedIds = old('specialties', $doctorSpecialties);
+                        @endphp
+                        <div id="selected-specialties" class="p-4 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700" style="min-height: 60px;" data-badge-style="bootstrap" data-initial-selected='@json($selectedIds)'>
                             @if(!empty($selectedIds))
                                 @foreach($selectedIds as $specialtyId)
                                     @php
@@ -325,233 +326,5 @@
             </form>
         </div>
     </div>
-
-@push('styles')
-    <link href="{{ asset('css/tenant-common.css') }}" rel="stylesheet">
-    <link href="{{ asset('css/tenant-doctors.css') }}" rel="stylesheet">
-    <style>
-        .btn-patient-primary {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 0.5rem;
-            padding: 0.625rem 1.25rem;
-            font-size: 0.875rem;
-            font-weight: 500;
-            transition: all 0.2s;
-            border: 1px solid #d1d5db;
-            background-color: #2563eb;
-            color: white;
-        }
-        
-        .btn-patient-primary:hover {
-            background-color: #1d4ed8;
-            border-color: #1d4ed8;
-        }
-        
-        .btn-patient-secondary {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 0.5rem;
-            padding: 0.5rem 1rem;
-            font-size: 0.875rem;
-            font-weight: 500;
-            transition: all 0.2s;
-            border: 1px solid #d1d5db;
-            background-color: transparent;
-            color: #374151;
-            text-decoration: none;
-        }
-        
-        .btn-patient-secondary:hover {
-            background-color: #f9fafb;
-            border-color: #9ca3af;
-        }
-        
-        /* Dark mode styles */
-        @media (prefers-color-scheme: dark) {
-            .btn-patient-primary {
-                background-color: transparent;
-                border-color: #d1d5db;
-                color: white;
-            }
-            
-            .btn-patient-primary:hover {
-                background-color: #1f2937;
-                border-color: #9ca3af;
-            }
-            
-            .btn-patient-secondary {
-                background-color: transparent;
-                border-color: #d1d5db;
-                color: white;
-            }
-            
-            .btn-patient-secondary:hover {
-                background-color: #1f2937;
-                border-color: #9ca3af;
-            }
-        }
-        
-        /* For TailAdmin dark mode class */
-        .dark .btn-patient-primary {
-            background-color: transparent;
-            border-color: #d1d5db;
-            color: white;
-        }
-        
-        .dark .btn-patient-primary:hover {
-            background-color: #1f2937;
-            border-color: #9ca3af;
-        }
-        
-        .dark .btn-patient-secondary {
-            background-color: transparent;
-            border-color: #d1d5db;
-            color: white;
-        }
-        
-        .dark .btn-patient-secondary:hover {
-            background-color: #1f2937;
-            border-color: #9ca3af;
-        }
-    </style>
-@endpush
-
-@push('scripts')
-<script>
-    $(document).ready(function() {
-        let selectedSpecialties = [];
-        
-        // Carregar especialidades já selecionadas (do old ou do banco)
-        function loadSelectedSpecialties() {
-            @php
-                $doctorSpecialties = $doctor->specialties->pluck('id')->toArray();
-                $selectedIds = old('specialties', $doctorSpecialties);
-            @endphp
-            @if(!empty($selectedIds))
-                selectedSpecialties = @json($selectedIds);
-            @endif
-            updateSpecialtiesDisplay();
-        }
-        
-        // Atualizar exibição das especialidades selecionadas
-        function updateSpecialtiesDisplay() {
-            const container = $('#selected-specialties');
-            container.empty();
-            
-            if (selectedSpecialties.length === 0) {
-                container.html('<p class="text-muted mb-0"><i class="mdi mdi-information-outline me-1"></i>Nenhuma especialidade selecionada</p>');
-                return;
-            }
-            
-            selectedSpecialties.forEach(function(specialtyId) {
-                const option = $('#specialty-select option[value="' + specialtyId + '"]');
-                if (option.length) {
-                    const name = option.data('name');
-                    const badge = $('<span>')
-                        .addClass('badge bg-primary me-2 mb-2 specialty-badge')
-                        .attr('data-id', specialtyId)
-                        .css({
-                            'font-size': '13px', 
-                            'padding': '8px 14px', 
-                            'display': 'inline-flex', 
-                            'align-items': 'center', 
-                            'gap': '6px'
-                        })
-                        .html('<i class="mdi mdi-stethoscope"></i>' + name + '<button type="button" class="btn-close btn-close-white ms-1" style="font-size: 10px; opacity: 0.8;" aria-label="Remover"></button>');
-                    container.append(badge);
-                }
-            });
-            
-            // Atualizar campos hidden
-            const inputsContainer = $('#specialties-inputs');
-            inputsContainer.empty();
-            selectedSpecialties.forEach(function(specialtyId) {
-                inputsContainer.append($('<input>')
-                    .attr('type', 'hidden')
-                    .attr('name', 'specialties[]')
-                    .val(specialtyId)
-                );
-            });
-        }
-        
-        // Adicionar especialidade
-        $('#add-specialty-btn').on('click', function() {
-            const select = $('#specialty-select');
-            const specialtyId = select.val();
-            
-            if (!specialtyId) {
-                showAlert({ type: 'warning', title: 'Atenção', message: 'Por favor, selecione uma especialidade' });
-                return;
-            }
-            
-            // Verificar se já foi adicionada
-            if (selectedSpecialties.includes(specialtyId)) {
-                showAlert({ type: 'warning', title: 'Atenção', message: 'Esta especialidade já foi adicionada' });
-                return;
-            }
-            
-            selectedSpecialties.push(specialtyId);
-            updateSpecialtiesDisplay();
-            select.val(''); // Limpar seleção
-        });
-        
-        // Remover especialidade (delegation para elementos dinâmicos)
-        $(document).on('click', '.specialty-badge .btn-close', function(e) {
-            e.preventDefault();
-            const badge = $(this).closest('.specialty-badge');
-            const specialtyId = badge.data('id');
-            
-            selectedSpecialties = selectedSpecialties.filter(function(id) {
-                return id !== specialtyId;
-            });
-            
-            updateSpecialtiesDisplay();
-        });
-        
-        // Limpar todas as especialidades
-        $('#clear-specialties-btn').on('click', function() {
-            if (selectedSpecialties.length === 0) {
-                return;
-            }
-            
-            confirmAction({
-                title: 'Remover especialidades',
-                message: 'Deseja remover todas as especialidades selecionadas?',
-                confirmText: 'Remover',
-                cancelText: 'Cancelar',
-                type: 'warning',
-                onConfirm: () => {
-                    selectedSpecialties = [];
-                    updateSpecialtiesDisplay();
-                }
-            });
-        });
-        
-        // Permitir adicionar com Enter no select
-        $('#specialty-select').on('keypress', function(e) {
-            if (e.which === 13) {
-                e.preventDefault();
-                $('#add-specialty-btn').click();
-            }
-        });
-        
-        // Validação antes de enviar o formulário
-        $('form').on('submit', function(e) {
-            if (selectedSpecialties.length === 0) {
-                e.preventDefault();
-                showAlert({ type: 'warning', title: 'Atenção', message: 'Por favor, selecione pelo menos uma especialidade médica.' });
-                $('#specialty-select').focus();
-                return false;
-            }
-        });
-        
-        // Inicializar
-        loadSelectedSpecialties();
-    });
-</script>
-@endpush
 
 @endsection

@@ -1,6 +1,7 @@
 @extends('layouts.tailadmin.app')
 
 @section('title', 'Configurações')
+@section('page', 'doctor-settings')
 
 @section('content')
 
@@ -255,7 +256,13 @@
                                                 </td>
                                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
                                                     <button type="button" class="inline-flex items-center px-3 py-1.5 bg-amber-100 hover:bg-amber-200 text-amber-700 dark:bg-amber-900 dark:text-amber-300 dark:hover:bg-amber-800 text-xs font-medium rounded-md transition-colors"
-                                                            onclick="editHour('{{ $hour->id }}', '{{ $hour->weekday }}', '{{ $hour->start_time }}', '{{ $hour->end_time }}', '{{ $hour->break_start_time }}', '{{ $hour->break_end_time }}')">
+                                                            data-action="edit-hour"
+                                                            data-hour-id="{{ $hour->id }}"
+                                                            data-weekday="{{ $hour->weekday }}"
+                                                            data-start-time="{{ $hour->start_time }}"
+                                                            data-end-time="{{ $hour->end_time }}"
+                                                            data-break-start="{{ $hour->break_start_time }}"
+                                                            data-break-end="{{ $hour->break_end_time }}">
                                                         Editar
                                                     </button>
                                                     <form action="{{ workspace_route('tenant.doctor-settings.destroy-business-hour', $hour->id) }}"
@@ -329,7 +336,11 @@
                                                 </td>
                                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
                                                     <button type="button" class="inline-flex items-center px-3 py-1.5 bg-amber-100 hover:bg-amber-200 text-amber-700 dark:bg-amber-900 dark:text-amber-300 dark:hover:bg-amber-800 text-xs font-medium rounded-md transition-colors"
-                                                            onclick="editType('{{ $type->id }}', '{{ $type->name }}', '{{ $type->duration_min }}', '{{ $type->is_active }}')">
+                                                            data-action="edit-type"
+                                                            data-type-id="{{ $type->id }}"
+                                                            data-type-name="{{ $type->name }}"
+                                                            data-type-duration="{{ $type->duration_min }}"
+                                                            data-type-active="{{ $type->is_active }}">
                                                         Editar
                                                     </button>
                                                     <form action="{{ workspace_route('tenant.doctor-settings.destroy-appointment-type', $type->id) }}"
@@ -396,7 +407,7 @@
                                     Limpar
                                 </button>
                             </div>
-                            <div id="selected-weekdays" class="border border-gray-200 dark:border-gray-600 rounded-md p-3 bg-gray-50 dark:bg-gray-700 mt-3" style="min-height: 60px;">
+                            <div id="selected-weekdays" class="border border-gray-200 dark:border-gray-600 rounded-md p-3 bg-gray-50 dark:bg-gray-700 mt-3" style="min-height: 60px;" data-badge-style="bootstrap">
                                 <p class="text-gray-500 dark:text-gray-400 mb-0">Nenhum dia selecionado</p>
                             </div>
                             <div id="weekdays-inputs"></div>
@@ -468,7 +479,7 @@
     <div class="modal fade" id="editHourModal" tabindex="-1">
         <div class="modal-dialog">
             <div class="modal-content">
-                <form id="editHourForm" method="POST">
+                <form id="editHourForm" method="POST" data-action-template="{{ workspace_route('tenant.doctor-settings.update-business-hour', ':id') }}">
                     @csrf
                     @method('PUT')
                     <div class="modal-header">
@@ -595,7 +606,7 @@
     <div class="modal fade" id="editTypeModal" tabindex="-1">
         <div class="modal-dialog">
             <div class="modal-content">
-                <form id="editTypeForm" method="POST">
+                <form id="editTypeForm" method="POST" data-action-template="{{ workspace_route('tenant.doctor-settings.update-appointment-type', ':id') }}">
                     @csrf
                     @method('PUT')
                     <div class="modal-header">
@@ -636,176 +647,4 @@
         </div>
     </div>
 
-@push('styles')
-<link href="{{ asset('css/tenant-business-hours.css') }}" rel="stylesheet">
-@endpush
-
-@push('scripts')
-<script>
-    $(document).ready(function() {
-        // Gerenciamento de dias da semana no modal de horário
-        let selectedWeekdays = [];
-        
-        const weekdayNames = {
-            0: 'Domingo',
-            1: 'Segunda-feira',
-            2: 'Terça-feira',
-            3: 'Quarta-feira',
-            4: 'Quinta-feira',
-            5: 'Sexta-feira',
-            6: 'Sábado'
-        };
-        
-        function updateWeekdaysDisplay() {
-            const container = $('#selected-weekdays');
-            container.empty();
-            
-            if (selectedWeekdays.length === 0) {
-                container.html('<p class="text-muted mb-0"><i class="mdi mdi-information-outline me-1"></i>Nenhum dia selecionado</p>');
-                return;
-            }
-            
-            selectedWeekdays.forEach(function(weekday) {
-                const weekdayStr = String(weekday);
-                const name = weekdayNames[weekday] || 'Dia ' + weekday;
-                const badge = $('<span>')
-                    .addClass('badge bg-primary me-2 mb-2 weekday-badge')
-                    .attr('data-id', weekdayStr)
-                    .css({
-                        'font-size': '13px', 
-                        'padding': '8px 14px', 
-                        'display': 'inline-flex', 
-                        'align-items': 'center', 
-                        'gap': '6px'
-                    })
-                    .html('<i class="mdi mdi-calendar-week"></i>' + name + '<button type="button" class="btn-close btn-close-white ms-1" style="font-size: 10px; opacity: 0.8;" aria-label="Remover"></button>');
-                container.append(badge);
-            });
-            
-            const inputsContainer = $('#weekdays-inputs');
-            inputsContainer.empty();
-            selectedWeekdays.forEach(function(weekday) {
-                inputsContainer.append($('<input>')
-                    .attr('type', 'hidden')
-                    .attr('name', 'weekdays[]')
-                    .val(parseInt(weekday))
-                );
-            });
-        }
-        
-        $('#add-weekday-btn').on('click', function() {
-            const select = $('#weekday-select');
-            const weekday = select.val();
-            
-            if (weekday === '') {
-                showAlert({ type: 'warning', title: 'Atenção', message: 'Por favor, selecione um dia da semana' });
-                return;
-            }
-            
-            // Converter para string para comparação consistente
-            const weekdayStr = String(weekday);
-            if (selectedWeekdays.some(function(id) { return String(id) === weekdayStr; })) {
-                showAlert({ type: 'warning', title: 'Atenção', message: 'Este dia já foi adicionado' });
-                return;
-            }
-            
-            selectedWeekdays.push(parseInt(weekday));
-            updateWeekdaysDisplay();
-            select.val('');
-        });
-        
-        // Usar delegação de eventos no container para garantir que funcione
-        $('#selected-weekdays').on('click', '.weekday-badge .btn-close', function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            const badge = $(this).closest('.weekday-badge');
-            const weekday = String(badge.attr('data-id'));
-            
-            selectedWeekdays = selectedWeekdays.filter(function(id) {
-                return String(id) !== weekday;
-            });
-            
-            updateWeekdaysDisplay();
-        });
-        
-        $('#clear-weekdays-btn').on('click', function() {
-            if (selectedWeekdays.length === 0) {
-                return;
-            }
-            
-            confirmAction({
-                title: 'Remover dias selecionados',
-                message: 'Deseja remover todos os dias selecionados?',
-                confirmText: 'Remover',
-                cancelText: 'Cancelar',
-                type: 'warning',
-                onConfirm: () => {
-                    selectedWeekdays = [];
-                    updateWeekdaysDisplay();
-                }
-            });
-        });
-        
-        // Validação antes de submeter o formulário
-        $('#addHourModal form').on('submit', function(e) {
-            if (selectedWeekdays.length === 0) {
-                e.preventDefault();
-                showAlert({ type: 'warning', title: 'Atenção', message: 'Por favor, selecione pelo menos um dia da semana.' });
-                return false;
-            }
-            
-            const startTime = $(this).find('input[name="start_time"]').val();
-            const endTime = $(this).find('input[name="end_time"]').val();
-            
-            if (!startTime || !endTime) {
-                e.preventDefault();
-                showAlert({ type: 'warning', title: 'Atenção', message: 'Por favor, preencha os horários de início e fim.' });
-                return false;
-            }
-            
-            // Garantir que os weekdays estão como inteiros
-            const inputsContainer = $('#weekdays-inputs');
-            inputsContainer.empty();
-            selectedWeekdays.forEach(function(weekday) {
-                inputsContainer.append($('<input>')
-                    .attr('type', 'hidden')
-                    .attr('name', 'weekdays[]')
-                    .val(parseInt(weekday))
-                );
-            });
-        });
-        
-        // Limpar ao fechar o modal
-        $('#addHourModal').on('hidden.bs.modal', function () {
-            selectedWeekdays = [];
-            updateWeekdaysDisplay();
-            $('#addHourModal form')[0].reset();
-        });
-        
-        // Função para editar horário
-        window.editHour = function(id, weekday, startTime, endTime, breakStartTime, breakEndTime) {
-            const form = $('#editHourForm');
-            form.attr('action', '{{ workspace_route("tenant.doctor-settings.update-business-hour", ":id") }}'.replace(':id', id));
-            form.find('select[name="weekday"]').val(weekday);
-            form.find('input[name="start_time"]').val(startTime);
-            form.find('input[name="end_time"]').val(endTime);
-            form.find('input[name="break_start_time"]').val(breakStartTime || '');
-            form.find('input[name="break_end_time"]').val(breakEndTime || '');
-            $('#editHourModal').modal('show');
-        };
-        
-        // Função para editar tipo
-        window.editType = function(id, name, durationMin, isActive) {
-            const form = $('#editTypeForm');
-            form.attr('action', '{{ workspace_route("tenant.doctor-settings.update-appointment-type", ":id") }}'.replace(':id', id));
-            form.find('input[name="name"]').val(name);
-            form.find('input[name="duration_min"]').val(durationMin);
-            form.find('select[name="is_active"]').val(isActive ? '1' : '0');
-            $('#editTypeModal').modal('show');
-        };
-    });
-</script>
-@endpush
-
 @endsection
-

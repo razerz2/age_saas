@@ -1,6 +1,25 @@
 @extends('layouts.tailadmin.app')
 
 @section('title', 'Criar Médico')
+@section('page', 'doctors')
+
+@push('styles')
+    <link rel="stylesheet" href="{{ mix('css/tenant-doctors.css') }}">
+@endpush
+
+@push('scripts')
+    <script type="module">
+        import { init as initDoctorsPage } from '{{ mix('js/tenant/pages/doctors.js') }}';
+
+        document.addEventListener('DOMContentLoaded', () => {
+            try {
+                initDoctorsPage();
+            } catch (error) {
+                console.error('Erro ao inicializar a página de médicos:', error);
+            }
+        });
+    </script>
+@endpush
 
 @section('content')
 
@@ -232,7 +251,7 @@
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                             Selecione as especialidades do médico <span class="text-red-500">*</span>
                         </label>
-                        <div class="grid grid-cols-1 md:grid-cols-12 gap-4 mb-4">
+                        <div class="grid grid-cols-1 md:grid-cols-12 gap-4 mb-4 items-end">
                             <div class="md:col-span-8">
                                 <select id="specialty-select" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white @error('specialties') border-red-500 @enderror">
                                     <option value="">Selecione uma especialidade</option>
@@ -242,24 +261,25 @@
                                 </select>
                             </div>
                             <div class="md:col-span-4">
-                                <div class="flex gap-2">
-                                    <button type="button" id="add-specialty-btn" class="flex-1 px-4 py-2 bg-primary text-white hover:bg-primary/90 font-medium rounded-md transition-colors">
-                                        <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <div class="flex flex-col gap-2 sm:flex-row sm:justify-end">
+                                    <button type="button" id="add-specialty-btn" class="btn-patient-primary">
+                                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
                                         </svg>
                                         Adicionar
                                     </button>
-                                    <button type="button" id="clear-specialties-btn" class="px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 font-medium rounded-md transition-colors">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <button type="button" id="clear-specialties-btn" class="btn-patient-secondary">
+                                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
                                         </svg>
+                                        Remover selecionadas
                                     </button>
                                 </div>
                             </div>
                         </div>
                         
                         <!-- Área para exibir especialidades selecionadas -->
-                        <div id="selected-specialties" class="p-4 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700" style="min-height: 60px;">
+                        <div id="selected-specialties" class="p-4 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700" style="min-height: 60px;" data-badge-style="tailwind" data-initial-selected='@json(old('specialties', []))'>
                             @if(old('specialties'))
                                 @foreach(old('specialties') as $specialtyId)
                                     @php
@@ -316,282 +336,5 @@
             </form>
         </div>
     </div>
-
-@push('styles')
-    <link href="{{ asset('css/tenant-common.css') }}" rel="stylesheet">
-    <link href="{{ asset('css/tenant-doctors.css') }}" rel="stylesheet">
-    <style>
-        .btn-patient-primary {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 0.5rem;
-            padding: 0.625rem 1.25rem;
-            font-size: 0.875rem;
-            font-weight: 500;
-            transition: all 0.2s;
-            border: 1px solid #d1d5db;
-            background-color: #2563eb;
-            color: white;
-        }
-        
-        .btn-patient-primary:hover {
-            background-color: #1d4ed8;
-            border-color: #1d4ed8;
-        }
-        
-        .btn-patient-secondary {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 0.5rem;
-            padding: 0.5rem 1rem;
-            font-size: 0.875rem;
-            font-weight: 500;
-            transition: all 0.2s;
-            border: 1px solid #d1d5db;
-            background-color: transparent;
-            color: #374151;
-            text-decoration: none;
-        }
-        
-        .btn-patient-secondary:hover {
-            background-color: #f9fafb;
-            border-color: #9ca3af;
-        }
-        
-        /* Dark mode styles */
-        @media (prefers-color-scheme: dark) {
-            .btn-patient-primary {
-                background-color: transparent;
-                border-color: #d1d5db;
-                color: white;
-            }
-            
-            .btn-patient-primary:hover {
-                background-color: #1f2937;
-                border-color: #9ca3af;
-            }
-            
-            .btn-patient-secondary {
-                background-color: transparent;
-                border-color: #d1d5db;
-                color: white;
-            }
-            
-            .btn-patient-secondary:hover {
-                background-color: #1f2937;
-                border-color: #9ca3af;
-            }
-        }
-        
-        /* For TailAdmin dark mode class */
-        .dark .btn-patient-primary {
-            background-color: transparent;
-            border-color: #d1d5db;
-            color: white;
-        }
-        
-        .dark .btn-patient-primary:hover {
-            background-color: #1f2937;
-            border-color: #9ca3af;
-        }
-        
-        .dark .btn-patient-secondary {
-            background-color: transparent;
-            border-color: #d1d5db;
-            color: white;
-        }
-        
-        .dark .btn-patient-secondary:hover {
-            background-color: #1f2937;
-            border-color: #9ca3af;
-        }
-        
-        /* Forçar visibilidade do botão Adicionar Especialidade */
-        #add-specialty-btn {
-            background-color: #2563eb !important;
-            color: white !important;
-            border: none !important;
-            display: inline-flex !important;
-            align-items: center !important;
-            justify-content: center !important;
-            visibility: visible !important;
-            opacity: 1 !important;
-        }
-        
-        #add-specialty-btn:hover {
-            background-color: #1d4ed8 !important;
-        }
-        
-        #clear-specialties-btn {
-            background-color: white !important;
-            color: #374151 !important;
-            border: 1px solid #d1d5db !important;
-            display: inline-flex !important;
-            align-items: center !important;
-            justify-content: center !important;
-            visibility: visible !important;
-            opacity: 1 !important;
-        }
-        
-        #clear-specialties-btn:hover {
-            background-color: #f9fafb !important;
-        }
-        
-        /* Dark mode para botões de especialidade */
-        .dark #add-specialty-btn {
-            background-color: transparent !important;
-            color: white !important;
-            border: 1px solid #d1d5db !important;
-        }
-        
-        .dark #add-specialty-btn:hover {
-            background-color: #1f2937 !important;
-        }
-        
-        .dark #clear-specialties-btn {
-            background-color: transparent !important;
-            color: white !important;
-            border: 1px solid #d1d5db !important;
-        }
-        
-        .dark #clear-specialties-btn:hover {
-            background-color: #1f2937 !important;
-        }
-    </style>
-@endpush
-
-@push('scripts')
-<script>
-    document.addEventListener('DOMContentLoaded', function () {
-        const specialtySelect = document.getElementById('specialty-select');
-        const addSpecialtyBtn = document.getElementById('add-specialty-btn');
-        const clearSpecialtiesBtn = document.getElementById('clear-specialties-btn');
-        const selectedSpecialtiesContainer = document.getElementById('selected-specialties');
-        const specialtiesInputs = document.getElementById('specialties-inputs');
-        const form = document.querySelector('form');
-
-        let selectedSpecialties = [];
-
-        const storedSpecialties = @json(old('specialties', []));
-        if (Array.isArray(storedSpecialties) && storedSpecialties.length > 0) {
-            selectedSpecialties = [...new Set(storedSpecialties.map(String))];
-        }
-
-        function renderPlaceholder() {
-            selectedSpecialtiesContainer.innerHTML = '<p class="text-gray-500 dark:text-gray-400 mb-0"><svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>Nenhuma especialidade selecionada</p>';
-        }
-
-        function updateSpecialtiesDisplay() {
-            selectedSpecialtiesContainer.innerHTML = '';
-
-            if (selectedSpecialties.length === 0) {
-                renderPlaceholder();
-            } else {
-                selectedSpecialties.forEach((specialtyId) => {
-                    const option = specialtySelect.querySelector(`option[value="${specialtyId}"]`);
-                    if (!option) {
-                        return;
-                    }
-
-                    const badge = document.createElement('span');
-                    badge.className = 'inline-flex items-center gap-2 px-3 py-2 bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 rounded-full text-sm font-medium mr-2 mb-2 specialty-badge';
-                    badge.dataset.id = specialtyId;
-
-                    badge.innerHTML = `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>${option.dataset.name}`;
-
-                    const removeBtn = document.createElement('button');
-                    removeBtn.type = 'button';
-                    removeBtn.className = 'text-blue-600 hover:text-blue-800 dark:text-blue-300 dark:hover:text-blue-100 ml-1';
-                    removeBtn.setAttribute('aria-label', 'Remover');
-                    removeBtn.innerHTML = `<svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg>`;
-
-                    removeBtn.addEventListener('click', function () {
-                        selectedSpecialties = selectedSpecialties.filter((id) => id !== specialtyId);
-                        updateSpecialtiesDisplay();
-                    });
-
-                    badge.appendChild(removeBtn);
-                    selectedSpecialtiesContainer.appendChild(badge);
-                });
-            }
-
-            specialtiesInputs.innerHTML = '';
-            selectedSpecialties.forEach((specialtyId) => {
-                const input = document.createElement('input');
-                input.type = 'hidden';
-                input.name = 'specialties[]';
-                input.value = specialtyId;
-                specialtiesInputs.appendChild(input);
-            });
-        }
-
-        function addSpecialty() {
-            const specialtyId = specialtySelect.value;
-
-            if (!specialtyId) {
-                showAlert({ type: 'warning', title: 'Atenção', message: 'Por favor, selecione uma especialidade' });
-                specialtySelect.focus();
-                return;
-            }
-
-            const normalizedId = String(specialtyId);
-
-            if (selectedSpecialties.includes(normalizedId)) {
-                showAlert({ type: 'warning', title: 'Atenção', message: 'Esta especialidade já foi adicionada' });
-                specialtySelect.focus();
-                return;
-            }
-
-            selectedSpecialties.push(normalizedId);
-            specialtySelect.value = '';
-            updateSpecialtiesDisplay();
-        }
-
-        addSpecialtyBtn.addEventListener('click', function (event) {
-            event.preventDefault();
-            addSpecialty();
-        });
-
-        specialtySelect.addEventListener('keypress', function (event) {
-            if (event.key === 'Enter') {
-                event.preventDefault();
-                addSpecialty();
-            }
-        });
-
-        clearSpecialtiesBtn.addEventListener('click', function () {
-            if (selectedSpecialties.length === 0) {
-                return;
-            }
-
-            confirmAction({
-                title: 'Remover especialidades',
-                message: 'Deseja remover todas as especialidades selecionadas?',
-                confirmText: 'Remover',
-                cancelText: 'Cancelar',
-                type: 'warning',
-                onConfirm: () => {
-                    selectedSpecialties = [];
-                    updateSpecialtiesDisplay();
-                }
-            });
-        });
-
-        if (form) {
-            form.addEventListener('submit', function (event) {
-                if (selectedSpecialties.length === 0) {
-                    event.preventDefault();
-                    showAlert({ type: 'warning', title: 'Atenção', message: 'Por favor, selecione pelo menos uma especialidade médica.' });
-                    specialtySelect.focus();
-                }
-            });
-        }
-
-        updateSpecialtiesDisplay();
-    });
-</script>
-@endpush
 
 @endsection

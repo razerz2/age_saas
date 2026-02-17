@@ -1,75 +1,8 @@
 @extends('layouts.tailadmin.public')
 
 @section('title', 'Detalhes do Agendamento — ' . ($tenant->trade_name ?? $tenant->legal_name ?? 'Sistema'))
+@section('page', 'public')
 
-@push('styles')
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@mdi/font@7.4.47/css/materialdesignicons.min.css">
-    <style>
-        .page-wrapper {
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            padding: 2rem 0;
-        }
-        .details-card {
-            background: white;
-            border-radius: 10px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-        }
-        .details-header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 2rem;
-            border-radius: 10px 10px 0 0;
-            text-align: center;
-        }
-        .details-header h2 {
-            margin: 0;
-            font-size: 1.75rem;
-        }
-        .details-body {
-            padding: 2rem;
-        }
-        .detail-row {
-            padding: 1rem 0;
-            border-bottom: 1px solid #e9ecef;
-        }
-        .detail-row:last-child {
-            border-bottom: none;
-        }
-        .detail-label {
-            font-weight: 600;
-            color: #495057;
-            margin-bottom: 0.25rem;
-        }
-        .detail-value {
-            color: #212529;
-            font-size: 1rem;
-        }
-        .badge-status {
-            padding: 0.5rem 1rem;
-            border-radius: 5px;
-            font-weight: 500;
-        }
-        .badge-scheduled {
-            background-color: #28a745;
-            color: white;
-        }
-        .badge-cancelled {
-            background-color: #dc3545;
-            color: white;
-        }
-        .badge-completed {
-            background-color: #17a2b8;
-            color: white;
-        }
-        .badge-rescheduled {
-            background-color: #ffc107;
-            color: #212529;
-        }
-    </style>
-@endpush
 
 @section('content')
     <div class="page-wrapper">

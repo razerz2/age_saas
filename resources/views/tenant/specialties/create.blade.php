@@ -1,6 +1,7 @@
 @extends('layouts.tailadmin.app')
 
 @section('title', 'Criar Especialidade')
+@section('page', 'specialties')
 
 @section('content')
 
@@ -189,96 +190,5 @@
         </div>
     </div>
 
-@push('styles')
-    <link href="{{ asset('css/tenant-common.css') }}" rel="stylesheet">
-    <style>
-        .btn-patient-primary {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 0.5rem;
-            padding: 0.625rem 1.25rem;
-            font-size: 0.875rem;
-            font-weight: 500;
-            transition: all 0.2s;
-            border: 1px solid #d1d5db;
-            background-color: #2563eb;
-            color: white;
-        }
-        
-        .btn-patient-primary:hover {
-            background-color: #1d4ed8;
-            border-color: #1d4ed8;
-        }
-        
-        .btn-patient-secondary {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 0.5rem;
-            padding: 0.5rem 1rem;
-            font-size: 0.875rem;
-            font-weight: 500;
-            transition: all 0.2s;
-            border: 1px solid #d1d5db;
-            background-color: transparent;
-            color: #374151;
-            text-decoration: none;
-        }
-        
-        .btn-patient-secondary:hover {
-            background-color: #f9fafb;
-            border-color: #9ca3af;
-        }
-        
-        /* Dark mode styles */
-        @media (prefers-color-scheme: dark) {
-            .btn-patient-primary {
-                background-color: transparent;
-                border-color: #d1d5db;
-                color: white;
-            }
-            
-            .btn-patient-primary:hover {
-                background-color: #1f2937;
-                border-color: #9ca3af;
-            }
-            
-            .btn-patient-secondary {
-                background-color: transparent;
-                border-color: #d1d5db;
-                color: white;
-            }
-            
-            .btn-patient-secondary:hover {
-                background-color: #1f2937;
-                border-color: #9ca3af;
-            }
-        }
-        
-        /* For TailAdmin dark mode class */
-        .dark .btn-patient-primary {
-            background-color: transparent;
-            border-color: #d1d5db;
-            color: white;
-        }
-        
-        .dark .btn-patient-primary:hover {
-            background-color: #1f2937;
-            border-color: #9ca3af;
-        }
-        
-        .dark .btn-patient-secondary {
-            background-color: transparent;
-            border-color: #d1d5db;
-            color: white;
-        }
-        
-        .dark .btn-patient-secondary:hover {
-            background-color: #1f2937;
-            border-color: #9ca3af;
-        }
-    </style>
-@endpush
 
 @endsection

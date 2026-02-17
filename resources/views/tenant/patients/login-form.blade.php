@@ -1,8 +1,13 @@
 @extends('layouts.tailadmin.app')
 
 @section('title', 'Gerenciar Login do Paciente')
+@section('page', 'patients')
 
 @section('content')
+
+    <div id="patients-login-form-config"
+         data-require-confirmation="{{ (!isset($patient->login) || !$patient->login) ? '1' : '0' }}"></div>
+
     <div class="page-header mb-6">
         <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <nav class="min-w-0 flex-1" aria-label="breadcrumb">
@@ -196,95 +201,4 @@
     </div>
 @endsection
 
-@push('scripts')
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Gerador de senha
-        const generatePasswordBtn = document.getElementById('generatePassword');
-        if (generatePasswordBtn) {
-            generatePasswordBtn.addEventListener('click', function() {
-                const uppercase = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-                const lowercase = 'abcdefghijklmnopqrstuvwxyz';
-                const numbers = '0123456789';
-                const symbols = '!@#$%&*';
-                const allChars = uppercase + lowercase + numbers + symbols;
-                
-                let password = '';
-                // Garantir pelo menos um de cada tipo
-                password += uppercase.charAt(Math.floor(Math.random() * uppercase.length));
-                password += lowercase.charAt(Math.floor(Math.random() * lowercase.length));
-                password += numbers.charAt(Math.floor(Math.random() * numbers.length));
-                password += symbols.charAt(Math.floor(Math.random() * symbols.length));
-                
-                // Completar até 12 caracteres
-                for (let i = password.length; i < 12; i++) {
-                    password += allChars.charAt(Math.floor(Math.random() * allChars.length));
-                }
-                
-                // Embaralhar a senha
-                password = password.split('').sort(() => Math.random() - 0.5).join('');
-                
-                document.getElementById('password').value = password;
-                const confirmField = document.getElementById('password_confirmation');
-                if (confirmField) {
-                    confirmField.value = password;
-                }
-                
-                // Mostrar senha temporariamente
-                const passwordField = document.getElementById('password');
-                const wasPassword = passwordField.type === 'password';
-                if (wasPassword) {
-                    passwordField.type = 'text';
-                    setTimeout(() => {
-                        passwordField.type = 'password';
-                    }, 5000);
-                }
-            });
-        }
-
-        // Validação de confirmação de senha
-        @if(!$patient->login)
-        function validatePasswordConfirmation() {
-            const password = document.getElementById('password').value;
-            const confirmation = document.getElementById('password_confirmation').value;
-            
-            if (password && confirmation) {
-                if (password !== confirmation) {
-                    document.getElementById('password_confirmation').classList.add('border-red-500');
-                    const existingError = document.getElementById('password-confirmation-error');
-                    if (!existingError) {
-                        const errorDiv = document.createElement('p');
-                        errorDiv.id = 'password-confirmation-error';
-                        errorDiv.className = 'mt-1 text-sm text-red-600 dark:text-red-400';
-                        errorDiv.textContent = 'As senhas não coincidem.';
-                        document.getElementById('password_confirmation').parentNode.appendChild(errorDiv);
-                    }
-                    return false;
-                } else {
-                    document.getElementById('password_confirmation').classList.remove('border-red-500');
-                    const existingError = document.getElementById('password-confirmation-error');
-                    if (existingError) {
-                        existingError.remove();
-                    }
-                    return true;
-                }
-            }
-            return true;
-        }
-
-        document.getElementById('password').addEventListener('keyup', validatePasswordConfirmation);
-        document.getElementById('password_confirmation').addEventListener('keyup', validatePasswordConfirmation);
-
-        // Validar antes de enviar formulário
-        document.querySelector('form').addEventListener('submit', function(e) {
-            if (!validatePasswordConfirmation()) {
-                e.preventDefault();
-                showAlert({ type: 'warning', title: 'Atenção', message: 'As senhas não coincidem. Por favor, verifique.' });
-                return false;
-            }
-        });
-        @endif
-    });
-</script>
-@endpush
 

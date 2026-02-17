@@ -1,6 +1,7 @@
 @extends('layouts.tailadmin.auth')
 
 @section('title', 'Verificação 2FA — Sistema')
+@section('page', 'auth')
 
 @section('content')
 <div class="min-h-screen flex items-center justify-center px-4">
@@ -83,14 +84,13 @@
                     <input type="text" 
                            name="code" 
                            id="code"
-                           class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 @error('code') border-red-300 @enderror"
+                           class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 auth-code-input @error('code') border-red-300 @enderror"
                            placeholder="000000"
                            maxlength="6"
                            pattern="[0-9]{6}"
                            required 
                            autofocus
-                           autocomplete="one-time-code"
-                           style="font-size: 1.5rem; text-align: center; letter-spacing: 0.5rem; font-weight: 600;">
+                           autocomplete="one-time-code">
                     @error('code')
                         <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                     @enderror
@@ -133,18 +133,4 @@
     </div>
 </div>
 
-@push('scripts')
-<script>
-    // Auto-submit quando 6 dígitos forem digitados
-    document.getElementById('code').addEventListener('input', function(e) {
-        this.value = this.value.replace(/[^0-9]/g, '');
-        if (this.value.length === 6) {
-            // Opcional: auto-submit após 6 dígitos
-            // this.form.submit();
-        }
-    });
-</script>
-@endpush
-
 @endsection
-

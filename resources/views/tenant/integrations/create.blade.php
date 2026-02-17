@@ -1,6 +1,7 @@
 @extends('layouts.tailadmin.app')
 
 @section('title', 'Criar Integração')
+@section('page', 'integrations')
 
 @section('content')
 
@@ -125,9 +126,4 @@
         </div>
     </div>
 
-@push('styles')
-    <link href="{{ asset('css/tenant-common.css') }}" rel="stylesheet">
-@endpush
-
 @endsection
-

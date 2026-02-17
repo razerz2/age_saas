@@ -9,6 +9,10 @@
     <meta http-equiv="X-UA-Compatible" content="ie=edge" />
     <title>@yield('title', 'Login | TailAdmin')</title>
     <link href="{{ asset('tailadmin/assets/css/style.css') }}" rel="stylesheet">
+    @vite([
+        'resources/css/tenant/app.css',
+        'resources/js/tenant/app.js',
+    ])
     @stack('styles')
     <style>
         [x-cloak] { display: none !important; }
@@ -43,7 +47,7 @@
         body.dark .btn-patient-secondary.hover\:text-red-900:hover { color: #fecaca; }
     </style>
 </head>
-<body class="bg-gray-50">
+<body class="bg-gray-50" data-page="@yield('page')">
     <!-- ===== Preloader Start ===== -->
     <div
         x-data="{ loaded: true }"

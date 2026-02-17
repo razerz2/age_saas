@@ -1,6 +1,7 @@
 ﻿@extends('layouts.tailadmin.app')
 
 @section('title', 'Editar Tipo de Consulta')
+@section('page', 'appointment-types')
 
 @section('content')
 
@@ -179,97 +180,6 @@
         </div>
     </div>
 
-@push('styles')
-    <link href="{{ asset('css/tenant-common.css') }}" rel="stylesheet">
-    <style>
-        /* Botões padrão com suporte a modo claro e escuro */
-        .btn-patient-primary {
-            background-color: #2563eb;
-            color: white;
-            border: 1px solid #d1d5db;
-            padding: 0.625rem 1.25rem;
-            font-size: 0.875rem;
-            font-weight: 500;
-            border-radius: 0.375rem;
-            cursor: pointer;
-            transition: all 0.2s;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 0.5rem;
-            text-decoration: none;
-        }
-        
-        .btn-patient-primary:hover {
-            background-color: #1d4ed8;
-        }
-        
-        .btn-patient-secondary {
-            background-color: transparent;
-            color: #374151;
-            border: 1px solid #d1d5db;
-            padding: 0.5rem 1rem;
-            font-size: 0.875rem;
-            font-weight: 500;
-            border-radius: 0.375rem;
-            cursor: pointer;
-            transition: all 0.2s;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 0.5rem;
-            text-decoration: none;
-        }
-        
-        .btn-patient-secondary:hover {
-            background-color: #f9fafb;
-        }
-        
-        /* Modo escuro via preferência do sistema */
-        @media (prefers-color-scheme: dark) {
-            .btn-patient-primary {
-                background-color: transparent;
-                color: white;
-                border-color: #d1d5db;
-            }
-            
-            .btn-patient-primary:hover {
-                background-color: #1f2937;
-            }
-            
-            .btn-patient-secondary {
-                background-color: transparent;
-                color: white;
-                border-color: #d1d5db;
-            }
-            
-            .btn-patient-secondary:hover {
-                background-color: #1f2937;
-            }
-        }
-        
-        /* Modo escuro via classe */
-        .dark .btn-patient-primary {
-            background-color: transparent;
-            color: white;
-            border-color: #d1d5db;
-        }
-        
-        .dark .btn-patient-primary:hover {
-            background-color: #1f2937;
-        }
-        
-        .dark .btn-patient-secondary {
-            background-color: transparent;
-            color: white;
-            border-color: #d1d5db;
-        }
-        
-        .dark .btn-patient-secondary:hover {
-            background-color: #1f2937;
-        }
-    </style>
-@endpush
 
 @endsection
 

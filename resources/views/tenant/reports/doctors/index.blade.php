@@ -1,8 +1,12 @@
 @extends('layouts.tailadmin.app')
 
 @section('title', 'Relatório de Médicos')
+@section('page', 'reports')
 
 @section('content')
+
+
+<div id="reports-doctors-config" data-report-type="doctors" data-data-url="{{ workspace_route('tenant.reports.doctors.data') }}"></div>
 
 <div class="page-header mb-6">
     <div>
@@ -50,24 +54,4 @@
 
 @endsection
 
-@push('scripts')
-<script>
-$(document).ready(function() {
-    $('#reports-table').DataTable({
-        language: { url: "//cdn.datatables.net/plug-ins/1.11.5/i18n/pt-BR.json" },
-        ajax: {
-            url: '{{ workspace_route("tenant.reports.doctors.data") }}',
-            method: 'POST',
-            headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
-            dataSrc: 'table'
-        },
-        columns: [
-            { data: 'name' },
-            { data: 'specialties' },
-            { data: 'appointments_count' }
-        ]
-    });
-});
-</script>
-@endpush
 
