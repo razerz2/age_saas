@@ -1,8 +1,23 @@
 export function init() {
-	const tenantSlug = window.tenantSlug || (window.tenant && window.tenant.slug) || null;
+	let tenantSlug = window.tenantSlug || (window.tenant && window.tenant.slug) || null;
 	if (!tenantSlug) {
-		return;
+		// Hardening: make the failure explicit and try a safe fallback.
+		// Expected path: /workspace/{slug}/...
+		const parts = String(window.location?.pathname || '').split('/').filter(Boolean);
+		if (parts[0] === 'workspace' && parts[1]) {
+			tenantSlug = parts[1];
+			window.tenantSlug = tenantSlug;
+			window.tenant = window.tenant || {};
+			window.tenant.slug = tenantSlug;
+		} else {
+			// eslint-disable-next-line no-console
+			console.error('[appointments] tenantSlug ausente — JS não inicializado');
+			return;
+		}
 	}
+
+	// eslint-disable-next-line no-console
+	console.log('[appointments] init ok', { tenantSlug });
 
 	document.querySelectorAll('.js-stop-propagation').forEach((el) => {
 		el.addEventListener('click', (event) => {
@@ -29,6 +44,10 @@ export function init() {
 	const calendarIdInput = document.getElementById('calendar_id');
 	const businessHoursModal = document.getElementById('businessHoursModal');
 	const btnShowBusinessHours = document.getElementById('btn-show-business-hours');
+	const appointmentTypeWrapper = appointmentTypeSelect?.closest('[data-appointment-type-wrapper]') || null;
+
+	// Tipo de Consulta nunca deve aparecer na UI (padrão do público).
+	appointmentTypeWrapper?.classList.add('hidden');
 
 	if (!doctorSelect || !dateInput || !timeSelect || !startsAtInput || !endsAtInput) {
 		return;
@@ -59,10 +78,18 @@ export function init() {
 		fetch(`/workspace/${tenantSlug}/api/doctors/${doctorId}/appointment-types`)
 			.then((response) => response.json())
 			.then((data) => {
+				const types = Array.isArray(data) ? data : [];
+
+				if (types.length === 0) {
+					appointmentTypeSelect.innerHTML = '<option value="">Nenhum tipo de consulta disponível</option>';
+					appointmentTypeSelect.disabled = true;
+					return;
+				}
+
 				appointmentTypeSelect.innerHTML = '<option value="">Selecione um tipo</option>';
 
 				let currentTypeFound = false;
-				(data || []).forEach((type) => {
+				types.forEach((type) => {
 					const option = document.createElement('option');
 					option.value = type.id;
 					option.textContent = `${type.name} (${type.duration_min} min)`;
@@ -74,15 +101,16 @@ export function init() {
 					appointmentTypeSelect.appendChild(option);
 				});
 
-				if (currentTypeId && !currentTypeFound) {
-					const opt = document.createElement('option');
-					opt.value = currentTypeId;
-					opt.textContent = 'Tipo atual (não encontrado na lista)';
-					opt.selected = true;
-					appointmentTypeSelect.appendChild(opt);
+				// Preferir o valor atual (edição). Caso não exista (create), auto-selecionar o primeiro.
+				if (!currentTypeFound) {
+					appointmentTypeSelect.value = String(types[0].id);
 				}
 
 				appointmentTypeSelect.disabled = false;
+
+				if (dateInput?.value) {
+					loadAvailableSlots(doctorId, appointmentTypeSelect.value);
+				}
 			})
 			.catch(() => {
 				appointmentTypeSelect.innerHTML = '<option value="">Erro ao carregar tipos</option>';
@@ -1130,7 +1158,7 @@ function initRecurringEdit($, tenantSlug) {
 			$('#end_date_field').toggle(endType === 'date');
 		});
 
-	function loadAppointmentTypes(doctorId) {
+	function loadRecurringAppointmentTypes(doctorId) {
 		const $appointmentTypeSelect = $('#appointment_type_id');
 
 		if (!doctorId) {
@@ -1224,7 +1252,7 @@ function initRecurringEdit($, tenantSlug) {
 		.off('change.recurringEdit')
 		.on('change.recurringEdit', function () {
 			const selectedDoctorId = $(this).val();
-			loadAppointmentTypes(selectedDoctorId);
+			loadRecurringAppointmentTypes(selectedDoctorId);
 			loadBusinessHours();
 		});
 
@@ -1234,7 +1262,7 @@ function initRecurringEdit($, tenantSlug) {
 		startDate = $('#start_date').val();
 
 		if (doctorId) {
-			loadAppointmentTypes(doctorId);
+			loadRecurringAppointmentTypes(doctorId);
 			loadBusinessHours();
 		}
 	}
@@ -1456,4 +1484,3 @@ function initRecurringEdit($, tenantSlug) {
 	initState();
 	updateRemoveButtons();
 }
-

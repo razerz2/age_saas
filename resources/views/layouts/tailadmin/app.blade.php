@@ -15,6 +15,12 @@
     <!-- Grid.js CDN CSS -->
     <link rel="stylesheet" href="https://unpkg.com/gridjs/dist/theme/mermaid.min.css">
     <link href="{{ asset('css/page-headers.css') }}" rel="stylesheet">
+    <script>
+        // JS modules expect a tenant slug for /workspace/{slug}/... pages.
+        window.tenantSlug = @json(request()->segment(2));
+        window.tenant = window.tenant || {};
+        window.tenant.slug = window.tenantSlug;
+    </script>
     @vite([
         'resources/css/tenant/app.css',
         'resources/js/tenant/app.js',

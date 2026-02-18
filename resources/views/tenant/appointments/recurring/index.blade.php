@@ -50,7 +50,6 @@
                 :columns="[
                     ['name' => 'patient', 'label' => 'Paciente'],
                     ['name' => 'doctor', 'label' => 'Médico'],
-                    ['name' => 'type', 'label' => 'Tipo'],
                     ['name' => 'start_date', 'label' => 'Data Inicial'],
                     ['name' => 'end_display', 'label' => 'Término'],
                     ['name' => 'rules_display', 'label' => 'Regras'],

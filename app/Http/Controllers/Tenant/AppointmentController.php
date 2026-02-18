@@ -40,7 +40,6 @@ class AppointmentController extends Controller
             'patient',
             'doctor.user',
             'specialty',
-            'type',
             'calendar',
         ]);
 
@@ -60,9 +59,6 @@ class AppointmentController extends Controller
                 ->orWhereHas('doctor.user', function ($sub) use ($search) {
                     $sub->where('name_full', 'like', '%' . $search . '%');
                 })
-                ->orWhereHas('type', function ($sub) use ($search) {
-                    $sub->where('name', 'like', '%' . $search . '%');
-                })
                 ->orWhereHas('specialty', function ($sub) use ($search) {
                     $sub->where('name', 'like', '%' . $search . '%');
                 })
@@ -75,6 +71,7 @@ class AppointmentController extends Controller
             'starts_at' => 'starts_at',
             'patient'   => 'patient_id',
             'doctor'    => 'doctor_id',
+            'mode'      => 'appointment_mode',
             'status'    => 'status',
         ];
 
@@ -90,14 +87,19 @@ class AppointmentController extends Controller
         $paginator = $query->paginate($limit, ['*'], 'page', $page);
 
         $data = $paginator->getCollection()->map(function (Appointment $appointment) {
+            $modeLabel = match ($appointment->appointment_mode) {
+                'online' => 'Online',
+                'presencial' => 'Presencial',
+                default => '—',
+            };
+
             return [
                 'date'         => $appointment->starts_at?->format('d/m/Y'),
                 'time'         => $appointment->starts_at?->format('H:i'),
                 'patient'      => e($appointment->patient->full_name ?? '-'),
                 'doctor'       => e(optional(optional($appointment->doctor)->user)->name_full ?? '-'),
                 'specialty'    => e(optional($appointment->specialty)->name ?? '-'),
-                'type'         => e(optional($appointment->type)->name ?? '-'),
-                'mode_badge'   => view('tenant.appointments.partials.mode', compact('appointment'))->render(),
+                'mode'         => $modeLabel,
                 'status_badge' => view('tenant.appointments.partials.status', compact('appointment'))->render(),
                 'actions'      => view('tenant.appointments.partials.actions', compact('appointment'))->render(),
             ];
@@ -116,7 +118,7 @@ class AppointmentController extends Controller
 
     public function index()
     {
-        $query = Appointment::with(['doctor.user', 'calendar', 'patient', 'type', 'specialty']);
+        $query = Appointment::with(['doctor.user', 'calendar', 'patient', 'specialty']);
         
         // Aplicar filtro de médico usando doctor_id diretamente
         $this->applyDoctorFilter($query, 'doctor_id');

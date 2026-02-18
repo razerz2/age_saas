@@ -86,8 +86,7 @@
                     ['name' => 'patient', 'label' => 'Paciente'],
                     ['name' => 'doctor', 'label' => 'Médico'],
                     ['name' => 'specialty', 'label' => 'Especialidade'],
-                    ['name' => 'type', 'label' => 'Tipo'],
-                    ['name' => 'mode_badge', 'label' => 'Modo'],
+                    ['name' => 'mode', 'label' => 'Modo'],
                     ['name' => 'status_badge', 'label' => 'Status'],
                     ['name' => 'actions', 'label' => 'Ações'],
                 ]"

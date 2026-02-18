@@ -3,148 +3,146 @@
 @section('title', 'Detalhes do Agendamento — ' . ($tenant->trade_name ?? $tenant->legal_name ?? 'Sistema'))
 @section('page', 'public')
 
-
 @section('content')
-    <div class="page-wrapper">
-        <div class="container">
-            <div class="row justify-content-center">
-                <div class="col-lg-8">
-                    <div class="card details-card">
-                        <div class="details-header">
-                            <i class="mdi mdi-calendar-clock" style="font-size: 48px; margin-bottom: 1rem;"></i>
-                            <h2>Detalhes do Agendamento</h2>
+    <div class="min-h-screen bg-slate-50">
+        <div class="mx-auto max-w-3xl px-4 sm:px-6 py-8">
+            <div class="pt-10 pb-6 sm:pt-12 sm:pb-8 lg:pt-14 text-center">
+                <div class="mx-auto mb-4 inline-flex h-10 w-10 items-center justify-center rounded-full bg-emerald-50 text-emerald-700 ring-1 ring-emerald-100">
+                    <i class="mdi mdi-calendar-check text-xl"></i>
+                </div>
+                <h1 class="text-2xl font-bold tracking-tight text-slate-900">Detalhes do Agendamento</h1>
+                <p class="mt-2 text-sm text-slate-600">Confira os dados do seu agendamento.</p>
+            </div>
+
+            @php
+                $status = $appointment->status ?? null;
+                $statusText = $appointment->status_translated ?? ($status ?: '—');
+                $statusClasses = 'bg-slate-50 text-slate-700 ring-slate-200';
+                if ($status === 'scheduled') $statusClasses = 'bg-emerald-50 text-emerald-700 ring-emerald-200';
+                if ($status === 'attended') $statusClasses = 'bg-emerald-50 text-emerald-700 ring-emerald-200';
+                if ($status === 'canceled' || $status === 'no_show') $statusClasses = 'bg-red-50 text-red-700 ring-red-200';
+                if ($status === 'rescheduled') $statusClasses = 'bg-amber-50 text-amber-800 ring-amber-200';
+            @endphp
+
+            <div class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+                <div class="px-6 py-5 text-center">
+                    <div class="mx-auto w-full text-center">
+                        <h2 class="text-base font-semibold text-slate-900">Detalhes</h2>
+                        <p class="mt-1 text-sm text-slate-600">Informações principais do agendamento.</p>
+                        <div class="mt-4 inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ring-1 {{ $statusClasses }}">
+                            {{ $statusText }}
                         </div>
-                        <div class="details-body">
-                            
-                            <div class="detail-row">
-                                <div class="detail-label">Paciente</div>
-                                <div class="detail-value">{{ $appointment->patient->full_name ?? 'N/A' }}</div>
-                            </div>
+                    </div>
+                </div>
 
-                            <div class="detail-row">
-                                <div class="detail-label">Profissional</div>
-                                <div class="detail-value">
-                                    @if($appointment->calendar && $appointment->calendar->doctor && $appointment->calendar->doctor->user)
-                                        {{ $appointment->calendar->doctor->user->name }}
-                                    @else
-                                        N/A
-                                    @endif
-                                </div>
-                            </div>
+                <div class="border-t border-slate-200 px-6 py-6">
+                    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 text-center justify-items-center items-start">
+                        <div class="mx-auto w-full max-w-xs text-center">
+                            <div class="text-xs font-semibold uppercase tracking-wide text-slate-500">Paciente</div>
+                            <div class="mt-1 text-sm font-semibold text-slate-900">{{ $appointment->patient->full_name ?? '—' }}</div>
+                        </div>
 
-                            <div class="detail-row">
-                                <div class="detail-label">Calendário</div>
-                                <div class="detail-value">{{ $appointment->calendar->name ?? 'N/A' }}</div>
-                            </div>
-
-                            @if($appointment->type)
-                            <div class="detail-row">
-                                <div class="detail-label">Tipo de Consulta</div>
-                                <div class="detail-value">{{ $appointment->type->name }}</div>
-                            </div>
-                            @endif
-
-                            @if($appointment->specialty)
-                            <div class="detail-row">
-                                <div class="detail-label">Especialidade</div>
-                                <div class="detail-value">{{ $appointment->specialty->name }}</div>
-                            </div>
-                            @endif
-
-                            <div class="detail-row">
-                                <div class="detail-label">Data e Hora de Início</div>
-                                <div class="detail-value">
-                                    {{ $appointment->starts_at ? $appointment->starts_at->format('d/m/Y \à\s H:i') : 'N/A' }}
-                                </div>
-                            </div>
-
-                            <div class="detail-row">
-                                <div class="detail-label">Data e Hora de Término</div>
-                                <div class="detail-value">
-                                    {{ $appointment->ends_at ? $appointment->ends_at->format('d/m/Y \à\s H:i') : 'N/A' }}
-                                </div>
-                            </div>
-
-                            <div class="detail-row">
-                                <div class="detail-label">Status</div>
-                                <div class="detail-value">
-                                    @php
-                                        $statusClass = 'badge-scheduled';
-                                        if($appointment->status == 'canceled') {
-                                            $statusClass = 'badge-cancelled';
-                                        } elseif($appointment->status == 'attended') {
-                                            $statusClass = 'badge-completed';
-                                        } elseif($appointment->status == 'rescheduled') {
-                                            $statusClass = 'badge-rescheduled';
-                                        } elseif($appointment->status == 'no_show') {
-                                            $statusClass = 'badge-cancelled';
-                                        }
-                                    @endphp
-                                    <span class="badge-status {{ $statusClass }}">
-                                        {{ $appointment->status_translated }}
-                                    </span>
-                                </div>
-                            </div>
-
-                            @if($appointment->notes)
-                            <div class="detail-row">
-                                <div class="detail-label">Observações</div>
-                                <div class="detail-value">{{ $appointment->notes }}</div>
-                            </div>
-                            @endif
-
-                            <div class="detail-row">
-                                <div class="detail-label">Agendado em</div>
-                                <div class="detail-value">
-                                    {{ $appointment->created_at ? $appointment->created_at->format('d/m/Y \à\s H:i') : 'N/A' }}
-                                </div>
-                            </div>
-
-                            @php
-                                $form = \App\Models\Tenant\Form::getFormForAppointment($appointment);
-                            @endphp
-
-                            @if($form)
-                                <div class="mt-4 flex justify-center">
-                                    <x-tailadmin-button variant="primary" size="lg" href="{{ tenant_route($tenant, 'public.form.response.create', ['form' => $form->id, 'appointment' => $appointment->id]) }}">
-                                        <i class="mdi mdi-file-document-edit"></i>
-                                        Responder Formulário
-                                    </x-tailadmin-button>
-                                </div>
-                            @endif
-
-                            <div class="mt-4 flex flex-wrap items-center justify-center gap-3">
-                                <x-tailadmin-button variant="primary" size="md" href="{{ route('public.patient.identify', ['slug' => $tenant->subdomain]) }}">
-                                    <i class="mdi mdi-calendar-plus"></i>
-                                    Novo Agendamento
-                                </x-tailadmin-button>
-                                @if(session('last_appointment_id'))
-                                    <x-tailadmin-button variant="secondary" size="md" href="{{ route('public.appointment.success', ['slug' => $tenant->subdomain, 'appointment_id' => session('last_appointment_id')]) }}"
-                                        class="bg-transparent border-gray-300 text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-white/5">
-                                        <i class="mdi mdi-arrow-left"></i>
-                                        Voltar
-                                    </x-tailadmin-button>
+                        <div class="mx-auto w-full max-w-xs text-center">
+                            <div class="text-xs font-semibold uppercase tracking-wide text-slate-500">Profissional</div>
+                            <div class="mt-1 text-sm font-semibold text-slate-900">
+                                @if($appointment->calendar && $appointment->calendar->doctor && $appointment->calendar->doctor->user)
+                                    {{ $appointment->calendar->doctor->user->name_full ?? $appointment->calendar->doctor->user->name ?? '—' }}
                                 @else
-                                    <x-tailadmin-button variant="secondary" size="md" href="{{ route('public.patient.identify', ['slug' => $tenant->subdomain]) }}"
-                                        class="bg-transparent border-gray-300 text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-white/5">
-                                        <i class="mdi mdi-arrow-left"></i>
-                                        Voltar
-                                    </x-tailadmin-button>
+                                    —
                                 @endif
                             </div>
-
-                            <div class="mt-3 text-center">
-                                <small class="text-muted">
-                                    © {{ date('Y') }} {{ $tenant->trade_name ?? $tenant->legal_name ?? 'Sistema' }}. Todos os direitos reservados.
-                                </small>
-                            </div>
-
                         </div>
+
+                        <div class="mx-auto w-full max-w-xs text-center">
+                            <div class="text-xs font-semibold uppercase tracking-wide text-slate-500">Calendário</div>
+                            <div class="mt-1 text-sm font-semibold text-slate-900">{{ $appointment->calendar->name ?? '—' }}</div>
+                        </div>
+
+                        <div class="mx-auto w-full max-w-xs text-center">
+                            <div class="text-xs font-semibold uppercase tracking-wide text-slate-500">Tipo de Consulta</div>
+                            <div class="mt-1 text-sm font-semibold text-slate-900">{{ $appointment->type->name ?? '—' }}</div>
+                        </div>
+
+                        <div class="mx-auto w-full max-w-xs text-center">
+                            <div class="text-xs font-semibold uppercase tracking-wide text-slate-500">Especialidade</div>
+                            <div class="mt-1 text-sm font-semibold text-slate-900">{{ $appointment->specialty->name ?? '—' }}</div>
+                        </div>
+
+                        <div class="mx-auto w-full max-w-xs text-center">
+                            <div class="text-xs font-semibold uppercase tracking-wide text-slate-500">Início</div>
+                            <div class="mt-1 text-sm font-semibold text-slate-900">
+                                {{ $appointment->starts_at ? $appointment->starts_at->format('d/m/Y \à\s H:i') : '—' }}
+                            </div>
+                        </div>
+
+                        <div class="mx-auto w-full max-w-xs text-center">
+                            <div class="text-xs font-semibold uppercase tracking-wide text-slate-500">Término</div>
+                            <div class="mt-1 text-sm font-semibold text-slate-900">
+                                {{ $appointment->ends_at ? $appointment->ends_at->format('d/m/Y \à\s H:i') : '—' }}
+                            </div>
+                        </div>
+
+                        <div class="mx-auto w-full max-w-xs text-center">
+                            <div class="text-xs font-semibold uppercase tracking-wide text-slate-500">Agendado em</div>
+                            <div class="mt-1 text-sm font-semibold text-slate-900">
+                                {{ $appointment->created_at ? $appointment->created_at->format('d/m/Y \à\s H:i') : '—' }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                @if($appointment->notes)
+                    <div class="border-t border-slate-200 px-6 py-5">
+                        <h3 class="text-base font-semibold text-slate-900 text-center sm:text-left">Observações</h3>
+                        <div class="mt-3 whitespace-pre-line rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700">{{ $appointment->notes }}</div>
+                    </div>
+                @endif
+
+                @php
+                    $form = \App\Models\Tenant\Form::getFormForAppointment($appointment);
+                @endphp
+
+                @if($form)
+                    <div class="border-t border-slate-200 px-6 py-5">
+                        <div class="flex justify-center">
+                            <x-tailadmin-button
+                                variant="primary"
+                                size="md"
+                                href="{{ tenant_route($tenant, 'public.form.response.create', ['form' => $form->id, 'appointment' => $appointment->id]) }}"
+                                class="w-auto min-w-[220px] justify-center !bg-indigo-600 !text-white shadow-sm hover:!bg-indigo-700 focus:!outline-none focus:!ring-2 focus:!ring-indigo-500 focus:!ring-offset-1"
+                            >
+                                <i class="mdi mdi-file-document-edit text-lg text-white"></i>
+                                Responder Formulário
+                            </x-tailadmin-button>
+                        </div>
+                    </div>
+                @endif
+
+                <div class="border-t border-slate-200 px-6 py-5">
+                    <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                        <x-tailadmin-button
+                            variant="secondary"
+                            size="md"
+                            href="{{ route('public.patient.identify', ['slug' => $tenant->subdomain]) }}"
+                            class="w-auto min-w-[180px] justify-center !bg-white !text-slate-900 !border !border-slate-200 shadow-sm hover:!bg-slate-50 focus:!outline-none focus:!ring-2 focus:!ring-indigo-500 focus:!ring-offset-1"
+                        >
+                            <i class="mdi mdi-arrow-left text-lg text-slate-900"></i>
+                            Voltar
+                        </x-tailadmin-button>
+
+                        <x-tailadmin-button
+                            variant="secondary"
+                            size="md"
+                            href="{{ route('public.patient.identify', ['slug' => $tenant->subdomain]) }}"
+                            class="w-auto min-w-[180px] justify-center !bg-slate-100 !text-black !border !border-slate-200 shadow-sm hover:!bg-slate-200 focus:!outline-none focus:!ring-2 focus:!ring-indigo-500 focus:!ring-offset-1"
+                        >
+                            <i class="mdi mdi-calendar-plus text-lg text-black"></i>
+                            Novo Agendamento
+                        </x-tailadmin-button>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-
 @endsection
 

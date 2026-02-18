@@ -3,30 +3,38 @@
 @section('title', 'Formulário Enviado — ' . ($tenant->trade_name ?? $tenant->legal_name ?? 'Sistema'))
 @section('page', 'public')
 
-
 @section('content')
-    <div class="page-wrapper">
-        <div class="container">
-            <div class="row justify-content-center">
-                <div class="col-lg-6">
-                    <div class="success-card success-card-padded">
-                        <i class="mdi mdi-check-circle success-icon success-icon-sm"></i>
-                        <h2 class="mb-3">Formulário Enviado com Sucesso!</h2>
-                        <p class="text-muted mb-4">
-                            Sua resposta foi registrada. Obrigado por preencher o formulário.
-                        </p>
-                        <div class="mt-4 flex flex-col gap-3">
+    <div class="min-h-screen bg-slate-50">
+        <div class="mx-auto max-w-3xl px-4 sm:px-6 py-8">
+            <div class="pt-10 pb-6 sm:pt-12 sm:pb-8 lg:pt-14 text-center">
+                <div class="mx-auto mb-4 inline-flex h-10 w-10 items-center justify-center rounded-full bg-emerald-50 text-emerald-700 ring-1 ring-emerald-100">
+                    <i class="mdi mdi-check-circle text-xl"></i>
+                </div>
+                <h1 class="text-2xl font-bold tracking-tight text-slate-900">Formulário Enviado com Sucesso!</h1>
+                <p class="mt-2 text-sm text-slate-600">Sua resposta foi registrada. Obrigado por preencher o formulário.</p>
+            </div>
+
+            <div class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+                <div class="px-6 py-6">
+                    <div class="mx-auto w-full max-w-xl text-center">
+                        <div class="mt-2 flex flex-col items-center justify-center gap-3 sm:flex-row">
                             @if($response->appointment)
-                                <x-tailadmin-button variant="primary" size="md" href="{{ tenant_route($tenant, 'public.appointment.show', ['appointment_id' => $response->appointment->id]) }}">
-                                    <i class="mdi mdi-calendar-clock"></i>
+                                <a
+                                    href="{{ tenant_route($tenant, 'public.appointment.show', ['appointment_id' => $response->appointment->id]) }}"
+                                    class="inline-flex w-auto min-w-[180px] items-center justify-center gap-2 rounded-lg bg-indigo-600 px-6 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-1"
+                                >
+                                    <i class="mdi mdi-calendar-clock text-lg text-white"></i>
                                     Ver Agendamento
-                                </x-tailadmin-button>
+                                </a>
                             @endif
-                            <x-tailadmin-button variant="secondary" size="md" href="{{ tenant_route($tenant, 'public.patient.identify') }}"
-                                class="bg-transparent border-gray-200 text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-white/5">
-                                <i class="mdi mdi-home"></i>
+
+                            <a
+                                href="{{ tenant_route($tenant, 'public.patient.identify') }}"
+                                class="inline-flex w-auto min-w-[180px] items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-6 py-2.5 text-sm font-semibold text-slate-900 shadow-sm hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-1"
+                            >
+                                <i class="mdi mdi-home text-lg text-slate-900"></i>
                                 Voltar ao Início
-                            </x-tailadmin-button>
+                            </a>
                         </div>
                     </div>
                 </div>

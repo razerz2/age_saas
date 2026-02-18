@@ -29,7 +29,6 @@ class RecurringAppointmentController extends Controller
         $query = RecurringAppointment::with([
             'patient',
             'doctor.user',
-            'appointmentType',
             'rules',
         ])->withCount([
             'appointments as generated_sessions_count' => function ($q) {
@@ -44,7 +43,7 @@ class RecurringAppointmentController extends Controller
         $page  = max(1, (int) $request->input('page', 1));
         $limit = max(1, min(100, (int) $request->input('limit', 10)));
 
-        // Busca global (paciente, médico, tipo, status)
+        // Busca global (paciente, médico, status)
         $search = trim((string) $request->input('search', ''));
         if ($search !== '') {
             $query->where(function ($q) use ($search) {
@@ -55,9 +54,6 @@ class RecurringAppointmentController extends Controller
                     $sub->where('name_full', 'like', '%' . $search . '%')
                         ->orWhere('name', 'like', '%' . $search . '%');
                 })
-                ->orWhereHas('appointmentType', function ($sub) use ($search) {
-                    $sub->where('name', 'like', '%' . $search . '%');
-                })
                 ->orWhere('end_type', 'like', '%' . $search . '%')
                 ->orWhere('appointment_mode', 'like', '%' . $search . '%');
             });
@@ -67,7 +63,6 @@ class RecurringAppointmentController extends Controller
         $sortable = [
             'patient'              => 'patient_id',
             'doctor'               => 'doctor_id',
-            'type'                 => 'appointment_type_id',
             'start_date'           => 'start_date',
             'generated_sessions'   => 'generated_sessions_count',
             'status_badge'         => 'active',
@@ -94,9 +89,6 @@ class RecurringAppointmentController extends Controller
             $doctorUser = optional($recurring->doctor)->user;
             $doctorName = $doctorUser->name_full ?? $doctorUser->name ?? 'N/A';
 
-            // Tipo de consulta
-            $typeName = optional($recurring->appointmentType)->name ?? 'N/A';
-
             // Data inicial
             $startDate = $recurring->start_date ? $recurring->start_date->format('d/m/Y') : null;
 
@@ -114,7 +106,6 @@ class RecurringAppointmentController extends Controller
             return [
                 'patient'            => e($patientName),
                 'doctor'             => e($doctorName),
-                'type'               => e($typeName),
                 'start_date'         => $startDate,
                 'end_display'        => $endDisplay,
                 'rules_display'      => view('tenant.appointments.recurring.partials.rules', compact('recurring'))->render(),
@@ -638,4 +629,3 @@ class RecurringAppointmentController extends Controller
         return response()->json($availableSlots);
     }
 }
-

@@ -7,9 +7,16 @@
       content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0"
     />
     <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <meta name="color-scheme" content="light">
+    <meta name="supported-color-schemes" content="light">
+    <style>
+        :root { color-scheme: light; }
+        html, body { color-scheme: light; }
+    </style>
     <title>@yield('title', 'Agendamento | ' . ($tenant->trade_name ?? $tenant->legal_name ?? 'Sistema'))</title>
     <link rel="icon" href="{{ asset('tailadmin/src/favicon.ico') }}">
     <link href="{{ asset('tailadmin/assets/css/style.css') }}" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@mdi/font@7.4.47/css/materialdesignicons.min.css">
     @vite([
         'resources/css/tenant/app.css',
         'resources/js/tenant/app.js',
@@ -54,7 +61,7 @@
         x-data="{ loaded: true }"
         x-show="loaded"
         x-init="window.addEventListener('DOMContentLoaded', () => {setTimeout(() => loaded = false, 500)})"
-        class="fixed left-0 top-0 z-999999 flex h-screen w-screen items-center justify-center bg-white dark:bg-black"
+        class="fixed left-0 top-0 z-999999 flex h-screen w-screen items-center justify-center bg-white"
     >
         <div
             class="h-16 w-16 animate-spin rounded-full border-4 border-solid border-brand-500 border-t-transparent"

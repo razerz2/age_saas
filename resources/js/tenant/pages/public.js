@@ -20,6 +20,7 @@ function bindAppointmentCreate() {
     const endsAtInput = document.getElementById('ends_at');
     const businessHoursBtn = document.getElementById('btn-show-business-hours');
     const businessHoursModal = document.getElementById('businessHoursModal');
+    const appointmentTypeWrapper = appointmentTypeSelect?.closest('[data-appointment-type-wrapper]') || null;
 
     if (!doctorSelect || !calendarIdInput || !appointmentTypeSelect || !specialtySelect || !dateInput || !timeSelect) {
         return;
@@ -38,8 +39,18 @@ function bindAppointmentCreate() {
         businessHours: config.dataset.businessHoursUrlTemplate || '',
     };
 
-    const today = new Date().toISOString().split('T')[0];
+    function formatLocalISODate(d) {
+        const y = d.getFullYear();
+        const m = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        return `${y}-${m}-${day}`;
+    }
+
+    const today = formatLocalISODate(new Date());
     dateInput.setAttribute('min', today);
+    if (!dateInput.value) {
+        dateInput.value = today;
+    }
 
     const resetDependentFields = () => {
         calendarIdInput.value = '';
@@ -50,6 +61,18 @@ function bindAppointmentCreate() {
         timeSelect.innerHTML = '<option value=\"\">Primeiro selecione a data</option>';
         timeSelect.disabled = true;
     };
+
+    const toggleBusinessHoursButton = () => {
+        if (!businessHoursBtn) return;
+        businessHoursBtn.disabled = !doctorSelect.value;
+    };
+
+    // Tipo de consulta nunca deve aparecer na UI (mantém no DOM para contrato com JS/back-end).
+    if (appointmentTypeWrapper) {
+        appointmentTypeWrapper.classList.add('hidden');
+    }
+
+    toggleBusinessHoursButton();
 
     const loadCalendarAuto = async (doctorId) => {
         if (!urlTemplate.calendars) return;
@@ -73,18 +96,28 @@ function bindAppointmentCreate() {
         try {
             const response = await fetch(urlTemplate.appointmentTypes.replace('__ID__', doctorId));
             const data = await response.json();
+            const types = Array.isArray(data) ? data : [];
+
+            if (types.length === 0) {
+                appointmentTypeSelect.innerHTML = '<option value=\"\">Nenhum tipo de consulta disponível</option>';
+                appointmentTypeSelect.disabled = true;
+                return;
+            }
+
             appointmentTypeSelect.innerHTML = '<option value=\"\">Selecione um tipo</option>';
-            data.forEach((type) => {
+            types.forEach((type) => {
                 const option = document.createElement('option');
                 option.value = type.id;
                 option.textContent = `${type.name} (${type.duration_min} min)`;
                 option.dataset.duration = type.duration_min;
-                if (oldAppointmentType && String(oldAppointmentType) === String(type.id)) {
-                    option.selected = true;
-                }
                 appointmentTypeSelect.appendChild(option);
             });
+            appointmentTypeSelect.value = String(types[0].id);
             appointmentTypeSelect.disabled = false;
+
+            if (dateInput.value) {
+                await loadAvailableSlots(doctorId, appointmentTypeSelect.value);
+            }
         } catch (error) {
             // eslint-disable-next-line no-console
             console.error('Erro ao carregar tipos de consulta:', error);
@@ -175,22 +208,15 @@ function bindAppointmentCreate() {
         const listEl = document.getElementById('business-hours-list');
         const doctorNameEl = document.getElementById('business-hours-doctor-name');
 
-        if (loadingEl) {
-            loadingEl.classList.remove('d-none');
-            loadingEl.style.display = 'block';
-        }
-        if (contentEl) {
-            contentEl.classList.add('d-none');
-            contentEl.style.display = 'none';
-        }
-        if (errorEl) {
-            errorEl.classList.add('d-none');
-            errorEl.style.display = 'none';
-        }
-        if (emptyEl) {
-            emptyEl.classList.add('d-none');
-            emptyEl.style.display = 'none';
-        }
+        const setHidden = (el, hidden) => {
+            if (!el) return;
+            el.classList.toggle('hidden', hidden);
+        };
+
+        setHidden(loadingEl, false);
+        setHidden(contentEl, true);
+        setHidden(errorEl, true);
+        setHidden(emptyEl, true);
 
         try {
             const response = await fetch(urlTemplate.businessHours.replace('__ID__', doctorId));
@@ -199,10 +225,7 @@ function bindAppointmentCreate() {
             }
             const data = await response.json();
 
-            if (loadingEl) {
-                loadingEl.classList.add('d-none');
-                loadingEl.style.display = 'none';
-            }
+            setHidden(loadingEl, true);
 
             let businessHoursArray = null;
             let doctorInfo = null;
@@ -215,8 +238,7 @@ function bindAppointmentCreate() {
             } else if (data && typeof data === 'object') {
                 if (data.error) {
                     if (errorEl) {
-                        errorEl.classList.remove('d-none');
-                        errorEl.style.display = 'block';
+                        setHidden(errorEl, false);
                         const msg = document.getElementById('business-hours-error-message');
                         if (msg) msg.textContent = data.error;
                     }
@@ -226,8 +248,7 @@ function bindAppointmentCreate() {
                 doctorInfo = data.doctor;
             } else {
                 if (errorEl) {
-                    errorEl.classList.remove('d-none');
-                    errorEl.style.display = 'block';
+                    setHidden(errorEl, false);
                     const msg = document.getElementById('business-hours-error-message');
                     if (msg) msg.textContent = 'Formato de dados inválido recebido da API.';
                 }
@@ -236,8 +257,7 @@ function bindAppointmentCreate() {
 
             if (!businessHoursArray || businessHoursArray.length === 0) {
                 if (emptyEl) {
-                    emptyEl.classList.remove('d-none');
-                    emptyEl.style.display = 'block';
+                    setHidden(emptyEl, false);
                 }
                 return;
             }
@@ -246,25 +266,34 @@ function bindAppointmentCreate() {
                 doctorNameEl.textContent = doctorInfo.name || 'N/A';
             }
 
-            let html = '<div class=\"table-responsive\"><table class=\"table table-bordered table-hover\">';
-            html += '<thead class=\"table-light\"><tr><th>Dia da Semana</th><th>Horários</th></tr></thead>';
-            html += '<tbody>';
+            let html =
+                '<div class=\"mx-auto w-full max-w-[720px]\">' +
+                '<table class=\"w-full table-fixed border-collapse overflow-hidden rounded-xl border border-slate-200\">' +
+                '<thead class=\"bg-slate-50\">' +
+                '<tr>' +
+                '<th class=\"px-4 py-3 text-center text-xs font-semibold uppercase tracking-wide text-slate-600\">Dia da Semana</th>' +
+                '<th class=\"px-4 py-3 text-center text-xs font-semibold uppercase tracking-wide text-slate-600\">Horários</th>' +
+                '</tr>' +
+                '</thead>' +
+                '<tbody>';
 
             businessHoursArray.forEach((day) => {
-                html += '<tr>';
-                html += `<td><strong>${day.weekday_name || 'N/A'}</strong></td>`;
-                html += '<td>';
+                html += '<tr class=\"border-t border-slate-200\">';
+                html += `<td class=\"px-4 py-3 text-center text-sm font-normal text-slate-900\">${day.weekday_name || 'N/A'}</td>`;
+                html += '<td class=\"px-4 py-3 text-center text-sm text-slate-900\">';
 
                 if (day.hours && Array.isArray(day.hours) && day.hours.length > 0) {
                     day.hours.forEach((hour, index) => {
                         if (index > 0) html += '<br>';
-                        html += `<span class=\"badge bg-primary me-1\">${hour.start_time || 'N/A'}</span> até <span class=\"badge bg-primary\">${hour.end_time || 'N/A'}</span>`;
+                        html += `<span class=\"inline-flex items-center rounded-full border border-indigo-200 bg-indigo-50 px-2 py-0.5 text-xs font-semibold text-indigo-700\">${hour.start_time || 'N/A'}</span> ` +
+                            `<span class=\"text-slate-500\">até</span> ` +
+                            `<span class=\"inline-flex items-center rounded-full border border-indigo-200 bg-indigo-50 px-2 py-0.5 text-xs font-semibold text-indigo-700\">${hour.end_time || 'N/A'}</span>`;
                         if (hour.break_start_time && hour.break_end_time) {
-                            html += ` <small class=\"text-muted\">(Intervalo: ${hour.break_start_time} - ${hour.break_end_time})</small>`;
+                            html += ` <span class=\"ml-2 text-xs text-slate-500\">(Intervalo: ${hour.break_start_time} - ${hour.break_end_time})</span>`;
                         }
                     });
                 } else {
-                    html += '<span class=\"text-muted\">Não trabalha neste dia</span>';
+                    html += '<span class=\"text-sm text-slate-500\">Não trabalha neste dia</span>';
                 }
                 html += '</td>';
                 html += '</tr>';
@@ -276,17 +305,12 @@ function bindAppointmentCreate() {
                 listEl.innerHTML = html;
             }
             if (contentEl) {
-                contentEl.classList.remove('d-none');
-                contentEl.style.display = 'block';
+                setHidden(contentEl, false);
             }
         } catch (error) {
-            if (loadingEl) {
-                loadingEl.classList.add('d-none');
-                loadingEl.style.display = 'none';
-            }
+            setHidden(loadingEl, true);
             if (errorEl) {
-                errorEl.classList.remove('d-none');
-                errorEl.style.display = 'block';
+                setHidden(errorEl, false);
                 const msg = document.getElementById('business-hours-error-message');
                 if (msg) msg.textContent = `Erro ao carregar informações: ${error.message}`;
             }
@@ -295,13 +319,12 @@ function bindAppointmentCreate() {
 
     doctorSelect.addEventListener('change', async function onDoctorChange() {
         const doctorId = this.value;
+        toggleBusinessHoursButton();
         if (!doctorId) {
             resetDependentFields();
-            if (businessHoursBtn) businessHoursBtn.disabled = true;
             return;
         }
 
-        if (businessHoursBtn) businessHoursBtn.disabled = false;
         await loadCalendarAuto(doctorId);
         await loadAppointmentTypes(doctorId);
         await loadSpecialties(doctorId);
@@ -345,14 +368,40 @@ function bindAppointmentCreate() {
         }
     });
 
-    if (businessHoursModal) {
-        businessHoursModal.addEventListener('show.bs.modal', () => {
-            const doctorId = doctorSelect.value;
-            if (doctorId) {
-                loadBusinessHours(doctorId);
-            }
+    const closeBusinessHoursModal = () => {
+        if (!businessHoursModal) return;
+        businessHoursModal.classList.add('hidden');
+        businessHoursModal.setAttribute('aria-hidden', 'true');
+    };
+
+    const openBusinessHoursModal = async () => {
+        if (!businessHoursModal) return;
+        const doctorId = doctorSelect.value;
+        if (!doctorId) {
+            showAlert({
+                type: 'warning',
+                title: 'Atenção',
+                message: 'Selecione um médico para visualizar os dias trabalhados.',
+            });
+            return;
+        }
+
+        businessHoursModal.classList.remove('hidden');
+        businessHoursModal.setAttribute('aria-hidden', 'false');
+        await loadBusinessHours(doctorId);
+    };
+
+    businessHoursBtn?.addEventListener('click', (event) => {
+        event.preventDefault();
+        openBusinessHoursModal();
+    });
+
+    businessHoursModal?.querySelectorAll('[data-modal-dismiss=\"businessHoursModal\"]').forEach((el) => {
+        el.addEventListener('click', (event) => {
+            event.preventDefault();
+            closeBusinessHoursModal();
         });
-    }
+    });
 
     if (oldDoctorId) {
         doctorSelect.value = oldDoctorId;
