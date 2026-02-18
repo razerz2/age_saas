@@ -36,7 +36,9 @@ class StoreUserRequest extends FormRequest
         }
 
         // Permite validar modules para todos os usuários
+        $rules['modules_present'] = ['nullable', 'in:1'];
         $rules['modules'] = ['nullable', 'array'];
+        $rules['modules.*'] = ['string'];
 
         return $rules;
     }

@@ -38,7 +38,9 @@ class UpdateUserRequest extends FormRequest
         }
 
         // Permite validar modules (admin pode atribuir módulos a outros usuários)
+        $rules['modules_present'] = ['nullable', 'in:1'];
         $rules['modules'] = ['nullable', 'array'];
+        $rules['modules.*'] = ['string'];
 
         return $rules;
     }

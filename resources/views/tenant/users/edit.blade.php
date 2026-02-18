@@ -51,6 +51,50 @@
         </div>
     </div>
 
+    <!-- Alerts -->
+    @if (session('success'))
+        <div class="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg dark:bg-green-900/20 dark:border-green-800">
+            <div class="flex">
+                <svg class="w-5 h-5 text-green-400" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                </svg>
+                <div class="ml-3">
+                    <p class="text-sm text-green-800 dark:text-green-200">{{ session('success') }}</p>
+                </div>
+            </div>
+        </div>
+    @endif
+
+    @if (session('error'))
+        <div class="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg dark:bg-red-900/20 dark:border-red-800">
+            <div class="flex">
+                <svg class="w-5 h-5 text-red-400" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path>
+                </svg>
+                <div class="ml-3">
+                    <p class="text-sm text-red-800 dark:text-red-200">{{ session('error') }}</p>
+                </div>
+            </div>
+        </div>
+    @endif
+
+    @if ($errors->any())
+        <div class="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg dark:bg-red-900/20 dark:border-red-800">
+            <div class="flex">
+                <svg class="w-5 h-5 text-red-400" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path>
+                </svg>
+                <div class="ml-3">
+                    <p class="text-sm text-red-800 dark:text-red-200">
+                        @foreach ($errors->all() as $error)
+                            {{ $error }}{{ !$loop->last ? ' | ' : '' }}
+                        @endforeach
+                    </p>
+                </div>
+            </div>
+        </div>
+    @endif
+
     <!-- Card Principal -->
     <div class="bg-white rounded-lg shadow-sm border border-gray-200">
         <div class="px-6 py-4 border-b border-gray-200">
@@ -218,6 +262,62 @@
                 </div>
 
                 <!-- Botões de Ação -->
+                <div class="mb-8 {{ old('role', $user->role ?? 'user') === 'admin' ? 'hidden' : '' }}" id="modules-section">
+                    <input type="hidden" name="modules_present" value="1">
+                    <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4 flex items-center">
+                        <svg class="w-5 h-5 mr-2 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path>
+                        </svg>
+                        Módulos
+                    </h3>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Selecione os módulos disponíveis para este usuário:</label>
+                        <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 mb-4">
+                            <div class="flex">
+                                <svg class="w-5 h-5 text-blue-600 dark:text-blue-400 mr-2 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
+                                </svg>
+                                <div class="text-sm text-blue-800 dark:text-blue-200">
+                                    <p id="modules-info-text">
+                                        <strong>Nota:</strong> Os módulos serão pré-selecionados conforme as configurações padrão em <a href="{{ workspace_route('tenant.settings.index') }}" target="_blank" class="text-blue-600 dark:text-blue-400 underline hover:text-blue-800 dark:hover:text-blue-300">Configurações → Usuários & Permissões</a>. Você pode ajustar manualmente se necessário.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        @php
+                            $availableModules = App\Models\Tenant\Module::available();
+                            $modules = collect($availableModules)->reject(function($module) {
+                                return in_array($module['key'], ['users', 'settings']);
+                            })->values()->all();
+                            $oldModules = old('modules', $user->modules ?? []);
+                        @endphp
+                        <div class="flex flex-wrap gap-2 mb-4">
+                            <button type="button" class="btn-patient-secondary" data-modules-select-all>Selecionar todos</button>
+                            <button type="button" class="btn-patient-secondary" data-modules-clear>Limpar seleção</button>
+                        </div>
+                        <div class="border border-gray-200 dark:border-gray-600 rounded-lg p-4 bg-gray-50 dark:bg-gray-700">
+                            <div class="flex flex-wrap gap-4">
+                                @foreach($modules as $module)
+                                    <div class="flex items-center">
+                                        <input type="checkbox"
+                                            class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded module-checkbox"
+                                            name="modules[]"
+                                            value="{{ $module['key'] }}"
+                                            data-module-key="{{ $module['key'] }}"
+                                            {{ in_array($module['key'], $oldModules) ? 'checked' : '' }}>
+                                        <label class="ml-2 text-sm text-gray-700 dark:text-gray-300">
+                                            {{ $module['name'] }}
+                                        </label>
+                                    </div>
+                                @endforeach
+                            </div>
+                        </div>
+                        @error('modules')
+                            <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+                        @enderror
+                    </div>
+                </div>
+
                 <div class="flex flex-col gap-3 pt-6 border-t border-gray-200 dark:border-gray-700 sm:flex-row sm:items-center sm:justify-between">
                     <a href="{{ workspace_route('tenant.users.index') }}" class="btn-patient-secondary">
                         <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">

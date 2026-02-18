@@ -215,6 +215,7 @@ class TenantProvisioner
                         'email'      => $email,
                         'password'   => Hash::make($adminPassword),
                         'is_doctor'  => false,
+                        'is_system'  => true,
                         'status'     => 'active',
                         'role'       => 'admin',
                         'modules'    => json_encode([]),

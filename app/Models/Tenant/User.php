@@ -24,6 +24,7 @@ class User extends Authenticatable
         'avatar',
         'password',
         'is_doctor',
+        'is_system',
         'status',
         'modules',
         'role',
@@ -37,6 +38,7 @@ class User extends Authenticatable
 
     protected $casts = [
         'is_doctor' => 'boolean',
+        'is_system' => 'boolean',
         'modules' => 'array',
         'email_verified_at' => 'datetime',
         'two_factor_enabled' => 'boolean',

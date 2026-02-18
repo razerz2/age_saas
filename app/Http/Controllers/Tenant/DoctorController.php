@@ -18,7 +18,7 @@ class DoctorController extends Controller
         return view('tenant.doctors.index');
     }
 
-    public function create()
+    public function create(Request $request, $slug)
     {
         $loggedUser = Auth::guard('tenant')->user();
         
@@ -70,7 +70,12 @@ class DoctorController extends Controller
         $users = $query->orderBy('name')->get();
         $specialties = MedicalSpecialty::orderBy('name')->get();
 
-        return view('tenant.doctors.create', compact('users', 'specialties'));
+        $selectedUserId = $request->query('user_id');
+        if ($selectedUserId && !$users->contains('id', $selectedUserId)) {
+            $selectedUserId = null;
+        }
+
+        return view('tenant.doctors.create', compact('users', 'specialties', 'selectedUserId'));
     }
 
     public function store(StoreDoctorRequest $request)

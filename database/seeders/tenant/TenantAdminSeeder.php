@@ -39,6 +39,7 @@ class TenantAdminSeeder extends Seeder
             'email'      => $email,
             'password'   => Hash::make($adminPassword),
             'is_doctor'  => false,
+            'is_system'  => true,
             'status'     => 'active',
             'role'     => 'admin',
             'modules'    => json_encode([]),
@@ -64,4 +65,3 @@ class TenantAdminSeeder extends Seeder
         return "admin@{$domain}.com";
     }
 }
-

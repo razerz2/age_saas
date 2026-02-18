@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Tenant;
 
 use App\Models\Tenant\User;
 use App\Models\Tenant\TenantSetting;
+use App\Models\Tenant\Module;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Tenant\StoreUserRequest;
 use App\Http\Requests\Tenant\UpdateUserRequest;
@@ -50,7 +51,10 @@ class UserController extends Controller
             
             if ($maxLimit !== null) {
                 // Conta quantos usuários já existem com este role
-                $currentCount = User::where('role', $role)->count();
+                $currentCount = User::where('role', $role)
+                    ->where(function ($query) {
+                        $query->whereNull('is_system')->orWhere('is_system', false);
+                    })->count();
                 
                 if ($currentCount >= $maxLimit) {
                     $roleLabel = match ($role) {
@@ -84,7 +88,11 @@ class UserController extends Controller
         // Processar módulos: se foram selecionados manualmente, usar esses
         // Caso contrário, aplicar módulos padrão baseado no role
         // O model User tem cast 'array' para modules, então passamos arrays diretamente
-        if (isset($data['modules']) && is_array($data['modules'])) {
+        if ($request->has('modules_present') && !isset($data['modules'])) {
+            $data['modules'] = [];
+        }
+
+        if (array_key_exists('modules', $data) && is_array($data['modules'])) {
             // Se módulos foram selecionados manualmente (mesmo que vazio), usar esses
             // O cast do model converte automaticamente para JSON
             $data['modules'] = $data['modules'];
@@ -108,6 +116,12 @@ class UserController extends Controller
         }
 
         // Upload do avatar se fornecido
+        if ($data['role'] === 'admin') {
+            $data['modules'] = [];
+        } else {
+            $data['modules'] = $this->sanitizeModulesForRole($data['role'], $data['modules'] ?? []);
+        }
+
         if ($request->hasFile('avatar')) {
             $avatar = $request->file('avatar');
             $avatarName = 'avatars/' . time() . '_' . Str::random(10) . '.' . $avatar->getClientOriginalExtension();
@@ -149,6 +163,13 @@ class UserController extends Controller
             }
         }
 
+        if ($user->role === 'doctor') {
+            return redirect()->route('tenant.doctors.create', [
+                'slug' => tenant()->subdomain,
+                'user_id' => $user->id,
+            ])->with('success', 'UsuÃ¡rio criado com sucesso. Agora complete o cadastro do mÃ©dico.');
+        }
+
         return redirect()->route('tenant.users.index', ['slug' => tenant()->subdomain])
             ->with('success', 'Usuário criado com sucesso.');
     }
@@ -157,6 +178,24 @@ class UserController extends Controller
      * Mostra as informações do usuário.
      * Agora usando o ID explícito.
      */
+    protected function sanitizeModulesForRole(string $role, array $modules): array
+    {
+        if ($role === 'admin') {
+            return [];
+        }
+
+        $allowedKeys = collect(Module::available())
+            ->pluck('key')
+            ->reject(fn ($key) => in_array($key, ['settings', 'users'], true))
+            ->values()
+            ->all();
+
+        $modules = array_values(array_filter($modules, fn ($value) => is_string($value) && $value !== ''));
+        $modules = array_values(array_unique($modules));
+
+        return array_values(array_intersect($modules, $allowedKeys));
+    }
+
     public function show($slug, $id)
     {
         $user = User::with(['allowedDoctors.user'])->findOrFail($id);  // Utilizando o ID passado na rota
@@ -197,7 +236,11 @@ class UserController extends Controller
         // Processar módulos: se foram selecionados manualmente, usar esses
         // Caso contrário, aplicar módulos padrão baseado no role
         // O model User tem cast 'array' para modules, então passamos arrays diretamente
-        if (isset($data['modules']) && is_array($data['modules'])) {
+        if ($request->has('modules_present') && !isset($data['modules'])) {
+            $data['modules'] = [];
+        }
+
+        if (array_key_exists('modules', $data) && is_array($data['modules'])) {
             // Se módulos foram selecionados manualmente (mesmo que vazio), usar esses
             // O cast do model converte automaticamente para JSON
             $data['modules'] = $data['modules'];
@@ -225,6 +268,12 @@ class UserController extends Controller
         }
 
         // Upload do novo avatar se fornecido
+        if ($data['role'] === 'admin') {
+            $data['modules'] = [];
+        } elseif (array_key_exists('modules', $data)) {
+            $data['modules'] = $this->sanitizeModulesForRole($data['role'], $data['modules'] ?? []);
+        }
+
         if ($request->hasFile('avatar')) {
             // Remove avatar antigo se existir
             if ($user->avatar && Storage::disk('public')->exists($user->avatar)) {

@@ -4,7 +4,33 @@ export function init() {
     bindAvatarPreview();
     bindWebcam();
     bindRoleModules();
+    bindModuleBulkActions();
     exposeLegacyDeleteConfirm();
+}
+
+function bindModuleBulkActions() {
+    document.addEventListener('click', (event) => {
+        const selectAllBtn = event.target.closest('[data-modules-select-all]');
+        if (selectAllBtn) {
+            event.preventDefault();
+            document.querySelectorAll('.module-checkbox').forEach((checkbox) => {
+                if (!checkbox.disabled) {
+                    checkbox.checked = true;
+                }
+            });
+            return;
+        }
+
+        const clearBtn = event.target.closest('[data-modules-clear]');
+        if (clearBtn) {
+            event.preventDefault();
+            document.querySelectorAll('.module-checkbox').forEach((checkbox) => {
+                if (!checkbox.disabled) {
+                    checkbox.checked = false;
+                }
+            });
+        }
+    });
 }
 
 function bindDeleteConfirm() {
@@ -373,6 +399,7 @@ function bindRoleModules() {
     const modulesSection = document.getElementById('modules-section');
     const isDoctorSection = document.getElementById('is-doctor-section');
     const modulesInfoText = document.getElementById('modules-info-text');
+    const modulesPresenceInput = modulesSection?.querySelector('input[name="modules_present"]') || null;
 
     const setVisibility = (element, show) => {
         if (!element) {
@@ -432,8 +459,21 @@ function bindRoleModules() {
         if (modulesSection) {
             if (role === 'admin') {
                 setVisibility(modulesSection, false);
+                document.querySelectorAll('.module-checkbox').forEach((checkbox) => {
+                    checkbox.checked = false;
+                    checkbox.disabled = true;
+                });
+                if (modulesPresenceInput) {
+                    modulesPresenceInput.disabled = true;
+                }
             } else {
                 setVisibility(modulesSection, true);
+                document.querySelectorAll('.module-checkbox').forEach((checkbox) => {
+                    checkbox.disabled = false;
+                });
+                if (modulesPresenceInput) {
+                    modulesPresenceInput.disabled = false;
+                }
                 updateModulesInfo(role);
                 updateModulesSelection(role);
             }
