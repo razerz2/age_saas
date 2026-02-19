@@ -238,7 +238,7 @@ function bindLoginForm() {
             event.preventDefault();
             showAlert({
                 type: 'warning',
-                title: 'AtenÃ§Ã£o',
+                title: 'Atenção',
                 message: 'As senhas nÃ£o coincidem. Por favor, verifique.',
             });
         }

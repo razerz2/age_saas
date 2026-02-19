@@ -11,17 +11,17 @@
             <nav class="min-w-0 flex-1" aria-label="breadcrumb">
                 <ol class="flex flex-wrap items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
                     <li>
-                        <a href="{{ workspace_route('tenant.dashboard') }}" class="inline-flex items-center gap-2 text-gray-700 hover:text-blue-600 dark:text-gray-300 dark:hover:text-white">
-                            <x-icon name="mdi-home-outline" size="text-base" />
+                        <a href="{{ workspace_route('tenant.dashboard') }}" class="inline-flex items-center gap-2 text-gray-700 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white">
+                            <x-icon name="home-outline" size="text-base" />
                             Dashboard
                         </a>
                     </li>
                     <li class="flex items-center gap-2">
-                        <x-icon name="mdi-chevron-right" size="text-sm" class="text-gray-400" />
-                        <a href="{{ workspace_route('tenant.doctors.index') }}" class="text-gray-700 hover:text-blue-600 dark:text-gray-300 dark:hover:text-white">Médicos</a>
+                        <x-icon name="chevron-right" size="text-sm" class="text-gray-400" />
+                        <a href="{{ workspace_route('tenant.doctors.index') }}" class="text-gray-700 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white">Médicos</a>
                     </li>
                     <li class="flex items-center gap-2">
-                        <x-icon name="mdi-chevron-right" size="text-sm" class="text-gray-400" />
+                        <x-icon name="chevron-right" size="text-sm" class="text-gray-400" />
                         <span class="text-gray-900 dark:text-white font-semibold">Criar</span>
                     </li>
                 </ol>
@@ -37,7 +37,7 @@
             <div class="flex items-center">
                 <div>
                     <h2 class="text-xl font-semibold text-gray-900 dark:text-white flex items-center">
-                        <x-icon name="mdi-account-plus-outline" size="text-xl" class="mr-2 text-blue-600" />
+                        <x-icon name="account-plus-outline" size="text-xl" class="mr-2 text-blue-600" />
                         Novo Médico
                     </h2>
                     <p class="text-gray-600 dark:text-gray-400 mt-1">Preencha os dados abaixo para cadastrar um novo médico</p>
@@ -52,12 +52,12 @@
                 <!-- Seção: Informações Básicas -->
                 <div>
                     <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
-                        <x-icon name="mdi-information-outline" size="text-lg" class="mr-2 text-blue-600" />
+                        <x-icon name="information-outline" size="text-lg" class="mr-2 text-blue-600" />
                         Informações Básicas
                     </h3>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                            <x-icon name="mdi-account-outline" size="text-sm" class="inline mr-1" />
+                            <x-icon name="account-outline" size="text-sm" class="inline mr-1" />
                             Usuário <span class="text-red-500">*</span>
                         </label>
                         <select name="user_id" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white @error('user_id') border-red-500 @enderror" required>
@@ -75,13 +75,13 @@
                 <!-- Seção: Dados Profissionais -->
                 <div>
                     <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
-                        <x-icon name="mdi-briefcase-outline" size="text-lg" class="mr-2 text-blue-600" />
+                        <x-icon name="briefcase-outline" size="text-lg" class="mr-2 text-blue-600" />
                         Dados Profissionais
                     </h3>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
                             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                <x-icon name="mdi-card-account-details-outline" size="text-sm" class="inline mr-1" />
+                                <x-icon name="card-account-details-outline" size="text-sm" class="inline mr-1" />
                                 Número CRM, CRP ou CRO
                             </label>
                             <input type="text" 
@@ -96,7 +96,7 @@
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                <x-icon name="mdi-map-marker-outline" size="text-sm" class="inline mr-1" />
+                                <x-icon name="map-marker-outline" size="text-sm" class="inline mr-1" />
                                 Estado CRM, CRP ou CRO
                             </label>
                             <input type="text" 
@@ -113,7 +113,7 @@
                     </div>
                     <div class="mt-6">
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                            <x-icon name="mdi-pencil-outline" size="text-sm" class="inline mr-1" />
+                            <x-icon name="pencil-outline" size="text-sm" class="inline mr-1" />
                             Assinatura
                         </label>
                         <textarea class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white @error('signature') border-red-500 @enderror" 
@@ -134,7 +134,7 @@
                     <!-- Seção: Personalização do Profissional -->
                     <div class="p-4 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg">
                         <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
-                            <x-icon name="mdi-tune-variant" size="text-lg" class="mr-2 text-blue-600" />
+                            <x-icon name="tune-variant" size="text-lg" class="mr-2 text-blue-600" />
                             Personalização do Profissional (Opcional)
                         </h3>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -201,7 +201,7 @@
                 <!-- Seção: Especialidades Médicas -->
                 <div>
                     <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
-                        <x-icon name="mdi-stethoscope" size="text-lg" class="mr-2 text-blue-600" />
+                        <x-icon name="stethoscope" size="text-lg" class="mr-2 text-blue-600" />
                         Especialidades Médicas
                     </h3>
                     <div>
@@ -220,11 +220,11 @@
                             <div class="md:col-span-4">
                                 <div class="flex flex-col gap-2 sm:flex-row sm:justify-end">
                                     <button type="button" id="add-specialty-btn" class="btn btn-primary">
-                                        <x-icon name="mdi-plus" size="text-sm" class="mr-2" />
+                                        <x-icon name="plus" size="text-sm" class="mr-2" />
                                         Adicionar
                                     </button>
                                     <button type="button" id="clear-specialties-btn" class="btn btn-outline">
-                                        <x-icon name="mdi-trash-can-outline" size="text-sm" class="mr-2" />
+                                        <x-icon name="trash-can-outline" size="text-sm" class="mr-2" />
                                         Remover selecionadas
                                     </button>
                                 </div>
@@ -240,17 +240,17 @@
                                     @endphp
                                     @if($specialty)
                                         <span class="inline-flex items-center gap-2 px-3 py-2 bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 rounded-full text-sm font-medium mr-2 mb-2 specialty-badge" data-id="{{ $specialty->id }}">
-                                            <x-icon name="mdi-file-document-outline" size="text-sm" />
+                                            <x-icon name="file-document-outline" size="text-sm" />
                                             {{ $specialty->name }}
                                             <button type="button" class="text-blue-600 hover:text-blue-800 dark:text-blue-300 dark:hover:text-blue-100 ml-1" aria-label="Remover">
-                                                <x-icon name="mdi-close" size="text-xs" />
+                                                <x-icon name="close" size="text-xs" />
                                             </button>
                                         </span>
                                     @endif
                                 @endforeach
                             @else
                                 <p class="text-gray-500 dark:text-gray-400 mb-0">
-                                    <x-icon name="mdi-information-outline" size="text-sm" class="inline mr-1" />
+                                    <x-icon name="information-outline" size="text-sm" class="inline mr-1" />
                                     Nenhuma especialidade selecionada
                                 </p>
                             @endif
@@ -268,11 +268,11 @@
                 <!-- Botões de Ação -->
                 <div class="flex flex-col gap-3 pt-6 border-t border-gray-200 dark:border-gray-700 sm:flex-row sm:items-center sm:justify-between">
                     <a href="{{ workspace_route('tenant.doctors.index') }}" class="btn btn-outline inline-flex items-center">
-                        <x-icon name="mdi-arrow-left" size="text-sm" class="mr-2" />
+                        <x-icon name="arrow-left" size="text-sm" class="mr-2" />
                         Voltar
                     </a>
                     <button type="submit" class="btn btn-primary inline-flex items-center">
-                        <x-icon name="mdi-content-save-outline" size="text-sm" class="mr-2" />
+                        <x-icon name="content-save-outline" size="text-sm" class="mr-2" />
                         Salvar Médico
                     </button>
                 </div>

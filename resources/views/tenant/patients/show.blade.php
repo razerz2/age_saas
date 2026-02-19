@@ -11,17 +11,13 @@
             <ol class="inline-flex items-center space-x-1 md:space-x-3">
                 <li class="inline-flex items-center">
                     <a href="{{ workspace_route('tenant.dashboard') }}" class="inline-flex items-center text-sm font-medium text-gray-700 hover:text-blue-600 dark:text-gray-400 dark:hover:text-white">
-                        <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                            <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"></path>
-                        </svg>
+                        <x-icon name="mdi-home-outline" size="text-base" class="mr-2" />
                         Dashboard
                     </a>
                 </li>
                 <li>
                     <div class="flex items-center">
-                        <svg class="w-6 h-6 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
-                        </svg>
+                        <x-icon name="mdi-chevron-right" size="text-sm" class="text-gray-400" />
                         <a href="{{ workspace_route('tenant.patients.index') }}" class="ml-1 text-sm font-medium text-gray-700 hover:text-blue-600 dark:text-gray-400 dark:hover:text-white">
                             Pacientes
                         </a>
@@ -29,9 +25,7 @@
                 </li>
                 <li>
                     <div class="flex items-center">
-                        <svg class="w-6 h-6 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
-                        </svg>
+                        <x-icon name="mdi-chevron-right" size="text-sm" class="text-gray-400" />
                         <span class="ml-1 text-sm font-medium text-gray-500 dark:text-gray-400">Detalhes</span>
                     </div>
                 </li>
@@ -50,16 +44,12 @@
     <div class="mb-6">
         @if ($patient->is_active)
             <span class="inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400">
-                <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
-                </svg>
+                <x-icon name="mdi-check-circle-outline" size="text-sm" class="mr-2" />
                 Ativo
             </span>
         @else
             <span class="inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400">
-                <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path>
-                </svg>
+                <x-icon name="mdi-close-circle-outline" size="text-sm" class="mr-2" />
                 Inativo
             </span>
         @endif
@@ -69,9 +59,7 @@
     <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
         <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
             <div class="flex items-center">
-                <svg class="w-5 h-5 text-blue-600 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                    <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"></path>
-                </svg>
+                <x-icon name="mdi-account-outline" size="text-lg" class="text-blue-600 mr-2" />
                 <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Informações do Paciente</h2>
             </div>
         </div>
@@ -80,9 +68,7 @@
             <!-- Informações Pessoais -->
             <div>
                 <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4 flex items-center">
-                    <svg class="w-5 h-5 text-blue-600 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
-                    </svg>
+                    <x-icon name="mdi-information-outline" size="text-lg" class="text-blue-600 mr-2" />
                     Informações Pessoais
                 </h3>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -135,9 +121,7 @@
             <!-- Informações de Contato -->
             <div>
                 <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4 flex items-center">
-                    <svg class="w-5 h-5 text-blue-600 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                        <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z"></path>
-                    </svg>
+                    <x-icon name="mdi-phone-outline" size="text-lg" class="text-blue-600 mr-2" />
                     Informações de Contato
                 </h3>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -176,9 +160,7 @@
             @if($patient->address)
             <div>
                 <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4 flex items-center">
-                    <svg class="w-5 h-5 text-blue-600 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                        <path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"></path>
-                    </svg>
+                    <x-icon name="mdi-map-marker-outline" size="text-lg" class="text-blue-600 mr-2" />
                     Endereço
                 </h3>
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -233,18 +215,14 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div class="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4 border border-gray-200 dark:border-gray-600">
                         <label class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider block mb-2">
-                            <svg class="w-4 h-4 inline mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                <path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd"></path>
-                            </svg>
+                            <x-icon name="mdi-calendar-month-outline" size="text-sm" class="inline mr-1" />
                             Criado em
                         </label>
                         <p class="text-sm font-medium text-gray-900 dark:text-white">{{ $patient->created_at->format('d/m/Y H:i') }}</p>
                     </div>
                     <div class="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4 border border-gray-200 dark:border-gray-600">
                         <label class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider block mb-2">
-                            <svg class="w-4 h-4 inline mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                <path fill-rule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clip-rule="evenodd"></path>
-                            </svg>
+                            <x-icon name="mdi-sync" size="text-sm" class="inline mr-1" />
                             Atualizado em
                         </label>
                         <p class="text-sm font-medium text-gray-900 dark:text-white">{{ $patient->updated_at->format('d/m/Y H:i') }}</p>
@@ -252,34 +230,30 @@
                 </div>
             </div>
             <div class="flex items-center justify-between flex-nowrap mt-6 border-t pt-4">
-                <div>
-                    <a href="{{ workspace_route('tenant.patients.index') }}"
-                       class="btn-patient-secondary inline-flex items-center gap-2 px-4 py-2">
-                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
-                        </svg>
-                        Voltar
-                    </a>
-                </div>
+                <a href="{{ workspace_route('tenant.patients.index') }}"
+                   class="btn btn-outline inline-flex items-center">
+                    <x-icon name="mdi-arrow-left" size="text-sm" class="mr-2" />
+                    Voltar
+                </a>
                 <div class="flex items-center gap-3">
                     @can('patients.update')
                         <a href="{{ workspace_route('tenant.patients.edit', $patient->id) }}"
-                           class="btn-patient-primary inline-flex items-center gap-2 px-4 py-2">
-                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
-                            </svg>
+                           class="btn btn-primary inline-flex items-center">
+                            <x-icon name="mdi-pencil-outline" size="text-sm" class="mr-2" />
                             Editar
                         </a>
                     @endcan
                     <form action="{{ workspace_route('tenant.patients.destroy', $patient->id) }}" method="POST" class="inline"
-                          data-confirm-submit="true" data-confirm-title="Excluir paciente" data-confirm-message="Tem certeza que deseja excluir este paciente? Esta a??o n?o pode ser desfeita." data-confirm-confirm-text="Excluir" data-confirm-cancel-text="Cancelar" data-confirm-type="error">
+                          data-confirm-submit="true"
+                          data-confirm-title="Excluir paciente"
+                          data-confirm-message="Tem certeza que deseja excluir este paciente? Esta ação não pode ser desfeita."
+                          data-confirm-confirm-text="Excluir"
+                          data-confirm-cancel-text="Cancelar"
+                          data-confirm-type="error">
                         @csrf
                         @method('DELETE')
-                        <button type="submit"
-                                class="btn-patient-secondary inline-flex items-center gap-2 px-4 py-2 text-red-600 hover:text-red-900">
-                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-                            </svg>
+                        <button type="submit" class="btn btn-danger inline-flex items-center">
+                            <x-icon name="mdi-trash-can-outline" size="text-sm" class="mr-2" />
                             Excluir
                         </button>
                     </form>
@@ -290,4 +264,3 @@
 </div>
 
 @endsection
-

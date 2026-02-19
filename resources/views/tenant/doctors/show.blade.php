@@ -8,26 +8,26 @@
         <div class="flex items-center justify-between">
             <div>
                 <h1 class="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-                    <x-icon name="mdi-stethoscope" size="text-xl" class="text-blue-600" />
+                    <x-icon name="stethoscope" size="text-xl" class="text-blue-600" />
                     Detalhes do Médico
                 </h1>
                 <nav class="flex mt-2" aria-label="Breadcrumb">
                     <ol class="inline-flex items-center space-x-1 md:space-x-3">
                         <li class="inline-flex items-center">
-                            <a href="{{ workspace_route('tenant.dashboard') }}" class="text-gray-700 hover:text-gray-900">
+                            <a href="{{ workspace_route('tenant.dashboard') }}" class="text-gray-700 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white">
                                 Dashboard
                             </a>
                         </li>
                         <li>
                             <div class="flex items-center">
-                                <x-icon name="mdi-chevron-right" size="text-sm" class="text-gray-400" />
-                                <a href="{{ workspace_route('tenant.doctors.index') }}" class="ml-1 text-gray-700 hover:text-gray-900">Médicos</a>
+                                <x-icon name="chevron-right" size="text-sm" class="text-gray-400" />
+                                <a href="{{ workspace_route('tenant.doctors.index') }}" class="ml-1 text-gray-700 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white">Médicos</a>
                             </div>
                         </li>
                         <li>
                             <div class="flex items-center">
-                                <x-icon name="mdi-chevron-right" size="text-sm" class="text-gray-400" />
-                                <span class="ml-1 text-gray-500">Detalhes</span>
+                                <x-icon name="chevron-right" size="text-sm" class="text-gray-400" />
+                                <span class="ml-1 text-gray-500 dark:text-gray-400">Detalhes</span>
                             </div>
                         </li>
                     </ol>
@@ -36,12 +36,12 @@
         </div>
         <div class="mt-4 flex items-center justify-between">
             <a href="{{ workspace_route('tenant.doctors.index') }}" class="btn btn-outline inline-flex items-center">
-                <x-icon name="mdi-arrow-left" size="text-sm" class="mr-2" />
+                <x-icon name="arrow-left" size="text-sm" class="mr-2" />
                 Voltar
             </a>
             <div class="flex items-center gap-3">
                 <a href="{{ workspace_route('tenant.doctors.edit', $doctor->id) }}" class="btn btn-primary inline-flex items-center">
-                    <x-icon name="mdi-pencil-outline" size="text-sm" class="mr-2" />
+                    <x-icon name="pencil-outline" size="text-sm" class="mr-2" />
                     Editar
                 </a>
                 @if(!$doctor->hasAppointments())
@@ -55,13 +55,13 @@
                         @csrf
                         @method('DELETE')
                         <button type="submit" class="btn btn-danger inline-flex items-center">
-                            <x-icon name="mdi-trash-can-outline" size="text-sm" class="mr-2" />
+                            <x-icon name="trash-can-outline" size="text-sm" class="mr-2" />
                             Excluir
                         </button>
                     </form>
                 @else
                     <button type="button" class="btn btn-danger opacity-60 cursor-not-allowed inline-flex items-center" title="Não é possível excluir médico com atendimentos cadastrados" disabled>
-                        <x-icon name="mdi-trash-can-outline" size="text-sm" class="mr-2" />
+                        <x-icon name="trash-can-outline" size="text-sm" class="mr-2" />
                         Excluir
                     </button>
                 @endif
@@ -78,17 +78,17 @@
             <div class="flex flex-wrap gap-3">
                 @if ($doctor->status === 'active')
                     <span class="inline-flex items-center px-3 py-1 rounded-full bg-green-100 text-green-800 text-xs font-semibold">
-                        <x-icon name="mdi-check-circle-outline" size="text-xs" class="mr-1" />
+                        <x-icon name="check-circle-outline" size="text-xs" class="mr-1" />
                         Ativo
                     </span>
                 @else
                     <span class="inline-flex items-center px-3 py-1 rounded-full bg-red-100 text-red-800 text-xs font-semibold">
-                        <x-icon name="mdi-close-circle-outline" size="text-xs" class="mr-1" />
+                        <x-icon name="close-circle-outline" size="text-xs" class="mr-1" />
                         Bloqueado
                     </span>
                 @endif
                 <span class="inline-flex items-center px-3 py-1 rounded-full bg-blue-100 text-blue-800 text-xs font-semibold">
-                    <x-icon name="mdi-stethoscope" size="text-xs" class="mr-1" />
+                    <x-icon name="stethoscope" size="text-xs" class="mr-1" />
                     Médico
                 </span>
             </div>

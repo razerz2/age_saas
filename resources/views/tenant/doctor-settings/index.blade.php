@@ -13,14 +13,14 @@
                 <nav class="flex" aria-label="Breadcrumb">
                     <ol class="inline-flex items-center space-x-1 md:space-x-3">
                         <li class="inline-flex items-center">
-                            <a href="{{ workspace_route('tenant.dashboard') }}" class="text-gray-700 hover:text-blue-600 dark:text-gray-300 dark:hover:text-white">
-                                <x-icon name="mdi-home-outline" size="text-base" class="mr-2" />
+                            <a href="{{ workspace_route('tenant.dashboard') }}" class="text-gray-700 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white">
+                                <x-icon name="home-outline" size="text-base" class="mr-2" />
                                 Dashboard
                             </a>
                         </li>
                         <li aria-current="page">
                             <div class="flex items-center">
-                                <x-icon name="mdi-chevron-right" size="text-sm" class="text-gray-400" />
+                                <x-icon name="chevron-right" size="text-sm" class="text-gray-400" />
                                 <span class="ml-1 text-gray-500 dark:text-gray-400 md:ml-2">Configurações</span>
                             </div>
                         </li>
@@ -32,7 +32,7 @@
 
     <div class="mb-6 flex items-center justify-between">
         <a href="{{ workspace_route('tenant.doctors.show', $doctor->id) }}" class="btn btn-outline inline-flex items-center">
-            <x-icon name="mdi-arrow-left" size="text-sm" class="mr-2" />
+            <x-icon name="arrow-left" size="text-sm" class="mr-2" />
             Voltar
         </a>
         <div></div>
@@ -42,7 +42,7 @@
         <div class="bg-green-50 border border-green-200 rounded-md p-4 mb-6">
             <div class="flex">
                 <div class="flex-shrink-0">
-                    <x-icon name="mdi-check-circle-outline" size="text-lg" class="text-green-400" />
+                    <x-icon name="check-circle-outline" size="text-lg" class="text-green-400" />
                 </div>
                 <div class="ml-3">
                     <p class="text-sm text-green-700">{{ session('success') }}</p>
@@ -55,7 +55,7 @@
         <div class="bg-red-50 border border-red-200 rounded-md p-4 mb-6">
             <div class="flex">
                 <div class="flex-shrink-0">
-                    <x-icon name="mdi-alert-circle-outline" size="text-lg" class="text-red-400" />
+                    <x-icon name="alert-circle-outline" size="text-lg" class="text-red-400" />
                 </div>
                 <div class="ml-3">
                     <p class="text-sm text-red-700">{{ session('error') }}</p>
@@ -68,7 +68,7 @@
     <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
         <div class="p-6 border-b border-gray-200 dark:border-gray-700">
             <h2 class="text-xl font-semibold text-gray-900 dark:text-white flex items-center">
-                <x-icon name="mdi-account-outline" size="text-xl" class="mr-2 text-blue-600" />
+                <x-icon name="account-outline" size="text-xl" class="mr-2 text-blue-600" />
                 {{ $doctor->user->display_name ?? $doctor->user->name }}
             </h2>
         </div>
@@ -78,19 +78,19 @@
             <ul class="nav nav-tabs flex flex-wrap border-b border-gray-200 dark:border-gray-700 text-sm font-medium" id="settingsTabs" role="tablist">
                 <li class="nav-item mr-2" role="presentation">
                     <button class="nav-link active inline-flex items-center px-4 py-2 rounded-t-lg border border-transparent text-gray-600 dark:text-gray-300 hover:text-blue-600 hover:border-blue-600" id="calendar-tab" data-bs-toggle="tab" data-bs-target="#calendar" type="button" role="tab">
-                        <x-icon name="mdi-calendar-month-outline" size="text-sm" class="mr-2" />
+                        <x-icon name="calendar-month-outline" size="text-sm" class="mr-2" />
                         Calendário
                     </button>
                 </li>
                 <li class="nav-item mr-2" role="presentation">
                     <button class="nav-link inline-flex items-center px-4 py-2 rounded-t-lg border border-transparent text-gray-600 dark:text-gray-300 hover:text-blue-600 hover:border-blue-600" id="hours-tab" data-bs-toggle="tab" data-bs-target="#hours" type="button" role="tab">
-                        <x-icon name="mdi-clock-outline" size="text-sm" class="mr-2" />
+                        <x-icon name="clock-outline" size="text-sm" class="mr-2" />
                         Horários
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
                     <button class="nav-link inline-flex items-center px-4 py-2 rounded-t-lg border border-transparent text-gray-600 dark:text-gray-300 hover:text-blue-600 hover:border-blue-600" id="types-tab" data-bs-toggle="tab" data-bs-target="#types" type="button" role="tab">
-                        <x-icon name="mdi-file-document-outline" size="text-sm" class="mr-2" />
+                        <x-icon name="file-document-outline" size="text-sm" class="mr-2" />
                         Tipos de Atendimento
                     </button>
                 </li>
@@ -101,7 +101,7 @@
                 <div class="tab-pane fade show active" id="calendar" role="tabpanel">
                     <div class="rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/20 p-6">
                         <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
-                            <x-icon name="mdi-calendar-month-outline" size="text-lg" class="mr-2 text-blue-600" />
+                            <x-icon name="calendar-month-outline" size="text-lg" class="mr-2 text-blue-600" />
                             Calendário
                         </h3>
 
@@ -138,7 +138,7 @@
 
                                 <div class="flex justify-end mt-6">
                                     <button type="submit" class="btn btn-primary inline-flex items-center">
-                                        <x-icon name="mdi-content-save-outline" size="text-sm" class="mr-2" />
+                                        <x-icon name="content-save-outline" size="text-sm" class="mr-2" />
                                         Salvar Calendário
                                     </button>
                                 </div>
@@ -150,7 +150,7 @@
 
                                 <div class="bg-blue-50 border border-blue-200 text-blue-800 rounded-md p-4 mb-6">
                                     <div class="flex items-start">
-                                        <x-icon name="mdi-information-outline" size="text-lg" class="mr-2 mt-0.5" />
+                                        <x-icon name="information-outline" size="text-lg" class="mr-2 mt-0.5" />
                                         <span>Nenhum calendário cadastrado. Preencha os dados abaixo para criar um.</span>
                                     </div>
                                 </div>
@@ -183,7 +183,7 @@
 
                                 <div class="flex justify-end mt-6">
                                     <button type="submit" class="btn btn-primary inline-flex items-center">
-                                        <x-icon name="mdi-plus" size="text-sm" class="mr-2" />
+                                        <x-icon name="plus" size="text-sm" class="mr-2" />
                                         Criar Calendário
                                     </button>
                                 </div>
@@ -197,11 +197,11 @@
                     <div class="rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/20 p-6">
                         <div class="flex items-center justify-between mb-4">
                             <h3 class="text-lg font-semibold text-gray-900 dark:text-white flex items-center">
-                                <x-icon name="mdi-clock-outline" size="text-lg" class="mr-2 text-blue-600" />
+                                <x-icon name="clock-outline" size="text-lg" class="mr-2 text-blue-600" />
                                 Horários de Atendimento
                             </h3>
                             <button type="button" class="btn btn-primary inline-flex items-center" data-bs-toggle="modal" data-bs-target="#addHourModal">
-                                <x-icon name="mdi-plus" size="text-sm" class="mr-2" />
+                                <x-icon name="plus" size="text-sm" class="mr-2" />
                                 Novo Horário
                             </button>
                         </div>
@@ -268,7 +268,7 @@
                         @else
                             <div class="bg-blue-50 border border-blue-200 text-blue-800 rounded-md p-4">
                                 <div class="flex items-start">
-                                    <x-icon name="mdi-information-outline" size="text-lg" class="mr-2 mt-0.5" />
+                                    <x-icon name="information-outline" size="text-lg" class="mr-2 mt-0.5" />
                                     <span>Nenhum horário cadastrado. Clique em "Novo Horário" para adicionar.</span>
                                 </div>
                             </div>
@@ -281,11 +281,11 @@
                     <div class="rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/20 p-6">
                         <div class="flex items-center justify-between mb-4">
                             <h3 class="text-lg font-semibold text-gray-900 dark:text-white flex items-center">
-                                <x-icon name="mdi-file-document-outline" size="text-lg" class="mr-2 text-blue-600" />
+                                <x-icon name="file-document-outline" size="text-lg" class="mr-2 text-blue-600" />
                                 Tipos de Atendimento
                             </h3>
                             <button type="button" class="btn btn-primary inline-flex items-center" data-bs-toggle="modal" data-bs-target="#addTypeModal">
-                                <x-icon name="mdi-plus" size="text-sm" class="mr-2" />
+                                <x-icon name="plus" size="text-sm" class="mr-2" />
                                 Novo Tipo
                             </button>
                         </div>
@@ -345,7 +345,7 @@
                         @else
                             <div class="bg-blue-50 border border-blue-200 text-blue-800 rounded-md p-4">
                                 <div class="flex items-start">
-                                    <x-icon name="mdi-information-outline" size="text-lg" class="mr-2 mt-0.5" />
+                                    <x-icon name="information-outline" size="text-lg" class="mr-2 mt-0.5" />
                                     <span>Nenhum tipo de atendimento cadastrado. Clique em "Novo Tipo" para adicionar.</span>
                                 </div>
                             </div>

@@ -11,22 +11,22 @@
                 <nav class="flex mt-2" aria-label="Breadcrumb">
                     <ol class="inline-flex items-center space-x-1 md:space-x-3">
                         <li class="inline-flex items-center">
-                            <a href="{{ workspace_route('tenant.dashboard') }}" class="text-gray-700 hover:text-gray-900 inline-flex items-center">
-                                <x-icon name="mdi-home-outline" size="text-base" class="mr-2" />
+                            <a href="{{ workspace_route('tenant.dashboard') }}" class="text-gray-700 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white inline-flex items-center">
+                                <x-icon name="home-outline" size="text-base" class="mr-2" />
                                 Dashboard
                             </a>
                         </li>
                         <li>
                             <div class="flex items-center">
-                                <x-icon name="mdi-chevron-right" size="text-sm" class="text-gray-400" />
-                                <span class="ml-1 text-gray-500">Médicos</span>
+                                <x-icon name="chevron-right" size="text-sm" class="text-gray-400" />
+                                <span class="ml-1 text-gray-500 dark:text-gray-400">Médicos</span>
                             </div>
                         </li>
                     </ol>
                 </nav>
             </div>
             <a href="{{ workspace_route('tenant.doctors.create') }}" class="btn btn-primary inline-flex items-center">
-                <x-icon name="mdi-plus" size="text-sm" class="mr-2" />
+                <x-icon name="plus" size="text-sm" class="mr-2" />
                 Novo Médico
             </a>
         </div>

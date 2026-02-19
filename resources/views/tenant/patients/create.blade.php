@@ -19,15 +19,11 @@
                         <a href="{{ workspace_route('tenant.dashboard') }}" class="hover:text-blue-600 dark:hover:text-white">Dashboard</a>
                     </li>
                     <li class="flex items-center gap-2">
-                        <svg class="h-4 w-4 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
-                            <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
-                        </svg>
+                        <x-icon name="mdi-chevron-right" size="text-sm" class="text-gray-400" />
                         <a href="{{ workspace_route('tenant.patients.index') }}" class="hover:text-blue-600 dark:hover:text-white">Pacientes</a>
                     </li>
                     <li class="flex items-center gap-2">
-                        <svg class="h-4 w-4 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
-                            <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
-                        </svg>
+                        <x-icon name="mdi-chevron-right" size="text-sm" class="text-gray-400" />
                         <span class="text-gray-900 dark:text-white font-semibold">Criar</span>
                     </li>
                 </ol>
@@ -237,10 +233,10 @@
                 </div>
 
                 <div class="flex flex-col gap-3 pt-6 border-t border-gray-200 dark:border-gray-700 sm:flex-row sm:items-center sm:justify-between">
-                    <a href="{{ workspace_route('tenant.patients.index') }}" class="btn-patient-secondary">
-                        Cancelar
+                    <a href="{{ workspace_route('tenant.patients.index') }}" class="btn btn-outline">
+                        Voltar
                     </a>
-                    <button type="submit" class="btn-patient-primary">
+                    <button type="submit" class="btn btn-primary">
                         Salvar Paciente
                     </button>
                 </div>
