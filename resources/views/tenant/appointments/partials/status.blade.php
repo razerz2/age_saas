@@ -45,8 +45,6 @@
 @endphp
 
 <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $bg }} {{ $txt }}">
-    <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
-        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v4a1 1 0 00.293.707l2 2a1 1 0 001.414-1.414L11 10.586V7z" clip-rule="evenodd"></path>
-    </svg>
+    <x-icon name="calendar-check-outline" class="w-3 h-3 mr-1" />
     {{ $label }}
 </span>

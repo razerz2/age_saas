@@ -354,7 +354,7 @@ export function init() {
 		doctorSelect.dispatchEvent(new Event('change'));
 	}
 
-	// Inicializa dados de ediÃ§Ã£o
+	// Inicializa dados de edição
 	if (isEditMode && doctorSelect && doctorSelect.value) {
 		loadAppointmentTypes(doctorSelect.value, currentAppointmentTypeId);
 		loadSpecialties(doctorSelect.value, currentSpecialtyId);
@@ -405,7 +405,7 @@ export function init() {
 					errorEl.classList.remove('d-none');
 					errorEl.style.display = 'block';
 					const msgEl = document.getElementById('business-hours-error-message');
-					if (msgEl) msgEl.textContent = 'Por favor, selecione um mÃ©dico primeiro.';
+					if (msgEl) msgEl.textContent = 'Por favor, selecione um médico primeiro.';
 				}
 				return;
 			}
@@ -523,8 +523,8 @@ export function init() {
 				if (typeof window.showAlert === 'function') {
 					window.showAlert({
 						type: 'warning',
-						title: 'AtenÃ§Ã£o',
-						message: 'Selecione um mÃ©dico primeiro para ver os dias trabalhados.',
+						title: 'Atenção',
+						message: 'Selecione um médico primeiro para ver os dias trabalhados.',
 					});
 				}
 				return;
@@ -594,7 +594,7 @@ function initRecurringCreate($, tenantSlug) {
 			if (!doctorId) {
 				businessHours = [];
 				$('#specialty_id')
-					.html('<option value="">Primeiro selecione um mÃ©dico</option>')
+					.html('<option value="">Primeiro selecione um médico</option>')
 					.prop('disabled', true);
 				$('#appointment_type_id')
 					.html('<option value="">Primeiro selecione uma especialidade</option>')
@@ -676,11 +676,11 @@ function initRecurringCreate($, tenantSlug) {
 				updateAllRules();
 			},
 			error: function (xhr) {
-				console.error('Erro ao buscar horÃ¡rios do mÃ©dico:', xhr);
+				console.error('Erro ao buscar horários do médico:', xhr);
 				showAlert({
 					type: 'error',
 					title: 'Erro',
-					message: 'Erro ao carregar horÃ¡rios do mÃ©dico. Por favor, tente novamente.',
+					message: 'Erro ao carregar horários do médico. Por favor, tente novamente.',
 				});
 			},
 		});
@@ -800,7 +800,7 @@ function initRecurringCreate($, tenantSlug) {
 		}
 
 		if (!doctorId || businessHours.length === 0) {
-			$weekdaySelect.append('<option value="">Primeiro selecione um mÃ©dico</option>');
+			$weekdaySelect.append('<option value="">Primeiro selecione um médico</option>');
 			$weekdaySelect.prop('disabled', true);
 			return;
 		}
@@ -854,7 +854,7 @@ function initRecurringCreate($, tenantSlug) {
 		if (!doctorId || !appointmentTypeId || !startDate) {
 			$timeSlotSelect.empty();
 			const missingFields = [];
-			if (!doctorId) missingFields.push('mÃ©dico');
+			if (!doctorId) missingFields.push('médico');
 			if (!appointmentTypeId) missingFields.push('tipo de consulta');
 			if (!startDate) missingFields.push('data inicial');
 			$timeSlotSelect.append(`<option value="">Selecione: ${missingFields.join(', ')}</option>`);
@@ -888,9 +888,9 @@ function initRecurringCreate($, tenantSlug) {
 				$timeSlotSelect.prop('disabled', false);
 			},
 			error: function (xhr) {
-				console.error('Erro ao buscar horÃ¡rios disponÃ­veis:', xhr);
+				console.error('Erro ao buscar horários disponíveis:', xhr);
 				$timeSlotSelect.empty();
-				$timeSlotSelect.append('<option value="">Erro ao carregar horÃ¡rios</option>');
+				$timeSlotSelect.append('<option value="">Erro ao carregar horários</option>');
 				$timeSlotSelect.prop('disabled', true);
 			},
 		});
@@ -956,7 +956,7 @@ function initRecurringCreate($, tenantSlug) {
 			if (!currentWeekday || !currentTimeSlot || !currentStartTime || !currentEndTime) {
 				showAlert({
 					type: 'warning',
-					title: 'AtenÃ§Ã£o',
+					title: 'Atenção',
 					message:
 						'Por favor, selecione um dia da semana e um horÃ¡rio na primeira regra antes de adicionar outra.',
 				});
@@ -974,7 +974,7 @@ function initRecurringCreate($, tenantSlug) {
 			if (selectedWeekdays.includes(currentWeekday)) {
 				showAlert({
 					type: 'warning',
-					title: 'AtenÃ§Ã£o',
+					title: 'Atenção',
 					message: 'Este dia da semana jÃ¡ foi adicionado em outra regra. NÃ£o Ã© possÃ­vel duplicar dias.',
 				});
 				return;
@@ -1060,7 +1060,7 @@ function initRecurringCreate($, tenantSlug) {
 				e.preventDefault();
 				showAlert({
 					type: 'warning',
-					title: 'AtenÃ§Ã£o',
+					title: 'Atenção',
 					message:
 						'Por favor, adicione pelo menos uma regra de recorrÃªncia completa (dia da semana e horÃ¡rio).',
 				});
@@ -1162,7 +1162,7 @@ function initRecurringEdit($, tenantSlug) {
 		const $appointmentTypeSelect = $('#appointment_type_id');
 
 		if (!doctorId) {
-			$appointmentTypeSelect.html('<option value="">Primeiro selecione um mÃ©dico</option>').prop('disabled', true);
+			$appointmentTypeSelect.html('<option value="">Primeiro selecione um médico</option>').prop('disabled', true);
 			return;
 		}
 
@@ -1224,11 +1224,11 @@ function initRecurringEdit($, tenantSlug) {
 				updateAllRules();
 			},
 			error: function (xhr) {
-				console.error('Erro ao buscar horÃ¡rios do mÃ©dico:', xhr);
+				console.error('Erro ao buscar horários do médico:', xhr);
 				showAlert({
 					type: 'error',
 					title: 'Erro',
-					message: 'Erro ao carregar horÃ¡rios do mÃ©dico. Por favor, tente novamente.',
+					message: 'Erro ao carregar horários do médico. Por favor, tente novamente.',
 				});
 			},
 		});
@@ -1284,7 +1284,7 @@ function initRecurringEdit($, tenantSlug) {
 		$timeSlotSelect.prop('disabled', true);
 
 		if (!doctorId || businessHours.length === 0) {
-			$weekdaySelect.append('<option value="">Primeiro selecione um mÃ©dico</option>');
+			$weekdaySelect.append('<option value="">Primeiro selecione um médico</option>');
 			$weekdaySelect.prop('disabled', true);
 			return;
 		}
@@ -1313,7 +1313,7 @@ function initRecurringEdit($, tenantSlug) {
 
 		if (!doctorId || !appointmentTypeId || !startDate) {
 			$timeSlotSelect.empty();
-			$timeSlotSelect.append('<option value="">Selecione mÃ©dico, tipo de consulta e data inicial</option>');
+			$timeSlotSelect.append('<option value="">Selecione médico, tipo de consulta e data inicial</option>');
 			return;
 		}
 
@@ -1355,9 +1355,9 @@ function initRecurringEdit($, tenantSlug) {
 				}
 			},
 			error: function (xhr) {
-				console.error('Erro ao buscar horÃ¡rios disponÃ­veis:', xhr);
+				console.error('Erro ao buscar horários disponíveis:', xhr);
 				$timeSlotSelect.empty();
-				$timeSlotSelect.append('<option value="">Erro ao carregar horÃ¡rios</option>');
+				$timeSlotSelect.append('<option value="">Erro ao carregar horários</option>');
 				$timeSlotSelect.prop('disabled', true);
 			},
 		});
@@ -1412,7 +1412,7 @@ function initRecurringEdit($, tenantSlug) {
                         <div class="form-group">
                             <label class="fw-semibold">Dia da Semana <span class="text-danger">*</span></label>
                             <select name="rules[${ruleIndex}][weekday]" class="form-control rule-weekday" required>
-                                ${businessHours.length > 0 ? businessHours.map(bh => `<option value="${bh.weekday_string}" ${bh.weekday_string === currentWeekday ? 'selected' : ''}>${bh.weekday_name}</option>`).join('') : '<option value="">Primeiro selecione um mÃ©dico</option>'}
+                                ${businessHours.length > 0 ? businessHours.map(bh => `<option value="${bh.weekday_string}" ${bh.weekday_string === currentWeekday ? 'selected' : ''}>${bh.weekday_name}</option>`).join('') : '<option value="">Primeiro selecione um médico</option>'}
                             </select>
                         </div>
                     </div>

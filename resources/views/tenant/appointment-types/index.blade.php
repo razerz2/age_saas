@@ -13,27 +13,21 @@
                     <ol class="inline-flex items-center space-x-1 md:space-x-3">
                         <li class="inline-flex items-center">
                             <a href="{{ workspace_route('tenant.dashboard') }}" class="text-gray-700 hover:text-gray-900 inline-flex items-center">
-                                <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                                    <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001 1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"></path>
-                                </svg>
+                                <x-icon name="home-outline" class="w-4 h-4 mr-2" />
                                 Dashboard
                             </a>
                         </li>
                         <li>
                             <div class="flex items-center">
-                                <svg class="w-4 h-4 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
-                                </svg>
+                                <x-icon name="chevron-right" class="w-4 h-4 text-gray-400" />
                                 <span class="ml-1 text-gray-500 dark:text-gray-400">Tipos de Consulta</span>
                             </div>
                         </li>
                     </ol>
                 </nav>
             </div>
-            <a href="{{ workspace_route('tenant.appointment-types.create') }}" class="btn-patient-primary">
-                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
-                </svg>
+            <a href="{{ workspace_route('tenant.appointment-types.create') }}" class="btn btn-primary">
+                <x-icon name="plus" class="w-4 h-4 mr-2" />
                 Novo
             </a>
         </div>
@@ -57,9 +51,7 @@
                         </select>
                         @if(request('doctor_id'))
                             <a href="{{ workspace_route('tenant.appointment-types.index') }}" class="inline-flex items-center px-3 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors">
-                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                                </svg>
+                                <x-icon name="filter-remove-outline" class="w-4 h-4 mr-2" />
                                 Limpar
                             </a>
                         @endif

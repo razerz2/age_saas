@@ -1,9 +1,9 @@
 <div class="flex gap-2 flex-wrap">
-    <x-table-action-button 
+    <x-table-action-button
         href="{{ workspace_route('tenant.business-hours.edit', $hour->id) }}"
         title="Editar"
         color="amber">
-        <!-- ícone lápis -->
+        <x-icon name="pencil-outline" class="w-3 h-3" />
     </x-table-action-button>
 
     <form action="{{ workspace_route('tenant.business-hours.destroy', $hour->id) }}"
@@ -12,12 +12,12 @@
         @csrf
         @method('DELETE')
 
-        <x-table-action-button 
+        <x-table-action-button
             as="button"
             type="submit"
             title="Excluir"
             color="red">
-            <!-- ícone lixeira -->
+            <x-icon name="trash-can-outline" class="w-3 h-3" />
         </x-table-action-button>
     </form>
 </div>

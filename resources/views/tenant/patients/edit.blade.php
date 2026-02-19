@@ -18,14 +18,17 @@
             <nav class="min-w-0 flex-1" aria-label="breadcrumb">
                 <ol class="flex flex-wrap items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
                     <li>
-                        <a href="{{ workspace_route('tenant.dashboard') }}" class="hover:text-blue-600 dark:hover:text-white">Dashboard</a>
+                        <a href="{{ workspace_route('tenant.dashboard') }}" class="inline-flex items-center gap-2 text-gray-700 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white">
+                            <x-icon name="home-outline" size="text-base" />
+                            Dashboard
+                        </a>
                     </li>
                     <li class="flex items-center gap-2">
-                        <x-icon name="mdi-chevron-right" size="text-sm" class="text-gray-400" />
-                        <a href="{{ workspace_route('tenant.patients.index') }}" class="hover:text-blue-600 dark:hover:text-white">Pacientes</a>
+                        <x-icon name="chevron-right" size="text-sm" class="text-gray-400" />
+                        <a href="{{ workspace_route('tenant.patients.index') }}" class="text-gray-700 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white">Pacientes</a>
                     </li>
                     <li class="flex items-center gap-2">
-                        <x-icon name="mdi-chevron-right" size="text-sm" class="text-gray-400" />
+                        <x-icon name="chevron-right" size="text-sm" class="text-gray-400" />
                         <span class="text-gray-900 dark:text-white font-semibold">Editar</span>
                     </li>
                 </ol>
@@ -40,10 +43,10 @@
         <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
             <div class="p-6 border-b border-gray-200 dark:border-gray-700">
                 <h4 class="text-xl font-semibold text-gray-900 dark:text-white flex items-center">
-                    <x-icon name="mdi-pencil-outline" size="text-xl" class="mr-2 text-blue-600" />
+                    <x-icon name="pencil-outline" size="text-xl" class="mr-2 text-blue-600" />
                     Editar Paciente
                 </h4>
-                <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">Atualize as informações do paciente abaixo</p>
+                <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">Atualize as Informações do paciente abaixo</p>
             </div>
 
                     <form action="{{ workspace_route('tenant.patients.update', $patient->id) }}" method="POST" class="p-6 space-y-8">
@@ -52,7 +55,7 @@
 
                         <div>
                             <h5 class="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
-                                <x-icon name="mdi-account-outline" size="text-lg" class="mr-2 text-blue-600" />
+                                <x-icon name="account-outline" size="text-lg" class="mr-2 text-blue-600" />
                                 Dados Pessoais
                             </h5>
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -109,7 +112,7 @@
 
                         <div>
                             <h5 class="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
-                                <x-icon name="mdi-email-outline" size="text-lg" class="mr-2 text-blue-600" />
+                                <x-icon name="email-outline" size="text-lg" class="mr-2 text-blue-600" />
                                 Informações de Contato
                             </h5>
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -140,7 +143,7 @@
 
                         <div>
                             <h5 class="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
-                                <x-icon name="mdi-map-marker-outline" size="text-lg" class="mr-2 text-blue-600" />
+                                <x-icon name="map-marker-outline" size="text-lg" class="mr-2 text-blue-600" />
                                 Endereço
                             </h5>
                             <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
@@ -231,7 +234,7 @@
 
                         <div>
                             <h5 class="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
-                                <x-icon name="mdi-check-circle-outline" size="text-lg" class="mr-2 text-blue-600" />
+                                <x-icon name="check-circle-outline" size="text-lg" class="mr-2 text-blue-600" />
                                 Status
                             </h5>
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -251,10 +254,12 @@
                         </div>
 
                         <div class="flex flex-col gap-3 pt-6 border-t border-gray-200 dark:border-gray-700 sm:flex-row sm:items-center sm:justify-between">
-                            <a href="{{ workspace_route('tenant.patients.index') }}" class="btn btn-outline">
+                            <a href="{{ workspace_route('tenant.patients.index') }}" class="btn btn-outline inline-flex items-center">
+                                <x-icon name="arrow-left" size="text-sm" class="mr-2" />
                                 Voltar
                             </a>
-                            <button type="submit" class="btn btn-primary">
+                            <button type="submit" class="btn btn-primary inline-flex items-center">
+                                <x-icon name="content-save-outline" size="text-sm" class="mr-2" />
                                 Atualizar Paciente
                             </button>
                         </div>
@@ -267,3 +272,5 @@
 
 
 @endsection
+
+

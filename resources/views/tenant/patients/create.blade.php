@@ -16,14 +16,17 @@
             <nav class="min-w-0 flex-1" aria-label="breadcrumb">
                 <ol class="flex flex-wrap items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
                     <li>
-                        <a href="{{ workspace_route('tenant.dashboard') }}" class="hover:text-blue-600 dark:hover:text-white">Dashboard</a>
+                        <a href="{{ workspace_route('tenant.dashboard') }}" class="inline-flex items-center gap-2 text-gray-700 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white">
+                            <x-icon name="home-outline" size="text-base" />
+                            Dashboard
+                        </a>
                     </li>
                     <li class="flex items-center gap-2">
-                        <x-icon name="mdi-chevron-right" size="text-sm" class="text-gray-400" />
-                        <a href="{{ workspace_route('tenant.patients.index') }}" class="hover:text-blue-600 dark:hover:text-white">Pacientes</a>
+                        <x-icon name="chevron-right" size="text-sm" class="text-gray-400" />
+                        <a href="{{ workspace_route('tenant.patients.index') }}" class="text-gray-700 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white">Pacientes</a>
                     </li>
                     <li class="flex items-center gap-2">
-                        <x-icon name="mdi-chevron-right" size="text-sm" class="text-gray-400" />
+                        <x-icon name="chevron-right" size="text-sm" class="text-gray-400" />
                         <span class="text-gray-900 dark:text-white font-semibold">Criar</span>
                     </li>
                 </ol>
@@ -233,10 +236,12 @@
                 </div>
 
                 <div class="flex flex-col gap-3 pt-6 border-t border-gray-200 dark:border-gray-700 sm:flex-row sm:items-center sm:justify-between">
-                    <a href="{{ workspace_route('tenant.patients.index') }}" class="btn btn-outline">
+                    <a href="{{ workspace_route('tenant.patients.index') }}" class="btn btn-outline inline-flex items-center">
+                        <x-icon name="arrow-left" size="text-sm" class="mr-2" />
                         Voltar
                     </a>
-                    <button type="submit" class="btn btn-primary">
+                    <button type="submit" class="btn btn-primary inline-flex items-center">
+                        <x-icon name="content-save-outline" size="text-sm" class="mr-2" />
                         Salvar Paciente
                     </button>
                 </div>
@@ -247,3 +252,5 @@
 
 
 @endsection
+
+

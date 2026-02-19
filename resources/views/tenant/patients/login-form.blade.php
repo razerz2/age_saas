@@ -13,14 +13,17 @@
             <nav class="min-w-0 flex-1" aria-label="breadcrumb">
                 <ol class="flex flex-wrap items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
                     <li>
-                        <a href="{{ workspace_route('tenant.dashboard') }}" class="hover:text-blue-600 dark:hover:text-white">Dashboard</a>
+                        <a href="{{ workspace_route('tenant.dashboard') }}" class="inline-flex items-center gap-2 text-gray-700 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white">
+                            <x-icon name="home-outline" size="text-base" />
+                            Dashboard
+                        </a>
                     </li>
                     <li class="flex items-center gap-2">
-                        <x-icon name="mdi-chevron-right" size="text-sm" class="text-gray-400" />
-                        <a href="{{ workspace_route('tenant.patients.index') }}" class="hover:text-blue-600 dark:hover:text-white">Pacientes</a>
+                        <x-icon name="chevron-right" size="text-sm" class="text-gray-400" />
+                        <a href="{{ workspace_route('tenant.patients.index') }}" class="text-gray-700 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white">Pacientes</a>
                     </li>
                     <li class="flex items-center gap-2">
-                        <x-icon name="mdi-chevron-right" size="text-sm" class="text-gray-400" />
+                        <x-icon name="chevron-right" size="text-sm" class="text-gray-400" />
                         <span class="text-gray-900 dark:text-white font-semibold">Gerenciar Login</span>
                     </li>
                 </ol>
@@ -32,7 +35,7 @@
         <div class="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
             <div class="flex">
                 <div class="flex-shrink-0">
-                    <x-icon name="mdi-check-circle-outline" size="text-lg" class="text-green-400" />
+                    <x-icon name="check-circle-outline" size="text-lg" class="text-green-400" />
                 </div>
                 <div class="ml-3">
                     <p class="text-sm text-green-700">{{ session('success') }}</p>
@@ -45,7 +48,7 @@
         <div class="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
             <div class="flex">
                 <div class="flex-shrink-0">
-                    <x-icon name="mdi-alert-circle-outline" size="text-lg" class="text-red-400" />
+                    <x-icon name="alert-circle-outline" size="text-lg" class="text-red-400" />
                 </div>
                 <div class="ml-3">
                     <div class="text-sm text-red-700">
@@ -66,7 +69,7 @@
             <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
                 <div class="p-6 border-b border-gray-200 dark:border-gray-700">
                     <h4 class="text-lg font-semibold text-gray-900 dark:text-white flex items-center">
-                        <x-icon name="mdi-account-outline" size="text-lg" class="mr-2 text-blue-600" />
+                        <x-icon name="account-outline" size="text-lg" class="mr-2 text-blue-600" />
                         Dados do Paciente
                     </h4>
                 </div>
@@ -92,7 +95,7 @@
             <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
                 <div class="p-6 border-b border-gray-200 dark:border-gray-700">
                     <h4 class="text-lg font-semibold text-gray-900 dark:text-white flex items-center">
-                        <x-icon name="mdi-key-outline" size="text-lg" class="mr-2 text-blue-600" />
+                        <x-icon name="key-outline" size="text-lg" class="mr-2 text-blue-600" />
                         {{ (isset($patient->login) && $patient->login) ? 'Editar Login' : 'Criar Login' }}
                     </h4>
                 </div>
@@ -132,7 +135,7 @@
                                         id="generatePassword" 
                                         class="btn btn-outline inline-flex items-center"
                                         title="Gerar senha aleatória">
-                                    <x-icon name="mdi-refresh" size="text-sm" class="mr-2" />
+                                    <x-icon name="refresh" size="text-sm" class="mr-2" />
                                     Gerar
                                 </button>
                             </div>
@@ -173,10 +176,12 @@
                         </div>
 
                         <div class="flex flex-col gap-3 pt-6 border-t border-gray-200 dark:border-gray-700 sm:flex-row sm:items-center sm:justify-between">
-                            <a href="{{ workspace_route('tenant.patients.index') }}" class="btn btn-outline">
+                            <a href="{{ workspace_route('tenant.patients.index') }}" class="btn btn-outline inline-flex items-center">
+                                <x-icon name="arrow-left" size="text-sm" class="mr-2" />
                                 Voltar
                             </a>
-                            <button type="submit" class="btn btn-primary">
+                            <button type="submit" class="btn btn-primary inline-flex items-center">
+                                <x-icon name="content-save-outline" size="text-sm" class="mr-2" />
                                 Salvar
                             </button>
                         </div>
@@ -186,3 +191,5 @@
         </div>
     </div>
 @endsection
+
+

@@ -15,17 +15,13 @@
                     <ol class="inline-flex items-center space-x-1 md:space-x-3">
                         <li class="inline-flex items-center">
                             <a href="{{ workspace_route('tenant.dashboard') }}" class="text-gray-700 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white inline-flex items-center">
-                                <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                                    <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"></path>
-                                </svg>
+                                <x-icon name="home-outline" class="w-4 h-4 mr-2" />
                                 Dashboard
                             </a>
                         </li>
                         <li>
                             <div class="flex items-center">
-                                <svg class="w-4 h-4 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
-                                </svg>
+                                <x-icon name="chevron-right" class="w-4 h-4 text-gray-400" />
                                 <span class="ml-1 text-gray-500 dark:text-gray-400">Atendimento Médico</span>
                             </div>
                         </li>
@@ -39,9 +35,7 @@
         <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
             <div class="p-6 border-b border-gray-200 dark:border-gray-700">
                 <h4 class="text-xl font-semibold text-gray-900 dark:text-white flex items-center">
-                    <svg class="w-5 h-5 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.5a4.5 4.5 0 110 9 4.5 4.5 0 010-9zM4.5 20.25a7.5 7.5 0 0115 0"></path>
-                    </svg>
+                    <x-icon name="stethoscope" class="w-5 h-5 mr-2 text-blue-600" />
                     Iniciar Atendimento
                 </h4>
             </div>
@@ -94,10 +88,8 @@
                     </div>
 
                     <div class="flex justify-end">
-                        <button type="submit" class="px-6 py-3 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors flex items-center text-lg font-medium">
-                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3l14 9-14 9V3z"></path>
-                            </svg>
+                        <button type="submit" class="btn btn-primary">
+                            <x-icon name="play" class="w-5 h-5 mr-2" />
                             Iniciar Atendimento
                         </button>
                     </div>
@@ -108,5 +100,4 @@
 </div>
 
 @endsection
-
 

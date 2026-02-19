@@ -14,21 +14,20 @@
         <nav class="flex mt-3" aria-label="breadcrumb">
             <ol class="inline-flex items-center space-x-1 md:space-x-3 text-sm text-gray-500 dark:text-gray-400">
                 <li class="inline-flex items-center">
-                    <a href="{{ workspace_route('tenant.dashboard') }}" class="hover:text-gray-900 dark:hover:text-white">Dashboard</a>
+                    <a href="{{ workspace_route('tenant.dashboard') }}" class="inline-flex items-center gap-2 hover:text-gray-900 dark:hover:text-white">
+                        <x-icon name="home-outline" class="w-4 h-4" />
+                        Dashboard
+                    </a>
                 </li>
                 <li>
                     <div class="flex items-center">
-                        <svg class="w-4 h-4 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
-                        </svg>
+                        <x-icon name="chevron-right" class="w-4 h-4 text-gray-400" />
                         <a href="{{ workspace_route('tenant.business-hours.index') }}" class="ml-1 hover:text-gray-900 dark:hover:text-white">Horários Comerciais</a>
                     </div>
                 </li>
                 <li>
                     <div class="flex items-center">
-                        <svg class="w-4 h-4 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
-                        </svg>
+                        <x-icon name="chevron-right" class="w-4 h-4 text-gray-400" />
                         <span class="ml-1 text-gray-500 dark:text-gray-400">Editar</span>
                     </div>
                 </li>
@@ -117,16 +116,12 @@
                 </div>
 
                 <div class="flex flex-col gap-3 pt-3 border-t border-gray-200 dark:border-gray-700 sm:flex-row sm:items-center sm:justify-between flex-wrap">
-                    <a href="{{ workspace_route('tenant.business-hours.index') }}" class="btn-patient-secondary">
-                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
-                        </svg>
+                    <a href="{{ workspace_route('tenant.business-hours.index') }}" class="btn btn-outline">
+                        <x-icon name="arrow-left" class="w-4 h-4 mr-2" />
                         Cancelar
                     </a>
-                    <button type="submit" class="btn-patient-primary">
-                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V2"></path>
-                        </svg>
+                    <button type="submit" class="btn btn-primary">
+                        <x-icon name="content-save-outline" class="w-4 h-4 mr-2" />
                         Atualizar Horário Comercial
                     </button>
                 </div>

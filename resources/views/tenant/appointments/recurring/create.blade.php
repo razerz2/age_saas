@@ -11,14 +11,14 @@
             <nav class="min-w-0 flex-1" aria-label="breadcrumb">
                 <ol class="flex flex-wrap items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
                     <li>
-                        <a href="{{ workspace_route('tenant.dashboard') }}" class="inline-flex items-center gap-2 text-gray-700 hover:text-blue-600 dark:text-gray-300 dark:hover:text-white">
+                        <a href="{{ workspace_route('tenant.dashboard') }}" class="inline-flex items-center gap-2 text-gray-700 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white">
                             <x-icon name="home-outline" size="text-base" />
                             Dashboard
                         </a>
                     </li>
                     <li class="flex items-center gap-2">
                         <x-icon name="chevron-right" size="text-sm" class="text-gray-400" />
-                        <a href="{{ workspace_route('tenant.recurring-appointments.index') }}" class="text-gray-700 hover:text-blue-600 dark:text-gray-300 dark:hover:text-white">Agendamentos Recorrentes</a>
+                        <a href="{{ workspace_route('tenant.recurring-appointments.index') }}" class="text-gray-700 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white">Agendamentos Recorrentes</a>
                     </li>
                     <li class="flex items-center gap-2">
                         <x-icon name="chevron-right" size="text-sm" class="text-gray-400" />
@@ -108,7 +108,7 @@
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
                         <div>
                             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                <x-icon name="check-circle-outline" size="text-sm" class="inline mr-1" />
+                                <x-icon name="check-bold" size="text-sm" class="inline mr-1" />
                                 Especialidade
                             </label>
                             <select name="specialty_id" id="specialty_id" data-initial-value="{{ old('specialty_id') }}" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white @error('specialty_id') border-red-500 @enderror" disabled>
@@ -145,7 +145,7 @@
 
                         <div>
                             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                <x-icon name="check-circle-outline" size="text-sm" class="inline mr-1" />
+                                <x-icon name="check-bold" size="text-sm" class="inline mr-1" />
                                 Tipo de Término <span class="text-red-500">*</span>
                             </label>
                             <select name="end_type" id="end_type" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white @error('end_type') border-red-500 @enderror" required>
@@ -215,11 +215,11 @@
 
                 <!-- Botões de Ação -->
                 <div class="flex items-center justify-between pt-6 border-t border-gray-200 dark:border-gray-700">
-                    <a href="{{ workspace_route('tenant.recurring-appointments.index') }}" class="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors">
+                    <a href="{{ workspace_route('tenant.recurring-appointments.index') }}" class="btn btn-outline">
                         <x-icon name="arrow-left" size="text-sm" class="mr-2" />
                         Cancelar
                     </a>
-                    <button type="submit" class="inline-flex items-center px-6 py-3 bg-primary text-white hover:bg-primary/90 font-medium rounded-md transition-colors">
+                    <button type="submit" class="btn btn-primary">
                         <x-icon name="inbox-arrow-down-outline" size="text-base" class="mr-2" />
                         Criar Agendamento Recorrente
                     </button>

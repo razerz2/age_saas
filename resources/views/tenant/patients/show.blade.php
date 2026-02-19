@@ -6,26 +6,26 @@
 @section('content')
 <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6">
     <!-- Page Header -->
-    <div class="mb-6">
+    <div class="page-header mb-6">
         <nav class="flex mb-4" aria-label="Breadcrumb">
             <ol class="inline-flex items-center space-x-1 md:space-x-3">
                 <li class="inline-flex items-center">
-                    <a href="{{ workspace_route('tenant.dashboard') }}" class="inline-flex items-center text-sm font-medium text-gray-700 hover:text-blue-600 dark:text-gray-400 dark:hover:text-white">
-                        <x-icon name="mdi-home-outline" size="text-base" class="mr-2" />
+                    <a href="{{ workspace_route('tenant.dashboard') }}" class="inline-flex items-center text-sm font-medium text-gray-700 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white">
+                        <x-icon name="home-outline" size="text-base" class="mr-2" />
                         Dashboard
                     </a>
                 </li>
                 <li>
                     <div class="flex items-center">
-                        <x-icon name="mdi-chevron-right" size="text-sm" class="text-gray-400" />
-                        <a href="{{ workspace_route('tenant.patients.index') }}" class="ml-1 text-sm font-medium text-gray-700 hover:text-blue-600 dark:text-gray-400 dark:hover:text-white">
+                        <x-icon name="chevron-right" size="text-sm" class="text-gray-400" />
+                        <a href="{{ workspace_route('tenant.patients.index') }}" class="ml-1 text-sm font-medium text-gray-700 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white">
                             Pacientes
                         </a>
                     </div>
                 </li>
                 <li>
                     <div class="flex items-center">
-                        <x-icon name="mdi-chevron-right" size="text-sm" class="text-gray-400" />
+                        <x-icon name="chevron-right" size="text-sm" class="text-gray-400" />
                         <span class="ml-1 text-sm font-medium text-gray-500 dark:text-gray-400">Detalhes</span>
                     </div>
                 </li>
@@ -35,7 +35,7 @@
         <div class="flex items-center justify-between">
             <div>
                 <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Detalhes do Paciente</h1>
-                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Visualize as informações do paciente</p>
+                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Visualize as Informações do paciente</p>
             </div>
         </div>
     </div>
@@ -44,12 +44,12 @@
     <div class="mb-6">
         @if ($patient->is_active)
             <span class="inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400">
-                <x-icon name="mdi-check-circle-outline" size="text-sm" class="mr-2" />
+                <x-icon name="check-circle-outline" size="text-sm" class="mr-2" />
                 Ativo
             </span>
         @else
             <span class="inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400">
-                <x-icon name="mdi-close-circle-outline" size="text-sm" class="mr-2" />
+                <x-icon name="close-circle-outline" size="text-sm" class="mr-2" />
                 Inativo
             </span>
         @endif
@@ -59,7 +59,7 @@
     <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
         <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
             <div class="flex items-center">
-                <x-icon name="mdi-account-outline" size="text-lg" class="text-blue-600 mr-2" />
+                <x-icon name="account-outline" size="text-lg" class="text-blue-600 mr-2" />
                 <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Informações do Paciente</h2>
             </div>
         </div>
@@ -68,7 +68,7 @@
             <!-- Informações Pessoais -->
             <div>
                 <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4 flex items-center">
-                    <x-icon name="mdi-information-outline" size="text-lg" class="text-blue-600 mr-2" />
+                    <x-icon name="information-outline" size="text-lg" class="text-blue-600 mr-2" />
                     Informações Pessoais
                 </h3>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -121,7 +121,7 @@
             <!-- Informações de Contato -->
             <div>
                 <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4 flex items-center">
-                    <x-icon name="mdi-phone-outline" size="text-lg" class="text-blue-600 mr-2" />
+                    <x-icon name="phone-outline" size="text-lg" class="text-blue-600 mr-2" />
                     Informações de Contato
                 </h3>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -160,7 +160,7 @@
             @if($patient->address)
             <div>
                 <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4 flex items-center">
-                    <x-icon name="mdi-map-marker-outline" size="text-lg" class="text-blue-600 mr-2" />
+                    <x-icon name="map-marker-outline" size="text-lg" class="text-blue-600 mr-2" />
                     Endereço
                 </h3>
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -215,14 +215,14 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div class="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4 border border-gray-200 dark:border-gray-600">
                         <label class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider block mb-2">
-                            <x-icon name="mdi-calendar-month-outline" size="text-sm" class="inline mr-1" />
+                            <x-icon name="calendar-month-outline" size="text-sm" class="inline mr-1" />
                             Criado em
                         </label>
                         <p class="text-sm font-medium text-gray-900 dark:text-white">{{ $patient->created_at->format('d/m/Y H:i') }}</p>
                     </div>
                     <div class="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4 border border-gray-200 dark:border-gray-600">
                         <label class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider block mb-2">
-                            <x-icon name="mdi-sync" size="text-sm" class="inline mr-1" />
+                            <x-icon name="sync" size="text-sm" class="inline mr-1" />
                             Atualizado em
                         </label>
                         <p class="text-sm font-medium text-gray-900 dark:text-white">{{ $patient->updated_at->format('d/m/Y H:i') }}</p>
@@ -232,14 +232,14 @@
             <div class="flex items-center justify-between flex-nowrap mt-6 border-t pt-4">
                 <a href="{{ workspace_route('tenant.patients.index') }}"
                    class="btn btn-outline inline-flex items-center">
-                    <x-icon name="mdi-arrow-left" size="text-sm" class="mr-2" />
+                    <x-icon name="arrow-left" size="text-sm" class="mr-2" />
                     Voltar
                 </a>
                 <div class="flex items-center gap-3">
                     @can('patients.update')
                         <a href="{{ workspace_route('tenant.patients.edit', $patient->id) }}"
                            class="btn btn-primary inline-flex items-center">
-                            <x-icon name="mdi-pencil-outline" size="text-sm" class="mr-2" />
+                            <x-icon name="pencil-outline" size="text-sm" class="mr-2" />
                             Editar
                         </a>
                     @endcan
@@ -253,7 +253,7 @@
                         @csrf
                         @method('DELETE')
                         <button type="submit" class="btn btn-danger inline-flex items-center">
-                            <x-icon name="mdi-trash-can-outline" size="text-sm" class="mr-2" />
+                            <x-icon name="trash-can-outline" size="text-sm" class="mr-2" />
                             Excluir
                         </button>
                     </form>
@@ -264,3 +264,5 @@
 </div>
 
 @endsection
+
+

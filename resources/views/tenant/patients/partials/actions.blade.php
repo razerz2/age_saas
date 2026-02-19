@@ -4,7 +4,7 @@
         title="Ver detalhes"
         color="blue"
         data-stop-propagation="true">
-        <x-icon name="mdi-eye-outline" size="text-xs" />
+        <x-icon name="eye-outline" size="text-xs" />
     </x-table-action-button>
 
     <x-table-action-button 
@@ -12,7 +12,7 @@
         title="Editar"
         color="amber"
         data-stop-propagation="true">
-        <x-icon name="mdi-pencil-outline" size="text-xs" />
+        <x-icon name="pencil-outline" size="text-xs" />
     </x-table-action-button>
 
     <x-table-action-button 
@@ -20,6 +20,7 @@
         title="{{ isset($patient->login) ? 'Editar login' : 'Criar login' }}"
         color="purple"
         data-stop-propagation="true">
-        <x-icon name="mdi-key-outline" size="text-xs" />
+        <x-icon name="key-outline" size="text-xs" />
     </x-table-action-button>
 </div>
+

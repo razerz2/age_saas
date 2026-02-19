@@ -12,14 +12,17 @@
             <nav class="min-w-0 flex-1" aria-label="breadcrumb">
                 <ol class="flex flex-wrap items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
                     <li>
-                        <a href="{{ workspace_route('tenant.dashboard') }}" class="hover:text-blue-600 dark:hover:text-white">Dashboard</a>
+                        <a href="{{ workspace_route('tenant.dashboard') }}" class="inline-flex items-center gap-2 text-gray-700 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white">
+                            <x-icon name="home-outline" size="text-base" />
+                            Dashboard
+                        </a>
                     </li>
                     <li class="flex items-center gap-2">
-                        <x-icon name="mdi-chevron-right" size="text-sm" class="text-gray-400" />
-                        <a href="{{ workspace_route('tenant.patients.index') }}" class="hover:text-blue-600 dark:hover:text-white">Pacientes</a>
+                        <x-icon name="chevron-right" size="text-sm" class="text-gray-400" />
+                        <a href="{{ workspace_route('tenant.patients.index') }}" class="text-gray-700 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white">Pacientes</a>
                     </li>
                     <li class="flex items-center gap-2">
-                        <x-icon name="mdi-chevron-right" size="text-sm" class="text-gray-400" />
+                        <x-icon name="chevron-right" size="text-sm" class="text-gray-400" />
                         <span class="text-gray-900 dark:text-white font-semibold">Informações de Login</span>
                     </li>
                 </ol>
@@ -31,7 +34,7 @@
         <div class="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
             <div class="flex">
                 <div class="flex-shrink-0">
-                    <x-icon name="mdi-check-circle-outline" size="text-lg" class="text-green-400" />
+                    <x-icon name="check-circle-outline" size="text-lg" class="text-green-400" />
                 </div>
                 <div class="ml-3">
                     <p class="text-sm text-green-700">{{ session('success') }}</p>
@@ -44,7 +47,7 @@
         <div class="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
             <div class="flex">
                 <div class="flex-shrink-0">
-                    <x-icon name="mdi-alert-circle-outline" size="text-lg" class="text-red-400" />
+                    <x-icon name="alert-circle-outline" size="text-lg" class="text-red-400" />
                 </div>
                 <div class="ml-3">
                     <div class="text-sm text-red-700">
@@ -65,7 +68,7 @@
             <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
                 <div class="p-6 border-b border-gray-200 dark:border-gray-700">
                     <h4 class="text-lg font-semibold text-gray-900 dark:text-white flex items-center">
-                        <x-icon name="mdi-account-outline" size="text-lg" class="mr-2 text-blue-600" />
+                        <x-icon name="account-outline" size="text-lg" class="mr-2 text-blue-600" />
                         Dados do Paciente
                     </h4>
                 </div>
@@ -95,14 +98,14 @@
             <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
                 <div class="p-6 border-b border-gray-200 dark:border-gray-700">
                     <h4 class="text-lg font-semibold text-gray-900 dark:text-white flex items-center">
-                        <x-icon name="mdi-key-outline" size="text-lg" class="mr-2 text-blue-600" />
+                        <x-icon name="key-outline" size="text-lg" class="mr-2 text-blue-600" />
                         Informações de Acesso ao Portal
                     </h4>
                 </div>
                 <div class="p-6">
                     <div class="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4 mb-6">
                         <h5 class="text-sm font-semibold text-blue-900 dark:text-blue-100 mb-4 flex items-center">
-                            <x-icon name="mdi-information-outline" size="text-sm" class="mr-2" />
+                            <x-icon name="information-outline" size="text-sm" class="mr-2" />
                             Credenciais de Acesso
                         </h5>
                         
@@ -119,7 +122,7 @@
                                             class="inline-flex items-center justify-center rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
                                             data-copy-target="portalUrl" 
                                             title="Copiar URL">
-                                        <x-icon name="mdi-content-copy" size="text-sm" />
+                                        <x-icon name="content-copy" size="text-sm" />
                                     </button>
                                 </div>
                             </div>
@@ -136,7 +139,7 @@
                                             class="inline-flex items-center justify-center rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
                                             data-copy-target="loginEmail" 
                                             title="Copiar e-mail">
-                                        <x-icon name="mdi-content-copy" size="text-sm" />
+                                        <x-icon name="content-copy" size="text-sm" />
                                     </button>
                                 </div>
                             </div>
@@ -154,17 +157,17 @@
                                                 class="inline-flex items-center justify-center rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
                                                 data-toggle-password-target="loginPassword" 
                                                 title="Mostrar/Ocultar senha">
-                                            <x-icon name="mdi-eye-outline" size="text-sm" id="toggleIcon" />
+                                            <x-icon name="eye-outline" size="text-sm" id="toggleIcon" />
                                         </button>
                                         <button type="button" 
                                                 class="inline-flex items-center justify-center rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
                                                 data-copy-target="loginPassword" 
                                                 title="Copiar senha">
-                                            <x-icon name="mdi-content-copy" size="text-sm" />
+                                            <x-icon name="content-copy" size="text-sm" />
                                         </button>
                                     </div>
                                     <p class="mt-2 text-sm text-yellow-600 dark:text-yellow-400">
-                                        <x-icon name="mdi-alert" size="text-sm" class="inline mr-1" />
+                                        <x-icon name="alert" size="text-sm" class="inline mr-1" />
                                         Anote esta senha! Ela não será exibida novamente.
                                     </p>
                                 </div>
@@ -173,7 +176,7 @@
                                     <label class="text-sm font-medium text-gray-700 dark:text-gray-300">Senha</label>
                                     <div class="bg-yellow-50 dark:bg-yellow-900/20 rounded-lg p-3 mt-2">
                                         <div class="flex items-center text-sm text-yellow-800 dark:text-yellow-200">
-                                            <x-icon name="mdi-lock-outline" size="text-sm" class="mr-2" />
+                                            <x-icon name="lock-outline" size="text-sm" class="mr-2" />
                                             A senha não pode ser visualizada por questões de segurança.
                                         </div>
                                         <p class="text-xs text-yellow-700 dark:text-yellow-300 mt-1">Para redefinir a senha, edite o login do paciente.</p>
@@ -185,12 +188,12 @@
                                 <label class="text-sm font-medium text-gray-700 dark:text-gray-300">Status</label>
                                 @if($patient->login->is_active)
                                     <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400">
-                                        <x-icon name="mdi-check-circle-outline" size="text-xs" class="mr-1" />
+                                        <x-icon name="check-circle-outline" size="text-xs" class="mr-1" />
                                         Acesso Ativo
                                     </span>
                                 @else
                                     <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400">
-                                        <x-icon name="mdi-alert" size="text-xs" class="mr-1" />
+                                        <x-icon name="alert" size="text-xs" class="mr-1" />
                                         Acesso Bloqueado
                                     </span>
                                 @endif
@@ -205,7 +208,7 @@
         <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 mt-6">
             <div class="p-6 border-b border-gray-200 dark:border-gray-700">
                 <h4 class="text-lg font-semibold text-gray-900 dark:text-white flex items-center">
-                    <x-icon name="mdi-email-outline" size="text-lg" class="mr-2 text-blue-600" />
+                    <x-icon name="email-outline" size="text-lg" class="mr-2 text-blue-600" />
                     Enviar Informações de Acesso
                 </h4>
                 <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">Envie as credenciais de acesso ao paciente por e-mail ou WhatsApp.</p>
@@ -224,11 +227,11 @@
                                 class="btn btn-primary inline-flex items-center"
                                 data-confirm-submit="true"
                                 data-confirm-title="Enviar por e-mail"
-                                data-confirm-message="Deseja enviar as informações de acesso por e-mail?"
+                                data-confirm-message="Deseja enviar as Informações de acesso por e-mail?"
                                 data-confirm-confirm-text="Enviar"
                                 data-confirm-cancel-text="Cancelar"
                                 data-confirm-type="warning">
-                            <x-icon name="mdi-email-outline" size="text-sm" class="mr-2" />
+                            <x-icon name="email-outline" size="text-sm" class="mr-2" />
                             Enviar por E-mail
                         </button>
                     </form>
@@ -246,11 +249,11 @@
                                     class="btn btn-primary inline-flex items-center"
                                     data-confirm-submit="true"
                                     data-confirm-title="Enviar por WhatsApp"
-                                    data-confirm-message="Deseja enviar as informações de acesso por WhatsApp?"
+                                    data-confirm-message="Deseja enviar as Informações de acesso por WhatsApp?"
                                     data-confirm-confirm-text="Enviar"
                                     data-confirm-cancel-text="Cancelar"
                                     data-confirm-type="warning">
-                                <x-icon name="mdi-whatsapp" size="text-sm" class="mr-2" />
+                                <x-icon name="whatsapp" size="text-sm" class="mr-2" />
                                 Enviar por WhatsApp
                             </button>
                         </form>
@@ -259,7 +262,7 @@
                                 disabled 
                                 class="btn btn-outline opacity-60 cursor-not-allowed inline-flex items-center"
                                 title="Paciente não possui telefone cadastrado">
-                            <x-icon name="mdi-whatsapp" size="text-sm" class="mr-2" />
+                            <x-icon name="whatsapp" size="text-sm" class="mr-2" />
                             Enviar por WhatsApp
                         </button>
                         <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Adicione um telefone ao paciente para enviar por WhatsApp.</p>
@@ -267,7 +270,7 @@
 
                     <a href="{{ workspace_route('tenant.patients.index') }}" 
                        class="btn btn-outline inline-flex items-center">
-                        <x-icon name="mdi-arrow-left" size="text-sm" class="mr-2" />
+                        <x-icon name="arrow-left" size="text-sm" class="mr-2" />
                         Voltar para Lista
                     </a>
                 </div>
@@ -275,3 +278,5 @@
         </div>
     </div>
 @endsection
+
+
