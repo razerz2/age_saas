@@ -300,10 +300,7 @@
                             $doctors = \App\Models\Tenant\Doctor::with('user')->get();
                             $oldDoctorIds = old('doctor_ids', []);
                         @endphp
-                        <div class="flex flex-wrap gap-2 mb-4">
-                            <button type="button" class="btn-patient-secondary" data-modules-select-all>Selecionar todos</button>
-                            <button type="button" class="btn-patient-secondary" data-modules-clear>Limpar seleção</button>
-                        </div>
+        
                         <div class="border border-gray-200 dark:border-gray-600 rounded-lg p-4 bg-gray-50 dark:bg-gray-700">
                             <div class="flex flex-wrap gap-4">
                                 @foreach($doctors as $doctor)
@@ -344,6 +341,10 @@
                                     </p>
                                 </div>
                             </div>
+                        </div>
+                        <div class="flex flex-wrap gap-2 mb-4">
+                            <button type="button" class="btn-patient-secondary" data-modules-select-all>Selecionar todos</button>
+                            <button type="button" class="btn-patient-secondary" data-modules-clear>Limpar seleção</button>
                         </div>
                         @php
                             // Buscar apenas módulos disponíveis (no plano e habilitados na tenant)
