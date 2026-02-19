@@ -1,4 +1,33 @@
 /* Tenant common styles (migrated from public/css/tenant-common.css) */
+@import "./components/buttons.css";
+@import "./pages/dashboard.css";
+@import "./pages/appointments.css";
+@import "./pages/appointment-types.css";
+@import "./pages/business-hours.css";
+@import "./pages/calendars.css";
+@import "./pages/doctor-settings.css";
+@import "./pages/auth.css";
+@import "./pages/forms.css";
+@import "./pages/doctors.css";
+@import "./pages/integrations.css";
+@import "./pages/medical_appointments.css";
+@import "./pages/oauth-accounts.css";
+@import "./pages/patients.css";
+@import "./pages/form_responses.css";
+@import "./pages/notifications.css";
+@import "./pages/online_appointments.css";
+@import "./pages/plan-change-request.css";
+@import "./pages/profile.css";
+@import "./pages/public.css";
+@import "./pages/public-appointments.css";
+@import "./pages/reports.css";
+@import "./pages/responses.css";
+@import "./pages/settings.css";
+@import "./pages/specialties.css";
+@import "./pages/subscription.css";
+@import "./pages/users.css";
+@import "./pages/user-doctor-permissions.css";
+
 .form-group label {
     font-weight: 600;
     color: #2c3e50;
@@ -64,32 +93,3 @@ h5.text-primary {
     width: 100%;
     box-sizing: border-box;
 }
-
-@import './pages/dashboard.css';
-@import './pages/appointments.css';
-@import './pages/appointment-types.css';
-@import './pages/business-hours.css';
-@import './pages/calendars.css';
-@import './pages/doctor-settings.css';
-@import './pages/auth.css';
-@import './pages/forms.css';
-@import './pages/doctors.css';
-@import './pages/integrations.css';
-@import './pages/medical_appointments.css';
-@import './pages/oauth-accounts.css';
-@import './pages/patients.css';
-@import './pages/form_responses.css';
-@import './pages/notifications.css';
-@import './pages/online_appointments.css';
-@import './pages/plan-change-request.css';
-@import './pages/profile.css';
-@import './pages/public.css';
-@import './pages/public-appointments.css';
-@import './pages/reports.css';
-@import './pages/responses.css';
-@import './pages/settings.css';
-@import './pages/specialties.css';
-@import './pages/subscription.css';
-@import './pages/users.css';
-@import './pages/user-doctor-permissions.css';
-

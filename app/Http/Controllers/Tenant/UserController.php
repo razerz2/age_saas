@@ -12,6 +12,7 @@ use App\Http\Requests\Tenant\ChangePasswordUserRequest;
 use App\Traits\HasFeatureAccess;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
@@ -51,10 +52,16 @@ class UserController extends Controller
             
             if ($maxLimit !== null) {
                 // Conta quantos usuários já existem com este role
-                $currentCount = User::where('role', $role)
-                    ->where(function ($query) {
+                $usersQuery = User::where('role', $role);
+
+                // Tenants antigos podem ainda nÃ£o ter a coluna `is_system` aplicada.
+                if (Schema::connection((new User())->getConnectionName())->hasColumn('users', 'is_system')) {
+                    $usersQuery->where(function ($query) {
                         $query->whereNull('is_system')->orWhere('is_system', false);
-                    })->count();
+                    });
+                }
+
+                $currentCount = $usersQuery->count();
                 
                 if ($currentCount >= $maxLimit) {
                     $roleLabel = match ($role) {

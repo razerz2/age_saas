@@ -431,10 +431,10 @@ function bindRoleModules() {
         }
         if (role === 'doctor') {
             modulesInfoText.innerHTML =
-                `<strong>Nota:</strong> Os mÃ³dulos foram prÃ©-selecionados conforme as configuraÃ§Ãµes padrÃ£o para mÃ©dicos em <a href="${settingsUrl}" target="_blank" class="text-blue-600 underline hover:text-blue-800">ConfiguraÃ§Ãµes â†’ UsuÃ¡rios & PermissÃµes</a>. VocÃª pode ajustar manualmente se necessÃ¡rio.`;
+                `<strong>Nota:</strong> Os módulos foram pré-selecionados conforme as configurações padrão para médicos em <a href="${settingsUrl}" target="_blank" class="text-blue-600 underline hover:text-blue-800">Configurações → Usuários & Permissões</a>. Você pode ajustar manualmente se necessário.`;
         } else {
             modulesInfoText.innerHTML =
-                `<strong>Nota:</strong> Os mÃ³dulos foram prÃ©-selecionados conforme as configuraÃ§Ãµes padrÃ£o para usuÃ¡rios comuns em <a href="${settingsUrl}" target="_blank" class="text-blue-600 underline hover:text-blue-800">ConfiguraÃ§Ãµes â†’ UsuÃ¡rios & PermissÃµes</a>. VocÃª pode ajustar manualmente se necessÃ¡rio.`;
+                `<strong>Nota:</strong> Os módulos foram pré-selecionados conforme as configurações padrão para usuários comuns em <a href="${settingsUrl}" target="_blank" class="text-blue-600 underline hover:text-blue-800">Configurações → Usuários & Permissões</a>. Você pode ajustar manualmente se necessário.`;
         }
     };
 
