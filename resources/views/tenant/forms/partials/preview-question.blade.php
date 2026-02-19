@@ -8,7 +8,7 @@
     
     @if($question->help_text)
         <div class="help-text">
-            <i class="mdi mdi-information-outline me-1"></i>
+            <x-icon name="information-outline" class=" me-1" />
             {{ $question->help_text }}
         </div>
     @endif
@@ -68,7 +68,7 @@
     @endif
 
     <small class="text-muted d-block">
-        <i class="mdi mdi-tag-outline me-1"></i>
+        <x-icon name="tag-outline" class=" me-1" />
         Tipo: 
         @switch($question->type)
             @case('text')

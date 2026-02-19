@@ -7,7 +7,7 @@
 
     <div class="page-header">
         <h3 class="page-title">
-            <i class="mdi mdi-file-document-check text-primary me-2"></i>
+            <x-icon name="file-document-check" class=" text-primary me-2" />
             Detalhes da Resposta
         </h3>
 
@@ -31,17 +31,17 @@
                     {{-- Header do Card --}}
                     <div class="d-flex justify-content-between align-items-center mb-4">
                         <h4 class="card-title mb-0">
-                            <i class="mdi mdi-file-document text-primary me-2"></i>
+                            <x-icon name="file-document" class=" text-primary me-2" />
                             Informações da Resposta
                         </h4>
                         <div class="flex items-center justify-end gap-3 flex-nowrap">
                             <x-tailadmin-button variant="secondary" size="sm" href="{{ workspace_route('tenant.responses.edit', $response->id) }}"
                                 class="inline-flex items-center gap-2 border-warning text-warning bg-warning/10 hover:bg-warning/20 dark:bg-warning/20 dark:hover:bg-warning/30 dark:text-warning">
-                                <i class="mdi mdi-pencil"></i> Editar
+                                <x-icon name="pencil" class="" /> Editar
                             </x-tailadmin-button>
                             <x-tailadmin-button variant="secondary" size="sm" href="{{ workspace_route('tenant.responses.index') }}"
                                 class="inline-flex items-center gap-2 bg-transparent border-gray-300 text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-white/5">
-                                <i class="mdi mdi-arrow-left"></i> Voltar
+                                <x-icon name="arrow-left" class="" /> Voltar
                             </x-tailadmin-button>
                         </div>
                     </div>
@@ -50,25 +50,25 @@
                     <div class="mb-4">
                         @if($response->status == 'submitted')
                             <span class="badge bg-success px-3 py-2">
-                                <i class="mdi mdi-check-circle me-1"></i> Enviado
+                                <x-icon name="check-circle" class=" me-1" /> Enviado
                             </span>
                         @else
                             <span class="badge bg-warning px-3 py-2">
-                                <i class="mdi mdi-clock-outline me-1"></i> Pendente
+                                <x-icon name="clock-outline" class=" me-1" /> Pendente
                             </span>
                         @endif
                     </div>
 
                     {{-- Informações Gerais --}}
                     <h5 class="text-primary mb-3">
-                        <i class="mdi mdi-information-outline me-2"></i>
+                        <x-icon name="information-outline" class=" me-2" />
                         Informações Gerais
                     </h5>
                     <div class="row mb-4">
                         <div class="col-md-6 mb-3">
                             <div class="border rounded p-3 h-100">
                                 <label class="text-muted small mb-1 d-block">
-                                    <i class="mdi mdi-identifier me-1"></i> ID
+                                    <x-icon name="identifier" class=" me-1" /> ID
                                 </label>
                                 <p class="mb-0 fw-semibold">{{ $response->id }}</p>
                             </div>
@@ -76,7 +76,7 @@
                         <div class="col-md-6 mb-3">
                             <div class="border rounded p-3 h-100">
                                 <label class="text-muted small mb-1 d-block">
-                                    <i class="mdi mdi-file-document-edit me-1"></i> Formulário
+                                    <x-icon name="file-document-edit" class=" me-1" /> Formulário
                                 </label>
                                 <p class="mb-0 fw-semibold">{{ $response->form->name ?? 'N/A' }}</p>
                             </div>
@@ -84,7 +84,7 @@
                         <div class="col-md-6 mb-3">
                             <div class="border rounded p-3 h-100">
                                 <label class="text-muted small mb-1 d-block">
-                                    <i class="mdi mdi-account-heart me-1"></i> Paciente
+                                    <x-icon name="account-heart" class=" me-1" /> Paciente
                                 </label>
                                 <p class="mb-0 fw-semibold">{{ $response->patient->full_name ?? 'N/A' }}</p>
                             </div>
@@ -92,7 +92,7 @@
                         <div class="col-md-6 mb-3">
                             <div class="border rounded p-3 h-100">
                                 <label class="text-muted small mb-1 d-block">
-                                    <i class="mdi mdi-calendar-clock me-1"></i> Agendamento
+                                    <x-icon name="calendar-clock" class=" me-1" /> Agendamento
                                 </label>
                                 <p class="mb-0 fw-semibold">{{ $response->appointment_id ?? 'N/A' }}</p>
                             </div>
@@ -100,7 +100,7 @@
                         <div class="col-md-6 mb-3">
                             <div class="border rounded p-3 h-100">
                                 <label class="text-muted small mb-1 d-block">
-                                    <i class="mdi mdi-calendar-check me-1"></i> Data de Envio
+                                    <x-icon name="calendar-check" class=" me-1" /> Data de Envio
                                 </label>
                                 <p class="mb-0 fw-semibold">
                                     {{ $response->submitted_at ? $response->submitted_at->format('d/m/Y H:i') : 'N/A' }}
@@ -111,7 +111,7 @@
 
                     {{-- Respostas --}}
                     <h5 class="text-primary mb-3">
-                        <i class="mdi mdi-text-box me-2"></i>
+                        <x-icon name="text-box" class=" me-2" />
                         Respostas
                     </h5>
                     
@@ -120,7 +120,7 @@
                             @foreach($response->form->sections->sortBy('position') as $section)
                                 <div class="border rounded p-3 mb-3">
                                     <h6 class="text-primary mb-3">
-                                        <i class="mdi mdi-folder-outline me-1"></i>
+                                        <x-icon name="folder-outline" class=" me-1" />
                                         {{ $section->title ?? 'Seção sem título' }}
                                     </h6>
                                     
@@ -136,7 +136,7 @@
                                                 <p class="mb-0">{{ $answer->value ?? 'N/A' }}</p>
                                             @else
                                                 <p class="mb-0 text-muted">
-                                                    <i class="mdi mdi-minus-circle me-1"></i>
+                                                    <x-icon name="minus-circle" class=" me-1" />
                                                     Não respondido
                                                 </p>
                                             @endif
@@ -158,7 +158,7 @@
                                             <p class="mb-0">{{ $answer->value ?? 'N/A' }}</p>
                                         @else
                                             <p class="mb-0 text-muted">
-                                                <i class="mdi mdi-minus-circle me-1"></i>
+                                                <x-icon name="minus-circle" class=" me-1" />
                                                 Não respondido
                                             </p>
                                         @endif
@@ -168,7 +168,7 @@
                         @endif
                     @else
                         <div class="alert alert-info">
-                            <i class="mdi mdi-information-outline me-2"></i>
+                            <x-icon name="information-outline" class=" me-2" />
                             Nenhuma resposta encontrada.
                         </div>
                     @endif

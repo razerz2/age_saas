@@ -31,7 +31,7 @@
                     <div class="d-flex align-items-center justify-content-between mb-4">
                         <div>
                             <h4 class="card-title mb-1">
-                                <i class="mdi mdi-file-document-edit text-primary me-2"></i>
+                                <x-icon name="file-document-edit" class=" text-primary me-2" />
                                 Editar Formulário
                             </h4>
                             <p class="card-description mb-0 text-muted">Atualize as informações do formulário abaixo</p>
@@ -45,14 +45,14 @@
                         {{-- Seção: Informações do Formulário --}}
                         <div class="mb-4">
                             <h5 class="mb-3 text-primary">
-                                <i class="mdi mdi-information-outline me-2"></i>
+                                <x-icon name="information-outline" class=" me-2" />
                                 Informações do Formulário
                             </h5>
                             <div class="row">
                                 <div class="col-md-12">
                                     <div class="form-group">
                                         <label class="fw-semibold">
-                                            <i class="mdi mdi-tag me-1"></i>
+                                            <x-icon name="tag" class=" me-1" />
                                             Nome <span class="text-danger">*</span>
                                         </label>
                                         <input type="text" class="form-control @error('name') is-invalid @enderror" 
@@ -68,7 +68,7 @@
                                 <div class="col-md-12">
                                     <div class="form-group">
                                         <label class="fw-semibold">
-                                            <i class="mdi mdi-text me-1"></i>
+                                            <x-icon name="text" class=" me-1" />
                                             Descrição
                                         </label>
                                         <textarea class="form-control @error('description') is-invalid @enderror" 
@@ -85,14 +85,14 @@
                         {{-- Seção: Associação --}}
                         <div class="mb-4">
                             <h5 class="mb-3 text-primary">
-                                <i class="mdi mdi-link me-2"></i>
+                                <x-icon name="link" class=" me-2" />
                                 Associação
                             </h5>
                             <div class="row">
                                 <div class="col-md-6">
                                     <div class="form-group">
                                         <label class="fw-semibold">
-                                            <i class="mdi mdi-doctor me-1"></i>
+                                            <x-icon name="doctor" class=" me-1" />
                                             Médico <span class="text-danger">*</span>
                                         </label>
                                         <select name="doctor_id" id="doctor_id" class="form-control @error('doctor_id') is-invalid @enderror" data-specialties-url-template="{{ workspace_route('tenant.forms.doctors.specialties', ['doctorId' => '__DOCTOR_ID__']) }}" required>
@@ -110,7 +110,7 @@
                                 <div class="col-md-6">
                                     <div class="form-group">
                                         <label class="fw-semibold">
-                                            <i class="mdi mdi-stethoscope me-1"></i>
+                                            <x-icon name="stethoscope" class=" me-1" />
                                             Especialidade
                                         </label>
                                         <select name="specialty_id" id="specialty_id" class="form-control @error('specialty_id') is-invalid @enderror" data-initial-specialty-id="{{ old('specialty_id', $form->specialty_id) }}">
@@ -128,14 +128,14 @@
                         {{-- Seção: Status --}}
                         <div class="mb-4">
                             <h5 class="mb-3 text-primary">
-                                <i class="mdi mdi-toggle-switch me-2"></i>
+                                <x-icon name="toggle-switch" class=" me-2" />
                                 Status
                             </h5>
                             <div class="row">
                                 <div class="col-md-6">
                                     <div class="form-group">
                                         <label class="fw-semibold">
-                                            <i class="mdi mdi-check-circle me-1"></i>
+                                            <x-icon name="check-circle" class=" me-1" />
                                             Status do Formulário
                                         </label>
                                         <select name="is_active" class="form-control @error('is_active') is-invalid @enderror">
@@ -152,16 +152,12 @@
 
                         {{-- Botões de Ação --}}
                         <div class="flex flex-col gap-3 pt-3 border-t border-gray-200 dark:border-gray-700 sm:flex-row sm:items-center sm:justify-between">
-                            <a href="{{ workspace_route('tenant.forms.index') }}" class="btn-patient-secondary">
-                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
-                                </svg>
+                            <a href="{{ workspace_route('tenant.forms.index') }}" class="btn btn-outline">
+                                <x-icon name="information-outline" class="w-4 h-4 mr-2" />
                                 Cancelar
                             </a>
-                            <button type="submit" class="btn-patient-primary">
-                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V2"></path>
-                                </svg>
+                            <button type="submit" class="btn btn-primary">
+                                <x-icon name="information-outline" class="w-4 h-4 mr-2" />
                                 Atualizar Formulário
                             </button>
                         </div>

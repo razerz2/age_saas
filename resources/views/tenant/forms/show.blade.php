@@ -7,7 +7,7 @@
 
     <div class="page-header">
         <h3 class="page-title">
-            <i class="mdi mdi-file-document-edit text-primary me-2"></i>
+            <x-icon name="file-document-edit" class=" text-primary me-2" />
             Detalhes do Formulário
         </h3>
 
@@ -31,16 +31,16 @@
                     {{-- Header do Card --}}
                     <div class="d-flex justify-content-between align-items-center mb-4">
                         <h4 class="card-title mb-0">
-                            <i class="mdi mdi-file-document text-primary me-2"></i>
+                            <x-icon name="file-document" class=" text-primary me-2" />
                             Informações do Formulário
                         </h4>
                         <div class="flex items-center gap-2">
                             <x-tailadmin-button variant="warning" size="sm" href="{{ workspace_route('tenant.forms.edit', ['form' => $form->id]) }}">
-                                <i class="mdi mdi-pencil"></i> Editar
+                                <x-icon name="pencil" class="" /> Editar
                             </x-tailadmin-button>
                             <x-tailadmin-button variant="secondary" size="sm" href="{{ workspace_route('tenant.forms.index') }}"
                                 class="bg-transparent border-gray-300 text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-white/5">
-                                <i class="mdi mdi-arrow-left"></i> Voltar
+                                <x-icon name="arrow-left" class="" /> Voltar
                             </x-tailadmin-button>
                         </div>
                     </div>
@@ -49,11 +49,11 @@
                     <div class="mb-4">
                         @if ($form->is_active)
                             <span class="badge bg-success px-3 py-2">
-                                <i class="mdi mdi-check-circle me-1"></i> Ativo
+                                <x-icon name="check-circle" class=" me-1" /> Ativo
                             </span>
                         @else
                             <span class="badge bg-danger px-3 py-2">
-                                <i class="mdi mdi-close-circle me-1"></i> Inativo
+                                <x-icon name="close-circle" class=" me-1" /> Inativo
                             </span>
                         @endif
                     </div>
@@ -63,7 +63,7 @@
                         <div class="col-md-6 mb-3">
                             <div class="border rounded p-3 h-100">
                                 <label class="text-muted small mb-1 d-block">
-                                    <i class="mdi mdi-identifier me-1"></i> ID
+                                    <x-icon name="identifier" class=" me-1" /> ID
                                 </label>
                                 <p class="mb-0 fw-semibold">{{ $form->id }}</p>
                             </div>
@@ -71,7 +71,7 @@
                         <div class="col-md-6 mb-3">
                             <div class="border rounded p-3 h-100">
                                 <label class="text-muted small mb-1 d-block">
-                                    <i class="mdi mdi-format-title me-1"></i> Nome
+                                    <x-icon name="format-title" class=" me-1" /> Nome
                                 </label>
                                 <p class="mb-0 fw-semibold">{{ $form->name }}</p>
                             </div>
@@ -79,7 +79,7 @@
                         <div class="col-md-6 mb-3">
                             <div class="border rounded p-3 h-100">
                                 <label class="text-muted small mb-1 d-block">
-                                    <i class="mdi mdi-medical-bag me-1"></i> Especialidade
+                                    <x-icon name="medical-bag" class=" me-1" /> Especialidade
                                 </label>
                                 <p class="mb-0 fw-semibold">{{ $form->specialty->name ?? 'N/A' }}</p>
                             </div>
@@ -87,7 +87,7 @@
                         <div class="col-md-6 mb-3">
                             <div class="border rounded p-3 h-100">
                                 <label class="text-muted small mb-1 d-block">
-                                    <i class="mdi mdi-doctor me-1"></i> Médico
+                                    <x-icon name="doctor" class=" me-1" /> Médico
                                 </label>
                                 <p class="mb-0 fw-semibold">{{ $form->doctor->user->name ?? 'N/A' }}</p>
                             </div>
@@ -98,7 +98,7 @@
                     @if($form->description)
                         <div class="mb-4">
                             <label class="text-muted small mb-2 d-block">
-                                <i class="mdi mdi-text me-1"></i> Descrição
+                                <x-icon name="text" class=" me-1" /> Descrição
                             </label>
                             <div class="border rounded p-3 bg-light">
                                 <p class="mb-0">{{ $form->description }}</p>
@@ -111,7 +111,7 @@
                         @if($sectionsCount > 0 || $questionsCount > 0)
                             <div class="alert alert-success">
                                 <div class="d-flex align-items-center">
-                                    <i class="mdi mdi-check-circle me-2 fs-4"></i>
+                                    <x-icon name="check-circle" class=" me-2 fs-4" />
                                     <div>
                                         <strong>Formulário configurado</strong>
                                         <p class="mb-0">Possui {{ $sectionsCount }} seção(ões) e {{ $questionsCount }} pergunta(s)</p>
@@ -120,7 +120,7 @@
                             </div>
                         @else
                             <div class="alert alert-warning">
-                                <i class="mdi mdi-information-outline me-2"></i>
+                                <x-icon name="information-outline" class=" me-2" />
                                 Este formulário ainda não possui conteúdo. Use o botão "Construir" na lista para adicionar seções e perguntas.
                             </div>
                         @endif
@@ -131,13 +131,13 @@
                         <div class="flex items-center justify-end gap-3 flex-nowrap">
                             @if($sectionsCount > 0 || $questionsCount > 0)
                                 <x-tailadmin-button variant="primary" size="md" href="{{ workspace_route('tenant.forms.preview', $form->id) }}" target="_blank" class="inline-flex items-center gap-2">
-                                    <i class="mdi mdi-eye"></i>
+                                    <x-icon name="eye" class="" />
                                     Visualizar Formulário
                                 </x-tailadmin-button>
                             @endif
                             <x-tailadmin-button variant="secondary" size="md" href="{{ workspace_route('tenant.forms.builder', $form->id) }}"
                                 class="inline-flex items-center gap-2 border-info text-info bg-info/10 hover:bg-info/20 dark:border-info/40 dark:text-info dark:hover:bg-info/30">
-                                <i class="mdi mdi-tools"></i>
+                                <x-icon name="tools" class="" />
                                 Construir Formulário
                             </x-tailadmin-button>
                         </div>

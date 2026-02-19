@@ -6,7 +6,7 @@
 
     <div class="page-header">
         <h3 class="page-title">
-            <i class="mdi mdi-apple text-primary me-2"></i>
+            <x-icon name="apple" class=" text-primary me-2" />
             Conectar Apple Calendar
         </h3>
 
@@ -29,7 +29,7 @@
     {{-- Alertas --}}
     @if (session('error'))
         <div class="alert alert-danger alert-dismissible fade show" role="alert">
-            <i class="mdi mdi-alert-circle me-1"></i> {{ session('error') }}
+            <x-icon name="alert-circle" class=" me-1" /> {{ session('error') }}
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
     @endif
@@ -39,14 +39,14 @@
             <div class="card">
                 <div class="card-body">
                     <h4 class="card-title mb-4">
-                        <i class="mdi mdi-apple text-primary me-2"></i>
+                        <x-icon name="apple" class=" text-primary me-2" />
                         Conectar Apple Calendar (iCloud) - {{ $doctor->user->name_full ?? $doctor->user->name }}
                     </h4>
 
                     {{-- Instruções --}}
                     <div class="alert alert-info mb-4">
                         <h5 class="alert-heading">
-                            <i class="mdi mdi-information-outline me-2"></i>
+                            <x-icon name="information-outline" class=" me-2" />
                             Como obter suas credenciais do iCloud
                         </h5>
                         <ol class="mb-0">
@@ -147,11 +147,11 @@
                         <div class="flex flex-wrap items-center justify-between gap-3">
                             <x-tailadmin-button variant="secondary" size="md" href="{{ workspace_route('tenant.integrations.apple.index') }}"
                                 class="bg-transparent border-gray-300 text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-white/5">
-                                <i class="mdi mdi-arrow-left"></i>
+                                <x-icon name="arrow-left" class="" />
                                 Cancelar
                             </x-tailadmin-button>
                             <x-tailadmin-button type="submit" variant="primary">
-                                <i class="mdi mdi-check"></i>
+                                <x-icon name="check" class="" />
                                 Conectar
                             </x-tailadmin-button>
                         </div>

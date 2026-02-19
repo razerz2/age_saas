@@ -31,7 +31,7 @@
                     <div class="d-flex align-items-center justify-content-between mb-4">
                         <div>
                             <h4 class="card-title mb-1">
-                                <i class="mdi mdi-link-plus text-primary me-2"></i>
+                                <x-icon name="link-plus" class=" text-primary me-2" />
                                 Nova Integração
                             </h4>
                             <p class="card-description mb-0 text-muted">Preencha os dados abaixo para criar uma nova integração</p>
@@ -44,14 +44,14 @@
                         {{-- Seção: Informações da Integração --}}
                         <div class="mb-4">
                             <h5 class="mb-3 text-primary">
-                                <i class="mdi mdi-information-outline me-2"></i>
+                                <x-icon name="information-outline" class=" me-2" />
                                 Informações da Integração
                             </h5>
                             <div class="row">
                                 <div class="col-md-6">
                                     <div class="form-group">
                                         <label class="fw-semibold">
-                                            <i class="mdi mdi-key me-1"></i>
+                                            <x-icon name="key" class=" me-1" />
                                             Chave <span class="text-danger">*</span>
                                         </label>
                                         <input type="text" class="form-control @error('key') is-invalid @enderror" 
@@ -66,7 +66,7 @@
                                 <div class="col-md-6">
                                     <div class="form-group">
                                         <label class="fw-semibold">
-                                            <i class="mdi mdi-toggle-switch me-1"></i>
+                                            <x-icon name="toggle-switch" class=" me-1" />
                                             Status
                                         </label>
                                         <select name="is_enabled" class="form-control @error('is_enabled') is-invalid @enderror">
@@ -84,21 +84,21 @@
                         {{-- Seção: Configuração --}}
                         <div class="mb-4">
                             <h5 class="mb-3 text-primary">
-                                <i class="mdi mdi-cog-outline me-2"></i>
+                                <x-icon name="cog-outline" class=" me-2" />
                                 Configuração
                             </h5>
                             <div class="row">
                                 <div class="col-md-12">
                                     <div class="form-group">
                                         <label class="fw-semibold">
-                                            <i class="mdi mdi-code-json me-1"></i>
+                                            <x-icon name="code-json" class=" me-1" />
                                             Configuração (JSON)
                                         </label>
                                         <textarea class="form-control @error('config') is-invalid @enderror" 
                                                   name="config" rows="6" 
                                                   placeholder='{"key": "value", "api_key": "your_api_key"}' 
                                                   style="font-family: monospace;">{{ old('config') }}</textarea>
-                                        <small class="form-text text-muted">Configure os parâmetros da integração em formato JSON</small>
+                                        <small class="form-text text-muted">Configure os parmetros da integração em formato JSON</small>
                                         @error('config')
                                             <div class="invalid-feedback d-block">{{ $message }}</div>
                                         @enderror
@@ -111,11 +111,11 @@
                         <div class="flex flex-wrap items-center justify-between gap-3 pt-3 border-t">
                             <x-tailadmin-button variant="secondary" size="md" href="{{ workspace_route('tenant.integrations.index') }}"
                                 class="bg-transparent border-gray-300 text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-white/5">
-                                <i class="mdi mdi-arrow-left"></i>
+                                <x-icon name="arrow-left" class="" />
                                 Cancelar
                             </x-tailadmin-button>
                             <x-tailadmin-button type="submit" variant="primary" size="lg">
-                                <i class="mdi mdi-content-save"></i>
+                                <x-icon name="content-save" class="" />
                                 Salvar Integração
                             </x-tailadmin-button>
                         </div>

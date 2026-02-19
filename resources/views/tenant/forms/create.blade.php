@@ -10,18 +10,14 @@
             <nav class="min-w-0 flex-1" aria-label="breadcrumb">
                 <ol class="flex flex-wrap items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
                     <li>
-                        <a href="{{ workspace_route('tenant.dashboard') }}" class="hover:text-blue-600 dark:hover:text-white">Dashboard</a>
+                        <a href="{{ workspace_route('tenant.dashboard') }}" class="hover:text-gray-900 dark:hover:text-white">Dashboard</a>
                     </li>
                     <li class="flex items-center gap-2">
-                        <svg class="h-4 w-4 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
-                            <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
-                        </svg>
-                        <a href="{{ workspace_route('tenant.forms.index') }}" class="hover:text-blue-600 dark:hover:text-white">Formulários</a>
+                        <x-icon name="information-outline" class="h-4 w-4 text-gray-400" />
+                        <a href="{{ workspace_route('tenant.forms.index') }}" class="hover:text-gray-900 dark:hover:text-white">Formulários</a>
                     </li>
                     <li class="flex items-center gap-2">
-                        <svg class="h-4 w-4 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
-                            <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
-                        </svg>
+                        <x-icon name="information-outline" class="h-4 w-4 text-gray-400" />
                         <span class="text-gray-900 dark:text-white font-semibold">Criar</span>
                     </li>
                 </ol>
@@ -122,16 +118,12 @@
                 </div>
 
                 <div class="flex flex-col gap-3 pt-6 border-t border-gray-200 dark:border-gray-700 sm:flex-row sm:items-center sm:justify-between">
-                    <a href="{{ workspace_route('tenant.forms.index') }}" class="btn-patient-secondary">
-                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
-                        </svg>
+                    <a href="{{ workspace_route('tenant.forms.index') }}" class="btn btn-outline">
+                        <x-icon name="information-outline" class="w-4 h-4 mr-2" />
                         Cancelar
                     </a>
-                    <button type="submit" class="btn-patient-primary">
-                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V2"></path>
-                        </svg>
+                    <button type="submit" class="btn btn-primary">
+                        <x-icon name="information-outline" class="w-4 h-4 mr-2" />
                         Salvar Formulário
                     </button>
                 </div>

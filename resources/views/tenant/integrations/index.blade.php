@@ -29,7 +29,7 @@
                                 <div class="card-body">
                                     <div class="d-flex align-items-center mb-3">
                                         <div class="me-3">
-                                            <i class="mdi mdi-google text-primary" style="font-size: 3rem;"></i>
+                                            <x-icon name="google" class=" text-primary" />
                                         </div>
                                         <div>
                                             <h5 class="card-title mb-0">Google Calendar</h5>
@@ -42,20 +42,20 @@
                                     </p>
                                     <ul class="list-unstyled mb-3">
                                         <li class="mb-2">
-                                            <i class="mdi mdi-check-circle text-success me-2"></i>
+                                            <x-icon name="check-circle" class=" text-success me-2" />
                                             Sincronização automática de agendamentos
                                         </li>
                                         <li class="mb-2">
-                                            <i class="mdi mdi-check-circle text-success me-2"></i>
+                                            <x-icon name="check-circle" class=" text-success me-2" />
                                             Suporte a agendamentos recorrentes
                                         </li>
                                         <li class="mb-2">
-                                            <i class="mdi mdi-check-circle text-success me-2"></i>
+                                            <x-icon name="check-circle" class=" text-success me-2" />
                                             Conta individual por médico
                                         </li>
                                     </ul>
                                     <x-tailadmin-button variant="primary" size="md" href="{{ workspace_route('tenant.integrations.google.index') }}">
-                                        <i class="mdi mdi-google"></i>
+                                        <x-icon name="google" class="" />
                                         Configurar Google Calendar
                                     </x-tailadmin-button>
                                 </div>

@@ -29,14 +29,10 @@
     @if (session('success'))
         <div class="bg-green-50 border border-green-200 rounded-lg p-4 mb-6 dark:bg-green-900/20 dark:border-green-800">
             <div class="flex items-center">
-                <svg class="w-5 h-5 text-green-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                </svg>
+                <x-icon name="information-outline" class="w-5 h-5 text-green-600 mr-2" />
                 <span class="text-green-800 dark:text-green-200">{{ session('success') }}</span>
                 <button type="button" data-dismiss="alert" class="ml-auto text-green-600 hover:text-green-800 dark:text-green-400 dark:hover:text-green-200">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                    </svg>
+                    <x-icon name="information-outline" class="w-4 h-4" />
                 </button>
             </div>
         </div>
@@ -45,14 +41,10 @@
     @if (session('error'))
         <div class="bg-red-50 border border-red-200 rounded-lg p-4 mb-6 dark:bg-red-900/20 dark:border-red-800">
             <div class="flex items-center">
-                <svg class="w-5 h-5 text-red-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
-                </svg>
+                <x-icon name="information-outline" class="w-5 h-5 text-red-600 mr-2" />
                 <span class="text-red-800 dark:text-red-200">{{ session('error') }}</span>
                 <button type="button" data-dismiss="alert" class="ml-auto text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-200">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                    </svg>
+                    <x-icon name="information-outline" class="w-4 h-4" />
                 </button>
             </div>
         </div>
@@ -61,14 +53,10 @@
     @if (session('info'))
         <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6 dark:bg-blue-900/20 dark:border-blue-800">
             <div class="flex items-center">
-                <svg class="w-5 h-5 text-blue-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                </svg>
+                <x-icon name="information-outline" class="w-5 h-5 text-blue-600 mr-2" />
                 <span class="text-blue-800 dark:text-blue-200">{{ session('info') }}</span>
                 <button type="button" data-dismiss="alert" class="ml-auto text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-200">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                    </svg>
+                    <x-icon name="information-outline" class="w-4 h-4" />
                 </button>
             </div>
         </div>
@@ -78,9 +66,7 @@
         <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
             <div class="p-6 border-b border-gray-200 dark:border-gray-700">
                 <h4 class="text-xl font-semibold text-gray-900 dark:text-white flex items-center">
-                    <svg class="w-5 h-5 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                    </svg>
+                    <x-icon name="information-outline" class="w-5 h-5 mr-2 text-blue-600" />
                     Como Funciona a Integração
                 </h4>
             </div>
@@ -88,53 +74,37 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <ul class="space-y-3">
                         <li class="flex items-start">
-                            <svg class="w-4 h-4 mr-2 text-green-600 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4"></path>
-                            </svg>
+                            <x-icon name="information-outline" class="w-4 h-4 mr-2 text-green-600 mt-1" />
                             <span class="text-gray-700 dark:text-gray-200"><strong>Sincronização Automática:</strong> Todos os agendamentos são sincronizados automaticamente com o Google Calendar do médico</span>
                         </li>
                         <li class="flex items-start">
-                            <svg class="w-4 h-4 mr-2 text-green-600 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4"></path>
-                            </svg>
+                            <x-icon name="information-outline" class="w-4 h-4 mr-2 text-green-600 mt-1" />
                             <span class="text-gray-700 dark:text-gray-200"><strong>Criação:</strong> Ao criar um agendamento, o evento é criado no Google Calendar</span>
                         </li>
                         <li class="flex items-start">
-                            <svg class="w-4 h-4 mr-2 text-green-600 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4"></path>
-                            </svg>
+                            <x-icon name="information-outline" class="w-4 h-4 mr-2 text-green-600 mt-1" />
                             <span class="text-gray-700 dark:text-gray-200"><strong>Edição:</strong> Ao editar um agendamento, o evento é atualizado no Google Calendar</span>
                         </li>
                         <li class="flex items-start">
-                            <svg class="w-4 h-4 mr-2 text-green-600 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4"></path>
-                            </svg>
+                            <x-icon name="information-outline" class="w-4 h-4 mr-2 text-green-600 mt-1" />
                             <span class="text-gray-700 dark:text-gray-200"><strong>Cancelamento:</strong> Ao cancelar um agendamento, o evento é removido do Google Calendar</span>
                         </li>
                     </ul>
                     <ul class="space-y-3">
                         <li class="flex items-start">
-                            <svg class="w-4 h-4 mr-2 text-green-600 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4"></path>
-                            </svg>
+                            <x-icon name="information-outline" class="w-4 h-4 mr-2 text-green-600 mt-1" />
                             <span class="text-gray-700 dark:text-gray-200"><strong>Agendamentos Recorrentes:</strong> São sincronizados como eventos recorrentes (RRULE) no Google Calendar</span>
                         </li>
                         <li class="flex items-start">
-                            <svg class="w-4 h-4 mr-2 text-green-600 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4"></path>
-                            </svg>
+                            <x-icon name="information-outline" class="w-4 h-4 mr-2 text-green-600 mt-1" />
                             <span class="text-gray-700 dark:text-gray-200"><strong>Conta Individual:</strong> Cada médico conecta sua própria conta do Google Calendar</span>
                         </li>
                         <li class="flex items-start">
-                            <svg class="w-4 h-4 mr-2 text-green-600 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4"></path>
-                            </svg>
+                            <x-icon name="information-outline" class="w-4 h-4 mr-2 text-green-600 mt-1" />
                             <span class="text-gray-700 dark:text-gray-200"><strong>Renovação Automática:</strong> Tokens são renovados automaticamente quando necessário</span>
                         </li>
                         <li class="flex items-start">
-                            <svg class="w-4 h-4 mr-2 text-green-600 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4"></path>
-                            </svg>
+                            <x-icon name="information-outline" class="w-4 h-4 mr-2 text-green-600 mt-1" />
                             <span class="text-gray-700 dark:text-gray-200"><strong>Áreas Sincronizadas:</strong> Funciona para agendamentos criados em qualquer área do sistema (administrativa, pública, portal do paciente)</span>
                         </li>
                     </ul>
@@ -145,7 +115,7 @@
         <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
             <div class="p-6 border-b border-gray-200 dark:border-gray-700">
                 <h4 class="text-xl font-semibold text-gray-900 dark:text-white flex items-center">
-                    <i class="mdi mdi-google text-blue-600 mr-2"></i>
+                    <x-icon name="google" class=" text-blue-600 mr-2" />
                     Integração Google Calendar por Médico
                 </h4>
             </div>
@@ -166,7 +136,7 @@
                                     <td class="px-4 py-3 text-sm text-gray-700 dark:text-gray-200">
                                         <div class="flex items-center">
                                             <div class="mr-3">
-                                                <i class="mdi mdi-account-circle text-blue-600 text-2xl"></i>
+                                                <x-icon name="account-circle" class=" text-blue-600 text-2xl" />
                                             </div>
                                             <div>
                                                 <div class="font-semibold text-gray-900 dark:text-white">{{ $doctor->user->name_full ?? $doctor->user->name }}</div>
@@ -216,11 +186,11 @@
                                             @if ($doctor->googleCalendarToken)
                                                 <div class="flex flex-wrap justify-end gap-2">
                                                     <button type="button"
-                                                            class="inline-flex items-center px-3 py-1.5 rounded-lg text-sm font-medium bg-blue-50 text-blue-700 hover:bg-blue-100 dark:bg-blue-900/30 dark:text-blue-300"
+                                                            class="btn btn-outline"
                                                             data-bs-toggle="tooltip"
                                                             data-bs-placement="top"
                                                             title="Status da integração">
-                                                        <i class="mdi mdi-information-outline"></i>
+                                                        <x-icon name="information-outline" class="" />
                                                     </button>
                                                     <form action="{{ workspace_route('tenant.integrations.google.disconnect', ['doctor' => $doctor->id]) }}"
                                                           method="POST"
@@ -232,16 +202,16 @@
                                                       data-confirm-type="warning">
                                                         @csrf
                                                         @method('DELETE')
-                                                        <button type="submit" class="inline-flex items-center px-3 py-1.5 rounded-lg text-sm font-medium bg-red-50 text-red-700 hover:bg-red-100 dark:bg-red-900/30 dark:text-red-300">
-                                                            <i class="mdi mdi-link-variant-off mr-1"></i>
+                                                        <button type="submit" class="btn btn-danger">
+                                                            <x-icon name="link-variant-off" class=" mr-1" />
                                                             Desconectar
                                                         </button>
                                                     </form>
                                                 </div>
                                             @else
                                                 <a href="{{ workspace_route('tenant.integrations.google.connect', ['doctor' => $doctor->id]) }}"
-                                                   class="inline-flex items-center px-3 py-1.5 rounded-lg text-sm font-medium bg-primary text-white hover:bg-primary/90">
-                                                    <i class="mdi mdi-google mr-1"></i>
+                                                   class="btn btn-primary">
+                                                    <x-icon name="google" class=" mr-1" />
                                                     Conectar Google
                                                 </a>
                                             @endif
@@ -265,10 +235,8 @@
                 </div>
 
                 <div class="mt-6">
-                    <a href="{{ workspace_route('tenant.integrations.index') }}" class="inline-flex items-center px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700">
-                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
-                        </svg>
+                    <a href="{{ workspace_route('tenant.integrations.index') }}" class="btn btn-outline">
+                        <x-icon name="information-outline" class="w-4 h-4 mr-2" />
                         Voltar para Integrações
                     </a>
                 </div>

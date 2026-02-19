@@ -31,7 +31,7 @@
                     <div class="d-flex align-items-center justify-content-between mb-4">
                         <div>
                             <h4 class="card-title mb-1">
-                                <i class="mdi mdi-file-document-text text-primary me-2"></i>
+                                <x-icon name="file-document-text" class=" text-primary me-2" />
                                 {{ $form->name }}
                             </h4>
                             @if($form->description)
@@ -43,11 +43,11 @@
                                 {{ $form->is_active ? 'Ativo' : 'Inativo' }}
                             </span>
                             <x-tailadmin-button type="button" variant="secondary" size="sm" class="bg-transparent border-gray-300 text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-white/5" data-form-preview-action="print">
-                                <i class="mdi mdi-printer"></i>
+                                <x-icon name="printer" class="" />
                                 Imprimir
                             </x-tailadmin-button>
                             <x-tailadmin-button type="button" variant="secondary" size="sm" class="bg-transparent border-gray-300 text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-white/5" data-form-preview-action="close">
-                                <i class="mdi mdi-close"></i>
+                                <x-icon name="close" class="" />
                                 Fechar
                             </x-tailadmin-button>
                         </div>
@@ -68,7 +68,7 @@
 
                     @if($form->sections->isEmpty() && $form->questions->where('section_id', null)->isEmpty())
                         <div class="alert alert-warning">
-                            <i class="mdi mdi-alert-outline me-2"></i>
+                            <x-icon name="alert-outline" class=" me-2" />
                             Este formulário ainda não possui perguntas. Use o construtor para adicionar seções e perguntas.
                         </div>
                     @else
@@ -77,7 +77,7 @@
                             @if($form->questions->where('section_id', null)->isNotEmpty())
                                 <div class="mb-4">
                                     <h5 class="mb-3 text-primary border-bottom pb-2">
-                                        <i class="mdi mdi-file-document me-2"></i>
+                                        <x-icon name="file-document" class=" me-2" />
                                         Perguntas Gerais
                                     </h5>
                                     
@@ -91,7 +91,7 @@
                             @foreach($form->sections->sortBy('position') as $section)
                                 <div class="mb-4">
                                     <h5 class="mb-3 text-primary border-bottom pb-2">
-                                        <i class="mdi mdi-folder me-2"></i>
+                                        <x-icon name="folder" class=" me-2" />
                                         {{ $section->title ?: 'Seção sem título' }}
                                     </h5>
                                     
@@ -110,7 +110,7 @@
                     <div class="mt-4 pt-3 border-top">
                         <x-tailadmin-button variant="secondary" size="md" href="{{ workspace_route('tenant.forms.show', ['form' => $form->id]) }}"
                             class="bg-transparent border-gray-300 text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-white/5">
-                            <i class="mdi mdi-arrow-left"></i>
+                            <x-icon name="arrow-left" class="" />
                             Voltar
                         </x-tailadmin-button>
                     </div>

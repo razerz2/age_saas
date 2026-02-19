@@ -189,16 +189,12 @@
                         @endif
 
                         <div class="flex flex-col gap-3 pt-3 border-t border-gray-200 dark:border-gray-700 sm:flex-row sm:items-center sm:justify-between">
-                            <a href="{{ workspace_route('tenant.responses.index') }}" class="btn-patient-secondary">
-                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
-                                </svg>
+                            <a href="{{ workspace_route('tenant.responses.index') }}" class="btn btn-outline">
+                                <x-icon name="information-outline" class="w-4 h-4 mr-2" />
                                 Cancelar
                             </a>
-                            <button type="submit" class="btn-patient-primary">
-                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V2"></path>
-                                </svg>
+                            <button type="submit" class="btn btn-primary">
+                                <x-icon name="information-outline" class="w-4 h-4 mr-2" />
                                 Enviar
                             </button>
                         </div>

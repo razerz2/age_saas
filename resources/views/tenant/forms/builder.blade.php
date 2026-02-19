@@ -31,14 +31,14 @@
                     <div class="d-flex align-items-center justify-content-between mb-4">
                         <div>
                             <h4 class="card-title mb-1">
-                                <i class="mdi mdi-file-document-edit text-primary me-2"></i>
+                                <x-icon name="file-document-edit" class=" text-primary me-2" />
                                 {{ $form->name }}
                             </h4>
                             <p class="card-description mb-0 text-muted">Adicione seções, perguntas e opções ao formulário</p>
                         </div>
                         <x-tailadmin-button variant="secondary" size="md" href="{{ workspace_route('tenant.forms.show', ['form' => $form->id]) }}"
                             class="bg-transparent border-gray-300 text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-white/5">
-                            <i class="mdi mdi-arrow-left"></i>
+                            <x-icon name="arrow-left" class="" />
                             Voltar
                         </x-tailadmin-button>
                     </div>
@@ -49,11 +49,11 @@
                     {{-- Botões de Ação --}}
                     <div class="mb-4 flex flex-wrap items-center gap-2">
                         <x-tailadmin-button type="button" variant="primary" size="md" data-bs-toggle="modal" data-bs-target="#addSectionModal">
-                            <i class="mdi mdi-plus"></i>
+                            <x-icon name="plus" class="" />
                             Adicionar Seção
                         </x-tailadmin-button>
                         <x-tailadmin-button type="button" variant="success" size="md" data-bs-toggle="modal" data-bs-target="#addQuestionModal" id="addQuestionBtn" disabled>
-                            <i class="mdi mdi-plus-circle"></i>
+                            <x-icon name="plus-circle" class="" />
                             Adicionar Pergunta
                         </x-tailadmin-button>
                     </div>
@@ -62,7 +62,7 @@
                     <div id="form-builder" data-tenant-slug="{{ tenant()->subdomain }}" data-form-id="{{ $form->id }}" data-csrf-token="{{ csrf_token() }}">
                         @if($form->sections->isEmpty() && $form->questions->where('section_id', null)->isEmpty())
                             <div class="alert alert-info">
-                                <i class="mdi mdi-information me-2"></i>
+                                <x-icon name="information" class=" me-2" />
                                 Nenhuma seção ou pergunta adicionada ainda. Comece adicionando uma seção ou pergunta.
                             </div>
                         @else
@@ -72,7 +72,7 @@
                                     <div class="card border-primary">
                                         <div class="card-header bg-primary text-white">
                                             <h5 class="mb-0">
-                                                <i class="mdi mdi-file-document me-2"></i>
+                                                <x-icon name="file-document" class=" me-2" />
                                                 Perguntas Gerais
                                             </h5>
                                         </div>
@@ -93,17 +93,17 @@
                                     <div class="card">
                                         <div class="card-header d-flex justify-content-between align-items-center">
                                             <h5 class="mb-0">
-                                                <i class="mdi mdi-folder me-2"></i>
+                                                <x-icon name="folder" class=" me-2" />
                                                 <span class="section-title">{{ $section->title ?: 'Seção sem título' }}</span>
                                             </h5>
                                             <div class="flex items-center gap-2">
                                                 <x-tailadmin-button type="button" variant="warning" size="xs"
                                                     class="edit-section-btn px-2 py-1" data-section-id="{{ $section->id }}" data-section-title="{{ $section->title }}">
-                                                    <i class="mdi mdi-pencil"></i>
+                                                    <x-icon name="pencil" class="" />
                                                 </x-tailadmin-button>
                                                 <x-tailadmin-button type="button" variant="danger" size="xs"
                                                     class="delete-section-btn px-2 py-1" data-section-id="{{ $section->id }}">
-                                                    <i class="mdi mdi-delete"></i>
+                                                    <x-icon name="delete" class="" />
                                                 </x-tailadmin-button>
                                             </div>
                                         </div>
@@ -238,7 +238,7 @@
                             <h6>Opções de Resposta</h6>
                             <div id="options-list"></div>
                             <x-tailadmin-button type="button" variant="success" size="sm" class="mt-2" id="add-option-btn">
-                                <i class="mdi mdi-plus"></i>
+                                <x-icon name="plus" class="" />
                                 Adicionar Opção
                             </x-tailadmin-button>
                         </div>
@@ -342,7 +342,7 @@
                             <h6>Opções de Resposta</h6>
                             <div id="edit-options-list"></div>
                             <x-tailadmin-button type="button" variant="success" size="sm" class="mt-2" id="add-edit-option-btn">
-                                <i class="mdi mdi-plus"></i>
+                                <x-icon name="plus" class="" />
                                 Adicionar Opção
                             </x-tailadmin-button>
                         </div>
