@@ -14,17 +14,13 @@
                     <ol class="inline-flex items-center space-x-1 md:space-x-3">
                         <li class="inline-flex items-center">
                             <a href="{{ workspace_route('tenant.dashboard') }}" class="text-gray-700 hover:text-blue-600 dark:text-gray-300 dark:hover:text-white">
-                                <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                                    <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001 1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"></path>
-                                </svg>
+                                <x-icon name="mdi-home-outline" size="text-base" class="mr-2" />
                                 Dashboard
                             </a>
                         </li>
                         <li aria-current="page">
                             <div class="flex items-center">
-                                <svg class="w-6 h-6 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
-                                </svg>
+                                <x-icon name="mdi-chevron-right" size="text-sm" class="text-gray-400" />
                                 <span class="ml-1 text-gray-500 dark:text-gray-400 md:ml-2">Configurações</span>
                             </div>
                         </li>
@@ -34,13 +30,19 @@
         </div>
     </div>
 
+    <div class="mb-6 flex items-center justify-between">
+        <a href="{{ workspace_route('tenant.doctors.show', $doctor->id) }}" class="btn btn-outline inline-flex items-center">
+            <x-icon name="mdi-arrow-left" size="text-sm" class="mr-2" />
+            Voltar
+        </a>
+        <div></div>
+    </div>
+
     @if (session('success'))
         <div class="bg-green-50 border border-green-200 rounded-md p-4 mb-6">
             <div class="flex">
                 <div class="flex-shrink-0">
-                    <svg class="h-5 w-5 text-green-400" fill="currentColor" viewBox="0 0 20 20">
-                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
-                    </svg>
+                    <x-icon name="mdi-check-circle-outline" size="text-lg" class="text-green-400" />
                 </div>
                 <div class="ml-3">
                     <p class="text-sm text-green-700">{{ session('success') }}</p>
@@ -53,9 +55,7 @@
         <div class="bg-red-50 border border-red-200 rounded-md p-4 mb-6">
             <div class="flex">
                 <div class="flex-shrink-0">
-                    <svg class="h-5 w-5 text-red-400" fill="currentColor" viewBox="0 0 20 20">
-                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path>
-                    </svg>
+                    <x-icon name="mdi-alert-circle-outline" size="text-lg" class="text-red-400" />
                 </div>
                 <div class="ml-3">
                     <p class="text-sm text-red-700">{{ session('error') }}</p>
@@ -68,9 +68,7 @@
     <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
         <div class="p-6 border-b border-gray-200 dark:border-gray-700">
             <h2 class="text-xl font-semibold text-gray-900 dark:text-white flex items-center">
-                <svg class="w-6 h-6 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16h6m2 0a2 2 0 002-2V8a2 2 0 00-2-2H7a2 2 0 00-2 2v6a2 2 0 002 2h10z"></path>
-                </svg>
+                <x-icon name="mdi-account-outline" size="text-xl" class="mr-2 text-blue-600" />
                 {{ $doctor->user->display_name ?? $doctor->user->name }}
             </h2>
         </div>
@@ -80,25 +78,19 @@
             <ul class="nav nav-tabs flex flex-wrap border-b border-gray-200 dark:border-gray-700 text-sm font-medium" id="settingsTabs" role="tablist">
                 <li class="nav-item mr-2" role="presentation">
                     <button class="nav-link active inline-flex items-center px-4 py-2 rounded-t-lg border border-transparent text-gray-600 dark:text-gray-300 hover:text-blue-600 hover:border-blue-600" id="calendar-tab" data-bs-toggle="tab" data-bs-target="#calendar" type="button" role="tab">
-                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-                        </svg>
+                        <x-icon name="mdi-calendar-month-outline" size="text-sm" class="mr-2" />
                         Calendário
                     </button>
                 </li>
                 <li class="nav-item mr-2" role="presentation">
                     <button class="nav-link inline-flex items-center px-4 py-2 rounded-t-lg border border-transparent text-gray-600 dark:text-gray-300 hover:text-blue-600 hover:border-blue-600" id="hours-tab" data-bs-toggle="tab" data-bs-target="#hours" type="button" role="tab">
-                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                        </svg>
+                        <x-icon name="mdi-clock-outline" size="text-sm" class="mr-2" />
                         Horários
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
                     <button class="nav-link inline-flex items-center px-4 py-2 rounded-t-lg border border-transparent text-gray-600 dark:text-gray-300 hover:text-blue-600 hover:border-blue-600" id="types-tab" data-bs-toggle="tab" data-bs-target="#types" type="button" role="tab">
-                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                        </svg>
+                        <x-icon name="mdi-file-document-outline" size="text-sm" class="mr-2" />
                         Tipos de Atendimento
                     </button>
                 </li>
@@ -109,9 +101,7 @@
                 <div class="tab-pane fade show active" id="calendar" role="tabpanel">
                     <div class="rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/20 p-6">
                         <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
-                            <svg class="w-5 h-5 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-                            </svg>
+                            <x-icon name="mdi-calendar-month-outline" size="text-lg" class="mr-2 text-blue-600" />
                             Calendário
                         </h3>
 
@@ -147,10 +137,8 @@
                                 </div>
 
                                 <div class="flex justify-end mt-6">
-                                    <button type="submit" class="inline-flex items-center px-4 py-2 bg-primary text-white hover:bg-primary/90 font-medium rounded-md transition-colors">
-                                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                                        </svg>
+                                    <button type="submit" class="btn btn-primary inline-flex items-center">
+                                        <x-icon name="mdi-content-save-outline" size="text-sm" class="mr-2" />
                                         Salvar Calendário
                                     </button>
                                 </div>
@@ -162,9 +150,7 @@
 
                                 <div class="bg-blue-50 border border-blue-200 text-blue-800 rounded-md p-4 mb-6">
                                     <div class="flex items-start">
-                                        <svg class="w-5 h-5 mr-2 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                        </svg>
+                                        <x-icon name="mdi-information-outline" size="text-lg" class="mr-2 mt-0.5" />
                                         <span>Nenhum calendário cadastrado. Preencha os dados abaixo para criar um.</span>
                                     </div>
                                 </div>
@@ -196,10 +182,8 @@
                                 </div>
 
                                 <div class="flex justify-end mt-6">
-                                    <button type="submit" class="inline-flex items-center px-4 py-2 bg-primary text-white hover:bg-primary/90 font-medium rounded-md transition-colors">
-                                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
-                                        </svg>
+                                    <button type="submit" class="btn btn-primary inline-flex items-center">
+                                        <x-icon name="mdi-plus" size="text-sm" class="mr-2" />
                                         Criar Calendário
                                     </button>
                                 </div>
@@ -213,15 +197,11 @@
                     <div class="rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/20 p-6">
                         <div class="flex items-center justify-between mb-4">
                             <h3 class="text-lg font-semibold text-gray-900 dark:text-white flex items-center">
-                                <svg class="w-5 h-5 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                </svg>
+                                <x-icon name="mdi-clock-outline" size="text-lg" class="mr-2 text-blue-600" />
                                 Horários de Atendimento
                             </h3>
-                            <button type="button" class="inline-flex items-center px-4 py-2 bg-primary text-white hover:bg-primary/90 font-medium rounded-md transition-colors" data-bs-toggle="modal" data-bs-target="#addHourModal">
-                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
-                                </svg>
+                            <button type="button" class="btn btn-primary inline-flex items-center" data-bs-toggle="modal" data-bs-target="#addHourModal">
+                                <x-icon name="mdi-plus" size="text-sm" class="mr-2" />
                                 Novo Horário
                             </button>
                         </div>
@@ -267,10 +247,15 @@
                                                     </button>
                                                     <form action="{{ workspace_route('tenant.doctor-settings.destroy-business-hour', $hour->id) }}"
                                                           method="POST" class="inline"
-                                                          onsubmit="event.preventDefault(); confirmAction({ title: 'Remover horário', message: 'Tem certeza que deseja remover este horário?', confirmText: 'Remover', cancelText: 'Cancelar', type: 'warning', onConfirm: () => event.target.submit() }); return false;">
+                                                          data-confirm-submit="true"
+                                                          data-confirm-title="Remover horário"
+                                                          data-confirm-message="Tem certeza que deseja remover este horário?"
+                                                          data-confirm-confirm-text="Remover"
+                                                          data-confirm-cancel-text="Cancelar"
+                                                          data-confirm-type="warning">
                                                         @csrf
                                                         @method('DELETE')
-                                                        <button type="submit" class="inline-flex items-center px-3 py-1.5 bg-red-100 hover:bg-red-200 text-red-700 dark:bg-red-900 dark:text-red-300 dark:hover:bg-red-800 text-xs font-medium rounded-md transition-colors">
+                                                        <button type="submit" class="btn btn-danger">
                                                             Excluir
                                                         </button>
                                                     </form>
@@ -283,9 +268,7 @@
                         @else
                             <div class="bg-blue-50 border border-blue-200 text-blue-800 rounded-md p-4">
                                 <div class="flex items-start">
-                                    <svg class="w-5 h-5 mr-2 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                    </svg>
+                                    <x-icon name="mdi-information-outline" size="text-lg" class="mr-2 mt-0.5" />
                                     <span>Nenhum horário cadastrado. Clique em "Novo Horário" para adicionar.</span>
                                 </div>
                             </div>
@@ -298,15 +281,11 @@
                     <div class="rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/20 p-6">
                         <div class="flex items-center justify-between mb-4">
                             <h3 class="text-lg font-semibold text-gray-900 dark:text-white flex items-center">
-                                <svg class="w-5 h-5 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                                </svg>
+                                <x-icon name="mdi-file-document-outline" size="text-lg" class="mr-2 text-blue-600" />
                                 Tipos de Atendimento
                             </h3>
-                            <button type="button" class="inline-flex items-center px-4 py-2 bg-primary text-white hover:bg-primary/90 font-medium rounded-md transition-colors" data-bs-toggle="modal" data-bs-target="#addTypeModal">
-                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
-                                </svg>
+                            <button type="button" class="btn btn-primary inline-flex items-center" data-bs-toggle="modal" data-bs-target="#addTypeModal">
+                                <x-icon name="mdi-plus" size="text-sm" class="mr-2" />
                                 Novo Tipo
                             </button>
                         </div>
@@ -345,10 +324,15 @@
                                                     </button>
                                                     <form action="{{ workspace_route('tenant.doctor-settings.destroy-appointment-type', $type->id) }}"
                                                           method="POST" class="inline"
-                                                          onsubmit="event.preventDefault(); confirmAction({ title: 'Remover tipo de atendimento', message: 'Tem certeza que deseja remover este tipo de atendimento?', confirmText: 'Remover', cancelText: 'Cancelar', type: 'warning', onConfirm: () => event.target.submit() }); return false;">
+                                                          data-confirm-submit="true"
+                                                          data-confirm-title="Remover tipo de atendimento"
+                                                          data-confirm-message="Tem certeza que deseja remover este tipo de atendimento?"
+                                                          data-confirm-confirm-text="Remover"
+                                                          data-confirm-cancel-text="Cancelar"
+                                                          data-confirm-type="warning">
                                                         @csrf
                                                         @method('DELETE')
-                                                        <button type="submit" class="inline-flex items-center px-3 py-1.5 bg-red-100 hover:bg-red-200 text-red-700 dark:bg-red-900 dark:text-red-300 dark:hover:bg-red-800 text-xs font-medium rounded-md transition-colors">
+                                                        <button type="submit" class="btn btn-danger">
                                                             Excluir
                                                         </button>
                                                     </form>
@@ -361,9 +345,7 @@
                         @else
                             <div class="bg-blue-50 border border-blue-200 text-blue-800 rounded-md p-4">
                                 <div class="flex items-start">
-                                    <svg class="w-5 h-5 mr-2 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                    </svg>
+                                    <x-icon name="mdi-information-outline" size="text-lg" class="mr-2 mt-0.5" />
                                     <span>Nenhum tipo de atendimento cadastrado. Clique em "Novo Tipo" para adicionar.</span>
                                 </div>
                             </div>
@@ -400,10 +382,10 @@
                                 <option value="6" data-name="Sábado">Sábado</option>
                             </select>
                             <div class="mt-3 flex gap-2">
-                                <button type="button" id="add-weekday-btn" class="inline-flex items-center px-3 py-2 bg-primary text-white hover:bg-primary/90 text-sm font-medium rounded-md transition-colors">
+                                <button type="button" id="add-weekday-btn" class="btn btn-primary">
                                     Adicionar Dia
                                 </button>
-                                <button type="button" id="clear-weekdays-btn" class="inline-flex items-center px-3 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 text-sm font-medium rounded-md transition-colors">
+                                <button type="button" id="clear-weekdays-btn" class="btn btn-outline">
                                     Limpar
                                 </button>
                             </div>
@@ -467,8 +449,8 @@
                         </div>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="inline-flex items-center px-4 py-2 border border-gray-300 text-gray-700 bg-white hover:bg-gray-50 rounded-md text-sm font-medium transition-colors" data-bs-dismiss="modal">Cancelar</button>
-                        <button type="submit" class="inline-flex items-center px-4 py-2 bg-primary text-white hover:bg-primary/90 rounded-md text-sm font-medium transition-colors">Salvar</button>
+                        <button type="button" class="btn btn-outline" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-primary">Salvar</button>
                     </div>
                 </form>
             </div>
@@ -537,8 +519,8 @@
                         </div>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="inline-flex items-center px-4 py-2 border border-gray-300 text-gray-700 bg-white hover:bg-gray-50 rounded-md text-sm font-medium transition-colors" data-bs-dismiss="modal">Cancelar</button>
-                        <button type="submit" class="inline-flex items-center px-4 py-2 bg-primary text-white hover:bg-primary/90 rounded-md text-sm font-medium transition-colors">Salvar</button>
+                        <button type="button" class="btn btn-outline" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-primary">Salvar</button>
                     </div>
                 </form>
             </div>
@@ -594,8 +576,8 @@
                         </div>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="inline-flex items-center px-4 py-2 border border-gray-300 text-gray-700 bg-white hover:bg-gray-50 rounded-md text-sm font-medium transition-colors" data-bs-dismiss="modal">Cancelar</button>
-                        <button type="submit" class="inline-flex items-center px-4 py-2 bg-primary text-white hover:bg-primary/90 rounded-md text-sm font-medium transition-colors">Salvar</button>
+                        <button type="button" class="btn btn-outline" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-primary">Salvar</button>
                     </div>
                 </form>
             </div>
@@ -639,8 +621,8 @@
                         </div>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="inline-flex items-center px-4 py-2 border border-gray-300 text-gray-700 bg-white hover:bg-gray-50 rounded-md text-sm font-medium transition-colors" data-bs-dismiss="modal">Cancelar</button>
-                        <button type="submit" class="inline-flex items-center px-4 py-2 bg-primary text-white hover:bg-primary/90 rounded-md text-sm font-medium transition-colors">Salvar</button>
+                        <button type="button" class="btn btn-outline" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-primary">Salvar</button>
                     </div>
                 </form>
             </div>

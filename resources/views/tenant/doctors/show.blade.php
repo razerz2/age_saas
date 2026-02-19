@@ -8,9 +8,7 @@
         <div class="flex items-center justify-between">
             <div>
                 <h1 class="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-                    <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
-                    </svg>
+                    <x-icon name="mdi-stethoscope" size="text-xl" class="text-blue-600" />
                     Detalhes do Médico
                 </h1>
                 <nav class="flex mt-2" aria-label="Breadcrumb">
@@ -22,53 +20,48 @@
                         </li>
                         <li>
                             <div class="flex items-center">
-                                <svg class="w-4 h-4 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414L9 14.707a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
-                                </svg>
+                                <x-icon name="mdi-chevron-right" size="text-sm" class="text-gray-400" />
                                 <a href="{{ workspace_route('tenant.doctors.index') }}" class="ml-1 text-gray-700 hover:text-gray-900">Médicos</a>
                             </div>
                         </li>
                         <li>
                             <div class="flex items-center">
-                                <svg class="w-4 h-4 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414L9 14.707a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
-                                </svg>
+                                <x-icon name="mdi-chevron-right" size="text-sm" class="text-gray-400" />
                                 <span class="ml-1 text-gray-500">Detalhes</span>
                             </div>
                         </li>
                     </ol>
                 </nav>
             </div>
-            <div class="flex items-center justify-end gap-3 flex-nowrap">
-                <a href="{{ workspace_route('tenant.doctors.edit', $doctor->id) }}" class="btn-patient-primary inline-flex items-center gap-2">
-                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
-                    </svg>
+        </div>
+        <div class="mt-4 flex items-center justify-between">
+            <a href="{{ workspace_route('tenant.doctors.index') }}" class="btn btn-outline inline-flex items-center">
+                <x-icon name="mdi-arrow-left" size="text-sm" class="mr-2" />
+                Voltar
+            </a>
+            <div class="flex items-center gap-3">
+                <a href="{{ workspace_route('tenant.doctors.edit', $doctor->id) }}" class="btn btn-primary inline-flex items-center">
+                    <x-icon name="mdi-pencil-outline" size="text-sm" class="mr-2" />
                     Editar
-                </a>
-                <a href="{{ workspace_route('tenant.doctors.index') }}" class="btn-patient-secondary inline-flex items-center gap-2">
-                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
-                    </svg>
-                    Voltar
                 </a>
                 @if(!$doctor->hasAppointments())
                     <form action="{{ workspace_route('tenant.doctors.destroy', $doctor->id) }}" method="POST" class="inline"
-                          onsubmit="event.preventDefault(); confirmAction({ title: 'Excluir médico', message: 'Tem certeza que deseja excluir este médico? Esta ação não pode ser desfeita.', confirmText: 'Excluir', cancelText: 'Cancelar', type: 'error', onConfirm: () => event.target.submit() }); return false;">
+                          data-confirm-submit="true"
+                          data-confirm-title="Excluir médico"
+                          data-confirm-message="Tem certeza que deseja excluir este médico? Esta ação não pode ser desfeita."
+                          data-confirm-confirm-text="Excluir"
+                          data-confirm-cancel-text="Cancelar"
+                          data-confirm-type="error">
                         @csrf
                         @method('DELETE')
-                    <button type="submit" class="btn-patient-secondary text-red-600 hover:text-red-800 inline-flex items-center gap-2">
-                            <svg class="w-4 h-4 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-                            </svg>
+                        <button type="submit" class="btn btn-danger inline-flex items-center">
+                            <x-icon name="mdi-trash-can-outline" size="text-sm" class="mr-2" />
                             Excluir
                         </button>
                     </form>
                 @else
-                    <button type="button" class="btn-patient-secondary text-gray-500 cursor-not-allowed inline-flex items-center gap-2" title="Não é possível excluir médico com atendimentos cadastrados">
-                        <svg class="w-4 h-4 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-                        </svg>
+                    <button type="button" class="btn btn-danger opacity-60 cursor-not-allowed inline-flex items-center" title="Não é possível excluir médico com atendimentos cadastrados" disabled>
+                        <x-icon name="mdi-trash-can-outline" size="text-sm" class="mr-2" />
                         Excluir
                     </button>
                 @endif
@@ -85,23 +78,17 @@
             <div class="flex flex-wrap gap-3">
                 @if ($doctor->status === 'active')
                     <span class="inline-flex items-center px-3 py-1 rounded-full bg-green-100 text-green-800 text-xs font-semibold">
-                        <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd" d="M16.704 5.29a1 1 0 00-1.414-1.414L8 11.166 5.707 8.871a1 1 0 10-1.414 1.414l3 3a1 1 0 001.414 0l7-7z" clip-rule="evenodd"></path>
-                        </svg>
+                        <x-icon name="mdi-check-circle-outline" size="text-xs" class="mr-1" />
                         Ativo
                     </span>
                 @else
                     <span class="inline-flex items-center px-3 py-1 rounded-full bg-red-100 text-red-800 text-xs font-semibold">
-                        <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1.414-9.414a1 1 0 10-1.414 1.414l1.414-1.414zm0 0L10 12l-1.414-1.414a1 1 0 011.414-1.414l1.414 1.414z" clip-rule="evenodd"></path>
-                        </svg>
+                        <x-icon name="mdi-close-circle-outline" size="text-xs" class="mr-1" />
                         Bloqueado
                     </span>
                 @endif
                 <span class="inline-flex items-center px-3 py-1 rounded-full bg-blue-100 text-blue-800 text-xs font-semibold">
-                    <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM11 12H9v4h2v-4z" clip-rule="evenodd"></path>
-                    </svg>
+                    <x-icon name="mdi-stethoscope" size="text-xs" class="mr-1" />
                     Médico
                 </span>
             </div>

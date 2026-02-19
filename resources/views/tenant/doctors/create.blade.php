@@ -3,24 +3,6 @@
 @section('title', 'Criar Médico')
 @section('page', 'doctors')
 
-@push('styles')
-    <link rel="stylesheet" href="{{ mix('css/tenant-doctors.css') }}">
-@endpush
-
-@push('scripts')
-    <script type="module">
-        import { init as initDoctorsPage } from '{{ mix('js/tenant/pages/doctors.js') }}';
-
-        document.addEventListener('DOMContentLoaded', () => {
-            try {
-                initDoctorsPage();
-            } catch (error) {
-                console.error('Erro ao inicializar a página de médicos:', error);
-            }
-        });
-    </script>
-@endpush
-
 @section('content')
 
     <!-- Page Header -->
@@ -30,22 +12,16 @@
                 <ol class="flex flex-wrap items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
                     <li>
                         <a href="{{ workspace_route('tenant.dashboard') }}" class="inline-flex items-center gap-2 text-gray-700 hover:text-blue-600 dark:text-gray-300 dark:hover:text-white">
-                            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                                <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"></path>
-                            </svg>
+                            <x-icon name="mdi-home-outline" size="text-base" />
                             Dashboard
                         </a>
                     </li>
                     <li class="flex items-center gap-2">
-                        <svg class="w-4 h-4 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
-                        </svg>
+                        <x-icon name="mdi-chevron-right" size="text-sm" class="text-gray-400" />
                         <a href="{{ workspace_route('tenant.doctors.index') }}" class="text-gray-700 hover:text-blue-600 dark:text-gray-300 dark:hover:text-white">Médicos</a>
                     </li>
                     <li class="flex items-center gap-2">
-                        <svg class="w-4 h-4 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
-                        </svg>
+                        <x-icon name="mdi-chevron-right" size="text-sm" class="text-gray-400" />
                         <span class="text-gray-900 dark:text-white font-semibold">Criar</span>
                     </li>
                 </ol>
@@ -61,9 +37,7 @@
             <div class="flex items-center">
                 <div>
                     <h2 class="text-xl font-semibold text-gray-900 dark:text-white flex items-center">
-                        <svg class="w-6 h-6 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"></path>
-                        </svg>
+                        <x-icon name="mdi-account-plus-outline" size="text-xl" class="mr-2 text-blue-600" />
                         Novo Médico
                     </h2>
                     <p class="text-gray-600 dark:text-gray-400 mt-1">Preencha os dados abaixo para cadastrar um novo médico</p>
@@ -78,16 +52,12 @@
                 <!-- Seção: Informações Básicas -->
                 <div>
                     <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
-                        <svg class="w-5 h-5 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                        </svg>
+                        <x-icon name="mdi-information-outline" size="text-lg" class="mr-2 text-blue-600" />
                         Informações Básicas
                     </h3>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                            <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7 7z"></path>
-                            </svg>
+                            <x-icon name="mdi-account-outline" size="text-sm" class="inline mr-1" />
                             Usuário <span class="text-red-500">*</span>
                         </label>
                         <select name="user_id" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white @error('user_id') border-red-500 @enderror" required>
@@ -105,17 +75,13 @@
                 <!-- Seção: Dados Profissionais -->
                 <div>
                     <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
-                        <svg class="w-5 h-5 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A6.002 6.002 0 0015 7.001V5a4 4 0 00-8 0v2.001A6.002 6.002 0 001 13.255V16a2 2 0 002 2h16a2 2 0 002-2v-2.745zM9 5a2 2 0 014 0v2.001H9V5z"></path>
-                        </svg>
+                        <x-icon name="mdi-briefcase-outline" size="text-lg" class="mr-2 text-blue-600" />
                         Dados Profissionais
                     </h3>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
                             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2M15 11h3m-3 4h2"></path>
-                                </svg>
+                                <x-icon name="mdi-card-account-details-outline" size="text-sm" class="inline mr-1" />
                                 Número CRM, CRP ou CRO
                             </label>
                             <input type="text" 
@@ -130,10 +96,7 @@
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                                </svg>
+                                <x-icon name="mdi-map-marker-outline" size="text-sm" class="inline mr-1" />
                                 Estado CRM, CRP ou CRO
                             </label>
                             <input type="text" 
@@ -150,9 +113,7 @@
                     </div>
                     <div class="mt-6">
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                            <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path>
-                            </svg>
+                            <x-icon name="mdi-pencil-outline" size="text-sm" class="inline mr-1" />
                             Assinatura
                         </label>
                         <textarea class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white @error('signature') border-red-500 @enderror" 
@@ -173,9 +134,7 @@
                     <!-- Seção: Personalização do Profissional -->
                     <div class="p-4 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg">
                         <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
-                            <svg class="w-5 h-5 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path>
-                            </svg>
+                            <x-icon name="mdi-tune-variant" size="text-lg" class="mr-2 text-blue-600" />
                             Personalização do Profissional (Opcional)
                         </h3>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -242,9 +201,7 @@
                 <!-- Seção: Especialidades Médicas -->
                 <div>
                     <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
-                        <svg class="w-5 h-5 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                        </svg>
+                        <x-icon name="mdi-stethoscope" size="text-lg" class="mr-2 text-blue-600" />
                         Especialidades Médicas
                     </h3>
                     <div>
@@ -262,16 +219,12 @@
                             </div>
                             <div class="md:col-span-4">
                                 <div class="flex flex-col gap-2 sm:flex-row sm:justify-end">
-                                    <button type="button" id="add-specialty-btn" class="btn-patient-primary">
-                                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
-                                        </svg>
+                                    <button type="button" id="add-specialty-btn" class="btn btn-primary">
+                                        <x-icon name="mdi-plus" size="text-sm" class="mr-2" />
                                         Adicionar
                                     </button>
-                                    <button type="button" id="clear-specialties-btn" class="btn-patient-secondary">
-                                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-                                        </svg>
+                                    <button type="button" id="clear-specialties-btn" class="btn btn-outline">
+                                        <x-icon name="mdi-trash-can-outline" size="text-sm" class="mr-2" />
                                         Remover selecionadas
                                     </button>
                                 </div>
@@ -287,23 +240,17 @@
                                     @endphp
                                     @if($specialty)
                                         <span class="inline-flex items-center gap-2 px-3 py-2 bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 rounded-full text-sm font-medium mr-2 mb-2 specialty-badge" data-id="{{ $specialty->id }}">
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                                            </svg>
+                                            <x-icon name="mdi-file-document-outline" size="text-sm" />
                                             {{ $specialty->name }}
                                             <button type="button" class="text-blue-600 hover:text-blue-800 dark:text-blue-300 dark:hover:text-blue-100 ml-1" aria-label="Remover">
-                                                <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                                                    <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
-                                                </svg>
+                                                <x-icon name="mdi-close" size="text-xs" />
                                             </button>
                                         </span>
                                     @endif
                                 @endforeach
                             @else
                                 <p class="text-gray-500 dark:text-gray-400 mb-0">
-                                    <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                    </svg>
+                                    <x-icon name="mdi-information-outline" size="text-sm" class="inline mr-1" />
                                     Nenhuma especialidade selecionada
                                 </p>
                             @endif
@@ -320,16 +267,12 @@
 
                 <!-- Botões de Ação -->
                 <div class="flex flex-col gap-3 pt-6 border-t border-gray-200 dark:border-gray-700 sm:flex-row sm:items-center sm:justify-between">
-                    <a href="{{ workspace_route('tenant.doctors.index') }}" class="btn-patient-secondary">
-                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7v10a2 2 0 002-2h4v-4a2 2 0 00-2-2h-4v-4a2 2 0 00-2-2z"></path>
-                        </svg>
-                        Cancelar
+                    <a href="{{ workspace_route('tenant.doctors.index') }}" class="btn btn-outline inline-flex items-center">
+                        <x-icon name="mdi-arrow-left" size="text-sm" class="mr-2" />
+                        Voltar
                     </a>
-                    <button type="submit" class="btn-patient-primary">
-                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2h14a2 2 0 002 2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
-                        </svg>
+                    <button type="submit" class="btn btn-primary inline-flex items-center">
+                        <x-icon name="mdi-content-save-outline" size="text-sm" class="mr-2" />
                         Salvar Médico
                     </button>
                 </div>
