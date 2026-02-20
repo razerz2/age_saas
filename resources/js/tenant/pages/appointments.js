@@ -83,6 +83,30 @@ export function init() {
 		return;
 	}
 
+	function refreshSlots({ initial = false, initialTimeStart = null, initialTimeEnd = null, initialStartsAt = null, initialEndsAt = null } = {}) {
+		const doctorId = doctorSelect.value;
+		const date = dateInput.value;
+		const typeId = appointmentTypeSelect ? appointmentTypeSelect.value : null;
+
+		if (!doctorId || !date) {
+			timeSelect.innerHTML = '<option value="">Primeiro selecione mÃ©dico e data</option>';
+			timeSelect.disabled = true;
+			startsAtInput.value = '';
+			endsAtInput.value = '';
+			return;
+		}
+
+		loadAvailableSlots(
+			doctorId,
+			typeId,
+			initial,
+			initialTimeStart,
+			initialTimeEnd,
+			initialStartsAt,
+			initialEndsAt
+		);
+	}
+
 	function getDoctorName() {
 		if (doctorNameInput) {
 			return doctorNameInput.value || doctorSelect.dataset.selectedName || 'N/A';
@@ -218,18 +242,24 @@ export function init() {
 		const finalUrl = appointmentTypeId ? `${baseUrl}&appointment_type_id=${appointmentTypeId}` : baseUrl;
 
 		fetch(finalUrl)
-			.then((response) => response.json())
+			.then((response) => {
+				if (!response.ok) {
+					throw new Error(`HTTP error! status: ${response.status}`);
+				}
+				return response.json();
+			})
 			.then((data) => {
+				const slots = Array.isArray(data) ? data : Array.isArray(data?.data) ? data.data : [];
 				timeSelect.innerHTML = '<option value="">Selecione um horário</option>';
 
-				if (!data || data.length === 0) {
+				if (slots.length === 0) {
 					timeSelect.innerHTML = '<option value="">Nenhum horário disponível para esta data</option>';
 					timeSelect.disabled = true;
 					return;
 				}
 
 				let selectedFound = false;
-				data.forEach((slot) => {
+				slots.forEach((slot) => {
 					const slotStart = slot.datetime_start || slot.start || slot.start_time;
 					const slotEnd = slot.datetime_end || slot.end || slot.end_time;
 					const slotLabel =
@@ -313,32 +343,27 @@ export function init() {
 
 		loadAppointmentTypes(doctorId);
 		loadSpecialties(doctorId);
-
-		if (dateInput.value) {
-			const typeId = appointmentTypeSelect ? appointmentTypeSelect.value : null;
-			loadAvailableSlots(doctorId, typeId);
-		}
+		refreshSlots();
 	});
 
 	if (doctorSelect.tagName !== 'SELECT') {
 		doctorSelect.addEventListener('doctor:selected', () => {
 			doctorSelect.dispatchEvent(new Event('change'));
+			refreshSlots();
 		});
 	}
 
 	dateInput.addEventListener('change', () => {
-		const doctorId = doctorSelect.value;
-		const typeId = appointmentTypeSelect ? appointmentTypeSelect.value : null;
-		loadAvailableSlots(doctorId, typeId);
+		refreshSlots();
+	});
+
+	dateInput.addEventListener('input', () => {
+		refreshSlots();
 	});
 
 	if (appointmentTypeSelect) {
 		appointmentTypeSelect.addEventListener('change', () => {
-			const doctorId = doctorSelect.value;
-			const typeId = appointmentTypeSelect.value;
-			if (doctorId && dateInput.value) {
-				loadAvailableSlots(doctorId, typeId);
-			}
+			refreshSlots();
 		});
 	}
 
@@ -409,15 +434,13 @@ export function init() {
 		loadSpecialties(doctorSelect.value, currentSpecialtyId);
 		if (initialDate) {
 			dateInput.value = initialDate;
-			loadAvailableSlots(
-				doctorSelect.value,
-				currentAppointmentTypeId,
-				true,
+			refreshSlots({
+				initial: true,
 				initialTimeStart,
 				initialTimeEnd,
 				initialStartsAt,
-				initialEndsAt
-			);
+				initialEndsAt,
+			});
 		}
 	}
 
