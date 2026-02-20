@@ -340,15 +340,15 @@ function bindAddressForm() {
     });
 
     zipcodeField?.addEventListener('input', (event) => {
-        let value = event.target.value.replace(/\\D/g, '');
+        let value = event.target.value.replace(/\D/g, '');
         if (value.length > 8) value = value.substring(0, 8);
         if (value.length > 5) {
             value = `${value.substring(0, 5)}-${value.substring(5)}`;
         }
         event.target.value = value;
 
-        if (value.replace(/\\D/g, '').length === 8) {
-            fetch(`https://viacep.com.br/ws/${value.replace(/\\D/g, '')}/json/`)
+        if (value.replace(/\D/g, '').length === 8) {
+            fetch(`https://viacep.com.br/ws/${value.replace(/\D/g, '')}/json/`)
                 .then((response) => response.json())
                 .then((data) => {
                     if (!data.erro) {
