@@ -81,14 +81,18 @@
                                             <i class="mdi mdi-doctor me-1"></i>
                                             Médico <span class="text-danger">*</span>
                                         </label>
-                                        <select name="doctor_id" id="doctor_id" class="form-control @error('doctor_id') is-invalid @enderror" required>
-                                            <option value="">Selecione um médico</option>
-                                            @foreach($doctors as $doctor)
-                                                <option value="{{ $doctor->id }}" {{ old('doctor_id', $appointment->doctor_id) == $doctor->id ? 'selected' : '' }}>
-                                                    {{ $doctor->user->name_full ?? $doctor->user->name }}
-                                                </option>
-                                            @endforeach
-                                        </select>
+                                        @php
+                                            $selectedDoctorId = old('doctor_id', $appointment->doctor_id);
+                                            $selectedDoctor = $doctors->firstWhere('id', $selectedDoctorId);
+                                            $selectedDoctorName = $selectedDoctor ? ($selectedDoctor->user->name_full ?? $selectedDoctor->user->name) : '';
+                                        @endphp
+                                        <div class="flex items-center gap-2">
+                                            <input type="hidden" name="doctor_id" id="doctor_id" value="{{ $selectedDoctorId }}" data-selected-name="{{ $selectedDoctorName }}" required>
+                                            <input type="text" id="doctor_name" class="form-control @error('doctor_id') is-invalid @enderror" value="{{ $selectedDoctorName }}" placeholder="Selecione um mÃ©dico" readonly>
+                                            <x-tailadmin-button type="button" variant="secondary" size="sm" class="js-open-entity-search" data-entity-type="doctors" data-search-url="{{ workspace_route('tenant.appointments.api.search-doctors') }}" data-hidden-input-id="doctor_id" data-display-input-id="doctor_name" data-modal-title="Buscar mÃ©dico">
+                                                Buscar
+                                            </x-tailadmin-button>
+                                        </div>
                                         @error('doctor_id')
                                             <div class="invalid-feedback d-block">{{ $message }}</div>
                                         @enderror
@@ -101,12 +105,17 @@
                                             <i class="mdi mdi-account me-1"></i>
                                             Paciente <span class="text-danger">*</span>
                                         </label>
-                                        <select name="patient_id" class="form-control @error('patient_id') is-invalid @enderror" required>
-                                            <option value="">Selecione um paciente</option>
-                                            @foreach($patients as $patient)
-                                                <option value="{{ $patient->id }}" {{ old('patient_id', $appointment->patient_id) == $patient->id ? 'selected' : '' }}>{{ $patient->full_name }}</option>
-                                            @endforeach
-                                        </select>
+                                        @php
+                                            $selectedPatientId = old('patient_id', $appointment->patient_id);
+                                            $selectedPatient = $patients->firstWhere('id', $selectedPatientId);
+                                        @endphp
+                                        <div class="flex items-center gap-2">
+                                            <input type="hidden" name="patient_id" id="patient_id" value="{{ $selectedPatientId }}" required>
+                                            <input type="text" id="patient_name" class="form-control @error('patient_id') is-invalid @enderror" value="{{ $selectedPatient?->full_name ?? '' }}" placeholder="Selecione um paciente" readonly>
+                                            <x-tailadmin-button type="button" variant="secondary" size="sm" class="js-open-entity-search" data-entity-type="patients" data-search-url="{{ workspace_route('tenant.appointments.api.search-patients') }}" data-hidden-input-id="patient_id" data-display-input-id="patient_name" data-modal-title="Buscar paciente">
+                                                Buscar
+                                            </x-tailadmin-button>
+                                        </div>
                                         @error('patient_id')
                                             <div class="invalid-feedback d-block">{{ $message }}</div>
                                         @enderror
@@ -159,10 +168,21 @@
                                             <i class="mdi mdi-calendar-start me-1"></i>
                                             Data <span class="text-danger">*</span>
                                         </label>
-                                            <div class="flex gap-2">
+                                            <div class="flex gap-2 appointment-date-field-group">
                                                 <input type="date" id="appointment_date" class="form-control @error('appointment_date') is-invalid @enderror @error('starts_at') is-invalid @enderror" 
                                                        name="appointment_date" value="{{ old('appointment_date', $appointment->starts_at ? $appointment->starts_at->format('Y-m-d') : '') }}" 
-                                                       min="{{ date('Y-m-d') }}" required>
+                                                       min="{{ \Carbon\Carbon::now('America/Campo_Grande')->toDateString() }}" required>
+                                                <x-tailadmin-button
+                                                    type="button"
+                                                    variant="secondary"
+                                                    size="sm"
+                                                    class="px-2 py-2 appointment-date-picker-trigger"
+                                                    data-action="open-date-picker"
+                                                    aria-label="Abrir calendário"
+                                                    title="Abrir calendário"
+                                                >
+                                                    <i class="mdi mdi-calendar"></i>
+                                                </x-tailadmin-button>
                                                 <x-tailadmin-button type="button" variant="secondary" size="sm" id="btn-show-business-hours"
                                                     class="px-2 py-2" data-bs-toggle="modal" data-bs-target="#businessHoursModal"
                                                     title="Ver dias trabalhados do médico">
@@ -267,6 +287,29 @@
         </div>
     </div>
 
+    <div id="entitySearchModal" class="entity-search-modal hidden" data-entity-search-modal>
+        <div class="entity-search-modal__backdrop" data-entity-search-backdrop></div>
+        <div class="entity-search-modal__dialog" role="dialog" aria-modal="true" aria-labelledby="entity-search-modal-title">
+            <div class="entity-search-modal__header">
+                <h3 id="entity-search-modal-title" class="text-lg font-semibold text-gray-900 dark:text-white" data-entity-search-title>Buscar</h3>
+                <button type="button" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 js-close-entity-search-modal" aria-label="Fechar modal de busca">
+                    <x-icon name="close" class="w-6 h-6" />
+                </button>
+            </div>
+            <div class="entity-search-modal__body">
+                <input type="text" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white" placeholder="Digite para buscar..." data-entity-search-input>
+                <div class="entity-search-modal__results-wrap border border-gray-200 dark:border-gray-700 rounded-md mt-3">
+                    <div class="p-3 text-sm text-gray-500 dark:text-gray-400" data-entity-search-empty>Digite para buscar.</div>
+                    <div class="hidden p-3 text-sm text-gray-500 dark:text-gray-400" data-entity-search-loading>Buscando...</div>
+                    <ul class="hidden" data-entity-search-results></ul>
+                </div>
+            </div>
+            <div class="entity-search-modal__footer">
+                <button type="button" class="btn btn-outline js-cancel-entity-search">Cancelar</button>
+                <button type="button" class="btn btn-primary js-confirm-entity-search" data-entity-search-confirm disabled>Selecionar</button>
+            </div>
+        </div>
+    </div>
     {{-- Modal de Dias Trabalhados --}}
     <div class="modal fade" id="businessHoursModal" tabindex="-1" aria-labelledby="businessHoursModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-lg">

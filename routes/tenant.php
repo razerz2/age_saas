@@ -456,6 +456,10 @@ Route::prefix('workspace/{slug}')
         Route::get('api/doctors/{doctorId}/business-hours', [AppointmentController::class, 'getBusinessHoursByDoctor'])
             ->where('doctorId', '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}')
             ->name('appointments.api.business-hours');
+        Route::get('api/appointments/search/patients', [AppointmentController::class, 'searchPatients'])
+            ->name('appointments.api.search-patients');
+        Route::get('api/appointments/search/doctors', [AppointmentController::class, 'searchDoctors'])
+            ->name('appointments.api.search-doctors');
 
 
         // =====================================================================

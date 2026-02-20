@@ -51,10 +51,11 @@ class StoreAppointmentRequest extends FormRequest
         $validator->after(function ($validator) {
             $startsAt = Carbon::parse($this->starts_at);
             $endsAt = Carbon::parse($this->ends_at);
+            $startsAtCampoGrande = $startsAt->copy()->timezone('America/Campo_Grande');
             
             // Verificar se a data de início não é anterior à data/hora atual
-            $now = Carbon::now();
-            if ($startsAt->lt($now)) {
+            $now = Carbon::now('America/Campo_Grande');
+            if ($startsAtCampoGrande->lt($now)) {
                 $validator->errors()->add('starts_at', 'Não é possível agendar para uma data/hora passada. Por favor, selecione uma data/hora atual ou futura.');
                 return;
             }

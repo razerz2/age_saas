@@ -1,174 +1,79 @@
 @extends('layouts.tailadmin.app')
 
 @section('title', 'Link de Agendamento Público')
-@section('page', 'settings')
+@section('page', 'appointments')
 
 @section('content')
-<div class="page-header">
-    <h3 class="page-title">
-        <span class="page-title-icon bg-gradient-primary text-white me-2">
-            <i class="mdi mdi-link-variant"></i>
-        </span>
-        Link de Agendamento Público
-    </h3>
-    <nav aria-label="breadcrumb">
-        <ol class="breadcrumb">
-            <li class="breadcrumb-item">
-                <a href="{{ workspace_route('tenant.dashboard') }}">Dashboard</a>
-            </li>
-            <li class="breadcrumb-item active" aria-current="page">Link de Agendamento</li>
-        </ol>
-    </nav>
-</div>
-
-<div class="row">
-    <div class="col-12">
-        <div class="card shadow-sm">
-            <div class="card-body p-4">
-                <h4 class="mb-4">Link de Agendamento Público</h4>
-                <p class="text-muted mb-4">
-                    Compartilhe este link com seus pacientes para que eles possam agendar consultas diretamente pela internet.
-                </p>
-
-                @if($publicBookingUrl)
-                    <div class="card border shadow-sm mb-4">
-                        <div class="card-header bg-primary text-white">
-                            <h5 class="mb-0">
-                                <i class="mdi mdi-link-variant me-2"></i>Seu Link de Agendamento
-                            </h5>
-                        </div>
-                        <div class="card-body">
-                            <div class="mb-3">
-                                <label class="form-label fw-bold">Link para compartilhar:</label>
-                                <div class="flex items-stretch gap-2">
-                                    <input type="text" class="form-control flex-1" id="publicBookingLink" value="{{ $publicBookingUrl }}" readonly>
-                                    <x-tailadmin-button type="button" variant="primary" size="sm" class="py-2 px-4" data-copy-link="publicBookingLink">
-                                        <i class="mdi mdi-content-copy"></i> Copiar Link
-                                    </x-tailadmin-button>
-                                </div>
-                                <small class="text-muted d-block mt-2">
-                                    <i class="mdi mdi-information-outline me-1"></i>
-                                    Clique em "Copiar Link" para copiar o endereço completo
-                                </small>
-                            </div>
-
-                            <div class="alert alert-success d-flex align-items-start" id="copySuccessAlert" role="alert" style="display: none;">
-                                <i class="mdi mdi-check-circle-outline me-3" style="font-size: 1.5rem; flex-shrink: 0;"></i>
-                                <div class="flex-grow-1">
-                                    <strong class="d-block mb-2">Link copiado com sucesso!</strong>
-                                    <p class="mb-0" style="font-size: 0.9rem;">
-                                        O link foi copiado para a área de transferência. Agora você pode colar em qualquer lugar.
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                @else
-                    <div class="alert alert-warning" role="alert">
-                        <i class="mdi mdi-alert-circle-outline me-2"></i>
-                        <strong>Atenção:</strong> Não foi possível gerar o link de agendamento público. Verifique se o tenant está configurado corretamente.
-                    </div>
-                @endif
-
-                <div class="card border shadow-sm">
-                    <div class="card-header bg-light">
-                        <h5 class="mb-0">
-                            <i class="mdi mdi-information-outline me-2"></i>Sobre o Link de Agendamento Público
-                        </h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="mb-4">
-                            <h6 class="fw-bold mb-3">
-                                <i class="mdi mdi-calendar-check me-2 text-primary"></i>Como funciona?
-                            </h6>
-                            <p class="text-muted mb-3">
-                                O link de agendamento público permite que seus pacientes agendem consultas diretamente pela internet, 
-                                sem precisar entrar em contato por telefone ou WhatsApp. É uma forma prática e moderna de receber agendamentos.
-                            </p>
-                            <ul class="list-unstyled mb-0">
-                                <li class="mb-2">
-                                    <i class="mdi mdi-check-circle text-success me-2"></i>
-                                    <strong>Fácil de usar:</strong> Os pacientes acessam o link e seguem um processo simples e intuitivo
-                                </li>
-                                <li class="mb-2">
-                                    <i class="mdi mdi-check-circle text-success me-2"></i>
-                                    <strong>Disponível 24/7:</strong> Seus pacientes podem agendar a qualquer hora do dia ou da noite
-                                </li>
-                                <li class="mb-2">
-                                    <i class="mdi mdi-check-circle text-success me-2"></i>
-                                    <strong>Reduz filas:</strong> Diminui o volume de ligações e mensagens para agendamento
-                                </li>
-                                <li class="mb-2">
-                                    <i class="mdi mdi-check-circle text-success me-2"></i>
-                                    <strong>Organização automática:</strong> Os agendamentos são registrados diretamente no sistema
-                                </li>
-                            </ul>
-                        </div>
-
-                        <div class="mb-4">
-                            <h6 class="fw-bold mb-3">
-                                <i class="mdi mdi-share-variant me-2 text-primary"></i>Onde compartilhar?
-                            </h6>
-                            <p class="text-muted mb-3">
-                                Você pode adicionar este link em vários lugares para facilitar o acesso dos seus pacientes:
-                            </p>
-                            <div class="row">
-                                <div class="col-md-6 mb-3">
-                                    <div class="d-flex align-items-start">
-                                        <i class="mdi mdi-facebook me-3 text-primary" style="font-size: 1.5rem;"></i>
-                                        <div>
-                                            <strong class="d-block">Redes Sociais</strong>
-                                            <small class="text-muted">Adicione o link na bio do Instagram, Facebook, LinkedIn ou outras redes sociais da sua clínica ou consultório</small>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="col-md-6 mb-3">
-                                    <div class="d-flex align-items-start">
-                                        <i class="mdi mdi-whatsapp me-3 text-success" style="font-size: 1.5rem;"></i>
-                                        <div>
-                                            <strong class="d-block">WhatsApp</strong>
-                                            <small class="text-muted">Envie o link diretamente para pacientes ou adicione em mensagens automáticas</small>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="col-md-6 mb-3">
-                                    <div class="d-flex align-items-start">
-                                        <i class="mdi mdi-email me-3 text-danger" style="font-size: 1.5rem;"></i>
-                                        <div>
-                                            <strong class="d-block">E-mail</strong>
-                                            <small class="text-muted">Inclua o link em assinaturas de e-mail ou em campanhas de marketing</small>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="col-md-6 mb-3">
-                                    <div class="d-flex align-items-start">
-                                        <i class="mdi mdi-web me-3 text-info" style="font-size: 1.5rem;"></i>
-                                        <div>
-                                            <strong class="d-block">Site ou Blog</strong>
-                                            <small class="text-muted">Adicione um botão ou link no seu site para facilitar o agendamento</small>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="alert alert-info d-flex align-items-start" role="alert">
-                            <i class="mdi mdi-lightbulb-outline me-3" style="font-size: 1.5rem; flex-shrink: 0;"></i>
-                            <div class="flex-grow-1">
-                                <strong class="d-block mb-2">Dica:</strong>
-                                <p class="mb-0" style="font-size: 0.9rem;">
-                                    Para médicos autônomos, clínicas e empresas, este link é uma excelente forma de profissionalizar 
-                                    o atendimento e facilitar o processo de agendamento. Quanto mais fácil for para o paciente agendar, 
-                                    mais consultas você receberá!
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+    <div class="page-header mb-6">
+        <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <nav class="min-w-0 flex-1" aria-label="breadcrumb">
+                <ol class="flex flex-wrap items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
+                    <li>
+                        <a href="{{ workspace_route('tenant.dashboard') }}" class="inline-flex items-center gap-2 text-gray-700 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white">
+                            <x-icon name="home-outline" class="w-5 h-5" />
+                            Dashboard
+                        </a>
+                    </li>
+                    <li class="flex items-center gap-2">
+                        <x-icon name="chevron-right" class="w-4 h-4 text-gray-400" />
+                        <span class="text-gray-900 dark:text-white font-semibold">Agendamento Público</span>
+                    </li>
+                </ol>
+            </nav>
         </div>
     </div>
-</div>
 
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
+        <div class="p-6 border-b border-gray-200 dark:border-gray-700">
+            <h2 class="text-xl font-semibold text-gray-900 dark:text-white flex items-center">
+                <x-icon name="link-variant" class="w-6 h-6 mr-2 text-blue-600" />
+                Link de Agendamento Público
+            </h2>
+            <p class="text-gray-600 dark:text-gray-400 mt-1">
+                Compartilhe este link com seus pacientes para que eles iniciem o agendamento online.
+            </p>
+        </div>
+
+        <div class="p-6 space-y-6">
+            @if($publicBookingUrl)
+                <div class="rounded-lg border border-blue-200 bg-blue-50 dark:border-blue-800 dark:bg-blue-900/20 p-4">
+                    <label for="publicBookingLink" class="block text-sm font-medium text-blue-900 dark:text-blue-100 mb-2">
+                        Link para compartilhar
+                    </label>
+                    <div class="flex flex-col sm:flex-row gap-2">
+                        <input
+                            id="publicBookingLink"
+                            type="text"
+                            class="w-full px-3 py-2 border border-blue-300 dark:border-blue-700 rounded-md shadow-sm bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
+                            value="{{ $publicBookingUrl }}"
+                            readonly
+                        >
+                        <button
+                            type="button"
+                            class="btn btn-primary"
+                            data-copy-booking-link
+                            data-booking-link="{{ $publicBookingUrl }}"
+                        >
+                            <x-icon name="content-copy" class="w-4 h-4 mr-1.5" />
+                            Copiar link
+                        </button>
+                    </div>
+                    <p class="mt-2 text-sm text-blue-800 dark:text-blue-200 hidden" data-copy-feedback>
+                        Link copiado para a área de transferência.
+                    </p>
+                </div>
+
+                <div class="rounded-lg border border-gray-200 dark:border-gray-700 p-4">
+                    <h3 class="text-base font-semibold text-gray-900 dark:text-white mb-2">Como usar</h3>
+                    <p class="text-sm text-gray-600 dark:text-gray-400">
+                        Envie o link por WhatsApp, e-mail ou redes sociais. O paciente será direcionado ao fluxo público de identificação e agendamento.
+                    </p>
+                </div>
+            @else
+                <div class="rounded-lg border border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-900/20 p-4 text-amber-800 dark:text-amber-200">
+                    Não foi possível gerar o link de agendamento público para este tenant.
+                </div>
+            @endif
+        </div>
+    </div>
 @endsection
-

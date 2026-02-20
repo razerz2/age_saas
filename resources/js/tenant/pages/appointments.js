@@ -34,7 +34,11 @@ export function init() {
 		});
 	});
 
+	bindCopyBookingLinks();
+	initEntitySearchModal();
+
 	const doctorSelect = document.getElementById('doctor_id');
+	const doctorNameInput = document.getElementById('doctor_name');
 	const appointmentTypeSelect = document.getElementById('appointment_type');
 	const specialtySelect = document.getElementById('specialty_id');
 	const dateInput = document.getElementById('appointment_date');
@@ -45,12 +49,51 @@ export function init() {
 	const businessHoursModal = document.getElementById('businessHoursModal');
 	const btnShowBusinessHours = document.getElementById('btn-show-business-hours');
 	const appointmentTypeWrapper = appointmentTypeSelect?.closest('[data-appointment-type-wrapper]') || null;
+	const openDatePickerButtons = document.querySelectorAll('[data-action="open-date-picker"]');
+
+	const tryOpenDatePicker = () => {
+		if (!dateInput) return;
+		try {
+			if (typeof dateInput.showPicker === 'function') {
+				dateInput.showPicker();
+				return;
+			}
+		} catch {
+			// Fallback para navegadores/dispositivos sem suporte ao showPicker.
+		}
+		dateInput.focus();
+	};
+
+	openDatePickerButtons.forEach((button) => {
+		button.addEventListener('click', () => {
+			tryOpenDatePicker();
+		});
+	});
+
+	if (dateInput) {
+		dateInput.addEventListener('click', () => {
+			tryOpenDatePicker();
+		});
+	}
 
 	// Tipo de Consulta nunca deve aparecer na UI (padrão do público).
 	appointmentTypeWrapper?.classList.add('hidden');
 
 	if (!doctorSelect || !dateInput || !timeSelect || !startsAtInput || !endsAtInput) {
 		return;
+	}
+
+	function getDoctorName() {
+		if (doctorNameInput) {
+			return doctorNameInput.value || doctorSelect.dataset.selectedName || 'N/A';
+		}
+
+		if (doctorSelect.tagName === 'SELECT') {
+			const selectedOption = doctorSelect.options[doctorSelect.selectedIndex];
+			return selectedOption ? selectedOption.textContent.trim() : 'N/A';
+		}
+
+		return doctorSelect.dataset.selectedName || 'N/A';
 	}
 
 	// Helpers compartilhados
@@ -277,6 +320,12 @@ export function init() {
 		}
 	});
 
+	if (doctorSelect.tagName !== 'SELECT') {
+		doctorSelect.addEventListener('doctor:selected', () => {
+			doctorSelect.dispatchEvent(new Event('change'));
+		});
+	}
+
 	dateInput.addEventListener('change', () => {
 		const doctorId = doctorSelect.value;
 		const typeId = appointmentTypeSelect ? appointmentTypeSelect.value : null;
@@ -425,9 +474,7 @@ export function init() {
 
 					if (Array.isArray(data)) {
 						businessHoursArray = data;
-						const selectedOption = doctorSelect.options[doctorSelect.selectedIndex];
-						const doctorName = selectedOption ? selectedOption.textContent.trim() : 'N/A';
-						doctorInfo = { name: doctorName };
+						doctorInfo = { name: getDoctorName() };
 					} else if (data && typeof data === 'object') {
 						if (data.error) {
 							if (errorEl) {
@@ -542,6 +589,258 @@ export function init() {
 		initRecurringCreate($, tenantSlug);
 		initRecurringEdit($, tenantSlug);
 	}
+}
+
+function bindCopyBookingLinks() {
+	const feedbackTimers = new WeakMap();
+	document.querySelectorAll('[data-copy-booking-link]').forEach((button) => {
+		button.addEventListener('click', () => {
+			const link = button.dataset.bookingLink;
+			if (!link) return;
+
+			const onSuccess = () => {
+				const feedback =
+					button.closest('.flex-1')?.querySelector('[data-copy-feedback]') ||
+					button.closest('.rounded-lg')?.querySelector('[data-copy-feedback]') ||
+					document.querySelector('[data-copy-feedback]');
+				if (!feedback) return;
+
+				feedback.classList.remove('hidden');
+				const activeTimer = feedbackTimers.get(feedback);
+				if (activeTimer) {
+					clearTimeout(activeTimer);
+				}
+				const timerId = setTimeout(() => feedback.classList.add('hidden'), 3000);
+				feedbackTimers.set(feedback, timerId);
+			};
+
+			if (navigator.clipboard && navigator.clipboard.writeText) {
+				navigator.clipboard.writeText(link).then(onSuccess).catch(() => fallbackCopy(link, onSuccess));
+			} else {
+				fallbackCopy(link, onSuccess);
+			}
+		});
+	});
+}
+
+function fallbackCopy(text, onSuccess) {
+	const textarea = document.createElement('textarea');
+	textarea.value = text;
+	textarea.style.position = 'fixed';
+	textarea.style.opacity = '0';
+	document.body.appendChild(textarea);
+	textarea.select();
+
+	try {
+		document.execCommand('copy');
+		if (typeof onSuccess === 'function') {
+			onSuccess();
+		}
+	} catch {
+		if (typeof window.showAlert === 'function') {
+			window.showAlert({
+				type: 'error',
+				title: 'Erro',
+				message: 'NÃ£o foi possÃ­vel copiar o link.',
+			});
+		}
+	}
+
+	document.body.removeChild(textarea);
+}
+
+function initEntitySearchModal() {
+	const modal = document.querySelector('[data-entity-search-modal]');
+	if (!modal) return;
+
+	const searchInput = modal.querySelector('[data-entity-search-input]');
+	const listEl = modal.querySelector('[data-entity-search-results]');
+	const emptyEl = modal.querySelector('[data-entity-search-empty]');
+	const loadingEl = modal.querySelector('[data-entity-search-loading]');
+	const titleEl = modal.querySelector('[data-entity-search-title]');
+	const confirmButton = modal.querySelector('[data-entity-search-confirm]');
+	const backdrop = modal.querySelector('[data-entity-search-backdrop]');
+	const cancelButton = modal.querySelector('.js-cancel-entity-search');
+
+	let debounceTimer = null;
+	let currentConfig = null;
+	let selectedItem = null;
+	let selectedButton = null;
+	let currentItems = [];
+
+	const applySelection = (button, item) => {
+		if (selectedButton) {
+			selectedButton.classList.remove('entity-search-modal__result--selected');
+			selectedButton.setAttribute('aria-selected', 'false');
+		}
+
+		selectedButton = button;
+		selectedItem = item;
+
+		if (selectedButton) {
+			selectedButton.classList.add('entity-search-modal__result--selected');
+			selectedButton.setAttribute('aria-selected', 'true');
+		}
+
+		if (confirmButton) {
+			confirmButton.disabled = !selectedItem;
+		}
+	};
+
+	const resetSelection = () => {
+		applySelection(null, null);
+	};
+
+	const commitSelection = () => {
+		if (!currentConfig || !selectedItem) return;
+
+		const hiddenInput = document.getElementById(currentConfig.hiddenInputId);
+		const displayInput = document.getElementById(currentConfig.displayInputId);
+
+		if (hiddenInput) {
+			hiddenInput.value = selectedItem.id || '';
+			if (hiddenInput.id === 'doctor_id') {
+				hiddenInput.dataset.selectedName = selectedItem.name || '';
+				hiddenInput.dispatchEvent(new CustomEvent('doctor:selected'));
+			}
+		}
+
+		if (displayInput) {
+			displayInput.value = selectedItem.name || '';
+		}
+
+		closeModal();
+	};
+
+	const renderEmpty = (message) => {
+		listEl.classList.add('hidden');
+		listEl.innerHTML = '';
+		loadingEl.classList.add('hidden');
+		emptyEl.classList.remove('hidden');
+		emptyEl.textContent = message;
+		currentItems = [];
+		resetSelection();
+	};
+
+	const closeModal = () => {
+		modal.classList.add('hidden');
+		searchInput.value = '';
+		currentConfig = null;
+		currentItems = [];
+		resetSelection();
+		renderEmpty('Digite para buscar.');
+	};
+
+	const renderResults = (items) => {
+		listEl.innerHTML = '';
+		if (!Array.isArray(items) || items.length === 0) {
+			renderEmpty('Nenhum resultado encontrado.');
+			return;
+		}
+
+		currentItems = items;
+		resetSelection();
+
+		items.forEach((item) => {
+			const li = document.createElement('li');
+			const resultButton = document.createElement('button');
+			resultButton.type = 'button';
+			resultButton.className = 'entity-search-modal__result w-full text-left px-3 py-2';
+			resultButton.setAttribute('aria-selected', 'false');
+			resultButton.setAttribute('tabindex', '0');
+			resultButton.innerHTML = `<span class="block text-sm font-medium text-gray-900 dark:text-white">${item.name || ''}</span><span class="block text-xs text-gray-500 dark:text-gray-400">${item.secondary || ''}</span>`;
+			resultButton.addEventListener('click', () => {
+				applySelection(resultButton, item);
+			});
+			resultButton.addEventListener('dblclick', () => {
+				applySelection(resultButton, item);
+				commitSelection();
+			});
+			resultButton.addEventListener('keydown', (event) => {
+				if (event.key === 'Enter') {
+					event.preventDefault();
+					applySelection(resultButton, item);
+					commitSelection();
+				}
+			});
+			li.appendChild(resultButton);
+			listEl.appendChild(li);
+		});
+
+		emptyEl.classList.add('hidden');
+		loadingEl.classList.add('hidden');
+		listEl.classList.remove('hidden');
+	};
+
+	const fetchResults = (query) => {
+		if (!currentConfig?.searchUrl) return;
+
+		loadingEl.classList.remove('hidden');
+		emptyEl.classList.add('hidden');
+		listEl.classList.add('hidden');
+		resetSelection();
+
+		fetch(`${currentConfig.searchUrl}?q=${encodeURIComponent(query)}&limit=10`)
+			.then((response) => response.json())
+			.then((payload) => renderResults(payload?.data || []))
+			.catch(() => renderEmpty('Erro ao buscar resultados.'));
+	};
+
+	searchInput.addEventListener('input', () => {
+		const query = searchInput.value.trim();
+		if (debounceTimer) {
+			clearTimeout(debounceTimer);
+		}
+		debounceTimer = setTimeout(() => fetchResults(query), 250);
+	});
+
+	document.querySelectorAll('.js-open-entity-search').forEach((button) => {
+		button.addEventListener('click', () => {
+			currentConfig = {
+				searchUrl: button.dataset.searchUrl,
+				hiddenInputId: button.dataset.hiddenInputId,
+				displayInputId: button.dataset.displayInputId,
+			};
+
+			titleEl.textContent = button.dataset.modalTitle || 'Buscar';
+			renderEmpty('Digite para buscar.');
+			modal.classList.remove('hidden');
+			if (confirmButton) {
+				confirmButton.disabled = true;
+			}
+			searchInput.focus();
+		});
+	});
+
+	if (confirmButton) {
+		confirmButton.addEventListener('click', commitSelection);
+	}
+
+	modal.querySelectorAll('.js-close-entity-search-modal').forEach((button) => {
+		button.addEventListener('click', closeModal);
+	});
+
+	if (cancelButton) {
+		cancelButton.addEventListener('click', closeModal);
+	}
+
+	if (backdrop) {
+		backdrop.addEventListener('click', closeModal);
+	}
+
+	document.addEventListener('keydown', (event) => {
+		if (event.key === 'Escape' && !modal.classList.contains('hidden')) {
+			closeModal();
+		}
+
+		if (event.key === 'Enter' && !modal.classList.contains('hidden')) {
+			const isTypingInSearch = document.activeElement === searchInput;
+			if (isTypingInSearch && selectedItem) {
+				event.preventDefault();
+				commitSelection();
+			}
+		}
+	});
 }
 
 function initRecurringCreate($, tenantSlug) {

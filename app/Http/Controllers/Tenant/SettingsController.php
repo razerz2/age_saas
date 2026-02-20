@@ -111,7 +111,7 @@ class SettingsController extends Controller
         $publicBookingUrl = null;
         
         if ($currentTenant) {
-            $publicBookingUrl = url('/customer/' . $currentTenant->subdomain . '/agendamento/criar');
+            $publicBookingUrl = url('/customer/' . $currentTenant->subdomain . '/agendamento/identificar');
         }
 
         $localizacao = $currentTenant ? $currentTenant->localizacao : null;
@@ -183,7 +183,7 @@ class SettingsController extends Controller
         $publicBookingUrl = null;
         
         if ($currentTenant) {
-            $publicBookingUrl = url('/customer/' . $currentTenant->subdomain . '/agendamento/criar');
+            $publicBookingUrl = url('/customer/' . $currentTenant->subdomain . '/agendamento/identificar');
         }
 
         return view('tenant.settings.public-booking-link', compact('publicBookingUrl'));
@@ -551,4 +551,3 @@ class SettingsController extends Controller
             ->with('success', 'Configurações de aparência atualizadas com sucesso.');
     }
 }
-

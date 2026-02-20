@@ -712,6 +712,10 @@ class AppointmentController extends Controller
      */
     public function getCalendarsByDoctor($slug, $doctorId)
     {
+        if (!$this->findAccessibleDoctor($doctorId)) {
+            return response()->json([]);
+        }
+
         $calendars = Calendar::where('doctor_id', $doctorId)
             ->orderBy('name')
             ->get()
@@ -731,6 +735,10 @@ class AppointmentController extends Controller
     public function getAppointmentTypesByDoctor($slug, $doctorId)
     {
         try {
+            if (!$this->findAccessibleDoctor($doctorId)) {
+                return response()->json([]);
+            }
+
             // Retorna apenas os tipos de consulta do médico específico
             $types = AppointmentType::where('doctor_id', $doctorId)
                 ->where('is_active', true)
@@ -762,7 +770,10 @@ class AppointmentController extends Controller
     public function getSpecialtiesByDoctor($slug, $doctorId)
     {
         try {
-            $doctor = Doctor::findOrFail($doctorId);
+            $doctor = $this->findAccessibleDoctor($doctorId);
+            if (!$doctor) {
+                return response()->json([]);
+            }
             
             \Log::info('Buscando especialidades para médico', [
                 'doctor_id' => $doctorId,
@@ -809,7 +820,18 @@ class AppointmentController extends Controller
             'appointment_type_id' => 'nullable|exists:tenant.appointment_types,id',
         ]);
 
-        $date = Carbon::parse($request->date);
+        if (!$this->findAccessibleDoctor($doctorId)) {
+            return response()->json([]);
+        }
+
+        $date = Carbon::parse($request->date, 'America/Campo_Grande')->startOfDay();
+        $todayCampoGrande = Carbon::now('America/Campo_Grande')->startOfDay();
+        if ($date->lt($todayCampoGrande)) {
+            return response()->json([
+                'message' => 'Não é possível buscar horários para uma data passada. Selecione hoje ou uma data futura.',
+            ], 422);
+        }
+
         $weekday = $date->dayOfWeek; // 0 = Domingo, 6 = Sábado
         
         // Buscar horários comerciais do médico para o dia da semana
@@ -1022,7 +1044,10 @@ class AppointmentController extends Controller
     public function getBusinessHoursByDoctor($slug, $doctorId)
     {
         try {
-            $doctor = Doctor::with('user')->findOrFail($doctorId);
+            $doctor = $this->findAccessibleDoctor($doctorId);
+            if (!$doctor) {
+                return response()->json([]);
+            }
             
             $businessHours = BusinessHour::where('doctor_id', $doctorId)
                 ->orderBy('weekday')
@@ -1087,5 +1112,113 @@ class AppointmentController extends Controller
                 'business_hours' => []
             ], 500);
         }
+    }
+
+    /**
+     * API: Buscar pacientes por texto (nome/email/telefone/CPF)
+     */
+    public function searchPatients(Request $request, $slug)
+    {
+        $validated = $request->validate([
+            'q' => ['nullable', 'string', 'max:100'],
+            'limit' => ['nullable', 'integer', 'min:1', 'max:20'],
+        ]);
+
+        $queryText = trim((string) ($validated['q'] ?? ''));
+        $limit = (int) ($validated['limit'] ?? 10);
+
+        $patientsQuery = Patient::query()->orderBy('full_name');
+
+        if ($queryText !== '') {
+            $patientsQuery->where(function ($query) use ($queryText) {
+                $query->where('full_name', 'like', "%{$queryText}%")
+                    ->orWhere('email', 'like', "%{$queryText}%")
+                    ->orWhere('phone', 'like', "%{$queryText}%")
+                    ->orWhere('cpf', 'like', "%{$queryText}%");
+            });
+        }
+
+        $patients = $patientsQuery
+            ->limit($limit)
+            ->get(['id', 'full_name', 'email', 'phone', 'cpf'])
+            ->map(function (Patient $patient) {
+                $secondary = $patient->email ?: ($patient->phone ?: $patient->cpf);
+
+                return [
+                    'id' => $patient->id,
+                    'name' => $patient->full_name,
+                    'secondary' => $secondary,
+                ];
+            });
+
+        return response()->json(['data' => $patients]);
+    }
+
+    /**
+     * API: Buscar mÃ©dicos por texto (nome/registro/especialidade)
+     */
+    public function searchDoctors(Request $request, $slug)
+    {
+        $validated = $request->validate([
+            'q' => ['nullable', 'string', 'max:100'],
+            'limit' => ['nullable', 'integer', 'min:1', 'max:20'],
+        ]);
+
+        $queryText = trim((string) ($validated['q'] ?? ''));
+        $limit = (int) ($validated['limit'] ?? 10);
+
+        $doctorsQuery = Doctor::query()
+            ->with(['user:id,name,name_full,status', 'specialties:id,name'])
+            ->whereHas('user', function ($query) {
+                $query->where('status', 'active');
+            })
+            ->whereHas('calendars')
+            ->whereHas('businessHours')
+            ->whereHas('appointmentTypes', function ($query) {
+                $query->where('is_active', true);
+            });
+
+        $this->applyDoctorFilter($doctorsQuery);
+
+        if ($queryText !== '') {
+            $doctorsQuery->where(function ($query) use ($queryText) {
+                $query->whereHas('user', function ($subQuery) use ($queryText) {
+                    $subQuery->where('name_full', 'like', "%{$queryText}%")
+                        ->orWhere('name', 'like', "%{$queryText}%");
+                })
+                ->orWhere('registration_value', 'like', "%{$queryText}%")
+                ->orWhere('crm_number', 'like', "%{$queryText}%")
+                ->orWhereHas('specialties', function ($subQuery) use ($queryText) {
+                    $subQuery->where('name', 'like', "%{$queryText}%");
+                });
+            });
+        }
+
+        $doctors = $doctorsQuery
+            ->orderBy('id')
+            ->limit($limit)
+            ->get()
+            ->map(function (Doctor $doctor) {
+                $name = $doctor->user?->name_full ?: $doctor->user?->name ?: 'MÃ©dico';
+                $registration = $doctor->registration_value ?: $doctor->crm_number;
+                $specialty = $doctor->specialties->first()?->name;
+                $secondary = $registration ?: $specialty;
+
+                return [
+                    'id' => $doctor->id,
+                    'name' => $name,
+                    'secondary' => $secondary,
+                ];
+            });
+
+        return response()->json(['data' => $doctors]);
+    }
+
+    private function findAccessibleDoctor(string $doctorId): ?Doctor
+    {
+        $query = Doctor::with('user');
+        $this->applyDoctorFilter($query);
+
+        return $query->where('id', $doctorId)->first();
     }
 }

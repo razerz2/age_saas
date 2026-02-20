@@ -79,3 +79,128 @@
     padding: 0.375rem 0.75rem !important;
     flex-shrink: 0 !important;
 }
+
+.entity-search-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 70;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+}
+
+.entity-search-modal.hidden {
+    display: none;
+}
+
+.entity-search-modal__backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.55);
+}
+
+.entity-search-modal__dialog {
+    position: relative;
+    width: min(720px, 100%);
+    background: #fff;
+    border-radius: 0.75rem;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.35);
+    border: 1px solid #e5e7eb;
+    z-index: 1;
+    overflow: hidden;
+}
+
+.dark .entity-search-modal__dialog {
+    background: #1f2937;
+    border-color: #374151;
+}
+
+.entity-search-modal__header,
+.entity-search-modal__footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 1rem 1.25rem;
+}
+
+.entity-search-modal__header {
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.entity-search-modal__footer {
+    justify-content: flex-end;
+    border-top: 1px solid #e5e7eb;
+}
+
+.dark .entity-search-modal__header,
+.dark .entity-search-modal__footer {
+    border-color: #374151;
+}
+
+.entity-search-modal__body {
+    padding: 1rem 1.25rem;
+}
+
+.entity-search-modal__results-wrap {
+    max-height: 18rem;
+    overflow-y: auto;
+}
+
+[data-entity-search-results] {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+[data-entity-search-results] li + li {
+    border-top: 1px solid #e5e7eb;
+}
+
+.dark [data-entity-search-results] li + li {
+    border-color: #374151;
+}
+
+.entity-search-modal__result {
+    transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.entity-search-modal__result:hover,
+.entity-search-modal__result:focus-visible {
+    background: #eff6ff;
+    outline: none;
+}
+
+.dark .entity-search-modal__result:hover,
+.dark .entity-search-modal__result:focus-visible {
+    background: #374151;
+}
+
+.entity-search-modal__result--selected {
+    background: #dbeafe;
+}
+
+.dark .entity-search-modal__result--selected {
+    background: #1e3a8a;
+}
+
+#appointment_date {
+    appearance: auto;
+    -webkit-appearance: auto;
+}
+
+#appointment_date::-webkit-calendar-picker-indicator {
+    display: block;
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.appointment-date-field-group #appointment_date {
+    position: relative;
+    z-index: 1;
+}
+
+.appointment-date-picker-trigger {
+    pointer-events: auto;
+}
