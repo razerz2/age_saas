@@ -197,7 +197,7 @@
                             <div class="flex gap-2 appointment-date-field-group">
                                 <input type="date" id="appointment_date" class="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white @error('appointment_date') border-red-500 @enderror @error('starts_at') border-red-500 @enderror" 
                                        name="appointment_date" value="{{ old('appointment_date') }}" 
-                                       min="{{ \Carbon\Carbon::now('America/Campo_Grande')->toDateString() }}" required>
+                                       min="{{ \Carbon\Carbon::now('America/Campo_Grande')->toDateString() }}" required disabled>
                                 <button
                                     type="button"
                                     class="btn btn-outline appointment-date-picker-trigger"
@@ -224,7 +224,7 @@
                                 Horário Disponível <span class="text-red-500">*</span>
                             </label>
                             <select name="appointment_time" id="appointment_time" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white @error('appointment_time') border-red-500 @enderror" required disabled>
-                                <option value="">Primeiro selecione a data</option>
+                                <option value="">Primeiro selecione médico</option>
                             </select>
                             @error('appointment_time')
                                 <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>

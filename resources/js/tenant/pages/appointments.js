@@ -83,16 +83,66 @@ export function init() {
 		return;
 	}
 
+	const form = document.querySelector('form');
+	const isEditMode = form && form.dataset && form.dataset.appointmentEdit === 'true';
+	const currentAppointmentTypeId = form ? form.dataset.currentAppointmentTypeId : null;
+	const currentSpecialtyId = form ? form.dataset.currentSpecialtyId : null;
+	const initialDate = form ? form.dataset.initialDate : null;
+	const initialTimeStart = form ? form.dataset.initialTimeStart : null;
+	const initialTimeEnd = form ? form.dataset.initialTimeEnd : null;
+	const initialStartsAt = form ? form.dataset.initialStartsAt : null;
+	const initialEndsAt = form ? form.dataset.initialEndsAt : null;
+
+	function setTimeState(placeholder, disabled = true, clearHidden = true) {
+		timeSelect.innerHTML = `<option value="">${placeholder}</option>`;
+		timeSelect.disabled = disabled;
+
+		if (clearHidden) {
+			startsAtInput.value = '';
+			endsAtInput.value = '';
+		}
+	}
+
+	function setInitialState() {
+		const hasDoctor = Boolean(doctorSelect.value);
+		const hasDate = Boolean(dateInput.value);
+
+		if (!isEditMode) {
+			dateInput.disabled = true;
+			setTimeState('Primeiro selecione médico', true);
+			return;
+		}
+
+		dateInput.disabled = !hasDoctor;
+
+		if (!hasDoctor) {
+			setTimeState('Primeiro selecione médico', true);
+			return;
+		}
+
+		if (!hasDate) {
+			setTimeState('Selecione uma data', true);
+			return;
+		}
+
+		setTimeState('Carregando horários...', true, false);
+	}
+
 	function refreshSlots({ initial = false, initialTimeStart = null, initialTimeEnd = null, initialStartsAt = null, initialEndsAt = null } = {}) {
 		const doctorId = doctorSelect.value;
 		const date = dateInput.value;
 		const typeId = appointmentTypeSelect ? appointmentTypeSelect.value : null;
 
-		if (!doctorId || !date) {
-			timeSelect.innerHTML = '<option value="">Primeiro selecione mÃ©dico e data</option>';
-			timeSelect.disabled = true;
-			startsAtInput.value = '';
-			endsAtInput.value = '';
+		if (!doctorId) {
+			dateInput.disabled = true;
+			setTimeState('Primeiro selecione médico', true);
+			return;
+		}
+
+		dateInput.disabled = false;
+
+		if (!date) {
+			setTimeState('Selecione uma data', true);
 			return;
 		}
 
@@ -132,8 +182,9 @@ export function init() {
 			specialtySelect.disabled = true;
 		}
 
-		timeSelect.innerHTML = '<option value="">Primeiro selecione a data</option>';
-		timeSelect.disabled = true;
+		dateInput.value = '';
+		dateInput.disabled = true;
+		setTimeState('Primeiro selecione médico', true);
 	}
 
 	function loadAppointmentTypes(doctorId, currentTypeId = null) {
@@ -176,7 +227,7 @@ export function init() {
 				appointmentTypeSelect.disabled = false;
 
 				if (dateInput?.value) {
-					loadAvailableSlots(doctorId, appointmentTypeSelect.value);
+					refreshSlots();
 				}
 			})
 			.catch(() => {
@@ -230,8 +281,7 @@ export function init() {
 	) {
 		const date = dateInput.value;
 		if (!doctorId || !date) {
-			timeSelect.innerHTML = '<option value="">Primeiro selecione médico e data</option>';
-			timeSelect.disabled = true;
+			setTimeState(doctorId ? 'Selecione uma data' : 'Primeiro selecione médico', true);
 			return;
 		}
 
@@ -313,7 +363,7 @@ export function init() {
 				}
 			})
 			.catch(() => {
-				timeSelect.innerHTML = '<option value="">Erro ao carregar horários</option>';
+				timeSelect.innerHTML = '<option value="">Nenhum horário disponível</option>';
 				timeSelect.disabled = true;
 			});
 	}
@@ -321,12 +371,22 @@ export function init() {
 	// Eventos comuns (create/edit)
 	doctorSelect.addEventListener('change', () => {
 		const doctorId = doctorSelect.value;
+		const shouldPreserveDate = doctorSelect.dataset.preserveDateOnNextChange === '1';
+		delete doctorSelect.dataset.preserveDateOnNextChange;
+
 		if (!doctorId) {
 			resetDependentFields();
 			if (btnShowBusinessHours) btnShowBusinessHours.disabled = true;
 			if (calendarIdInput) calendarIdInput.value = '';
 			return;
 		}
+
+		dateInput.disabled = true;
+		if (!shouldPreserveDate) {
+			dateInput.value = '';
+			setTimeState('Selecione uma data', true);
+		}
+		dateInput.disabled = false;
 
 		if (btnShowBusinessHours) btnShowBusinessHours.disabled = false;
 
@@ -341,15 +401,16 @@ export function init() {
 				});
 		}
 
-		loadAppointmentTypes(doctorId);
-		loadSpecialties(doctorId);
-		refreshSlots();
+		loadAppointmentTypes(doctorId, shouldPreserveDate ? currentAppointmentTypeId : null);
+		loadSpecialties(doctorId, shouldPreserveDate ? currentSpecialtyId : null);
+		if (shouldPreserveDate) {
+			refreshSlots();
+		}
 	});
 
 	if (doctorSelect.tagName !== 'SELECT') {
 		doctorSelect.addEventListener('doctor:selected', () => {
 			doctorSelect.dispatchEvent(new Event('change'));
-			refreshSlots();
 		});
 	}
 
@@ -378,7 +439,6 @@ export function init() {
 		}
 	});
 
-	const form = document.querySelector('form');
 	if (form) {
 		form.addEventListener('submit', (e) => {
 			if (!startsAtInput.value || !endsAtInput.value) {
@@ -394,14 +454,7 @@ export function init() {
 		});
 	}
 
-	const isEditMode = form && form.dataset && form.dataset.appointmentEdit === 'true';
-	const currentAppointmentTypeId = form ? form.dataset.currentAppointmentTypeId : null;
-	const currentSpecialtyId = form ? form.dataset.currentSpecialtyId : null;
-	const initialDate = form ? form.dataset.initialDate : null;
-	const initialTimeStart = form ? form.dataset.initialTimeStart : null;
-	const initialTimeEnd = form ? form.dataset.initialTimeEnd : null;
-	const initialStartsAt = form ? form.dataset.initialStartsAt : null;
-	const initialEndsAt = form ? form.dataset.initialEndsAt : null;
+	setInitialState();
 
 	// Fechar modal de dias trabalhados (create: Tailwind overlay, edit: Bootstrap modal)
 	document.querySelectorAll('.js-close-business-hours-modal').forEach((btn) => {
@@ -425,13 +478,16 @@ export function init() {
 		if (!doctorSelect.value) {
 			doctorSelect.value = doctorSelect.dataset.initialValue;
 		}
+		if (dateInput.value) {
+			doctorSelect.dataset.preserveDateOnNextChange = '1';
+		}
 		doctorSelect.dispatchEvent(new Event('change'));
 	}
 
 	// Inicializa dados de edição
 	if (isEditMode && doctorSelect && doctorSelect.value) {
-		loadAppointmentTypes(doctorSelect.value, currentAppointmentTypeId);
-		loadSpecialties(doctorSelect.value, currentSpecialtyId);
+		doctorSelect.dataset.preserveDateOnNextChange = '1';
+		doctorSelect.dispatchEvent(new Event('change'));
 		if (initialDate) {
 			dateInput.value = initialDate;
 			refreshSlots({
