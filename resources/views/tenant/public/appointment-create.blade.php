@@ -3,14 +3,6 @@
 @section('title', 'Novo Agendamento — ' . ($tenant->trade_name ?? $tenant->legal_name ?? 'Sistema'))
 @section('page', 'public')
 
-@push('styles')
-    <style>
-        /* TailAdmin hides the native date picker indicator globally; re-enable only here. */
-        #appointment_date::-webkit-calendar-picker-indicator { display: block; opacity: 1; }
-        #appointment_date { appearance: auto; -webkit-appearance: auto; }
-    </style>
-@endpush
-
 @section('content')
 
     <div id="public-appointment-create-config"
@@ -318,7 +310,7 @@
                         <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                             <a
                                 href="{{ route('public.patient.identify', ['slug' => $tenant->subdomain]) }}"
-                                class="inline-flex items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-1"
+                                class="btn btn-outline"
                             >
                                 <i class="mdi mdi-arrow-left text-base text-slate-900"></i>
                                 <span>Voltar</span>
@@ -326,7 +318,7 @@
 
                             <button
                                 type="submit"
-                                class="inline-flex items-center justify-center gap-2 rounded-lg bg-indigo-600 px-6 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                                class="btn btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 <i class="mdi mdi-content-save text-base text-white"></i>
                                 <span>Confirmar Agendamento</span>
@@ -394,7 +386,7 @@
                 <div class="flex items-center justify-end gap-3 border-t border-slate-200 px-5 py-4">
                     <button
                         type="button"
-                        class="inline-flex items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-1"
+                        class="btn btn-outline"
                         data-modal-dismiss="businessHoursModal"
                     >
                         Fechar
@@ -404,4 +396,3 @@
         </div>
     </div>
 @endsection
-

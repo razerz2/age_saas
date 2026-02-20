@@ -88,9 +88,9 @@
                     <div class="mt-6 flex justify-center">
                         <button
                             type="submit"
-                            class="inline-flex w-auto min-w-[180px] items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-6 py-2.5 text-sm font-semibold text-slate-900 shadow-sm hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-1"
+                            class="btn btn-primary"
                         >
-                            <i class="mdi mdi-arrow-right text-lg text-slate-900"></i>
+                            <i class="mdi mdi-arrow-right text-lg text-white"></i>
                             Continuar
                         </button>
                     </div>
@@ -108,9 +108,9 @@
                         <div class="mt-4 flex justify-center">
                             <a
                                 href="{{ route('public.patient.register', ['slug' => $tenant->subdomain]) }}"
-                                class="inline-flex w-auto min-w-[180px] items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-6 py-2.5 text-sm font-semibold text-slate-900 shadow-sm hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-1"
+                                class="btn btn-primary"
                             >
-                                <i class="mdi mdi-account-plus text-lg text-slate-900"></i>
+                                <i class="mdi mdi-account-plus text-lg text-white"></i>
                                 Criar Cadastro
                             </a>
                         </div>
@@ -126,4 +126,3 @@
         </div>
     </div>
 @endsection
-

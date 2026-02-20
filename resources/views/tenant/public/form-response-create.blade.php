@@ -178,38 +178,22 @@
                                         $editUrl .= '?edit=1';
                                     }
                                 @endphp
-                                <x-tailadmin-button
-                                    variant="primary"
-                                    size="lg"
-                                    href="{{ $editUrl }}"
-                                    class="!inline-flex !w-auto min-w-[180px] !items-center !justify-center !gap-2 !rounded-lg !bg-indigo-600 !px-6 !py-2.5 !text-sm !font-semibold !text-white shadow-sm hover:!bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-1"
-                                >
+                                <a href="{{ $editUrl }}" class="btn btn-primary">
                                     <i class="mdi mdi-pencil text-white"></i>
                                     Editar Formulário
-                                </x-tailadmin-button>
+                                </a>
                             @else
-                                <x-tailadmin-button
-                                    type="submit"
-                                    variant="primary"
-                                    size="lg"
-                                    id="submitBtn"
-                                    class="!inline-flex !w-auto min-w-[180px] !items-center !justify-center !gap-2 !rounded-lg !bg-indigo-600 !px-6 !py-2.5 !text-sm !font-semibold !text-white shadow-sm hover:!bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-1 disabled:opacity-60 disabled:cursor-not-allowed"
-                                >
+                                <button type="submit" id="submitBtn" class="btn btn-primary disabled:opacity-60 disabled:cursor-not-allowed">
                                     <i class="mdi {{ $existingResponse ? 'mdi-content-save' : 'mdi-send' }} text-white"></i>
                                     {{ $existingResponse ? 'Atualizar Formulário' : 'Enviar Formulário' }}
-                                </x-tailadmin-button>
+                                </button>
                             @endif
 
                             @if($appointment)
-                                <x-tailadmin-button
-                                    variant="secondary"
-                                    size="lg"
-                                    href="{{ tenant_route($tenant, 'public.appointment.show', ['appointment_id' => $appointment->id]) }}"
-                                    class="!inline-flex !w-auto min-w-[180px] !items-center !justify-center !gap-2 !rounded-lg !border !border-slate-200 !bg-white !px-6 !py-2.5 !text-sm !font-semibold !text-slate-900 shadow-sm hover:!bg-slate-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-1"
-                                >
+                                <a href="{{ tenant_route($tenant, 'public.appointment.show', ['appointment_id' => $appointment->id]) }}" class="btn btn-outline">
                                     <i class="mdi mdi-arrow-left text-slate-900"></i>
                                     Voltar
-                                </x-tailadmin-button>
+                                </a>
                             @endif
                         </div>
                     </div>
@@ -218,4 +202,3 @@
         </div>
     </div>
 @endsection
-

@@ -182,7 +182,7 @@
                         <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                             <a
                                 href="{{ route('public.patient.identify', ['slug' => $tenant->subdomain]) }}"
-                                class="inline-flex w-auto min-w-[180px] items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-6 py-2.5 text-sm font-semibold text-slate-900 shadow-sm hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-1"
+                                class="btn btn-outline"
                             >
                                 <i class="mdi mdi-arrow-left text-lg text-slate-900"></i>
                                 Cancelar
@@ -190,7 +190,7 @@
 
                             <button
                                 type="submit"
-                                class="inline-flex w-auto min-w-[180px] items-center justify-center gap-2 rounded-lg bg-indigo-600 px-6 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-1"
+                                class="btn btn-primary"
                             >
                                 <i class="mdi mdi-content-save text-lg text-white"></i>
                                 Cadastrar
@@ -202,4 +202,3 @@
         </div>
     </div>
 @endsection
-

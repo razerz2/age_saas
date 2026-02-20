@@ -1,22 +1,24 @@
-<div class="flex gap-2 flex-wrap">
-    <x-table-action-button 
+<div class="flex gap-2 flex-wrap items-center">
+    <x-table-action-button
         href="{{ workspace_route('tenant.forms.show', $form->id) }}"
         title="Visualizar"
         color="blue">
-        <!-- ícone olho -->
+        <x-icon name="eye-outline" size="text-base" />
     </x-table-action-button>
 
-    <x-table-action-button 
+    <x-table-action-button
         href="{{ workspace_route('tenant.forms.edit', $form->id) }}"
         title="Editar"
         color="amber">
-        <!-- ícone lápis -->
+        <x-icon name="pencil-outline" size="text-base" />
     </x-table-action-button>
 
-    <x-table-action-button 
-        href="{{ workspace_route('tenant.forms.builder', $form->id) }}"
-        title="Builder"
-        color="purple">
-        <!-- ícone builder -->
-    </x-table-action-button>
+    <form action="{{ workspace_route('tenant.forms.destroy', $form->id) }}" method="POST" class="inline"
+          data-confirm-form-delete="true" data-form-name="{{ $form->name }}">
+        @csrf
+        @method('DELETE')
+        <x-table-action-button type="submit" title="Excluir" color="red">
+            <x-icon name="trash-can-outline" size="text-base" />
+        </x-table-action-button>
+    </form>
 </div>

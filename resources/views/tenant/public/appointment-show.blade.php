@@ -105,44 +105,28 @@
                 @if($form)
                     <div class="border-t border-slate-200 px-6 py-5">
                         <div class="flex justify-center">
-                            <x-tailadmin-button
-                                variant="primary"
-                                size="md"
-                                href="{{ tenant_route($tenant, 'public.form.response.create', ['form' => $form->id, 'appointment' => $appointment->id]) }}"
-                                class="w-auto min-w-[220px] justify-center !bg-indigo-600 !text-white shadow-sm hover:!bg-indigo-700 focus:!outline-none focus:!ring-2 focus:!ring-indigo-500 focus:!ring-offset-1"
-                            >
+                            <a href="{{ tenant_route($tenant, 'public.form.response.create', ['form' => $form->id, 'appointment' => $appointment->id]) }}" class="btn btn-primary">
                                 <i class="mdi mdi-file-document-edit text-lg text-white"></i>
                                 Responder Formulário
-                            </x-tailadmin-button>
+                            </a>
                         </div>
                     </div>
                 @endif
 
                 <div class="border-t border-slate-200 px-6 py-5">
                     <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                        <x-tailadmin-button
-                            variant="secondary"
-                            size="md"
-                            href="{{ route('public.patient.identify', ['slug' => $tenant->subdomain]) }}"
-                            class="w-auto min-w-[180px] justify-center !bg-white !text-slate-900 !border !border-slate-200 shadow-sm hover:!bg-slate-50 focus:!outline-none focus:!ring-2 focus:!ring-indigo-500 focus:!ring-offset-1"
-                        >
+                        <a href="{{ route('public.patient.identify', ['slug' => $tenant->subdomain]) }}" class="btn btn-outline">
                             <i class="mdi mdi-arrow-left text-lg text-slate-900"></i>
                             Voltar
-                        </x-tailadmin-button>
+                        </a>
 
-                        <x-tailadmin-button
-                            variant="secondary"
-                            size="md"
-                            href="{{ route('public.patient.identify', ['slug' => $tenant->subdomain]) }}"
-                            class="w-auto min-w-[180px] justify-center !bg-slate-100 !text-black !border !border-slate-200 shadow-sm hover:!bg-slate-200 focus:!outline-none focus:!ring-2 focus:!ring-indigo-500 focus:!ring-offset-1"
-                        >
-                            <i class="mdi mdi-calendar-plus text-lg text-black"></i>
+                        <a href="{{ route('public.patient.identify', ['slug' => $tenant->subdomain]) }}" class="btn btn-primary">
+                            <i class="mdi mdi-calendar-plus text-lg text-white"></i>
                             Novo Agendamento
-                        </x-tailadmin-button>
+                        </a>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 @endsection
-

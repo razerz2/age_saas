@@ -4,20 +4,22 @@
 @section('page', 'forms')
 
 @section('content')
-
     <div class="page-header mb-6">
         <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <nav class="min-w-0 flex-1" aria-label="breadcrumb">
                 <ol class="flex flex-wrap items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
                     <li>
-                        <a href="{{ workspace_route('tenant.dashboard') }}" class="hover:text-gray-900 dark:hover:text-white">Dashboard</a>
+                        <a href="{{ workspace_route('tenant.dashboard') }}" class="inline-flex items-center gap-2 text-gray-700 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white">
+                            <x-icon name="home-outline" size="text-base" />
+                            Dashboard
+                        </a>
                     </li>
                     <li class="flex items-center gap-2">
-                        <x-icon name="information-outline" class="h-4 w-4 text-gray-400" />
-                        <a href="{{ workspace_route('tenant.forms.index') }}" class="hover:text-gray-900 dark:hover:text-white">Formulários</a>
+                        <x-icon name="chevron-right" size="text-sm" class="text-gray-400" />
+                        <a href="{{ workspace_route('tenant.forms.index') }}" class="text-gray-700 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white">Formulários</a>
                     </li>
                     <li class="flex items-center gap-2">
-                        <x-icon name="information-outline" class="h-4 w-4 text-gray-400" />
+                        <x-icon name="chevron-right" size="text-sm" class="text-gray-400" />
                         <span class="text-gray-900 dark:text-white font-semibold">Criar</span>
                     </li>
                 </ol>
@@ -119,16 +121,15 @@
 
                 <div class="flex flex-col gap-3 pt-6 border-t border-gray-200 dark:border-gray-700 sm:flex-row sm:items-center sm:justify-between">
                     <a href="{{ workspace_route('tenant.forms.index') }}" class="btn btn-outline">
-                        <x-icon name="information-outline" class="w-4 h-4 mr-2" />
-                        Cancelar
+                        <x-icon name="arrow-left" class="w-4 h-4 mr-2" />
+                        Voltar
                     </a>
                     <button type="submit" class="btn btn-primary">
-                        <x-icon name="information-outline" class="w-4 h-4 mr-2" />
+                        <x-icon name="content-save-outline" class="w-4 h-4 mr-2" />
                         Salvar Formulário
                     </button>
                 </div>
             </form>
         </div>
     </div>
-
 @endsection
