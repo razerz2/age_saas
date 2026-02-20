@@ -1,4 +1,4 @@
-@extends('layouts.tailadmin.app')
+﻿@extends('layouts.tailadmin.app')
 
 @section('title', 'Criar Agendamento Recorrente')
 @section('page', 'recurring-appointments')
@@ -72,14 +72,17 @@
                                 <x-icon name="account-outline" size="text-sm" class="inline mr-1" />
                                 Paciente <span class="text-red-500">*</span>
                             </label>
-                            <select name="patient_id" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white @error('patient_id') border-red-500 @enderror" required>
-                                <option value="">Selecione um paciente</option>
-                                @foreach($patients as $patient)
-                                    <option value="{{ $patient->id }}" {{ old('patient_id') == $patient->id ? 'selected' : '' }}>
-                                        {{ $patient->full_name }}
-                                    </option>
-                                @endforeach
-                            </select>
+                            @php
+                                $selectedPatientId = old('patient_id');
+                                $selectedPatient = $selectedPatientId ? $patients->firstWhere('id', $selectedPatientId) : null;
+                            @endphp
+                            <div class="flex items-center gap-2">
+                                <input type="hidden" name="patient_id" id="patient_id" value="{{ $selectedPatientId }}" required>
+                                <input type="text" id="patient_name" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-gray-50 dark:bg-gray-700 dark:text-white @error('patient_id') border-red-500 @enderror" value="{{ $selectedPatient?->full_name ?? '' }}" placeholder="Selecione um paciente" readonly>
+                                <button type="button" class="btn btn-outline js-open-entity-search" data-entity-type="patients" data-search-url="{{ workspace_route('tenant.appointments.api.search-patients') }}" data-hidden-input-id="patient_id" data-display-input-id="patient_name" data-modal-title="Buscar paciente">
+                                    Buscar
+                                </button>
+                            </div>
                             @error('patient_id')
                                 <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
                             @enderror
@@ -90,14 +93,18 @@
                                 <x-icon name="account" size="text-sm" class="inline mr-1" />
                                 Médico <span class="text-red-500">*</span>
                             </label>
-                            <select name="doctor_id" id="doctor_id" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white @error('doctor_id') border-red-500 @enderror" required>
-                                <option value="">Selecione um médico</option>
-                                @foreach($doctors as $doctor)
-                                    <option value="{{ $doctor->id }}" {{ old('doctor_id') == $doctor->id ? 'selected' : '' }}>
-                                        {{ $doctor->user->name_full ?? $doctor->user->name }}
-                                    </option>
-                                @endforeach
-                            </select>
+                            @php
+                                $selectedDoctorId = old('doctor_id');
+                                $selectedDoctor = $selectedDoctorId ? $doctors->firstWhere('id', $selectedDoctorId) : null;
+                                $selectedDoctorName = $selectedDoctor ? ($selectedDoctor->user->name_full ?? $selectedDoctor->user->name) : '';
+                            @endphp
+                            <div class="flex items-center gap-2 mb-2">
+                                <input type="hidden" name="doctor_id" id="doctor_id" data-initial-value="{{ $selectedDoctorId }}" value="{{ $selectedDoctorId }}" data-selected-name="{{ $selectedDoctorName }}" required>
+                                <input type="text" id="doctor_name" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-gray-50 dark:bg-gray-700 dark:text-white @error('doctor_id') border-red-500 @enderror" value="{{ $selectedDoctorName }}" placeholder="Selecione um médico" readonly>
+                                <button type="button" class="btn btn-outline js-open-entity-search" data-entity-type="doctors" data-search-url="{{ workspace_route('tenant.appointments.api.search-doctors') }}" data-hidden-input-id="doctor_id" data-display-input-id="doctor_name" data-modal-title="Buscar médico">
+                                    Buscar
+                                </button>
+                            </div>
                             @error('doctor_id')
                                 <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
                             @enderror
@@ -136,8 +143,13 @@
                                 <x-icon name="calendar-month-outline" size="text-sm" class="inline mr-1" />
                                 Data Inicial <span class="text-red-500">*</span>
                             </label>
-                            <input type="date" name="start_date" id="start_date" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white @error('start_date') border-red-500 @enderror"
-                                   value="{{ old('start_date', date('Y-m-d')) }}" required>
+                            <div class="flex items-center gap-2 recurring-date-field-group">
+                                <input type="date" name="start_date" id="start_date" class="native-date w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white @error('start_date') border-red-500 @enderror"
+                                       value="{{ old('start_date') }}" min="{{ \Carbon\Carbon::now('America/Campo_Grande')->toDateString() }}" required disabled>
+                                <button type="button" class="btn btn-outline recurring-date-picker-trigger" data-action="open-date-picker" aria-label="Abrir calendário" title="Abrir calendário">
+                                    <x-icon name="calendar-month-outline" size="text-sm" />
+                                </button>
+                            </div>
                             @error('start_date')
                                 <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
                             @enderror
@@ -159,7 +171,7 @@
                     </div>
 
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
-                        <div id="end_date_field" style="display: none;">
+                        <div id="end_date_field" class="hidden recurring-end-date-field">
                             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                                 Data Final <span class="text-red-500">*</span>
                             </label>
@@ -182,7 +194,7 @@
                     </h3>
                     <div id="rules-container">
                         <div class="rule-item mb-4 p-4 border border-gray-200 dark:border-gray-700 rounded-md">
-                            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                                         Dia da Semana <span class="text-red-500 rule-required-indicator">*</span>
@@ -201,15 +213,15 @@
                                     <input type="hidden" name="rules[0][start_time]" class="rule-start-time" value="{{ old('rules.0.start_time') }}">
                                     <input type="hidden" name="rules[0][end_time]" class="rule-end-time" value="{{ old('rules.0.end_time') }}">
                                 </div>
-                                <div class="flex items-end rule-button-col">
-                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 rule-label-spacer" style="visibility: hidden;">&nbsp;</label>
-                                    <button type="button" class="inline-flex items-center px-3 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-md transition-colors rule-action-btn" id="add-rule">
-                                        <x-icon name="plus" size="text-sm" class="mr-1" />
-                                        Adicionar Regra
-                                    </button>
-                                </div>
+
                             </div>
                         </div>
+                    </div>
+                    <div class="mt-4 flex justify-end">
+                        <button type="button" class="btn btn-primary inline-flex items-center gap-2" id="add-rule" aria-label="Adicionar regra de recorrência">
+                            <x-icon name="plus" size="text-sm" />
+                            Adicionar Regra
+                        </button>
                     </div>
                 </div>
 
@@ -225,6 +237,30 @@
                     </button>
                 </div>
             </form>
+        </div>
+    </div>
+
+    <div id="entitySearchModal" class="entity-search-modal hidden" data-entity-search-modal>
+        <div class="entity-search-modal__backdrop" data-entity-search-backdrop></div>
+        <div class="entity-search-modal__dialog" role="dialog" aria-modal="true" aria-labelledby="entity-search-modal-title">
+            <div class="entity-search-modal__header">
+                <h3 id="entity-search-modal-title" class="text-lg font-semibold text-gray-900 dark:text-white" data-entity-search-title>Buscar</h3>
+                <button type="button" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 js-close-entity-search-modal" aria-label="Fechar modal de busca">
+                    <x-icon name="close" class="w-6 h-6" />
+                </button>
+            </div>
+            <div class="entity-search-modal__body">
+                <input type="text" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white" placeholder="Digite para buscar..." data-entity-search-input>
+                <div class="entity-search-modal__results-wrap border border-gray-200 dark:border-gray-700 rounded-md mt-3">
+                    <div class="p-3 text-sm text-gray-500 dark:text-gray-400" data-entity-search-empty>Digite para buscar.</div>
+                    <div class="hidden p-3 text-sm text-gray-500 dark:text-gray-400" data-entity-search-loading>Buscando...</div>
+                    <ul class="hidden" data-entity-search-results></ul>
+                </div>
+            </div>
+            <div class="entity-search-modal__footer">
+                <button type="button" class="btn btn-outline js-cancel-entity-search">Cancelar</button>
+                <button type="button" class="btn btn-primary js-confirm-entity-search" data-entity-search-confirm disabled>Selecionar</button>
+            </div>
         </div>
     </div>
 

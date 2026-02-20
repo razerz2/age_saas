@@ -1,0 +1,23 @@
+.native-date {
+    appearance: auto;
+    -webkit-appearance: auto;
+}
+
+.native-date::-webkit-calendar-picker-indicator {
+    display: block;
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.recurring-date-field-group .native-date {
+    position: relative;
+    z-index: 1;
+}
+
+.recurring-date-picker-trigger {
+    pointer-events: auto;
+}
+
+.rule-label-spacer {
+    visibility: hidden;
+}

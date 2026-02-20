@@ -1,3 +1,5 @@
+import { initEntitySearchModal } from '../components/entitySearchModal';
+
 export function init() {
 	const tenantSlug = window.tenantSlug || (window.tenant && window.tenant.slug) || null;
 	if (!tenantSlug) return;
@@ -9,12 +11,15 @@ export function init() {
 	const specialtySelect = form.querySelector('#specialty_id');
 	const appointmentTypeInput = form.querySelector('#appointment_type_id');
 	const startDateInput = form.querySelector('#start_date');
+	const openDatePickerButton = form.querySelector('[data-action="open-date-picker"]');
 	const endTypeSelect = form.querySelector('#end_type');
 	const endDateField = form.querySelector('#end_date_field');
 	const rulesContainer = form.querySelector('#rules-container');
 	const addRuleButton = form.querySelector('#add-rule');
 
 	if (!doctorSelect || !specialtySelect || !appointmentTypeInput || !rulesContainer) return;
+
+	initEntitySearchModal();
 
 	let businessHours = [];
 	let ruleIndex = 1;
@@ -38,6 +43,27 @@ export function init() {
 			throw new Error(`HTTP ${response.status}`);
 		}
 		return response.json();
+	}
+
+	function openStartDatePicker() {
+		if (!startDateInput || startDateInput.disabled) return;
+		try {
+			if (typeof startDateInput.showPicker === 'function') {
+				startDateInput.showPicker();
+				return;
+			}
+		} catch {
+			// fallback
+		}
+		startDateInput.focus();
+	}
+
+	function setStartDateState(hasDoctor, preserveValue = false) {
+		if (!startDateInput) return;
+		startDateInput.disabled = !hasDoctor;
+		if (!hasDoctor || !preserveValue) {
+			startDateInput.value = '';
+		}
 	}
 
 	function getFirstRule() {
@@ -370,8 +396,8 @@ export function init() {
 					<input type="hidden" name="rules[${ruleIndex}][interval]" value="1">
 				</div>
 				<div class="flex items-end">
-					<label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" style="visibility: hidden;">&nbsp;</label>
-					<button type="button" class="remove-rule inline-flex items-center px-3 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded-md transition-colors">
+					<label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 rule-label-spacer">&nbsp;</label>
+					<button type="button" class="btn btn-outline remove-rule" aria-label="Remover regra de recorrência">
 						Remover
 					</button>
 				</div>
@@ -443,13 +469,13 @@ export function init() {
 		if (!endTypeSelect || !endDateField) return;
 		const apply = () => {
 			const show = endTypeSelect.value === 'date';
-			endDateField.style.display = show ? '' : 'none';
+			endDateField.classList.toggle('hidden', !show);
 		};
 		endTypeSelect.addEventListener('change', apply);
 		apply();
 	}
 
-	async function handleDoctorChange() {
+	async function handleDoctorChange({ preserveDate = false } = {}) {
 		const doctorId = doctorSelect.value || null;
 
 		resetRules();
@@ -458,8 +484,11 @@ export function init() {
 
 		if (!doctorId) {
 			appointmentTypeInput.value = '';
+			setStartDateState(false);
 			return;
 		}
+
+		setStartDateState(true, preserveDate);
 
 		await Promise.all([loadSpecialties(doctorId), loadBusinessHours(doctorId), loadAppointmentTypeId(doctorId)]);
 
@@ -524,7 +553,7 @@ export function init() {
 		}
 	});
 
-	doctorSelect.addEventListener('change', handleDoctorChange);
+	doctorSelect.addEventListener('change', () => handleDoctorChange());
 	if (addRuleButton) addRuleButton.addEventListener('click', handleAddRule);
 
 	if (startDateInput) {
@@ -536,7 +565,18 @@ export function init() {
 		});
 	}
 
+	if (openDatePickerButton) {
+		openDatePickerButton.addEventListener('click', openStartDatePicker);
+	}
+
+	if (startDateInput) {
+		startDateInput.addEventListener('click', openStartDatePicker);
+	}
+
 	initEndTypeToggle();
 	setupFirstRuleHandlers();
-	handleDoctorChange();
+	if (doctorSelect.dataset.initialValue && !doctorSelect.value) {
+		doctorSelect.value = doctorSelect.dataset.initialValue;
+	}
+	handleDoctorChange({ preserveDate: Boolean(startDateInput?.value) });
 }
