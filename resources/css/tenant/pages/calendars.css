@@ -340,6 +340,112 @@
     border-radius: 10px;
 }
 
+#calendars-grid .row-clickable {
+    cursor: pointer;
+    transition: background-color 0.12s ease;
+}
+
+#calendars-grid .gridjs-table {
+    border-collapse: separate;
+}
+
+#calendars-grid .row-clickable:hover {
+    background-color: rgba(15, 23, 42, 0.04);
+    box-shadow: inset 0 0 0 1px rgba(15, 23, 42, 0.04);
+}
+
+#calendars-grid .actions-wrap {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    white-space: nowrap;
+    width: 100%;
+}
+
+#calendars-grid .actions-wrap form {
+    margin: 0;
+}
+
+#calendars-grid .actions-wrap form > button {
+    margin: 0;
+}
+
+#calendars-grid tr.row-clickable:hover > td,
+#calendars-grid .gridjs-tr.row-clickable:hover > .gridjs-td {
+    background-color: rgba(15, 23, 42, 0.04);
+}
+
+.dark #calendars-grid .gridjs-wrapper,
+.dark #calendars-grid .gridjs-container,
+.dark #calendars-grid .gridjs-table {
+    background-color: transparent !important;
+}
+
+.dark #calendars-grid .gridjs-thead,
+.dark #calendars-grid .gridjs-table thead,
+.dark #calendars-grid .gridjs-table thead th,
+.dark #calendars-grid .gridjs-th {
+    background-color: rgba(255, 255, 255, 0.04) !important;
+    color: rgba(255, 255, 255, 0.85) !important;
+    border-color: rgba(255, 255, 255, 0.10) !important;
+}
+
+.dark #calendars-grid .gridjs-table tbody,
+.dark #calendars-grid .gridjs-table tbody tr,
+.dark #calendars-grid .gridjs-table tbody td,
+.dark #calendars-grid .gridjs-td {
+    background-color: transparent !important;
+    color: rgba(255, 255, 255, 0.85) !important;
+    border-color: rgba(255, 255, 255, 0.10) !important;
+}
+
+.dark #calendars-grid .gridjs-tr:nth-child(even) .gridjs-td {
+    background-color: transparent !important;
+}
+
+.dark #calendars-grid tr.row-clickable:hover > td,
+.dark #calendars-grid .gridjs-tr.row-clickable:hover > .gridjs-td {
+    background-color: rgba(255, 255, 255, 0.06) !important;
+}
+
+.dark #calendars-grid .gridjs-table,
+.dark #calendars-grid .gridjs-wrapper {
+    border-color: rgba(255, 255, 255, 0.10) !important;
+}
+
+.dark #calendars-grid .gridjs-footer,
+.dark #calendars-grid .gridjs-pagination,
+.dark #calendars-grid .gridjs-summary,
+.dark #calendars-grid .gridjs-pages {
+    background-color: transparent !important;
+    color: rgba(255, 255, 255, 0.70) !important;
+    border-color: rgba(255, 255, 255, 0.10) !important;
+}
+
+.dark #calendars-grid .gridjs-footer {
+    border-top: 1px solid rgba(255, 255, 255, 0.10) !important;
+}
+
+.dark #calendars-grid .gridjs-pages button,
+.dark #calendars-grid .gridjs-pages .gridjs-page,
+.dark #calendars-grid .gridjs-pages a {
+    background-color: rgba(255, 255, 255, 0.04) !important;
+    color: rgba(255, 255, 255, 0.85) !important;
+    border: 1px solid rgba(255, 255, 255, 0.10) !important;
+}
+
+.dark #calendars-grid .gridjs-pages button:hover,
+.dark #calendars-grid .gridjs-pages .gridjs-page:hover,
+.dark #calendars-grid .gridjs-pages a:hover {
+    background-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+.dark #calendars-grid .gridjs-pages .gridjs-currentPage,
+.dark #calendars-grid .gridjs-pages button[aria-current="page"] {
+    background-color: rgba(255, 255, 255, 0.10) !important;
+}
+
 .fc-scroller::-webkit-scrollbar-thumb:hover {
     background: #0048cc;
 }

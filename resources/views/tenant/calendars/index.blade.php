@@ -39,6 +39,10 @@
         <div class="p-6">
             <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Lista de Calendários</h2>
 
+            <div
+                id="calendars-grid-wrapper"
+                data-row-click-link-selector='a[title="Ver"]'
+            >
             <x-tenant.grid
                 id="calendars-grid"
                 :columns="[
@@ -52,6 +56,7 @@
                 :search="true"
                 :sort="true"
             />
+            </div>
 
         </div>
     </div>

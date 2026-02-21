@@ -237,3 +237,109 @@
 .dark .btn-patient-secondary:hover {
     background-color: #1f2937;
 }
+
+#forms-grid .row-clickable {
+    cursor: pointer;
+    transition: background-color 0.12s ease;
+}
+
+#forms-grid .gridjs-table {
+    border-collapse: separate;
+}
+
+#forms-grid .row-clickable:hover {
+    background-color: rgba(15, 23, 42, 0.04);
+    box-shadow: inset 0 0 0 1px rgba(15, 23, 42, 0.04);
+}
+
+#forms-grid .actions-wrap {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    white-space: nowrap;
+    width: 100%;
+}
+
+#forms-grid .actions-wrap form {
+    margin: 0;
+}
+
+#forms-grid .actions-wrap form > button {
+    margin: 0;
+}
+
+#forms-grid tr.row-clickable:hover > td,
+#forms-grid .gridjs-tr.row-clickable:hover > .gridjs-td {
+    background-color: rgba(15, 23, 42, 0.04);
+}
+
+.dark #forms-grid .gridjs-wrapper,
+.dark #forms-grid .gridjs-container,
+.dark #forms-grid .gridjs-table {
+    background-color: transparent !important;
+}
+
+.dark #forms-grid .gridjs-thead,
+.dark #forms-grid .gridjs-table thead,
+.dark #forms-grid .gridjs-table thead th,
+.dark #forms-grid .gridjs-th {
+    background-color: rgba(255, 255, 255, 0.04) !important;
+    color: rgba(255, 255, 255, 0.85) !important;
+    border-color: rgba(255, 255, 255, 0.10) !important;
+}
+
+.dark #forms-grid .gridjs-table tbody,
+.dark #forms-grid .gridjs-table tbody tr,
+.dark #forms-grid .gridjs-table tbody td,
+.dark #forms-grid .gridjs-td {
+    background-color: transparent !important;
+    color: rgba(255, 255, 255, 0.85) !important;
+    border-color: rgba(255, 255, 255, 0.10) !important;
+}
+
+.dark #forms-grid .gridjs-tr:nth-child(even) .gridjs-td {
+    background-color: transparent !important;
+}
+
+.dark #forms-grid tr.row-clickable:hover > td,
+.dark #forms-grid .gridjs-tr.row-clickable:hover > .gridjs-td {
+    background-color: rgba(255, 255, 255, 0.06) !important;
+}
+
+.dark #forms-grid .gridjs-table,
+.dark #forms-grid .gridjs-wrapper {
+    border-color: rgba(255, 255, 255, 0.10) !important;
+}
+
+.dark #forms-grid .gridjs-footer,
+.dark #forms-grid .gridjs-pagination,
+.dark #forms-grid .gridjs-summary,
+.dark #forms-grid .gridjs-pages {
+    background-color: transparent !important;
+    color: rgba(255, 255, 255, 0.70) !important;
+    border-color: rgba(255, 255, 255, 0.10) !important;
+}
+
+.dark #forms-grid .gridjs-footer {
+    border-top: 1px solid rgba(255, 255, 255, 0.10) !important;
+}
+
+.dark #forms-grid .gridjs-pages button,
+.dark #forms-grid .gridjs-pages .gridjs-page,
+.dark #forms-grid .gridjs-pages a {
+    background-color: rgba(255, 255, 255, 0.04) !important;
+    color: rgba(255, 255, 255, 0.85) !important;
+    border: 1px solid rgba(255, 255, 255, 0.10) !important;
+}
+
+.dark #forms-grid .gridjs-pages button:hover,
+.dark #forms-grid .gridjs-pages .gridjs-page:hover,
+.dark #forms-grid .gridjs-pages a:hover {
+    background-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+.dark #forms-grid .gridjs-pages .gridjs-currentPage,
+.dark #forms-grid .gridjs-pages button[aria-current="page"] {
+    background-color: rgba(255, 255, 255, 0.10) !important;
+}

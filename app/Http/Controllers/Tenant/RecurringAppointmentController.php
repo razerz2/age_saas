@@ -108,7 +108,7 @@ class RecurringAppointmentController extends Controller
                 'doctor'             => e($doctorName),
                 'start_date'         => $startDate,
                 'end_display'        => $endDisplay,
-                'rules_display'      => view('tenant.appointments.recurring.partials.rules', compact('recurring'))->render(),
+                'rules_display'      => $this->formatRulesDisplayText($recurring),
                 'generated_sessions' => (int) $recurring->generated_sessions_count,
                 'status_badge'       => view('tenant.appointments.recurring.partials.status', compact('recurring'))->render(),
                 'actions'            => view('tenant.appointments.recurring.partials.actions', compact('recurring'))->render(),
@@ -124,6 +124,46 @@ class RecurringAppointmentController extends Controller
                 'total'        => $paginator->total(),
             ],
         ]);
+    }
+
+    private function formatRulesDisplayText(RecurringAppointment $recurring): string
+    {
+        if (!$recurring->relationLoaded('rules')) {
+            $recurring->load('rules');
+        }
+
+        $weekdayMap = [
+            'monday' => 'segunda',
+            'tuesday' => 'terça',
+            'wednesday' => 'quarta',
+            'thursday' => 'quinta',
+            'friday' => 'sexta',
+            'saturday' => 'sábado',
+            'sunday' => 'domingo',
+        ];
+
+        $parts = $recurring->rules
+            ->map(function ($rule) use ($weekdayMap) {
+                $weekday = strtolower((string) ($rule->weekday ?? ''));
+                $dayLabel = $weekdayMap[$weekday] ?? ucfirst($weekday ?: 'Dia');
+                $start = substr((string) ($rule->start_time ?? ''), 0, 5);
+                $end = substr((string) ($rule->end_time ?? ''), 0, 5);
+
+                if ($start !== '' && $end !== '') {
+                    return "{$dayLabel} {$start}-{$end}";
+                }
+
+                if ($start !== '') {
+                    return "{$dayLabel} {$start}";
+                }
+
+                return $dayLabel;
+            })
+            ->filter(fn ($part) => is_string($part) && $part !== '')
+            ->values()
+            ->all();
+
+        return !empty($parts) ? implode(' | ', $parts) : '-';
     }
 
     public function index()

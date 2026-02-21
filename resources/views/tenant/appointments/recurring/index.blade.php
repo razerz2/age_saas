@@ -1,7 +1,7 @@
 @extends('layouts.tailadmin.app')
 
 @section('title', 'Agendamentos Recorrentes')
-@section('page', 'appointments')
+@section('page', 'recurring-appointments')
 
 @section('content')
 
@@ -39,6 +39,11 @@
         </div>
 
         <div class="p-6">
+            <div
+                id="recurring-appointments-grid-wrapper"
+                data-show-url-template="{{ workspace_route('tenant.recurring-appointments.show', '__RECURRING_ID__') }}"
+                data-row-click-link-selector='a[title="Ver"]'
+            >
             <x-tenant.grid
                 id="recurring-appointments-grid"
                 :columns="[
@@ -56,6 +61,7 @@
                 :search="true"
                 :sort="true"
             />
+            </div>
         </div>
     </div>
 

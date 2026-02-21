@@ -1,6 +1,6 @@
 <div class="actions-wrap">
     <a
-        href="{{ workspace_route('tenant.form-responses.show', $response->id) }}"
+        href="{{ workspace_route('tenant.online-appointments.show', ['appointment' => $appointment->id]) }}"
         title="Ver"
         onclick="event.stopPropagation()"
         class="inline-flex items-center justify-center rounded-xl border border-blue-100 bg-blue-50 px-2.5 py-1.5 text-xs font-medium text-blue-700 hover:bg-blue-100 dark:border-blue-900/40 dark:bg-blue-900/20 dark:text-blue-300 table-action-btn"

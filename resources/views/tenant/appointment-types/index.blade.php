@@ -2,6 +2,7 @@
 
 @section('title', 'Tipos de Consulta')
 
+@section('page', 'appointment-types')
 @section('content')
 
     <!-- Page Header -->
@@ -61,6 +62,10 @@
         </div>
 
         <div class="p-6">
+            <div
+                id="appointment-types-grid-wrapper"
+                data-row-click-link-selector='a[title="Ver"]'
+            >
             <x-tenant.grid
                 id="appointment-types-grid"
                 :columns="[
@@ -76,6 +81,7 @@
                 :search="true"
                 :sort="true"
             />
+            </div>
         </div>
     </div>
 

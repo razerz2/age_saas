@@ -31,6 +31,11 @@
         <div class="p-6">
             <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Lista de Consultas Online</h2>
 
+            <div
+                id="online-appointments-grid-wrapper"
+                data-show-url-template="{{ workspace_route('tenant.online-appointments.show', ['appointment' => '__APPOINTMENT_ID__']) }}"
+                data-row-click-link-selector='a[title="Ver"]'
+            >
             <x-tenant.grid
                 id="online-appointments-grid"
                 :columns="[
@@ -46,6 +51,7 @@
                 :search="true"
                 :sort="true"
             />
+            </div>
 
         </div>
     </div>

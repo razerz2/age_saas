@@ -40,6 +40,10 @@
             </div>
 
             <div class="p-6">
+                <div
+                    id="forms-grid-wrapper"
+                    data-row-click-link-selector='a[title="Ver"]'
+                >
                 <x-tenant.grid
                     id="forms-grid"
                     :columns="[
@@ -55,6 +59,7 @@
                     :search="true"
                     :sort="true"
                 />
+                </div>
             </div>
         </div>
     </div>

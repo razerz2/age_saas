@@ -68,6 +68,11 @@
         </div>
 
         <div class="p-6">
+            <div
+                id="appointments-grid-wrapper"
+                data-show-url-template="{{ workspace_route('tenant.appointments.show', '__APPOINTMENT_ID__') }}"
+                data-row-click-link-selector='a[title="Ver"]'
+            >
             <x-tenant.grid
                 id="appointments-grid"
                 :columns="[
@@ -85,6 +90,7 @@
                 :search="true"
                 :sort="true"
             />
+            </div>
         </div>
     </div>
 

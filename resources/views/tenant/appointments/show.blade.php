@@ -186,7 +186,7 @@
             <div class="border-t border-gray-200 pt-6">
                 <div class="flex items-center justify-end gap-3 flex-nowrap">
                     @if($appointment->appointment_mode === 'online')
-                        <a href="{{ workspace_route('tenant.online-appointments.show', $appointment->id) }}" class="btn btn-primary">
+                        <a href="{{ workspace_route('tenant.online-appointments.show', ['appointment' => $appointment->id]) }}" class="btn btn-primary">
                             <x-icon name="video-outline" class="w-4 h-4 mr-2" />
                             Instruções Online
                         </a>

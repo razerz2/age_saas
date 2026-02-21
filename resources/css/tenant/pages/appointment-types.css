@@ -83,3 +83,109 @@
 .dark .btn-patient-secondary:hover {
     background-color: #1f2937;
 }
+
+#appointment-types-grid .row-clickable {
+    cursor: pointer;
+    transition: background-color 0.12s ease;
+}
+
+#appointment-types-grid .gridjs-table {
+    border-collapse: separate;
+}
+
+#appointment-types-grid .row-clickable:hover {
+    background-color: rgba(15, 23, 42, 0.04);
+    box-shadow: inset 0 0 0 1px rgba(15, 23, 42, 0.04);
+}
+
+#appointment-types-grid .actions-wrap {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    white-space: nowrap;
+    width: 100%;
+}
+
+#appointment-types-grid .actions-wrap form {
+    margin: 0;
+}
+
+#appointment-types-grid .actions-wrap form > button {
+    margin: 0;
+}
+
+#appointment-types-grid tr.row-clickable:hover > td,
+#appointment-types-grid .gridjs-tr.row-clickable:hover > .gridjs-td {
+    background-color: rgba(15, 23, 42, 0.04);
+}
+
+.dark #appointment-types-grid .gridjs-wrapper,
+.dark #appointment-types-grid .gridjs-container,
+.dark #appointment-types-grid .gridjs-table {
+    background-color: transparent !important;
+}
+
+.dark #appointment-types-grid .gridjs-thead,
+.dark #appointment-types-grid .gridjs-table thead,
+.dark #appointment-types-grid .gridjs-table thead th,
+.dark #appointment-types-grid .gridjs-th {
+    background-color: rgba(255, 255, 255, 0.04) !important;
+    color: rgba(255, 255, 255, 0.85) !important;
+    border-color: rgba(255, 255, 255, 0.10) !important;
+}
+
+.dark #appointment-types-grid .gridjs-table tbody,
+.dark #appointment-types-grid .gridjs-table tbody tr,
+.dark #appointment-types-grid .gridjs-table tbody td,
+.dark #appointment-types-grid .gridjs-td {
+    background-color: transparent !important;
+    color: rgba(255, 255, 255, 0.85) !important;
+    border-color: rgba(255, 255, 255, 0.10) !important;
+}
+
+.dark #appointment-types-grid .gridjs-tr:nth-child(even) .gridjs-td {
+    background-color: transparent !important;
+}
+
+.dark #appointment-types-grid tr.row-clickable:hover > td,
+.dark #appointment-types-grid .gridjs-tr.row-clickable:hover > .gridjs-td {
+    background-color: rgba(255, 255, 255, 0.06) !important;
+}
+
+.dark #appointment-types-grid .gridjs-table,
+.dark #appointment-types-grid .gridjs-wrapper {
+    border-color: rgba(255, 255, 255, 0.10) !important;
+}
+
+.dark #appointment-types-grid .gridjs-footer,
+.dark #appointment-types-grid .gridjs-pagination,
+.dark #appointment-types-grid .gridjs-summary,
+.dark #appointment-types-grid .gridjs-pages {
+    background-color: transparent !important;
+    color: rgba(255, 255, 255, 0.70) !important;
+    border-color: rgba(255, 255, 255, 0.10) !important;
+}
+
+.dark #appointment-types-grid .gridjs-footer {
+    border-top: 1px solid rgba(255, 255, 255, 0.10) !important;
+}
+
+.dark #appointment-types-grid .gridjs-pages button,
+.dark #appointment-types-grid .gridjs-pages .gridjs-page,
+.dark #appointment-types-grid .gridjs-pages a {
+    background-color: rgba(255, 255, 255, 0.04) !important;
+    color: rgba(255, 255, 255, 0.85) !important;
+    border: 1px solid rgba(255, 255, 255, 0.10) !important;
+}
+
+.dark #appointment-types-grid .gridjs-pages button:hover,
+.dark #appointment-types-grid .gridjs-pages .gridjs-page:hover,
+.dark #appointment-types-grid .gridjs-pages a:hover {
+    background-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+.dark #appointment-types-grid .gridjs-pages .gridjs-currentPage,
+.dark #appointment-types-grid .gridjs-pages button[aria-current="page"] {
+    background-color: rgba(255, 255, 255, 0.10) !important;
+}

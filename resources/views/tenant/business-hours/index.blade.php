@@ -2,6 +2,7 @@
 
 @section('title', 'Horários Comerciais')
 
+@section('page', 'business-hours')
 @section('content')
 
     <!-- Page Header -->
@@ -40,6 +41,10 @@
         <div class="p-6">
             <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Lista de Horários Comerciais</h2>
 
+            <div
+                id="business-hours-grid-wrapper"
+                data-row-click-link-selector='a[title="Ver"]'
+            >
             <x-tenant.grid
                 id="business-hours-grid"
                 :columns="[
@@ -54,6 +59,7 @@
                 :search="true"
                 :sort="true"
             />
+            </div>
 
         </div>
     </div>

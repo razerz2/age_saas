@@ -1,14 +1,14 @@
 export function init() {
-    bindOnlineAppointmentsIndexRowClick();
+    bindAppointmentTypesIndexRowClick();
 }
 
-function bindOnlineAppointmentsIndexRowClick() {
-    const grid = document.getElementById('online-appointments-grid');
+function bindAppointmentTypesIndexRowClick() {
+    const grid = document.getElementById('appointment-types-grid');
     if (!grid) {
         return;
     }
 
-    const wrapper = document.getElementById('online-appointments-grid-wrapper');
+    const wrapper = document.getElementById('appointment-types-grid-wrapper');
     const linkSelector = wrapper?.dataset?.rowClickLinkSelector || 'a[title="Ver"]';
     const excludedSelector = 'a, button, input, select, textarea, label, [data-no-row-click], [role="button"]';
 

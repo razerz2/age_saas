@@ -1,1 +1,107 @@
 [data-page="online_appointments"] {}
+
+#online-appointments-grid .row-clickable {
+    cursor: pointer;
+    transition: background-color 0.12s ease;
+}
+
+#online-appointments-grid .gridjs-table {
+    border-collapse: separate;
+}
+
+#online-appointments-grid .row-clickable:hover {
+    background-color: rgba(15, 23, 42, 0.04);
+    box-shadow: inset 0 0 0 1px rgba(15, 23, 42, 0.04);
+}
+
+#online-appointments-grid .actions-wrap {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    white-space: nowrap;
+    width: 100%;
+}
+
+#online-appointments-grid .actions-wrap form {
+    margin: 0;
+}
+
+#online-appointments-grid .actions-wrap form > button {
+    margin: 0;
+}
+
+#online-appointments-grid tr.row-clickable:hover > td,
+#online-appointments-grid .gridjs-tr.row-clickable:hover > .gridjs-td {
+    background-color: rgba(15, 23, 42, 0.04);
+}
+
+.dark #online-appointments-grid .gridjs-wrapper,
+.dark #online-appointments-grid .gridjs-container,
+.dark #online-appointments-grid .gridjs-table {
+    background-color: transparent !important;
+}
+
+.dark #online-appointments-grid .gridjs-thead,
+.dark #online-appointments-grid .gridjs-table thead,
+.dark #online-appointments-grid .gridjs-table thead th,
+.dark #online-appointments-grid .gridjs-th {
+    background-color: rgba(255, 255, 255, 0.04) !important;
+    color: rgba(255, 255, 255, 0.85) !important;
+    border-color: rgba(255, 255, 255, 0.10) !important;
+}
+
+.dark #online-appointments-grid .gridjs-table tbody,
+.dark #online-appointments-grid .gridjs-table tbody tr,
+.dark #online-appointments-grid .gridjs-table tbody td,
+.dark #online-appointments-grid .gridjs-td {
+    background-color: transparent !important;
+    color: rgba(255, 255, 255, 0.85) !important;
+    border-color: rgba(255, 255, 255, 0.10) !important;
+}
+
+.dark #online-appointments-grid .gridjs-tr:nth-child(even) .gridjs-td {
+    background-color: transparent !important;
+}
+
+.dark #online-appointments-grid tr.row-clickable:hover > td,
+.dark #online-appointments-grid .gridjs-tr.row-clickable:hover > .gridjs-td {
+    background-color: rgba(255, 255, 255, 0.06) !important;
+}
+
+.dark #online-appointments-grid .gridjs-table,
+.dark #online-appointments-grid .gridjs-wrapper {
+    border-color: rgba(255, 255, 255, 0.10) !important;
+}
+
+.dark #online-appointments-grid .gridjs-footer,
+.dark #online-appointments-grid .gridjs-pagination,
+.dark #online-appointments-grid .gridjs-summary,
+.dark #online-appointments-grid .gridjs-pages {
+    background-color: transparent !important;
+    color: rgba(255, 255, 255, 0.70) !important;
+    border-color: rgba(255, 255, 255, 0.10) !important;
+}
+
+.dark #online-appointments-grid .gridjs-footer {
+    border-top: 1px solid rgba(255, 255, 255, 0.10) !important;
+}
+
+.dark #online-appointments-grid .gridjs-pages button,
+.dark #online-appointments-grid .gridjs-pages .gridjs-page,
+.dark #online-appointments-grid .gridjs-pages a {
+    background-color: rgba(255, 255, 255, 0.04) !important;
+    color: rgba(255, 255, 255, 0.85) !important;
+    border: 1px solid rgba(255, 255, 255, 0.10) !important;
+}
+
+.dark #online-appointments-grid .gridjs-pages button:hover,
+.dark #online-appointments-grid .gridjs-pages .gridjs-page:hover,
+.dark #online-appointments-grid .gridjs-pages a:hover {
+    background-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+.dark #online-appointments-grid .gridjs-pages .gridjs-currentPage,
+.dark #online-appointments-grid .gridjs-pages button[aria-current="page"] {
+    background-color: rgba(255, 255, 255, 0.10) !important;
+}
