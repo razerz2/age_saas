@@ -39,18 +39,24 @@
 
         <div class="p-6">
             {{-- Nova tabela baseada em Grid.js --}}
-            <x-tenant.grid
-                id="specialties-grid"
-                :columns="[
-                    ['name' => 'name', 'label' => 'Nome'],
-                    ['name' => 'code', 'label' => 'Código'],
-                    ['name' => 'actions', 'label' => 'Ações'],
-                ]"
-                ajaxUrl="{{ workspace_route('tenant.specialties.grid-data') }}"
-                :pagination="true"
-                :search="true"
-                :sort="true"
-            />
+            <div
+                id="specialties-grid-wrapper"
+                data-show-url-template="{{ workspace_route('tenant.specialties.show', '__SPECIALTY_ID__') }}"
+                data-row-click-link-selector='a[title="Ver"]'
+            >
+                <x-tenant.grid
+                    id="specialties-grid"
+                    :columns="[
+                        ['name' => 'name', 'label' => 'Nome'],
+                        ['name' => 'code', 'label' => 'Código'],
+                        ['name' => 'actions', 'label' => 'Ações'],
+                    ]"
+                    ajaxUrl="{{ workspace_route('tenant.specialties.grid-data') }}"
+                    :pagination="true"
+                    :search="true"
+                    :sort="true"
+                />
+            </div>
         </div>
     </div>
 @endsection

@@ -68,24 +68,29 @@
         </div>
         
         <div class="p-6">
-            <x-tenant.grid
-                id="patients-grid"
-                :columns="[
-                    ['name' => 'name', 'label' => 'Nome'],
-                    ['name' => 'email', 'label' => 'E-mail'],
-                    ['name' => 'cpf', 'label' => 'CPF'],
-                    ['name' => 'status_badge', 'label' => 'Status'],
-                    ['name' => 'actions', 'label' => 'Ações'],
-                ]"
-                ajaxUrl="{{ workspace_route('tenant.patients.grid-data') }}"
-                :pagination="true"
-                :search="true"
-                :sort="true"
-            />
+            <div
+                id="patients-grid-wrapper"
+                data-show-url-template="{{ workspace_route('tenant.patients.show', '__PATIENT_ID__') }}"
+                data-row-click-link-selector='a[title="Ver"]'
+            >
+                <x-tenant.grid
+                    id="patients-grid"
+                    :columns="[
+                        ['name' => 'name', 'label' => 'Nome'],
+                        ['name' => 'email', 'label' => 'E-mail'],
+                        ['name' => 'cpf', 'label' => 'CPF'],
+                        ['name' => 'status_badge', 'label' => 'Status'],
+                        ['name' => 'actions', 'label' => 'Ações'],
+                    ]"
+                    ajaxUrl="{{ workspace_route('tenant.patients.grid-data') }}"
+                    :pagination="true"
+                    :search="true"
+                    :sort="true"
+                />
+            </div>
         </div>
     </div>
 </div>
 
 @endsection
-
 

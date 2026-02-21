@@ -118,3 +118,160 @@
 [data-page="users"] #webcam-start:hover {
     background-color: #1d4ed8;
 }
+
+#users-grid .row-clickable {
+    cursor: pointer;
+    transition: background-color 0.12s ease;
+}
+
+#users-grid .gridjs-table {
+    border-collapse: separate;
+}
+
+#users-grid .row-clickable:hover {
+    background-color: rgba(15, 23, 42, 0.04);
+    box-shadow: inset 0 0 0 1px rgba(15, 23, 42, 0.04);
+}
+
+.dark #users-grid .gridjs-wrapper,
+.dark #users-grid .gridjs-container,
+.dark #users-grid .gridjs-table {
+    background-color: transparent;
+}
+
+.dark #users-grid .gridjs-thead,
+.dark #users-grid .gridjs-table thead th,
+.dark #users-grid .gridjs-th {
+    background-color: rgba(255, 255, 255, 0.04);
+    color: rgba(255, 255, 255, 0.8);
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+.dark #users-grid .gridjs-table tbody td,
+.dark #users-grid .gridjs-td {
+    background-color: transparent;
+    color: rgba(255, 255, 255, 0.8);
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+.dark #users-grid .gridjs-tr:nth-child(even) .gridjs-td {
+    background-color: transparent;
+}
+
+.dark #users-grid .gridjs-table tbody tr {
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+.dark #users-grid .row-clickable:hover {
+    background-color: rgba(255, 255, 255, 0.06);
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.06);
+}
+
+#users-grid tr.row-clickable:hover > td,
+#users-grid .gridjs-tr.row-clickable:hover > .gridjs-td {
+    background-color: rgba(15, 23, 42, 0.04);
+}
+
+.dark #users-grid tr.row-clickable:hover > td,
+.dark #users-grid .gridjs-tr.row-clickable:hover > .gridjs-td {
+    background-color: rgba(255, 255, 255, 0.06);
+}
+
+#users-grid .gridjs-tr > td:nth-child(5) {
+    white-space: nowrap;
+    text-align: center;
+    vertical-align: middle;
+}
+
+#users-grid .gridjs-tr > td:nth-child(5) :is(a, form) {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0;
+    vertical-align: middle;
+}
+
+#users-grid .gridjs-tr > td:nth-child(5) :is(a, form) + :is(a, form) {
+    margin-left: 0.5rem;
+}
+
+#users-grid .gridjs-tr > td:nth-child(5) form > button {
+    margin: 0;
+}
+
+/* Users Grid - Dark theme override (local) */
+.dark #users-grid .gridjs-wrapper,
+.dark #users-grid .gridjs-container,
+.dark #users-grid .gridjs-table {
+    background-color: transparent !important;
+}
+
+.dark #users-grid .gridjs-thead,
+.dark #users-grid .gridjs-table thead,
+.dark #users-grid .gridjs-table thead th,
+.dark #users-grid .gridjs-th {
+    background-color: rgba(255, 255, 255, 0.04) !important;
+    color: rgba(255, 255, 255, 0.85) !important;
+    border-color: rgba(255, 255, 255, 0.10) !important;
+}
+
+.dark #users-grid .gridjs-table tbody,
+.dark #users-grid .gridjs-table tbody tr,
+.dark #users-grid .gridjs-table tbody td,
+.dark #users-grid .gridjs-td {
+    background-color: transparent !important;
+    color: rgba(255, 255, 255, 0.85) !important;
+    border-color: rgba(255, 255, 255, 0.10) !important;
+}
+
+/* desativar zebra do grid.blade.php no users */
+.dark #users-grid .gridjs-tr:nth-child(even) .gridjs-td {
+    background-color: transparent !important;
+}
+
+/* manter hover da linha clicável no dark */
+.dark #users-grid tr.row-clickable:hover > td,
+.dark #users-grid .gridjs-tr.row-clickable:hover > .gridjs-td {
+    background-color: rgba(255, 255, 255, 0.06) !important;
+}
+
+/* opcional: ajustar linhas/bordas muito fortes (se ainda estiver pesado) */
+.dark #users-grid .gridjs-table,
+.dark #users-grid .gridjs-wrapper {
+    border-color: rgba(255, 255, 255, 0.10) !important;
+}
+
+/* Users Grid - Footer dark override */
+.dark #users-grid .gridjs-footer,
+.dark #users-grid .gridjs-pagination,
+.dark #users-grid .gridjs-summary,
+.dark #users-grid .gridjs-pages {
+    background-color: transparent !important;
+    color: rgba(255, 255, 255, 0.70) !important;
+    border-color: rgba(255, 255, 255, 0.10) !important;
+}
+
+.dark #users-grid .gridjs-footer {
+    border-top: 1px solid rgba(255, 255, 255, 0.10) !important;
+}
+
+/* botões da paginação */
+.dark #users-grid .gridjs-pages button,
+.dark #users-grid .gridjs-pages .gridjs-page,
+.dark #users-grid .gridjs-pages a {
+    background-color: rgba(255, 255, 255, 0.04) !important;
+    color: rgba(255, 255, 255, 0.85) !important;
+    border: 1px solid rgba(255, 255, 255, 0.10) !important;
+}
+
+/* hover/active */
+.dark #users-grid .gridjs-pages button:hover,
+.dark #users-grid .gridjs-pages .gridjs-page:hover,
+.dark #users-grid .gridjs-pages a:hover {
+    background-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+.dark #users-grid .gridjs-pages .gridjs-currentPage,
+.dark #users-grid .gridjs-pages button[aria-current="page"] {
+    background-color: rgba(255, 255, 255, 0.10) !important;
+}

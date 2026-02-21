@@ -172,6 +172,36 @@ class PatientController extends Controller
         $page  = max(1, (int) $request->input('page', 1));
         $limit = max(1, min(100, (int) $request->input('limit', 10)));
 
+        $normalizeUtf8 = static function ($value, string $field, ?string $patientId = null) {
+            if (!is_string($value)) {
+                return $value;
+            }
+
+            if (mb_check_encoding($value, 'UTF-8')) {
+                return $value;
+            }
+
+            \Log::warning('Invalid UTF-8 detected in tenant.patients.grid-data payload', [
+                'patient_id' => $patientId,
+                'field' => $field,
+                'value_hex_preview' => bin2hex(substr($value, 0, 64)),
+            ]);
+
+            $normalized = function_exists('iconv')
+                ? iconv('UTF-8', 'UTF-8//IGNORE', $value)
+                : false;
+
+            if ($normalized === false) {
+                $normalized = mb_convert_encoding($value, 'UTF-8', 'UTF-8');
+            }
+
+            if (!is_string($normalized) || !mb_check_encoding($normalized, 'UTF-8')) {
+                return '';
+            }
+
+            return $normalized;
+        };
+
         $query = Patient::query();
 
         // Busca simples
@@ -215,21 +245,27 @@ class PatientController extends Controller
             $statusBadge = view('tenant.patients.partials.status', [
                 'patient' => $patient,
             ])->render();
+            $statusBadge = $normalizeUtf8($statusBadge, 'status_badge_html', (string) $patient->id);
 
             $actions = view('tenant.patients.partials.actions', [
                 'patient' => $patient,
             ])->render();
+            $actions = $normalizeUtf8($actions, 'actions_html', (string) $patient->id);
+
+            $name = $normalizeUtf8((string) ($patient->full_name ?? ''), 'full_name', (string) $patient->id);
+            $email = $normalizeUtf8((string) ($patient->email ?? '-'), 'email', (string) $patient->id);
+            $cpf = $normalizeUtf8((string) ($patient->cpf ?? '-'), 'cpf', (string) $patient->id);
 
             $data[] = [
-                'name'         => e($patient->full_name),
-                'email'        => e($patient->email ?? '-'),
-                'cpf'          => e($patient->cpf ?? '-'),
+                'name'         => e($name),
+                'email'        => e($email),
+                'cpf'          => e($cpf),
                 'status_badge' => $statusBadge,
                 'actions'      => $actions,
             ];
         }
 
-        return response()->json([
+        $payload = [
             'data' => $data,
             'meta' => [
                 'current_page' => $paginator->currentPage(),
@@ -237,7 +273,9 @@ class PatientController extends Controller
                 'per_page'     => $paginator->perPage(),
                 'total'        => $paginator->total(),
             ],
-        ]);
+        ];
+
+        return response()->json($payload, 200, [], JSON_INVALID_UTF8_SUBSTITUTE | JSON_UNESCAPED_UNICODE);
     }
 
     /**

@@ -80,20 +80,26 @@
                 --}}
 
                 {{-- Nova tabela baseada em Grid.js --}}
-                <x-tenant.grid
-                    id="users-grid"
-                    :columns="[
-                        ['name' => 'name_full', 'label' => 'Nome'],
-                        ['name' => 'email', 'label' => 'E-mail'],
-                        ['name' => 'role_label', 'label' => 'Perfil'],
-                        ['name' => 'status_badge', 'label' => 'Status'],
-                        ['name' => 'actions', 'label' => 'Ações'],
-                    ]"
-                    ajaxUrl="{{ workspace_route('tenant.users.grid-data') }}"
-                    :pagination="true"
-                    :search="true"
-                    :sort="true"
-                />
+                <div
+                    id="users-grid-wrapper"
+                    data-show-url-template="{{ workspace_route('tenant.users.show', '__USER_ID__') }}"
+                    data-row-click-link-selector='a[title="Ver"]'
+                >
+                    <x-tenant.grid
+                        id="users-grid"
+                        :columns="[
+                            ['name' => 'name_full', 'label' => 'Nome'],
+                            ['name' => 'email', 'label' => 'E-mail'],
+                            ['name' => 'role_label', 'label' => 'Perfil'],
+                            ['name' => 'status_badge', 'label' => 'Status'],
+                            ['name' => 'actions', 'label' => 'Ações'],
+                        ]"
+                        ajaxUrl="{{ workspace_route('tenant.users.grid-data') }}"
+                        :pagination="true"
+                        :search="true"
+                        :sort="true"
+                    />
+                </div>
             </div>
         </div>
     </div>

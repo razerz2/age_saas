@@ -156,3 +156,176 @@
 .dark #clear-specialties-btn:hover {
     background-color: #1f2937 !important;
 }
+
+#doctors-grid .row-clickable {
+    cursor: pointer;
+    transition: background-color 0.12s ease;
+}
+
+#doctors-grid .gridjs-table {
+    border-collapse: separate;
+}
+
+#doctors-grid .row-clickable:hover {
+    background-color: rgba(15, 23, 42, 0.04);
+    box-shadow: inset 0 0 0 1px rgba(15, 23, 42, 0.04);
+}
+
+.dark #doctors-grid .gridjs-wrapper,
+.dark #doctors-grid .gridjs-container,
+.dark #doctors-grid .gridjs-table {
+    background-color: transparent;
+}
+
+.dark #doctors-grid .gridjs-thead,
+.dark #doctors-grid .gridjs-table thead th,
+.dark #doctors-grid .gridjs-th {
+    background-color: rgba(255, 255, 255, 0.04);
+    color: rgba(255, 255, 255, 0.8);
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+.dark #doctors-grid .gridjs-table tbody td,
+.dark #doctors-grid .gridjs-td {
+    background-color: transparent;
+    color: rgba(255, 255, 255, 0.8);
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+.dark #doctors-grid .gridjs-tr:nth-child(even) .gridjs-td {
+    background-color: transparent;
+}
+
+.dark #doctors-grid .gridjs-table tbody tr {
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+.dark #doctors-grid .row-clickable:hover {
+    background-color: rgba(255, 255, 255, 0.06);
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.06);
+}
+
+#doctors-grid tr.row-clickable:hover > td,
+#doctors-grid .gridjs-tr.row-clickable:hover > .gridjs-td {
+    background-color: rgba(15, 23, 42, 0.04);
+}
+
+.dark #doctors-grid tr.row-clickable:hover > td,
+.dark #doctors-grid .gridjs-tr.row-clickable:hover > .gridjs-td {
+    background-color: rgba(255, 255, 255, 0.06);
+}
+
+#doctors-grid .gridjs-tr > td:nth-child(5) {
+    white-space: nowrap;
+    text-align: center;
+    vertical-align: middle;
+}
+
+#doctors-grid .gridjs-tr > td:nth-child(5) :is(a, form) {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0;
+    vertical-align: middle;
+}
+
+#doctors-grid .gridjs-tr > td:nth-child(5) :is(a, form) + :is(a, form) {
+    margin-left: 0.5rem;
+}
+
+#doctors-grid .gridjs-tr > td:nth-child(5) form > button {
+    margin: 0;
+}
+
+#doctors-grid .actions-wrap {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    white-space: nowrap;
+    width: 100%;
+}
+
+#doctors-grid .actions-wrap form {
+    margin: 0;
+}
+
+#doctors-grid .actions-wrap form > button {
+    margin: 0;
+}
+
+/* Doctors Grid - Dark theme override (local) */
+.dark #doctors-grid .gridjs-wrapper,
+.dark #doctors-grid .gridjs-container,
+.dark #doctors-grid .gridjs-table {
+    background-color: transparent !important;
+}
+
+.dark #doctors-grid .gridjs-thead,
+.dark #doctors-grid .gridjs-table thead,
+.dark #doctors-grid .gridjs-table thead th,
+.dark #doctors-grid .gridjs-th {
+    background-color: rgba(255, 255, 255, 0.04) !important;
+    color: rgba(255, 255, 255, 0.85) !important;
+    border-color: rgba(255, 255, 255, 0.10) !important;
+}
+
+.dark #doctors-grid .gridjs-table tbody,
+.dark #doctors-grid .gridjs-table tbody tr,
+.dark #doctors-grid .gridjs-table tbody td,
+.dark #doctors-grid .gridjs-td {
+    background-color: transparent !important;
+    color: rgba(255, 255, 255, 0.85) !important;
+    border-color: rgba(255, 255, 255, 0.10) !important;
+}
+
+/* desativar zebra do grid.blade.php no doctors */
+.dark #doctors-grid .gridjs-tr:nth-child(even) .gridjs-td {
+    background-color: transparent !important;
+}
+
+/* manter hover da linha clicável no dark */
+.dark #doctors-grid tr.row-clickable:hover > td,
+.dark #doctors-grid .gridjs-tr.row-clickable:hover > .gridjs-td {
+    background-color: rgba(255, 255, 255, 0.06) !important;
+}
+
+/* opcional: ajustar linhas/bordas muito fortes (se ainda estiver pesado) */
+.dark #doctors-grid .gridjs-table,
+.dark #doctors-grid .gridjs-wrapper {
+    border-color: rgba(255, 255, 255, 0.10) !important;
+}
+
+/* Doctors Grid - Footer dark override */
+.dark #doctors-grid .gridjs-footer,
+.dark #doctors-grid .gridjs-pagination,
+.dark #doctors-grid .gridjs-summary,
+.dark #doctors-grid .gridjs-pages {
+    background-color: transparent !important;
+    color: rgba(255, 255, 255, 0.70) !important;
+    border-color: rgba(255, 255, 255, 0.10) !important;
+}
+
+.dark #doctors-grid .gridjs-footer {
+    border-top: 1px solid rgba(255, 255, 255, 0.10) !important;
+}
+
+/* botões da paginação */
+.dark #doctors-grid .gridjs-pages button,
+.dark #doctors-grid .gridjs-pages .gridjs-page,
+.dark #doctors-grid .gridjs-pages a {
+    background-color: rgba(255, 255, 255, 0.04) !important;
+    color: rgba(255, 255, 255, 0.85) !important;
+    border: 1px solid rgba(255, 255, 255, 0.10) !important;
+}
+
+/* hover/active */
+.dark #doctors-grid .gridjs-pages button:hover,
+.dark #doctors-grid .gridjs-pages .gridjs-page:hover,
+.dark #doctors-grid .gridjs-pages a:hover {
+    background-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+.dark #doctors-grid .gridjs-pages .gridjs-currentPage,
+.dark #doctors-grid .gridjs-pages button[aria-current="page"] {
+    background-color: rgba(255, 255, 255, 0.10) !important;
+}
