@@ -32,16 +32,6 @@
                     </ol>
                 </nav>
             </div>
-            <div class="flex items-center justify-end gap-3 flex-nowrap">
-                <a href="{{ workspace_route('tenant.recurring-appointments.edit', ['id' => $recurringAppointment->id]) }}" class="inline-flex items-center gap-2 px-4 py-2 bg-amber-100 hover:bg-amber-200 text-amber-700 dark:bg-amber-900 dark:text-amber-300 dark:hover:bg-amber-800 text-sm font-medium rounded-md transition-colors">
-                    Editar
-                </a>
-                @if($recurringAppointment->active)
-                    <a href="{{ workspace_route('tenant.recurring-appointments.cancel', ['id' => $recurringAppointment->id]) }}" class="btn btn-danger">
-                        Cancelar
-                    </a>
-                @endif
-            </div>
         </div>
     </div>
 
@@ -144,6 +134,22 @@
                     </div>
                 </div>
             @endif
+
+            <div class="border-t border-gray-200 dark:border-gray-700 pt-6">
+                <div class="flex flex-wrap items-center justify-between gap-3">
+                    <a href="{{ workspace_route('tenant.recurring-appointments.index') }}" class="btn btn-outline inline-flex items-center">
+                        <x-icon name="arrow-left" class="w-4 h-4 mr-2" />
+                        Voltar
+                    </a>
+
+                    <div class="flex flex-wrap items-center justify-end gap-3">
+                        <a href="{{ workspace_route('tenant.recurring-appointments.edit', ['id' => $recurringAppointment->id]) }}" class="btn btn-outline inline-flex items-center">
+                            <x-icon name="pencil-outline" class="w-4 h-4 mr-2" />
+                            Editar
+                        </a>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 

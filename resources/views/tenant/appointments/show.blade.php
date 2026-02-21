@@ -38,14 +38,6 @@
                     <x-icon name="information-outline" class="w-5 h-5 mr-2 text-blue-600" />
                     Informações do Agendamento
                 </h2>
-                <div class="flex gap-2">
-                    <a href="{{ workspace_route('tenant.appointments.edit', $appointment->id) }}" class="px-3 py-1.5 bg-yellow-600 text-white rounded-md hover:bg-yellow-700 text-sm font-medium">
-                        <x-icon name="pencil-outline" class="w-4 h-4 mr-1" />                        Editar
-                    </a>
-                    <a href="{{ workspace_route('tenant.appointments.index') }}" class="px-3 py-1.5 border border-gray-300 rounded-md text-gray-700 bg-white hover:bg-gray-50 text-sm font-medium">
-                        <x-icon name="arrow-left" class="w-4 h-4 mr-1" />                        Voltar
-                    </a>
-                </div>
             </div>
         </div>
         
@@ -182,37 +174,35 @@
                 </div>
             </div>
 
-            <!-- Botões de Ação -->
             <div class="border-t border-gray-200 pt-6">
-                <div class="flex items-center justify-end gap-3 flex-nowrap">
-                    @if($appointment->appointment_mode === 'online')
-                        <a href="{{ workspace_route('tenant.online-appointments.show', ['appointment' => $appointment->id]) }}" class="btn btn-primary">
-                            <x-icon name="video-outline" class="w-4 h-4 mr-2" />
-                            Instruções Online
+                <div class="flex flex-wrap items-center justify-between gap-3">
+                    <a href="{{ workspace_route('tenant.appointments.index') }}" class="btn btn-outline inline-flex items-center">
+                        <x-icon name="arrow-left" class="w-4 h-4 mr-2" />
+                        Voltar
+                    </a>
+
+                    <div class="flex flex-wrap items-center justify-end gap-3">
+                        <a href="{{ workspace_route('tenant.appointments.edit', $appointment->id) }}" class="btn btn-outline inline-flex items-center">
+                            <x-icon name="pencil-outline" class="w-4 h-4 mr-2" />
+                            Editar
                         </a>
-                    @endif
-                    
-                    @php
-                        $tenant = \App\Models\Platform\Tenant::current();
-                    @endphp
-                    @if($form && $tenant)
-                        @if(isset($formResponse) && $formResponse)
-                            <!-- Se já existe resposta, mostrar botão para visualizar -->
-                            <a href="{{ workspace_route('tenant.responses.show', ['id' => $formResponse->id]) }}" 
-                               class="inline-flex items-center gap-2 px-4 py-2 border border-blue-600 text-blue-600 rounded-md hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 text-sm font-medium">
-                                <x-icon name="eye-outline" class="w-4 h-4 mr-2" />
-                                Ver Formulário
-                            </a>
-                        @else
-                            <!-- Se não existe resposta, mostrar botão para responder -->
-                            <a href="{{ tenant_route($tenant, 'public.form.response.create', ['form' => $form->id, 'appointment' => $appointment->id]) }}" 
-                               target="_blank"
-                               class="btn btn-primary">
-                                <x-icon name="clipboard-text-outline" class="w-4 h-4 mr-2" />
-                                Responder Formulário
-                            </a>
+
+                        @if (auth('tenant')->user() && auth('tenant')->user()->role === 'admin')
+                            <form
+                                action="{{ workspace_route('tenant.appointments.destroy', $appointment->id) }}"
+                                method="POST"
+                                class="inline"
+                            >
+                                @csrf
+                                @method('DELETE')
+
+                                <button type="submit" class="btn btn-danger inline-flex items-center">
+                                    <x-icon name="trash-can-outline" class="w-4 h-4 mr-2" />
+                                    Excluir
+                                </button>
+                            </form>
                         @endif
-                    @endif
+                    </div>
                 </div>
             </div>
         </div>

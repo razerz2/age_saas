@@ -107,6 +107,119 @@ agendamento-saas/
 ### Carregamento Dinâmico
 - `resources/js/tenant/app.js` lê `data-page` e faz import dinâmico do módulo.
 
+### 📊 Padrão oficial de Listagens (Grid.js) no Tenant
+
+Este é o **padrão atual “oficial”** para telas **index/listagem** na área Tenant. Ele foi padronizado a partir do módulo **Users** e replicado para diversos módulos (ex.: Doctors, Specialties, Patients, Appointments, Recurring, Online, Calendars, Business Hours, Appointment Types, Forms, Responses).
+
+#### 1) Visão geral (fluxo)
+1. A view `index.blade.php` renderiza o grid via componente Blade `x-tenant.grid`.
+2. O componente cria o container e inicializa o Grid.js consumindo um endpoint `.../grid-data`.
+3. O controller `gridData()` retorna JSON no formato esperado pelo componente (`data` + `meta.total`).
+4. O JS por página (`resources/js/tenant/pages/<modulo>.js`) cuida do comportamento de UI em volta do grid (ex.: **row-click**).
+5. O CSS por página (`resources/css/tenant/pages/<modulo>.css`) aplica overrides **escopados ao grid** (principalmente dark mode e ações).
+
+#### 2) View: contrato do `index.blade.php`
+- Defina a página para o loader de assets: `@section('page', '<modulo>')`.
+- Use `x-tenant.grid` com `id` canônico do módulo e `ajaxUrl` apontando para a rota `*.grid-data`.
+- Para padronização de “row-click”, mantenha um wrapper (quando aplicável) para configurar o seletor do link de detalhes:
+  - `data-row-click-link-selector='a[title="Ver"]'` (padrão atual nas telas migradas).
+
+Exemplo real (ver `resources/views/tenant/users/index.blade.php`):
+```blade
+<div id="users-grid-wrapper" data-row-click-link-selector='a[title="Ver"]'>
+  <x-tenant.grid
+    id="users-grid"
+    :columns="[
+      ['name' => 'name_full', 'label' => 'Nome'],
+      ['name' => 'email', 'label' => 'E-mail'],
+      ['name' => 'status_badge', 'label' => 'Status'],
+      ['name' => 'actions', 'label' => 'Ações'],
+    ]"
+    ajaxUrl="{{ workspace_route('tenant.users.grid-data') }}"
+  />
+</div>
+```
+
+#### 3) Componente do grid: `x-tenant.grid`
+- Implementação: `resources/views/components/tenant/grid.blade.php`.
+- O Grid.js é carregado via CDN no layout Tenant (ver `resources/views/layouts/tailadmin/app.blade.php`).
+- **Colunas HTML**:
+  - O componente trata `status_badge` e `actions` como HTML (via `gridjs.html(cell)`).
+  - Outras colunas devem ser texto (string) e **não devem receber HTML cru**.
+
+> Nota (estado atual): o componente ainda injeta CSS/JS via stacks (`@pushOnce('styles')`/`@push('scripts')`).  
+> A regra “sem `<style>`/`<script>` inline” se aplica às **views de módulo**; não crie novos scripts/styles inline em views — use o padrão de assets (`tenant/app.js` + `tenant/app.css`).
+
+#### 4) Rotas: `.../grid-data` (ordem importa)
+- As rotas de `grid-data` ficam em `routes/tenant.php` e devem ser definidas **antes** das rotas com `{id}` para evitar conflito de matching (há comentários no arquivo reforçando isso).
+
+#### 5) Controller: contrato do `gridData()`
+- Os controllers do Tenant implementam `gridData(Request $request, $slug)` retornando:
+```json
+{
+  "data": [ { "...": "..." } ],
+  "meta": { "total": 123, "current_page": 1, "last_page": 13, "per_page": 10 }
+}
+```
+- Regras práticas no payload:
+  - **Texto**: retornar string (e.g. `e($value)` no PHP) para evitar HTML “cru” em colunas textuais.
+  - **HTML controlado**: `status_badge` e `actions` podem retornar HTML (normalmente via `view(...)->render()`).
+  - **Exemplo do anti-bug “Regras”**: em recorrências, as regras são enviadas como texto (`rules_display`), não como HTML (ver `App\Http\Controllers\Tenant\RecurringAppointmentController::formatRulesDisplayText()`).
+
+##### Robustez de JSON / UTF-8
+- Quando houver risco de conteúdo inválido (ex.: HTML renderizado vindo de dados externos), a resposta deve ser robusta contra UTF-8 inválido.
+- Exemplo real: `App\Http\Controllers\Tenant\PatientController::gridData()` normaliza campos e retorna `response()->json(..., JSON_INVALID_UTF8_SUBSTITUTE | JSON_UNESCAPED_UNICODE)`.
+
+#### 6) Ações (Actions column): `partials/actions.blade.php` + `.actions-wrap`
+- Padrão preferencial:
+  - Renderizar ações via partial: `resources/views/tenant/<modulo>/partials/actions.blade.php`.
+  - Sempre envolver em `<div class="actions-wrap">...</div>` para centralizar/alinhação sem depender de seletor de coluna.
+  - Para impedir row-click:
+    - `onclick="event.stopPropagation()"` nos elementos interativos (links/botões/forms), e/ou
+    - usar `[data-no-row-click]` quando fizer sentido.
+
+#### 7) Row-click (abrir detalhes ao clicar na linha)
+- Implementado no JS por página (ex.: `resources/js/tenant/pages/users.js`, `doctors.js`, `patients.js`, `appointments.js`, etc.).
+- Padrão atual:
+  - **Event delegation** no container do grid.
+  - Cancelar navegação quando o clique ocorreu em elementos interativos:
+    `a, button, input, select, textarea, label, [data-no-row-click], [role="button"]`.
+  - Re-marcar as linhas após paginação/atualizações do Grid.js usando `MutationObserver`.
+- Classe usada para UX/estilo: `row-clickable` (junto com `cursor-pointer`).
+
+#### 8) CSS por página: escopo, dark mode e footer do Grid.js
+- CSS deve ser por página: `resources/css/tenant/pages/<modulo>.css` e importado em `resources/css/tenant/app.css`.
+- Regras do grid devem ser **escopadas pelo id do grid**:
+  - `#<module>-grid ...`
+- Dark mode:
+  - O componente base define um skin e zebra striping (incluindo `.dark .gridjs-tr:nth-child(even)`).
+  - Cada módulo pode (e deve, quando necessário) aplicar overrides escopados por `#<module>-grid` para:
+    - `thead/tbody/td/th`,
+    - desativar zebra quando conflitar com o visual do módulo,
+    - hover da linha clicável (`.row-clickable:hover`),
+    - **footer** do Grid.js em dark (`.gridjs-footer`, `.gridjs-pagination`, `.gridjs-summary`, `.gridjs-pages`) para evitar footer branco.
+
+#### 9) Anti‑padrões (evitar regressões)
+- Não usar seletores frágeis como `td:last-child` / `td:nth-child(N)` para layout/centralização das ações.  
+  Preferir `.actions-wrap` e regras escopadas em `#<module>-grid`.
+- Não enviar HTML para colunas que são texto (ex.: regras de recorrência).
+- Não criar CSS “órfão” (fora de `resources/css/tenant/...`) nem JS inline em Blade.
+
+#### ✅ Checklist — Para novas telas index (Tenant)
+1. `@section('page', '<modulo>')` na view.
+2. Grid com `x-tenant.grid` e `id` canônico `#<module>-grid`.
+3. `ajaxUrl` apontando para `tenant.<modulo>.grid-data` (e rota definida antes de `{id}` em `routes/tenant.php`).
+4. `gridData()` retorna `{ data, meta.total }` (meta com paginação).
+5. Coluna **Ações**:
+   - partial `resources/views/tenant/<modulo>/partials/actions.blade.php`;
+   - `<div class="actions-wrap">...</div>` dentro da célula;
+   - impedir row-click via `event.stopPropagation()` e/ou `[data-no-row-click]`.
+6. JS por página `resources/js/tenant/pages/<modulo>.js` exportando `init()` (row-click via event delegation + MutationObserver).
+7. CSS por página `resources/css/tenant/pages/<modulo>.css` importado em `resources/css/tenant/app.css`.
+8. Dark mode escopado em `#<module>-grid`, incluindo override do **footer** do Grid.js.
+9. Sem dependência de `td:nth-child` para alinhar ações.
+10. Se houver risco de UTF‑8 inválido no payload, usar `JSON_INVALID_UTF8_SUBSTITUTE` (ver Patients).
+
 ---
 
 ## 🛣️ Rotas (Platform e Tenant)

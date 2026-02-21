@@ -32,18 +32,6 @@
                 </nav>
             </div>
         </div>
-        <div class="mt-4 flex items-center justify-between">
-            <a href="{{ workspace_route('tenant.specialties.index') }}" class="btn btn-outline inline-flex items-center">
-                <x-icon name="arrow-left" size="text-sm" class="mr-2" />
-                Voltar
-            </a>
-            <div class="flex items-center gap-3">
-                <a href="{{ workspace_route('tenant.specialties.edit', $specialty->id) }}" class="btn btn-primary inline-flex items-center">
-                    <x-icon name="pencil-outline" size="text-sm" class="mr-2" />
-                    Editar
-                </a>
-            </div>
-        </div>
     </div>
 
     <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 mt-6">
@@ -77,6 +65,38 @@
                     <div>
                         <p class="text-xs text-gray-500 dark:text-gray-400">Atualizado em</p>
                         <p class="text-sm text-gray-900 dark:text-gray-100">{{ $specialty->updated_at->format('d/m/Y H:i') }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="border-t border-gray-200 dark:border-gray-700 pt-6">
+                <div class="flex flex-wrap items-center justify-between gap-3">
+                    <a href="{{ workspace_route('tenant.specialties.index') }}" class="btn btn-outline inline-flex items-center">
+                        <x-icon name="arrow-left" size="text-sm" class="mr-2" />
+                        Voltar
+                    </a>
+
+                    <div class="flex flex-wrap items-center justify-end gap-3">
+                        <a href="{{ workspace_route('tenant.specialties.edit', $specialty->id) }}" class="btn btn-outline inline-flex items-center">
+                            <x-icon name="pencil-outline" size="text-sm" class="mr-2" />
+                            Editar
+                        </a>
+
+                        <form
+                            action="{{ workspace_route('tenant.specialties.destroy', $specialty->id) }}"
+                            method="POST"
+                            class="inline"
+                            data-confirm-specialty-delete
+                            data-specialty-name="{{ $specialty->name }}"
+                        >
+                            @csrf
+                            @method('DELETE')
+
+                            <button type="submit" class="btn btn-danger inline-flex items-center">
+                                <x-icon name="trash-can-outline" size="text-sm" class="mr-2" />
+                                Excluir
+                            </button>
+                        </form>
                     </div>
                 </div>
             </div>

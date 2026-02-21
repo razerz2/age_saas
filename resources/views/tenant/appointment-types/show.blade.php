@@ -1,6 +1,7 @@
 @extends('layouts.tailadmin.app')
 
 @section('title', 'Detalhes do Tipo de Consulta')
+@section('page', 'appointment-types')
 
 @section('content')
 
@@ -34,16 +35,6 @@
                         </li>
                     </ol>
                 </nav>
-            </div>
-            <div class="flex items-center justify-end gap-3 flex-nowrap">
-                <a href="{{ workspace_route('tenant.appointment-types.edit', $appointmentType->id) }}" class="inline-flex items-center gap-2 px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white font-medium rounded-md transition-colors">
-                    <x-icon name="pencil-outline" class="w-4 h-4 mr-2" />
-                    Editar
-                </a>
-                <a href="{{ workspace_route('tenant.appointment-types.index') }}" class="inline-flex items-center gap-2 px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors">
-                    <x-icon name="arrow-left" class="w-4 h-4 mr-2" />
-                    Voltar
-                </a>
             </div>
         </div>
     </div>
@@ -126,6 +117,32 @@
                             Atualizado em
                         </label>
                         <p class="text-sm text-gray-900 dark:text-gray-100">{{ $appointmentType->updated_at->format('d/m/Y H:i') }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pt-6 border-t border-gray-200 dark:border-gray-700 mt-6">
+                <div class="flex flex-wrap items-center justify-between gap-3">
+                    <a href="{{ workspace_route('tenant.appointment-types.index') }}" class="btn btn-outline inline-flex items-center">
+                        <x-icon name="arrow-left" class="w-4 h-4 mr-2" />
+                        Voltar
+                    </a>
+
+                    <div class="flex flex-wrap items-center justify-end gap-3">
+                        <a href="{{ workspace_route('tenant.appointment-types.edit', $appointmentType->id) }}" class="btn btn-outline inline-flex items-center">
+                            <x-icon name="pencil-outline" class="w-4 h-4 mr-2" />
+                            Editar
+                        </a>
+
+                        <form action="{{ workspace_route('tenant.appointment-types.destroy', $appointmentType->id) }}" method="POST" class="inline">
+                            @csrf
+                            @method('DELETE')
+
+                            <button type="submit" class="btn btn-danger inline-flex items-center">
+                                <x-icon name="trash-can-outline" class="w-4 h-4 mr-2" />
+                                Excluir
+                            </button>
+                        </form>
                     </div>
                 </div>
             </div>

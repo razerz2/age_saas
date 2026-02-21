@@ -32,12 +32,6 @@
                     </ol>
                 </nav>
             </div>
-            <div class="flex items-center justify-end gap-3 flex-nowrap">
-                <a href="{{ workspace_route('tenant.appointments.show', $appointment->id) }}" class="btn btn-outline">
-                    <x-icon name="arrow-left" class="w-4 h-4 mr-2" />
-                    Voltar ao Agendamento
-                </a>
-            </div>
         </div>
     </div>
 
@@ -167,6 +161,18 @@
                         @endif
                     </div>
                 @endif
+            </div>
+
+            <div class="border-t border-gray-200 dark:border-gray-700 pt-6">
+                <div class="flex flex-wrap items-center justify-between gap-3">
+                    <a href="{{ workspace_route('tenant.online-appointments.index') }}" class="btn btn-outline inline-flex items-center">
+                        <x-icon name="arrow-left" class="w-4 h-4 mr-2" />
+                        Voltar
+                    </a>
+
+                    <div class="flex flex-wrap items-center justify-end gap-3">
+                    </div>
+                </div>
             </div>
         </div>
     </div>

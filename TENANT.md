@@ -802,6 +802,8 @@ Cada arquivo `pages/*.js` conhece apenas:
 
 > Observação:  
 > As stacks (`@stack`) ainda existem temporariamente no layout por **compatibilidade com legado**, mas **novos módulos não devem utilizá-las**. Toda lógica e estilo devem estar em arquivos de `resources/css/tenant` e `resources/js/tenant`.
+>
+> Exceção controlada (estado atual): alguns **componentes compartilhados** do core (ex.: `x-tenant.grid`) ainda injetam CSS/JS via stacks internamente. Isso **não** libera o uso de `@push` nas views de módulos.
 
 ---
 
@@ -828,22 +830,25 @@ Toda view da área Tenant **deve**:
 
 3. Ter o JS da página carregado dinamicamente em `resources/js/tenant/app.js`:
 
-   ```js
-   document.addEventListener('DOMContentLoaded', () => {
-       const page = document.body?.dataset?.page;
-       if (!page) return;
+    ```js
+    document.addEventListener('DOMContentLoaded', () => {
+        const page = document.body?.dataset?.page;
+        if (!page) return;
 
-       import(`./pages/${page}.js`)
-           .then((module) => {
-               if (typeof module.init === 'function') {
-                   module.init();
-               }
-           })
-           .catch(() => {
-               // Falha silenciosa se a página não tiver módulo dedicado.
-           });
-   });
-   ```
+        // Use um glob para o Vite incluir todos os entrypoints de página no build.
+        const pages = import.meta.glob('./pages/*.js');
+        const key = `./pages/${page}.js`;
+        const loader = pages[key];
+
+        if (!loader) return;
+
+        loader().then((module) => {
+            if (typeof module.init === 'function') {
+                module.init();
+            }
+        });
+    });
+    ```
 
 4. Cada arquivo `resources/js/tenant/pages/*.js` **deve exportar**:
 
@@ -853,7 +858,19 @@ Toda view da área Tenant **deve**:
    }
    ```
 
-Nenhuma view deve depender de `<script>` ou `@push('scripts')` para registrar handlers; tudo deve estar encapsulado no `init()` da respectiva página ou em componentes/utilitários importados.
+Nenhuma **view de módulo** deve conter `<script>` ou usar `@push('scripts')` diretamente para registrar handlers; tudo deve estar encapsulado no `init()` da respectiva página ou em componentes/utilitários importados (ex.: `x-tenant.grid`).
+
+---
+
+### 🧭 Padrões de UI do Tenant (Index/Grid)
+
+As telas **index/listagem** do Tenant seguem um padrão padronizado com Grid.js. Detalhes técnicos (contratos de `gridData()`, `.actions-wrap`, overrides de dark/footer, row-click, etc.) ficam documentados em **ARQUITETURA.md** na seção **“Padrão oficial de Listagens (Grid.js) no Tenant”**.
+
+Comportamento esperado para o usuário:
+- **Clicar na linha** abre a tela de detalhes (show).
+- Clicar em **ações** (Ver/Editar/Excluir etc.) **não** dispara o clique da linha.
+- Visual consistente no **dark mode** (incluindo paginação/rodapé do Grid.js).
+- Header/breadcrumbs padronizados no estilo do módulo **Users** (Dashboard → Módulo, com CTA “Novo …” quando aplicável).
 
 ---
 
@@ -882,11 +899,11 @@ Ao criar um novo módulo na área Tenant:
 
 4. **Nunca** usar:
 
-   - `@push('styles')`
-   - `@push('scripts')`
-   - `<script>`
-   - `<style>`
-   - `onclick=""` ou qualquer outro handler inline.
+    - `@push('styles')`
+    - `@push('scripts')`
+    - `<script>`
+    - `<style>`
+    - `onclick=""` ou qualquer outro handler inline.
 
 Toda a lógica deve viver em `resources/js/tenant/...` e ser chamada via `init()`.
 

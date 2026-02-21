@@ -243,6 +243,13 @@
                             Editar
                         </a>
                     @endcan
+                    <a
+                        href="{{ workspace_route('tenant.patients.login.form', $patient->id) }}"
+                        class="btn btn-outline inline-flex items-center"
+                    >
+                        <x-icon name="key-outline" size="text-sm" class="mr-2" />
+                        {{ isset($patient->login) ? 'Editar Login' : 'Criar Login' }}
+                    </a>
                     <form action="{{ workspace_route('tenant.patients.destroy', $patient->id) }}" method="POST" class="inline"
                           data-confirm-submit="true"
                           data-confirm-title="Excluir paciente"

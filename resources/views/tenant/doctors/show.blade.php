@@ -34,39 +34,6 @@
                 </nav>
             </div>
         </div>
-        <div class="mt-4 flex items-center justify-between">
-            <a href="{{ workspace_route('tenant.doctors.index') }}" class="btn btn-outline inline-flex items-center">
-                <x-icon name="arrow-left" size="text-sm" class="mr-2" />
-                Voltar
-            </a>
-            <div class="flex items-center gap-3">
-                <a href="{{ workspace_route('tenant.doctors.edit', $doctor->id) }}" class="btn btn-primary inline-flex items-center">
-                    <x-icon name="pencil-outline" size="text-sm" class="mr-2" />
-                    Editar
-                </a>
-                @if(!$doctor->hasAppointments())
-                    <form action="{{ workspace_route('tenant.doctors.destroy', $doctor->id) }}" method="POST" class="inline"
-                          data-confirm-submit="true"
-                          data-confirm-title="Excluir médico"
-                          data-confirm-message="Tem certeza que deseja excluir este médico? Esta ação não pode ser desfeita."
-                          data-confirm-confirm-text="Excluir"
-                          data-confirm-cancel-text="Cancelar"
-                          data-confirm-type="error">
-                        @csrf
-                        @method('DELETE')
-                        <button type="submit" class="btn btn-danger inline-flex items-center">
-                            <x-icon name="trash-can-outline" size="text-sm" class="mr-2" />
-                            Excluir
-                        </button>
-                    </form>
-                @else
-                    <button type="button" class="btn btn-danger opacity-60 cursor-not-allowed inline-flex items-center" title="Não é possível excluir médico com atendimentos cadastrados" disabled>
-                        <x-icon name="trash-can-outline" size="text-sm" class="mr-2" />
-                        Excluir
-                    </button>
-                @endif
-            </div>
-        </div>
     </div>
 
     <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 mt-6">
@@ -177,6 +144,44 @@
                 <div>
                     <p class="text-xs text-gray-500 dark:text-gray-400 mb-1">Atualizado em</p>
                     <p class="text-sm font-medium text-gray-900 dark:text-gray-100">{{ $doctor->updated_at->format('d/m/Y H:i') }}</p>
+                </div>
+            </div>
+
+            <div class="border-t border-gray-200 dark:border-gray-700 pt-6">
+                <div class="flex flex-wrap items-center justify-between gap-3">
+                    <a href="{{ workspace_route('tenant.doctors.index') }}" class="btn btn-outline inline-flex items-center">
+                        <x-icon name="arrow-left" size="text-sm" class="mr-2" />
+                        Voltar
+                    </a>
+
+                    <div class="flex flex-wrap items-center justify-end gap-3">
+                        <a href="{{ workspace_route('tenant.doctors.edit', $doctor->id) }}" class="btn btn-outline inline-flex items-center">
+                            <x-icon name="pencil-outline" size="text-sm" class="mr-2" />
+                            Editar
+                        </a>
+
+                        @if(!$doctor->hasAppointments())
+                            <form action="{{ workspace_route('tenant.doctors.destroy', $doctor->id) }}" method="POST" class="inline"
+                                  data-confirm-submit="true"
+                                  data-confirm-title="Excluir médico"
+                                  data-confirm-message="Tem certeza que deseja excluir este médico? Esta ação não pode ser desfeita."
+                                  data-confirm-confirm-text="Excluir"
+                                  data-confirm-cancel-text="Cancelar"
+                                  data-confirm-type="error">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="btn btn-danger inline-flex items-center">
+                                    <x-icon name="trash-can-outline" size="text-sm" class="mr-2" />
+                                    Excluir
+                                </button>
+                            </form>
+                        @else
+                            <button type="button" class="btn btn-danger opacity-60 cursor-not-allowed inline-flex items-center" title="Não é possível excluir médico com atendimentos cadastrados" disabled>
+                                <x-icon name="trash-can-outline" size="text-sm" class="mr-2" />
+                                Excluir
+                            </button>
+                        @endif
+                    </div>
                 </div>
             </div>
         </div>

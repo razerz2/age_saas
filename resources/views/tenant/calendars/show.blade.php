@@ -1,6 +1,7 @@
 @extends('layouts.tailadmin.app')
 
 @section('title', 'Detalhes do Calendário')
+@section('page', 'calendars')
 
 @section('content')
 
@@ -34,16 +35,6 @@
                         </li>
                     </ol>
                 </nav>
-            </div>
-            <div class="flex items-center justify-end gap-3 flex-nowrap">
-                <a href="{{ workspace_route('tenant.calendars.edit', $calendar->id) }}" class="inline-flex items-center gap-2 px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white font-medium rounded-md transition-colors">
-                    <x-icon name="pencil-outline" class="w-4 h-4 mr-2" />
-                    Editar
-                </a>
-                <a href="{{ workspace_route('tenant.calendars.index') }}" class="inline-flex items-center gap-2 px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors">
-                    <x-icon name="arrow-left" class="w-4 h-4 mr-2" />
-                    Voltar
-                </a>
             </div>
         </div>
     </div>
@@ -112,12 +103,20 @@
                 </div>
             </div>
 
-            <!-- Botões de Ação -->
-            <div class="flex items-center justify-end gap-3 flex-nowrap pt-6 border-t border-gray-200 dark:border-gray-700 mt-6">
-                <a href="{{ workspace_route('tenant.calendars.events', ['id' => $calendar->id]) }}" class="btn btn-primary">
-                    <x-icon name="calendar-month-outline" class="w-5 h-5 mr-2" />
-                    Ver Eventos
-                </a>
+            <div class="pt-6 border-t border-gray-200 dark:border-gray-700 mt-6">
+                <div class="flex flex-wrap items-center justify-between gap-3">
+                    <a href="{{ workspace_route('tenant.calendars.index') }}" class="btn btn-outline inline-flex items-center">
+                        <x-icon name="arrow-left" class="w-4 h-4 mr-2" />
+                        Voltar
+                    </a>
+
+                    <div class="flex flex-wrap items-center justify-end gap-3">
+                        <a href="{{ workspace_route('tenant.calendars.edit', $calendar->id) }}" class="btn btn-outline inline-flex items-center">
+                            <x-icon name="pencil-outline" class="w-4 h-4 mr-2" />
+                            Editar
+                        </a>
+                    </div>
+                </div>
             </div>
         </div>
     </div>

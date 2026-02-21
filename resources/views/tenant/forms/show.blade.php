@@ -100,18 +100,6 @@
                         </a>
 
                         <div class="flex flex-wrap items-center justify-end gap-3">
-                            @if($sectionsCount > 0 || $questionsCount > 0)
-                                <a href="{{ workspace_route('tenant.forms.preview', $form->id) }}" target="_blank" class="btn btn-outline">
-                                    <x-icon name="eye-outline" size="text-sm" />
-                                    Visualizar
-                                </a>
-                            @endif
-
-                            <a href="{{ workspace_route('tenant.forms.builder', $form->id) }}" class="btn btn-outline">
-                                <x-icon name="tools" size="text-sm" />
-                                Construir Formulário
-                            </a>
-
                             <a href="{{ workspace_route('tenant.forms.edit', ['form' => $form->id]) }}" class="btn btn-outline">
                                 <x-icon name="pencil-outline" size="text-sm" />
                                 Editar

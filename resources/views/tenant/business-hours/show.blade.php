@@ -1,6 +1,7 @@
 @extends('layouts.tailadmin.app')
 
 @section('title', 'Detalhes do Horário Comercial')
+@section('page', 'business-hours')
 
 @section('content')
 
@@ -35,16 +36,6 @@
                     </ol>
                 </nav>
             </div>
-            <div class="flex items-center justify-end gap-3 flex-nowrap">
-                <a href="{{ workspace_route('tenant.business-hours.edit', $businessHour->id) }}" class="inline-flex items-center gap-2 px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white font-medium rounded-md transition-colors">
-                    <x-icon name="pencil-outline" class="w-4 h-4 mr-2" />
-                    Editar
-                </a>
-                <a href="{{ workspace_route('tenant.business-hours.index') }}" class="inline-flex items-center gap-2 px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors">
-                    <x-icon name="arrow-left" class="w-4 h-4 mr-2" />
-                    Voltar
-                </a>
-            </div>
         </div>
     </div>
 
@@ -58,4 +49,44 @@
                     Informações do Horário Comercial
                 </h2>
             </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
+                    <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">ID</label>
+                    <p class="text-sm font-semibold text-gray-900 dark:text-gray-100">{{ $businessHour->id }}</p>
+                </div>
+                <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
+                    <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">Médico</label>
+                    <p class="text-sm font-semibold text-gray-900 dark:text-gray-100">{{ $businessHour->doctor->user->name ?? 'N/A' }}</p>
+                </div>
+            </div>
+
+            <div class="pt-6 border-t border-gray-200 dark:border-gray-700 mt-6">
+                <div class="flex flex-wrap items-center justify-between gap-3">
+                    <a href="{{ workspace_route('tenant.business-hours.index') }}" class="btn btn-outline inline-flex items-center">
+                        <x-icon name="arrow-left" class="w-4 h-4 mr-2" />
+                        Voltar
+                    </a>
+
+                    <div class="flex flex-wrap items-center justify-end gap-3">
+                        <a href="{{ workspace_route('tenant.business-hours.edit', $businessHour->id) }}" class="btn btn-outline inline-flex items-center">
+                            <x-icon name="pencil-outline" class="w-4 h-4 mr-2" />
+                            Editar
+                        </a>
+
+                        <form action="{{ workspace_route('tenant.business-hours.destroy', $businessHour->id) }}" method="POST" class="inline">
+                            @csrf
+                            @method('DELETE')
+
+                            <button type="submit" class="btn btn-danger inline-flex items-center">
+                                <x-icon name="trash-can-outline" class="w-4 h-4 mr-2" />
+                                Excluir
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
 @endsection
