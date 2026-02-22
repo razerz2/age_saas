@@ -102,6 +102,37 @@ function initFormsBuilder() {
         setTimeout(() => alert.remove(), 5000);
     };
 
+    const toggleHidden = (element, shouldShow) => {
+        if (!element) return;
+        element.classList.toggle('hidden', !shouldShow);
+    };
+
+    const panels = {
+        addSection: document.getElementById('addSectionPanel'),
+        editSection: document.getElementById('editSectionPanel'),
+        addQuestion: document.getElementById('addQuestionPanel'),
+        editQuestion: document.getElementById('editQuestionPanel'),
+        addOption: document.getElementById('addOptionPanel')
+    };
+
+    const hideAllPanels = () => {
+        Object.values(panels).forEach((panel) => {
+            if (panel) {
+                panel.classList.add('hidden');
+            }
+        });
+    };
+
+    const openPanel = (panelKey) => {
+        hideAllPanels();
+        const panel = panels[panelKey];
+        if (panel) {
+            panel.classList.remove('hidden');
+        }
+    };
+
+    hideAllPanels();
+
     const addSectionForm = document.getElementById('addSectionForm');
     if (addSectionForm) {
         addSectionForm.addEventListener('submit', async (e) => {
@@ -142,7 +173,7 @@ function initFormsBuilder() {
             if (!editSectionId || !editSectionTitle) return;
             editSectionId.value = sectionId;
             editSectionTitle.value = sectionTitle;
-            new bootstrap.Modal(document.getElementById('editSectionModal')).show();
+            openPanel('editSection');
         });
     });
 
@@ -220,6 +251,10 @@ function initFormsBuilder() {
         });
     });
 
+    document.getElementById('addSectionBtn')?.addEventListener('click', () => {
+        openPanel('addSection');
+    });
+
     const addQuestionBtn = document.getElementById('addQuestionBtn');
     if (addQuestionBtn) {
         if (
@@ -232,6 +267,27 @@ function initFormsBuilder() {
         addQuestionBtn.addEventListener('click', () => {
             const sections = document.querySelectorAll('.section-container');
             const select = document.getElementById('question_section_select');
+            const questionForm = document.getElementById('addQuestionForm');
+            const optionsContainer = document.getElementById('options-container');
+            const optionsList = document.getElementById('options-list');
+            const questionType = document.getElementById('question_type');
+
+            if (questionForm) {
+                questionForm.reset();
+            }
+
+            if (questionType) {
+                questionType.value = 'text';
+            }
+
+            if (optionsList) {
+                optionsList.innerHTML = '';
+            }
+
+            if (optionsContainer) {
+                toggleHidden(optionsContainer, false);
+            }
+
             if (!select) return;
             if (sections.length === 0) {
                 select.value = '';
@@ -239,8 +295,15 @@ function initFormsBuilder() {
             } else {
                 select.disabled = false;
             }
+            openPanel('addQuestion');
         });
     }
+
+    document.querySelectorAll('[data-builder-cancel]').forEach((btn) => {
+        btn.addEventListener('click', () => {
+            hideAllPanels();
+        });
+    });
 
     const questionType = document.getElementById('question_type');
     if (questionType) {
@@ -249,9 +312,9 @@ function initFormsBuilder() {
             const optionsList = document.getElementById('options-list');
             if (!optionsContainer || !optionsList) return;
             if (questionType.value === 'single_choice' || questionType.value === 'multi_choice') {
-                optionsContainer.style.display = 'block';
+                toggleHidden(optionsContainer, true);
             } else {
-                optionsContainer.style.display = 'none';
+                toggleHidden(optionsContainer, false);
                 optionsList.innerHTML = '';
             }
         });
@@ -264,10 +327,10 @@ function initFormsBuilder() {
             const optionsList = document.getElementById('options-list');
             if (!optionsList) return;
             const optionDiv = document.createElement('div');
-            optionDiv.className = 'option-input-group';
+            optionDiv.className = 'option-input-group grid grid-cols-1 md:grid-cols-[1fr_1fr_auto] gap-2';
             optionDiv.innerHTML = `
-                <input type="text" class="form-control" name="options[${optionIndex}][label]" placeholder="Rótulo" required>
-                <input type="text" class="form-control" name="options[${optionIndex}][value]" placeholder="Valor" required>
+                <input type="text" class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-brand-500 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white" name="options[${optionIndex}][label]" placeholder="Rótulo" required>
+                <input type="text" class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-brand-500 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white" name="options[${optionIndex}][value]" placeholder="Valor" required>
                 <button type="button" class="remove-option-btn inline-flex items-center justify-center gap-1 rounded-md bg-error text-white text-xs font-semibold transition hover:bg-error/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-error/50 focus-visible:ring-offset-white dark:focus-visible:ring-offset-gray-900">
                     <i class="mdi mdi-delete"></i>
                 </button>
@@ -400,11 +463,11 @@ function initFormsBuilder() {
 
                     existingOptions.forEach((opt) => {
                         const optionDiv = document.createElement('div');
-                        optionDiv.className = 'option-input-group';
+                        optionDiv.className = 'option-input-group grid grid-cols-1 md:grid-cols-[1fr_1fr_auto] gap-2';
                         const text = opt.textContent.trim();
                         optionDiv.innerHTML = `
-                            <input type="text" class="form-control" name="edit_options[${editOptionIndex}][label]" value="${text}" placeholder="Rótulo" required>
-                            <input type="text" class="form-control" name="edit_options[${editOptionIndex}][value]" value="${text
+                            <input type="text" class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-brand-500 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white" name="edit_options[${editOptionIndex}][label]" value="${text}" placeholder="Rótulo" required>
+                            <input type="text" class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-brand-500 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white" name="edit_options[${editOptionIndex}][value]" value="${text
                                 .toLowerCase()
                                 .replace(/\\s+/g, '_')}" placeholder="Valor" required>
                             <button type="button" class="remove-option-btn inline-flex items-center justify-center gap-1 rounded-md bg-error text-white text-xs font-semibold transition hover:bg-error/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-error/50 focus-visible:ring-offset-white dark:focus-visible:ring-offset-gray-900">
@@ -423,13 +486,13 @@ function initFormsBuilder() {
                 const editOptionsContainer = document.getElementById('edit-options-container');
                 if (editOptionsContainer) {
                     if (type === 'single_choice' || type === 'multi_choice') {
-                        editOptionsContainer.style.display = 'block';
+                        toggleHidden(editOptionsContainer, true);
                     } else {
-                        editOptionsContainer.style.display = 'none';
+                        toggleHidden(editOptionsContainer, false);
                     }
                 }
 
-                new bootstrap.Modal(document.getElementById('editQuestionModal')).show();
+                openPanel('editQuestion');
             } catch (error) {
                 showAlert(`Erro ao carregar pergunta: ${error.message}`, 'danger');
             }
@@ -481,7 +544,7 @@ function initFormsBuilder() {
         const optionQuestionId = document.getElementById('option_question_id');
         if (!optionQuestionId) return;
         optionQuestionId.value = questionId;
-        new bootstrap.Modal(document.getElementById('addOptionModal')).show();
+        openPanel('addOption');
     });
 
     const addOptionForm = document.getElementById('addOptionForm');
@@ -492,7 +555,7 @@ function initFormsBuilder() {
             const formData = new FormData(addOptionForm);
 
             try {
-                const response = await fetch(`/tenant/questions/${questionId}/options`, {
+                const response = await fetch(`/workspace/${tenantSlug}/questions/${questionId}/options`, {
                     method: 'POST',
                     headers: {
                         'X-CSRF-TOKEN': csrfToken,
@@ -508,7 +571,7 @@ function initFormsBuilder() {
 
                 const data = await response.json();
                 if (response.ok) {
-                    bootstrap.Modal.getInstance(document.getElementById('addOptionModal')).hide();
+                    hideAllPanels();
                     location.reload();
                 } else {
                     showAlert(
@@ -608,9 +671,9 @@ function initFormsBuilder() {
                 editQuestionType.value === 'single_choice' ||
                 editQuestionType.value === 'multi_choice'
             ) {
-                editOptionsContainer.style.display = 'block';
+                toggleHidden(editOptionsContainer, true);
             } else {
-                editOptionsContainer.style.display = 'none';
+                toggleHidden(editOptionsContainer, false);
             }
         });
     }

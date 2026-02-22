@@ -33,7 +33,8 @@ class FormController extends Controller
 
     public function index()
     {
-        $query = Form::with(['specialty', 'doctor']);
+        $query = Form::with(['specialty', 'doctor'])
+            ->withCount(['sections', 'questions']);
 
         // Aplicar filtro de médico
         $this->applyDoctorFilter($query, 'doctor_id');
@@ -45,7 +46,8 @@ class FormController extends Controller
 
     public function gridData(Request $request, $slug)
     {
-        $query = Form::with(['doctor.user', 'specialty']);
+        $query = Form::with(['doctor.user', 'specialty'])
+            ->withCount(['sections', 'questions']);
 
         $this->applyDoctorFilter($query, 'doctor_id');
 
@@ -142,9 +144,11 @@ class FormController extends Controller
 
     public function show($slug, $id)
     {
-        $form = Form::with(['specialty', 'doctor.user'])->findOrFail($id);
-        $sectionsCount = $form->sections()->count();
-        $questionsCount = $form->questions()->count();
+        $form = Form::with(['specialty', 'doctor.user'])
+            ->withCount(['sections', 'questions'])
+            ->findOrFail($id);
+        $sectionsCount = $form->sections_count;
+        $questionsCount = $form->questions_count;
 
         return view('tenant.forms.show', compact('form', 'sectionsCount', 'questionsCount'));
     }

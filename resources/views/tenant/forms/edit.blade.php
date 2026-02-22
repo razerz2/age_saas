@@ -37,7 +37,7 @@
                 <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">Atualize as informações do formulário abaixo</p>
             </div>
 
-            <form action="{{ workspace_route('tenant.forms.update', $form->id) }}" method="POST" class="p-6 space-y-8">
+            <form action="{{ workspace_route('tenant.forms.update', ['form' => $form->id]) }}" method="POST" class="p-6 space-y-8">
                 @csrf
                 @method('PUT')
 

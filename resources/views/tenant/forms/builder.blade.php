@@ -4,361 +4,290 @@
 @section('page', 'forms')
 
 @section('content')
+    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6">
+        <div class="mb-6">
+            <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div class="min-w-0 flex-1">
+                    <h1 class="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                        <x-icon name="file-document-edit" size="text-xl" class="text-blue-600 dark:text-blue-400" />
+                        Construir Formulário
+                    </h1>
+                    <nav class="flex mt-2" aria-label="Breadcrumb">
+                        <ol class="flex flex-wrap items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
+                            <li>
+                                <a href="{{ workspace_route('tenant.dashboard') }}"
+                                    class="inline-flex items-center gap-2 text-gray-700 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white">
+                                    <x-icon name="home-outline" size="text-base" />
+                                    Dashboard
+                                </a>
+                            </li>
+                            <li class="flex items-center gap-2">
+                                <x-icon name="chevron-right" size="text-sm" class="text-gray-400" />
+                                <a href="{{ workspace_route('tenant.forms.index') }}"
+                                    class="text-gray-700 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white">Formulários</a>
+                            </li>
+                            <li class="flex items-center gap-2">
+                                <x-icon name="chevron-right" size="text-sm" class="text-gray-400" />
+                                <a href="{{ workspace_route('tenant.forms.show', ['form' => $form->id]) }}"
+                                    class="text-gray-700 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white">{{ $form->name }}</a>
+                            </li>
+                            <li class="flex items-center gap-2">
+                                <x-icon name="chevron-right" size="text-sm" class="text-gray-400" />
+                                <span class="text-gray-900 dark:text-white font-semibold">Construir</span>
+                            </li>
+                        </ol>
+                    </nav>
+                </div>
+            </div>
+        </div>
 
-    <div class="page-header">
-        <h3 class="page-title"> Construir Formulário </h3>
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
+            <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+                <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Construtor do Formulário</h2>
+            </div>
 
-        <nav aria-label="breadcrumb">
-            <ol class="breadcrumb">
-                <li class="breadcrumb-item">
-                    <a href="{{ workspace_route('tenant.dashboard') }}">Dashboard</a>
-                </li>
-                <li class="breadcrumb-item">
-                    <a href="{{ workspace_route('tenant.forms.index') }}">Formulários</a>
-                </li>
-                <li class="breadcrumb-item">
-                    <a href="{{ workspace_route('tenant.forms.show', ['form' => $form->id]) }}">{{ $form->name }}</a>
-                </li>
-                <li class="breadcrumb-item active" aria-current="page">Construir</li>
-            </ol>
-        </nav>
-    </div>
+            <div class="p-6">
+                <div id="alert-container" class="mb-6"></div>
 
-    <div class="row">
-        <div class="col-12">
-            <div class="card">
-                <div class="card-body">
-                    <div class="d-flex align-items-center justify-content-between mb-4">
-                        <div>
-                            <h4 class="card-title mb-1">
-                                <x-icon name="file-document-edit" class=" text-primary me-2" />
-                                {{ $form->name }}
-                            </h4>
-                            <p class="card-description mb-0 text-muted">Adicione seções, perguntas e opções ao formulário</p>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6" id="builder-summary">
+                    <div class="bg-gray-50 dark:bg-gray-900/40 rounded-lg p-4 border border-gray-200/60 dark:border-gray-700/60">
+                        <label class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1 block">Seções</label>
+                        <p class="text-gray-900 dark:text-white font-medium">{{ $form->sections->count() }} seção(ões)</p>
+                    </div>
+                    <div class="bg-gray-50 dark:bg-gray-900/40 rounded-lg p-4 border border-gray-200/60 dark:border-gray-700/60">
+                        <label class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1 block">Perguntas</label>
+                        <p class="text-gray-900 dark:text-white font-medium">{{ $form->questions->count() }} pergunta(s)</p>
+                    </div>
+                </div>
+
+                <div id="form-builder" data-tenant-slug="{{ tenant()->subdomain }}" data-form-id="{{ $form->id }}" data-csrf-token="{{ csrf_token() }}" class="space-y-4 mb-6">
+                    @if($form->sections->isEmpty() && $form->questions->where('section_id', null)->isEmpty())
+                        <div class="p-4 bg-amber-50 border border-amber-200 rounded-lg dark:bg-amber-900/20 dark:border-amber-800">
+                            <p class="text-sm text-amber-800 dark:text-amber-200">Nenhuma seção ou pergunta adicionada ainda.</p>
                         </div>
-                        <x-tailadmin-button variant="secondary" size="md" href="{{ workspace_route('tenant.forms.show', ['form' => $form->id]) }}"
-                            class="bg-transparent border-gray-300 text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-white/5">
-                            <x-icon name="arrow-left" class="" />
-                            Voltar
-                        </x-tailadmin-button>
-                    </div>
-
-                    {{-- Alertas --}}
-                    <div id="alert-container"></div>
-
-                    {{-- Botões de Ação --}}
-                    <div class="mb-4 flex flex-wrap items-center gap-2">
-                        <x-tailadmin-button type="button" variant="primary" size="md" data-bs-toggle="modal" data-bs-target="#addSectionModal">
-                            <x-icon name="plus" class="" />
-                            Adicionar Seção
-                        </x-tailadmin-button>
-                        <x-tailadmin-button type="button" variant="success" size="md" data-bs-toggle="modal" data-bs-target="#addQuestionModal" id="addQuestionBtn" disabled>
-                            <x-icon name="plus-circle" class="" />
-                            Adicionar Pergunta
-                        </x-tailadmin-button>
-                    </div>
-
-                    {{-- Lista de Seções e Perguntas --}}
-                    <div id="form-builder" data-tenant-slug="{{ tenant()->subdomain }}" data-form-id="{{ $form->id }}" data-csrf-token="{{ csrf_token() }}">
-                        @if($form->sections->isEmpty() && $form->questions->where('section_id', null)->isEmpty())
-                            <div class="alert alert-info">
-                                <x-icon name="information" class=" me-2" />
-                                Nenhuma seção ou pergunta adicionada ainda. Comece adicionando uma seção ou pergunta.
+                    @else
+                        @if($form->questions->where('section_id', null)->isNotEmpty())
+                            <div class="section-container rounded-xl border border-gray-200 dark:border-gray-700" data-section-id="null">
+                                <div class="px-4 py-3 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/40">
+                                    <h3 class="text-sm font-semibold text-gray-900 dark:text-white">Perguntas Gerais</h3>
+                                </div>
+                                <div class="p-4">
+                                    <div class="questions-list space-y-3" data-section-id="null">
+                                        @foreach($form->questions->where('section_id', null)->sortBy('position') as $question)
+                                            @include('tenant.forms.partials.question-item', ['question' => $question])
+                                        @endforeach
+                                    </div>
+                                </div>
                             </div>
-                        @else
-                            {{-- Perguntas sem seção --}}
-                            @if($form->questions->where('section_id', null)->isNotEmpty())
-                                <div class="section-container mb-4" data-section-id="null">
-                                    <div class="card border-primary">
-                                        <div class="card-header bg-primary text-white">
-                                            <h5 class="mb-0">
-                                                <x-icon name="file-document" class=" me-2" />
-                                                Perguntas Gerais
-                                            </h5>
-                                        </div>
-                                        <div class="card-body">
-                                            <div class="questions-list" data-section-id="null">
-                                                @foreach($form->questions->where('section_id', null)->sortBy('position') as $question)
-                                                    @include('tenant.forms.partials.question-item', ['question' => $question])
-                                                @endforeach
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            @endif
-
-                            {{-- Seções com perguntas --}}
-                            @foreach($form->sections->sortBy('position') as $section)
-                                <div class="section-container mb-4" data-section-id="{{ $section->id }}">
-                                    <div class="card">
-                                        <div class="card-header d-flex justify-content-between align-items-center">
-                                            <h5 class="mb-0">
-                                                <x-icon name="folder" class=" me-2" />
-                                                <span class="section-title">{{ $section->title ?: 'Seção sem título' }}</span>
-                                            </h5>
-                                            <div class="flex items-center gap-2">
-                                                <x-tailadmin-button type="button" variant="warning" size="xs"
-                                                    class="edit-section-btn px-2 py-1" data-section-id="{{ $section->id }}" data-section-title="{{ $section->title }}">
-                                                    <x-icon name="pencil" class="" />
-                                                </x-tailadmin-button>
-                                                <x-tailadmin-button type="button" variant="danger" size="xs"
-                                                    class="delete-section-btn px-2 py-1" data-section-id="{{ $section->id }}">
-                                                    <x-icon name="delete" class="" />
-                                                </x-tailadmin-button>
-                                            </div>
-                                        </div>
-                                        <div class="card-body">
-                                            <div class="questions-list" data-section-id="{{ $section->id }}">
-                                                @if($section->questions->isEmpty())
-                                                    <p class="text-muted mb-0">Nenhuma pergunta nesta seção.</p>
-                                                @else
-                                                    @foreach($section->questions->sortBy('position') as $question)
-                                                        @include('tenant.forms.partials.question-item', ['question' => $question])
-                                                    @endforeach
-                                                @endif
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            @endforeach
                         @endif
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
 
-    {{-- Modal: Adicionar Seção --}}
-    <div class="modal fade" id="addSectionModal" tabindex="-1">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Adicionar Seção</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        @foreach($form->sections->sortBy('position') as $section)
+                            <div class="section-container rounded-xl border border-gray-200 dark:border-gray-700" data-section-id="{{ $section->id }}">
+                                <div class="px-4 py-3 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/40 flex items-start justify-between gap-3">
+                                    <div>
+                                        <h3 class="text-sm font-semibold text-gray-900 dark:text-white section-title">{{ $section->title ?: 'Seção sem título' }}</h3>
+                                        <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Seções</p>
+                                    </div>
+                                    <div class="flex items-center gap-2">
+                                        <button type="button" class="btn btn-outline edit-section-btn" data-section-id="{{ $section->id }}" data-section-title="{{ $section->title }}">Editar</button>
+                                        <button type="button" class="btn btn-danger delete-section-btn" data-section-id="{{ $section->id }}">Excluir</button>
+                                    </div>
+                                </div>
+                                <div class="p-4">
+                                    <h4 class="text-sm font-semibold text-gray-900 dark:text-white mb-3">Perguntas</h4>
+                                    <div class="questions-list space-y-3" data-section-id="{{ $section->id }}">
+                                        @if($section->questions->isEmpty())
+                                            <p class="text-sm text-gray-500 dark:text-gray-400">Nenhuma pergunta nesta seção.</p>
+                                        @else
+                                            @foreach($section->questions->sortBy('position') as $question)
+                                                @include('tenant.forms.partials.question-item', ['question' => $question])
+                                            @endforeach
+                                        @endif
+                                    </div>
+                                </div>
+                            </div>
+                        @endforeach
+                    @endif
                 </div>
-                <form id="addSectionForm">
-                    <div class="modal-body">
-                        <div class="form-group">
-                            <label>Título da Seção</label>
-                            <input type="text" class="form-control" name="title" placeholder="Ex: Dados Pessoais, Sintomas, etc.">
-                            <small class="form-text text-muted">Opcional - Deixe em branco para uma seção sem título</small>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <x-tailadmin-button type="button" variant="secondary" size="md" class="bg-transparent border-gray-300 text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-white/5" data-bs-dismiss="modal">
-                            Cancelar
-                        </x-tailadmin-button>
-                        <x-tailadmin-button type="submit" variant="primary" size="md">
-                            Adicionar
-                        </x-tailadmin-button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
 
-    {{-- Modal: Editar Seção --}}
-    <div class="modal fade" id="editSectionModal" tabindex="-1">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Editar Seção</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <form id="editSectionForm">
-                    <input type="hidden" name="section_id" id="edit_section_id">
-                    <div class="modal-body">
-                        <div class="form-group">
-                            <label>Título da Seção</label>
-                            <input type="text" class="form-control" name="title" id="edit_section_title" placeholder="Ex: Dados Pessoais, Sintomas, etc.">
+                <div id="builder-panels" class="space-y-4">
+                    <div id="addSectionPanel" class="hidden rounded-xl border border-gray-200 dark:border-gray-700">
+                        <div class="px-4 py-3 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/40">
+                            <h3 class="text-sm font-semibold text-gray-900 dark:text-white">Adicionar Seção</h3>
                         </div>
+                        <form id="addSectionForm" class="p-4 space-y-4">
+                            <div>
+                                <label class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block">Título da Seção</label>
+                                <input type="text" class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-brand-500 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white" name="title" placeholder="Ex: Dados Pessoais, Sintomas, etc.">
+                                <small class="text-xs text-gray-500 dark:text-gray-400">Opcional. Deixe em branco para uma seção sem título.</small>
+                            </div>
+                            <div class="flex flex-wrap items-center justify-end gap-3">
+                                <button type="button" class="btn btn-outline" data-builder-cancel>Cancelar</button>
+                                <button type="submit" class="btn btn-primary">Adicionar</button>
+                            </div>
+                        </form>
                     </div>
-                    <div class="modal-footer">
-                        <x-tailadmin-button type="button" variant="secondary" size="md" class="bg-transparent border-gray-300 text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-white/5" data-bs-dismiss="modal">
-                            Cancelar
-                        </x-tailadmin-button>
-                        <x-tailadmin-button type="submit" variant="primary" size="md">
-                            Salvar
-                        </x-tailadmin-button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
 
-    {{-- Modal: Adicionar Pergunta --}}
-    <div class="modal fade" id="addQuestionModal" tabindex="-1">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Adicionar Pergunta</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <form id="addQuestionForm">
-                    <div class="modal-body">
-                        <div class="form-group mb-3">
-                            <label>Seção</label>
-                            <select class="form-control" id="question_section_select">
-                                <option value="">Pergunta Geral (sem seção)</option>
-                                @foreach($form->sections->sortBy('position') as $section)
-                                    <option value="{{ $section->id }}">{{ $section->title ?: 'Seção sem título' }}</option>
-                                @endforeach
-                            </select>
-                            <small class="form-text text-muted">Selecione uma seção ou deixe em branco para pergunta geral</small>
+                    <div id="editSectionPanel" class="hidden rounded-xl border border-gray-200 dark:border-gray-700">
+                        <div class="px-4 py-3 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/40">
+                            <h3 class="text-sm font-semibold text-gray-900 dark:text-white">Editar Seção</h3>
                         </div>
-                        <div class="form-group mb-3">
-                            <label>Pergunta <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" name="label" required placeholder="Ex: Qual é o seu nome?">
+                        <form id="editSectionForm" class="p-4 space-y-4">
+                            <input type="hidden" name="section_id" id="edit_section_id">
+                            <div>
+                                <label class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block">Título da Seção</label>
+                                <input type="text" class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-brand-500 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white" name="title" id="edit_section_title" placeholder="Ex: Dados Pessoais, Sintomas, etc.">
+                            </div>
+                            <div class="flex flex-wrap items-center justify-end gap-3">
+                                <button type="button" class="btn btn-outline" data-builder-cancel>Cancelar</button>
+                                <button type="submit" class="btn btn-primary">Salvar</button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <div id="addQuestionPanel" class="hidden rounded-xl border border-gray-200 dark:border-gray-700">
+                        <div class="px-4 py-3 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/40">
+                            <h3 class="text-sm font-semibold text-gray-900 dark:text-white">Adicionar Pergunta</h3>
                         </div>
-                        <div class="form-group mb-3">
-                            <label>Texto de Ajuda</label>
-                            <textarea class="form-control" name="help_text" rows="2" placeholder="Texto explicativo opcional"></textarea>
-                        </div>
-                        <div class="form-group mb-3">
-                            <label>Tipo de Resposta <span class="text-danger">*</span></label>
-                            <select class="form-control" name="type" id="question_type" required>
-                                <option value="text">Texto</option>
-                                <option value="number">Número</option>
-                                <option value="date">Data</option>
-                                <option value="boolean">Sim/Não</option>
-                                <option value="single_choice">Escolha Única</option>
-                                <option value="multi_choice">Escolha Múltipla</option>
-                            </select>
-                        </div>
-                        <div class="form-group mb-3">
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" name="required" id="question_required" value="1">
-                                <label class="form-check-label" for="question_required">
+                        <form id="addQuestionForm" class="p-4 space-y-4">
+                            <div>
+                                <label class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block">Seção</label>
+                                <select class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-brand-500 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white" id="question_section_select">
+                                    <option value="">Pergunta Geral (sem seção)</option>
+                                    @foreach($form->sections->sortBy('position') as $section)
+                                        <option value="{{ $section->id }}">{{ $section->title ?: 'Seção sem título' }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div>
+                                <label class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block">Pergunta <span class="text-red-500">*</span></label>
+                                <input type="text" class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-brand-500 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white" name="label" required placeholder="Ex: Qual é o seu nome?">
+                            </div>
+                            <div>
+                                <label class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block">Texto de Ajuda</label>
+                                <textarea class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-brand-500 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white" name="help_text" rows="2" placeholder="Texto explicativo opcional"></textarea>
+                            </div>
+                            <div>
+                                <label class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block">Tipo de Resposta <span class="text-red-500">*</span></label>
+                                <select class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-brand-500 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white" name="type" id="question_type" required>
+                                    <option value="text">Texto</option>
+                                    <option value="number">Número</option>
+                                    <option value="date">Data</option>
+                                    <option value="boolean">Sim/Não</option>
+                                    <option value="single_choice">Escolha Única</option>
+                                    <option value="multi_choice">Escolha Múltipla</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="inline-flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+                                    <input class="h-4 w-4 rounded border-gray-300 text-brand-600 focus:ring-brand-500" type="checkbox" name="required" id="question_required" value="1">
                                     Campo obrigatório
                                 </label>
                             </div>
-                        </div>
-                        <div id="options-container" style="display: none;">
-                            <hr>
-                            <h6>Opções de Resposta</h6>
-                            <div id="options-list"></div>
-                            <x-tailadmin-button type="button" variant="success" size="sm" class="mt-2" id="add-option-btn">
-                                <x-icon name="plus" class="" />
-                                Adicionar Opção
-                            </x-tailadmin-button>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <x-tailadmin-button type="button" variant="secondary" size="md" class="bg-transparent border-gray-300 text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-white/5" data-bs-dismiss="modal">
-                            Cancelar
-                        </x-tailadmin-button>
-                        <x-tailadmin-button type="submit" variant="primary" size="md">
-                            Adicionar
-                        </x-tailadmin-button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
 
-    {{-- Modal: Adicionar Opção a Pergunta --}}
-    <div class="modal fade" id="addOptionModal" tabindex="-1">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Adicionar Opção</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <form id="addOptionForm">
-                    <input type="hidden" name="question_id" id="option_question_id">
-                    <div class="modal-body">
-                        <div class="form-group mb-3">
-                            <label>Rótulo <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" name="label" required placeholder="Ex: Sim, Não, etc.">
-                        </div>
-                        <div class="form-group mb-3">
-                            <label>Valor <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" name="value" required placeholder="Ex: sim, nao, etc.">
-                            <small class="form-text text-muted">Valor usado internamente (geralmente em minúsculas, sem espaços)</small>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <x-tailadmin-button type="button" variant="secondary" size="md" class="bg-transparent border-gray-300 text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-white/5" data-bs-dismiss="modal">
-                            Cancelar
-                        </x-tailadmin-button>
-                        <x-tailadmin-button type="submit" variant="primary" size="md">
-                            Adicionar
-                        </x-tailadmin-button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
+                            <div id="options-container" class="hidden border-t border-gray-200 dark:border-gray-700 pt-4 mt-4">
+                                <h6 class="text-sm font-semibold text-gray-900 dark:text-white mb-2">Opções</h6>
+                                <div id="options-list" class="space-y-2"></div>
+                                <button type="button" class="btn btn-primary mt-3" id="add-option-btn">Adicionar Opção</button>
+                            </div>
 
-    {{-- Modal: Editar Pergunta --}}
-    <div class="modal fade" id="editQuestionModal" tabindex="-1">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Editar Pergunta</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <form id="editQuestionForm">
-                    <input type="hidden" name="question_id" id="edit_question_id">
-                    <div class="modal-body">
-                        <div class="form-group mb-3">
-                            <label>Seção</label>
-                            <select class="form-control" name="section_id" id="edit_question_section_select">
-                                <option value="">Pergunta Geral (sem seção)</option>
-                                @foreach($form->sections->sortBy('position') as $section)
-                                    <option value="{{ $section->id }}">{{ $section->title ?: 'Seção sem título' }}</option>
-                                @endforeach
-                            </select>
+                            <div class="flex flex-wrap items-center justify-end gap-3">
+                                <button type="button" class="btn btn-outline" data-builder-cancel>Cancelar</button>
+                                <button type="submit" class="btn btn-primary">Adicionar</button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <div id="addOptionPanel" class="hidden rounded-xl border border-gray-200 dark:border-gray-700">
+                        <div class="px-4 py-3 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/40">
+                            <h3 class="text-sm font-semibold text-gray-900 dark:text-white">Adicionar Opção</h3>
                         </div>
-                        <div class="form-group mb-3">
-                            <label>Pergunta <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" name="label" id="edit_question_label" required>
+                        <form id="addOptionForm" class="p-4 space-y-4">
+                            <input type="hidden" name="question_id" id="option_question_id">
+                            <div>
+                                <label class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block">Rótulo <span class="text-red-500">*</span></label>
+                                <input type="text" class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-brand-500 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white" name="label" required placeholder="Ex: Sim, Não, etc.">
+                            </div>
+                            <div>
+                                <label class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block">Valor <span class="text-red-500">*</span></label>
+                                <input type="text" class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-brand-500 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white" name="value" required placeholder="Ex: sim, nao, etc.">
+                            </div>
+                            <div class="flex flex-wrap items-center justify-end gap-3">
+                                <button type="button" class="btn btn-outline" data-builder-cancel>Cancelar</button>
+                                <button type="submit" class="btn btn-primary">Adicionar</button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <div id="editQuestionPanel" class="hidden rounded-xl border border-gray-200 dark:border-gray-700">
+                        <div class="px-4 py-3 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/40">
+                            <h3 class="text-sm font-semibold text-gray-900 dark:text-white">Editar Pergunta</h3>
                         </div>
-                        <div class="form-group mb-3">
-                            <label>Texto de Ajuda</label>
-                            <textarea class="form-control" name="help_text" id="edit_question_help_text" rows="2"></textarea>
-                        </div>
-                        <div class="form-group mb-3">
-                            <label>Tipo de Resposta <span class="text-danger">*</span></label>
-                            <select class="form-control" name="type" id="edit_question_type" required>
-                                <option value="text">Texto</option>
-                                <option value="number">Número</option>
-                                <option value="date">Data</option>
-                                <option value="boolean">Sim/Não</option>
-                                <option value="single_choice">Escolha Única</option>
-                                <option value="multi_choice">Escolha Múltipla</option>
-                            </select>
-                        </div>
-                        <div class="form-group mb-3">
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" name="required" id="edit_question_required" value="1">
-                                <label class="form-check-label" for="edit_question_required">
+                        <form id="editQuestionForm" class="p-4 space-y-4">
+                            <input type="hidden" name="question_id" id="edit_question_id">
+                            <div>
+                                <label class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block">Seção</label>
+                                <select class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-brand-500 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white" name="section_id" id="edit_question_section_select">
+                                    <option value="">Pergunta Geral (sem seção)</option>
+                                    @foreach($form->sections->sortBy('position') as $section)
+                                        <option value="{{ $section->id }}">{{ $section->title ?: 'Seção sem título' }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div>
+                                <label class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block">Pergunta <span class="text-red-500">*</span></label>
+                                <input type="text" class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-brand-500 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white" name="label" id="edit_question_label" required>
+                            </div>
+                            <div>
+                                <label class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block">Texto de Ajuda</label>
+                                <textarea class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-brand-500 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white" name="help_text" id="edit_question_help_text" rows="2"></textarea>
+                            </div>
+                            <div>
+                                <label class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block">Tipo de Resposta <span class="text-red-500">*</span></label>
+                                <select class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-brand-500 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white" name="type" id="edit_question_type" required>
+                                    <option value="text">Texto</option>
+                                    <option value="number">Número</option>
+                                    <option value="date">Data</option>
+                                    <option value="boolean">Sim/Não</option>
+                                    <option value="single_choice">Escolha Única</option>
+                                    <option value="multi_choice">Escolha Múltipla</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="inline-flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+                                    <input class="h-4 w-4 rounded border-gray-300 text-brand-600 focus:ring-brand-500" type="checkbox" name="required" id="edit_question_required" value="1">
                                     Campo obrigatório
                                 </label>
                             </div>
-                        </div>
-                        <div id="edit-options-container">
-                            <hr>
-                            <h6>Opções de Resposta</h6>
-                            <div id="edit-options-list"></div>
-                            <x-tailadmin-button type="button" variant="success" size="sm" class="mt-2" id="add-edit-option-btn">
-                                <x-icon name="plus" class="" />
-                                Adicionar Opção
-                            </x-tailadmin-button>
+
+                            <div id="edit-options-container" class="hidden mt-6 border-t border-gray-200 dark:border-gray-700 pt-4">
+                                <h6 class="text-sm font-semibold text-gray-900 dark:text-white mb-2">Opções</h6>
+                                <div id="edit-options-list" class="space-y-2"></div>
+                                <button type="button" class="btn btn-primary mt-3" id="add-edit-option-btn">Adicionar Opção</button>
+                            </div>
+
+                            <div class="flex flex-wrap items-center justify-end gap-3">
+                                <button type="button" class="btn btn-outline" data-builder-cancel>Cancelar</button>
+                                <button type="submit" class="btn btn-primary">Salvar</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="border-t border-gray-200 dark:border-gray-700 pt-6 mt-6">
+                    <div class="flex flex-wrap items-center justify-between gap-3">
+                        <a href="{{ workspace_route('tenant.forms.show', ['form' => $form->id]) }}" class="btn btn-outline">
+                            <x-icon name="arrow-left" size="text-sm" />
+                            Voltar
+                        </a>
+
+                        <div class="flex flex-wrap items-center justify-end gap-3">
+                            <button type="button" class="btn btn-primary" id="addSectionBtn">Adicionar Seção</button>
+                            <button type="button" class="btn btn-primary" id="addQuestionBtn" disabled>Adicionar Pergunta</button>
                         </div>
                     </div>
-                    <div class="modal-footer">
-                        <x-tailadmin-button type="button" variant="secondary" size="md" class="bg-transparent border-gray-300 text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-white/5" data-bs-dismiss="modal">
-                            Cancelar
-                        </x-tailadmin-button>
-                        <x-tailadmin-button type="submit" variant="primary" size="md">
-                            Salvar
-                        </x-tailadmin-button>
-                    </div>
-                </form>
+                </div>
             </div>
         </div>
     </div>
-
 @endsection
-

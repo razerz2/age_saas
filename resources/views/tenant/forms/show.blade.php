@@ -100,20 +100,7 @@
                         </a>
 
                         <div class="flex flex-wrap items-center justify-end gap-3">
-                            <a href="{{ workspace_route('tenant.forms.edit', ['form' => $form->id]) }}" class="btn btn-outline">
-                                <x-icon name="pencil-outline" size="text-sm" />
-                                Editar
-                            </a>
-
-                            <form action="{{ workspace_route('tenant.forms.destroy', $form->id) }}" method="POST" class="inline"
-                                  data-confirm-form-delete="true" data-form-name="{{ $form->name }}">
-                                @csrf
-                                @method('DELETE')
-                                <button type="submit" class="btn btn-danger">
-                                    <x-icon name="trash-can-outline" size="text-sm" />
-                                    Excluir
-                                </button>
-                            </form>
+                            @include('tenant.forms.partials.actions', ['form' => $form, 'showView' => false])
                         </div>
                     </div>
                 </div>
