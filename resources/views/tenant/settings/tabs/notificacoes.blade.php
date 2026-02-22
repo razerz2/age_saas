@@ -93,7 +93,6 @@
                         Driver de Email
                     </label>
                     <select name="email_driver" id="email_driver" required
-                            x-on:change="$refs.emailTenancyConfig.style.display = $el.value === 'tenancy' ? 'block' : 'none'"
                             class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white">
                         <option value="global" {{ ($settings['email.driver'] ?? 'global') == 'global' ? 'selected' : '' }}>Usar serviço global do sistema</option>
                         <option value="tenancy" {{ ($settings['email.driver'] ?? 'global') == 'tenancy' ? 'selected' : '' }}>Usar SMTP próprio</option>
@@ -101,7 +100,7 @@
                     <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Escolha entre usar o serviço global ou configurar seu próprio SMTP</p>
                 </div>
 
-                <div x-ref="emailTenancyConfig" style="display: {{ ($settings['email.driver'] ?? 'global') == 'tenancy' ? 'block' : 'none' }};">
+                <div id="email_tenancy_config" style="display: {{ ($settings['email.driver'] ?? 'global') == 'tenancy' ? 'block' : 'none' }};">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Host SMTP</label>
@@ -184,7 +183,6 @@
                         Driver de WhatsApp
                     </label>
                     <select name="whatsapp_driver" id="whatsapp_driver" required
-                            x-on:change="$refs.whatsappTenancyConfig.style.display = $el.value === 'tenancy' ? 'block' : 'none'"
                             class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white">
                         <option value="global" {{ ($settings['whatsapp.driver'] ?? 'global') == 'global' ? 'selected' : '' }}>Usar serviço global do sistema</option>
                         <option value="tenancy" {{ ($settings['whatsapp.driver'] ?? 'global') == 'tenancy' ? 'selected' : '' }}>Usar API própria</option>
@@ -192,41 +190,22 @@
                     <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Escolha entre usar o serviço global ou configurar sua própria API de WhatsApp</p>
                 </div>
 
-                <div x-ref="whatsappTenancyConfig" style="display: {{ ($settings['whatsapp.driver'] ?? 'global') == 'tenancy' ? 'block' : 'none' }};">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div class="md:col-span-2">
-                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">API URL</label>
-                            <input type="url" name="whatsapp_api_url" 
-                                   value="{{ $settings['whatsapp.api_url'] ?? '' }}" 
-                                   placeholder="https://api.exemplo.com/send"
-                                   class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">API Token</label>
-                            <input type="text" name="whatsapp_api_token" 
-                                   value="{{ $settings['whatsapp.api_token'] ?? '' }}" 
-                                   placeholder="seu-token-aqui"
-                                   class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Sender (Remetente)</label>
-                            <input type="text" name="whatsapp_sender" 
-                                   value="{{ $settings['whatsapp.sender'] ?? '' }}" 
-                                   placeholder="5511999999999"
-                                   class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white">
-                        </div>
-                    </div>
+                <div id="whatsapp_tenancy_config" style="display: {{ ($settings['whatsapp.driver'] ?? 'global') == 'tenancy' ? 'block' : 'none' }};">
+                    @include('shared.whatsapp.providers-settings', [
+                        'settings' => $settings,
+                        'providerFieldName' => 'whatsapp_provider',
+                        'providerValue' => $settings['WHATSAPP_PROVIDER'] ?? 'whatsapp_business',
+                        'metaTestUrl' => workspace_route('tenant.settings.whatsapp.test.connection', ['service' => 'meta']),
+                        'metaSendUrl' => workspace_route('tenant.settings.whatsapp.test.meta.send'),
+                        'zapiTestUrl' => workspace_route('tenant.settings.whatsapp.test.connection', ['service' => 'zapi']),
+                        'zapiSendUrl' => workspace_route('tenant.settings.whatsapp.test.zapi.send'),
+                        'wahaTestUrl' => workspace_route('tenant.settings.whatsapp.test.connection', ['service' => 'waha']),
+                        'wahaSendUrl' => workspace_route('tenant.settings.whatsapp.test.waha.send'),
+                    ])
                 </div>
             </div>
         </div>
 
-        <div class="flex justify-end">
-            <button type="submit" class="px-6 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors duration-200 flex items-center gap-2">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                </svg>
-                Salvar Alterações
-            </button>
-        </div>
+        @include('tenant.settings.partials.form-actions')
     </form>
 </div>

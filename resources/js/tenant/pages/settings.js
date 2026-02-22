@@ -1,3 +1,5 @@
+import { initTenantWhatsAppSettings } from '../components/whatsappProviderSettings';
+
 export function init() {
     ensureAlpine();
     bindSettingsActions();
@@ -5,6 +7,7 @@ export function init() {
     bindBookingLinkCopy();
     bindLocationConfig();
     bindFinanceConfig();
+    initTenantWhatsAppSettings();
 }
 
 function ensureAlpine() {
@@ -143,6 +146,16 @@ function bindSettingsTabs() {
         });
     }
 
+    const appleCalendarCheckbox = document.getElementById('integrations_apple_calendar_enabled');
+    if (appleCalendarCheckbox) {
+        appleCalendarCheckbox.addEventListener('change', function onAppleChange() {
+            const autoSyncGroup = document.getElementById('apple_calendar_auto_sync_group');
+            if (autoSyncGroup) {
+                autoSyncGroup.style.display = this.checked && !this.disabled ? 'block' : 'none';
+            }
+        });
+    }
+
     const calendarForm = document.querySelector('form[action*=\"calendar\"]');
     if (calendarForm) {
         calendarForm.addEventListener('submit', function onCalendarSubmit() {
@@ -165,16 +178,6 @@ function bindSettingsTabs() {
             const emailConfig = document.getElementById('email_tenancy_config');
             if (emailConfig) {
                 emailConfig.style.display = this.value === 'tenancy' ? 'block' : 'none';
-            }
-        });
-    }
-
-    const whatsappDriver = document.getElementById('whatsapp_driver');
-    if (whatsappDriver) {
-        whatsappDriver.addEventListener('change', function onWhatsappChange() {
-            const whatsappConfig = document.getElementById('whatsapp_tenancy_config');
-            if (whatsappConfig) {
-                whatsappConfig.style.display = this.value === 'tenancy' ? 'block' : 'none';
             }
         });
     }

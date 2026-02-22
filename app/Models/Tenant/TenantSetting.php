@@ -122,10 +122,19 @@ class TenantSetting extends Model
 
         return [
             'driver' => $settings['whatsapp.driver'] ?? 'global',
+            'provider' => $settings['whatsapp.provider'] ?? 'whatsapp_business',
+            'meta_access_token' => $settings['whatsapp.meta.access_token'] ?? null,
+            'meta_phone_number_id' => $settings['whatsapp.meta.phone_number_id'] ?? null,
+            'zapi_api_url' => $settings['whatsapp.zapi.api_url'] ?? null,
+            'zapi_token' => $settings['whatsapp.zapi.token'] ?? null,
+            'zapi_client_token' => $settings['whatsapp.zapi.client_token'] ?? null,
+            'zapi_instance_id' => $settings['whatsapp.zapi.instance_id'] ?? null,
+            'waha_base_url' => $settings['whatsapp.waha.base_url'] ?? null,
+            'waha_api_key' => $settings['whatsapp.waha.api_key'] ?? null,
+            'waha_session' => $settings['whatsapp.waha.session'] ?? 'default',
             'api_url' => $settings['whatsapp.api_url'] ?? null,
             'api_token' => $settings['whatsapp.api_token'] ?? null,
             'sender' => $settings['whatsapp.sender'] ?? null,
         ];
     }
 }
-

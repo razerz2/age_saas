@@ -94,10 +94,48 @@ agendamento-saas/
 ## 🎨 Frontend Tenant (Views/Assets)
 
 ### Padrão de Views
-- Cada view Tenant deve declarar `@section('page', '<modulo>')`.
-- Não usar `<style>`/`<script>` inline nas views migradas.
-- Não usar `@push('styles')`/`@push('scripts')` nas views migradas.
-- Eventos devem usar `data-*` e serem vinculados no JS do módulo.
+- Cada view Tenant deve declarar `@section('page', '<modulo>')` (nome canônico do módulo).
+- **Proibido** usar `<style>`/`<script>` inline nas views migradas.
+- **Proibido** usar `@push('styles')`/`@push('scripts')` em views de páginas Tenant.
+- Eventos devem usar `data-*` e serem vinculados no JS do módulo via `resources/js/tenant/app.js` + `pages/<modulo>.js::init()`.
+
+### Layout de Página (Header, Containers e Cards)
+
+Padrão canônico de layout para telas Tenant já migradas para TailAdmin (ex.: Users, Doctors, Patients, Forms, Calendars, Business Hours, Reports):
+
+- **Header da Página**
+  - Breadcrumbs sempre via componente/padrão do layout Tenant (nunca texto solto).
+  - Título (`h1`) e subtítulo alinhados à esquerda, com o mesmo `padding-x` dos cards principais.
+  - Ações globais (ex.: "Novo ...") alinhadas à direita quando existirem.
+
+- **Containers / Cards principais**
+  - Card padrão TailAdmin com três zonas bem definidas:
+    - **Header**: `px-6 py-4` + `border-b` (`border-gray-200 dark:border-gray-700`).
+    - **Body**: `px-6 py-6`.
+    - **Footer / Actions**: `border-t` + `pt-4`/`pt-6` com botões alinhados.
+  - Em formulários e telas Show, o footer deve seguir o padrão:
+    - Ação de **Voltar** à esquerda (quando aplicável).
+    - Demais ações (Salvar, Editar, Builder, Preview, etc.) agrupadas à direita.
+
+- **Tabs de Configuração (Settings Tenant)**
+  - Ícone do header renderizado com `x-icon`/mdi válido, visível em light/dark.
+  - Cada aba que contém formulário **deve** exibir o botão global de "Salvar alterações" via componente/partial padrão (não recriar classe manualmente).
+  - Estrutura recomendada:
+    - `<form>` envolvendo o conteúdo da aba.
+    - Body com campos em grid responsivo.
+    - Footer com ações globais reutilizando os botões padrão do projeto.
+
+### Encoding
+
+- **UTF-8**: Todas as views e arquivos devem ser salvos com encoding UTF-8.
+- **JSON**: Todas as respostas JSON devem ser codificadas em UTF-8.
+
+### Checklist de PR Geral de Frontend
+
+- **Revisar** se todas as views estão seguindo o padrão de layout e estrutura.
+- **Verificar** se todas as ações estão sendo vinculadas corretamente via JS.
+- **Testar** se todas as funcionalidades estão funcionando corretamente.
+- **Revisar** se todas as mensagens de erro estão sendo exibidas corretamente.
 
 ### Assets por Módulo
 - JS: `resources/js/tenant/pages/<modulo>.js` com `export function init()`.

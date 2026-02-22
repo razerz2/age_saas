@@ -76,7 +76,7 @@ class AppleCalendarController extends Controller
     /**
      * Mostra formulário para conectar com Apple Calendar
      */
-    public function showConnectForm($doctorId)
+    public function showConnectForm($slug, $doctorId)
     {
         $doctor = Doctor::findOrFail($doctorId);
         
@@ -92,7 +92,7 @@ class AppleCalendarController extends Controller
     /**
      * Conecta com Apple Calendar usando credenciais CalDAV
      */
-    public function connect($doctorId, Request $request)
+    public function connect($slug, $doctorId, Request $request)
     {
         try {
             $doctor = Doctor::findOrFail($doctorId);
@@ -161,7 +161,7 @@ class AppleCalendarController extends Controller
     /**
      * Remove a integração do Apple Calendar
      */
-    public function disconnect($doctorId)
+    public function disconnect($slug, $doctorId)
     {
         try {
             $doctor = Doctor::findOrFail($doctorId);
@@ -201,7 +201,7 @@ class AppleCalendarController extends Controller
     /**
      * Verifica o status da integração
      */
-    public function status($doctorId)
+    public function status($slug, $doctorId)
     {
         $doctor = Doctor::findOrFail($doctorId);
         $token = $doctor->appleCalendarToken;
@@ -214,7 +214,7 @@ class AppleCalendarController extends Controller
     /**
      * Lista eventos do Apple Calendar para um médico (API para FullCalendar)
      */
-    public function getEvents($doctorId, Request $request)
+    public function getEvents($slug, $doctorId, Request $request)
     {
         try {
             $doctor = Doctor::findOrFail($doctorId);
@@ -246,4 +246,3 @@ class AppleCalendarController extends Controller
         }
     }
 }
-

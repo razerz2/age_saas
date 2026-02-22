@@ -13,12 +13,13 @@
 9. [Guia de Uso](#guia-de-uso)
 10. [Padrão de Views: Index / Show / Form](#padrão-de-views-index--show--form)
 11. [Forms: Builder e Preview](#forms-builder-e-preview)
-12. [Gridjs-padrão-de-paginação-e-seletor-de-page-size](#gridjs-padrão-de-paginação-e-seletor-de-page-size)
+12. [Grid.js: Paginação e seletor de page size](#gridjs-padrão-de-paginação-e-seletor-de-page-size)
 13. [Checklist de Qualidade (Tenant)](#checklist-de-qualidade-tenant)
+14. [Checklist de PR (Tenant)](#checklist-de-pr-tenant)
 
 ---
 
-## 🎯 Visão Geral
+## Visão Geral
 
 A **Tenant** é a área específica de cada cliente (clínica) do sistema SaaS de agendamento médico. Cada tenant possui seu próprio banco de dados PostgreSQL isolado, garantindo total separação de dados.
 
@@ -59,7 +60,7 @@ Cada tenant possui seu **próprio banco de dados PostgreSQL**, que armazena:
 
 ---
 
-## 🔐 Acesso e Autenticação
+## Acesso e Autenticação
 
 ### URL de Acesso
 
@@ -136,7 +137,7 @@ O middleware `module.access:{modulo}` verifica o acesso antes de permitir a rota
 
 ---
 
-## 🛣️ Estrutura de Rotas
+## Estrutura de Rotas
 
 ### Rotas Públicas (sem autenticação)
 
@@ -311,7 +312,7 @@ GET  /workspace/{slug}/paciente/logout                    # Logout (GET)
 
 ---
 
-## 🎮 Controllers
+## Controllers
 
 ### Controllers dos Tenants (`app/Http/Controllers/Tenant/`)
 
@@ -361,7 +362,7 @@ GET  /workspace/{slug}/paciente/logout                    # Logout (GET)
 
 ---
 
-## 🗄️ Models
+## Models
 
 ### Models dos Tenants (`app/Models/Tenant/`)
 
@@ -419,7 +420,7 @@ Armazenados no **banco do tenant** (conexão `tenant`):
 
 ---
 
-## ⚙️ Funcionalidades Principais
+## Funcionalidades Principais
 
 ### 1. Dashboard
 
@@ -676,7 +677,7 @@ O módulo de **Atendimento Médico** permite realizar sessões de atendimento do
 
 **Controle de Acesso:**
 - Requer módulo `medical_appointments` habilitado
-- Filtros automáticos baseados em roles são aplicados:
+- Filtros baseados em roles são aplicados automaticamente:
   - **Admin**: Vê todos os agendamentos do dia
   - **Doctor**: Vê apenas seus próprios agendamentos
   - **User**: Vê apenas agendamentos dos médicos permitidos
@@ -713,7 +714,7 @@ O módulo de **Atendimento Médico** permite realizar sessões de atendimento do
 
 ## Frontend Architecture — Tenant Area
 
-### 🎨 Estrutura de Assets
+### Estrutura de Assets
 
 Toda a camada frontend da área **Tenant** é organizada exclusivamente via assets versionados em `resources/`, compilados pelo Vite/Laravel Mix. A estrutura oficial é:
 
@@ -793,7 +794,7 @@ Cada arquivo `pages/*.js` conhece apenas:
 
 ---
 
-### 🚫 Regras Oficiais: Proibições
+### Regras Oficiais: Proibições
 
 **É expressamente proibido** em novas implementações e em código migrado:
 
@@ -811,7 +812,7 @@ Cada arquivo `pages/*.js` conhece apenas:
 
 ---
 
-### 📄 Padrão de Página — Tenant
+### Padrão de Página — Tenant
 
 Toda view da área Tenant **deve**:
 
@@ -866,7 +867,7 @@ Nenhuma **view de módulo** deve conter `<script>` ou usar `@push('scripts')` di
 
 ---
 
-### 🧭 Padrões de UI do Tenant (Index/Grid)
+### Padrões de UI do Tenant (Index/Grid)
 
 As telas **index/listagem** do Tenant seguem um padrão padronizado com Grid.js. Detalhes técnicos (contratos de `gridData()`, `.actions-wrap`, overrides de dark/footer, row-click, etc.) ficam documentados em **ARQUITETURA.md** na seção **“Padrão oficial de Listagens (Grid.js) no Tenant”**.
 
@@ -878,6 +879,7 @@ Comportamento esperado para o usuário:
 
 ---
 
+### Regras para Novos Módulos
 ### 🧩 Regras para Novos Módulos
 
 Ao criar um novo módulo na área Tenant:

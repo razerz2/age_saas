@@ -100,181 +100,20 @@
                     <a href="{{ route('Platform.settings.test', 'asaas') }}" class="btn btn-secondary mb-4">
                         <i class="fas fa-plug me-1"></i> Testar Conexão ASAAS</a>
 
-                    <h5>💬 WhatsApp</h5>
-                    <div class="mb-3">
-                        <label>Provedor WhatsApp</label>
-                        <select class="form-select" name="WHATSAPP_PROVIDER" id="whatsapp-provider-select">
-                            <option value="whatsapp_business" {{ $settings['WHATSAPP_PROVIDER'] == 'whatsapp_business' ? 'selected' : '' }}>
-                                WhatsApp Business (Meta)
-                            </option>
-                            <option value="zapi" {{ $settings['WHATSAPP_PROVIDER'] == 'zapi' ? 'selected' : '' }}>
-                                Z-API
-                            </option>
-                            <option value="waha" {{ $settings['WHATSAPP_PROVIDER'] == 'waha' ? 'selected' : '' }}>
-                                WAHA
-                            </option>
-                        </select>
-                        <small class="text-muted">Escolha qual provedor de WhatsApp será usado pelo sistema.</small>
-                    </div>
+                    <h5>WhatsApp</h5>
+                    @include('shared.whatsapp.providers-settings', [
+                        'settings' => $settings,
+                        'providerFieldName' => 'WHATSAPP_PROVIDER',
+                        'providerValue' => $settings['WHATSAPP_PROVIDER'] ?? 'whatsapp_business',
+                        'metaTestUrl' => route('Platform.settings.test', 'meta'),
+                        'metaSendUrl' => route('Platform.settings.test.meta.send'),
+                        'zapiTestUrl' => route('Platform.settings.test', 'zapi'),
+                        'zapiSendUrl' => route('Platform.settings.test.zapi.send'),
+                        'wahaTestUrl' => route('Platform.settings.test', 'waha'),
+                        'wahaSendUrl' => route('Platform.settings.test.waha.send'),
+                    ])
 
-                    {{-- Meta / WhatsApp Business --}}
-                    <div class="border rounded p-3 mb-3 whatsapp-provider-section" data-provider="whatsapp_business">
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <h6 class="mb-0">💬 Meta (WhatsApp Business)</h6>
-                            <span id="meta-test-badge" class="badge bg-secondary d-none">Aguardando teste</span>
-                        </div>
-                        <div class="mb-3">
-                            <label>Access Token</label>
-                            <input type="text" class="form-control" name="META_ACCESS_TOKEN"
-                                   value="{{ $settings['META_ACCESS_TOKEN'] }}">
-                        </div>
-                        <div class="mb-3">
-                            <label>Phone Number ID</label>
-                            <input type="text" class="form-control" name="META_PHONE_NUMBER_ID"
-                                   value="{{ $settings['META_PHONE_NUMBER_ID'] }}">
-                        </div>
-                        <div class="d-flex flex-column flex-sm-row gap-2 mb-2">
-                            <button type="button" class="btn btn-outline-secondary" id="btn-test-meta"
-                                    data-test-url="{{ route('Platform.settings.test', 'meta') }}">
-                                <i class="fas fa-plug me-1"></i> Testar Conexão Meta
-                            </button>
-                            <button type="button" class="btn btn-outline-primary" id="btn-toggle-meta-send">
-                                <i class="fas fa-paper-plane me-1"></i> Testar Envio Meta
-                            </button>
-                        </div>
-                        <small id="meta-test-message" class="text-muted d-block mb-2"></small>
 
-                        <div id="meta-send-form" class="border rounded p-3 bg-light d-none">
-                            <div class="mb-2">
-                                <label for="meta-test-number" class="form-label">Número de destino</label>
-                                <input type="text" id="meta-test-number" class="form-control" placeholder="Ex: 5511999999999">
-                            </div>
-                            <div class="mb-2">
-                                <label for="meta-test-message-input" class="form-label">Mensagem</label>
-                                <textarea id="meta-test-message-input" class="form-control" rows="3">Teste de envio Meta - Plataforma AgeClin</textarea>
-                            </div>
-                            <div class="d-flex flex-column flex-sm-row gap-2 align-items-start align-items-sm-center">
-                                <button type="button" class="btn btn-success" id="btn-send-meta-test"
-                                        data-send-url="{{ route('Platform.settings.test.meta.send') }}">
-                                    <i class="fas fa-paper-plane me-1"></i> Enviar teste
-                                </button>
-                                <span id="meta-send-badge" class="badge bg-secondary d-none">Aguardando envio</span>
-                            </div>
-                            <small id="meta-send-message" class="text-muted d-block mt-2"></small>
-                        </div>
-                    </div>
-
-                    {{-- Z-API --}}
-                    <div class="border rounded p-3 mb-3 whatsapp-provider-section" data-provider="zapi">
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <h6 class="mb-0">📱 Z-API (WhatsApp)</h6>
-                            <span id="zapi-test-badge" class="badge bg-secondary d-none">Aguardando teste</span>
-                        </div>
-                        <div class="mb-3">
-                            <label>API URL</label>
-                            <input type="text" class="form-control" name="ZAPI_API_URL"
-                                   value="{{ $settings['ZAPI_API_URL'] }}" placeholder="https://api.z-api.io">
-                        </div>
-                        <div class="mb-3">
-                            <label>Token</label>
-                            <input type="text" class="form-control" name="ZAPI_TOKEN"
-                                   value="{{ $settings['ZAPI_TOKEN'] }}" placeholder="Token da instância">
-                            <small class="text-muted">Token da instância Z-API (usado na URL).</small>
-                        </div>
-                        <div class="mb-3">
-                            <label>Client Token</label>
-                            <input type="text" class="form-control" name="ZAPI_CLIENT_TOKEN"
-                                   value="{{ $settings['ZAPI_CLIENT_TOKEN'] }}" placeholder="Client-Token de segurança">
-                            <small class="text-muted">Client-Token de segurança da conta (usado no header).</small>
-                        </div>
-                        <div class="mb-3">
-                            <label>Instance ID</label>
-                            <input type="text" class="form-control" name="ZAPI_INSTANCE_ID"
-                                   value="{{ $settings['ZAPI_INSTANCE_ID'] }}" placeholder="ID da instância">
-                            <small class="text-muted">ID da instância Z-API.</small>
-                        </div>
-                        <div class="d-flex flex-column flex-sm-row gap-2 mb-2">
-                            <button type="button" class="btn btn-outline-secondary" id="btn-test-zapi"
-                                    data-test-url="{{ route('Platform.settings.test', 'zapi') }}">
-                                <i class="fas fa-plug me-1"></i> Testar Conexão Z-API
-                            </button>
-                            <button type="button" class="btn btn-outline-primary" id="btn-toggle-zapi-send">
-                                <i class="fas fa-paper-plane me-1"></i> Testar Envio Z-API
-                            </button>
-                        </div>
-                        <small id="zapi-test-message" class="text-muted d-block mb-2"></small>
-
-                        <div id="zapi-send-form" class="border rounded p-3 bg-light d-none">
-                            <div class="mb-2">
-                                <label for="zapi-test-number" class="form-label">Número de destino</label>
-                                <input type="text" id="zapi-test-number" class="form-control" placeholder="Ex: 5511999999999">
-                            </div>
-                            <div class="mb-2">
-                                <label for="zapi-test-message-input" class="form-label">Mensagem</label>
-                                <textarea id="zapi-test-message-input" class="form-control" rows="3">Teste de envio Z-API - Plataforma AgeClin</textarea>
-                            </div>
-                            <div class="d-flex flex-column flex-sm-row gap-2 align-items-start align-items-sm-center">
-                                <button type="button" class="btn btn-success" id="btn-send-zapi-test"
-                                        data-send-url="{{ route('Platform.settings.test.zapi.send') }}">
-                                    <i class="fas fa-paper-plane me-1"></i> Enviar teste
-                                </button>
-                                <span id="zapi-send-badge" class="badge bg-secondary d-none">Aguardando envio</span>
-                            </div>
-                            <small id="zapi-send-message" class="text-muted d-block mt-2"></small>
-                        </div>
-                    </div>
-
-                    {{-- WAHA --}}
-                    <div class="border rounded p-3 mb-3 whatsapp-provider-section" data-provider="waha">
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <h6 class="mb-0">🔄 WAHA (WhatsApp Gateway)</h6>
-                            <span id="waha-test-badge" class="badge bg-secondary d-none">Aguardando teste</span>
-                        </div>
-                        <div class="mb-3">
-                            <label>Base URL</label>
-                            <input type="text" class="form-control" name="WAHA_BASE_URL"
-                                   value="{{ $settings['WAHA_BASE_URL'] }}" placeholder="https://seu-servidor-waha">
-                        </div>
-                        <div class="mb-3">
-                            <label>API Key</label>
-                            <input type="text" class="form-control" name="WAHA_API_KEY"
-                                   value="{{ $settings['WAHA_API_KEY'] }}" placeholder="X-Api-Key">
-                        </div>
-                        <div class="mb-3">
-                            <label>Nome da Sessão</label>
-                            <input type="text" class="form-control" name="WAHA_SESSION"
-                                   value="{{ $settings['WAHA_SESSION'] }}" placeholder="default">
-                        </div>
-                        <div class="d-flex flex-column flex-sm-row gap-2 mb-2">
-                            <button type="button" class="btn btn-outline-secondary" id="btn-test-waha"
-                                    data-test-url="{{ route('Platform.settings.test', 'waha') }}">
-                                <i class="fas fa-plug me-1"></i> Testar Sessão WAHA
-                            </button>
-                            <button type="button" class="btn btn-outline-primary" id="btn-toggle-waha-send">
-                                <i class="fas fa-paper-plane me-1"></i> Testar Envio WAHA
-                            </button>
-                        </div>
-                        <small id="waha-test-message" class="text-muted d-block mb-2"></small>
-
-                        <div id="waha-send-form" class="border rounded p-3 bg-light d-none">
-                            <div class="mb-2">
-                                <label for="waha-test-number" class="form-label">Número de destino</label>
-                                <input type="text" id="waha-test-number" class="form-control" placeholder="Ex: 5511999999999">
-                            </div>
-                            <div class="mb-2">
-                                <label for="waha-test-message-input" class="form-label">Mensagem</label>
-                                <textarea id="waha-test-message-input" class="form-control" rows="3">Teste de envio WAHA - Plataforma AgeClin</textarea>
-                            </div>
-                            <div class="d-flex flex-column flex-sm-row gap-2 align-items-start align-items-sm-center">
-                                <button type="button" class="btn btn-success" id="btn-send-waha-test"
-                                        data-send-url="{{ route('Platform.settings.test.waha.send') }}">
-                                    <i class="fas fa-paper-plane me-1"></i> Enviar teste
-                                </button>
-                                <span id="waha-send-badge" class="badge bg-secondary d-none">Aguardando envio</span>
-                            </div>
-                            <small id="waha-send-message" class="text-muted d-block mt-2"></small>
-                        </div>
-                    </div>
 
                     <div class="d-flex gap-2">
                         <button type="submit" class="btn btn-primary">
@@ -1830,3 +1669,4 @@
         })();
     </script>
 @endpush
+

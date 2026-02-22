@@ -4,95 +4,102 @@
 @section('page', 'integrations')
 
 @section('content')
-
-    <div class="page-header">
-        <h3 class="page-title">Integração Apple Calendar</h3>
-        <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">
-            Cada médico pode conectar sua própria conta do Apple Calendar (iCloud). 
-            Os agendamentos serão sincronizados automaticamente com o calendário do médico conectado.
-        </p>
-
-        <nav aria-label="breadcrumb">
-            <ol class="breadcrumb">
-                <li class="breadcrumb-item">
-                    <a href="{{ workspace_route('tenant.dashboard') }}">Dashboard</a>
-                </li>
-                <li class="breadcrumb-item">
-                    <a href="{{ workspace_route('tenant.integrations.index') }}">Integrações</a>
-                </li>
-                <li class="breadcrumb-item active" aria-current="page">Apple Calendar</li>
-            </ol>
-        </nav>
-    </div>
-
-    {{-- Alertas --}}
-    @if (session('success'))
-        <div class="bg-green-50 border border-green-200 rounded-lg p-4 mb-6 dark:bg-green-900/20 dark:border-green-800">
-            <div class="flex items-center">
-                <x-icon name="information-outline" class="w-5 h-5 text-green-600 mr-2" />
-                <span class="text-green-800 dark:text-green-200">{{ session('success') }}</span>
-                <button type="button" data-dismiss="alert" class="ml-auto text-green-600 hover:text-green-800 dark:text-green-400 dark:hover:text-green-200">
-                    <x-icon name="information-outline" class="w-4 h-4" />
-                </button>
-            </div>
+    <div class="max-w-6xl mx-auto space-y-6">
+        <!-- PAGE_HEADER_START -->
+        <div class="px-6 pt-6">
+            <nav class="min-w-0" aria-label="breadcrumb">
+                <ol class="flex flex-wrap items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
+                    <li>
+                        <a href="{{ workspace_route('tenant.dashboard') }}" class="inline-flex items-center gap-2 text-gray-700 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white">
+                            <x-icon name="home-outline" size="text-base" />
+                            Dashboard
+                        </a>
+                    </li>
+                    <li class="flex items-center gap-2">
+                        <x-icon name="chevron-right" size="text-sm" class="text-gray-400" />
+                        <a href="{{ workspace_route('tenant.integrations.index') }}" class="text-gray-700 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white">Integrações</a>
+                    </li>
+                    <li class="flex items-center gap-2">
+                        <x-icon name="chevron-right" size="text-sm" class="text-gray-400" />
+                        <span class="text-gray-900 dark:text-white font-semibold">Apple Calendar</span>
+                    </li>
+                </ol>
+            </nav>
         </div>
-    @endif
+        <!-- PAGE_HEADER_END -->
 
-    @if (session('error'))
-        <div class="bg-red-50 border border-red-200 rounded-lg p-4 mb-6 dark:bg-red-900/20 dark:border-red-800">
-            <div class="flex items-center">
-                <x-icon name="information-outline" class="w-5 h-5 text-red-600 mr-2" />
-                <span class="text-red-800 dark:text-red-200">{{ session('error') }}</span>
-                <button type="button" data-dismiss="alert" class="ml-auto text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-200">
-                    <x-icon name="information-outline" class="w-4 h-4" />
-                </button>
-            </div>
-        </div>
-    @endif
-
-    @if (session('info'))
-        <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6 dark:bg-blue-900/20 dark:border-blue-800">
-            <div class="flex items-center">
-                <x-icon name="information-outline" class="w-5 h-5 text-blue-600 mr-2" />
-                <span class="text-blue-800 dark:text-blue-200">{{ session('info') }}</span>
-                <button type="button" data-dismiss="alert" class="ml-auto text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-200">
-                    <x-icon name="information-outline" class="w-4 h-4" />
-                </button>
-            </div>
-        </div>
-    @endif
-
-    @if (!isset($hasAppleCalendarTable) || !$hasAppleCalendarTable)
-        <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-5 mb-6 dark:bg-yellow-900/20 dark:border-yellow-800">
-            <div class="flex items-start">
-                <x-icon name="information-outline" class="w-6 h-6 text-yellow-600 mr-3 mt-0.5" />
-                <div>
-                    <h5 class="text-lg font-semibold text-yellow-800 dark:text-yellow-200">Migrations Pendentes</h5>
-                    <p class="text-sm text-yellow-800 dark:text-yellow-200 mt-2">
-                        A tabela <code>apple_calendar_tokens</code> ainda não foi criada. 
-                        Execute as migrations para ativar a integração com Apple Calendar.
-                    </p>
-                    <p class="text-sm text-yellow-800 dark:text-yellow-200 mt-3">
-                        <strong>Opção 1 (Recomendado):</strong> Execute o script SQL em 
-                        <code>database/migrations/tenant/apple_calendar_migration.sql</code> diretamente no banco do tenant.
-                    </p>
-                    <p class="text-sm text-yellow-800 dark:text-yellow-200 mt-2">
-                        <strong>Opção 2:</strong> Execute via Artisan quando o tenant estiver ativo:
-                    </p>
-                    <pre class="bg-yellow-100 text-yellow-900 p-3 rounded-lg mt-2 overflow-x-auto"><code>php artisan migrate --database=tenant --path=database/migrations/tenant/2025_12_03_084550_add_apple_calendar_fields_to_appointments_table.php
-php artisan migrate --database=tenant --path=database/migrations/tenant/2025_12_03_084556_create_apple_calendar_tokens_table.php</code></pre>
+        @if (session('success'))
+            <div class="bg-green-50 border border-green-200 rounded-lg p-4 mb-6 dark:bg-green-900/20 dark:border-green-800">
+                <div class="flex items-center">
+                    <x-icon name="information-outline" class="w-5 h-5 text-green-600 mr-2" />
+                    <span class="text-green-800 dark:text-green-200">{{ session('success') }}</span>
+                    <button type="button" data-dismiss="alert" class="ml-auto text-green-600 hover:text-green-800 dark:text-green-400 dark:hover:text-green-200">
+                        <x-icon name="information-outline" class="w-4 h-4" />
+                    </button>
                 </div>
             </div>
-        </div>
-    @endif
+        @endif
 
-    <div class="max-w-6xl mx-auto space-y-6">
+        @if (session('error'))
+            <div class="bg-red-50 border border-red-200 rounded-lg p-4 mb-6 dark:bg-red-900/20 dark:border-red-800">
+                <div class="flex items-center">
+                    <x-icon name="information-outline" class="w-5 h-5 text-red-600 mr-2" />
+                    <span class="text-red-800 dark:text-red-200">{{ session('error') }}</span>
+                    <button type="button" data-dismiss="alert" class="ml-auto text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-200">
+                        <x-icon name="information-outline" class="w-4 h-4" />
+                    </button>
+                </div>
+            </div>
+        @endif
+
+        @if (session('info'))
+            <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6 dark:bg-blue-900/20 dark:border-blue-800">
+                <div class="flex items-center">
+                    <x-icon name="information-outline" class="w-5 h-5 text-blue-600 mr-2" />
+                    <span class="text-blue-800 dark:text-blue-200">{{ session('info') }}</span>
+                    <button type="button" data-dismiss="alert" class="ml-auto text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-200">
+                        <x-icon name="information-outline" class="w-4 h-4" />
+                    </button>
+                </div>
+            </div>
+        @endif
+
+        @if (!isset($hasAppleCalendarTable) || !$hasAppleCalendarTable)
+            <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-5 mb-6 dark:bg-yellow-900/20 dark:border-yellow-800">
+                <div class="flex items-start">
+                    <x-icon name="information-outline" class="w-6 h-6 text-yellow-600 mr-3 mt-0.5" />
+                    <div>
+                        <h5 class="text-lg font-semibold text-yellow-800 dark:text-yellow-200">Migrations Pendentes</h5>
+                        <p class="text-sm text-yellow-800 dark:text-yellow-200 mt-2">
+                            A tabela <code>apple_calendar_tokens</code> ainda não foi criada.
+                            Execute as migrations para ativar a integração com Apple Calendar.
+                        </p>
+                        <p class="text-sm text-yellow-800 dark:text-yellow-200 mt-3">
+                            <strong>Opção 1 (Recomendado):</strong> Execute o script SQL em
+                            <code>database/migrations/tenant/apple_calendar_migration.sql</code> diretamente no banco do tenant.
+                        </p>
+                        <p class="text-sm text-yellow-800 dark:text-yellow-200 mt-2">
+                            <strong>Opção 2:</strong> Execute via Artisan quando o tenant estiver ativo:
+                        </p>
+                        <pre class="bg-yellow-100 text-yellow-900 p-3 rounded-lg mt-2 overflow-x-auto"><code>php artisan migrate --database=tenant --path=database/migrations/tenant/2025_12_03_084550_add_apple_calendar_fields_to_appointments_table.php
+                        php artisan migrate --database=tenant --path=database/migrations/tenant/2025_12_03_084556_create_apple_calendar_tokens_table.php</code></pre>
+                    </div>
+                </div>
+            </div>
+        @endif
+        <!-- CARD_HOW_IT_WORKS_START -->
         <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
-            <div class="p-6 border-b border-gray-200 dark:border-gray-700">
-                <h4 class="text-xl font-semibold text-gray-900 dark:text-white flex items-center">
-                    <x-icon name="information-outline" class="w-5 h-5 mr-2 text-blue-600" />
-                    Como Funciona a Integração
-                </h4>
+            <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-800">
+                <div class="flex items-start gap-2">
+                    <x-icon name="apple" class="text-blue-600 mt-0.5" />
+                    <div>
+                        <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Integração Apple Calendar por Médico</h2>
+                        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                            Cada médico pode conectar sua própria conta do Apple Calendar (iCloud).
+                            Os agendamentos serão sincronizados automaticamente com o calendário do médico conectado.
+                        </p>
+                    </div>
+                </div>
             </div>
             <div class="p-6">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -137,22 +144,17 @@ php artisan migrate --database=tenant --path=database/migrations/tenant/2025_12_
                     <div class="flex items-start">
                         <x-icon name="information-outline" class="w-5 h-5 text-yellow-600 mr-2 mt-0.5" />
                         <p class="text-sm text-yellow-800 dark:text-yellow-200">
-                            <strong>Importante:</strong> Para usar o iCloud, você precisa gerar uma senha de app específica em 
-                            <a href="https://appleid.apple.com/account/manage" target="_blank" rel="noopener noreferrer" class="underline">appleid.apple.com</a>. 
+                            <strong>Importante:</strong> Para usar o iCloud, você precisa gerar uma senha de app específica em
+                            <a href="https://appleid.apple.com/account/manage" target="_blank" rel="noopener noreferrer" class="underline">appleid.apple.com</a>.
                             A senha da sua conta Apple não funcionará para CalDAV.
                         </p>
                     </div>
                 </div>
             </div>
         </div>
-
+        <!-- CARD_HOW_IT_WORKS_END -->
+        <!-- CARD_DOCTORS_START -->
         <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
-            <div class="p-6 border-b border-gray-200 dark:border-gray-700">
-                <h4 class="text-xl font-semibold text-gray-900 dark:text-white flex items-center">
-                    <x-icon name="apple" class=" text-blue-600 mr-2" />
-                    Integração Apple Calendar por Médico
-                </h4>
-            </div>
             <div class="p-6">
                 <div class="overflow-x-auto">
                     <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
@@ -214,20 +216,16 @@ php artisan migrate --database=tenant --path=database/migrations/tenant/2025_12_
                                             if ($user->role === 'admin') {
                                                 $canConnect = true;
                                             } elseif ($user->role === 'doctor') {
-                                                // Carregar relacionamento se não estiver carregado
                                                 if (!$user->relationLoaded('doctor')) {
                                                     $user->load('doctor');
                                                 }
-                                                // Verificar se o médico do usuário corresponde ao médico da linha
                                                 $canConnect = $user->doctor && (string) $user->doctor->id === (string) $doctor->id;
                                             } elseif ($user->role === 'user') {
-                                                // Usuário comum não pode conectar, apenas visualizar
                                                 $canConnect = false;
                                             }
                                         @endphp
-                                        
+
                                         @if ($canConnect)
-                                            {{-- Admin e médico (para si mesmo) podem conectar/desconectar --}}
                                             @if (isset($hasAppleCalendarTable) && $hasAppleCalendarTable && $doctor->appleCalendarToken)
                                                 <div class="flex flex-wrap justify-end gap-2">
                                                     <button type="button"
@@ -237,7 +235,7 @@ php artisan migrate --database=tenant --path=database/migrations/tenant/2025_12_
                                                             title="Status da integração">
                                                         <x-icon name="information-outline" class="" />
                                                     </button>
-                                                    <form action="{{ workspace_route('tenant.integrations.apple.disconnect', $doctor->id) }}"
+                                                    <form action="{{ workspace_route('tenant.integrations.apple.disconnect', ['doctor' => $doctor->id]) }}"
                                                           method="POST"
                                                           data-confirm="disconnect-apple"
                                                           data-confirm-title="Desconectar Apple Calendar"
@@ -255,7 +253,7 @@ php artisan migrate --database=tenant --path=database/migrations/tenant/2025_12_
                                                 </div>
                                             @else
                                                 @if (isset($hasAppleCalendarTable) && $hasAppleCalendarTable)
-                                                    <a href="{{ workspace_route('tenant.integrations.apple.connect.form', $doctor->id) }}"
+                                                    <a href="{{ workspace_route('tenant.integrations.apple.connect.form', ['doctor' => $doctor->id]) }}"
                                                        class="btn btn-primary">
                                                         <x-icon name="apple" class=" mr-1" />
                                                         Conectar Apple
@@ -267,7 +265,6 @@ php artisan migrate --database=tenant --path=database/migrations/tenant/2025_12_
                                                 @endif
                                             @endif
                                         @else
-                                            {{-- Usuário comum: apenas visualiza status --}}
                                             <span class="text-gray-500 dark:text-gray-400">
                                                 Apenas visualização
                                             </span>
@@ -293,6 +290,6 @@ php artisan migrate --database=tenant --path=database/migrations/tenant/2025_12_
                 </div>
             </div>
         </div>
+        <!-- CARD_DOCTORS_END -->
     </div>
-
 @endsection

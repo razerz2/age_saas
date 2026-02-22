@@ -11,6 +11,7 @@ use App\Models\Platform\Estado;
 use App\Models\Platform\Cidade;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 
 class SettingsController extends Controller
@@ -61,13 +62,22 @@ class SettingsController extends Controller
             
             // WhatsApp
             'whatsapp.driver' => TenantSetting::get('whatsapp.driver', 'global'),
-            'whatsapp.api_url' => TenantSetting::get('whatsapp.api_url', ''),
-            'whatsapp.api_token' => TenantSetting::get('whatsapp.api_token', ''),
-            'whatsapp.sender' => TenantSetting::get('whatsapp.sender', ''),
+            'WHATSAPP_PROVIDER' => TenantSetting::get('whatsapp.provider', 'whatsapp_business'),
+            'META_ACCESS_TOKEN' => TenantSetting::get('whatsapp.meta.access_token', ''),
+            'META_PHONE_NUMBER_ID' => TenantSetting::get('whatsapp.meta.phone_number_id', ''),
+            'ZAPI_API_URL' => TenantSetting::get('whatsapp.zapi.api_url', 'https://api.z-api.io'),
+            'ZAPI_TOKEN' => TenantSetting::get('whatsapp.zapi.token', ''),
+            'ZAPI_CLIENT_TOKEN' => TenantSetting::get('whatsapp.zapi.client_token', ''),
+            'ZAPI_INSTANCE_ID' => TenantSetting::get('whatsapp.zapi.instance_id', ''),
+            'WAHA_BASE_URL' => TenantSetting::get('whatsapp.waha.base_url', ''),
+            'WAHA_API_KEY' => TenantSetting::get('whatsapp.waha.api_key', ''),
+            'WAHA_SESSION' => TenantSetting::get('whatsapp.waha.session', 'default'),
             
             // Integrações
             'integrations.google_calendar.enabled' => TenantSetting::isEnabled('integrations.google_calendar.enabled'),
             'integrations.google_calendar.auto_sync' => TenantSetting::isEnabled('integrations.google_calendar.auto_sync'),
+            'integrations.apple_calendar.enabled' => TenantSetting::isEnabled('integrations.apple_calendar.enabled'),
+            'integrations.apple_calendar.auto_sync' => TenantSetting::isEnabled('integrations.apple_calendar.auto_sync'),
             
             // Profissionais
             'professional.customization_enabled' => TenantSetting::get('professional.customization_enabled') === 'true',
@@ -86,6 +96,7 @@ class SettingsController extends Controller
         
         // Verificar se Google Calendar está cadastrado e configurado
         $googleCalendarIntegration = Integrations::where('key', 'google_calendar')->first();
+        $appleCalendarIntegration = Integrations::where('key', 'apple_calendar')->first();
         
         // Considera válida se existe, está habilitada e tem config não vazio
         $hasGoogleCalendarIntegration = false;
@@ -106,6 +117,25 @@ class SettingsController extends Controller
             $hasGoogleCalendarIntegration = $googleCalendarIntegration->is_enabled && $hasConfig;
         }
 
+        // Considera válida se existe, está habilitada e tem config não vazio
+        $hasAppleCalendarIntegration = false;
+
+        if ($appleCalendarIntegration) {
+            $hasConfig = false;
+            if ($appleCalendarIntegration->config) {
+                $config = $appleCalendarIntegration->config;
+                if (is_array($config)) {
+                    $hasConfig = !empty($config);
+                } elseif (is_string($config)) {
+                    $hasConfig = !empty(trim($config));
+                } else {
+                    $hasConfig = !empty($config);
+                }
+            }
+
+            $hasAppleCalendarIntegration = $appleCalendarIntegration->is_enabled && $hasConfig;
+        }
+
         // Obter tenant atual para gerar o link de agendamento público
         $currentTenant = Tenant::current();
         $publicBookingUrl = null;
@@ -122,6 +152,8 @@ class SettingsController extends Controller
             'integrations', 
             'hasGoogleCalendarIntegration', 
             'googleCalendarIntegration', 
+            'hasAppleCalendarIntegration',
+            'appleCalendarIntegration',
             'publicBookingUrl',
             'currentTenant',
             'localizacao',
@@ -285,12 +317,12 @@ class SettingsController extends Controller
      */
     public function updateNotifications(Request $request)
     {
-        $request->validate([
+        $validator = Validator::make($request->all(), [
             'notifications_appointments_enabled' => 'nullable|boolean',
             'notifications_form_responses_enabled' => 'nullable|boolean',
             'notifications_send_email_to_patients' => 'nullable|boolean',
             'notifications_send_whatsapp_to_patients' => 'nullable|boolean',
-            
+
             'email_driver' => 'required|in:global,tenancy',
             'email_host' => 'required_if:email_driver,tenancy',
             'email_port' => 'required_if:email_driver,tenancy',
@@ -298,50 +330,116 @@ class SettingsController extends Controller
             'email_password' => 'required_if:email_driver,tenancy',
             'email_from_name' => 'nullable|string',
             'email_from_address' => 'nullable|email',
-            
+
             'whatsapp_driver' => 'required|in:global,tenancy',
-            'whatsapp_api_url' => 'required_if:whatsapp_driver,tenancy|url',
-            'whatsapp_api_token' => 'required_if:whatsapp_driver,tenancy',
-            'whatsapp_sender' => 'required_if:whatsapp_driver,tenancy',
+            'whatsapp_provider' => 'nullable|in:whatsapp_business,zapi,waha',
+            'META_ACCESS_TOKEN' => 'nullable|string',
+            'META_PHONE_NUMBER_ID' => 'nullable|string',
+            'ZAPI_API_URL' => 'nullable|url',
+            'ZAPI_TOKEN' => 'nullable|string',
+            'ZAPI_CLIENT_TOKEN' => 'nullable|string',
+            'ZAPI_INSTANCE_ID' => 'nullable|string',
+            'WAHA_BASE_URL' => 'nullable|url',
+            'WAHA_API_KEY' => 'nullable|string',
+            'WAHA_SESSION' => 'nullable|string',
         ]);
 
-        // Notificações internas
-        // Checkboxes não marcados não são enviados no request, então verificamos explicitamente
+        $validator->after(function ($validator) use ($request) {
+            if ($request->input('whatsapp_driver') !== 'tenancy') {
+                return;
+            }
+
+            $provider = $request->input('whatsapp_provider');
+            if (!in_array($provider, ['whatsapp_business', 'zapi', 'waha'], true)) {
+                $validator->errors()->add('whatsapp_provider', 'Selecione um provedor de WhatsApp valido.');
+                return;
+            }
+
+            if ($provider === 'whatsapp_business') {
+                if (!$request->filled('META_ACCESS_TOKEN')) {
+                    $validator->errors()->add('META_ACCESS_TOKEN', 'O Access Token e obrigatorio para o provedor Meta.');
+                }
+                if (!$request->filled('META_PHONE_NUMBER_ID')) {
+                    $validator->errors()->add('META_PHONE_NUMBER_ID', 'O Phone Number ID e obrigatorio para o provedor Meta.');
+                }
+            }
+
+            if ($provider === 'zapi') {
+                if (!$request->filled('ZAPI_API_URL')) {
+                    $validator->errors()->add('ZAPI_API_URL', 'A API URL e obrigatoria para o provedor Z-API.');
+                }
+                if (!$request->filled('ZAPI_TOKEN')) {
+                    $validator->errors()->add('ZAPI_TOKEN', 'O Token e obrigatorio para o provedor Z-API.');
+                }
+                if (!$request->filled('ZAPI_CLIENT_TOKEN')) {
+                    $validator->errors()->add('ZAPI_CLIENT_TOKEN', 'O Client Token e obrigatorio para o provedor Z-API.');
+                }
+                if (!$request->filled('ZAPI_INSTANCE_ID')) {
+                    $validator->errors()->add('ZAPI_INSTANCE_ID', 'O Instance ID e obrigatorio para o provedor Z-API.');
+                }
+            }
+
+            if ($provider === 'waha') {
+                if (!$request->filled('WAHA_BASE_URL')) {
+                    $validator->errors()->add('WAHA_BASE_URL', 'A Base URL e obrigatoria para o provedor WAHA.');
+                }
+                if (!$request->filled('WAHA_API_KEY')) {
+                    $validator->errors()->add('WAHA_API_KEY', 'A API Key e obrigatoria para o provedor WAHA.');
+                }
+                if (!$request->filled('WAHA_SESSION')) {
+                    $validator->errors()->add('WAHA_SESSION', 'O nome da sessao e obrigatorio para o provedor WAHA.');
+                }
+            }
+        });
+
+        $validated = $validator->validate();
+
         TenantSetting::set('notifications.appointments.enabled', $request->has('notifications_appointments_enabled') ? 'true' : 'false');
         TenantSetting::set('notifications.form_responses.enabled', $request->has('notifications_form_responses_enabled') ? 'true' : 'false');
 
-        // Notificações aos pacientes
         TenantSetting::set('notifications.send_email_to_patients', $request->has('notifications_send_email_to_patients') ? 'true' : 'false');
         TenantSetting::set('notifications.send_whatsapp_to_patients', $request->has('notifications_send_whatsapp_to_patients') ? 'true' : 'false');
 
-        // Configurações de Email
-        TenantSetting::set('email.driver', $request->email_driver);
-        if ($request->email_driver === 'tenancy') {
-            TenantSetting::set('email.host', $request->email_host);
-            TenantSetting::set('email.port', $request->email_port);
-            TenantSetting::set('email.username', $request->email_username);
-            TenantSetting::set('email.password', $request->email_password);
-            TenantSetting::set('email.from_name', $request->email_from_name ?? '');
-            TenantSetting::set('email.from_address', $request->email_from_address ?? '');
+        TenantSetting::set('email.driver', $validated['email_driver']);
+        if ($validated['email_driver'] === 'tenancy') {
+            TenantSetting::set('email.host', $validated['email_host']);
+            TenantSetting::set('email.port', $validated['email_port']);
+            TenantSetting::set('email.username', $validated['email_username']);
+            TenantSetting::set('email.password', $validated['email_password']);
+            TenantSetting::set('email.from_name', $validated['email_from_name'] ?? '');
+            TenantSetting::set('email.from_address', $validated['email_from_address'] ?? '');
         } else {
-            // Limpar configurações quando usar global
             TenantSetting::set('email.host', '');
             TenantSetting::set('email.port', '');
             TenantSetting::set('email.username', '');
             TenantSetting::set('email.password', '');
         }
 
-        // Configurações de WhatsApp
-        TenantSetting::set('whatsapp.driver', $request->whatsapp_driver);
-        if ($request->whatsapp_driver === 'tenancy') {
-            TenantSetting::set('whatsapp.api_url', $request->whatsapp_api_url);
-            TenantSetting::set('whatsapp.api_token', $request->whatsapp_api_token);
-            TenantSetting::set('whatsapp.sender', $request->whatsapp_sender);
+        TenantSetting::set('whatsapp.driver', $validated['whatsapp_driver']);
+        if ($validated['whatsapp_driver'] === 'tenancy') {
+            $provider = $validated['whatsapp_provider'];
+
+            TenantSetting::set('whatsapp.provider', $provider);
+            TenantSetting::set('whatsapp.meta.access_token', $validated['META_ACCESS_TOKEN'] ?? '');
+            TenantSetting::set('whatsapp.meta.phone_number_id', $validated['META_PHONE_NUMBER_ID'] ?? '');
+            TenantSetting::set('whatsapp.zapi.api_url', $validated['ZAPI_API_URL'] ?? '');
+            TenantSetting::set('whatsapp.zapi.token', $validated['ZAPI_TOKEN'] ?? '');
+            TenantSetting::set('whatsapp.zapi.client_token', $validated['ZAPI_CLIENT_TOKEN'] ?? '');
+            TenantSetting::set('whatsapp.zapi.instance_id', $validated['ZAPI_INSTANCE_ID'] ?? '');
+            TenantSetting::set('whatsapp.waha.base_url', $validated['WAHA_BASE_URL'] ?? '');
+            TenantSetting::set('whatsapp.waha.api_key', $validated['WAHA_API_KEY'] ?? '');
+            TenantSetting::set('whatsapp.waha.session', $validated['WAHA_SESSION'] ?? 'default');
         } else {
-            // Limpar configurações quando usar global
-            TenantSetting::set('whatsapp.api_url', '');
-            TenantSetting::set('whatsapp.api_token', '');
-            TenantSetting::set('whatsapp.sender', '');
+            TenantSetting::set('whatsapp.provider', '');
+            TenantSetting::set('whatsapp.meta.access_token', '');
+            TenantSetting::set('whatsapp.meta.phone_number_id', '');
+            TenantSetting::set('whatsapp.zapi.api_url', '');
+            TenantSetting::set('whatsapp.zapi.token', '');
+            TenantSetting::set('whatsapp.zapi.client_token', '');
+            TenantSetting::set('whatsapp.zapi.instance_id', '');
+            TenantSetting::set('whatsapp.waha.base_url', '');
+            TenantSetting::set('whatsapp.waha.api_key', '');
+            TenantSetting::set('whatsapp.waha.session', '');
         }
 
         return redirect()->route('tenant.settings.index', ['slug' => tenant()->subdomain])
@@ -356,20 +454,22 @@ class SettingsController extends Controller
         $request->validate([
             'integrations_google_calendar_enabled' => 'boolean',
             'integrations_google_calendar_auto_sync' => 'boolean',
+            'integrations_apple_calendar_enabled' => 'boolean',
+            'integrations_apple_calendar_auto_sync' => 'boolean',
         ]);
 
         // Verificar se Google Calendar está cadastrado antes de permitir habilitar
         $googleCalendarIntegration = Integrations::where('key', 'google_calendar')->first();
-        
+        $appleCalendarIntegration = Integrations::where('key', 'apple_calendar')->first();
+
         if ($request->has('integrations_google_calendar_enabled')) {
-            // Verificar se a integração está cadastrada e configurada
             if (!$googleCalendarIntegration || !$googleCalendarIntegration->is_enabled || empty($googleCalendarIntegration->config)) {
                 return redirect()->route('tenant.settings.index', ['slug' => tenant()->subdomain])
                     ->with('error', 'Não é possível habilitar o Google Calendar. Cadastre primeiro a integração em Integrações com a chave "google_calendar" e configure a API.');
             }
-            
+
             TenantSetting::enable('integrations.google_calendar.enabled');
-            
+
             if ($request->has('integrations_google_calendar_auto_sync')) {
                 TenantSetting::enable('integrations.google_calendar.auto_sync');
             } else {
@@ -378,6 +478,24 @@ class SettingsController extends Controller
         } else {
             TenantSetting::disable('integrations.google_calendar.enabled');
             TenantSetting::disable('integrations.google_calendar.auto_sync');
+        }
+
+        if ($request->has('integrations_apple_calendar_enabled')) {
+            if (!$appleCalendarIntegration || !$appleCalendarIntegration->is_enabled || empty($appleCalendarIntegration->config)) {
+                return redirect()->route('tenant.settings.index', ['slug' => tenant()->subdomain])
+                    ->with('error', 'Não é possível habilitar o Apple Calendar. Cadastre primeiro a integração em Integrações com a chave "apple_calendar" e configure a API.');
+            }
+
+            TenantSetting::enable('integrations.apple_calendar.enabled');
+
+            if ($request->has('integrations_apple_calendar_auto_sync')) {
+                TenantSetting::enable('integrations.apple_calendar.auto_sync');
+            } else {
+                TenantSetting::disable('integrations.apple_calendar.auto_sync');
+            }
+        } else {
+            TenantSetting::disable('integrations.apple_calendar.enabled');
+            TenantSetting::disable('integrations.apple_calendar.auto_sync');
         }
 
         return redirect()->route('tenant.settings.index', ['slug' => tenant()->subdomain])
@@ -551,3 +669,4 @@ class SettingsController extends Controller
             ->with('success', 'Configurações de aparência atualizadas com sucesso.');
     }
 }
+

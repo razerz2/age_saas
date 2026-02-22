@@ -51,6 +51,7 @@ use App\Http\Controllers\Tenant\NotificationController;
 
 // Settings
 use App\Http\Controllers\Tenant\SettingsController;
+use App\Http\Controllers\Tenant\WhatsAppSettingsTestController;
 
 // Recurring Appointments
 use App\Http\Controllers\Tenant\RecurringAppointmentController;
@@ -745,6 +746,15 @@ Route::prefix('workspace/{slug}')
             Route::post('settings/appointments', [SettingsController::class, 'updateAppointments'])->name('settings.update.appointments');
             Route::post('settings/calendar', [SettingsController::class, 'updateCalendar'])->name('settings.update.calendar');
             Route::post('settings/notifications', [SettingsController::class, 'updateNotifications'])->name('settings.update.notifications');
+            Route::get('settings/whatsapp/test/{service}', [WhatsAppSettingsTestController::class, 'testConnection'])
+                ->where('service', 'meta|zapi|waha')
+                ->name('settings.whatsapp.test.connection');
+            Route::post('settings/whatsapp/test/meta/send', [WhatsAppSettingsTestController::class, 'testMetaSend'])
+                ->name('settings.whatsapp.test.meta.send');
+            Route::post('settings/whatsapp/test/zapi/send', [WhatsAppSettingsTestController::class, 'testZapiSend'])
+                ->name('settings.whatsapp.test.zapi.send');
+            Route::post('settings/whatsapp/test/waha/send', [WhatsAppSettingsTestController::class, 'testWahaSend'])
+                ->name('settings.whatsapp.test.waha.send');
             Route::post('settings/integrations', [SettingsController::class, 'updateIntegrations'])->name('settings.update.integrations');
             Route::post('settings/user-defaults', [SettingsController::class, 'updateUserDefaults'])->name('settings.update.user-defaults');
             Route::post('settings/professionals', [SettingsController::class, 'updateProfessionals'])->name('settings.update.professionals');

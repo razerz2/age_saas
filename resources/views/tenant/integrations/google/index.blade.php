@@ -4,75 +4,84 @@
 @section('page', 'integrations')
 
 @section('content')
-
-    <div class="page-header">
-        <h3 class="page-title">Integração Google Calendar</h3>
-        <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">
-            Cada médico pode conectar sua própria conta do Google Calendar. 
-            Os agendamentos serão sincronizados automaticamente com o calendário do médico conectado.
-        </p>
-
-        <nav aria-label="breadcrumb">
-            <ol class="breadcrumb">
-                <li class="breadcrumb-item">
-                    <a href="{{ workspace_route('tenant.dashboard') }}">Dashboard</a>
-                </li>
-                <li class="breadcrumb-item">
-                    <a href="{{ workspace_route('tenant.integrations.index') }}">Integrações</a>
-                </li>
-                <li class="breadcrumb-item active" aria-current="page">Google Calendar</li>
-            </ol>
-        </nav>
-    </div>
-
-    {{-- Alertas --}}
-    @if (session('success'))
-        <div class="bg-green-50 border border-green-200 rounded-lg p-4 mb-6 dark:bg-green-900/20 dark:border-green-800">
-            <div class="flex items-center">
-                <x-icon name="information-outline" class="w-5 h-5 text-green-600 mr-2" />
-                <span class="text-green-800 dark:text-green-200">{{ session('success') }}</span>
-                <button type="button" data-dismiss="alert" class="ml-auto text-green-600 hover:text-green-800 dark:text-green-400 dark:hover:text-green-200">
-                    <x-icon name="information-outline" class="w-4 h-4" />
-                </button>
-            </div>
-        </div>
-    @endif
-
-    @if (session('error'))
-        <div class="bg-red-50 border border-red-200 rounded-lg p-4 mb-6 dark:bg-red-900/20 dark:border-red-800">
-            <div class="flex items-center">
-                <x-icon name="information-outline" class="w-5 h-5 text-red-600 mr-2" />
-                <span class="text-red-800 dark:text-red-200">{{ session('error') }}</span>
-                <button type="button" data-dismiss="alert" class="ml-auto text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-200">
-                    <x-icon name="information-outline" class="w-4 h-4" />
-                </button>
-            </div>
-        </div>
-    @endif
-
-    @if (session('info'))
-        <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6 dark:bg-blue-900/20 dark:border-blue-800">
-            <div class="flex items-center">
-                <x-icon name="information-outline" class="w-5 h-5 text-blue-600 mr-2" />
-                <span class="text-blue-800 dark:text-blue-200">{{ session('info') }}</span>
-                <button type="button" data-dismiss="alert" class="ml-auto text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-200">
-                    <x-icon name="information-outline" class="w-4 h-4" />
-                </button>
-            </div>
-        </div>
-    @endif
-
     <div class="max-w-6xl mx-auto space-y-6">
+        <!-- PAGE_HEADER_START -->
+        <div class="px-6 pt-6">
+            <nav class="min-w-0" aria-label="breadcrumb">
+                <ol class="flex flex-wrap items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
+                    <li>
+                        <a href="{{ workspace_route('tenant.dashboard') }}" class="inline-flex items-center gap-2 text-gray-700 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white">
+                            <x-icon name="home-outline" size="text-base" />
+                            Dashboard
+                        </a>
+                    </li>
+                    <li class="flex items-center gap-2">
+                        <x-icon name="chevron-right" size="text-sm" class="text-gray-400" />
+                        <a href="{{ workspace_route('tenant.integrations.index') }}" class="text-gray-700 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white">Integrações</a>
+                    </li>
+                    <li class="flex items-center gap-2">
+                        <x-icon name="chevron-right" size="text-sm" class="text-gray-400" />
+                        <span class="text-gray-900 dark:text-white font-semibold">Google Calendar</span>
+                    </li>
+                </ol>
+            </nav>
+        </div>
+        <!-- PAGE_HEADER_END -->
+
+        @if (session('success'))
+            <div class="bg-green-50 border border-green-200 rounded-lg p-4 mb-6 dark:bg-green-900/20 dark:border-green-800">
+                <div class="flex items-center">
+                    <x-icon name="information-outline" class="w-5 h-5 text-green-600 mr-2" />
+                    <span class="text-green-800 dark:text-green-200">{{ session('success') }}</span>
+                    <button type="button" data-dismiss="alert" class="ml-auto text-green-600 hover:text-green-800 dark:text-green-400 dark:hover:text-green-200">
+                        <x-icon name="information-outline" class="w-4 h-4" />
+                    </button>
+                </div>
+            </div>
+        @endif
+
+        @if (session('error'))
+            <div class="bg-red-50 border border-red-200 rounded-lg p-4 mb-6 dark:bg-red-900/20 dark:border-red-800">
+                <div class="flex items-center">
+                    <x-icon name="information-outline" class="w-5 h-5 text-red-600 mr-2" />
+                    <span class="text-red-800 dark:text-red-200">{{ session('error') }}</span>
+                    <button type="button" data-dismiss="alert" class="ml-auto text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-200">
+                        <x-icon name="information-outline" class="w-4 h-4" />
+                    </button>
+                </div>
+            </div>
+        @endif
+
+        @if (session('info'))
+            <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6 dark:bg-blue-900/20 dark:border-blue-800">
+                <div class="flex items-center">
+                    <x-icon name="information-outline" class="w-5 h-5 text-blue-600 mr-2" />
+                    <span class="text-blue-800 dark:text-blue-200">{{ session('info') }}</span>
+                    <button type="button" data-dismiss="alert" class="ml-auto text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-200">
+                        <x-icon name="information-outline" class="w-4 h-4" />
+                    </button>
+                </div>
+            </div>
+        @endif
+
+        <!-- CARD_HOW_IT_WORKS_START -->
         <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
-            <div class="p-6 border-b border-gray-200 dark:border-gray-700">
-                <h4 class="text-xl font-semibold text-gray-900 dark:text-white flex items-center">
-                    <x-icon name="information-outline" class="w-5 h-5 mr-2 text-blue-600" />
-                    Como Funciona a Integração
-                </h4>
+            <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-800">
+                <div class="flex items-start gap-2">
+                    <x-icon name="google" class="text-blue-600 mt-0.5" />
+                    <div>
+                        <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Integração Google Calendar por Médico</h2>
+                        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                            Cada médico pode conectar sua própria conta do Google Calendar.
+                            Os agendamentos serão sincronizados automaticamente com o calendário do médico conectado.
+                        </p>
+                    </div>
+                </div>
             </div>
             <div class="p-6">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <ul class="space-y-3">
+                        
                         <li class="flex items-start">
                             <x-icon name="information-outline" class="w-4 h-4 mr-2 text-green-600 mt-1" />
                             <span class="text-gray-700 dark:text-gray-200"><strong>Sincronização Automática:</strong> Todos os agendamentos são sincronizados automaticamente com o Google Calendar do médico</span>
@@ -111,14 +120,9 @@
                 </div>
             </div>
         </div>
-
+        <!-- CARD_HOW_IT_WORKS_END -->
+        <!-- CARD_DOCTORS_START -->
         <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
-            <div class="p-6 border-b border-gray-200 dark:border-gray-700">
-                <h4 class="text-xl font-semibold text-gray-900 dark:text-white flex items-center">
-                    <x-icon name="google" class=" text-blue-600 mr-2" />
-                    Integração Google Calendar por Médico
-                </h4>
-            </div>
             <div class="p-6">
                 <div class="overflow-x-auto">
                     <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
@@ -182,7 +186,6 @@
                                     </td>
                                     <td class="px-4 py-3 text-sm text-right">
                                         @if ($user->role === 'admin' || ($user->role === 'doctor' && $user->doctor && $user->doctor->id === $doctor->id))
-                                            {{-- Admin e médico (para si mesmo) podem conectar/desconectar --}}
                                             @if ($doctor->googleCalendarToken)
                                                 <div class="flex flex-wrap justify-end gap-2">
                                                     <button type="button"
@@ -194,12 +197,12 @@
                                                     </button>
                                                     <form action="{{ workspace_route('tenant.integrations.google.disconnect', ['doctor' => $doctor->id]) }}"
                                                           method="POST"
-                                                      data-confirm="disconnect-google"
-                                                      data-confirm-title="Desconectar Google Calendar"
-                                                      data-confirm-message="Tem certeza que deseja desconectar a integração do Google Calendar para este médico?\n\nOs eventos já criados no Google Calendar não serão removidos automaticamente."
-                                                      data-confirm-confirm-text="Desconectar"
-                                                      data-confirm-cancel-text="Cancelar"
-                                                      data-confirm-type="warning">
+                                                          data-confirm="disconnect-google"
+                                                          data-confirm-title="Desconectar Google Calendar"
+                                                          data-confirm-message="Tem certeza que deseja desconectar a integração do Google Calendar para este médico?\n\nOs eventos já criados no Google Calendar não serão removidos automaticamente."
+                                                          data-confirm-confirm-text="Desconectar"
+                                                          data-confirm-cancel-text="Cancelar"
+                                                          data-confirm-type="warning">
                                                         @csrf
                                                         @method('DELETE')
                                                         <button type="submit" class="btn btn-danger">
@@ -216,7 +219,6 @@
                                                 </a>
                                             @endif
                                         @else
-                                            {{-- Usuário comum: apenas visualiza status --}}
                                             <span class="text-gray-500 dark:text-gray-400">
                                                 Apenas visualização
                                             </span>
@@ -242,6 +244,8 @@
                 </div>
             </div>
         </div>
-    </div>
+        <!-- CARD_DOCTORS_END -->
 
+        
+    </div>
 @endsection
