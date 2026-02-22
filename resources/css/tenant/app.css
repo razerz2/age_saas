@@ -100,3 +100,21 @@ h5.text-primary {
     width: 100%;
     box-sizing: border-box;
 }
+
+/* Grid.js: horizontal scroll on narrow containers without cutting columns */
+body[data-page] .gridjs-wrapper,
+body[data-page] .gridjs-container {
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+}
+
+body[data-page] .gridjs-table {
+    width: max-content;
+    min-width: 100%;
+}
+
+body[data-page] .gridjs-th,
+body[data-page] .gridjs-td {
+    white-space: nowrap;
+}
