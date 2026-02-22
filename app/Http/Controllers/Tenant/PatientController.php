@@ -67,6 +67,7 @@ class PatientController extends Controller
     public function store(StorePatientRequest $request)
     {
         $data = $request->validated();
+        $data['is_active'] = true;
 
         // Separar dados do paciente dos dados de endereço
         $addressData = [];
@@ -602,3 +603,5 @@ class PatientController extends Controller
         }
     }
 }
+
+

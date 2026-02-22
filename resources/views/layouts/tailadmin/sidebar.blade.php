@@ -165,10 +165,10 @@
                         <div class="translate transform overflow-hidden" x-show="open">
                             <ul :class="sidebarToggle ? 'xl:hidden' : 'flex'" class="menu-dropdown mt-2 flex flex-col gap-1 pl-9">
                                 <li>
-                                    <a href="{{ workspace_route('tenant.patients.index') }}" class="menu-dropdown-item group {{ request()->routeIs('tenant.patients.index') ? 'menu-dropdown-item-active' : 'menu-dropdown-item-inactive' }}">Todos os Pacientes</a>
+                                    <a href="{{ workspace_route('tenant.patients.index') }}" class="menu-dropdown-item group flex items-center gap-2 {{ request()->routeIs('tenant.patients.index') ? 'menu-dropdown-item-active' : 'menu-dropdown-item-inactive' }}"><i class="mdi mdi-view-list text-[14px] text-gray-500 dark:text-gray-400"></i>Todos os Pacientes</a>
                                 </li>
                                 <li>
-                                    <a href="{{ workspace_route('tenant.patients.create') }}" class="menu-dropdown-item group {{ request()->routeIs('tenant.patients.create') ? 'menu-dropdown-item-active' : 'menu-dropdown-item-inactive' }}">Novo Paciente</a>
+                                    <a href="{{ workspace_route('tenant.patients.create') }}" class="menu-dropdown-item group flex items-center gap-2 {{ request()->routeIs('tenant.patients.create') ? 'menu-dropdown-item-active' : 'menu-dropdown-item-inactive' }}"><i class="mdi mdi-plus text-[14px] text-gray-500 dark:text-gray-400"></i>Novo Paciente</a>
                                 </li>
                             </ul>
                         </div>
@@ -185,10 +185,10 @@
                         <div class="translate transform overflow-hidden" x-show="open">
                             <ul :class="sidebarToggle ? 'xl:hidden' : 'flex'" class="menu-dropdown mt-2 flex flex-col gap-1 pl-9">
                                 <li>
-                                    <a href="{{ workspace_route('tenant.doctors.index') }}" class="menu-dropdown-item group {{ request()->routeIs('tenant.doctors.index') ? 'menu-dropdown-item-active' : 'menu-dropdown-item-inactive' }}">Todos os {{ $professionalLabelPlural }}</a>
+                                    <a href="{{ workspace_route('tenant.doctors.index') }}" class="menu-dropdown-item group flex items-center gap-2 {{ request()->routeIs('tenant.doctors.index') ? 'menu-dropdown-item-active' : 'menu-dropdown-item-inactive' }}"><i class="mdi mdi-view-list text-[14px] text-gray-500 dark:text-gray-400"></i>Todos os {{ $professionalLabelPlural }}</a>
                                 </li>
                                 <li>
-                                    <a href="{{ workspace_route('tenant.doctors.create') }}" class="menu-dropdown-item group {{ request()->routeIs('tenant.doctors.create') ? 'menu-dropdown-item-active' : 'menu-dropdown-item-inactive' }}">Novo {{ $professionalLabelSingular }}</a>
+                                    <a href="{{ workspace_route('tenant.doctors.create') }}" class="menu-dropdown-item group flex items-center gap-2 {{ request()->routeIs('tenant.doctors.create') ? 'menu-dropdown-item-active' : 'menu-dropdown-item-inactive' }}"><i class="mdi mdi-plus text-[14px] text-gray-500 dark:text-gray-400"></i>Novo {{ $professionalLabelSingular }}</a>
                                 </li>
                             </ul>
                         </div>
@@ -205,10 +205,10 @@
                         <div class="translate transform overflow-hidden" x-show="open">
                             <ul :class="sidebarToggle ? 'xl:hidden' : 'flex'" class="menu-dropdown mt-2 flex flex-col gap-1 pl-9">
                                 <li>
-                                    <a href="{{ workspace_route('tenant.specialties.index') }}" class="menu-dropdown-item group {{ request()->routeIs('tenant.specialties.index') ? 'menu-dropdown-item-active' : 'menu-dropdown-item-inactive' }}">Todas as Especialidades</a>
+                                    <a href="{{ workspace_route('tenant.specialties.index') }}" class="menu-dropdown-item group flex items-center gap-2 {{ request()->routeIs('tenant.specialties.index') ? 'menu-dropdown-item-active' : 'menu-dropdown-item-inactive' }}"><i class="mdi mdi-view-list text-[14px] text-gray-500 dark:text-gray-400"></i>Todas as Especialidades</a>
                                 </li>
                                 <li>
-                                    <a href="{{ workspace_route('tenant.specialties.create') }}" class="menu-dropdown-item group {{ request()->routeIs('tenant.specialties.create') ? 'menu-dropdown-item-active' : 'menu-dropdown-item-inactive' }}">Nova Especialidade</a>
+                                    <a href="{{ workspace_route('tenant.specialties.create') }}" class="menu-dropdown-item group flex items-center gap-2 {{ request()->routeIs('tenant.specialties.create') ? 'menu-dropdown-item-active' : 'menu-dropdown-item-inactive' }}"><i class="mdi mdi-plus text-[14px] text-gray-500 dark:text-gray-400"></i>Nova Especialidade</a>
                                 </li>
                             </ul>
                         </div>
@@ -226,10 +226,10 @@
                             <div class="translate transform overflow-hidden" x-show="open">
                                 <ul :class="sidebarToggle ? 'xl:hidden' : 'flex'" class="menu-dropdown mt-2 flex flex-col gap-1 pl-9">
                                     <li>
-                                        <a href="{{ workspace_route('tenant.users.index') }}" class="menu-dropdown-item group {{ request()->routeIs('tenant.users.index') ? 'menu-dropdown-item-active' : 'menu-dropdown-item-inactive' }}">Todos os Usuários</a>
+                                        <a href="{{ workspace_route('tenant.users.index') }}" class="menu-dropdown-item group flex items-center gap-2 {{ request()->routeIs('tenant.users.index') ? 'menu-dropdown-item-active' : 'menu-dropdown-item-inactive' }}"><i class="mdi mdi-view-list text-[14px] text-gray-500 dark:text-gray-400"></i>Todos os Usuários</a>
                                     </li>
                                     <li>
-                                        <a href="{{ workspace_route('tenant.users.create') }}" class="menu-dropdown-item group {{ request()->routeIs('tenant.users.create') ? 'menu-dropdown-item-active' : 'menu-dropdown-item-inactive' }}">Novo Usuário</a>
+                                        <a href="{{ workspace_route('tenant.users.create') }}" class="menu-dropdown-item group flex items-center gap-2 {{ request()->routeIs('tenant.users.create') ? 'menu-dropdown-item-active' : 'menu-dropdown-item-inactive' }}"><i class="mdi mdi-plus text-[14px] text-gray-500 dark:text-gray-400"></i>Novo Usuário</a>
                                     </li>
                                 </ul>
                             </div>
@@ -265,11 +265,11 @@
                             <div class="translate transform overflow-hidden" x-show="open">
                                 <ul :class="sidebarToggle ? 'xl:hidden' : 'flex'" class="menu-dropdown mt-2 flex flex-col gap-1 pl-9">
                                     <li>
-                                        <a href="{{ workspace_route('tenant.calendars.index') }}" class="menu-dropdown-item group {{ request()->routeIs('tenant.calendars.index') ? 'menu-dropdown-item-active' : 'menu-dropdown-item-inactive' }}">Todos os Calendários</a>
+                                        <a href="{{ workspace_route('tenant.calendars.index') }}" class="menu-dropdown-item group flex items-center gap-2 {{ request()->routeIs('tenant.calendars.index') ? 'menu-dropdown-item-active' : 'menu-dropdown-item-inactive' }}"><i class="mdi mdi-view-list text-[14px] text-gray-500 dark:text-gray-400"></i>Todos os Calendários</a>
                                     </li>
                                     @if ($canCreateCalendar)
                                         <li>
-                                            <a href="{{ workspace_route('tenant.calendars.create') }}" class="menu-dropdown-item group {{ request()->routeIs('tenant.calendars.create') ? 'menu-dropdown-item-active' : 'menu-dropdown-item-inactive' }}">Novo Calendário</a>
+                                            <a href="{{ workspace_route('tenant.calendars.create') }}" class="menu-dropdown-item group flex items-center gap-2 {{ request()->routeIs('tenant.calendars.create') ? 'menu-dropdown-item-active' : 'menu-dropdown-item-inactive' }}"><i class="mdi mdi-plus text-[14px] text-gray-500 dark:text-gray-400"></i>Novo Calendário</a>
                                         </li>
                                     @endif
                                 </ul>
@@ -287,10 +287,10 @@
                             <div class="translate transform overflow-hidden" x-show="open">
                                 <ul :class="sidebarToggle ? 'xl:hidden' : 'flex'" class="menu-dropdown mt-2 flex flex-col gap-1 pl-9">
                                     <li>
-                                        <a href="{{ workspace_route('tenant.business-hours.index') }}" class="menu-dropdown-item group {{ request()->routeIs('tenant.business-hours.index') ? 'menu-dropdown-item-active' : 'menu-dropdown-item-inactive' }}">Todos os Horários</a>
+                                        <a href="{{ workspace_route('tenant.business-hours.index') }}" class="menu-dropdown-item group flex items-center gap-2 {{ request()->routeIs('tenant.business-hours.index') ? 'menu-dropdown-item-active' : 'menu-dropdown-item-inactive' }}"><i class="mdi mdi-view-list text-[14px] text-gray-500 dark:text-gray-400"></i>Todos os Horários</a>
                                     </li>
                                     <li>
-                                        <a href="{{ workspace_route('tenant.business-hours.create') }}" class="menu-dropdown-item group {{ request()->routeIs('tenant.business-hours.create') ? 'menu-dropdown-item-active' : 'menu-dropdown-item-inactive' }}">Novo Horário</a>
+                                        <a href="{{ workspace_route('tenant.business-hours.create') }}" class="menu-dropdown-item group flex items-center gap-2 {{ request()->routeIs('tenant.business-hours.create') ? 'menu-dropdown-item-active' : 'menu-dropdown-item-inactive' }}"><i class="mdi mdi-plus text-[14px] text-gray-500 dark:text-gray-400"></i>Novo Horário</a>
                                     </li>
                                 </ul>
                             </div>
@@ -307,10 +307,10 @@
                             <div class="translate transform overflow-hidden" x-show="open">
                                 <ul :class="sidebarToggle ? 'xl:hidden' : 'flex'" class="menu-dropdown mt-2 flex flex-col gap-1 pl-9">
                                     <li>
-                                        <a href="{{ workspace_route('tenant.appointment-types.index') }}" class="menu-dropdown-item group {{ request()->routeIs('tenant.appointment-types.index') ? 'menu-dropdown-item-active' : 'menu-dropdown-item-inactive' }}">Todos os Tipos</a>
+                                        <a href="{{ workspace_route('tenant.appointment-types.index') }}" class="menu-dropdown-item group flex items-center gap-2 {{ request()->routeIs('tenant.appointment-types.index') ? 'menu-dropdown-item-active' : 'menu-dropdown-item-inactive' }}"><i class="mdi mdi-view-list text-[14px] text-gray-500 dark:text-gray-400"></i>Todos os Tipos</a>
                                     </li>
                                     <li>
-                                        <a href="{{ workspace_route('tenant.appointment-types.create') }}" class="menu-dropdown-item group {{ request()->routeIs('tenant.appointment-types.create') ? 'menu-dropdown-item-active' : 'menu-dropdown-item-inactive' }}">Novo Tipo</a>
+                                        <a href="{{ workspace_route('tenant.appointment-types.create') }}" class="menu-dropdown-item group flex items-center gap-2 {{ request()->routeIs('tenant.appointment-types.create') ? 'menu-dropdown-item-active' : 'menu-dropdown-item-inactive' }}"><i class="mdi mdi-plus text-[14px] text-gray-500 dark:text-gray-400"></i>Novo Tipo</a>
                                     </li>
                                 </ul>
                             </div>
@@ -335,10 +335,10 @@
                         <div class="translate transform overflow-hidden" x-show="open">
                             <ul :class="sidebarToggle ? 'xl:hidden' : 'flex'" class="menu-dropdown mt-2 flex flex-col gap-1 pl-9">
                                 <li>
-                                    <a href="{{ workspace_route('tenant.forms.index') }}" class="menu-dropdown-item group {{ request()->routeIs('tenant.forms.index') ? 'menu-dropdown-item-active' : 'menu-dropdown-item-inactive' }}">Todos os Formulários</a>
+                                    <a href="{{ workspace_route('tenant.forms.index') }}" class="menu-dropdown-item group flex items-center gap-2 {{ request()->routeIs('tenant.forms.index') ? 'menu-dropdown-item-active' : 'menu-dropdown-item-inactive' }}"><i class="mdi mdi-view-list text-[14px] text-gray-500 dark:text-gray-400"></i>Todos os Formulários</a>
                                 </li>
                                 <li>
-                                    <a href="{{ workspace_route('tenant.forms.create') }}" class="menu-dropdown-item group {{ request()->routeIs('tenant.forms.create') ? 'menu-dropdown-item-active' : 'menu-dropdown-item-inactive' }}">Novo Formulário</a>
+                                    <a href="{{ workspace_route('tenant.forms.create') }}" class="menu-dropdown-item group flex items-center gap-2 {{ request()->routeIs('tenant.forms.create') ? 'menu-dropdown-item-active' : 'menu-dropdown-item-inactive' }}"><i class="mdi mdi-plus text-[14px] text-gray-500 dark:text-gray-400"></i>Novo Formulário</a>
                                 </li>
                             </ul>
                         </div>
@@ -355,7 +355,7 @@
                         <div class="translate transform overflow-hidden" x-show="open">
                             <ul :class="sidebarToggle ? 'xl:hidden' : 'flex'" class="menu-dropdown mt-2 flex flex-col gap-1 pl-9">
                                 <li>
-                                    <a href="{{ workspace_route('tenant.responses.index') }}" class="menu-dropdown-item group {{ request()->routeIs('tenant.responses.index') ? 'menu-dropdown-item-active' : 'menu-dropdown-item-inactive' }}">Todas as Respostas</a>
+                                    <a href="{{ workspace_route('tenant.responses.index') }}" class="menu-dropdown-item group flex items-center gap-2 {{ request()->routeIs('tenant.responses.index') ? 'menu-dropdown-item-active' : 'menu-dropdown-item-inactive' }}"><i class="mdi mdi-view-list text-[14px] text-gray-500 dark:text-gray-400"></i>Todas as Respostas</a>
                                 </li>
                             </ul>
                         </div>

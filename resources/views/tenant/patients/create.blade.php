@@ -131,8 +131,11 @@
 
                 <div>
                     <h5 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Endereço</h5>
-                    <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
-                        <div class="md:col-span-4">
+                    <input type="hidden" name="pais_id" value="31">
+
+                    <div class="space-y-4">
+                        <div class="grid grid-cols-1 gap-4" data-patient-address-grid="line-1">
+                            <div>
                             <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
                                 Logradouro <span class="text-red-500">*</span>
                             </label>
@@ -142,8 +145,8 @@
                             @error('street')
                                 <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
                             @enderror
-                        </div>
-                        <div>
+                            </div>
+                            <div>
                             <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
                                 Número <span class="text-red-500">*</span>
                             </label>
@@ -153,8 +156,8 @@
                             @error('number')
                                 <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
                             @enderror
-                        </div>
-                        <div class="md:col-span-2">
+                            </div>
+                            <div>
                             <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
                                 Complemento
                             </label>
@@ -164,8 +167,8 @@
                             @error('complement')
                                 <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
                             @enderror
-                        </div>
-                        <div>
+                            </div>
+                            <div>
                             <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
                                 Bairro <span class="text-red-500">*</span>
                             </label>
@@ -175,8 +178,11 @@
                             @error('neighborhood')
                                 <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
                             @enderror
+                            </div>
                         </div>
-                        <div>
+
+                        <div class="grid grid-cols-1 gap-4" data-patient-address-grid="line-2">
+                            <div>
                             <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
                                 CEP <span class="text-red-500">*</span>
                             </label>
@@ -186,11 +192,8 @@
                             @error('postal_code')
                                 <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
                             @enderror
-                        </div>
-
-                        <input type="hidden" name="pais_id" value="31">
-
-                        <div>
+                            </div>
+                            <div>
                             <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
                                 Estado <span class="text-red-500">*</span>
                             </label>
@@ -201,8 +204,8 @@
                             @error('estado_id')
                                 <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
                             @enderror
-                        </div>
-                        <div class="md:col-span-2">
+                            </div>
+                            <div>
                             <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
                                 Cidade <span class="text-red-500">*</span>
                             </label>
@@ -213,24 +216,7 @@
                             @error('cidade_id')
                                 <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
                             @enderror
-                        </div>
-                    </div>
-                </div>
-
-                <div>
-                    <h5 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Status</h5>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div>
-                            <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                                Status do Paciente
-                            </label>
-                            <select name="is_active" class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white @error('is_active') border-red-500 @enderror">
-                                <option value="1" {{ old('is_active', '1') == '1' ? 'selected' : '' }}>Ativo</option>
-                                <option value="0" {{ old('is_active') == '0' ? 'selected' : '' }}>Inativo</option>
-                            </select>
-                            @error('is_active')
-                                <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
-                            @enderror
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -252,5 +238,3 @@
 
 
 @endsection
-
-

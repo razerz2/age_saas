@@ -23,7 +23,7 @@ class UpdatePatientRequest extends FormRequest
             'gender_id'  => ['nullable', 'exists:tenant.genders,id'],
             'email'      => ['nullable', 'email'],
             'phone'      => ['nullable', 'string', 'max:20'],
-            'is_active'  => ['nullable', 'boolean'],
+            'is_active'  => ['required', 'boolean'],
             
             // Campos de endereÃ§o (opcionais)
             'postal_code'    => ['nullable', 'string', 'max:10'],
@@ -62,8 +62,10 @@ class UpdatePatientRequest extends FormRequest
 
             'phone.string' => 'O telefone deve ser uma string vÃ¡lida.',
             'phone.max' => 'O telefone nÃ£o pode ter mais que 20 caracteres.',
-
+            'is_active.required' => 'O status do paciente é obrigatório.',
             'is_active.boolean' => 'O campo "Ativo" deve ser verdadeiro ou falso.',
         ];
     }
 }
+
+

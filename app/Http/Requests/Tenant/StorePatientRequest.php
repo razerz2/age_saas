@@ -21,7 +21,6 @@ class StorePatientRequest extends FormRequest
             'gender_id'  => ['nullable', 'exists:tenant.genders,id'],
             'email'      => ['nullable', 'email'],
             'phone'      => ['nullable', 'string', 'max:20'],
-            'is_active'  => ['nullable', 'boolean'],
             
             // Campos de endereço (opcionais)
             'postal_code'    => ['nullable', 'string', 'max:10'],
@@ -60,8 +59,7 @@ class StorePatientRequest extends FormRequest
 
             'phone.string' => 'O telefone deve ser uma string válida.',
             'phone.max' => 'O telefone não pode ter mais que 20 caracteres.',
-
-            'is_active.boolean' => 'O campo "Ativo" deve ser verdadeiro ou falso.',
         ];
     }
 }
+

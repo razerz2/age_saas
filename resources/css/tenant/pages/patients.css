@@ -38,6 +38,33 @@
     border-color: #9ca3af;
 }
 
+[data-page="patients"] [data-patient-address-grid] {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
+    grid-template-columns: minmax(0, 1fr);
+}
+
+[data-page="patients"] [data-patient-address-grid] > div {
+    min-width: 0;
+}
+
+[data-page="patients"] [data-patient-address-grid] :is(input, select, textarea) {
+    min-width: 0;
+    width: 100%;
+    max-width: 100%;
+}
+
+@media (min-width: 1024px) {
+    [data-page="patients"] [data-patient-address-grid="line-1"] {
+        grid-template-columns: 4fr 1fr 3fr 2fr;
+    }
+
+    [data-page="patients"] [data-patient-address-grid="line-2"] {
+        grid-template-columns: 2fr 4fr 4fr;
+    }
+}
+
 @media (prefers-color-scheme: dark) {
     [data-page="patients"] .btn-patient-primary {
         background-color: #1d4ed8;
