@@ -1,3 +1,4 @@
+import { applyGridPageSizeSelector } from '../grid/pageSizeSelector';
 function initFormsSpecialtySelect() {
     const doctorSelect = document.getElementById('doctor_id');
     const specialtySelect = document.getElementById('specialty_id');
@@ -680,6 +681,15 @@ function initFormsBuilder() {
 }
 
 export function init() {
+    if (
+        !applyGridPageSizeSelector({
+            wrapperSelector: '#forms-grid-wrapper',
+            storageKey: 'tenant_forms_page_size',
+            defaultLimit: 10,
+        })
+    ) {
+        return;
+    }
     bindFormsIndexRowClick();
     initFormsSpecialtySelect();
     initFormsPreviewActions();

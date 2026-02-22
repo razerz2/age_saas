@@ -1,4 +1,15 @@
+import { applyGridPageSizeSelector } from '../grid/pageSizeSelector';
+
 export function init() {
+    if (
+        !applyGridPageSizeSelector({
+            wrapperSelector: '#patients-grid-wrapper',
+            storageKey: 'tenant_patients_page_size',
+            defaultLimit: 10,
+        })
+    ) {
+        return;
+    }
     bindPatientsIndexRowClick();
     bindStopPropagation();
     bindConfirmSubmits();

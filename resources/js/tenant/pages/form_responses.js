@@ -1,4 +1,14 @@
+import { applyGridPageSizeSelector } from '../grid/pageSizeSelector';
 export function init() {
+    if (
+        !applyGridPageSizeSelector({
+            wrapperSelector: '#responses-grid',
+            storageKey: 'tenant_form_responses_page_size',
+            defaultLimit: 10,
+        })
+    ) {
+        return;
+    }
     bindResponsesIndexRowClick();
 }
 

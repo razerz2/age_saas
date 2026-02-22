@@ -1,4 +1,14 @@
+import { applyGridPageSizeSelector } from '../grid/pageSizeSelector';
 export function init() {
+    if (
+        !applyGridPageSizeSelector({
+            wrapperSelector: '#calendars-grid-wrapper',
+            storageKey: 'tenant_calendars_page_size',
+            defaultLimit: 10,
+        })
+    ) {
+        return;
+    }
 	bindCalendarsIndexRowClick();
 	initCalendarEventsPage();
 	initCalendarSyncIndex();

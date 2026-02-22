@@ -1,3 +1,4 @@
+import { applyGridPageSizeSelector } from '../grid/pageSizeSelector';
 import { initEntitySearchModal } from '../components/entitySearchModal';
 
 function bindRecurringAppointmentsIndexRowClick() {
@@ -75,6 +76,15 @@ function bindRecurringAppointmentsIndexRowClick() {
 }
 
 export function init() {
+    if (
+        !applyGridPageSizeSelector({
+            wrapperSelector: '#recurring-appointments-grid-wrapper',
+            storageKey: 'tenant_recurring_appointments_page_size',
+            defaultLimit: 10,
+        })
+    ) {
+        return;
+    }
 	const tenantSlug = window.tenantSlug || (window.tenant && window.tenant.slug) || null;
 	if (!tenantSlug) return;
 	bindRecurringAppointmentsIndexRowClick();

@@ -1,3 +1,4 @@
+import { applyGridPageSizeSelector } from '../grid/pageSizeSelector';
 function bindSpecialtiesIndexRowClick() {
     const grid = document.getElementById('specialties-grid');
     if (!grid) {
@@ -102,6 +103,15 @@ function bindSpecialtyDeleteConfirm() {
 }
 
 export function init() {
+    if (
+        !applyGridPageSizeSelector({
+            wrapperSelector: '#specialties-grid-wrapper',
+            storageKey: 'tenant_specialties_page_size',
+            defaultLimit: 10,
+        })
+    ) {
+        return;
+    }
     bindSpecialtiesIndexRowClick();
     bindSpecialtyDeleteConfirm();
 }

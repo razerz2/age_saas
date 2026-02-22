@@ -1,6 +1,16 @@
+import { applyGridPageSizeSelector } from '../grid/pageSizeSelector';
 import { initEntitySearchModal } from '../components/entitySearchModal';
 
 export function init() {
+    if (
+        !applyGridPageSizeSelector({
+            wrapperSelector: '#appointments-grid-wrapper',
+            storageKey: 'tenant_appointments_page_size',
+            defaultLimit: 10,
+        })
+    ) {
+        return;
+    }
 	let tenantSlug = window.tenantSlug || (window.tenant && window.tenant.slug) || null;
 	if (!tenantSlug) {
 		// Hardening: make the failure explicit and try a safe fallback.

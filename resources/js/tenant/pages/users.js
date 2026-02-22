@@ -1,4 +1,14 @@
+import { applyGridPageSizeSelector } from '../grid/pageSizeSelector';
 export function init() {
+    if (
+        !applyGridPageSizeSelector({
+            wrapperSelector: '#users-grid-wrapper',
+            storageKey: 'tenant_users_page_size',
+            defaultLimit: 10,
+        })
+    ) {
+        return;
+    }
     bindDeleteConfirm();
     bindUsersIndexRowClick();
     bindPasswordTools();
@@ -113,10 +123,10 @@ function bindDeleteConfirm() {
         }
         event.preventDefault();
 
-        const userName = form.dataset.userName || 'este usuÃ¡rio';
+        const userName = form.dataset.userName || 'este usuÃƒÂ¡rio';
         confirmAction({
-            title: 'Excluir usuÃ¡rio',
-            message: `Tem certeza que deseja excluir ${userName}? Esta aÃ§Ã£o nÃ£o pode ser desfeita.`,
+            title: 'Excluir usuÃƒÂ¡rio',
+            message: `Tem certeza que deseja excluir ${userName}? Esta aÃƒÂ§ÃƒÂ£o nÃƒÂ£o pode ser desfeita.`,
             confirmText: 'Excluir',
             cancelText: 'Cancelar',
             type: 'error',
@@ -135,8 +145,8 @@ function exposeLegacyDeleteConfirm() {
             return false;
         }
         confirmAction({
-            title: 'Excluir usuÃ¡rio',
-            message: `Tem certeza que deseja excluir o usuÃ¡rio "${userName}"?\n\nEsta aÃ§Ã£o nÃ£o pode ser desfeita.`,
+            title: 'Excluir usuÃƒÂ¡rio',
+            message: `Tem certeza que deseja excluir o usuÃƒÂ¡rio "${userName}"?\n\nEsta aÃƒÂ§ÃƒÂ£o nÃƒÂ£o pode ser desfeita.`,
             confirmText: 'Excluir',
             cancelText: 'Cancelar',
             type: 'error',
@@ -276,8 +286,8 @@ function bindAvatarPreview() {
         } else {
             showAlert({
                 type: 'warning',
-                title: 'AtenÃ§Ã£o',
-                message: 'Por favor, selecione um arquivo de imagem vÃ¡lido.',
+                title: 'AtenÃƒÂ§ÃƒÂ£o',
+                message: 'Por favor, selecione um arquivo de imagem vÃƒÂ¡lido.',
             });
             if (avatarInput) {
                 avatarInput.value = '';
@@ -292,8 +302,8 @@ function bindAvatarPreview() {
                 if (file.size > 2048 * 1024) {
                     showAlert({
                         type: 'warning',
-                        title: 'AtenÃ§Ã£o',
-                        message: 'O arquivo Ã© muito grande. Por favor, selecione uma imagem com no mÃ¡ximo 2MB.',
+                        title: 'AtenÃƒÂ§ÃƒÂ£o',
+                        message: 'O arquivo ÃƒÂ© muito grande. Por favor, selecione uma imagem com no mÃƒÂ¡ximo 2MB.',
                     });
                     avatarInput.value = '';
                     if (avatarPreviewContainer) {
@@ -318,7 +328,7 @@ function bindAvatarPreview() {
                 avatarPreview.src = originalAvatar;
             }
             if (avatarFilename) {
-                avatarFilename.textContent = hasOriginalAvatar ? 'Imagem atual do usuÃ¡rio' : 'Nenhuma imagem selecionada';
+                avatarFilename.textContent = hasOriginalAvatar ? 'Imagem atual do usuÃƒÂ¡rio' : 'Nenhuma imagem selecionada';
             }
             if (avatarPreviewContainer && !hasOriginalAvatar) {
                 avatarPreviewContainer.classList.add('hidden');
@@ -503,10 +513,10 @@ function bindRoleModules() {
         }
         if (role === 'doctor') {
             modulesInfoText.innerHTML =
-                `<strong>Nota:</strong> Os módulos foram pré-selecionados conforme as configurações padrão para médicos em <a href="${settingsUrl}" target="_blank" class="text-blue-600 underline hover:text-blue-800">Configurações → Usuários & Permissões</a>. Você pode ajustar manualmente se necessário.`;
+                `<strong>Nota:</strong> Os mÃ³dulos foram prÃ©-selecionados conforme as configuraÃ§Ãµes padrÃ£o para mÃ©dicos em <a href="${settingsUrl}" target="_blank" class="text-blue-600 underline hover:text-blue-800">ConfiguraÃ§Ãµes â†’ UsuÃ¡rios & PermissÃµes</a>. VocÃª pode ajustar manualmente se necessÃ¡rio.`;
         } else {
             modulesInfoText.innerHTML =
-                `<strong>Nota:</strong> Os módulos foram pré-selecionados conforme as configurações padrão para usuários comuns em <a href="${settingsUrl}" target="_blank" class="text-blue-600 underline hover:text-blue-800">Configurações → Usuários & Permissões</a>. Você pode ajustar manualmente se necessário.`;
+                `<strong>Nota:</strong> Os mÃ³dulos foram prÃ©-selecionados conforme as configuraÃ§Ãµes padrÃ£o para usuÃ¡rios comuns em <a href="${settingsUrl}" target="_blank" class="text-blue-600 underline hover:text-blue-800">ConfiguraÃ§Ãµes â†’ UsuÃ¡rios & PermissÃµes</a>. VocÃª pode ajustar manualmente se necessÃ¡rio.`;
         }
     };
 
@@ -566,3 +576,4 @@ function parseJson(value) {
         return [];
     }
 }
+

@@ -1,4 +1,14 @@
+import { applyGridPageSizeSelector } from '../grid/pageSizeSelector';
 export function init() {
+    if (
+        !applyGridPageSizeSelector({
+            wrapperSelector: '#online-appointments-grid-wrapper',
+            storageKey: 'tenant_online_appointments_page_size',
+            defaultLimit: 10,
+        })
+    ) {
+        return;
+    }
     bindOnlineAppointmentsIndexRowClick();
 }
 

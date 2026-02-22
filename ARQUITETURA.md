@@ -199,11 +199,39 @@ Exemplo real (ver `resources/views/tenant/users/index.blade.php`):
     - hover da linha clicável (`.row-clickable:hover`),
     - **footer** do Grid.js em dark (`.gridjs-footer`, `.gridjs-pagination`, `.gridjs-summary`, `.gridjs-pages`) para evitar footer branco.
 
-#### 9) Anti‑padrões (evitar regressões)
+#### 9) Seletor de "itens por página" (page size selector)
+- Helper JS dedicado para o seletor global de page size:
+  - Arquivo: `resources/js/tenant/grid/pageSizeSelector.js`.
+  - Exporta: `applyGridPageSizeSelector({ wrapperSelector, storageKey, allowed, defaultLimit, queryParam })`.
+- Padrão de uso (por módulo):
+  - Chamar o helper a partir de `resources/js/tenant/pages/<modulo>.js`.
+  - `wrapperSelector`: seletor CSS do wrapper do grid (ex.: `#users-grid-wrapper`).
+  - `storageKey`: chave única por módulo no `localStorage` (ex.: `tenant_users_page_size`).
+  - `allowed`: limites permitidos, default `[10, 25, 50, 100]`.
+  - `defaultLimit`: limite padrão quando não há query nem valor salvo.
+  - `queryParam`: nome do parâmetro de URL (`limit` por padrão).
+- Comportamento esperado (conforme implementação atual):
+  - Se houver valor de `limit` na URL, ele domina.
+  - Caso não haja `limit` na URL, mas haja valor salvo em `localStorage`, a URL é atualizada com esse valor via `window.location.replace`.
+  - O helper injeta um `<select>` no footer do Grid.js, antes do summary ("Showing ..."), com label "Exibir <N> por página".
+  - Ao trocar o valor do select:
+    - Atualiza o `localStorage`.
+    - Atualiza o query param `limit` na URL.
+    - Recarrega a página (`window.location.assign`) para que o backend respeite o novo limite.
+- Visual (TailAdmin):
+  - O `<select>` usa `appearance-none` + `pr-9` para evitar sobreposição da seta com o valor.
+  - Classes de cor/borda alinhadas ao tema (`border-gray-200`, `bg-white`, dark mode, etc.).
+
+#### 10) Anti‑padrões (evitar regressões)
 - Não usar seletores frágeis como `td:last-child` / `td:nth-child(N)` para layout/centralização das ações.  
   Preferir `.actions-wrap` e regras escopadas em `#<module>-grid`.
 - Não enviar HTML para colunas que são texto (ex.: regras de recorrência).
 - Não criar CSS “órfão” (fora de `resources/css/tenant/...`) nem JS inline em Blade.
+- Não usar hooks/atalhos avançados do Grid.js para tentar alterar paginação server-side:
+  - Evitar `Grid.prototype.render` e manipulação direta do HTML principal do grid.
+  - Não usar `MutationObserver` para rescrever conteúdo de células/linhas.
+  - Não usar `updateConfig`/`forceRender` para mudar `limit` quando o HTML vem do backend.
+  - Sempre que o limite de página precisar mudar, usar o padrão `limit` via query param + recarregamento da página.
 
 #### ✅ Checklist — Para novas telas index (Tenant)
 1. `@section('page', '<modulo>')` na view.

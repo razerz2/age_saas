@@ -1,3 +1,4 @@
+import { applyGridPageSizeSelector } from '../grid/pageSizeSelector';
 function parseInitialWeekdays(container) {
     if (!container) return [];
     const raw = container.dataset.initialSelected;
@@ -156,6 +157,15 @@ function initWeekdaysPicker() {
 }
 
 export function init() {
+    if (
+        !applyGridPageSizeSelector({
+            wrapperSelector: '#business-hours-grid-wrapper',
+            storageKey: 'tenant_business_hours_page_size',
+            defaultLimit: 10,
+        })
+    ) {
+        return;
+    }
     bindBusinessHoursIndexRowClick();
     initWeekdaysPicker();
 }

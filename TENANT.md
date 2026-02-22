@@ -11,6 +11,10 @@
 7. [Área Pública de Agendamento](#área-pública-de-agendamento)
 8. [Portal do Paciente](#portal-do-paciente)
 9. [Guia de Uso](#guia-de-uso)
+10. [Padrão de Views: Index / Show / Form](#padrão-de-views-index--show--form)
+11. [Forms: Builder e Preview](#forms-builder-e-preview)
+12. [Gridjs-padrão-de-paginação-e-seletor-de-page-size](#gridjs-padrão-de-paginação-e-seletor-de-page-size)
+13. [Checklist de Qualidade (Tenant)](#checklist-de-qualidade-tenant)
 
 ---
 

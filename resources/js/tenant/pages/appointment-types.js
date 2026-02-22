@@ -1,4 +1,14 @@
+import { applyGridPageSizeSelector } from '../grid/pageSizeSelector';
 export function init() {
+    if (
+        !applyGridPageSizeSelector({
+            wrapperSelector: '#appointment-types-grid-wrapper',
+            storageKey: 'tenant_appointment_types_page_size',
+            defaultLimit: 10,
+        })
+    ) {
+        return;
+    }
     bindAppointmentTypesIndexRowClick();
 }
 

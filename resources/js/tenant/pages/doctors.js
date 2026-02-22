@@ -1,3 +1,4 @@
+import { applyGridPageSizeSelector } from '../grid/pageSizeSelector';
 function parseInitialSelected(container) {
     if (!container) return [];
     const raw = container.dataset.initialSelected;
@@ -75,6 +76,7 @@ function showAlertSafe(payload) {
     }
 }
 
+
 function bindDoctorsIndexRowClick() {
     const grid = document.getElementById('doctors-grid');
     if (!grid) {
@@ -117,12 +119,13 @@ function bindDoctorsIndexRowClick() {
         });
     };
 
-    updateRows();
+    const scheduleRowRefresh = () => {
+        window.setTimeout(updateRows, 0);
+    };
 
-    const observer = new MutationObserver(() => {
-        updateRows();
-    });
-    observer.observe(grid, { childList: true, subtree: true });
+    updateRows();
+    grid.addEventListener('click', scheduleRowRefresh);
+    grid.addEventListener('input', scheduleRowRefresh);
 
     grid.addEventListener('click', (event) => {
         if (event.defaultPrevented) {
@@ -308,6 +311,15 @@ function initSpecialtiesSelector() {
 }
 
 export function init() {
+    if (
+        !applyGridPageSizeSelector({
+            wrapperSelector: '#doctors-grid-wrapper',
+            storageKey: 'tenant_doctors_page_size',
+            defaultLimit: 10,
+        })
+    ) {
+        return;
+    }
     bindDoctorsIndexRowClick();
     bindDoctorDeleteConfirm();
     initSpecialtiesSelector();
