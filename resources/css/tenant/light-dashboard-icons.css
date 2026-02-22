@@ -1,0 +1,89 @@
+/* Tenant Light Theme Overrides (dashboard KPI icon chips only)
+   IMPORTANT:
+   - Light mode only: every rule must be scoped with body:not(.dark)[data-page="dashboard"]
+   - Tenant only: scoped via body[data-page]
+   - Do not modify TailAdmin core CSS and do not touch .dark rules
+   - Do not change KPI title/number colors, borders, or card shadows
+   - No purple/indigo/violet
+*/
+
+body:not(.dark)[data-page="dashboard"] {
+    --tenant-kpi-blue: #1d4ed8;
+    --tenant-kpi-cyan: #0369a1;
+    --tenant-kpi-teal: #0f766e;
+    --tenant-kpi-amber: #b45309;
+    --tenant-kpi-green: #15803d;
+
+    --tenant-kpi-chip-opacity: 0.12;
+}
+
+/* Base selector (diagnosed in dashboard blade)
+   Chip: div.flex.h-12.w-12.rounded-xl.bg-gray-100
+   Icon: svg.h-6.w-6 (fill=currentColor)
+*/
+
+body:not(.dark)[data-page="dashboard"] .grid > div > div.flex.h-12.w-12.items-center.justify-center.rounded-xl.bg-gray-100 {
+    background-color: rgba(15, 23, 42, 0.04);
+}
+
+/* 1) Calendário / período (card 1) -> azul */
+body:not(.dark)[data-page="dashboard"] .grid > div:nth-child(1) > div.flex.h-12.w-12.items-center.justify-center.rounded-xl.bg-gray-100 {
+    background-color: rgba(29, 78, 216, var(--tenant-kpi-chip-opacity));
+}
+body:not(.dark)[data-page="dashboard"] .grid > div:nth-child(1) > div.flex.h-12.w-12.items-center.justify-center.rounded-xl.bg-gray-100 svg {
+    color: var(--tenant-kpi-blue);
+}
+
+/* 2) Pacientes / usuários (card 2) -> ciano */
+body:not(.dark)[data-page="dashboard"] .grid > div:nth-child(2) > div.flex.h-12.w-12.items-center.justify-center.rounded-xl.bg-gray-100 {
+    background-color: rgba(3, 105, 161, var(--tenant-kpi-chip-opacity));
+}
+body:not(.dark)[data-page="dashboard"] .grid > div:nth-child(2) > div.flex.h-12.w-12.items-center.justify-center.rounded-xl.bg-gray-100 svg {
+    color: var(--tenant-kpi-cyan);
+}
+
+/* 3) Profissionais / médicos (card 3) -> teal */
+body:not(.dark)[data-page="dashboard"] .grid > div:nth-child(3) > div.flex.h-12.w-12.items-center.justify-center.rounded-xl.bg-gray-100 {
+    background-color: rgba(15, 118, 110, var(--tenant-kpi-chip-opacity));
+}
+body:not(.dark)[data-page="dashboard"] .grid > div:nth-child(3) > div.flex.h-12.w-12.items-center.justify-center.rounded-xl.bg-gray-100 svg {
+    color: var(--tenant-kpi-teal);
+}
+
+/* 4) Especialidades (card 4) -> âmbar */
+body:not(.dark)[data-page="dashboard"] .grid > div:nth-child(4) > div.flex.h-12.w-12.items-center.justify-center.rounded-xl.bg-gray-100 {
+    background-color: rgba(180, 83, 9, var(--tenant-kpi-chip-opacity));
+}
+body:not(.dark)[data-page="dashboard"] .grid > div:nth-child(4) > div.flex.h-12.w-12.items-center.justify-center.rounded-xl.bg-gray-100 svg {
+    color: var(--tenant-kpi-amber);
+}
+
+/* Premium hover (KPI cards only)
+   Target: first KPI grid cards (4) -> direct children .grid > div
+   Requirements: lift 1-2px, subtle shadow increase, slightly more evident border/glow
+   Light only, dashboard only, no layout/spacing/content changes
+*/
+body:not(.dark)[data-page="dashboard"] .grid.grid-cols-1.gap-4.sm\:grid-cols-2.xl\:grid-cols-4.md\:gap-6 > div.rounded-2xl.border.border-gray-200.bg-white {
+    transition: transform 160ms ease-out, box-shadow 160ms ease-out, border-color 160ms ease-out;
+    will-change: transform;
+}
+
+@media (hover: hover) and (pointer: fine) {
+    body:not(.dark)[data-page="dashboard"] .grid.grid-cols-1.gap-4.sm\:grid-cols-2.xl\:grid-cols-4.md\:gap-6 > div.rounded-2xl.border.border-gray-200.bg-white:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 14px 28px rgba(15, 23, 42, 0.08);
+        border-color: rgba(29, 78, 216, 0.18);
+    }
+
+    body:not(.dark)[data-page="dashboard"] .grid.grid-cols-1.gap-4.sm\:grid-cols-2.xl\:grid-cols-4.md\:gap-6 > div.rounded-2xl.border.border-gray-200.bg-white:hover {
+        box-shadow:
+            0 14px 28px rgba(15, 23, 42, 0.08),
+            0 0 0 3px rgba(29, 78, 216, 0.05);
+    }
+}
+
+/* Ensure we don't touch KPI headings/numbers */
+body:not(.dark)[data-page="dashboard"] .grid > div > div.mt-5 h3,
+body:not(.dark)[data-page="dashboard"] .grid > div > div.mt-5 span {
+    color: unset;
+}

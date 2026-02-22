@@ -1,0 +1,162 @@
+/* Tenant Light Theme Overrides (sidebar only)
+   IMPORTANT:
+   - Light mode only: every rule must be scoped with body:not(.dark)
+   - Tenant only: scoped via .sidebar (exists in TailAdmin tenant layout)
+   - Do not modify TailAdmin core CSS and do not touch .dark rules
+*/
+
+body:not(.dark) .sidebar .menu-item-active {
+    background-color: rgba(29, 78, 216, 0.06);
+    color: #1d4ed8;
+    position: relative;
+}
+
+body:not(.dark) .sidebar .menu-item-active::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    background-color: #1d4ed8;
+    border-radius: 0 9999px 9999px 0;
+}
+
+body:not(.dark) .sidebar .menu-item-icon-active {
+    color: #1d4ed8;
+}
+
+body:not(.dark) .sidebar .menu-item-inactive:hover {
+    background-color: rgba(29, 78, 216, 0.06);
+    color: #111827;
+}
+
+ body:not(.dark)[data-page] .sidebar .menu-item-inactive {
+     color: #334155;
+ }
+
+ body:not(.dark)[data-page] .sidebar .menu-item-inactive:hover {
+     background-color: rgba(29, 78, 216, 0.08);
+     color: #1d4ed8;
+ }
+
+ body:not(.dark)[data-page] .sidebar .menu-item-active {
+     background-color: rgba(29, 78, 216, 0.11);
+     background-image: linear-gradient(90deg, rgba(29, 78, 216, 0.12) 0%, rgba(14, 165, 233, 0.10) 100%);
+ }
+
+ body:not(.dark)[data-page] .sidebar .menu-item-active,
+ body:not(.dark)[data-page] .sidebar .menu-item-active .menu-item-text {
+     color: #1d4ed8;
+ }
+
+ body:not(.dark)[data-page] .sidebar h3,
+ body:not(.dark)[data-page] .sidebar .menu-group-title {
+     color: #94a3b8;
+ }
+
+/* Submenu (dropdown) improvements - light only */
+body:not(.dark) .sidebar .menu-dropdown {
+    position: relative;
+    padding-left: 0.75rem;
+}
+
+body:not(.dark) .sidebar .menu-dropdown::before {
+    content: '';
+    position: absolute;
+    left: 0.25rem;
+    top: 0.25rem;
+    bottom: 0.25rem;
+    width: 1px;
+    background-color: rgba(29, 78, 216, 0.10);
+}
+
+body:not(.dark) .sidebar .menu-dropdown-item-active {
+    background-color: rgba(29, 78, 216, 0.06);
+    color: #1d4ed8;
+}
+
+body:not(.dark) .sidebar .menu-dropdown-item-inactive:hover {
+    background-color: rgba(29, 78, 216, 0.03);
+}
+
+ body:not(.dark)[data-page] .sidebar .menu-item-text {
+     font-weight: 500;
+ }
+
+ /* Sidebar icon scale (MDI)
+    - Affects Light and Dark (no body:not(.dark) scope on purpose)
+    - Does not change spacing/padding; only icon size
+ */
+ body[data-page] .sidebar .menu-item > i.mdi {
+     font-size: 1.3rem;
+     line-height: 1;
+ }
+
+ body[data-page] .sidebar .menu-dropdown-item::before {
+     line-height: 1;
+ }
+
+ body:not(.dark)[data-page] .sidebar .menu-item-inactive i.mdi,
+ body:not(.dark)[data-page] .sidebar .menu-item-icon-inactive {
+     opacity: 0.92;
+ }
+
+/* Icon colors by category (light only)
+   Applies to MDI icons used in tenant sidebar.
+*/
+
+/* Agenda / Tempo / Agendamentos / Recorrentes / Calendários / Horários / Tipos */
+body:not(.dark) .sidebar .mdi-calendar-check,
+body:not(.dark) .sidebar .mdi-calendar-clock,
+body:not(.dark) .sidebar .mdi-calendar-repeat,
+body:not(.dark) .sidebar .mdi-calendar-month,
+body:not(.dark) .sidebar .mdi-clock-outline,
+body:not(.dark) .sidebar .mdi-clipboard-pulse {
+    color: rgba(29, 78, 216, 0.72);
+}
+
+/* Área médica / Médicos / Especialidades */
+body:not(.dark) .sidebar .mdi-stethoscope,
+body:not(.dark) .sidebar .mdi-pulse {
+    color: rgba(16, 185, 129, 0.72);
+}
+
+/* Comunicação / Consultas Online / Atendimento */
+body:not(.dark) .sidebar .mdi-video-account,
+body:not(.dark) .sidebar .mdi-account-heart {
+    color: rgba(6, 182, 212, 0.72);
+}
+
+/* Núcleo do sistema / Dashboard / Usuários / Pacientes */
+body:not(.dark) .sidebar .mdi-view-dashboard,
+body:not(.dark) .sidebar .mdi-account-multiple,
+body:not(.dark) .sidebar .mdi-account-heart {
+    color: #1d4ed8;
+}
+
+/* Formulários, Respostas, Sistema/Configurações, Integrações, Relatórios */
+body:not(.dark)[data-page] .sidebar .mdi-file-document-edit {
+    color: rgba(29, 78, 216, 0.72);
+}
+
+body:not(.dark)[data-page] .sidebar .mdi-file-document-box-check {
+    color: rgba(2, 132, 199, 0.72);
+}
+
+body:not(.dark)[data-page] .sidebar .mdi-settings {
+    color: rgba(71, 85, 105, 0.78);
+}
+
+body:not(.dark)[data-page] .sidebar .mdi-puzzle {
+    color: rgba(14, 116, 144, 0.72);
+}
+
+body:not(.dark)[data-page] .sidebar .mdi-chart-bar {
+    color: rgba(29, 78, 216, 0.70);
+}
+
+ body:not(.dark)[data-page] .sidebar .menu-item-active i.mdi,
+ body:not(.dark)[data-page] .sidebar .menu-item-active .menu-item-icon-active {
+     color: #1d4ed8;
+ }

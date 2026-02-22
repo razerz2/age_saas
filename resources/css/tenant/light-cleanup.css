@@ -1,0 +1,147 @@
+/* Tenant Light Theme Cleanup (remove purple/indigo/violet residuals)
+   IMPORTANT:
+   - Light mode only: every rule must be scoped with body:not(.dark)[data-page]
+   - Tenant only: scoped via body[data-page]
+   - Do not modify TailAdmin core CSS and do not touch .dark rules
+   - Do not change status colors (success/warning/danger)
+*/
+
+body:not(.dark)[data-page] {
+    --tenant-primary: #1d4ed8;
+    --tenant-primary-soft: rgba(29, 78, 216, 0.08);
+    --tenant-primary-soft-2: rgba(29, 78, 216, 0.12);
+    --tenant-primary-border: rgba(29, 78, 216, 0.35);
+}
+
+/* =========================
+   A) Links / primary text (Light-only)
+   ========================= */
+
+body:not(.dark)[data-page] a {
+    color: var(--tenant-primary);
+}
+
+body:not(.dark)[data-page] a:hover,
+body:not(.dark)[data-page] a:focus-visible {
+    color: var(--tenant-primary);
+}
+
+body:not(.dark)[data-page] .text-primary {
+    color: var(--tenant-primary) !important;
+}
+
+body:not(.dark)[data-page] .link,
+body:not(.dark)[data-page] .link-primary {
+    color: var(--tenant-primary) !important;
+}
+
+/* =========================
+   B) TailAdmin brand/primary helpers (Light-only)
+   ========================= */
+
+body:not(.dark)[data-page] .bg-brand {
+    background-color: var(--tenant-primary) !important;
+}
+
+body:not(.dark)[data-page] .text-brand {
+    color: var(--tenant-primary) !important;
+}
+
+body:not(.dark)[data-page] .border-brand {
+    border-color: var(--tenant-primary-border) !important;
+}
+
+/* Gradients that may appear purple: neutralize to soft blue.
+   We only target Tailwind-style gradient utilities when they use primary/secondary/brand semantics.
+*/
+body:not(.dark)[data-page] .bg-gradient-primary,
+body:not(.dark)[data-page] .bg-gradient-to-br.from-primary\/5,
+body:not(.dark)[data-page] .bg-gradient-to-br.to-secondary\/10 {
+    background-image: none !important;
+    background-color: var(--tenant-primary-soft) !important;
+    border-color: var(--tenant-primary-border) !important;
+}
+
+/* =========================
+   C) Primary/brand badges (Light-only)
+   ========================= */
+
+body:not(.dark)[data-page] .badge-primary,
+body:not(.dark)[data-page] .badge-brand,
+body:not(.dark)[data-page] .pill-primary,
+body:not(.dark)[data-page] .chip-primary {
+    background-color: var(--tenant-primary-soft) !important;
+    color: var(--tenant-primary) !important;
+    border-color: var(--tenant-primary-border) !important;
+}
+
+/* =========================
+   D) Tabs / pills / active states (Light-only)
+   ========================= */
+
+body:not(.dark)[data-page] .nav-pills .nav-link.active,
+body:not(.dark)[data-page] .nav-tabs .nav-link.active {
+    background-color: var(--tenant-primary-soft) !important;
+    color: var(--tenant-primary) !important;
+    border-color: var(--tenant-primary-border) !important;
+}
+
+body:not(.dark)[data-page] .nav-pills .nav-link:hover,
+body:not(.dark)[data-page] .nav-tabs .nav-link:hover {
+    background-color: var(--tenant-primary-soft) !important;
+}
+
+/* =========================
+   E) Fallback: map Tailwind indigo/purple/violet utilities to blue (Light-only)
+   Only these families; do NOT touch green/yellow/red.
+   ========================= */
+
+body:not(.dark)[data-page] [class*='text-indigo-'],
+body:not(.dark)[data-page] [class*='text-purple-'],
+body:not(.dark)[data-page] [class*='text-violet-'] {
+    color: var(--tenant-primary) !important;
+}
+
+body:not(.dark)[data-page] [class*='bg-indigo-'],
+body:not(.dark)[data-page] [class*='bg-purple-'],
+body:not(.dark)[data-page] [class*='bg-violet-'] {
+    background-color: var(--tenant-primary-soft) !important;
+}
+
+body:not(.dark)[data-page] [class*='border-indigo-'],
+body:not(.dark)[data-page] [class*='border-purple-'],
+body:not(.dark)[data-page] [class*='border-violet-'] {
+    border-color: var(--tenant-primary-border) !important;
+}
+
+body:not(.dark)[data-page] [class*='ring-indigo-'],
+body:not(.dark)[data-page] [class*='ring-purple-'],
+body:not(.dark)[data-page] [class*='ring-violet-'],
+body:not(.dark)[data-page] [class*='focus:ring-indigo-'],
+body:not(.dark)[data-page] [class*='focus:ring-purple-'],
+body:not(.dark)[data-page] [class*='focus:ring-violet-'] {
+    --tw-ring-color: rgba(29, 78, 216, 0.18) !important;
+}
+
+body:not(.dark)[data-page] [class*='focus:ring-brand-'],
+body:not(.dark)[data-page] [class*='focus:border-brand-'] {
+    --tw-ring-color: rgba(29, 78, 216, 0.18) !important;
+    border-color: var(--tenant-primary) !important;
+}
+
+/* Specific known offenders in Tenant views (Light-only)
+   - Reports notifications card uses purple utilities.
+*/
+body:not(.dark)[data-page] .bg-purple-600,
+body:not(.dark)[data-page] .bg-purple-700 {
+    background-color: var(--tenant-primary) !important;
+}
+
+body:not(.dark)[data-page] .bg-purple-100 {
+    background-color: var(--tenant-primary-soft) !important;
+}
+
+body:not(.dark)[data-page] .text-purple-600,
+body:not(.dark)[data-page] .text-purple-700 {
+    color: var(--tenant-primary) !important;
+}

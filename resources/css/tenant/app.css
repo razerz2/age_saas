@@ -1,5 +1,11 @@
 /* Tenant common styles (migrated from public/css/tenant-common.css) */
 @import "./components/buttons.css";
+@import "./light-theme.css";
+@import "./light-buttons.css";
+@import "./light-forms.css";
+@import "./light-grids.css";
+@import "./light-cleanup.css";
+@import "./light-dashboard-icons.css";
 @import "./pages/dashboard.css";
 @import "./pages/appointments.css";
 @import "./pages/appointment-types.css";

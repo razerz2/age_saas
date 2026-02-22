@@ -1,0 +1,158 @@
+/* Tenant Light Theme Overrides (buttons only)
+   IMPORTANT:
+   - Light mode only: every rule must be scoped with body:not(.dark)
+   - Tenant only: scoped via [data-page] (Tenant layouts set body[data-page])
+   - Do not modify TailAdmin core CSS and do not touch .dark rules
+*/
+
+body:not(.dark)[data-page] {
+    --tenant-primary: #1d4ed8;
+    --tenant-primary-hover: #1a46c2;
+    --tenant-primary-soft: rgba(29, 78, 216, 0.08);
+    --tenant-border: #d1d5db;
+    --tenant-text: #0f172a;
+}
+
+/* =========================
+   btn-patient-* (Tenant legacy)
+   ========================= */
+
+body:not(.dark)[data-page] .btn-patient-primary {
+    background-color: var(--tenant-primary) !important;
+    border-color: transparent !important;
+    color: #ffffff !important;
+}
+
+body:not(.dark)[data-page] .btn-patient-primary * {
+    color: #ffffff !important;
+}
+
+body:not(.dark)[data-page] .btn-patient-primary:hover {
+    background-color: var(--tenant-primary-hover) !important;
+    border-color: transparent !important;
+}
+
+body:not(.dark)[data-page] .btn-patient-primary:focus,
+body:not(.dark)[data-page] .btn-patient-primary:focus-visible {
+    outline: 2px solid transparent;
+    outline-offset: 2px;
+    box-shadow: 0 0 0 3px rgba(29, 78, 216, 0.25);
+}
+
+body:not(.dark)[data-page] .btn-patient-primary:disabled,
+body:not(.dark)[data-page] .btn-patient-primary[aria-disabled='true'] {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+body:not(.dark)[data-page] .btn-patient-secondary {
+    background-color: #ffffff !important;
+    border-color: var(--tenant-border) !important;
+    color: var(--tenant-primary) !important;
+}
+
+body:not(.dark)[data-page] .btn-patient-secondary:hover {
+    background-color: var(--tenant-primary-soft) !important;
+    border-color: var(--tenant-border) !important;
+}
+
+body:not(.dark)[data-page] .btn-patient-secondary:focus,
+body:not(.dark)[data-page] .btn-patient-secondary:focus-visible {
+    outline: 2px solid transparent;
+    outline-offset: 2px;
+    box-shadow: 0 0 0 3px rgba(29, 78, 216, 0.20);
+}
+
+body:not(.dark)[data-page] .btn-patient-secondary:disabled,
+body:not(.dark)[data-page] .btn-patient-secondary[aria-disabled='true'] {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* =========================
+   TailAdmin semantic aliases (x-tailadmin-button + other views)
+   ========================= */
+
+body:not(.dark)[data-page] .bg-primary {
+    background-color: var(--tenant-primary) !important;
+    color: #ffffff !important;
+}
+
+body:not(.dark)[data-page] .bg-primary * {
+    color: #ffffff !important;
+}
+
+body:not(.dark)[data-page] .bg-primary\/10 {
+    background-color: rgba(29, 78, 216, 0.10) !important;
+}
+
+body:not(.dark)[data-page] .bg-primary\/20 {
+    background-color: rgba(29, 78, 216, 0.20) !important;
+}
+
+body:not(.dark)[data-page] .text-primary {
+    color: var(--tenant-primary) !important;
+}
+
+body:not(.dark)[data-page] .border-primary {
+    border-color: var(--tenant-primary) !important;
+}
+
+body:not(.dark)[data-page] .hover\:bg-primary\/90:hover {
+    background-color: var(--tenant-primary-hover) !important;
+}
+
+body:not(.dark)[data-page] .focus\:ring-primary\/30:focus,
+body:not(.dark)[data-page] .focus-visible\:ring-primary\/30:focus-visible,
+body:not(.dark)[data-page] .focus\:ring-primary\/40:focus,
+body:not(.dark)[data-page] .focus-visible\:ring-primary\/40:focus-visible,
+body:not(.dark)[data-page] .focus-visible\:ring-primary\/60:focus-visible {
+    --tw-ring-color: rgba(29, 78, 216, 0.25) !important;
+}
+
+/* =========================
+   Table action buttons (DataTables / Grid actions)
+   ========================= */
+
+body:not(.dark)[data-page] .table-action-btn {
+    border: 1px solid var(--tenant-border) !important;
+    background-color: #ffffff !important;
+    color: var(--tenant-text) !important;
+}
+
+body:not(.dark)[data-page] .table-action-btn:hover {
+    background-color: var(--tenant-primary-soft) !important;
+    border-color: rgba(29, 78, 216, 0.25) !important;
+    color: var(--tenant-primary) !important;
+}
+
+body:not(.dark)[data-page] .table-action-btn:focus-visible {
+    outline: 2px solid transparent;
+    outline-offset: 2px;
+    box-shadow: 0 0 0 3px rgba(29, 78, 216, 0.20) !important;
+}
+
+/* ========================================
+   FIX — texto branco em .btn.btn-primary (Bootstrap-like)
+   Light-only, Tenant-only
+   ======================================== */
+
+body:not(.dark)[data-page] .btn.btn-primary,
+body:not(.dark)[data-page] a.btn.btn-primary,
+body:not(.dark)[data-page] button.btn.btn-primary {
+    color: #ffffff !important;
+}
+
+body:not(.dark)[data-page] .btn.btn-primary *,
+body:not(.dark)[data-page] a.btn.btn-primary *,
+body:not(.dark)[data-page] button.btn.btn-primary * {
+    color: #ffffff !important;
+}
+
+body:not(.dark)[data-page] .btn.btn-primary:hover,
+body:not(.dark)[data-page] .btn.btn-primary:focus,
+body:not(.dark)[data-page] .btn.btn-primary:focus-visible,
+body:not(.dark)[data-page] .btn.btn-primary:active,
+body:not(.dark)[data-page] .btn.btn-primary.active {
+    color: #ffffff !important;
+}

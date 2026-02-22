@@ -1,0 +1,160 @@
+/* Tenant Light Theme Overrides (grids/tables only)
+   IMPORTANT:
+   - Light mode only: every rule must be scoped with body:not(.dark)[data-page]
+   - Tenant only: scoped via body[data-page]
+   - Do not modify TailAdmin core CSS and do not touch .dark rules
+*/
+
+body:not(.dark)[data-page] {
+    --tenant-grid-bg: #ffffff;
+    --tenant-grid-border: #e5e7eb;
+    --tenant-grid-header-bg: #f8fafc;
+    --tenant-grid-row-hover: rgba(29, 78, 216, 0.06);
+    --tenant-grid-row-zebra: rgba(15, 23, 42, 0.02);
+    --tenant-grid-text: #0f172a;
+    --tenant-grid-muted: #64748b;
+    --tenant-grid-primary: #1d4ed8;
+}
+
+/* =========================
+   Grid.js (Light-only)
+   ========================= */
+
+body:not(.dark)[data-page] .gridjs-wrapper {
+    background-color: var(--tenant-grid-bg);
+    border-color: var(--tenant-grid-border);
+    border-radius: 0.75rem;
+}
+
+body:not(.dark)[data-page] .gridjs-table {
+    color: var(--tenant-grid-text);
+}
+
+body:not(.dark)[data-page] .gridjs-thead {
+    background-color: var(--tenant-grid-header-bg);
+}
+
+body:not(.dark)[data-page] .gridjs-th {
+    color: var(--tenant-grid-muted);
+    border-color: var(--tenant-grid-border);
+}
+
+body:not(.dark)[data-page] .gridjs-td {
+    border-color: var(--tenant-grid-border);
+}
+
+/* Zebra extremely subtle */
+body:not(.dark)[data-page] .gridjs-tr:nth-child(even) .gridjs-td {
+    background-color: var(--tenant-grid-row-zebra);
+}
+
+/* Hover: apply to td so it wins against page css that targets td */
+body:not(.dark)[data-page] .gridjs-tr:hover > .gridjs-td,
+body:not(.dark)[data-page] tr.gridjs-tr:hover > td {
+    background-color: var(--tenant-grid-row-hover) !important;
+}
+
+body:not(.dark)[data-page] .gridjs-footer {
+    border-top-color: var(--tenant-grid-border);
+    background-color: var(--tenant-grid-bg);
+}
+
+body:not(.dark)[data-page] .gridjs-summary {
+    color: var(--tenant-grid-muted);
+}
+
+/* Pagination buttons */
+body:not(.dark)[data-page] .gridjs-pagination .gridjs-pages button {
+    background-color: #ffffff;
+    color: var(--tenant-grid-text);
+    border: 1px solid var(--tenant-grid-border);
+}
+
+body:not(.dark)[data-page] .gridjs-pagination .gridjs-pages button:hover {
+    background-color: var(--tenant-grid-row-hover);
+    border-color: rgba(29, 78, 216, 0.18);
+}
+
+/* Current page */
+body:not(.dark)[data-page] .gridjs-pagination .gridjs-pages button.current,
+body:not(.dark)[data-page] .gridjs-pagination .gridjs-pages button[aria-current='page'] {
+    background-color: rgba(29, 78, 216, 0.10) !important;
+    color: var(--tenant-grid-primary) !important;
+    border-color: rgba(29, 78, 216, 0.30) !important;
+}
+
+/* Search input (when enabled) */
+body:not(.dark)[data-page] .gridjs-search-input {
+    background-color: #f8fafc;
+    border-color: var(--tenant-grid-border);
+    color: var(--tenant-grid-text);
+    border-radius: 0.5rem;
+}
+
+body:not(.dark)[data-page] .gridjs-search-input:focus,
+body:not(.dark)[data-page] .gridjs-search-input:focus-visible {
+    border-color: var(--tenant-grid-primary) !important;
+    outline: 2px solid transparent;
+    outline-offset: 2px;
+    box-shadow: 0 0 0 3px rgba(29, 78, 216, 0.18) !important;
+}
+
+/* Page-specific row hover rules (existing files use rgba(15, 23, 42, 0.04)).
+   We override light-only with a more specific selector.
+*/
+body:not(.dark)[data-page] [id$='-grid'] .row-clickable:hover,
+body:not(.dark)[data-page] [id$='-grid'] tr.row-clickable:hover > td,
+body:not(.dark)[data-page] [id$='-grid'] .gridjs-tr.row-clickable:hover > .gridjs-td {
+    background-color: var(--tenant-grid-row-hover) !important;
+    box-shadow: none !important;
+}
+
+/* =========================
+   DataTables (Light-only)
+   ========================= */
+
+body:not(.dark)[data-page] .dataTables_wrapper {
+    width: 100%;
+}
+
+body:not(.dark)[data-page] .dataTables_wrapper .dataTables_info,
+body:not(.dark)[data-page] .dataTables_wrapper .dataTables_length label,
+body:not(.dark)[data-page] .dataTables_wrapper .dataTables_filter label {
+    color: var(--tenant-grid-muted);
+}
+
+body:not(.dark)[data-page] .dataTables_wrapper input,
+body:not(.dark)[data-page] .dataTables_wrapper select {
+    background-color: #f8fafc;
+    border-color: var(--tenant-grid-border);
+    color: var(--tenant-grid-text);
+    border-radius: 0.5rem;
+}
+
+body:not(.dark)[data-page] .dataTables_wrapper input:focus,
+body:not(.dark)[data-page] .dataTables_wrapper select:focus {
+    border-color: var(--tenant-grid-primary) !important;
+    box-shadow: 0 0 0 3px rgba(29, 78, 216, 0.18) !important;
+    outline: 2px solid transparent;
+    outline-offset: 2px;
+}
+
+/* Paginate buttons */
+body:not(.dark)[data-page] .dataTables_wrapper .dataTables_paginate .paginate_button {
+    border: 1px solid var(--tenant-grid-border) !important;
+    background: #ffffff !important;
+    color: var(--tenant-grid-text) !important;
+    border-radius: 0.5rem !important;
+}
+
+body:not(.dark)[data-page] .dataTables_wrapper .dataTables_paginate .paginate_button:hover {
+    background: var(--tenant-grid-row-hover) !important;
+    border-color: rgba(29, 78, 216, 0.18) !important;
+    color: var(--tenant-grid-primary) !important;
+}
+
+body:not(.dark)[data-page] .dataTables_wrapper .dataTables_paginate .paginate_button.current {
+    background: rgba(29, 78, 216, 0.10) !important;
+    color: var(--tenant-grid-primary) !important;
+    border-color: rgba(29, 78, 216, 0.30) !important;
+}

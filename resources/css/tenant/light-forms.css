@@ -1,0 +1,182 @@
+/* Tenant Light Theme Overrides (cards + forms only)
+   IMPORTANT:
+   - Light mode only: every rule must be scoped with body:not(.dark)[data-page]
+   - Tenant only: scoped via body[data-page]
+   - Do not modify TailAdmin core CSS and do not touch .dark rules
+*/
+
+body:not(.dark)[data-page] {
+    --tenant-card-bg: #ffffff;
+    --tenant-card-border: #e5e7eb;
+    --tenant-card-shadow: 0 1px 2px rgba(0, 0, 0, .06);
+
+    --tenant-input-bg: #f8fafc;
+    --tenant-input-border: #d1d5db;
+    --tenant-input-text: #0f172a;
+    --tenant-muted: #64748b;
+
+    --tenant-focus: #1d4ed8;
+    --tenant-focus-ring: rgba(29, 78, 216, 0.18);
+}
+
+/* =========================
+   Cards / Containers (Light-only)
+   ========================= */
+
+/* TailAdmin migrated cards commonly use bg-white + border-gray-200 */
+body:not(.dark)[data-page] .bg-white.border,
+body:not(.dark)[data-page] .bg-white.border.border-gray-200,
+body:not(.dark)[data-page] .bg-white.border-gray-200 {
+    background-color: var(--tenant-card-bg);
+    border-color: var(--tenant-card-border);
+    box-shadow: var(--tenant-card-shadow);
+}
+
+/* Keep radius consistent (rounded-xl ~= 12px). We avoid overriding very large radius (rounded-2xl) to not break layout. */
+body:not(.dark)[data-page] .bg-white.border.border-gray-200.rounded-lg,
+body:not(.dark)[data-page] .bg-white.border.border-gray-200.rounded-md {
+    border-radius: 0.75rem;
+}
+
+/* Grid.js wrapper already has its own styling; keep it intact */
+
+/* =========================
+   Inputs / Select / Textarea (Light-only)
+   ========================= */
+
+body:not(.dark)[data-page] input[type='text'],
+body:not(.dark)[data-page] input[type='email'],
+body:not(.dark)[data-page] input[type='password'],
+body:not(.dark)[data-page] input[type='tel'],
+body:not(.dark)[data-page] input[type='number'],
+body:not(.dark)[data-page] input[type='date'],
+body:not(.dark)[data-page] input[type='time'],
+body:not(.dark)[data-page] input[type='search'],
+body:not(.dark)[data-page] select,
+body:not(.dark)[data-page] textarea {
+    background-color: var(--tenant-input-bg);
+    border-color: var(--tenant-input-border);
+    color: var(--tenant-input-text);
+}
+
+body:not(.dark)[data-page] input::placeholder,
+body:not(.dark)[data-page] textarea::placeholder {
+    color: var(--tenant-muted);
+    opacity: 0.75;
+}
+
+body:not(.dark)[data-page] input:focus,
+body:not(.dark)[data-page] select:focus,
+body:not(.dark)[data-page] textarea:focus,
+body:not(.dark)[data-page] input:focus-visible,
+body:not(.dark)[data-page] select:focus-visible,
+body:not(.dark)[data-page] textarea:focus-visible {
+    border-color: var(--tenant-focus) !important;
+    outline: 2px solid transparent;
+    outline-offset: 2px;
+    box-shadow: 0 0 0 3px var(--tenant-focus-ring) !important;
+}
+
+body:not(.dark)[data-page] input:disabled,
+body:not(.dark)[data-page] select:disabled,
+body:not(.dark)[data-page] textarea:disabled {
+    background-color: #f1f5f9;
+    color: rgba(15, 23, 42, 0.55);
+    cursor: not-allowed;
+}
+
+/* Bootstrap-like form controls used in some tenant screens */
+body:not(.dark)[data-page] .form-control,
+body:not(.dark)[data-page] .form-select {
+    background-color: var(--tenant-input-bg) !important;
+    border-color: var(--tenant-input-border) !important;
+    color: var(--tenant-input-text) !important;
+}
+
+body:not(.dark)[data-page] .form-control::placeholder {
+    color: var(--tenant-muted);
+}
+
+body:not(.dark)[data-page] .form-control:focus,
+body:not(.dark)[data-page] .form-select:focus {
+    border-color: var(--tenant-focus) !important;
+    box-shadow: 0 0 0 3px var(--tenant-focus-ring) !important;
+}
+
+/* =========================
+   Labels / Help text (Light-only)
+   ========================= */
+
+body:not(.dark)[data-page] label,
+body:not(.dark)[data-page] .form-label {
+    color: var(--tenant-input-text);
+}
+
+body:not(.dark)[data-page] .text-muted,
+body:not(.dark)[data-page] small.text-muted,
+body:not(.dark)[data-page] .form-text {
+    color: var(--tenant-muted) !important;
+}
+
+ body:not(.dark)[data-page] .page-header h1,
+ body:not(.dark)[data-page] .page-header h2,
+ body:not(.dark)[data-page] .page-header .page-title {
+     color: var(--tenant-input-text);
+ }
+
+ body:not(.dark)[data-page] .page-header h1 {
+     font-size: 1.625rem;
+     line-height: 1.25;
+     font-weight: 700;
+ }
+
+ body:not(.dark)[data-page] .page-header h2 {
+     font-size: 1.5rem;
+     line-height: 1.25;
+     font-weight: 700;
+ }
+
+ body:not(.dark)[data-page] .page-header p {
+     font-size: 0.95rem;
+     color: var(--tenant-muted);
+ }
+
+ body:not(.dark)[data-page] .bg-white.border.border-gray-200 > .p-6 > .mb-6,
+ body:not(.dark)[data-page] .bg-white.border.border-gray-200 > .p-6 > .mb-5,
+ body:not(.dark)[data-page] .bg-white.border.border-gray-200 > .p-6 > .mb-4 {
+     margin-bottom: 1.25rem;
+ }
+
+ body:not(.dark)[data-page] h3.text-lg,
+ body:not(.dark)[data-page] h5.text-lg {
+     color: var(--tenant-input-text);
+ }
+
+ body:not(.dark)[data-page] form.space-y-8 > * + *,
+ body:not(.dark)[data-page] form.space-y-10 > * + * {
+     margin-top: 2.25rem;
+ }
+
+ body:not(.dark)[data-page] input,
+ body:not(.dark)[data-page] select,
+ body:not(.dark)[data-page] textarea {
+     transition: border-color 120ms ease, box-shadow 120ms ease, background-color 120ms ease;
+ }
+
+/* =========================
+   Error state (existing patterns only)
+   ========================= */
+
+/* Blade uses @error(...) to add border-red-300 on some inputs.
+   Some screens use Bootstrap-like .is-invalid.
+*/
+body:not(.dark)[data-page] .is-invalid,
+body:not(.dark)[data-page] .form-control.is-invalid {
+    border-color: #fca5a5 !important;
+}
+
+body:not(.dark)[data-page] .is-invalid:focus,
+body:not(.dark)[data-page] .form-control.is-invalid:focus {
+    border-color: #ef4444 !important;
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.16) !important;
+}
