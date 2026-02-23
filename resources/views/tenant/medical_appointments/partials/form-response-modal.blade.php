@@ -72,7 +72,7 @@
                                     <strong>{{ $question->label }}</strong>
                                 </label>
                                 @if($answer)
-                                    <p class="mb-0">{{ $answer->value ?? 'N/A' }}</p>
+                                    <p class="mb-0">{{ \App\Support\FormAnswerFormatter::format($question->type, $answer->value) }}</p>
                                 @else
                                     <p class="mb-0 text-muted">
                                         <i class="mdi mdi-minus-circle me-1"></i>
@@ -94,7 +94,7 @@
                                 <strong>{{ $question->label }}</strong>
                             </label>
                             @if($answer)
-                                <p class="mb-0">{{ $answer->value ?? 'N/A' }}</p>
+                                <p class="mb-0">{{ \App\Support\FormAnswerFormatter::format($question->type, $answer->value) }}</p>
                             @else
                                 <p class="mb-0 text-muted">
                                     <i class="mdi mdi-minus-circle me-1"></i>
@@ -118,4 +118,3 @@
         Resposta do formulário não encontrada.
     </div>
 @endif
-

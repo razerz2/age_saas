@@ -111,7 +111,7 @@
                                             <strong>{{ $question->label }}</strong>
                                         </label>
                                         @if($answer)
-                                            <p class="text-sm text-gray-900 dark:text-white">{{ $answer->value ?? 'N/A' }}</p>
+                                            <p class="text-sm text-gray-900 dark:text-white">{{ \App\Support\FormAnswerFormatter::format($question->type, $answer->value) }}</p>
                                         @else
                                             <p class="text-sm text-gray-500 dark:text-gray-400">Não respondido</p>
                                         @endif
@@ -130,7 +130,7 @@
                                         <strong>{{ $question->label }}</strong>
                                     </label>
                                     @if($answer)
-                                        <p class="text-sm text-gray-900 dark:text-white">{{ $answer->value ?? 'N/A' }}</p>
+                                        <p class="text-sm text-gray-900 dark:text-white">{{ \App\Support\FormAnswerFormatter::format($question->type, $answer->value) }}</p>
                                     @else
                                         <p class="text-sm text-gray-500 dark:text-gray-400">Não respondido</p>
                                     @endif
