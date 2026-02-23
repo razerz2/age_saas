@@ -64,18 +64,18 @@ class FormResponseController extends Controller
 
         // Ordenação whitelist
         $sortable = [
-            'form'        => 'form_id',
-            'patient'     => 'patient_id',
-            'created_at'  => 'created_at',
+            'form'         => 'form_id',
+            'patient'      => 'patient_id',
+            'submitted_at' => 'submitted_at',
         ];
 
-        $sortField = (string) $request->input('sort', 'created_at');
+        $sortField = (string) $request->input('sort', 'submitted_at');
         $sortDir   = strtolower((string) $request->input('direction', 'desc')) === 'asc' ? 'asc' : 'desc';
 
         if (isset($sortable[$sortField])) {
             $query->orderBy($sortable[$sortField], $sortDir);
         } else {
-            $query->orderBy('created_at', 'desc');
+            $query->orderBy('submitted_at', 'desc');
         }
 
         $paginator = $query->paginate($limit, ['*'], 'page', $page);
@@ -88,7 +88,7 @@ class FormResponseController extends Controller
                 'appointment' => $response->appointment
                     ? $response->appointment->starts_at?->format('d/m/Y H:i')
                     : '-',
-                'created_at'  => optional($response->created_at)?->format('d/m/Y H:i'),
+                'submitted_at' => optional($response->submitted_at)?->format('d/m/Y H:i'),
                 'actions'     => view('tenant.form_responses.partials.actions', compact('response'))->render(),
             ];
         })->all();

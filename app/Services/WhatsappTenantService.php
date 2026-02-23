@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Services\Providers\ProviderConfigResolver;
 use App\Models\Tenant\TenantSetting;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -15,6 +16,7 @@ class WhatsappTenantService
     {
         try {
             $provider = TenantSetting::whatsappProvider();
+            $resolver = new ProviderConfigResolver();
 
             if (($provider['driver'] ?? 'global') === 'tenancy') {
                 if (!empty($provider['provider'])) {
@@ -27,10 +29,9 @@ class WhatsappTenantService
                         'services.whatsapp.zapi.token' => $provider['zapi_token'] ?? '',
                         'services.whatsapp.zapi.client_token' => $provider['zapi_client_token'] ?? '',
                         'services.whatsapp.zapi.instance_id' => $provider['zapi_instance_id'] ?? '',
-                        'services.whatsapp.waha.base_url' => $provider['waha_base_url'] ?? '',
-                        'services.whatsapp.waha.api_key' => $provider['waha_api_key'] ?? '',
-                        'services.whatsapp.waha.session' => $provider['waha_session'] ?? 'default',
                     ]);
+
+                    $resolver->applyWahaConfig($resolver->resolveWahaConfig($provider));
 
                     $whatsappService = new WhatsAppService();
                     return $whatsappService->sendMessage($phone, $message);
@@ -54,6 +55,12 @@ class WhatsappTenantService
                     return $response->successful();
                 }
             }
+
+            $globalProvider = sysconfig('WHATSAPP_PROVIDER', config('services.whatsapp.provider', 'whatsapp_business'));
+            config([
+                'services.whatsapp.provider' => $globalProvider,
+            ]);
+            $resolver->applyWahaConfig($resolver->resolveWahaConfig());
 
             // GLOBAL PROVIDER - usa WhatsAppService padrao
             $whatsappService = new WhatsAppService();

@@ -1,5 +1,9 @@
 # 🏢 Documentação - Área Platform (Administrativa)
 
+> Esta documentação está sendo reorganizada.
+> Para o índice oficial e navegação por áreas, consulte `docs/README.md`.
+> Este arquivo permanece como referência funcional detalhada da área Platform.
+
 ## 📋 Índice
 
 1. [Visão Geral](#visão-geral)

@@ -1,5 +1,9 @@
 # 📐 Arquitetura do Sistema - Agendamento SaaS
 
+> Esta documentação está em processo de reorganização.
+> Para o índice oficial e navegação por áreas, consulte `docs/README.md`.
+> Este arquivo continua sendo a referência detalhada de arquitetura.
+
 ## 📋 Índice
 1. [Visão Geral](#visão-geral)
 2. [Estrutura de Pastas](#estrutura-de-pastas)

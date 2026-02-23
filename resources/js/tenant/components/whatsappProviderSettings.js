@@ -63,8 +63,14 @@ export function initTenantWhatsAppSettings() {
         }
     };
 
-    const csrfMeta = document.querySelector('meta[name="csrf-token"]');
-    const csrfToken = csrfMeta ? csrfMeta.getAttribute('content') : '';
+    const getCsrfToken = () => {
+        const meta = document.querySelector('meta[name="csrf-token"]');
+        if (meta && meta.getAttribute('content')) {
+            return meta.getAttribute('content');
+        }
+        const input = document.querySelector('input[name="_token"]');
+        return input ? input.value : '';
+    };
 
     const setupConnectionTest = (buttonId, badgeId, messageId) => {
         const button = document.getElementById(buttonId);
@@ -73,8 +79,13 @@ export function initTenantWhatsAppSettings() {
         button.addEventListener('click', async (event) => {
             event.preventDefault();
 
-            const url = button.getAttribute('data-test-url');
+            let url = button.getAttribute('data-test-url');
             if (!url) return;
+
+            if (buttonId === 'btn-test-waha') {
+                const suffix = 'provider=waha';
+                url += url.includes('?') ? `&${suffix}` : `?${suffix}`;
+            }
 
             const badge = document.getElementById(badgeId);
             const message = document.getElementById(messageId);
@@ -88,7 +99,7 @@ export function initTenantWhatsAppSettings() {
                     headers: {
                         'X-Requested-With': 'XMLHttpRequest',
                         Accept: 'application/json',
-                        'X-CSRF-TOKEN': csrfToken,
+                        'X-CSRF-TOKEN': getCsrfToken(),
                     },
                     credentials: 'same-origin',
                 });
@@ -162,7 +173,7 @@ export function initTenantWhatsAppSettings() {
                         'Content-Type': 'application/json',
                         Accept: 'application/json',
                         'X-Requested-With': 'XMLHttpRequest',
-                        'X-CSRF-TOKEN': csrfToken,
+                        'X-CSRF-TOKEN': getCsrfToken(),
                     },
                     credentials: 'same-origin',
                     body: JSON.stringify({

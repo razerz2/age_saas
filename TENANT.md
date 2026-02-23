@@ -1,5 +1,9 @@
 # 🏥 Documentação - Área Tenant (Clínicas)
 
+> Esta documentação está sendo reorganizada.
+> Para o índice oficial e navegação por áreas, consulte `docs/README.md`.
+> Este arquivo permanece como referência funcional detalhada da área Tenant.
+
 ## 📋 Índice
 
 1. [Visão Geral](#visão-geral)
@@ -16,6 +20,12 @@
 12. [Grid.js: Paginação e seletor de page size](#gridjs-padrão-de-paginação-e-seletor-de-page-size)
 13. [Checklist de Qualidade (Tenant)](#checklist-de-qualidade-tenant)
 14. [Checklist de PR (Tenant)](#checklist-de-pr-tenant)
+15. [Padrão de formulários (Create como referência)](#padrão-de-formulários-create-como-referência)
+16. [Patients: is_active](#patients-is_active)
+17. [Padrão Grid.js — Responsivo com scroll horizontal](#padrão-gridjs--responsivo-com-scroll-horizontal)
+18. [Menu lateral: subitens de dropdown com ícones](#menu-lateral-subitens-de-dropdown-com-ícones)
+19. [Encoding obrigatório (UTF-8 sem BOM)](#encoding-obrigatório-utf-8-sem-bom)
+20. [CSS por módulo (Tenant) / overrides escopados](#css-por-módulo-tenant--overrides-escopados)
 
 ---
 
@@ -877,9 +887,169 @@ Comportamento esperado para o usuário:
 - Visual consistente no **dark mode** (incluindo paginação/rodapé do Grid.js).
 - Header/breadcrumbs padronizados no estilo do módulo **Users** (Dashboard → Módulo, com CTA “Novo …” quando aplicável).
 
----
+----
 
-### Regras para Novos Módulos
+## Padrão de formulários (Create como referência)
+
+### Motivação
+
+Evitar regressões de UI/UX: o **Create** define o padrão oficial de layout/ordem/spacing do módulo; **Edit** e **Show** devem espelhar esse padrão.
+
+### Padrão
+
+- **Create** é a referência canônica para:
+  - Seções do formulário (ordem e títulos).
+  - Espaçamento vertical (`space-y-*`) e gaps dos grids.
+  - Layout responsivo (quebras e proporções em `lg+`).
+- **Edit** deve espelhar o Create:
+  - Mesma ordem/estrutura.
+  - Pode incluir campos de controle adicionais quando necessário (ex.: `is_active`).
+- **Show** deve espelhar o Create:
+  - Mesmo layout, porém em modo leitura (inputs `readonly`/texto com visual equivalente).
+
+### Pacientes — layout do Endereço (determinístico)
+
+#### Padrão visual
+
+- **Linha 1 (lg+)**: Logradouro | Número | Complemento | Bairro
+- **Linha 2 (lg+)**: CEP | Estado | Cidade
+- **Mobile**: empilhar tudo (1 coluna)
+
+#### Implementação recomendada (sem depender de utilitários ausentes)
+
+O build atual do tenant nem sempre possui todos os utilitários Tailwind desejados (ex.: granularidade de `grid-cols-10`/`lg:grid-cols-10`). Quando faltar utilitário, o padrão é:
+
+- Manter a marcação simples no Blade:
+  - 1 stack vertical com `space-y-4`.
+  - 2 grids independentes (linha 1 e linha 2) com `grid grid-cols-1 gap-4`.
+  - `pais_id` (hidden) deve ficar **fora** dos grids.
+- Definir colunas via CSS escopado do módulo:
+  - Arquivo: `resources/css/tenant/pages/patients.css`
+  - Escopo: `[data-page="patients"] ...`
+  - Seletores por data-attribute:
+    - `[data-patient-address-grid="line-1"] { grid-template-columns: 4fr 1fr 3fr 2fr; }`
+    - `[data-patient-address-grid="line-2"] { grid-template-columns: 2fr 4fr 4fr; }`
+  - Breakpoint: `@media (min-width: 1024px)` (equivalente a `lg`).
+
+#### Checklist (Pacientes)
+
+- **Create/Edit/Show** com Endereço idêntico (ordem e duas linhas em `lg+`).
+- Sem `<style>`/`<script>` inline em Blade.
+- CSS apenas em `resources/css/tenant/pages/patients.css` e sempre escopado por `[data-page="patients"]`.
+
+## Patients: is_active
+
+### Motivação
+
+Evitar comportamento inesperado (ex.: “sempre reativar paciente” ao editar) e manter a regra de negócio explícita.
+
+### Padrão
+
+- **Coluna real**: `patients.is_active` (boolean), default `true`.
+- **Create**:
+  - Não exibir campo de status.
+  - Backend força `is_active = true` no `store()`.
+- **Edit**:
+  - Pode exibir campo para ativar/desativar, se o negócio permitir.
+  - Não forçar `true` no `update()` (a não ser que seja decisão explícita de negócio).
+
+### FormRequests
+
+- `StorePatientRequest`:
+  - Não validar `is_active`.
+- `UpdatePatientRequest`:
+  - Validar `is_active` conforme uso na UI: `sometimes|boolean` (ou `required|boolean` quando sempre presente).
+
+### Checklist (PR)
+
+- Se `is_active` aparecer no Edit, garantir que o controller/update respeita o valor.
+- Não introduzir `is_active` no Create.
+
+## Padrão Grid.js — Responsivo com scroll horizontal
+
+### Motivação
+
+Em telas pequenas, tabelas podem “cortar” colunas e quebrar o layout.
+
+### Padrão
+
+- Habilitar **scroll horizontal apenas quando necessário** no wrapper correto do Grid.js.
+- Regras recomendadas (CSS escopado por módulo):
+  - `overflow-x: auto` no container que envolve a tabela (`.gridjs-wrapper`/`.gridjs-container`, dependendo do skin).
+  - Tabela com largura baseada no conteúdo (ex.: `min-width: max-content`).
+- Preservar `border-radius` do card:
+  - Preferir aplicar `overflow-x` no wrapper interno do grid, não no card inteiro.
+
+> Referência técnica do Grid.js (contratos e dark/footer): ver **ARQUITETURA.md** em “Padrão oficial de Listagens (Grid.js) no Tenant” e `docs/tenant-grid-pattern.md`.
+
+## Menu lateral: subitens de dropdown com ícones
+
+### Motivação
+
+Melhorar escaneabilidade do menu sem poluir visualmente os itens pais.
+
+### Padrão
+
+- Itens pais (ex.: “Pacientes”, “Médicos”) mantêm ícone padrão do módulo.
+- Subitens do dropdown devem incluir ícones menores:
+  - **Index/Listagem**: ícone de lista.
+  - **Create/Cadastro**: ícone de plus/adicionar.
+- Alinhamento:
+  - `flex items-center gap-2`.
+  - Ícone com tamanho menor (`w-4 h-4` ou equivalente; no MDI, `text-[14px]`).
+  - Cor suave (`text-gray-500 dark:text-gray-400`).
+
+## Encoding obrigatório (UTF-8 sem BOM)
+
+### Motivação
+
+Evitar caracteres quebrados (ex.: `�`) em views, docs e payloads JSON.
+
+### Padrão
+
+- Views e docs devem ser **UTF-8 sem BOM**.
+
+### Sintomas
+
+- Acentos aparecem como `�`.
+- JSON retornando erro/garbage por UTF-8 inválido.
+
+### Procedimento (manutenção)
+
+- Verificar encoding (ex.: `file -bi <arquivo>`).
+- Remover BOM, se existir.
+- Converter `ISO-8859-1`/`Windows-1252` para `UTF-8`.
+
+### Prevenção
+
+- Configurar editor para salvar como UTF-8 sem BOM.
+- Opcional: reforçar via `.gitattributes` e/ou lint (quando aplicável).
+
+## CSS por módulo (Tenant) / overrides escopados
+
+### Motivação
+
+Evitar CSS global que afete módulos não relacionados e impedir regressões visuais.
+
+### Padrão
+
+- Preferir utilities (Tailwind) quando disponíveis.
+- Quando faltar utilitário no build:
+  - Criar override **escopado por módulo** (ex.: `resources/css/tenant/pages/patients.css`).
+  - Usar seletores com `data-page`:
+    - `[data-page="patients"] ...`
+  - Preferir `data-*` específicos para pontos de layout:
+    - Ex.: `data-patient-address-grid`.
+- Proibido:
+  - `<style>` inline em Blade.
+  - CSS global sem escopo que impacte todos os módulos.
+
+### Checklist (PR)
+
+- CSS novo deve estar em `resources/css/tenant/pages/<modulo>.css`.
+- Seletores sempre escopados por `[data-page="<modulo>"]`.
+- Alterações de layout devem ser reproduzidas em Create/Edit/Show.
+
 ### 🧩 Regras para Novos Módulos
 
 Ao criar um novo módulo na área Tenant:

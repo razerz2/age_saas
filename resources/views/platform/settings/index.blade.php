@@ -1381,14 +1381,24 @@
                 updateWhatsAppProviderVisibility();
             }
 
-            function setupTestButton(buttonId, badgeId, messageId) {
-                var btn = document.getElementById(buttonId);
-                if (!btn) return;
+            function getCsrfToken() {
+                var meta = document.querySelector('meta[name="csrf-token"]');
+                if (meta && meta.getAttribute('content')) {
+                    return meta.getAttribute('content');
+                }
 
-                btn.addEventListener('click', function (e) {
+                var input = document.querySelector('input[name="_token"]');
+                return input ? input.value : '';
+            }
+
+            function setupTestButton(buttonId, badgeId, messageId) {
+                var button = document.getElementById(buttonId);
+                if (!button) return;
+
+                button.addEventListener('click', function (e) {
                     e.preventDefault();
 
-                    var url = btn.getAttribute('data-test-url');
+                    var url = button.getAttribute('data-test-url');
                     if (!url) return;
 
                     var badge = document.getElementById(badgeId);
@@ -1403,8 +1413,7 @@
                         message.textContent = '';
                     }
 
-                    var csrfMeta = document.querySelector('meta[name="csrf-token"]');
-                    var csrfToken = csrfMeta ? csrfMeta.getAttribute('content') : '';
+                    var csrfToken = getCsrfToken();
 
                     fetch(url, {
                         method: 'GET',
@@ -1516,13 +1525,13 @@
                             messageLabel.textContent = '';
                         }
 
-                        var csrfMeta = document.querySelector('meta[name="csrf-token"]');
-                        var csrfToken = csrfMeta ? csrfMeta.getAttribute('content') : '';
+                        var csrfToken = getCsrfToken();
 
                         fetch(url, {
                             method: 'POST',
                             headers: {
                                 'Content-Type': 'application/json',
+                                'Accept': 'application/json',
                                 'X-Requested-With': 'XMLHttpRequest',
                                 'X-CSRF-TOKEN': csrfToken
                             },
@@ -1614,8 +1623,7 @@
                             message.textContent = '';
                         }
 
-                        var csrfMeta = document.querySelector('meta[name="csrf-token"]');
-                        var csrfToken = csrfMeta ? csrfMeta.getAttribute('content') : '';
+                        var csrfToken = getCsrfToken();
 
                         fetch(url, {
                             method: 'POST',

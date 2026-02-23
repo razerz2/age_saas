@@ -1,69 +1,91 @@
-# 📚 Documentação Adicional
+# 📚 Documentação do Projeto
 
-Esta pasta contém documentação complementar e guias específicos do projeto.
+Este diretório concentra a documentação estruturada do sistema de agendamento SaaS.
 
-## 📋 Arquivos Disponíveis
+> Para o índice antigo desta pasta, consulte **[README_legacy.md](README_legacy.md)**.
 
-## ⭐ Trilha Recomendada (Comece por aqui)
+## 🧭 Navegação por áreas
 
-- **[../README.md](../README.md)** - Visão geral, instalação e links principais
-- **[../ARQUITETURA.md](../ARQUITETURA.md)** - Arquitetura e visão técnica do sistema
-- **[../PLATFORM.md](../PLATFORM.md)** - Área Platform (admin)
-- **[../TENANT.md](../TENANT.md)** - Área Tenant (clínicas)
-- **[ENV.md](ENV.md)** - Variáveis de ambiente
+- **00-global**  → Padrões, arquitetura geral, convenções de código e frontend.
+- **10-platform** → Área administrativa central (Platform).
+- **20-tenant**   → Área do tenant (clínicas).
+- **30-landing-page** → Landing page pública / marketing.
+- **40-portal-paciente** → Portal do paciente.
 
-### 🔧 Guias e Tutoriais
+### Links rápidos
 
-- **[GUIA_CRIAR_FORMULARIO.md](GUIA_CRIAR_FORMULARIO.md)** - Guia completo passo a passo para criar formulários personalizados
-- **[GUIA_TESTE_PUBLICO.md](GUIA_TESTE_PUBLICO.md)** - Guia de teste da área pública de agendamento
-- **[GUIA_TESTE_SESSAO_EXPIRADA.md](GUIA_TESTE_SESSAO_EXPIRADA.md)** - Guia de teste para sessão expirada / fluxo de autenticação
-
-### 🔍 Análises e Diagnósticos
-
-- **[FRONTEND_TENANT.md](FRONTEND_TENANT.md)** - Documentário do frontend atual do tenant (views, rotas, JS/CSS, personalização)
-- **[DIAGNOSTICO_GOOGLE_CALLBACK.md](DIAGNOSTICO_GOOGLE_CALLBACK.md)** - Diagnóstico de problemas com callback do Google OAuth
-- **[TIPOS_CONSULTA_VIEWS.md](TIPOS_CONSULTA_VIEWS.md)** - Análise de todas as views que utilizam tipos de consulta
-- **[SOLUCAO_ERRO_419.md](SOLUCAO_ERRO_419.md)** - Solução para erro 419 (CSRF / sessão)
-
-### ⚙️ Configuração e Ambiente
-
-- **[ENV.md](ENV.md)** - Guia completo de variáveis de ambiente
-- **[CORRECAO_APP_URL.md](CORRECAO_APP_URL.md)** - Correção de problemas com APP_URL
-- **[CONFIGURACAO_EMAIL.md](CONFIGURACAO_EMAIL.md)** - Configuração de envio de email
-- **[CONFIGURACAO_TITAN_EMAIL.md](CONFIGURACAO_TITAN_EMAIL.md)** - Configuração de email (Titan)
-
-### 🔗 Integrações
-
-- **[INTEGRACAO_GOOGLE_CALENDAR.md](INTEGRACAO_GOOGLE_CALENDAR.md)** - Documentação completa da integração com Google Calendar
-- **[INTEGRACAO_APPLE_CALENDAR.md](INTEGRACAO_APPLE_CALENDAR.md)** - Documentação completa da integração com Apple Calendar (iCloud) usando protocolo CalDAV
-- **[SISTEMA_PAGAMENTOS_ASAAS.md](SISTEMA_PAGAMENTOS_ASAAS.md)** - Integração e fluxo de pagamentos (Asaas)
-
-### 🗄️ Migrations e Banco de Dados
-
-- **[INSTRUCOES_MIGRATION.md](INSTRUCOES_MIGRATION.md)** - Instruções para migrações manuais
-- **[MIGRATIONS_CLEANUP.md](MIGRATIONS_CLEANUP.md)** - Documentação sobre consolidação de migrations
-
-### 💰 Financeiro (Tenant)
-
-- **[RESUMO_MODULO_FINANCEIRO.md](RESUMO_MODULO_FINANCEIRO.md)** - Resumo completo do módulo (visão geral + fluxos)
-- **[MODULO_FINANCEIRO_TENANT.md](MODULO_FINANCEIRO_TENANT.md)** - Documentação detalhada do módulo no tenant
-- **[MODULO_FINANCEIRO_COMPLETO.md](MODULO_FINANCEIRO_COMPLETO.md)** - Documento técnico (instalação, hardening, conciliação, go-live)
-- **[RELATORIOS_FINANCEIROS.md](RELATORIOS_FINANCEIROS.md)** - Relatórios financeiros
-- **[CONCILIACAO_FINANCEIRA.md](CONCILIACAO_FINANCEIRA.md)** - Conciliação e status
-- **[FLUXO_COBRANCA_COMPLETO.md](FLUXO_COBRANCA_COMPLETO.md)** - Fluxo completo de cobrança
-- **[APPOINTMENT_FINANCE_OBSERVER.md](APPOINTMENT_FINANCE_OBSERVER.md)** - Observer de finanças do agendamento
-- **[AUDITORIA_REFATORACAO_FINANCEIRO.md](AUDITORIA_REFATORACAO_FINANCEIRO.md)** - Auditoria/decisões de refatoração do módulo financeiro
-- **[FINANCE_GO_LIVE_CHECKLIST.md](FINANCE_GO_LIVE_CHECKLIST.md)** - Checklist de go-live
-- **[HARDENING_PRODUCAO.md](HARDENING_PRODUCAO.md)** - Hardening geral (inclui financeiro)
+- **[00-global/00-visao-geral.md](00-global/00-visao-geral.md)**
+- **[10-platform/README.md](10-platform/README.md)**
+- **[20-tenant/README.md](20-tenant/README.md)**
+- **[30-landing-page/README.md](30-landing-page/README.md)**
+- **[40-portal-paciente/README.md](40-portal-paciente/README.md)**
 
 ---
 
-## 📖 Documentação Principal
+## 🧩 Convenções
 
-Para a documentação principal do projeto, consulte:
+### Estrutura de pastas
 
-- **[../README.md](../README.md)** - Documentação geral do projeto
-- **[../TENANT.md](../TENANT.md)** - Documentação da área Tenant (Clínicas)
-- **[../PLATFORM.md](../PLATFORM.md)** - Documentação da área Platform
-- **[../ARQUITETURA.md](../ARQUITETURA.md)** - Documentação técnica da arquitetura
+- Diretórios numerados definem o agrupamento lógico:
+  - `00-global/` → conteúdo transversal a todas as áreas.
+  - `10-*/`, `20-*/`, `30-*/`, `40-*/` → áreas principais do produto.
+- Cada área possui:
+  - `README.md` com visão geral da área.
+  - Arquivos numerados (`01-*.md`, `02-*.md`, ...) para tópicos internos.
+  - Um diretório `modules/` reservado para documentação por módulo (Etapa 2+).
+
+### Nome de arquivos
+
+- Prefixo numérico (`01-`, `02-`, ...) define a ordem de leitura.
+- Sufixo descritivo em **kebab-case** (ex.: `01-visao-geral.md`, `03-estrutura-de-pastas.md`).
+- Para rascunhos ou versões alternativas usar:
+  - `*-new.md` ou `*_draft.md`.
+
+### Como adicionar um novo módulo (Etapas futuras)
+
+1. Escolha a área (`10-platform`, `20-tenant`, `30-landing-page`, `40-portal-paciente`).
+2. Dentro de `modules/`, crie a pasta do módulo usando o nome canônico (ex.: `patients`, `appointments`).
+3. Use o template de módulo em `./_templates/module-template.md` como guia de estrutura.
+4. Atualize o `README.md` da área para incluir o novo módulo na lista.
+
+> **Importante:** Nesta etapa estamos apenas criando a estrutura base. A documentação detalhada de módulos virá em etapas futuras.
+
+### Como registrar mudanças de documentação
+
+1. Edite `docs/CHANGELOG.md`.
+2. Adicione uma nova seção com a data no formato `YYYY-MM-DD`.
+3. Liste, em bullet points, as mudanças relevantes na documentação (arquivos criados/alterados).
+
+Exemplo:
+
+```markdown
+2026-02-22
+- Criada estrutura base de documentação em /docs.
+- Adicionados templates em /docs/_templates.
+```
+
+---
+
+## Como contribuir
+
+Para novo módulo, copie `docs/_templates/module-template.md` e crie pasta em `<area>/modules/<modulo>/`.
+
+## Rascunhos
+
+- Os arquivos de rascunho ficam em `docs/_drafts/README.md`.
+- Nota: vazio por enquanto.
+
+---
+
+## 📎 Referências legadas
+
+Parte da documentação histórica permanece em arquivos na raiz do projeto:
+
+- `ARQUITETURA.md`
+- `PLATFORM.md`
+- `TENANT.md`
+
+Esses documentos continuarão válidos e serão, aos poucos, consolidados dentro da nova estrutura (`00-global/*` e `*/modules/*`).
+
+Para o índice legacy desta pasta, veja **[README_legacy.md](README_legacy.md)**.
 

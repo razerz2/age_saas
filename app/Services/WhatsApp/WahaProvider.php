@@ -2,7 +2,6 @@
 
 namespace App\Services\WhatsApp;
 
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
 class WahaProvider implements WhatsAppProviderInterface
@@ -29,75 +28,71 @@ class WahaProvider implements WhatsAppProviderInterface
     public function sendMessage(string $phone, string $message): bool
     {
         try {
-            $formattedPhone = $this->formatPhone($phone);
+            $client = WahaClient::fromConfig();
+            $chatId = WahaClient::formatChatIdFromPhone($phone);
 
-            if (empty($this->baseUrl) || empty($this->apiKey) || empty($this->session)) {
+            if (!$client->isConfigured()) {
                 Log::error('❌ Tentativa de uso do WAHA sem configuração completa', [
-                    'phone' => $formattedPhone,
+                    'phone' => $chatId,
+                    'base_url_set' => !empty($this->baseUrl),
+                    'api_key_set' => !empty($this->apiKey),
+                    'session' => $this->session,
+                ]);
+                return false;
+            }
+
+            if ($chatId === '') {
+                Log::error('❌ Número inválido para envio WAHA', [
+                    'phone' => $phone,
                 ]);
                 return false;
             }
 
             // 1) Valida sessão
-            $sessionUrl = $this->baseUrl . '/api/sessions/' . urlencode($this->session);
-
-            $sessionResponse = Http::withHeaders([
-                'X-Api-Key' => $this->apiKey,
-            ])->get($sessionUrl);
-
-            $sessionData = $sessionResponse->json();
+            $sessionResult = $client->getSessionStatus();
+            $sessionBody = is_array($sessionResult['body'] ?? null) ? $sessionResult['body'] : [];
+            $sessionState = strtoupper((string) ($sessionBody['status'] ?? $sessionBody['state'] ?? ''));
+            $workingStates = ['WORKING', 'CONNECTED', 'READY', 'ONLINE'];
 
             Log::info('🔍 WAHA sessão verificada', [
-                'url' => $sessionUrl,
-                'status_code' => $sessionResponse->status(),
-                'body' => $sessionData,
+                'base_url' => $client->getBaseUrl(),
+                'session' => $client->getSession(),
+                'status_code' => $sessionResult['status'] ?? null,
+                'status' => $sessionState,
             ]);
 
-            if (!$sessionResponse->successful() || !isset($sessionData['status']) || $sessionData['status'] !== 'WORKING') {
-                Log::error('❌ Sessão WAHA não está WORKING, envio abortado', [
-                    'session' => $this->session,
-                    'status' => $sessionData['status'] ?? null,
-                    'status_code' => $sessionResponse->status(),
+            if (empty($sessionResult['ok']) || !in_array($sessionState, $workingStates, true)) {
+                Log::error('❌ Sessão WAHA não está pronta, envio abortado', [
+                    'session' => $client->getSession(),
+                    'status' => $sessionState ?: null,
+                    'status_code' => $sessionResult['status'] ?? null,
                 ]);
                 return false;
             }
 
             // 2) Envia mensagem
-            $sendUrl = $this->baseUrl . '/api/sendText';
-
-            $payload = [
-                'session' => $this->session,
-                'chatId' => $formattedPhone,
-                'text' => $message,
-            ];
-
-            $response = Http::withHeaders([
-                'X-Api-Key' => $this->apiKey,
-            ])->post($sendUrl, $payload);
-
-            $body = $response->json();
+            $sendResult = $client->sendText($chatId, $message);
+            $sendBody = $sendResult['body'] ?? null;
 
             Log::info('📤 WAHA resposta recebida', [
                 'provider' => 'waha',
-                'url' => $sendUrl,
-                'to' => $formattedPhone,
-                'status_code' => $response->status(),
-                'body' => $body,
+                'base_url' => $client->getBaseUrl(),
+                'to' => $chatId,
+                'status_code' => $sendResult['status'] ?? null,
             ]);
 
-            if (!$response->successful()) {
+            if (empty($sendResult['ok'])) {
                 Log::error('❌ Erro HTTP ao enviar mensagem WAHA', [
-                    'status_code' => $response->status(),
-                    'body' => $body,
+                    'status_code' => $sendResult['status'] ?? null,
+                    'body' => $sendBody,
                 ]);
                 return false;
             }
 
-            // Considera sucesso se não houver campo de erro explícito
-            if (is_array($body) && isset($body['error'])) {
+            if (is_array($sendBody) && isset($sendBody['error'])) {
                 Log::error('❌ Erro na resposta WAHA', [
-                    'error' => $body['error'],
-                    'body' => $body,
+                    'error' => $sendBody['error'],
+                    'body' => $sendBody,
                 ]);
                 return false;
             }
@@ -111,6 +106,61 @@ class WahaProvider implements WhatsAppProviderInterface
             ]);
             return false;
         }
+    }
+
+    public function testSession(): array
+    {
+        $client = WahaClient::fromConfig();
+        if (!$client->isConfigured()) {
+            return [
+                'status' => 'ERROR',
+                'message' => 'WAHA nao esta configurado corretamente.',
+                'http_status' => null,
+                'data' => [],
+            ];
+        }
+
+        $result = $client->getSessionStatus();
+        $httpStatus = $result['status'] ?? null;
+        $body = is_array($result['body'] ?? null) ? $result['body'] : [];
+
+        if (in_array($httpStatus, [401, 403], true)) {
+            return [
+                'status' => 'ERROR',
+                'message' => 'Unauthenticated (WAHA).',
+                'http_status' => $httpStatus,
+                'data' => $body,
+            ];
+        }
+
+        if ($httpStatus === 404) {
+            return [
+                'status' => 'ERROR',
+                'message' => 'Sessao nao encontrada.',
+                'http_status' => $httpStatus,
+                'data' => $body,
+            ];
+        }
+
+        if (empty($result['ok'])) {
+            return [
+                'status' => 'ERROR',
+                'message' => 'HTTP ' . ($httpStatus ?? 'erro') . ' - ' . ($body['message'] ?? $body['error'] ?? 'Falha ao consultar sessao.'),
+                'http_status' => $httpStatus,
+                'data' => $body,
+            ];
+        }
+
+        $state = strtoupper((string) ($body['status'] ?? $body['state'] ?? ''));
+
+        return [
+            'status' => 'OK',
+            'message' => $state !== ''
+                ? 'Sessao WAHA esta conectada (' . $state . ').'
+                : 'Sessao WAHA esta conectada.',
+            'http_status' => $httpStatus,
+            'data' => $body,
+        ];
     }
 
     public function formatPhone(string $phone): string

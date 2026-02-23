@@ -6,7 +6,10 @@ use App\Models\Platform\Pais; // ✅ importante
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use App\Services\Providers\ProviderConfigResolver;
 use App\Services\WhatsApp\WhatsAppBusinessProvider;
+use App\Services\WhatsApp\WahaClient;
+use App\Services\WhatsApp\WahaProvider;
 use App\Services\WhatsApp\ZApiProvider;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
@@ -755,7 +758,21 @@ class SystemSettingsController extends Controller
      */
     public function testConnection(Request $request, $service)
     {
-        $result = testConnection($service);
+        $serviceKey = $this->normalizeService($service);
+        if ($serviceKey === 'waha') {
+            $this->applyPlatformWahaConfig();
+            $provider = new WahaProvider();
+            $result = $provider->testSession();
+
+            return response()->json([
+                'status' => ($result['status'] ?? 'ERROR') === 'OK' ? 'OK' : 'ERROR',
+                'message' => $result['message'] ?? 'Falha ao testar sessao WAHA.',
+                'data' => $result['data'] ?? [],
+                'http_status' => $result['http_status'] ?? null,
+            ]);
+        }
+
+        $result = testConnection($serviceKey);
 
         if ($request->expectsJson() || $request->ajax()) {
             return response()->json([
@@ -850,70 +867,38 @@ class SystemSettingsController extends Controller
             'message' => 'required|string|max:1000',
         ]);
 
-        $baseUrl = config('services.whatsapp.waha.base_url');
-        $apiKey  = config('services.whatsapp.waha.api_key');
-        $session = config('services.whatsapp.waha.session', 'default');
-
-        if (empty($baseUrl) || empty($apiKey) || empty($session)) {
+        $this->applyPlatformWahaConfig();
+        $provider = new WahaProvider();
+        $sessionCheck = $provider->testSession();
+        if (($sessionCheck['status'] ?? 'ERROR') !== 'OK') {
             return response()->json([
                 'status' => 'ERROR',
-                'message' => 'WAHA não está configurado corretamente.',
+                'message' => $sessionCheck['message'] ?? 'Sessao WAHA nao esta pronta para envio.',
+                'data' => $sessionCheck['data'] ?? [],
+                'http_status' => $sessionCheck['http_status'] ?? null,
             ]);
         }
 
-        $sessionEndpoint = rtrim($baseUrl, '/') . '/api/sessions/' . urlencode($session);
-
         try {
-            $verifyOption = app()->environment('local') ? false : true;
-
-            // 1) Valida sessão
-            $sessionResponse = \Illuminate\Support\Facades\Http::timeout(8)
-                ->withOptions(['verify' => $verifyOption])
-                ->withHeaders([
-                    'X-Api-Key' => $apiKey,
-                ])->get($sessionEndpoint);
-
-            $sessionData = $sessionResponse->json();
-
-            if (!$sessionResponse->successful() || !isset($sessionData['status']) || $sessionData['status'] !== 'WORKING') {
+            $client = WahaClient::fromConfig();
+            $chatId = WahaClient::formatChatIdFromPhone($validated['number']);
+            if ($chatId === '') {
                 return response()->json([
                     'status' => 'ERROR',
-                    'message' => 'Sessão WAHA não está WORKING.',
-                    'raw' => [
-                        'http_status' => $sessionResponse->status(),
-                        'body' => $sessionData,
-                    ],
+                    'message' => 'Numero de destino invalido.',
                 ]);
             }
 
-            // 2) Envia mensagem de teste
-            $sendEndpoint = rtrim($baseUrl, '/') . '/api/sendText';
+            $sendResult = $client->sendText($chatId, $validated['message']);
+            $sendBody = $sendResult['body'] ?? null;
+            $ok = !empty($sendResult['ok']) && !(is_array($sendBody) && isset($sendBody['error']));
 
-            $chatId = $validated['number'];
-            if (!str_contains($chatId, '@')) {
-                $chatId .= '@c.us';
-            }
-
-            $payload = [
-                'session' => $session,
-                'chatId' => $chatId,
-                'text' => $validated['message'],
-            ];
-
-            $sendResponse = \Illuminate\Support\Facades\Http::timeout(8)
-                ->withOptions(['verify' => $verifyOption])
-                ->withHeaders([
-                    'X-Api-Key' => $apiKey,
-                ])->post($sendEndpoint, $payload);
-
-            $sendBody = $sendResponse->json();
-
-            if ($sendResponse->successful()) {
+            if ($ok) {
                 return response()->json([
                     'status' => 'OK',
                     'message' => 'Mensagem de teste WAHA enviada com sucesso.',
                     'raw' => [
-                        'http_status' => $sendResponse->status(),
+                        'http_status' => $sendResult['status'] ?? null,
                         'body' => $sendBody,
                     ],
                 ]);
@@ -921,9 +906,9 @@ class SystemSettingsController extends Controller
 
             return response()->json([
                 'status' => 'ERROR',
-                'message' => 'Falha ao enviar mensagem WAHA (HTTP ' . $sendResponse->status() . ').',
+                'message' => 'Falha ao enviar mensagem WAHA (HTTP ' . ($sendResult['status'] ?? 'erro') . ').',
                 'raw' => [
-                    'http_status' => $sendResponse->status(),
+                    'http_status' => $sendResult['status'] ?? null,
                     'body' => $sendBody,
                 ],
             ]);
@@ -933,5 +918,29 @@ class SystemSettingsController extends Controller
                 'message' => 'Erro ao enviar mensagem WAHA: ' . $e->getMessage(),
             ]);
         }
+    }
+
+    private function applyPlatformWahaConfig(): void
+    {
+        $resolver = new ProviderConfigResolver();
+        $resolver->applyWahaConfig($resolver->resolveWahaConfig());
+    }
+
+    private function normalizeService(string $service): string
+    {
+        $normalized = strtolower(trim($service));
+        $aliases = [
+            'whatsapp_business' => 'meta',
+            'whatsapp-business' => 'meta',
+            'business' => 'meta',
+            'z-api' => 'zapi',
+            'z_api' => 'zapi',
+            'waha_core' => 'waha',
+            'waha-core' => 'waha',
+            'whatsapp_waha' => 'waha',
+            'whatsapp-waha' => 'waha',
+        ];
+
+        return $aliases[$normalized] ?? $normalized;
     }
 }

@@ -48,7 +48,7 @@
                 ['name' => 'form', 'label' => 'Formulário'],
                 ['name' => 'patient', 'label' => 'Paciente'],
                 ['name' => 'appointment', 'label' => 'Consulta'],
-                ['name' => 'created_at', 'label' => 'Respondido em'],
+                ['name' => 'submitted_at', 'label' => 'Respondido em'],
                 ['name' => 'actions', 'label' => 'Ações'],
             ]"
             ajaxUrl="{{ workspace_route('tenant.form-responses.grid-data') }}"
