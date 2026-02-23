@@ -4,6 +4,7 @@ namespace App\Services\WhatsApp;
 
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use App\Services\WhatsApp\PhoneNormalizer;
 
 class ZApiProvider implements WhatsAppProviderInterface
 {
@@ -207,12 +208,7 @@ class ZApiProvider implements WhatsAppProviderInterface
 
     public function formatPhone(string $phone): string
     {
-        // Z-API espera o número no formato: 5511999999999 (sem + e sem espaços)
-        $digits = preg_replace('/\D/', '', $phone);
-        if (!str_starts_with($digits, '55')) {
-            $digits = '55' . $digits;
-        }
-        return $digits;
+        return PhoneNormalizer::formatForZapi($phone);
     }
 }
 

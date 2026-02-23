@@ -6,6 +6,7 @@ use App\Services\Providers\ProviderConfigResolver;
 use App\Models\Tenant\TenantSetting;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use App\Services\WhatsApp\PhoneNormalizer;
 
 class WhatsappTenantService
 {
@@ -39,10 +40,11 @@ class WhatsappTenantService
 
                 // Fallback legado para tenants com configuracao antiga
                 if (!empty($provider['api_url']) && !empty($provider['api_token'])) {
+                    $normalizedPhone = PhoneNormalizer::normalizeE164($phone);
                     $response = Http::asJson()->post($provider['api_url'], [
                         'token' => $provider['api_token'],
                         'from' => $provider['sender'],
-                        'to' => $phone,
+                        'to' => $normalizedPhone !== '' ? $normalizedPhone : $phone,
                         'body' => $message,
                     ]);
 

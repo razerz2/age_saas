@@ -11,6 +11,7 @@ use App\Services\WhatsApp\WhatsAppBusinessProvider;
 use App\Services\WhatsApp\WahaClient;
 use App\Services\WhatsApp\WahaProvider;
 use App\Services\WhatsApp\ZApiProvider;
+use App\Services\WhatsApp\PhoneNormalizer;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Cache;
@@ -867,6 +868,20 @@ class SystemSettingsController extends Controller
             'message' => 'required|string|max:1000',
         ]);
 
+        try {
+            $chatId = WahaClient::formatChatIdFromPhone($validated['number']);
+        } catch (\InvalidArgumentException $e) {
+            Log::warning('Numero invalido no teste WAHA (platform)', [
+                'number' => PhoneNormalizer::maskPhone($validated['number']),
+                'error' => $e->getMessage(),
+            ]);
+
+            return response()->json([
+                'status' => 'ERROR',
+                'message' => 'Telefone inválido para WhatsApp. Use DDD + número (ex: 67999998888).',
+            ]);
+        }
+
         $this->applyPlatformWahaConfig();
         $provider = new WahaProvider();
         $sessionCheck = $provider->testSession();
@@ -881,13 +896,6 @@ class SystemSettingsController extends Controller
 
         try {
             $client = WahaClient::fromConfig();
-            $chatId = WahaClient::formatChatIdFromPhone($validated['number']);
-            if ($chatId === '') {
-                return response()->json([
-                    'status' => 'ERROR',
-                    'message' => 'Numero de destino invalido.',
-                ]);
-            }
 
             $sendResult = $client->sendText($chatId, $validated['message']);
             $sendBody = $sendResult['body'] ?? null;

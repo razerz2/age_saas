@@ -41,10 +41,32 @@ class TenantNotificationService
         $appointment,
         ?array $metadata = null
     ): ?Notification {
-        // Verifica se notificações de agendamento estão habilitadas
-        if (!TenantSetting::isEnabled('notifications.appointments.enabled')) {
-            return null;
-        }
+        $internalNotificationsEnabled = TenantSetting::isEnabled('notifications.appointments.enabled');
+        $emailEnabled = self::isPatientEmailEnabled();
+        $whatsappEnabled = self::isPatientWhatsappEnabled();
+
+        $tenant = \App\Models\Platform\Tenant::current();
+        $emailProvider = TenantSetting::emailProvider();
+        $whatsappProvider = TenantSetting::whatsappProvider();
+
+        Log::info('🔔 Appointment notification dispatch started', [
+            'tenant_id' => $tenant?->id,
+            'appointment_id' => $appointment->id ?? null,
+            'action' => $action,
+            'internal_notifications_enabled' => $internalNotificationsEnabled,
+            'email_enabled' => $emailEnabled,
+            'whatsapp_enabled' => $whatsappEnabled,
+            'email_driver' => $emailProvider['driver'] ?? null,
+            'email_host_set' => !empty($emailProvider['host'] ?? null),
+            'email_from_address' => $emailProvider['from_address'] ?? null,
+            'whatsapp_driver' => $whatsappProvider['driver'] ?? null,
+            'whatsapp_provider' => $whatsappProvider['provider'] ?? null,
+            'waha_base_url' => $whatsappProvider['waha_base_url'] ?? null,
+            'waha_session' => $whatsappProvider['waha_session'] ?? null,
+            'waha_api_key_set' => !empty($whatsappProvider['waha_api_key'] ?? null),
+            'patient_email' => $appointment->patient?->email ?? null,
+            'patient_phone' => $appointment->patient?->phone ?? null,
+        ]);
 
         // Carrega relacionamentos necessários
         if (!$appointment->relationLoaded('patient')) {
@@ -116,21 +138,24 @@ class TenantNotificationService
             'status' => $appointment->status,
         ]);
 
-        // Cria notificação interna
-        $notification = self::create(
-            'appointment',
-            $data['title'],
-            $data['message'],
-            $data['level'],
-            $appointment->id,
-            'App\Models\Tenant\Appointment',
-            $metadata
-        );
+        $notification = null;
+        if ($internalNotificationsEnabled) {
+            // Cria notificação interna
+            $notification = self::create(
+                'appointment',
+                $data['title'],
+                $data['message'],
+                $data['level'],
+                $appointment->id,
+                'App\Models\Tenant\Appointment',
+                $metadata
+            );
+        }
 
         // Envia notificação ao paciente se configurado
         // Apenas para ações relevantes ao paciente
         $actionsToNotifyPatient = ['created', 'cancelled', 'rescheduled', 'scheduled'];
-        if (in_array($action, $actionsToNotifyPatient)) {
+        if (in_array($action, $actionsToNotifyPatient) && ($emailEnabled || $whatsappEnabled)) {
             self::sendAppointmentNotificationToPatient($appointment, $action, $metadata);
         }
 
@@ -179,8 +204,11 @@ class TenantNotificationService
                 'new_status' => $metadata['new_status'] ?? null,
             ]);
 
+            $emailEnabled = self::isPatientEmailEnabled();
+            $whatsappEnabled = self::isPatientWhatsappEnabled();
+
             // Enviar por email
-            if ($patient->email && TenantSetting::isEnabled('notifications.send_email_to_patients')) {
+            if ($patient->email && $emailEnabled) {
                 try {
                     $emailService = app(\App\Services\MailTenantService::class);
                     $emailService->send(
@@ -204,7 +232,7 @@ class TenantNotificationService
             }
 
             // Enviar por WhatsApp
-            if ($patient->phone && TenantSetting::isEnabled('notifications.send_whatsapp_to_patients')) {
+            if ($patient->phone && $whatsappEnabled) {
                 try {
                     $whatsappService = app(\App\Services\WhatsappTenantService::class);
                     $whatsappService->send(
@@ -233,6 +261,18 @@ class TenantNotificationService
                 'trace' => $e->getTraceAsString(),
             ]);
         }
+    }
+
+    private static function isPatientEmailEnabled(): bool
+    {
+        $enabled = TenantSetting::get('notifications.send_email_to_patients');
+        return $enabled === 'true' || $enabled === true;
+    }
+
+    private static function isPatientWhatsappEnabled(): bool
+    {
+        $enabled = TenantSetting::get('notifications.send_whatsapp_to_patients');
+        return $enabled === 'true' || $enabled === true;
     }
 
     /**

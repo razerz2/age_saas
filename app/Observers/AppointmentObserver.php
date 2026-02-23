@@ -7,7 +7,7 @@ use App\Models\Tenant\Form;
 use App\Models\Tenant\TenantSetting;
 use App\Models\Tenant\OnlineAppointmentInstruction;
 use App\Models\Platform\Tenant;
-use App\Services\TenantNotificationService;
+use App\Jobs\Tenant\SendAppointmentNotificationsJob;
 use App\Services\NotificationService;
 use App\Services\Tenant\GoogleCalendarService;
 use App\Services\Tenant\AppleCalendarService;
@@ -51,7 +51,7 @@ class AppointmentObserver
             }
         }
         
-        TenantNotificationService::notifyAppointment('created', $appointment);
+        $this->dispatchAppointmentNotificationJob('created', $appointment);
 
         // Enviar link do formulário se existir formulário ativo
         $form = Form::getFormForAppointment($appointment);
@@ -150,8 +150,8 @@ class AppointmentObserver
             ];
             
             if (isset($actionMap[$newStatus])) {
-                TenantNotificationService::notifyAppointment(
-                    $actionMap[$newStatus], 
+                $this->dispatchAppointmentNotificationJob(
+                    $actionMap[$newStatus],
                     $appointment,
                     ['old_status' => $oldStatus, 'new_status' => $newStatus]
                 );
@@ -160,7 +160,7 @@ class AppointmentObserver
             // Se não mudou o status, notifica apenas como atualizado
             // (pode ter mudado horário, notas, etc)
             if ($appointment->wasChanged(['starts_at', 'ends_at', 'notes'])) {
-                TenantNotificationService::notifyAppointment('updated', $appointment);
+                $this->dispatchAppointmentNotificationJob('updated', $appointment);
             }
         }
 
@@ -259,6 +259,52 @@ class AppointmentObserver
             Log::error('Erro ao remover agendamento do Apple Calendar (Observer)', [
                 'appointment_id' => $appointment->id,
                 'error' => $e->getMessage(),
+            ]);
+        }
+    }
+
+    private function dispatchAppointmentNotificationJob(
+        string $action,
+        Appointment $appointment,
+        ?array $metadata = null
+    ): void {
+        $tenant = Tenant::current();
+        if (!$tenant) {
+            Log::warning('Tenant atual não encontrado para enfileirar notificação de agendamento', [
+                'appointment_id' => $appointment->id,
+                'action' => $action,
+            ]);
+            return;
+        }
+
+        $queueConnection = (string) config('queue.default', 'sync');
+        $queueName = (string) config("queue.connections.{$queueConnection}.queue", 'default');
+
+        $pendingDispatch = SendAppointmentNotificationsJob::dispatch(
+            $tenant->id,
+            $appointment->id,
+            $action,
+            $metadata
+        );
+
+        if (method_exists($pendingDispatch, 'afterCommit')) {
+            $pendingDispatch->afterCommit();
+        }
+
+        if (in_array($queueConnection, ['database', 'redis'], true)) {
+            Log::info('📬 Appointment notification job enqueued', [
+                'tenant_id' => $tenant->id,
+                'appointment_id' => $appointment->id,
+                'action' => $action,
+                'queue_connection' => $queueConnection,
+                'queue' => $queueName,
+            ]);
+        } else {
+            Log::info('📬 Appointment notification dispatch scheduled', [
+                'tenant_id' => $tenant->id,
+                'appointment_id' => $appointment->id,
+                'action' => $action,
+                'queue_connection' => $queueConnection,
             ]);
         }
     }

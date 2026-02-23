@@ -10,6 +10,7 @@ use App\Services\WhatsApp\WhatsAppBusinessProvider;
 use App\Services\WhatsApp\WahaClient;
 use App\Services\WhatsApp\WahaProvider;
 use App\Services\WhatsApp\ZApiProvider;
+use App\Services\WhatsApp\PhoneNormalizer;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
@@ -93,6 +94,20 @@ class WhatsAppSettingsTestController extends Controller
 
     public function testWahaSend(TestWhatsAppSendRequest $request): JsonResponse
     {
+        try {
+            $chatId = WahaClient::formatChatIdFromPhone($request->input('number'));
+        } catch (\InvalidArgumentException $e) {
+            Log::warning('Numero invalido no teste WAHA (tenant)', [
+                'number' => PhoneNormalizer::maskPhone((string) $request->input('number')),
+                'error' => $e->getMessage(),
+            ]);
+
+            return response()->json([
+                'status' => 'ERROR',
+                'message' => 'Telefone inválido para WhatsApp. Use DDD + número (ex: 67999998888).',
+            ]);
+        }
+
         $this->applyTenantWhatsAppConfig();
 
         $provider = new WahaProvider();
@@ -107,13 +122,6 @@ class WhatsAppSettingsTestController extends Controller
         }
 
         $client = WahaClient::fromConfig();
-        $chatId = WahaClient::formatChatIdFromPhone($request->input('number'));
-        if ($chatId === '') {
-            return response()->json([
-                'status' => 'ERROR',
-                'message' => 'Numero de destino invalido.',
-            ]);
-        }
 
         try {
             $sendResult = $client->sendText($chatId, $request->input('message'));

@@ -6,6 +6,7 @@ use App\Helpers\EmailLayoutHelper;
 use App\Models\Tenant\TenantSetting;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\View;
 use App\Services\FeatureAccessService;
 
 class MailTenantService
@@ -28,6 +29,7 @@ class MailTenantService
             }
 
             $provider = TenantSetting::emailProvider();
+            $data = array_merge(['subject' => $subject], $data);
 
             if ($provider['driver'] === 'tenancy') {
                 // Configura SMTP do tenant
@@ -47,8 +49,21 @@ class MailTenantService
             }
             // Se driver for 'global', usa configuração padrão do Laravel
 
-            // Renderiza a view e aplica o layout
-            $html = EmailLayoutHelper::renderViewContent($view, $data);
+            // Renderiza a view e aplica o layout (ou usa conteúdo bruto se não for view)
+            if (is_string($view) && View::exists($view)) {
+                $html = EmailLayoutHelper::renderViewContent($view, $data);
+            } else {
+                $rawContent = is_string($view) ? $view : '';
+                $hasHtml = $rawContent !== strip_tags($rawContent);
+                $content = $hasHtml ? $rawContent : nl2br(e($rawContent));
+                $html = EmailLayoutHelper::apply($content, $data);
+
+                Log::info('📧 MailTenantService usando conteúdo bruto', [
+                    'to' => $to,
+                    'subject' => $subject,
+                    'driver' => $provider['driver'],
+                ]);
+            }
 
             Mail::send([], [], function ($message) use ($to, $subject, $html) {
                 $message->to($to)

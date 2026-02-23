@@ -3,6 +3,7 @@
 namespace App\Services\WhatsApp;
 
 use Illuminate\Support\Facades\Log;
+use App\Services\WhatsApp\PhoneNormalizer;
 
 class WahaProvider implements WhatsAppProviderInterface
 {
@@ -29,7 +30,15 @@ class WahaProvider implements WhatsAppProviderInterface
     {
         try {
             $client = WahaClient::fromConfig();
-            $chatId = WahaClient::formatChatIdFromPhone($phone);
+            try {
+                $chatId = WahaClient::formatChatIdFromPhone($phone);
+            } catch (\InvalidArgumentException $e) {
+                Log::error('❌ Telefone inválido para WAHA', [
+                    'phone' => PhoneNormalizer::maskPhone($phone),
+                    'error' => $e->getMessage(),
+                ]);
+                return false;
+            }
 
             if (!$client->isConfigured()) {
                 Log::error('❌ Tentativa de uso do WAHA sem configuração completa', [
@@ -66,6 +75,7 @@ class WahaProvider implements WhatsAppProviderInterface
                     'session' => $client->getSession(),
                     'status' => $sessionState ?: null,
                     'status_code' => $sessionResult['status'] ?? null,
+                    'body' => self::summarizeBody($sessionBody),
                 ]);
                 return false;
             }
@@ -165,12 +175,28 @@ class WahaProvider implements WhatsAppProviderInterface
 
     public function formatPhone(string $phone): string
     {
-        // WAHA normalmente aceita o número em formato internacional sem +, ex: 5511999999999
-        $digits = preg_replace('/\D/', '', $phone);
-        if (!str_starts_with($digits, '55')) {
-            $digits = '55' . $digits;
+        try {
+            return PhoneNormalizer::normalizeWahaBrPhone($phone);
+        } catch (\InvalidArgumentException $e) {
+            Log::warning('Telefone inválido para WAHA ao formatar', [
+                'phone' => PhoneNormalizer::maskPhone($phone),
+                'error' => $e->getMessage(),
+            ]);
+            return '';
+        }
+    }
+
+    private static function summarizeBody(mixed $body, int $limit = 800): string
+    {
+        if (is_array($body)) {
+            $body = json_encode($body, JSON_UNESCAPED_UNICODE);
         }
 
-        return $digits;
+        $body = (string) ($body ?? '');
+        if (strlen($body) <= $limit) {
+            return $body;
+        }
+
+        return substr($body, 0, $limit) . '...';
     }
 }

@@ -5,6 +5,7 @@ namespace App\Services\WhatsApp;
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use App\Services\WhatsApp\PhoneNormalizer;
 
 class WahaClient
 {
@@ -41,16 +42,8 @@ class WahaClient
             return $trimmed;
         }
 
-        $digits = preg_replace('/\D/', '', $trimmed);
-        if ($digits === '') {
-            return '';
-        }
-
-        if (!str_starts_with($digits, '55')) {
-            $digits = '55' . $digits;
-        }
-
-        return $digits . '@c.us';
+        $normalized = PhoneNormalizer::normalizeWahaBrPhone($trimmed);
+        return $normalized === '' ? '' : $normalized . '@c.us';
     }
 
     public function isConfigured(): bool
@@ -86,6 +79,14 @@ class WahaClient
 
             if ($body === null && $response->body() !== '') {
                 $body = ['raw' => $response->body()];
+            }
+
+            if (!$response->successful()) {
+                Log::warning('❌ WAHA session status request failed', [
+                    'endpoint' => $endpoint,
+                    'status_code' => $response->status(),
+                    'body' => self::summarizeBody($body),
+                ]);
             }
 
             return [
@@ -132,6 +133,22 @@ class WahaClient
                 $body = ['raw' => $response->body()];
             }
 
+            if (!$response->successful()) {
+                Log::warning('❌ WAHA sendText request failed', [
+                    'endpoint' => $endpoint,
+                    'status_code' => $response->status(),
+                    'body' => self::summarizeBody($body),
+                ]);
+            }
+
+            if (is_array($body) && isset($body['error'])) {
+                Log::warning('❌ WAHA sendText error response', [
+                    'endpoint' => $endpoint,
+                    'status_code' => $response->status(),
+                    'body' => self::summarizeBody($body),
+                ]);
+            }
+
             return [
                 'ok' => $response->successful(),
                 'status' => $response->status(),
@@ -160,5 +177,19 @@ class WahaClient
                 'X-Api-Key' => $this->apiKey,
                 'Accept' => 'application/json',
             ]);
+    }
+
+    private static function summarizeBody(mixed $body, int $limit = 800): string
+    {
+        if (is_array($body)) {
+            $body = json_encode($body, JSON_UNESCAPED_UNICODE);
+        }
+
+        $body = (string) ($body ?? '');
+        if (strlen($body) <= $limit) {
+            return $body;
+        }
+
+        return substr($body, 0, $limit) . '...';
     }
 }

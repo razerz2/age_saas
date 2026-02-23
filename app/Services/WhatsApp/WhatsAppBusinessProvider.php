@@ -4,6 +4,7 @@ namespace App\Services\WhatsApp;
 
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use App\Services\WhatsApp\PhoneNormalizer;
 
 class WhatsAppBusinessProvider implements WhatsAppProviderInterface
 {
@@ -55,12 +56,7 @@ class WhatsAppBusinessProvider implements WhatsAppProviderInterface
 
     public function formatPhone(string $phone): string
     {
-        // Remove caracteres não numéricos e adiciona +55 se não tiver
-        $digits = preg_replace('/\D/', '', $phone);
-        if (!str_starts_with($digits, '55')) {
-            $digits = '55' . $digits;
-        }
-        return '+' . $digits;
+        return PhoneNormalizer::formatForWhatsAppBusiness($phone);
     }
 }
 
