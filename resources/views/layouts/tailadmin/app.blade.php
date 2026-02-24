@@ -8,8 +8,22 @@
     />
     <meta http-equiv="X-UA-Compatible" content="ie=edge" />
     <meta name="csrf-token" content="{{ csrf_token() }}" />
+    @php
+        $tenantFavicon = tenant_setting('appearance.favicon', '');
+        $faviconVersion = '';
+        if ($tenantFavicon) {
+            try {
+                $faviconVersion = '?v=' . Storage::disk('public')->lastModified($tenantFavicon);
+            } catch (\Throwable $e) {
+                $faviconVersion = '';
+            }
+        }
+        $faviconUrl = $tenantFavicon
+            ? Storage::url($tenantFavicon) . $faviconVersion
+            : asset('tailadmin/assets/images/logo/logo.svg');
+    @endphp
     <title>@yield('title', 'Dashboard | TailAdmin - Tailwind CSS Admin Dashboard Template')</title>
-    <link rel="icon" href="{{ asset('tailadmin/assets/images/logo/logo.svg') }}" type="image/svg+xml">
+    <link rel="icon" href="{{ $faviconUrl }}" type="image/svg+xml">
     <link href="{{ asset('tailadmin/assets/css/style.css') }}" rel="stylesheet">
     <link href="{{ asset('tailadmin/assets/vendor/mdi/css/materialdesignicons.min.css') }}" rel="stylesheet">
     <!-- Grid.js CDN CSS -->

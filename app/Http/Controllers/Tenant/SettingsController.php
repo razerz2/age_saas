@@ -21,6 +21,12 @@ class SettingsController extends Controller
      */
     public function index()
     {
+        $appearanceLogoLight = TenantSetting::get('appearance.logo_light', TenantSetting::get('appearance.logo', ''));
+        $appearanceLogoDark = TenantSetting::get('appearance.logo_dark', '');
+        $appearanceLogoMiniLight = TenantSetting::get('appearance.logo_mini_light', TenantSetting::get('appearance.logo_mini', ''));
+        $appearanceLogoMiniDark = TenantSetting::get('appearance.logo_mini_dark', '');
+        $appearanceFavicon = TenantSetting::get('appearance.favicon', '');
+
         $settings = [
             // Geral
             'timezone' => TenantSetting::get('timezone', config('app.timezone', 'America/Sao_Paulo')),
@@ -86,9 +92,13 @@ class SettingsController extends Controller
             'professional.registration_label' => TenantSetting::get('professional.registration_label', ''),
             
             // Aparência
-            'appearance.logo' => TenantSetting::get('appearance.logo', ''),
-            'appearance.logo_mini' => TenantSetting::get('appearance.logo_mini', ''),
-            'appearance.favicon' => TenantSetting::get('appearance.favicon', ''),
+            'appearance.logo' => $appearanceLogoLight,
+            'appearance.logo_mini' => $appearanceLogoMiniLight,
+            'appearance.logo_light' => $appearanceLogoLight,
+            'appearance.logo_dark' => $appearanceLogoDark,
+            'appearance.logo_mini_light' => $appearanceLogoMiniLight,
+            'appearance.logo_mini_dark' => $appearanceLogoMiniDark,
+            'appearance.favicon' => $appearanceFavicon,
         ];
 
         // Buscar integrações ativas
@@ -576,92 +586,65 @@ class SettingsController extends Controller
     public function updateAppearance(Request $request)
     {
         $request->validate([
-            'logo' => 'nullable|image|mimes:jpeg,jpg,png,gif,svg|max:2048',
-            'logo_mini' => 'nullable|image|mimes:jpeg,jpg,png,gif,svg|max:2048',
-            'favicon' => 'nullable|image|mimes:jpeg,jpg,png,ico,svg|max:1024',
-            'remove_logo' => 'nullable|boolean',
-            'remove_logo_mini' => 'nullable|boolean',
+            'appearance_logo_light' => 'nullable|image|mimes:jpeg,jpg,png,gif,svg|max:2048',
+            'appearance_logo_dark' => 'nullable|image|mimes:jpeg,jpg,png,gif,svg|max:2048',
+            'appearance_logo_mini_light' => 'nullable|image|mimes:jpeg,jpg,png,gif,svg|max:2048',
+            'appearance_logo_mini_dark' => 'nullable|image|mimes:jpeg,jpg,png,gif,svg|max:2048',
+            'appearance_favicon' => 'nullable|image|mimes:jpeg,jpg,png,ico,svg|max:1024',
+            'remove_logo_light' => 'nullable|boolean',
+            'remove_logo_dark' => 'nullable|boolean',
+            'remove_logo_mini_light' => 'nullable|boolean',
+            'remove_logo_mini_dark' => 'nullable|boolean',
             'remove_favicon' => 'nullable|boolean',
         ]);
 
         // Obter tenant atual para criar diretório específico
         $currentTenant = Tenant::current();
         $tenantId = $currentTenant ? $currentTenant->id : 'default';
-        $storagePath = 'tenant/' . $tenantId;
+        $storagePath = 'tenant/' . $tenantId . '/branding';
         
         // Garantir que o diretório existe
         if (!Storage::disk('public')->exists($storagePath)) {
             Storage::disk('public')->makeDirectory($storagePath, 0755, true);
         }
 
-        // Processar logo
-        if ($request->has('remove_logo') && $request->remove_logo) {
-            // Remover logo atual
-            $currentLogo = TenantSetting::get('appearance.logo');
-            if ($currentLogo && Storage::disk('public')->exists($currentLogo)) {
-                Storage::disk('public')->delete($currentLogo);
-            }
-            TenantSetting::set('appearance.logo', '');
-        } elseif ($request->hasFile('logo')) {
-            // Remover logo anterior se existir
-            $currentLogo = TenantSetting::get('appearance.logo');
-            if ($currentLogo && Storage::disk('public')->exists($currentLogo)) {
-                Storage::disk('public')->delete($currentLogo);
+        $handleUpload = function (string $inputKey, string $settingKey, string $removeKey, string $prefix) use ($request, $storagePath): void {
+            if ($request->boolean($removeKey)) {
+                $currentValue = TenantSetting::get($settingKey);
+                if ($currentValue && Storage::disk('public')->exists($currentValue)) {
+                    Storage::disk('public')->delete($currentValue);
+                }
+                TenantSetting::set($settingKey, '');
+                return;
             }
 
-            // Fazer upload do novo logo
-            $file = $request->file('logo');
-            $filename = 'logo_' . time() . '_' . Str::random(10) . '.' . $file->getClientOriginalExtension();
-            $path = $file->storeAs($storagePath, $filename, 'public');
-            
-            TenantSetting::set('appearance.logo', $path);
-        }
+            if ($request->hasFile($inputKey)) {
+                $currentValue = TenantSetting::get($settingKey);
+                if ($currentValue && Storage::disk('public')->exists($currentValue)) {
+                    Storage::disk('public')->delete($currentValue);
+                }
 
-        // Processar logo retrátil (mini)
-        if ($request->has('remove_logo_mini') && $request->remove_logo_mini) {
-            // Remover logo mini atual
-            $currentLogoMini = TenantSetting::get('appearance.logo_mini');
-            if ($currentLogoMini && Storage::disk('public')->exists($currentLogoMini)) {
-                Storage::disk('public')->delete($currentLogoMini);
-            }
-            TenantSetting::set('appearance.logo_mini', '');
-        } elseif ($request->hasFile('logo_mini')) {
-            // Remover logo mini anterior se existir
-            $currentLogoMini = TenantSetting::get('appearance.logo_mini');
-            if ($currentLogoMini && Storage::disk('public')->exists($currentLogoMini)) {
-                Storage::disk('public')->delete($currentLogoMini);
-            }
+                $file = $request->file($inputKey);
+                $filename = $prefix . '_' . time() . '_' . Str::random(10) . '.' . $file->getClientOriginalExtension();
+                $path = $file->storeAs($storagePath, $filename, 'public');
 
-            // Fazer upload do novo logo mini
-            $file = $request->file('logo_mini');
-            $filename = 'logo_mini_' . time() . '_' . Str::random(10) . '.' . $file->getClientOriginalExtension();
-            $path = $file->storeAs($storagePath, $filename, 'public');
-            
-            TenantSetting::set('appearance.logo_mini', $path);
-        }
-
-        // Processar favicon
-        if ($request->has('remove_favicon') && $request->remove_favicon) {
-            // Remover favicon atual
-            $currentFavicon = TenantSetting::get('appearance.favicon');
-            if ($currentFavicon && Storage::disk('public')->exists($currentFavicon)) {
-                Storage::disk('public')->delete($currentFavicon);
+                TenantSetting::set($settingKey, $path);
             }
-            TenantSetting::set('appearance.favicon', '');
-        } elseif ($request->hasFile('favicon')) {
-            // Remover favicon anterior se existir
-            $currentFavicon = TenantSetting::get('appearance.favicon');
-            if ($currentFavicon && Storage::disk('public')->exists($currentFavicon)) {
-                Storage::disk('public')->delete($currentFavicon);
-            }
+        };
 
-            // Fazer upload do novo favicon
-            $file = $request->file('favicon');
-            $filename = 'favicon_' . time() . '_' . Str::random(10) . '.' . $file->getClientOriginalExtension();
-            $path = $file->storeAs($storagePath, $filename, 'public');
-            
-            TenantSetting::set('appearance.favicon', $path);
-        }
+        $handleUpload('appearance_logo_light', 'appearance.logo_light', 'remove_logo_light', 'logo_light');
+        $handleUpload('appearance_logo_dark', 'appearance.logo_dark', 'remove_logo_dark', 'logo_dark');
+        $handleUpload('appearance_logo_mini_light', 'appearance.logo_mini_light', 'remove_logo_mini_light', 'logo_mini_light');
+        $handleUpload('appearance_logo_mini_dark', 'appearance.logo_mini_dark', 'remove_logo_mini_dark', 'logo_mini_dark');
+        $handleUpload('appearance_favicon', 'appearance.favicon', 'remove_favicon', 'favicon');
+
+        $logoLight = TenantSetting::get('appearance.logo_light', '');
+        $logoDark = TenantSetting::get('appearance.logo_dark', '');
+        $logoMiniLight = TenantSetting::get('appearance.logo_mini_light', '');
+        $logoMiniDark = TenantSetting::get('appearance.logo_mini_dark', '');
+
+        TenantSetting::set('appearance.logo', $logoLight ?: $logoDark ?: '');
+        TenantSetting::set('appearance.logo_mini', $logoMiniLight ?: $logoMiniDark ?: '');
 
         // Redirecionar para a página de configurações mantendo o hash na URL
         $redirectUrl = route('tenant.settings.index', ['slug' => tenant()->subdomain]) . '#appearance';

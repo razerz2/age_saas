@@ -1,3 +1,24 @@
+@php
+    $headerLogoLightPath = tenant_setting('appearance.logo_light', tenant_setting('appearance.logo', ''));
+    $headerLogoDarkPath = tenant_setting('appearance.logo_dark', '');
+    $headerLogoVersion = function (?string $path): string {
+        if (empty($path)) {
+            return '';
+        }
+        try {
+            return '?v=' . Storage::disk('public')->lastModified($path);
+        } catch (\Throwable $e) {
+            return '';
+        }
+    };
+    $headerLogoLightUrl = $headerLogoLightPath
+        ? Storage::url($headerLogoLightPath) . $headerLogoVersion($headerLogoLightPath)
+        : asset('tailadmin/assets/images/logo/logo.svg');
+    $headerLogoDarkUrl = $headerLogoDarkPath
+        ? Storage::url($headerLogoDarkPath) . $headerLogoVersion($headerLogoDarkPath)
+        : $headerLogoLightUrl;
+@endphp
+
 <!-- Header -->
 <header x-data="{menuToggle: false}" class="sticky top-0 z-99999 flex w-full border-gray-200 bg-white xl:border-b dark:border-gray-800 dark:bg-gray-900">
     <div class="flex grow flex-col items-center justify-between xl:flex-row xl:px-6">
@@ -8,8 +29,8 @@
                 </svg>
             </button>
             <a href="{{ workspace_route('tenant.dashboard') }}" class="xl:hidden">
-                <img class="dark:hidden" src="{{ asset('tailadmin/assets/images/logo/logo.svg') }}" alt="Logo" />
-                <img class="h-9 w-9 rounded-full object-cover object-center" src="{{ asset('tailadmin/assets/images/user/owner.png') }}" alt="User" />
+                <img class="h-10 max-h-10 w-auto object-contain dark:hidden" src="{{ $headerLogoLightUrl }}" alt="Logo" />
+                <img class="h-10 max-h-10 w-auto object-contain hidden dark:block" src="{{ $headerLogoDarkUrl }}" alt="Logo" />
             </a>
         </div>
 

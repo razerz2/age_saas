@@ -7,6 +7,7 @@ export function init() {
     bindBookingLinkCopy();
     bindLocationConfig();
     bindFinanceConfig();
+    bindAppearancePreviews();
     initTenantWhatsAppSettings();
 }
 
@@ -220,6 +221,46 @@ function switchTab(tabId) {
             behavior: 'smooth',
         });
     }
+}
+
+function bindAppearancePreviews() {
+    const inputs = document.querySelectorAll('input[type="file"][data-preview-target]');
+    if (!inputs.length) {
+        return;
+    }
+
+    inputs.forEach((input) => {
+        input.addEventListener('change', () => {
+            const targetId = input.dataset.previewTarget;
+            const containerId = input.dataset.previewContainer;
+            if (!targetId || !containerId) {
+                return;
+            }
+
+            const preview = document.getElementById(targetId);
+            const container = document.getElementById(containerId);
+            if (!preview || !container) {
+                return;
+            }
+
+            const file = input.files && input.files[0];
+            if (!file) {
+                container.classList.add('hidden');
+                container.classList.remove('flex');
+                preview.removeAttribute('src');
+                return;
+            }
+
+            const url = URL.createObjectURL(file);
+            preview.src = url;
+            container.classList.remove('hidden');
+            container.classList.add('flex');
+
+            preview.onload = () => {
+                URL.revokeObjectURL(url);
+            };
+        });
+    });
 }
 
 function bindLocationConfig() {

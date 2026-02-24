@@ -204,14 +204,12 @@
                 @forelse($appointmentsNext as $appointment)
                     <div class="flex items-center justify-between rounded-lg border border-gray-200 p-3 dark:border-gray-800">
                         <div class="flex items-center gap-3">
-                            @if($appointment->patient && $appointment->patient->user)
-                                @if($appointment->patient->user->avatar)
-                                    <img class="h-10 w-10 rounded-full object-cover" src="{{ asset('storage/' . $appointment->patient->user->avatar) }}" alt="{{ $appointment->patient->user->name }}">
-                                @else
-                                    <div class="h-10 w-10 rounded-full bg-gray-300 flex items-center justify-center dark:bg-gray-700">
-                                        <span class="text-gray-600 font-medium dark:text-gray-200">{{ substr($appointment->patient->user->name, 0, 1) }}</span>
-                                    </div>
-                                @endif
+                            @if($appointment->patient)
+                                <div class="h-10 w-10 rounded-full bg-gray-300 flex items-center justify-center dark:bg-gray-700">
+                                    <span class="text-gray-600 font-medium dark:text-gray-200">
+                                        {{ mb_substr($appointment->patient->full_name ?? '?', 0, 1) }}
+                                    </span>
+                                </div>
                             @else
                                 <div class="h-10 w-10 rounded-full bg-gray-300 flex items-center justify-center dark:bg-gray-700">
                                     <span class="text-gray-600 font-medium dark:text-gray-200">?</span>
@@ -219,7 +217,7 @@
                             @endif
                             <div>
                                 <p class="font-medium text-gray-900 dark:text-white">
-                                    {{ $appointment->patient->user->name ?? 'Paciente não identificado' }}
+                                    {{ $appointment->patient?->full_name ?? 'Paciente não identificado' }}
                                 </p>
                                 <p class="text-xs text-gray-500 dark:text-gray-400">
                                     {{ $appointment->specialty->name ?? 'Sem especialidade' }} • 

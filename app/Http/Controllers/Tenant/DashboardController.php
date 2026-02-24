@@ -194,7 +194,7 @@ class DashboardController extends Controller
         $now = Carbon::now();
         $next24Hours = $now->copy()->addDay();
         
-        return Appointment::with(['patient.user', 'calendar.doctor.user', 'specialty', 'type'])
+        return Appointment::with(['patient', 'calendar.doctor.user', 'specialty', 'type'])
             ->whereBetween('starts_at', [$now, $next24Hours])
             ->whereIn('status', ['scheduled', 'rescheduled', 'confirmed'])
             ->orderBy('starts_at', 'asc')

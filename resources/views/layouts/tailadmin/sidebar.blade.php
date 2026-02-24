@@ -45,29 +45,58 @@
         strlen(trim($professionalLabelSingular)) <= 1) {
         $professionalLabelSingular = 'Profissional';
     }
+
+    $logoLightPath = tenant_setting('appearance.logo_light', tenant_setting('appearance.logo', ''));
+    $logoDarkPath = tenant_setting('appearance.logo_dark', '');
+    $logoMiniLightPath = tenant_setting('appearance.logo_mini_light', tenant_setting('appearance.logo_mini', ''));
+    $logoMiniDarkPath = tenant_setting('appearance.logo_mini_dark', '');
+
+    $logoVersion = function (?string $path): string {
+        if (empty($path)) {
+            return '';
+        }
+        try {
+            return '?v=' . Storage::disk('public')->lastModified($path);
+        } catch (\Throwable $e) {
+            return '';
+        }
+    };
+
+    $logoLightUrl = $logoLightPath
+        ? Storage::url($logoLightPath) . $logoVersion($logoLightPath)
+        : asset('tailadmin/assets/images/logo/logo.svg');
+    $logoDarkUrl = $logoDarkPath
+        ? Storage::url($logoDarkPath) . $logoVersion($logoDarkPath)
+        : $logoLightUrl;
+    $logoMiniLightUrl = $logoMiniLightPath
+        ? Storage::url($logoMiniLightPath) . $logoVersion($logoMiniLightPath)
+        : asset('tailadmin/assets/images/logo/logo-icon.svg');
+    $logoMiniDarkUrl = $logoMiniDarkPath
+        ? Storage::url($logoMiniDarkPath) . $logoVersion($logoMiniDarkPath)
+        : $logoMiniLightUrl;
 @endphp
 
 <aside
     :class="sidebarToggle ? 'translate-x-0 xl:w-[90px]' : '-translate-x-full'"
-    class="sidebar fixed top-0 left-0 z-9999 flex h-screen w-[290px] flex-col overflow-y-auto border-r border-gray-200 bg-white px-5 transition-all duration-300 xl:static xl:translate-x-0 dark:border-gray-800 dark:bg-black"
+    class="sidebar fixed top-0 left-0 z-9999 flex h-screen w-[260px] flex-col overflow-y-auto border-r border-gray-200 bg-white px-5 transition-all duration-300 xl:static xl:translate-x-0 dark:border-gray-800 dark:bg-black"
     @click.outside="sidebarToggle = false"
 >
-    <div
-        :class="sidebarToggle ? 'justify-center' : 'justify-between'"
-        class="sidebar-header flex items-center gap-2 pt-8 pb-7"
-    >
-        <a href="{{ workspace_route('tenant.dashboard') }}">
-            <span class="logo" :class="sidebarToggle ? 'hidden' : ''">
-                <img class="dark:hidden" src="{{ asset('tailadmin/assets/images/logo/logo.svg') }}" alt="Logo" />
-                <img class="hidden dark:block" src="{{ asset('tailadmin/assets/images/logo/logo-dark.svg') }}" alt="Logo" />
-            </span>
-            <img
-                class="logo-icon"
-                :class="sidebarToggle ? 'xl:block' : 'hidden'"
-                src="{{ asset('tailadmin/assets/images/logo/logo-icon.svg') }}"
-                alt="Logo"
-            />
-        </a>
+    <div class="sidebar-header px-4 pt-8 pb-7">
+        <div
+            :class="sidebarToggle ? 'justify-center' : 'justify-between'"
+            class="flex items-center gap-2"
+        >
+            <a href="{{ workspace_route('tenant.dashboard') }}" class="flex items-center gap-2 min-w-0">
+                <span :class="sidebarToggle ? 'hidden' : 'flex'" class="items-center">
+                    <img class="block h-10 w-auto object-contain dark:hidden" src="{{ $logoLightUrl }}" alt="Logo" />
+                    <img class="hidden h-10 w-auto object-contain dark:block" src="{{ $logoDarkUrl }}" alt="Logo" />
+                </span>
+                <span :class="sidebarToggle ? 'flex' : 'hidden'" class="items-center">
+                    <img class="block h-8 w-auto object-contain dark:hidden" src="{{ $logoMiniLightUrl }}" alt="Logo" />
+                    <img class="hidden h-8 w-auto object-contain dark:block" src="{{ $logoMiniDarkUrl }}" alt="Logo" />
+                </span>
+            </a>
+        </div>
     </div>
 
     <div class="no-scrollbar flex flex-col overflow-y-auto duration-300 ease-linear">
@@ -87,7 +116,7 @@
                         >
                             <i class="mdi mdi-view-dashboard {{ request()->routeIs('tenant.dashboard') ? 'menu-item-icon-active' : 'menu-item-icon-inactive' }}"></i>
 
-                            <span class="menu-item-text" :class="sidebarToggle ? 'xl:hidden' : ''">Dashboard</span>
+                            <span class="menu-item-text truncate min-w-0" :class="sidebarToggle ? 'xl:hidden' : ''">Dashboard</span>
                         </a>
                     </li>
 
@@ -98,7 +127,7 @@
                                 class="menu-item group {{ request()->routeIs('tenant.calendars.events.*') ? 'menu-item-active' : 'menu-item-inactive' }}"
                             >
                                 <i class="mdi mdi-calendar-check {{ request()->routeIs('tenant.calendars.events.*') ? 'menu-item-icon-active' : 'menu-item-icon-inactive' }}"></i>
-                                <span class="menu-item-text" :class="sidebarToggle ? 'xl:hidden' : ''">Agenda</span>
+                                <span class="menu-item-text truncate min-w-0" :class="sidebarToggle ? 'xl:hidden' : ''">Agenda</span>
                             </a>
                         </li>
                     @endif
@@ -109,7 +138,7 @@
                             class="menu-item group {{ request()->routeIs('tenant.appointments.*') && !request()->routeIs('tenant.recurring-appointments.*') ? 'menu-item-active' : 'menu-item-inactive' }}"
                         >
                             <i class="mdi mdi-calendar-clock {{ request()->routeIs('tenant.appointments.*') && !request()->routeIs('tenant.recurring-appointments.*') ? 'menu-item-icon-active' : 'menu-item-icon-inactive' }}"></i>
-                            <span class="menu-item-text" :class="sidebarToggle ? 'xl:hidden' : ''">Agendamentos</span>
+                            <span class="menu-item-text truncate min-w-0" :class="sidebarToggle ? 'xl:hidden' : ''">Agendamentos</span>
                         </a>
                     </li>
 
@@ -119,7 +148,7 @@
                             class="menu-item group {{ request()->routeIs('tenant.recurring-appointments.*') ? 'menu-item-active' : 'menu-item-inactive' }}"
                         >
                             <i class="mdi mdi-calendar-repeat {{ request()->routeIs('tenant.recurring-appointments.*') ? 'menu-item-icon-active' : 'menu-item-icon-inactive' }}"></i>
-                            <span class="menu-item-text" :class="sidebarToggle ? 'xl:hidden' : ''">Agend. Recorrentes</span>
+                            <span class="menu-item-text truncate min-w-0" :class="sidebarToggle ? 'xl:hidden' : ''">Agend. Recorrentes</span>
                         </a>
                     </li>
 
@@ -130,7 +159,7 @@
                                 class="menu-item group {{ request()->routeIs('tenant.online-appointments.*') ? 'menu-item-active' : 'menu-item-inactive' }}"
                             >
                                 <i class="mdi mdi-video-account {{ request()->routeIs('tenant.online-appointments.*') ? 'menu-item-icon-active' : 'menu-item-icon-inactive' }}"></i>
-                                <span class="menu-item-text" :class="sidebarToggle ? 'xl:hidden' : ''">Consultas Online</span>
+                                <span class="menu-item-text truncate min-w-0" :class="sidebarToggle ? 'xl:hidden' : ''">Consultas Online</span>
                             </a>
                         </li>
                     @endif
@@ -142,7 +171,7 @@
                                 class="menu-item group {{ request()->routeIs('tenant.medical-appointments.*') ? 'menu-item-active' : 'menu-item-inactive' }}"
                             >
                                 <i class="mdi mdi-account-heart {{ request()->routeIs('tenant.medical-appointments.*') ? 'menu-item-icon-active' : 'menu-item-icon-inactive' }}"></i>
-                                <span class="menu-item-text" :class="sidebarToggle ? 'xl:hidden' : ''">Atendimento</span>
+                                <span class="menu-item-text truncate min-w-0" :class="sidebarToggle ? 'xl:hidden' : ''">Atendimento</span>
                             </a>
                         </li>
                     @endif
@@ -157,7 +186,7 @@
                     <li x-data="{ open: {{ request()->routeIs('tenant.patients.*') ? 'true' : 'false' }} }">
                         <a href="#" @click.prevent="open = !open" class="menu-item group {{ request()->routeIs('tenant.patients.*') ? 'menu-item-active' : 'menu-item-inactive' }}">
                             <i class="mdi mdi-account-heart {{ request()->routeIs('tenant.patients.*') ? 'menu-item-icon-active' : 'menu-item-icon-inactive' }}"></i>
-                            <span class="menu-item-text" :class="sidebarToggle ? 'xl:hidden' : ''">Pacientes</span>
+                            <span class="menu-item-text truncate min-w-0" :class="sidebarToggle ? 'xl:hidden' : ''">Pacientes</span>
                             <svg class="menu-item-arrow" :class="[open ? 'menu-item-arrow-active' : 'menu-item-arrow-inactive', sidebarToggle ? 'xl:hidden' : '' ]" width="20" height="20" viewBox="0 0 20 20" fill="none">
                                 <path d="M4.79175 7.39584L10.0001 12.6042L15.2084 7.39585" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
                             </svg>
@@ -177,7 +206,7 @@
                     <li x-data="{ open: {{ request()->routeIs('tenant.doctors.*') ? 'true' : 'false' }} }">
                         <a href="#" @click.prevent="open = !open" class="menu-item group {{ request()->routeIs('tenant.doctors.*') ? 'menu-item-active' : 'menu-item-inactive' }}">
                             <i class="mdi mdi-stethoscope {{ request()->routeIs('tenant.doctors.*') ? 'menu-item-icon-active' : 'menu-item-icon-inactive' }}"></i>
-                            <span class="menu-item-text" :class="sidebarToggle ? 'xl:hidden' : ''">{{ $professionalLabelPlural }}</span>
+                            <span class="menu-item-text truncate min-w-0" :class="sidebarToggle ? 'xl:hidden' : ''">{{ $professionalLabelPlural }}</span>
                             <svg class="menu-item-arrow" :class="[open ? 'menu-item-arrow-active' : 'menu-item-arrow-inactive', sidebarToggle ? 'xl:hidden' : '' ]" width="20" height="20" viewBox="0 0 20 20" fill="none">
                                 <path d="M4.79175 7.39584L10.0001 12.6042L15.2084 7.39585" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
                             </svg>
@@ -197,7 +226,7 @@
                     <li x-data="{ open: {{ request()->routeIs('tenant.specialties.*') ? 'true' : 'false' }} }">
                         <a href="#" @click.prevent="open = !open" class="menu-item group {{ request()->routeIs('tenant.specialties.*') ? 'menu-item-active' : 'menu-item-inactive' }}">
                             <i class="mdi mdi-pulse {{ request()->routeIs('tenant.specialties.*') ? 'menu-item-icon-active' : 'menu-item-icon-inactive' }}"></i>
-                            <span class="menu-item-text" :class="sidebarToggle ? 'xl:hidden' : ''">Especialidades</span>
+                            <span class="menu-item-text truncate min-w-0" :class="sidebarToggle ? 'xl:hidden' : ''">Especialidades</span>
                             <svg class="menu-item-arrow" :class="[open ? 'menu-item-arrow-active' : 'menu-item-arrow-inactive', sidebarToggle ? 'xl:hidden' : '' ]" width="20" height="20" viewBox="0 0 20 20" fill="none">
                                 <path d="M4.79175 7.39584L10.0001 12.6042L15.2084 7.39585" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
                             </svg>
@@ -218,7 +247,7 @@
                         <li x-data="{ open: {{ request()->routeIs('tenant.users.*') ? 'true' : 'false' }} }">
                             <a href="#" @click.prevent="open = !open" class="menu-item group {{ request()->routeIs('tenant.users.*') ? 'menu-item-active' : 'menu-item-inactive' }}">
                                 <i class="mdi mdi-account-multiple {{ request()->routeIs('tenant.users.*') ? 'menu-item-icon-active' : 'menu-item-icon-inactive' }}"></i>
-                                <span class="menu-item-text" :class="sidebarToggle ? 'xl:hidden' : ''">Usuários</span>
+                                <span class="menu-item-text truncate min-w-0" :class="sidebarToggle ? 'xl:hidden' : ''">Usuários</span>
                                 <svg class="menu-item-arrow" :class="[open ? 'menu-item-arrow-active' : 'menu-item-arrow-inactive', sidebarToggle ? 'xl:hidden' : '' ]" width="20" height="20" viewBox="0 0 20 20" fill="none">
                                     <path d="M4.79175 7.39584L10.0001 12.6042L15.2084 7.39585" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
                                 </svg>
@@ -250,14 +279,14 @@
                                 class="menu-item group {{ request()->routeIs('tenant.doctor-settings.*') ? 'menu-item-active' : 'menu-item-inactive' }}"
                             >
                                 <i class="mdi mdi-calendar-month {{ request()->routeIs('tenant.doctor-settings.*') ? 'menu-item-icon-active' : 'menu-item-icon-inactive' }}"></i>
-                                <span class="menu-item-text" :class="sidebarToggle ? 'xl:hidden' : ''">Calendário</span>
+                                <span class="menu-item-text truncate min-w-0" :class="sidebarToggle ? 'xl:hidden' : ''">Calendário</span>
                             </a>
                         </li>
                     @else
                         <li x-data="{ open: {{ request()->routeIs('tenant.calendars.*') ? 'true' : 'false' }} }">
                             <a href="#" @click.prevent="open = !open" class="menu-item group {{ request()->routeIs('tenant.calendars.*') ? 'menu-item-active' : 'menu-item-inactive' }}">
                                 <i class="mdi mdi-calendar-month {{ request()->routeIs('tenant.calendars.*') ? 'menu-item-icon-active' : 'menu-item-icon-inactive' }}"></i>
-                                <span class="menu-item-text" :class="sidebarToggle ? 'xl:hidden' : ''">Calendários</span>
+                                <span class="menu-item-text truncate min-w-0" :class="sidebarToggle ? 'xl:hidden' : ''">Calendários</span>
                                 <svg class="menu-item-arrow" :class="[open ? 'menu-item-arrow-active' : 'menu-item-arrow-inactive', sidebarToggle ? 'xl:hidden' : '' ]" width="20" height="20" viewBox="0 0 20 20" fill="none">
                                     <path d="M4.79175 7.39584L10.0001 12.6042L15.2084 7.39585" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
                                 </svg>
@@ -279,7 +308,7 @@
                         <li x-data="{ open: {{ request()->routeIs('tenant.business-hours.*') ? 'true' : 'false' }} }">
                             <a href="#" @click.prevent="open = !open" class="menu-item group {{ request()->routeIs('tenant.business-hours.*') ? 'menu-item-active' : 'menu-item-inactive' }}">
                                 <i class="mdi mdi-clock-outline {{ request()->routeIs('tenant.business-hours.*') ? 'menu-item-icon-active' : 'menu-item-icon-inactive' }}"></i>
-                                <span class="menu-item-text" :class="sidebarToggle ? 'xl:hidden' : ''">Horários</span>
+                                <span class="menu-item-text truncate min-w-0" :class="sidebarToggle ? 'xl:hidden' : ''">Horários</span>
                                 <svg class="menu-item-arrow" :class="[open ? 'menu-item-arrow-active' : 'menu-item-arrow-inactive', sidebarToggle ? 'xl:hidden' : '' ]" width="20" height="20" viewBox="0 0 20 20" fill="none">
                                     <path d="M4.79175 7.39584L10.0001 12.6042L15.2084 7.39585" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
                                 </svg>
@@ -299,7 +328,7 @@
                         <li x-data="{ open: {{ request()->routeIs('tenant.appointment-types.*') ? 'true' : 'false' }} }">
                             <a href="#" @click.prevent="open = !open" class="menu-item group {{ request()->routeIs('tenant.appointment-types.*') ? 'menu-item-active' : 'menu-item-inactive' }}">
                                 <i class="mdi mdi-clipboard-pulse {{ request()->routeIs('tenant.appointment-types.*') ? 'menu-item-icon-active' : 'menu-item-icon-inactive' }}"></i>
-                                <span class="menu-item-text" :class="sidebarToggle ? 'xl:hidden' : ''">Tipos</span>
+                                <span class="menu-item-text truncate min-w-0" :class="sidebarToggle ? 'xl:hidden' : ''">Tipos</span>
                                 <svg class="menu-item-arrow" :class="[open ? 'menu-item-arrow-active' : 'menu-item-arrow-inactive', sidebarToggle ? 'xl:hidden' : '' ]" width="20" height="20" viewBox="0 0 20 20" fill="none">
                                     <path d="M4.79175 7.39584L10.0001 12.6042L15.2084 7.39585" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
                                 </svg>
@@ -327,7 +356,7 @@
                     <li x-data="{ open: {{ request()->routeIs('tenant.forms.*') ? 'true' : 'false' }} }">
                         <a href="#" @click.prevent="open = !open" class="menu-item group {{ request()->routeIs('tenant.forms.*') ? 'menu-item-active' : 'menu-item-inactive' }}">
                             <i class="mdi mdi-file-document-edit {{ request()->routeIs('tenant.forms.*') ? 'menu-item-icon-active' : 'menu-item-icon-inactive' }}"></i>
-                            <span class="menu-item-text" :class="sidebarToggle ? 'xl:hidden' : ''">Formulários</span>
+                            <span class="menu-item-text truncate min-w-0" :class="sidebarToggle ? 'xl:hidden' : ''">Formulários</span>
                             <svg class="menu-item-arrow" :class="[open ? 'menu-item-arrow-active' : 'menu-item-arrow-inactive', sidebarToggle ? 'xl:hidden' : '' ]" width="20" height="20" viewBox="0 0 20 20" fill="none">
                                 <path d="M4.79175 7.39584L10.0001 12.6042L15.2084 7.39585" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
                             </svg>
@@ -347,7 +376,7 @@
                     <li x-data="{ open: {{ request()->routeIs('tenant.responses.*') ? 'true' : 'false' }} }">
                         <a href="#" @click.prevent="open = !open" class="menu-item group {{ request()->routeIs('tenant.responses.*') ? 'menu-item-active' : 'menu-item-inactive' }}">
                             <i class="mdi mdi-file-document-box-check {{ request()->routeIs('tenant.responses.*') ? 'menu-item-icon-active' : 'menu-item-icon-inactive' }}"></i>
-                            <span class="menu-item-text" :class="sidebarToggle ? 'xl:hidden' : ''">Respostas</span>
+                            <span class="menu-item-text truncate min-w-0" :class="sidebarToggle ? 'xl:hidden' : ''">Respostas</span>
                             <svg class="menu-item-arrow" :class="[open ? 'menu-item-arrow-active' : 'menu-item-arrow-inactive', sidebarToggle ? 'xl:hidden' : '' ]" width="20" height="20" viewBox="0 0 20 20" fill="none">
                                 <path d="M4.79175 7.39584L10.0001 12.6042L15.2084 7.39585" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
                             </svg>
@@ -372,7 +401,7 @@
                         <li x-data="{ open: {{ request()->routeIs('tenant.finance.*') ? 'true' : 'false' }} }">
                             <a href="#" @click.prevent="open = !open" class="menu-item group {{ request()->routeIs('tenant.finance.*') ? 'menu-item-active' : 'menu-item-inactive' }}">
                                 <i class="mdi mdi-cash {{ request()->routeIs('tenant.finance.*') ? 'menu-item-icon-active' : 'menu-item-icon-inactive' }}"></i>
-                                <span class="menu-item-text" :class="sidebarToggle ? 'xl:hidden' : ''">Financeiro</span>
+                                <span class="menu-item-text truncate min-w-0" :class="sidebarToggle ? 'xl:hidden' : ''">Financeiro</span>
                                 <svg class="menu-item-arrow" :class="[open ? 'menu-item-arrow-active' : 'menu-item-arrow-inactive', sidebarToggle ? 'xl:hidden' : '' ]" width="20" height="20" viewBox="0 0 20 20" fill="none">
                                     <path d="M4.79175 7.39584L10.0001 12.6042L15.2084 7.39585" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
                                 </svg>
@@ -409,7 +438,7 @@
                                 class="menu-item group {{ request()->routeIs('tenant.settings.*') ? 'menu-item-active' : 'menu-item-inactive' }}"
                             >
                                 <i class="mdi mdi-settings {{ request()->routeIs('tenant.settings.*') ? 'menu-item-icon-active' : 'menu-item-icon-inactive' }}"></i>
-                                <span class="menu-item-text" :class="sidebarToggle ? 'xl:hidden' : ''">Configurações</span>
+                                <span class="menu-item-text truncate min-w-0" :class="sidebarToggle ? 'xl:hidden' : ''">Configurações</span>
                             </a>
                         </li>
                     </ul>
@@ -424,7 +453,7 @@
                     <li x-data="{ open: {{ request()->routeIs('tenant.integrations.*') || request()->routeIs('tenant.integrations.google.*') || request()->routeIs('tenant.integrations.apple.*') ? 'true' : 'false' }} }">
                         <a href="#" @click.prevent="open = !open" class="menu-item group {{ request()->routeIs('tenant.integrations.*') || request()->routeIs('tenant.integrations.google.*') || request()->routeIs('tenant.integrations.apple.*') ? 'menu-item-active' : 'menu-item-inactive' }}">
                             <i class="mdi mdi-puzzle {{ request()->routeIs('tenant.integrations.*') || request()->routeIs('tenant.integrations.google.*') || request()->routeIs('tenant.integrations.apple.*') ? 'menu-item-icon-active' : 'menu-item-icon-inactive' }}"></i>
-                            <span class="menu-item-text" :class="sidebarToggle ? 'xl:hidden' : ''">Integrações</span>
+                            <span class="menu-item-text truncate min-w-0" :class="sidebarToggle ? 'xl:hidden' : ''">Integrações</span>
                             <svg class="menu-item-arrow" :class="[open ? 'menu-item-arrow-active' : 'menu-item-arrow-inactive', sidebarToggle ? 'xl:hidden' : '' ]" width="20" height="20" viewBox="0 0 20 20" fill="none">
                                 <path d="M4.79175 7.39584L10.0001 12.6042L15.2084 7.39585" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
                             </svg>
@@ -451,7 +480,7 @@
                     <li x-data="{ open: {{ request()->routeIs('tenant.reports.*') ? 'true' : 'false' }} }">
                         <a href="#" @click.prevent="open = !open" class="menu-item group {{ request()->routeIs('tenant.reports.*') ? 'menu-item-active' : 'menu-item-inactive' }}">
                             <i class="mdi mdi-chart-bar {{ request()->routeIs('tenant.reports.*') ? 'menu-item-icon-active' : 'menu-item-icon-inactive' }}"></i>
-                            <span class="menu-item-text" :class="sidebarToggle ? 'xl:hidden' : ''">Relatórios</span>
+                            <span class="menu-item-text truncate min-w-0" :class="sidebarToggle ? 'xl:hidden' : ''">Relatórios</span>
                             <svg class="menu-item-arrow" :class="[open ? 'menu-item-arrow-active' : 'menu-item-arrow-inactive', sidebarToggle ? 'xl:hidden' : '' ]" width="20" height="20" viewBox="0 0 20 20" fill="none">
                                 <path d="M4.79175 7.39584L10.0001 12.6042L15.2084 7.39585" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
                             </svg>

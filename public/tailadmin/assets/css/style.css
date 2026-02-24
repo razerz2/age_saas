@@ -6639,7 +6639,7 @@ pre[class*="language-"] {
   }
 }
 .sidebar:hover {
-  width: 290px;
+  width: 260px;
 }
 .sidebar:hover .logo {
   display: block;

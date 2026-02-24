@@ -7,6 +7,14 @@
         </p>
     </div>
 
+    @php
+        $logoLight = $settings['appearance.logo_light'] ?? '';
+        $logoDark = $settings['appearance.logo_dark'] ?? '';
+        $logoMiniLight = $settings['appearance.logo_mini_light'] ?? '';
+        $logoMiniDark = $settings['appearance.logo_mini_dark'] ?? '';
+        $favicon = $settings['appearance.favicon'] ?? '';
+    @endphp
+
     <form method="POST" action="{{ workspace_route('tenant.settings.update.appearance') }}" enctype="multipart/form-data">
         @csrf
         
@@ -25,28 +33,74 @@
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                         Logo Principal
                     </label>
-                    <div class="space-y-3">
-                        @if(!empty($settings['appearance.logo']))
-                            <div class="flex items-center gap-4 p-3 border border-gray-200 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700">
-                                <img src="{{ Storage::url($settings['appearance.logo']) }}" alt="Logo Principal" class="h-12 w-auto max-w-xs">
-                                <div class="flex-1">
-                                    <p class="text-sm font-medium text-gray-900 dark:text-white">Logo atual</p>
-                                    <p class="text-xs text-gray-500 dark:text-gray-400">Clique em "Remover" para usar o logo padrão</p>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="space-y-3">
+                            <p class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Modo claro</p>
+                            @if(!empty($logoLight))
+                                <div class="flex items-center gap-4 p-3 border border-gray-200 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700">
+                                    <img src="{{ Storage::url($logoLight) }}" alt="Logo Principal Claro" class="h-12 w-auto max-w-xs">
+                                    <div class="flex-1">
+                                        <p class="text-sm font-medium text-gray-900 dark:text-white">Logo atual</p>
+                                        <p class="text-xs text-gray-500 dark:text-gray-400">Clique em "Remover" para usar o logo padrão</p>
+                                    </div>
+                                    <button type="button" 
+                                            data-settings-action="remove-logo" data-remove-target="remove_logo_light"
+                                            class="px-3 py-1.5 bg-red-600 text-white text-xs font-medium rounded hover:bg-red-700 transition-colors duration-200">
+                                        Remover
+                                    </button>
+                                    <input type="hidden" id="remove_logo_light" name="remove_logo_light" value="0">
                                 </div>
-                                <button type="button" 
-                                        data-settings-action="remove-logo" data-remove-target="remove_main_logo"
-                                        class="px-3 py-1.5 bg-red-600 text-white text-xs font-medium rounded hover:bg-red-700 transition-colors duration-200">
-                                    Remover
-                                </button>
-                                <input type="hidden" id="remove_main_logo" name="remove_main_logo" value="0">
+                            @endif
+                            <div id="preview_logo_light_container" class="hidden items-center gap-4 p-3 border border-blue-200 dark:border-blue-600 rounded-lg bg-blue-50 dark:bg-blue-900/20">
+                                <img id="preview_logo_light" src="" alt="Pré-visualização Logo Claro" class="h-12 w-auto max-w-xs">
+                                <div class="flex-1">
+                                    <p class="text-sm font-medium text-blue-700 dark:text-blue-200">Pré-visualização</p>
+                                    <p class="text-xs text-blue-600 dark:text-blue-300">Logo claro selecionado</p>
+                                </div>
                             </div>
-                        @endif
-                        <div>
-                            <input type="file" 
-                                   name="appearance_logo"
-                                   accept="image/*"
-                                   class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white">
-                            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Formatos: PNG, JPG, JPEG. Tamanho máximo: 2MB. Altura recomendada: 40px</p>
+                            <div>
+                                <input type="file" 
+                                       name="appearance_logo_light"
+                                       accept="image/*"
+                                       data-preview-target="preview_logo_light"
+                                       data-preview-container="preview_logo_light_container"
+                                       class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white">
+                                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Formatos: PNG, JPG, JPEG. Tamanho máximo: 2MB. Altura recomendada: 40px</p>
+                            </div>
+                        </div>
+                        <div class="space-y-3">
+                            <p class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Modo escuro</p>
+                            @if(!empty($logoDark))
+                                <div class="flex items-center gap-4 p-3 border border-gray-200 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700">
+                                    <img src="{{ Storage::url($logoDark) }}" alt="Logo Principal Escuro" class="h-12 w-auto max-w-xs">
+                                    <div class="flex-1">
+                                        <p class="text-sm font-medium text-gray-900 dark:text-white">Logo atual</p>
+                                        <p class="text-xs text-gray-500 dark:text-gray-400">Clique em "Remover" para usar o logo claro</p>
+                                    </div>
+                                    <button type="button" 
+                                            data-settings-action="remove-logo" data-remove-target="remove_logo_dark"
+                                            class="px-3 py-1.5 bg-red-600 text-white text-xs font-medium rounded hover:bg-red-700 transition-colors duration-200">
+                                        Remover
+                                    </button>
+                                    <input type="hidden" id="remove_logo_dark" name="remove_logo_dark" value="0">
+                                </div>
+                            @endif
+                            <div id="preview_logo_dark_container" class="hidden items-center gap-4 p-3 border border-blue-200 dark:border-blue-600 rounded-lg bg-blue-50 dark:bg-blue-900/20">
+                                <img id="preview_logo_dark" src="" alt="Pré-visualização Logo Escuro" class="h-12 w-auto max-w-xs">
+                                <div class="flex-1">
+                                    <p class="text-sm font-medium text-blue-700 dark:text-blue-200">Pré-visualização</p>
+                                    <p class="text-xs text-blue-600 dark:text-blue-300">Logo escuro selecionado</p>
+                                </div>
+                            </div>
+                            <div>
+                                <input type="file" 
+                                       name="appearance_logo_dark"
+                                       accept="image/*"
+                                       data-preview-target="preview_logo_dark"
+                                       data-preview-container="preview_logo_dark_container"
+                                       class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white">
+                                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Se vazio, o logo claro será usado no modo escuro</p>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -55,28 +109,74 @@
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                         Logo Mini (para sidebar)
                     </label>
-                    <div class="space-y-3">
-                        @if(!empty($settings['appearance.logo_mini']))
-                            <div class="flex items-center gap-4 p-3 border border-gray-200 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700">
-                                <img src="{{ Storage::url($settings['appearance.logo_mini']) }}" alt="Logo Mini" class="h-8 w-auto">
-                                <div class="flex-1">
-                                    <p class="text-sm font-medium text-gray-900 dark:text-white">Logo mini atual</p>
-                                    <p class="text-xs text-gray-500 dark:text-gray-400">Clique em "Remover" para usar o logo padrão</p>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="space-y-3">
+                            <p class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Modo claro</p>
+                            @if(!empty($logoMiniLight))
+                                <div class="flex items-center gap-4 p-3 border border-gray-200 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700">
+                                    <img src="{{ Storage::url($logoMiniLight) }}" alt="Logo Mini Claro" class="h-8 w-auto">
+                                    <div class="flex-1">
+                                        <p class="text-sm font-medium text-gray-900 dark:text-white">Logo mini atual</p>
+                                        <p class="text-xs text-gray-500 dark:text-gray-400">Clique em "Remover" para usar o logo padrão</p>
+                                    </div>
+                                    <button type="button" 
+                                            data-settings-action="remove-logo" data-remove-target="remove_logo_mini_light"
+                                            class="px-3 py-1.5 bg-red-600 text-white text-xs font-medium rounded hover:bg-red-700 transition-colors duration-200">
+                                        Remover
+                                    </button>
+                                    <input type="hidden" id="remove_logo_mini_light" name="remove_logo_mini_light" value="0">
                                 </div>
-                                <button type="button" 
-                                        data-settings-action="remove-logo" data-remove-target="remove_mini_logo"
-                                        class="px-3 py-1.5 bg-red-600 text-white text-xs font-medium rounded hover:bg-red-700 transition-colors duration-200">
-                                    Remover
-                                </button>
-                                <input type="hidden" id="remove_mini_logo" name="remove_mini_logo" value="0">
+                            @endif
+                            <div id="preview_logo_mini_light_container" class="hidden items-center gap-4 p-3 border border-blue-200 dark:border-blue-600 rounded-lg bg-blue-50 dark:bg-blue-900/20">
+                                <img id="preview_logo_mini_light" src="" alt="Pré-visualização Logo Mini Claro" class="h-8 w-auto">
+                                <div class="flex-1">
+                                    <p class="text-sm font-medium text-blue-700 dark:text-blue-200">Pré-visualização</p>
+                                    <p class="text-xs text-blue-600 dark:text-blue-300">Logo mini claro selecionado</p>
+                                </div>
                             </div>
-                        @endif
-                        <div>
-                            <input type="file" 
-                                   name="appearance_logo_mini"
-                                   accept="image/*"
-                                   class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white">
-                            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Formatos: PNG, JPG, JPEG. Tamanho máximo: 2MB. Altura recomendada: 32px</p>
+                            <div>
+                                <input type="file" 
+                                       name="appearance_logo_mini_light"
+                                       accept="image/*"
+                                       data-preview-target="preview_logo_mini_light"
+                                       data-preview-container="preview_logo_mini_light_container"
+                                       class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white">
+                                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Formatos: PNG, JPG, JPEG. Tamanho máximo: 2MB. Altura recomendada: 32px</p>
+                            </div>
+                        </div>
+                        <div class="space-y-3">
+                            <p class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Modo escuro</p>
+                            @if(!empty($logoMiniDark))
+                                <div class="flex items-center gap-4 p-3 border border-gray-200 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700">
+                                    <img src="{{ Storage::url($logoMiniDark) }}" alt="Logo Mini Escuro" class="h-8 w-auto">
+                                    <div class="flex-1">
+                                        <p class="text-sm font-medium text-gray-900 dark:text-white">Logo mini atual</p>
+                                        <p class="text-xs text-gray-500 dark:text-gray-400">Clique em "Remover" para usar o logo claro</p>
+                                    </div>
+                                    <button type="button" 
+                                            data-settings-action="remove-logo" data-remove-target="remove_logo_mini_dark"
+                                            class="px-3 py-1.5 bg-red-600 text-white text-xs font-medium rounded hover:bg-red-700 transition-colors duration-200">
+                                        Remover
+                                    </button>
+                                    <input type="hidden" id="remove_logo_mini_dark" name="remove_logo_mini_dark" value="0">
+                                </div>
+                            @endif
+                            <div id="preview_logo_mini_dark_container" class="hidden items-center gap-4 p-3 border border-blue-200 dark:border-blue-600 rounded-lg bg-blue-50 dark:bg-blue-900/20">
+                                <img id="preview_logo_mini_dark" src="" alt="Pré-visualização Logo Mini Escuro" class="h-8 w-auto">
+                                <div class="flex-1">
+                                    <p class="text-sm font-medium text-blue-700 dark:text-blue-200">Pré-visualização</p>
+                                    <p class="text-xs text-blue-600 dark:text-blue-300">Logo mini escuro selecionado</p>
+                                </div>
+                            </div>
+                            <div>
+                                <input type="file" 
+                                       name="appearance_logo_mini_dark"
+                                       accept="image/*"
+                                       data-preview-target="preview_logo_mini_dark"
+                                       data-preview-container="preview_logo_mini_dark_container"
+                                       class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white">
+                                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Se vazio, o logo mini claro será usado no modo escuro</p>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -86,9 +186,9 @@
                         Favicon
                     </label>
                     <div class="space-y-3">
-                        @if(!empty($settings['appearance.favicon']))
+                        @if(!empty($favicon))
                             <div class="flex items-center gap-4 p-3 border border-gray-200 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700">
-                                <img src="{{ Storage::url($settings['appearance.favicon']) }}" alt="Favicon" class="h-8 w-8">
+                                <img src="{{ Storage::url($favicon) }}" alt="Favicon" class="h-8 w-8">
                                 <div class="flex-1">
                                     <p class="text-sm font-medium text-gray-900 dark:text-white">Favicon atual</p>
                                     <p class="text-xs text-gray-500 dark:text-gray-400">Clique em "Remover" para usar o favicon padrão</p>
@@ -101,10 +201,19 @@
                                 <input type="hidden" id="remove_favicon" name="remove_favicon" value="0">
                             </div>
                         @endif
+                        <div id="preview_favicon_container" class="hidden items-center gap-4 p-3 border border-blue-200 dark:border-blue-600 rounded-lg bg-blue-50 dark:bg-blue-900/20">
+                            <img id="preview_favicon" src="" alt="Pré-visualização Favicon" class="h-8 w-8">
+                            <div class="flex-1">
+                                <p class="text-sm font-medium text-blue-700 dark:text-blue-200">Pré-visualização</p>
+                                <p class="text-xs text-blue-600 dark:text-blue-300">Favicon selecionado</p>
+                            </div>
+                        </div>
                         <div>
                             <input type="file" 
                                    name="appearance_favicon"
                                    accept="image/*"
+                                   data-preview-target="preview_favicon"
+                                   data-preview-container="preview_favicon_container"
                                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white">
                             <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Formatos: PNG, ICO. Tamanho recomendado: 32x32px</p>
                         </div>
