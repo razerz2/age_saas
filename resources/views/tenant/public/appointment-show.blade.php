@@ -18,10 +18,15 @@
                 $status = $appointment->status ?? null;
                 $statusText = $appointment->status_translated ?? ($status ?: '—');
                 $statusClasses = 'bg-slate-50 text-slate-700 ring-slate-200';
+                if ($status === 'pending_confirmation') $statusText = 'Aguardando confirmação';
+                if ($status === 'expired') $statusText = 'Expirado';
+                if ($status === 'canceled' || $status === 'cancelled') $statusText = 'Cancelado';
                 if ($status === 'scheduled') $statusClasses = 'bg-emerald-50 text-emerald-700 ring-emerald-200';
                 if ($status === 'attended') $statusClasses = 'bg-emerald-50 text-emerald-700 ring-emerald-200';
-                if ($status === 'canceled' || $status === 'no_show') $statusClasses = 'bg-red-50 text-red-700 ring-red-200';
+                if ($status === 'pending_confirmation') $statusClasses = 'bg-yellow-50 text-yellow-700 ring-yellow-200';
+                if ($status === 'canceled' || $status === 'cancelled' || $status === 'no_show') $statusClasses = 'bg-red-50 text-red-700 ring-red-200';
                 if ($status === 'rescheduled') $statusClasses = 'bg-amber-50 text-amber-800 ring-amber-200';
+                if ($status === 'expired') $statusClasses = 'bg-orange-50 text-orange-700 ring-orange-200';
             @endphp
 
             <div class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
@@ -90,6 +95,38 @@
                         </div>
                     </div>
                 </div>
+
+                @if($appointment->confirmation_token && in_array($appointment->status, ['pending_confirmation', 'scheduled', 'rescheduled'], true))
+                    <div class="border-t border-slate-200 px-6 py-5">
+                        <div class="rounded-xl border border-slate-200 bg-slate-50 px-4 py-4">
+                            @if($appointment->status === 'pending_confirmation')
+                                <p class="text-sm text-slate-700">
+                                    Este agendamento está aguardando confirmação.
+                                    @if($appointment->confirmation_expires_at)
+                                        Prazo até {{ $appointment->confirmation_expires_at->format('d/m/Y H:i') }}.
+                                    @endif
+                                </p>
+                            @endif
+
+                            <div class="mt-3 flex flex-col gap-3 sm:flex-row">
+                                @if($appointment->status === 'pending_confirmation')
+                                    <a href="{{ route('public.appointment.confirm', ['slug' => $tenant->subdomain, 'token' => $appointment->confirmation_token]) }}" class="btn btn-primary">
+                                        <i class="mdi mdi-check text-lg text-white"></i>
+                                        Confirmar agendamento
+                                    </a>
+                                @endif
+
+                                <form method="POST" action="{{ route('public.appointment.cancel', ['slug' => $tenant->subdomain, 'token' => $appointment->confirmation_token]) }}">
+                                    @csrf
+                                    <button type="submit" class="btn btn-outline">
+                                        <i class="mdi mdi-close-circle-outline text-lg text-slate-900"></i>
+                                        Cancelar agendamento
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                @endif
 
                 @if($appointment->notes)
                     <div class="border-t border-slate-200 px-6 py-5">

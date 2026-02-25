@@ -234,6 +234,17 @@
                     </div>
                     <input type="hidden" name="starts_at" id="starts_at">
                     <input type="hidden" name="ends_at" id="ends_at">
+                    <input type="hidden" name="intent_waitlist" id="intent_waitlist" value="{{ old('intent_waitlist', 0) }}">
+                    <div
+                        id="slot_waitlist_alert"
+                        class="mt-3 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800 dark:border-amber-700 dark:bg-amber-900/30 dark:text-amber-100"
+                        style="display: none;"
+                        aria-hidden="true"
+                    >
+                        <span id="slot_waitlist_alert_message">
+                            Você escolheu um horário já reservado. Você será encaminhado para a fila de espera e receberá uma notificação com link se a vaga ficar disponível.
+                        </span>
+                    </div>
                 </div>
 
                 <!-- Seção: Observações -->

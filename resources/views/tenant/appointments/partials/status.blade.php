@@ -1,6 +1,13 @@
 @php
     $status = $appointment->status ?? null;
     $label  = $appointment->status_translated ?? ($status ?? 'N/A');
+    if ($status === 'pending_confirmation') {
+        $label = 'Pendente';
+    } elseif ($status === 'expired') {
+        $label = 'Expirado';
+    } elseif (in_array($status, ['canceled', 'cancelled'], true)) {
+        $label = 'Cancelado';
+    }
 
     switch ($status) {
         case 'scheduled':
@@ -12,6 +19,11 @@
         case 'rescheduled':
             $bg  = 'bg-amber-100 dark:bg-amber-900/20';
             $txt = 'text-amber-800 dark:text-amber-400';
+            break;
+
+        case 'pending_confirmation':
+            $bg  = 'bg-yellow-100 dark:bg-yellow-900/20';
+            $txt = 'text-yellow-800 dark:text-yellow-400';
             break;
 
         case 'attended':
@@ -29,6 +41,11 @@
         case 'no_show':
             $bg  = 'bg-gray-200 dark:bg-gray-700';
             $txt = 'text-gray-800 dark:text-gray-200';
+            break;
+
+        case 'expired':
+            $bg  = 'bg-orange-100 dark:bg-orange-900/20';
+            $txt = 'text-orange-800 dark:text-orange-400';
             break;
 
         case 'arrived':

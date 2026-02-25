@@ -215,6 +215,12 @@
                             </div>
                             <input type="hidden" name="starts_at" id="starts_at" value="{{ old('starts_at', $appointment->starts_at ? $appointment->starts_at->format('Y-m-d H:i:s') : '') }}">
                             <input type="hidden" name="ends_at" id="ends_at" value="{{ old('ends_at', $appointment->ends_at ? $appointment->ends_at->format('Y-m-d H:i:s') : '') }}">
+                            <input type="hidden" name="intent_waitlist" id="intent_waitlist" value="{{ old('intent_waitlist', 0) }}">
+                            <div id="slot_waitlist_alert" class="alert alert-warning mt-3" role="alert" style="display: none;" aria-hidden="true">
+                                <span id="slot_waitlist_alert_message">
+                                    Você escolheu um horário já reservado. Você será encaminhado para a fila de espera e receberá uma notificação com link se a vaga ficar disponível.
+                                </span>
+                            </div>
                         </div>
 
                         {{-- Seção: Status e Observações --}}

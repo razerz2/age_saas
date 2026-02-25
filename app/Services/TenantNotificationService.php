@@ -4,6 +4,9 @@ namespace App\Services;
 
 use App\Models\Tenant\Notification;
 use App\Models\Tenant\TenantSetting;
+use App\Services\Tenant\EmailSender;
+use App\Services\Tenant\NotificationDispatcher;
+use App\Services\Tenant\WhatsAppSender;
 use Illuminate\Support\Facades\Log;
 
 class TenantNotificationService
@@ -163,7 +166,7 @@ class TenantNotificationService
     }
 
     /**
-     * Envia notificação de agendamento ao paciente (email/WhatsApp)
+     * Envia notificacao de agendamento ao paciente (email/WhatsApp)
      */
     private static function sendAppointmentNotificationToPatient(
         $appointment,
@@ -173,7 +176,7 @@ class TenantNotificationService
         try {
             $patient = $appointment->patient;
             if (!$patient) {
-                \Log::warning('Paciente não encontrado para enviar notificação de agendamento', [
+                \Log::warning('Paciente nao encontrado para enviar notificacao de agendamento', [
                     'appointment_id' => $appointment->id,
                 ]);
                 return;
@@ -181,9 +184,9 @@ class TenantNotificationService
 
             // Obter tenant atual
             $tenant = \App\Models\Platform\Tenant::current();
-            $tenantName = $tenant ? ($tenant->trade_name ?? $tenant->legal_name) : 'Clínica';
+            $tenantName = $tenant ? ($tenant->trade_name ?? $tenant->legal_name) : 'Clinica';
 
-            // Obter informações do agendamento
+            // Obter informacoes do agendamento
             $doctorName = $appointment->calendar->doctor->user->name ?? 'Dr(a).';
             $specialtyName = $appointment->specialty->name ?? '';
             $appointmentDate = $appointment->starts_at->format('d/m/Y');
@@ -210,20 +213,76 @@ class TenantNotificationService
             // Enviar por email
             if ($patient->email && $emailEnabled) {
                 try {
-                    $emailService = app(\App\Services\MailTenantService::class);
-                    $emailService->send(
-                        $patient->email,
-                        $templates['email_subject'],
-                        $templates['email_body']
+                    $templateKey = self::resolveTemplateKeyForAction($action, $appointment);
+                    $templateSource = 'legacy_hardcoded';
+                    $emailSubject = $templates['email_subject'];
+                    $emailMessage = $templates['email_body'];
+
+                    if ($templateKey !== null) {
+                        try {
+                            /** @var NotificationDispatcher $dispatcher */
+                            $dispatcher = app(NotificationDispatcher::class);
+                            $payloads = $dispatcher->buildMessageForAppointment(
+                                $appointment,
+                                $templateKey,
+                                ['email'],
+                                [
+                                    'origin' => 'tenant_notification_service',
+                                    'event' => 'appointment_' . $action,
+                                ]
+                            );
+
+                            $emailPayload = $payloads['email'] ?? null;
+                            if (is_array($emailPayload) && isset($emailPayload['message'])) {
+                                $emailSubject = (string) ($emailPayload['subject'] ?? '');
+                                $emailMessage = (string) $emailPayload['message'];
+                                $templateSource = (string) ($emailPayload['template_source'] ?? 'default');
+                            }
+                        } catch (\Throwable $e) {
+                            $templateSource = 'legacy_fallback';
+                            \Log::warning('Falha ao montar email via NotificationDispatcher. Usando fallback legado.', [
+                                'appointment_id' => $appointment->id,
+                                'action' => $action,
+                                'key' => $templateKey,
+                                'error' => $e->getMessage(),
+                            ]);
+                        }
+                    }
+
+                    /** @var EmailSender $emailSender */
+                    $emailSender = app(EmailSender::class);
+                    $sent = $emailSender->send(
+                        (string) ($tenant?->id ?? ''),
+                        (string) $patient->email,
+                        $emailSubject,
+                        $emailMessage,
+                        [
+                            'appointment_id' => (string) $appointment->id,
+                            'origin' => 'tenant_notification_service',
+                            'event' => 'appointment_' . $action,
+                            'key' => $templateKey ?? ('legacy.' . $action),
+                            'template_source' => $templateSource,
+                        ]
                     );
 
-                    \Log::info('Notificação de agendamento enviada por email', [
+                    if (!$sent) {
+                        \Log::warning('Notificacao de agendamento por email nao enviada.', [
+                            'appointment_id' => $appointment->id,
+                            'action' => $action,
+                            'key' => $templateKey ?? ('legacy.' . $action),
+                            'template_source' => $templateSource,
+                        ]);
+                    }
+
+                    \Log::info('Notificacao de agendamento enviada por email', [
                         'appointment_id' => $appointment->id,
                         'action' => $action,
                         'patient_email' => $patient->email,
+                        'key' => $templateKey ?? ('legacy.' . $action),
+                        'template_source' => $templateSource,
                     ]);
                 } catch (\Throwable $e) {
-                    \Log::error('Erro ao enviar notificação de agendamento por email', [
+                    \Log::error('Erro ao enviar notificacao de agendamento por email', [
                         'appointment_id' => $appointment->id,
                         'action' => $action,
                         'error' => $e->getMessage(),
@@ -234,19 +293,73 @@ class TenantNotificationService
             // Enviar por WhatsApp
             if ($patient->phone && $whatsappEnabled) {
                 try {
-                    $whatsappService = app(\App\Services\WhatsappTenantService::class);
-                    $whatsappService->send(
-                        $patient->phone,
-                        $templates['whatsapp_message']
+                    $templateKey = self::resolveTemplateKeyForAction($action, $appointment);
+                    $templateSource = 'legacy_hardcoded';
+                    $whatsappMessage = $templates['whatsapp_message'];
+
+                    if ($templateKey !== null) {
+                        try {
+                            /** @var NotificationDispatcher $dispatcher */
+                            $dispatcher = app(NotificationDispatcher::class);
+                            $payloads = $dispatcher->buildMessageForAppointment(
+                                $appointment,
+                                $templateKey,
+                                ['whatsapp'],
+                                [
+                                    'origin' => 'tenant_notification_service',
+                                    'event' => 'appointment_' . $action,
+                                ]
+                            );
+
+                            $whatsappPayload = $payloads['whatsapp'] ?? null;
+                            if (is_array($whatsappPayload) && isset($whatsappPayload['message'])) {
+                                $whatsappMessage = (string) $whatsappPayload['message'];
+                                $templateSource = (string) ($whatsappPayload['template_source'] ?? 'default');
+                            }
+                        } catch (\Throwable $e) {
+                            $templateSource = 'legacy_fallback';
+                            \Log::warning('Falha ao montar mensagem WhatsApp via NotificationDispatcher. Usando fallback legado.', [
+                                'appointment_id' => $appointment->id,
+                                'action' => $action,
+                                'key' => $templateKey,
+                                'error' => $e->getMessage(),
+                            ]);
+                        }
+                    }
+
+                    /** @var WhatsAppSender $whatsAppSender */
+                    $whatsAppSender = app(WhatsAppSender::class);
+                    $sent = $whatsAppSender->send(
+                        (string) ($tenant?->id ?? ''),
+                        (string) $patient->phone,
+                        $whatsappMessage,
+                        [
+                            'appointment_id' => (string) $appointment->id,
+                            'origin' => 'tenant_notification_service',
+                            'event' => 'appointment_' . $action,
+                            'key' => $templateKey ?? ('legacy.' . $action),
+                            'template_source' => $templateSource,
+                        ]
                     );
 
-                    \Log::info('Notificação de agendamento enviada por WhatsApp', [
+                    if (!$sent) {
+                        \Log::warning('Notificacao de agendamento por WhatsApp nao enviada.', [
+                            'appointment_id' => $appointment->id,
+                            'action' => $action,
+                            'key' => $templateKey ?? ('legacy.' . $action),
+                            'template_source' => $templateSource,
+                        ]);
+                    }
+
+                    \Log::info('Notificacao de agendamento enviada por WhatsApp', [
                         'appointment_id' => $appointment->id,
                         'action' => $action,
                         'patient_phone' => $patient->phone,
+                        'key' => $templateKey ?? ('legacy.' . $action),
+                        'template_source' => $templateSource,
                     ]);
                 } catch (\Throwable $e) {
-                    \Log::error('Erro ao enviar notificação de agendamento por WhatsApp', [
+                    \Log::error('Erro ao enviar notificacao de agendamento por WhatsApp', [
                         'appointment_id' => $appointment->id,
                         'action' => $action,
                         'error' => $e->getMessage(),
@@ -254,7 +367,7 @@ class TenantNotificationService
                 }
             }
         } catch (\Throwable $e) {
-            \Log::error('Erro ao enviar notificação de agendamento ao paciente', [
+            \Log::error('Erro ao enviar notificacao de agendamento ao paciente', [
                 'appointment_id' => $appointment->id,
                 'action' => $action,
                 'error' => $e->getMessage(),
@@ -273,6 +386,18 @@ class TenantNotificationService
     {
         $enabled = TenantSetting::get('notifications.send_whatsapp_to_patients');
         return $enabled === 'true' || $enabled === true;
+    }
+
+    private static function resolveTemplateKeyForAction(string $action, $appointment): ?string
+    {
+        return match ($action) {
+            'scheduled' => 'appointment.confirmed',
+            'cancelled' => 'appointment.canceled',
+            'created' => (($appointment->status ?? null) === 'pending_confirmation')
+                ? 'appointment.pending_confirmation'
+                : 'appointment.confirmed',
+            default => null,
+        };
     }
 
     /**

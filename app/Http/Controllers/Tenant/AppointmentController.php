@@ -17,9 +17,12 @@ use App\Http\Requests\Tenant\StoreAppointmentRequest;
 use App\Http\Requests\Tenant\UpdateAppointmentRequest;
 use App\Services\Tenant\GoogleCalendarService;
 use App\Services\Tenant\AppleCalendarService;
+use App\Services\Tenant\NotificationDispatcher;
+use App\Services\Tenant\WaitlistService;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
 use Carbon\Carbon;
 
 class AppointmentController extends Controller
@@ -27,11 +30,20 @@ class AppointmentController extends Controller
     use HasDoctorFilter;
     protected GoogleCalendarService $googleCalendarService;
     protected AppleCalendarService $appleCalendarService;
+    protected NotificationDispatcher $notificationDispatcher;
+    protected WaitlistService $waitlistService;
 
-    public function __construct(GoogleCalendarService $googleCalendarService, AppleCalendarService $appleCalendarService)
+    public function __construct(
+        GoogleCalendarService $googleCalendarService,
+        AppleCalendarService $appleCalendarService,
+        NotificationDispatcher $notificationDispatcher,
+        WaitlistService $waitlistService
+    )
     {
         $this->googleCalendarService = $googleCalendarService;
         $this->appleCalendarService = $appleCalendarService;
+        $this->notificationDispatcher = $notificationDispatcher;
+        $this->waitlistService = $waitlistService;
     }
 
     public function gridData(Request $request, $slug)
@@ -43,7 +55,7 @@ class AppointmentController extends Controller
             'calendar',
         ]);
 
-        // Aplicar filtro de médico usando doctor_id diretamente
+        // Aplicar filtro de mÃ©dico usando doctor_id diretamente
         $this->applyDoctorFilter($query, 'doctor_id');
 
         $page  = max(1, (int) $request->input('page', 1));
@@ -66,7 +78,7 @@ class AppointmentController extends Controller
             });
         }
 
-        // Ordenação
+        // OrdenaÃ§Ã£o
         $sortable = [
             'starts_at' => 'starts_at',
             'patient'   => 'patient_id',
@@ -90,7 +102,7 @@ class AppointmentController extends Controller
             $modeLabel = match ($appointment->appointment_mode) {
                 'online' => 'Online',
                 'presencial' => 'Presencial',
-                default => '—',
+                default => 'â€”',
             };
 
             return [
@@ -120,7 +132,7 @@ class AppointmentController extends Controller
     {
         $query = Appointment::with(['doctor.user', 'calendar', 'patient', 'specialty']);
         
-        // Aplicar filtro de médico usando doctor_id diretamente
+        // Aplicar filtro de mÃ©dico usando doctor_id diretamente
         $this->applyDoctorFilter($query, 'doctor_id');
 
         $appointments = $query->orderBy('starts_at')->paginate(30);
@@ -130,40 +142,40 @@ class AppointmentController extends Controller
 
     public function create()
     {
-        // Listar médicos ativos (com status active)
+        // Listar mÃ©dicos ativos (com status active)
         $doctorsQuery = Doctor::with('user')
             ->whereHas('user', function($query) {
                 $query->where('status', 'active');
             });
 
-        // Aplicar filtro de médico
+        // Aplicar filtro de mÃ©dico
         $this->applyDoctorFilter($doctorsQuery);
 
-        // Buscar todos os médicos primeiro para verificar configurações
+        // Buscar todos os mÃ©dicos primeiro para verificar configuraÃ§Ãµes
         $allDoctors = $doctorsQuery->orderBy('id')->get();
         
-        // Filtrar apenas médicos com configurações completas
+        // Filtrar apenas mÃ©dicos com configuraÃ§Ãµes completas
         $doctors = $allDoctors->filter(function($doctor) {
             return $doctor->hasCompleteCalendarConfiguration();
         });
 
-        // Verificar se não há médicos cadastrados
+        // Verificar se nÃ£o hÃ¡ mÃ©dicos cadastrados
         if ($allDoctors->isEmpty()) {
             return redirect()->route('tenant.appointments.index', ['slug' => tenant()->subdomain])
-                ->with('error', 'Não há médicos cadastrados no sistema. Por favor, cadastre pelo menos um médico antes de criar agendamentos.');
+                ->with('error', 'NÃ£o hÃ¡ mÃ©dicos cadastrados no sistema. Por favor, cadastre pelo menos um mÃ©dico antes de criar agendamentos.');
         }
 
-        // Verificar se não há médicos com configurações completas
+        // Verificar se nÃ£o hÃ¡ mÃ©dicos com configuraÃ§Ãµes completas
         if ($doctors->isEmpty()) {
             $user = Auth::guard('tenant')->user();
             $isAdmin = $user->role === 'admin';
             
-            // Construir mensagem detalhada sobre o que está faltando
+            // Construir mensagem detalhada sobre o que estÃ¡ faltando
             $missingDetails = [];
             foreach ($allDoctors as $doctor) {
                 $missing = $doctor->getMissingConfigurationDetails();
                 if (!empty($missing)) {
-                    $doctorName = $doctor->user->name_full ?? $doctor->user->name ?? 'Médico';
+                    $doctorName = $doctor->user->name_full ?? $doctor->user->name ?? 'MÃ©dico';
                     $missingDetails[] = [
                         'name' => $doctorName,
                         'missing' => $missing
@@ -171,16 +183,16 @@ class AppointmentController extends Controller
                 }
             }
             
-            $message = 'Não é possível criar agendamentos porque nenhum médico possui todas as configurações necessárias. ';
-            $message .= 'Para criar agendamentos, cada médico precisa ter: ';
+            $message = 'NÃ£o Ã© possÃ­vel criar agendamentos porque nenhum mÃ©dico possui todas as configuraÃ§Ãµes necessÃ¡rias. ';
+            $message .= 'Para criar agendamentos, cada mÃ©dico precisa ter: ';
             $message .= '<ul class="mb-0 mt-2">';
-            $message .= '<li><strong>Calendário</strong> cadastrado</li>';
-            $message .= '<li><strong>Horários comerciais</strong> configurados</li>';
+            $message .= '<li><strong>CalendÃ¡rio</strong> cadastrado</li>';
+            $message .= '<li><strong>HorÃ¡rios comerciais</strong> configurados</li>';
             $message .= '<li><strong>Tipos de atendimento</strong> cadastrados e ativos</li>';
             $message .= '</ul>';
             
             if ($isAdmin && !empty($missingDetails)) {
-                $message .= '<div class="mt-3"><strong>Detalhes por médico:</strong><ul class="mb-0 mt-2">';
+                $message .= '<div class="mt-3"><strong>Detalhes por mÃ©dico:</strong><ul class="mb-0 mt-2">';
                 foreach ($missingDetails as $detail) {
                     $missingList = implode(', ', array_map(function($item) {
                         return '<strong>' . $item . '</strong>';
@@ -192,10 +204,10 @@ class AppointmentController extends Controller
             
             $message .= '<div class="mt-3">';
             $message .= '<strong>O que fazer:</strong><br>';
-            $message .= '1. Acesse <a href="' . route('tenant.doctors.index') . '" class="alert-link">Médicos</a> para verificar os médicos cadastrados<br>';
-            $message .= '2. Para cada médico, configure:<br>';
-            $message .= '&nbsp;&nbsp;&nbsp;- <a href="' . route('tenant.calendars.index') . '" class="alert-link">Calendário</a><br>';
-            $message .= '&nbsp;&nbsp;&nbsp;- <a href="' . route('tenant.business-hours.index') . '" class="alert-link">Horários Comerciais</a><br>';
+            $message .= '1. Acesse <a href="' . route('tenant.doctors.index') . '" class="alert-link">MÃ©dicos</a> para verificar os mÃ©dicos cadastrados<br>';
+            $message .= '2. Para cada mÃ©dico, configure:<br>';
+            $message .= '&nbsp;&nbsp;&nbsp;- <a href="' . route('tenant.calendars.index') . '" class="alert-link">CalendÃ¡rio</a><br>';
+            $message .= '&nbsp;&nbsp;&nbsp;- <a href="' . route('tenant.business-hours.index') . '" class="alert-link">HorÃ¡rios Comerciais</a><br>';
             $message .= '&nbsp;&nbsp;&nbsp;- <a href="' . route('tenant.appointment-types.index') . '" class="alert-link">Tipos de Atendimento</a>';
             $message .= '</div>';
             
@@ -214,19 +226,61 @@ class AppointmentController extends Controller
     public function store(StoreAppointmentRequest $request)
     {
         $data = $request->validated();
+
+        $intentWaitlist = (string) $request->input('intent_waitlist', '0') === '1';
+        if ($intentWaitlist) {
+            try {
+                $result = $this->waitlistService->joinWaitlist([
+                    'doctor_id' => $data['doctor_id'],
+                    'patient_id' => $data['patient_id'],
+                    'starts_at' => $data['starts_at'],
+                    'ends_at' => $data['ends_at'],
+                ]);
+            } catch (ValidationException $e) {
+                $firstError = collect($e->errors())->flatten()->first() ?? 'NÃ£o foi possÃ­vel entrar na fila de espera.';
+
+                return redirect()->back()
+                    ->withInput()
+                    ->withErrors($e->errors())
+                    ->with('error', $firstError);
+            }
+
+            $message = $result['created']
+                ? 'VocÃª entrou na fila de espera desse horÃ¡rio. Avisaremos quando a vaga estiver disponÃ­vel.'
+                : 'VocÃª jÃ¡ estÃ¡ na fila de espera desse horÃ¡rio. Avisaremos quando a vaga estiver disponÃ­vel.';
+
+            return redirect()->route('tenant.appointments.index', ['slug' => tenant()->subdomain])
+                ->with('success', $message);
+        }
+
         $data['id'] = Str::uuid();
+
+        $confirmationEnabled = tenant_setting_bool('appointments.confirmation.enabled', false);
+        $confirmationTtlMinutes = max(1, tenant_setting_int('appointments.confirmation.ttl_minutes', 30));
+
+        $data['confirmation_token'] = $this->generateUniqueConfirmationToken();
+        if ($confirmationEnabled) {
+            $data['status'] = 'pending_confirmation';
+            $data['confirmation_expires_at'] = now()->addMinutes($confirmationTtlMinutes);
+            $data['confirmed_at'] = null;
+            $data['expired_at'] = null;
+            $data['canceled_at'] = null;
+            $data['cancellation_reason'] = null;
+        } else {
+            $data['status'] = 'scheduled';
+            $data['confirmed_at'] = now();
+            $data['confirmation_expires_at'] = null;
+            $data['expired_at'] = null;
+        }
         
-        // Sempre definir status como "scheduled" ao criar um novo agendamento
-        $data['status'] = 'scheduled';
-        
-        // Identificar origem: se usuário autenticado é paciente, é portal; senão, é interno
+        // Identificar origem: se usuÃ¡rio autenticado Ã© paciente, Ã© portal; senÃ£o, Ã© interno
         if (Auth::guard('patient')->check()) {
             $data['origin'] = 'portal';
         } else {
             $data['origin'] = 'internal';
         }
 
-        // Aplicar lógica de appointment_mode baseado na configuração
+        // Aplicar lÃ³gica de appointment_mode baseado na configuraÃ§Ã£o
         $mode = \App\Models\Tenant\TenantSetting::get('appointments.default_appointment_mode', 'user_choice');
         if ($mode === 'presencial') {
             $data['appointment_mode'] = 'presencial';
@@ -236,21 +290,21 @@ class AppointmentController extends Controller
             $data['appointment_mode'] = $request->appointment_mode ?? 'presencial';
         }
 
-        // Buscar o calendário principal do médico automaticamente
+        // Buscar o calendÃ¡rio principal do mÃ©dico automaticamente
         if (isset($data['doctor_id'])) {
             $doctor = Doctor::findOrFail($data['doctor_id']);
             
-            // Validar se o médico tem todas as configurações necessárias
+            // Validar se o mÃ©dico tem todas as configuraÃ§Ãµes necessÃ¡rias
             if (!$doctor->hasCompleteCalendarConfiguration()) {
                 $missing = $doctor->getMissingConfigurationDetails();
                 $missingList = implode(', ', array_map(function($item) {
                     return '<strong>' . $item . '</strong>';
                 }, $missing));
                 
-                $doctorName = $doctor->user->name_full ?? $doctor->user->name ?? 'Este médico';
-                $message = $doctorName . ' não possui todas as configurações necessárias para criar agendamentos. ';
+                $doctorName = $doctor->user->name_full ?? $doctor->user->name ?? 'Este mÃ©dico';
+                $message = $doctorName . ' nÃ£o possui todas as configuraÃ§Ãµes necessÃ¡rias para criar agendamentos. ';
                 $message .= 'Faltam: ' . $missingList . '. ';
-                $message .= 'Por favor, configure todas as opções antes de criar agendamentos.';
+                $message .= 'Por favor, configure todas as opÃ§Ãµes antes de criar agendamentos.';
                 
                 return redirect()->back()
                     ->withInput()
@@ -262,28 +316,28 @@ class AppointmentController extends Controller
             if (!$calendar) {
                 return redirect()->back()
                     ->withInput()
-                    ->with('error', 'O médico selecionado não possui um calendário cadastrado. Por favor, cadastre um calendário para este médico primeiro.');
+                    ->with('error', 'O mÃ©dico selecionado nÃ£o possui um calendÃ¡rio cadastrado. Por favor, cadastre um calendÃ¡rio para este mÃ©dico primeiro.');
             }
             
             $data['calendar_id'] = $calendar->id;
-            // Garantir que doctor_id está definido explicitamente
+            // Garantir que doctor_id estÃ¡ definido explicitamente
             $data['doctor_id'] = $doctor->id;
         } elseif (isset($data['calendar_id'])) {
-            // Se não tiver doctor_id mas tiver calendar_id, buscar do calendário
+            // Se nÃ£o tiver doctor_id mas tiver calendar_id, buscar do calendÃ¡rio
             $calendar = Calendar::findOrFail($data['calendar_id']);
             $doctor = $calendar->doctor;
             
-            // Validar se o médico tem todas as configurações necessárias
+            // Validar se o mÃ©dico tem todas as configuraÃ§Ãµes necessÃ¡rias
             if (!$doctor->hasCompleteCalendarConfiguration()) {
                 $missing = $doctor->getMissingConfigurationDetails();
                 $missingList = implode(', ', array_map(function($item) {
                     return '<strong>' . $item . '</strong>';
                 }, $missing));
                 
-                $doctorName = $doctor->user->name_full ?? $doctor->user->name ?? 'Este médico';
-                $message = $doctorName . ' não possui todas as configurações necessárias para criar agendamentos. ';
+                $doctorName = $doctor->user->name_full ?? $doctor->user->name ?? 'Este mÃ©dico';
+                $message = $doctorName . ' nÃ£o possui todas as configuraÃ§Ãµes necessÃ¡rias para criar agendamentos. ';
                 $message .= 'Faltam: ' . $missingList . '. ';
-                $message .= 'Por favor, configure todas as opções antes de criar agendamentos.';
+                $message .= 'Por favor, configure todas as opÃ§Ãµes antes de criar agendamentos.';
                 
                 return redirect()->back()
                     ->withInput()
@@ -295,7 +349,18 @@ class AppointmentController extends Controller
 
         $appointment = Appointment::create($data);
 
-        // Sincronizar com Google Calendar se o médico tiver token
+        if ($appointment->isHold()) {
+            $this->notificationDispatcher->dispatchAppointment(
+                $appointment,
+                'appointment.pending_confirmation',
+                [
+                    'event' => 'appointment_created_pending_confirmation',
+                    'origin' => 'internal',
+                ]
+            );
+        }
+
+        // Sincronizar com Google Calendar se o mÃ©dico tiver token
         try {
             $this->googleCalendarService->syncEvent($appointment);
         } catch (\Exception $e) {
@@ -306,7 +371,7 @@ class AppointmentController extends Controller
         }
 
         // Para agendamentos internos: enviar link de pagamento se configurado
-        // O Observer já cuida disso, mas garantimos aqui também para casos especiais
+        // O Observer jÃ¡ cuida disso, mas garantimos aqui tambÃ©m para casos especiais
         if (
             tenant_setting('finance.enabled') === 'true' &&
             tenant_setting('finance.charge_on_internal_appointment') === 'true' &&
@@ -329,19 +394,19 @@ class AppointmentController extends Controller
         $appointment = Appointment::findOrFail($id);
         $appointment->load(['calendar.doctor.user', 'patient', 'type', 'specialty']);
         
-        // Buscar formulário ativo do médico
+        // Buscar formulÃ¡rio ativo do mÃ©dico
         $form = \App\Models\Tenant\Form::getFormForAppointment($appointment);
         
         // Buscar resposta existente para este agendamento
-        // Prioridade: 1) Resposta com appointment_id e form_id específico, 2) Qualquer resposta com appointment_id, 3) Resposta sem appointment_id
+        // Prioridade: 1) Resposta com appointment_id e form_id especÃ­fico, 2) Qualquer resposta com appointment_id, 3) Resposta sem appointment_id
         $formResponse = null;
         
         if ($form) {
-            // Primeiro: buscar resposta específica para este agendamento e formulário
+            // Primeiro: buscar resposta especÃ­fica para este agendamento e formulÃ¡rio
             $formResponse = \App\Models\Tenant\FormResponse::findByAppointmentAndForm($appointment->id, $form->id);
         }
         
-        // Se não encontrou, buscar qualquer resposta para este agendamento
+        // Se nÃ£o encontrou, buscar qualquer resposta para este agendamento
         if (!$formResponse) {
             $formResponse = \App\Models\Tenant\FormResponse::where('appointment_id', $appointment->id)
                 ->whereNotNull('appointment_id')
@@ -349,7 +414,7 @@ class AppointmentController extends Controller
                 ->first();
         }
         
-        // Fallback: buscar resposta sem appointment_id (caso não tenha sido salvo)
+        // Fallback: buscar resposta sem appointment_id (caso nÃ£o tenha sido salvo)
         if (!$formResponse && $form && $appointment->patient_id) {
             $formResponse = \App\Models\Tenant\FormResponse::where('form_id', $form->id)
                 ->where('patient_id', $appointment->patient_id)
@@ -365,21 +430,21 @@ class AppointmentController extends Controller
     {
         $appointment = Appointment::findOrFail($id);
         
-        // Listar médicos ativos (com status active)
+        // Listar mÃ©dicos ativos (com status active)
         $doctorsQuery = Doctor::with('user')
             ->whereHas('user', function($query) {
                 $query->where('status', 'active');
             });
 
-        // Aplicar filtro de médico
+        // Aplicar filtro de mÃ©dico
         $this->applyDoctorFilter($doctorsQuery);
 
-        // Buscar todos os médicos primeiro para verificar configurações
+        // Buscar todos os mÃ©dicos primeiro para verificar configuraÃ§Ãµes
         $allDoctors = $doctorsQuery->orderBy('id')->get();
         
-        // Filtrar apenas médicos com configurações completas
-        // Mas incluir o médico do agendamento atual mesmo que não tenha todas as configurações
-        // (para não impedir a edição de agendamentos existentes)
+        // Filtrar apenas mÃ©dicos com configuraÃ§Ãµes completas
+        // Mas incluir o mÃ©dico do agendamento atual mesmo que nÃ£o tenha todas as configuraÃ§Ãµes
+        // (para nÃ£o impedir a ediÃ§Ã£o de agendamentos existentes)
         $doctors = $allDoctors->filter(function($doctor) use ($appointment) {
             return $doctor->hasCompleteCalendarConfiguration() || $doctor->id === $appointment->doctor_id;
         });
@@ -400,21 +465,21 @@ class AppointmentController extends Controller
         $appointment = Appointment::findOrFail($id);
         $data = $request->validated();
 
-        // Buscar o calendário principal do médico automaticamente
+        // Buscar o calendÃ¡rio principal do mÃ©dico automaticamente
         if (isset($data['doctor_id'])) {
             $doctor = Doctor::findOrFail($data['doctor_id']);
             
-            // Validar se o médico tem todas as configurações necessárias (apenas se mudou de médico)
+            // Validar se o mÃ©dico tem todas as configuraÃ§Ãµes necessÃ¡rias (apenas se mudou de mÃ©dico)
             if ($appointment->doctor_id !== $doctor->id && !$doctor->hasCompleteCalendarConfiguration()) {
                 $missing = $doctor->getMissingConfigurationDetails();
                 $missingList = implode(', ', array_map(function($item) {
                     return '<strong>' . $item . '</strong>';
                 }, $missing));
                 
-                $doctorName = $doctor->user->name_full ?? $doctor->user->name ?? 'Este médico';
-                $message = $doctorName . ' não possui todas as configurações necessárias para criar agendamentos. ';
+                $doctorName = $doctor->user->name_full ?? $doctor->user->name ?? 'Este mÃ©dico';
+                $message = $doctorName . ' nÃ£o possui todas as configuraÃ§Ãµes necessÃ¡rias para criar agendamentos. ';
                 $message .= 'Faltam: ' . $missingList . '. ';
-                $message .= 'Por favor, configure todas as opções antes de alterar o agendamento para este médico.';
+                $message .= 'Por favor, configure todas as opÃ§Ãµes antes de alterar o agendamento para este mÃ©dico.';
                 
                 return redirect()->back()
                     ->withInput()
@@ -426,15 +491,15 @@ class AppointmentController extends Controller
             if (!$calendar) {
                 return redirect()->back()
                     ->withInput()
-                    ->with('error', 'O médico selecionado não possui um calendário cadastrado. Por favor, cadastre um calendário para este médico primeiro.');
+                    ->with('error', 'O mÃ©dico selecionado nÃ£o possui um calendÃ¡rio cadastrado. Por favor, cadastre um calendÃ¡rio para este mÃ©dico primeiro.');
             }
             
             $data['calendar_id'] = $calendar->id;
-            // Garantir que doctor_id está definido explicitamente
+            // Garantir que doctor_id estÃ¡ definido explicitamente
             $data['doctor_id'] = $doctor->id;
         }
 
-        // Aplicar lógica de appointment_mode baseado na configuração
+        // Aplicar lÃ³gica de appointment_mode baseado na configuraÃ§Ã£o
         $mode = \App\Models\Tenant\TenantSetting::get('appointments.default_appointment_mode', 'user_choice');
         if ($mode === 'presencial') {
             $data['appointment_mode'] = 'presencial';
@@ -446,7 +511,7 @@ class AppointmentController extends Controller
 
         $appointment->update($data);
 
-        // Sincronizar com Google Calendar se o médico tiver token
+        // Sincronizar com Google Calendar se o mÃ©dico tiver token
         try {
             $this->googleCalendarService->syncEvent($appointment);
         } catch (\Exception $e) {
@@ -466,7 +531,7 @@ class AppointmentController extends Controller
         
         // Apenas admin pode excluir agendamentos
         if ($user->role !== 'admin') {
-            abort(403, 'Você não tem permissão para excluir agendamentos.');
+            abort(403, 'VocÃª nÃ£o tem permissÃ£o para excluir agendamentos.');
         }
         
         $appointment = Appointment::findOrFail($id);
@@ -497,12 +562,94 @@ class AppointmentController extends Controller
             ->with('success', 'Agendamento removido.');
     }
 
+    public function confirm(Request $request, $slug, $appointment)
+    {
+        $appointment = Appointment::findOrFail($appointment);
+
+        if (!$appointment->isHold()) {
+            return redirect()->back()->with('error', 'Apenas agendamentos pendentes podem ser confirmados.');
+        }
+
+        if (!$appointment->confirmation_expires_at || now()->gte($appointment->confirmation_expires_at)) {
+            $appointment->update([
+                'status' => 'expired',
+                'expired_at' => now(),
+                'confirmation_expires_at' => null,
+            ]);
+
+            $this->notificationDispatcher->dispatchAppointment(
+                $appointment,
+                'appointment.expired',
+                ['event' => 'appointment_expired_on_confirm_attempt']
+            );
+
+            $this->waitlistService->onSlotReleased(
+                $appointment->doctor_id,
+                $appointment->starts_at,
+                $appointment->ends_at
+            );
+
+            return redirect()->back()->with('error', 'O prazo de confirmacao deste agendamento expirou.');
+        }
+
+        $appointment->update([
+            'status' => 'scheduled',
+            'confirmed_at' => now(),
+            'confirmation_expires_at' => null,
+            'expired_at' => null,
+            'canceled_at' => null,
+            'cancellation_reason' => null,
+        ]);
+
+        $this->notificationDispatcher->dispatchAppointment(
+            $appointment,
+            'appointment.confirmed',
+            ['event' => 'appointment_confirmed']
+        );
+
+        return redirect()->back()->with('success', 'Agendamento confirmado com sucesso.');
+    }
+
+    public function cancel(Request $request, $slug, $appointment)
+    {
+        $appointment = Appointment::findOrFail($appointment);
+        $validated = $request->validate([
+            'reason' => ['nullable', 'string', 'max:2000'],
+        ]);
+
+        if (in_array($appointment->status, ['canceled', 'cancelled'], true)) {
+            return redirect()->back()->with('info', 'Este agendamento ja esta cancelado.');
+        }
+
+        $appointment->update([
+            'status' => 'canceled',
+            'canceled_at' => now(),
+            'cancellation_reason' => $validated['reason'] ?? null,
+            'confirmation_expires_at' => null,
+            'expired_at' => null,
+        ]);
+
+        $this->notificationDispatcher->dispatchAppointment(
+            $appointment,
+            'appointment.canceled',
+            ['event' => 'appointment_canceled']
+        );
+
+        $this->waitlistService->onSlotReleased(
+            $appointment->doctor_id,
+            $appointment->starts_at,
+            $appointment->ends_at
+        );
+
+        return redirect()->back()->with('success', 'Agendamento cancelado com sucesso.');
+    }
+
     public function events(Request $request, $slug, $id)
     {
         $calendar = Calendar::findOrFail($id);
         $calendar->load('doctor.user');
         
-        // Se for uma requisição AJAX, esperando JSON, ou se tiver parâmetros de query do FullCalendar (start/end), retorna JSON
+        // Se for uma requisiÃ§Ã£o AJAX, esperando JSON, ou se tiver parÃ¢metros de query do FullCalendar (start/end), retorna JSON
         $isFullCalendarRequest = $request->has('start') || $request->has('end') || 
                                  $request->ajax() || $request->wantsJson() || $request->expectsJson() ||
                                  str_contains($request->header('Accept', ''), 'application/json');
@@ -510,27 +657,27 @@ class AppointmentController extends Controller
         if ($isFullCalendarRequest) {
             $user = Auth::guard('tenant')->user();
             
-            // Query base para buscar os agendamentos do calendário
+            // Query base para buscar os agendamentos do calendÃ¡rio
             $query = Appointment::where('calendar_id', $calendar->id)
                 ->with(['patient', 'type', 'specialty']);
             
-            // Admin pode ver todos os eventos, outros roles têm restrições
+            // Admin pode ver todos os eventos, outros roles tÃªm restriÃ§Ãµes
             if ($user->role !== 'admin') {
-                // Verifica permissão para visualizar os eventos
+                // Verifica permissÃ£o para visualizar os eventos
                 if ($user->role === 'doctor' && $user->doctor) {
-                    // Médico só pode ver eventos do seu próprio calendário
+                    // MÃ©dico sÃ³ pode ver eventos do seu prÃ³prio calendÃ¡rio
                     if ($calendar->doctor_id !== $user->doctor->id) {
                         return response()->json([]);
                     }
                 } elseif ($user->role === 'user') {
-                    // Usuário comum precisa ter permissão para ver o médico
+                    // UsuÃ¡rio comum precisa ter permissÃ£o para ver o mÃ©dico
                     if (!$user->belongsToUser($calendar->doctor_id)) {
                         return response()->json([]);
                     }
                 }
             }
             
-            // Obter parâmetros de data do FullCalendar (se disponíveis)
+            // Obter parÃ¢metros de data do FullCalendar (se disponÃ­veis)
             $startDate = $request->has('start') ? Carbon::parse($request->start) : Carbon::now()->startOfMonth();
             $endDate = $request->has('end') ? Carbon::parse($request->end) : Carbon::now()->endOfMonth();
             
@@ -556,32 +703,32 @@ class AppointmentController extends Controller
                 ];
             });
             
-            // Adicionar agendamentos recorrentes que ainda não foram gerados
+            // Adicionar agendamentos recorrentes que ainda nÃ£o foram gerados
             $recurringEvents = $this->getRecurringAppointmentEvents($calendar->doctor_id, $startDate, $endDate);
             $events = $events->merge($recurringEvents);
             
             return response()->json($events);
         }
         
-        // Retorna a view para acesso direto - mas primeiro verifica permissões
+        // Retorna a view para acesso direto - mas primeiro verifica permissÃµes
         $user = Auth::guard('tenant')->user();
         
-        // Admin pode ver todos os calendários, outros roles têm restrições
+        // Admin pode ver todos os calendÃ¡rios, outros roles tÃªm restriÃ§Ãµes
         if ($user->role !== 'admin') {
-            // Verifica permissão para visualizar o calendário
+            // Verifica permissÃ£o para visualizar o calendÃ¡rio
             if ($user->role === 'doctor' && $user->doctor) {
-                // Médico só pode ver seu próprio calendário
+                // MÃ©dico sÃ³ pode ver seu prÃ³prio calendÃ¡rio
                 if ($calendar->doctor_id !== $user->doctor->id) {
-                    abort(403, 'Você não tem permissão para visualizar este calendário.');
+                    abort(403, 'VocÃª nÃ£o tem permissÃ£o para visualizar este calendÃ¡rio.');
                 }
             } elseif ($user->role === 'user') {
-                // Usuário comum precisa ter permissão para ver o médico
+                // UsuÃ¡rio comum precisa ter permissÃ£o para ver o mÃ©dico
                 if (!$user->belongsToUser($calendar->doctor_id)) {
-                    abort(403, 'Você não tem permissão para visualizar este calendário.');
+                    abort(403, 'VocÃª nÃ£o tem permissÃ£o para visualizar este calendÃ¡rio.');
                 }
             } else {
-                // Usuário não autenticado ou role inválido
-                abort(403, 'Você precisa estar autenticado para visualizar este calendário.');
+                // UsuÃ¡rio nÃ£o autenticado ou role invÃ¡lido
+                abort(403, 'VocÃª precisa estar autenticado para visualizar este calendÃ¡rio.');
             }
         }
         
@@ -603,13 +750,13 @@ class AppointmentController extends Controller
     }
 
     /**
-     * Gera eventos de agendamentos recorrentes para exibição no calendário
+     * Gera eventos de agendamentos recorrentes para exibiÃ§Ã£o no calendÃ¡rio
      */
     private function getRecurringAppointmentEvents($doctorId, Carbon $startDate, Carbon $endDate): \Illuminate\Support\Collection
     {
         $events = collect();
 
-        // Buscar recorrências ativas do médico
+        // Buscar recorrÃªncias ativas do mÃ©dico
         $recurringAppointments = RecurringAppointment::where('doctor_id', $doctorId)
             ->where('active', true)
             ->where('start_date', '<=', $endDate->format('Y-m-d'))
@@ -631,20 +778,20 @@ class AppointmentController extends Controller
                 continue;
             }
 
-            // Processar cada regra da recorrência
+            // Processar cada regra da recorrÃªncia
             foreach ($recurring->rules as $rule) {
                 $weekdayNumber = $rule->getWeekdayNumber();
                 
-                // Gerar eventos para cada ocorrência no período
+                // Gerar eventos para cada ocorrÃªncia no perÃ­odo
                 $currentDate = $startDate->copy();
                 
-                // Encontrar primeira ocorrência do dia da semana no período
+                // Encontrar primeira ocorrÃªncia do dia da semana no perÃ­odo
                 $daysUntilWeekday = ($weekdayNumber - $currentDate->dayOfWeek + 7) % 7;
                 if ($daysUntilWeekday > 0) {
                     $currentDate->addDays($daysUntilWeekday);
                 }
                 
-                // Garantir que a data não seja anterior à data inicial da recorrência
+                // Garantir que a data nÃ£o seja anterior Ã  data inicial da recorrÃªncia
                 if ($currentDate->lt($recurring->start_date)) {
                     $currentDate = $recurring->start_date->copy();
                     $daysToAdd = ($weekdayNumber - $currentDate->dayOfWeek + 7) % 7;
@@ -653,9 +800,9 @@ class AppointmentController extends Controller
                     }
                 }
 
-                // Gerar eventos até o final do período ou até a data final da recorrência
+                // Gerar eventos atÃ© o final do perÃ­odo ou atÃ© a data final da recorrÃªncia
                 while ($currentDate->lte($endDate)) {
-                    // Verificar limites da recorrência
+                    // Verificar limites da recorrÃªncia
                     if ($recurring->end_type === 'date' && $recurring->end_date && $currentDate->gt($recurring->end_date)) {
                         break;
                     }
@@ -667,7 +814,7 @@ class AppointmentController extends Controller
                         }
                     }
 
-                    // Verificar se já existe um agendamento gerado para esta data e horário
+                    // Verificar se jÃ¡ existe um agendamento gerado para esta data e horÃ¡rio
                     $startDateTime = Carbon::parse($currentDate->format('Y-m-d') . ' ' . $rule->start_time);
                     $endDateTime = Carbon::parse($currentDate->format('Y-m-d') . ' ' . $rule->end_time);
                     
@@ -677,7 +824,7 @@ class AppointmentController extends Controller
                         ->whereTime('ends_at', $rule->end_time)
                         ->first();
 
-                    // Se não existe, criar evento virtual para exibição
+                    // Se nÃ£o existe, criar evento virtual para exibiÃ§Ã£o
                     if (!$existingAppointment) {
                         $events->push([
                             'id' => 'recurring_' . $recurring->id . '_' . $currentDate->format('Y-m-d') . '_' . $rule->id,
@@ -698,7 +845,7 @@ class AppointmentController extends Controller
                         ]);
                     }
 
-                    // Avançar para a próxima semana
+                    // AvanÃ§ar para a prÃ³xima semana
                     $currentDate->addWeek();
                 }
             }
@@ -708,7 +855,7 @@ class AppointmentController extends Controller
     }
 
     /**
-     * API: Buscar calendários por médico
+     * API: Buscar calendÃ¡rios por mÃ©dico
      */
     public function getCalendarsByDoctor($slug, $doctorId)
     {
@@ -730,7 +877,7 @@ class AppointmentController extends Controller
     }
 
     /**
-     * API: Buscar tipos de consulta por médico
+     * API: Buscar tipos de consulta por mÃ©dico
      */
     public function getAppointmentTypesByDoctor($slug, $doctorId)
     {
@@ -739,7 +886,7 @@ class AppointmentController extends Controller
                 return response()->json([]);
             }
 
-            // Retorna apenas os tipos de consulta do médico específico
+            // Retorna apenas os tipos de consulta do mÃ©dico especÃ­fico
             $types = AppointmentType::where('doctor_id', $doctorId)
                 ->where('is_active', true)
                 ->orderBy('name')
@@ -754,7 +901,7 @@ class AppointmentController extends Controller
 
             return response()->json($types);
         } catch (\Exception $e) {
-            \Log::error('Erro ao buscar tipos de consulta por médico', [
+            \Log::error('Erro ao buscar tipos de consulta por mÃ©dico', [
                 'doctor_id' => $doctorId,
                 'error' => $e->getMessage()
             ]);
@@ -765,7 +912,7 @@ class AppointmentController extends Controller
     }
 
     /**
-     * API: Buscar especialidades por médico
+     * API: Buscar especialidades por mÃ©dico
      */
     public function getSpecialtiesByDoctor($slug, $doctorId)
     {
@@ -775,7 +922,7 @@ class AppointmentController extends Controller
                 return response()->json([]);
             }
             
-            \Log::info('Buscando especialidades para médico', [
+            \Log::info('Buscando especialidades para mÃ©dico', [
                 'doctor_id' => $doctorId,
                 'doctor_name' => $doctor->user->name_full ?? $doctor->user->name ?? 'N/A'
             ]);
@@ -799,7 +946,7 @@ class AppointmentController extends Controller
 
             return response()->json($result);
         } catch (\Exception $e) {
-            \Log::error('Erro ao buscar especialidades por médico', [
+            \Log::error('Erro ao buscar especialidades por mÃ©dico', [
                 'doctor_id' => $doctorId,
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
@@ -811,7 +958,7 @@ class AppointmentController extends Controller
     }
 
     /**
-     * API: Buscar horários disponíveis para um médico em uma data específica
+     * API: Buscar horÃ¡rios disponÃ­veis para um mÃ©dico em uma data especÃ­fica
      */
     public function getAvailableSlots(Request $request, $slug, $doctorId)
     {
@@ -821,41 +968,42 @@ class AppointmentController extends Controller
         ]);
 
         if (!$this->findAccessibleDoctor($doctorId)) {
-            return response()->json([]);
+            return response()->json([
+                'slots' => [],
+                'available' => [],
+            ]);
         }
 
         $date = Carbon::parse($request->date, 'America/Campo_Grande')->startOfDay();
         $todayCampoGrande = Carbon::now('America/Campo_Grande')->startOfDay();
         if ($date->lt($todayCampoGrande)) {
             return response()->json([
-                'message' => 'Não é possível buscar horários para uma data passada. Selecione hoje ou uma data futura.',
+                'message' => 'NÃ£o Ã© possÃ­vel buscar horÃ¡rios para uma data passada. Selecione hoje ou uma data futura.',
             ], 422);
         }
 
-        $weekday = $date->dayOfWeek; // 0 = Domingo, 6 = Sábado
-        
-        // Buscar horários comerciais do médico para o dia da semana
+        $weekday = $date->dayOfWeek; // 0 = Domingo, 6 = SÃ¡bado
+
         $businessHours = BusinessHour::where('doctor_id', $doctorId)
             ->where('weekday', $weekday)
             ->orderBy('start_time')
             ->get();
 
         if ($businessHours->isEmpty()) {
-            return response()->json([]);
+            return response()->json([
+                'slots' => [],
+                'available' => [],
+            ]);
         }
 
-        // Buscar calendários do médico
         $calendars = Calendar::where('doctor_id', $doctorId)->pluck('id');
-        
-        // Buscar agendamentos existentes para o dia (apenas scheduled e rescheduled)
-        // Cancelados e não comparecidos não ocupam horário
+
         $existingAppointments = Appointment::whereIn('calendar_id', $calendars)
             ->whereDate('starts_at', $date->format('Y-m-d'))
-            ->whereIn('status', ['scheduled', 'rescheduled'])
-            ->get();
+            ->whereIn('status', ['scheduled', 'rescheduled', 'pending_confirmation'])
+            ->get(['id', 'starts_at', 'ends_at', 'status', 'confirmation_expires_at']);
 
-        // Duração padrão (30 minutos) ou do tipo de consulta
-        $duration = 30; // minutos padrão
+        $duration = 30;
         if ($request->appointment_type_id) {
             $appointmentType = AppointmentType::find($request->appointment_type_id);
             if ($appointmentType) {
@@ -863,13 +1011,13 @@ class AppointmentController extends Controller
             }
         }
 
+        $slots = [];
         $availableSlots = [];
 
         foreach ($businessHours as $businessHour) {
             $startTime = Carbon::parse($date->format('Y-m-d') . ' ' . $businessHour->start_time);
             $endTime = Carbon::parse($date->format('Y-m-d') . ' ' . $businessHour->end_time);
 
-            // Verificar se há intervalo configurado
             $breakStartTime = null;
             $breakEndTime = null;
             if ($businessHour->break_start_time && $businessHour->break_end_time) {
@@ -882,39 +1030,69 @@ class AppointmentController extends Controller
             while ($currentSlot->copy()->addMinutes($duration)->lte($endTime)) {
                 $slotStart = $currentSlot->copy();
                 $slotEnd = $currentSlot->copy()->addMinutes($duration);
-                
-                // Verificar se o slot está dentro do intervalo (se houver)
+
+                $slotPayload = [
+                    'label' => $slotStart->format('H:i'),
+                    'starts_at' => $slotStart->format('Y-m-d H:i:s'),
+                    'ends_at' => $slotEnd->format('Y-m-d H:i:s'),
+                    'status' => 'FREE',
+                ];
+
                 $isInBreak = false;
                 if ($breakStartTime && $breakEndTime) {
-                    // Verifica se o slot se sobrepõe ao intervalo
                     $isInBreak = ($slotStart->lt($breakEndTime) && $slotEnd->gt($breakStartTime));
                 }
-                
+
                 if ($isInBreak) {
-                    // Pular este slot pois está no intervalo
+                    $slotPayload['status'] = 'DISABLED';
+                    $slotPayload['reason'] = 'BREAK';
+                    $slots[] = $slotPayload;
                     $currentSlot->addMinutes($duration);
                     continue;
                 }
 
-                // Verificar se o slot não conflita com agendamentos existentes
-                // Considera apenas agendamentos com status 'scheduled' ou 'rescheduled'
-                $hasConflict = $existingAppointments->filter(function($appointment) use ($slotStart, $slotEnd) {
-                    $apptStart = Carbon::parse($appointment->starts_at);
-                    $apptEnd = Carbon::parse($appointment->ends_at);
-                    
-                    // Verifica sobreposição: 
-                    // - Slot começa antes do agendamento terminar
-                    // - Slot termina depois do agendamento começar
-                    // Isso cobre todos os casos: sobreposição parcial, slot dentro do agendamento, agendamento dentro do slot
-                    return $slotStart->lt($apptEnd) && $slotEnd->gt($apptStart);
-                })->isNotEmpty();
-
-                // Verificar se o slot está bloqueado por uma recorrência ativa
-                if (!$hasConflict) {
-                    $hasConflict = $this->isSlotBlockedByRecurring($doctorId, $date, $slotStart, $slotEnd);
+                if ($this->isSlotBlockedByRecurring($doctorId, $date, $slotStart, $slotEnd)) {
+                    $slotPayload['status'] = 'DISABLED';
+                    $slotPayload['reason'] = 'RECURRING_BLOCK';
+                    $slots[] = $slotPayload;
+                    $currentSlot->addMinutes($duration);
+                    continue;
                 }
 
-                if (!$hasConflict) {
+                $holdAppointment = $existingAppointments->first(function ($appointment) use ($slotStart, $slotEnd) {
+                    if ($appointment->status !== 'pending_confirmation') {
+                        return false;
+                    }
+
+                    $apptStart = Carbon::parse($appointment->starts_at);
+                    $apptEnd = Carbon::parse($appointment->ends_at);
+                    return $slotStart->lt($apptEnd) && $slotEnd->gt($apptStart);
+                });
+
+                if ($holdAppointment) {
+                    $slotPayload['status'] = 'HOLD';
+                    $slotPayload['appointment_id'] = $holdAppointment->id;
+                    if ($holdAppointment->confirmation_expires_at) {
+                        $slotPayload['hold_expires_at'] = $holdAppointment->confirmation_expires_at->format('Y-m-d H:i:s');
+                    }
+                } else {
+                    $busyAppointment = $existingAppointments->first(function ($appointment) use ($slotStart, $slotEnd) {
+                        if (!in_array($appointment->status, ['scheduled', 'rescheduled'], true)) {
+                            return false;
+                        }
+
+                        $apptStart = Carbon::parse($appointment->starts_at);
+                        $apptEnd = Carbon::parse($appointment->ends_at);
+                        return $slotStart->lt($apptEnd) && $slotEnd->gt($apptStart);
+                    });
+
+                    if ($busyAppointment) {
+                        $slotPayload['status'] = 'BUSY';
+                        $slotPayload['appointment_id'] = $busyAppointment->id;
+                    }
+                }
+
+                if ($slotPayload['status'] === 'FREE') {
                     $availableSlots[] = [
                         'start' => $slotStart->format('H:i'),
                         'end' => $slotEnd->format('H:i'),
@@ -923,15 +1101,19 @@ class AppointmentController extends Controller
                     ];
                 }
 
+                $slots[] = $slotPayload;
                 $currentSlot->addMinutes($duration);
             }
         }
 
-        return response()->json($availableSlots);
+        return response()->json([
+            'slots' => $slots,
+            'available' => $availableSlots,
+        ]);
     }
 
     /**
-     * Verifica se um slot está bloqueado por uma recorrência ativa
+     * Verifica se um slot estÃ¡ bloqueado por uma recorrÃªncia ativa
      */
     private function isSlotBlockedByRecurring($doctorId, Carbon $date, Carbon $slotStart, Carbon $slotEnd): bool
     {
@@ -940,7 +1122,7 @@ class AppointmentController extends Controller
         $slotStartTime = $slotStart->format('H:i');
         $slotEndTime = $slotEnd->format('H:i');
 
-        // Buscar recorrências ativas do médico que têm regras para este dia da semana
+        // Buscar recorrÃªncias ativas do mÃ©dico que tÃªm regras para este dia da semana
         $recurringAppointments = RecurringAppointment::where('doctor_id', $doctorId)
             ->where('active', true)
             ->where('start_date', '<=', $date->format('Y-m-d'))
@@ -964,37 +1146,37 @@ class AppointmentController extends Controller
             return false;
         }
 
-        // Verificar se alguma recorrência ainda está dentro dos limites e bloqueia o slot
+        // Verificar se alguma recorrÃªncia ainda estÃ¡ dentro dos limites e bloqueia o slot
         foreach ($recurringAppointments as $recurring) {
             if (!$recurring->isActive()) {
                 continue;
             }
 
-            // Verificar se ainda não atingiu o limite de sessões
+            // Verificar se ainda nÃ£o atingiu o limite de sessÃµes
             if ($recurring->end_type === 'total_sessions' && $recurring->total_sessions) {
                 $generatedCount = $recurring->getGeneratedSessionsCount();
                 if ($generatedCount >= $recurring->total_sessions) {
-                    continue; // Já atingiu o limite
+                    continue; // JÃ¡ atingiu o limite
                 }
             }
 
-            // Verificar se a data está dentro do período válido
+            // Verificar se a data estÃ¡ dentro do perÃ­odo vÃ¡lido
             if ($recurring->end_type === 'date' && $recurring->end_date && $date->gt($recurring->end_date)) {
-                continue; // Data fora do período
+                continue; // Data fora do perÃ­odo
             }
 
-            // Verificar se alguma regra desta recorrência bloqueia o slot (verifica sobreposição)
+            // Verificar se alguma regra desta recorrÃªncia bloqueia o slot (verifica sobreposiÃ§Ã£o)
             foreach ($recurring->rules as $rule) {
                 if ($rule->weekday !== $weekdayString) {
                     continue;
                 }
 
-                // Converter horários para Carbon para comparação precisa
-                // Normalizar o formato do horário (pode vir como "HH:MM:SS" ou "HH:MM")
+                // Converter horÃ¡rios para Carbon para comparaÃ§Ã£o precisa
+                // Normalizar o formato do horÃ¡rio (pode vir como "HH:MM:SS" ou "HH:MM")
                 $ruleStartTime = $rule->start_time;
                 $ruleEndTime = $rule->end_time;
                 
-                // Normalizar para formato HH:MM:SS se necessário
+                // Normalizar para formato HH:MM:SS se necessÃ¡rio
                 if (strlen($ruleStartTime) === 5) {
                     $ruleStartTime .= ':00';
                 }
@@ -1002,7 +1184,7 @@ class AppointmentController extends Controller
                     $ruleEndTime .= ':00';
                 }
                 
-                // Criar objetos Carbon com a data e horário, zerando segundos e microsegundos para comparação precisa
+                // Criar objetos Carbon com a data e horÃ¡rio, zerando segundos e microsegundos para comparaÃ§Ã£o precisa
                 try {
                     $ruleStart = Carbon::createFromFormat('Y-m-d H:i:s', $date->format('Y-m-d') . ' ' . $ruleStartTime)->startOfMinute();
                     $ruleEnd = Carbon::createFromFormat('Y-m-d H:i:s', $date->format('Y-m-d') . ' ' . $ruleEndTime)->startOfMinute();
@@ -1012,25 +1194,25 @@ class AppointmentController extends Controller
                     $ruleEnd = Carbon::parse($date->format('Y-m-d') . ' ' . $ruleEndTime)->startOfMinute();
                 }
                 
-                // Garantir que os slots também estão normalizados
+                // Garantir que os slots tambÃ©m estÃ£o normalizados
                 $normalizedSlotStart = $slotStart->copy()->startOfMinute();
                 $normalizedSlotEnd = $slotEnd->copy()->startOfMinute();
 
-                // Verifica sobreposição de intervalos de tempo:
-                // Dois intervalos [a, b) e [c, d) se sobrepõem se: a < d && b > c
-                // Onde o fim do intervalo é exclusivo (um agendamento 08:00-09:00 termina em 09:00:00, mas não inclui 09:00:00)
-                // Então o próximo slot pode começar exatamente em 09:00:00
-                // IMPORTANTE: Se a regra termina às 09:00:00 e o slot começa às 09:00:00, NÃO há sobreposição
-                // Por isso usamos > (maior que) e não >= (maior ou igual)
+                // Verifica sobreposiÃ§Ã£o de intervalos de tempo:
+                // Dois intervalos [a, b) e [c, d) se sobrepÃµem se: a < d && b > c
+                // Onde o fim do intervalo Ã© exclusivo (um agendamento 08:00-09:00 termina em 09:00:00, mas nÃ£o inclui 09:00:00)
+                // EntÃ£o o prÃ³ximo slot pode comeÃ§ar exatamente em 09:00:00
+                // IMPORTANTE: Se a regra termina Ã s 09:00:00 e o slot comeÃ§a Ã s 09:00:00, NÃƒO hÃ¡ sobreposiÃ§Ã£o
+                // Por isso usamos > (maior que) e nÃ£o >= (maior ou igual)
                 // 
                 // Exemplo:
                 // - Regra: 08:00:00 - 09:00:00
                 // - Slot: 09:00:00 - 10:00:00
-                // - Verificação: 08:00:00 < 10:00:00 (true) && 09:00:00 > 09:00:00 (false) = false (não bloqueia) ✓
+                // - VerificaÃ§Ã£o: 08:00:00 < 10:00:00 (true) && 09:00:00 > 09:00:00 (false) = false (nÃ£o bloqueia) âœ“
                 $hasOverlap = $ruleStart->lt($normalizedSlotEnd) && $ruleEnd->gt($normalizedSlotStart);
                 
                 if ($hasOverlap) {
-                    return true; // Há sobreposição, o slot está bloqueado
+                    return true; // HÃ¡ sobreposiÃ§Ã£o, o slot estÃ¡ bloqueado
                 }
             }
         }
@@ -1039,7 +1221,7 @@ class AppointmentController extends Controller
     }
 
     /**
-     * API: Buscar dias trabalhados (business hours) do médico
+     * API: Buscar dias trabalhados (business hours) do mÃ©dico
      */
     public function getBusinessHoursByDoctor($slug, $doctorId)
     {
@@ -1058,17 +1240,17 @@ class AppointmentController extends Controller
             $weekdayNames = [
                 0 => 'Domingo',
                 1 => 'Segunda-feira',
-                2 => 'Terça-feira',
+                2 => 'TerÃ§a-feira',
                 3 => 'Quarta-feira',
                 4 => 'Quinta-feira',
                 5 => 'Sexta-feira',
-                6 => 'Sábado',
+                6 => 'SÃ¡bado',
             ];
 
             // Agrupar por weekday
             $grouped = $businessHours->groupBy('weekday');
             
-            // Criar array com todos os dias da semana (mesmo que não tenham horários)
+            // Criar array com todos os dias da semana (mesmo que nÃ£o tenham horÃ¡rios)
             $result = [
                 'doctor' => [
                     'id' => $doctor->id,
@@ -1100,14 +1282,14 @@ class AppointmentController extends Controller
 
             return response()->json($result);
         } catch (\Exception $e) {
-            \Log::error('Erro ao buscar dias trabalhados do médico', [
+            \Log::error('Erro ao buscar dias trabalhados do mÃ©dico', [
                 'doctor_id' => $doctorId,
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
             ]);
             
             return response()->json([
-                'error' => 'Erro ao buscar dias trabalhados do médico: ' . $e->getMessage(),
+                'error' => 'Erro ao buscar dias trabalhados do mÃ©dico: ' . $e->getMessage(),
                 'doctor' => null,
                 'business_hours' => []
             ], 500);
@@ -1155,7 +1337,7 @@ class AppointmentController extends Controller
     }
 
     /**
-     * API: Buscar mÃ©dicos por texto (nome/registro/especialidade)
+     * API: Buscar mÃƒÂ©dicos por texto (nome/registro/especialidade)
      */
     public function searchDoctors(Request $request, $slug)
     {
@@ -1199,7 +1381,7 @@ class AppointmentController extends Controller
             ->limit($limit)
             ->get()
             ->map(function (Doctor $doctor) {
-                $name = $doctor->user?->name_full ?: $doctor->user?->name ?: 'MÃ©dico';
+                $name = $doctor->user?->name_full ?: $doctor->user?->name ?: 'MÃƒÂ©dico';
                 $registration = $doctor->registration_value ?: $doctor->crm_number;
                 $specialty = $doctor->specialties->first()?->name;
                 $secondary = $registration ?: $specialty;
@@ -1214,6 +1396,15 @@ class AppointmentController extends Controller
         return response()->json(['data' => $doctors]);
     }
 
+    private function generateUniqueConfirmationToken(): string
+    {
+        do {
+            $token = Str::random(64);
+        } while (Appointment::where('confirmation_token', $token)->exists());
+
+        return $token;
+    }
+
     private function findAccessibleDoctor(string $doctorId): ?Doctor
     {
         $query = Doctor::with('user');
@@ -1222,3 +1413,4 @@ class AppointmentController extends Controller
         return $query->where('id', $doctorId)->first();
     }
 }
+

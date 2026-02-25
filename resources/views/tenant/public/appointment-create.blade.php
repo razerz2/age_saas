@@ -39,6 +39,18 @@
 
             {{-- Mensagens --}}
             <div class="mb-6 space-y-3">
+                @if (session('success'))
+                    <div class="flex items-start gap-3 rounded-xl border border-emerald-100 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
+                        <span class="mt-0.5 inline-flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-emerald-100 text-emerald-600">
+                            <i class="mdi mdi-check-circle text-base"></i>
+                        </span>
+                        <div class="flex-1">
+                            <p class="font-semibold">Sucesso</p>
+                            <p class="mt-0.5">{{ session('success') }}</p>
+                        </div>
+                    </div>
+                @endif
+
                 @if (session('error'))
                     <div class="flex items-start gap-3 rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-800">
                         <span class="mt-0.5 inline-flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-red-100 text-red-600">
@@ -270,7 +282,18 @@
 
                         <input type="hidden" name="starts_at" id="starts_at">
                         <input type="hidden" name="ends_at" id="ends_at">
+                        <input type="hidden" name="intent_waitlist" id="intent_waitlist" value="0">
                         <input type="hidden" name="calendar_id" id="calendar_id">
+                        <div
+                            id="slot_waitlist_alert"
+                            class="mt-3 hidden rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800"
+                            style="display: none;"
+                            aria-hidden="true"
+                        >
+                            <span id="slot_waitlist_alert_message">
+                                Você escolheu um horário já reservado. Você será encaminhado para a fila de espera e receberá uma notificação com link se a vaga ficar disponível.
+                            </span>
+                        </div>
                     </div>
 
                     {{-- Seção 3: Observações --}}

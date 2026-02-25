@@ -9,6 +9,7 @@ use App\Http\Controllers\Tenant\Auth\LoginController;
 use App\Http\Controllers\Tenant\PublicPatientController;
 use App\Http\Controllers\Tenant\PublicPatientRegisterController;
 use App\Http\Controllers\Tenant\PublicAppointmentController;
+use App\Http\Controllers\Tenant\PublicAppointmentWaitlistController;
 use App\Http\Controllers\Tenant\PublicFormController;
 
 // Dashboard
@@ -29,6 +30,7 @@ use App\Http\Controllers\Tenant\CalendarController;
 use App\Http\Controllers\Tenant\BusinessHourController;
 use App\Http\Controllers\Tenant\AppointmentTypeController;
 use App\Http\Controllers\Tenant\AppointmentController;
+use App\Http\Controllers\Tenant\AppointmentWaitlistController;
 use App\Http\Controllers\Tenant\DoctorSettingsController;
 
 // Forms
@@ -86,6 +88,11 @@ Route::prefix('customer/{slug}')
         Route::post('/agendamento/criar', [PublicAppointmentController::class, 'store'])->name('appointment.store');
         Route::get('/agendamento/sucesso/{appointment_id?}', [PublicAppointmentController::class, 'success'])->name('appointment.success');
         Route::get('/agendamento/{appointment_id}', [PublicAppointmentController::class, 'show'])->name('appointment.show');
+        Route::get('/agendamento/confirm/{token}', [PublicAppointmentController::class, 'confirmByToken'])->name('appointment.confirm');
+        Route::post('/agendamento/cancel/{token}', [PublicAppointmentController::class, 'cancelByToken'])->name('appointment.cancel');
+        Route::post('/agendamento/waitlist', [PublicAppointmentWaitlistController::class, 'store'])->name('waitlist.store');
+        Route::get('/agendamento/oferta/{token}', [PublicAppointmentWaitlistController::class, 'showOffer'])->name('waitlist.offer.show');
+        Route::post('/agendamento/oferta/{token}/accept', [PublicAppointmentWaitlistController::class, 'acceptOffer'])->name('waitlist.offer.accept');
 
         // APIs públicas para agendamento
         Route::prefix('agendamento/api')->group(function () {
@@ -406,6 +413,14 @@ Route::prefix('workspace/{slug}')
         Route::put('appointments/{id}', [AppointmentController::class, 'update'])
             ->where('id', '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}')
             ->name('appointments.update');
+        Route::post('appointments/{appointment}/confirm', [AppointmentController::class, 'confirm'])
+            ->where('appointment', '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}')
+            ->name('appointments.confirm');
+        Route::post('appointments/{appointment}/cancel', [AppointmentController::class, 'cancel'])
+            ->where('appointment', '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}')
+            ->name('appointments.cancel');
+        Route::post('appointments/waitlist', [AppointmentWaitlistController::class, 'store'])
+            ->name('appointments.waitlist.store');
         Route::delete('appointments/{id}', [AppointmentController::class, 'destroy'])
             ->where('id', '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}')
             ->name('appointments.destroy');
@@ -746,6 +761,9 @@ Route::prefix('workspace/{slug}')
             Route::post('settings/appointments', [SettingsController::class, 'updateAppointments'])->name('settings.update.appointments');
             Route::post('settings/calendar', [SettingsController::class, 'updateCalendar'])->name('settings.update.calendar');
             Route::post('settings/notifications', [SettingsController::class, 'updateNotifications'])->name('settings.update.notifications');
+            Route::post('settings/editor/preview', [SettingsController::class, 'previewNotificationTemplate'])->name('settings.editor.preview');
+            Route::post('settings/editor/save', [SettingsController::class, 'updateNotificationTemplate'])->name('settings.editor.save');
+            Route::post('settings/editor/restore', [SettingsController::class, 'restoreNotificationTemplate'])->name('settings.editor.restore');
             Route::get('settings/whatsapp/test/{service}', [WhatsAppSettingsTestController::class, 'testConnection'])
                 ->where('service', 'meta|zapi|waha')
                 ->name('settings.whatsapp.test.connection');

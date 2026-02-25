@@ -25,6 +25,7 @@ class StorePublicAppointmentRequest extends FormRequest
             'specialty_id'     => ['nullable', 'exists:tenant.medical_specialties,id'],
             'starts_at'        => ['required', 'date'],
             'ends_at'          => ['required', 'date', 'after:starts_at'],
+            'intent_waitlist'  => ['nullable', 'in:0,1'],
             'notes'            => ['nullable', 'string'],
         ];
 
@@ -112,6 +113,11 @@ class StorePublicAppointmentRequest extends FormRequest
             }
 
             // Obter patient_id da sessão (para agendamentos públicos)
+            $isWaitlistIntent = (string) $this->input('intent_waitlist', '0') === '1';
+            if ($isWaitlistIntent) {
+                return;
+            }
+
             $patientId = \Illuminate\Support\Facades\Session::get('public_patient_id');
 
             // Verificar se o paciente já possui um agendamento no mesmo dia com o mesmo médico
@@ -122,7 +128,7 @@ class StorePublicAppointmentRequest extends FormRequest
                         $query->where('doctor_id', $doctorId);
                     })
                     ->whereDate('starts_at', $startsAt->format('Y-m-d'))
-                    ->whereIn('status', ['scheduled', 'rescheduled'])
+                    ->whereIn('status', ['scheduled', 'rescheduled', 'pending_confirmation'])
                     ->first();
 
                 if ($existingAppointmentSameDay) {
@@ -137,7 +143,7 @@ class StorePublicAppointmentRequest extends FormRequest
                     })
                     ->whereNotNull('recurring_appointment_id')
                     ->whereDate('starts_at', $startsAt->format('Y-m-d'))
-                    ->whereIn('status', ['scheduled', 'rescheduled'])
+                    ->whereIn('status', ['scheduled', 'rescheduled', 'pending_confirmation'])
                     ->first();
 
                 if ($recurringGeneratedAppointment) {
@@ -197,7 +203,7 @@ class StorePublicAppointmentRequest extends FormRequest
 
             // Verificar se há conflito com agendamentos existentes (scheduled ou rescheduled)
             $conflictingAppointment = Appointment::where('calendar_id', $calendarId)
-                ->whereIn('status', ['scheduled', 'rescheduled'])
+                ->whereIn('status', ['scheduled', 'rescheduled', 'pending_confirmation'])
                 ->where(function($query) use ($startsAt, $endsAt) {
                     $query->where(function($q) use ($startsAt, $endsAt) {
                         // Verifica sobreposição: novo agendamento começa antes do existente terminar
@@ -238,4 +244,3 @@ class StorePublicAppointmentRequest extends FormRequest
         ];
     }
 }
-

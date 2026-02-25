@@ -13,6 +13,8 @@ class Kernel extends ConsoleKernel
     protected function schedule(Schedule $schedule): void
     {
         // Carrega configurações de comandos do banco de dados
+        $schedule->command('appointments:expire-pending')->everyFiveMinutes();
+        $schedule->command('appointments:expire-waitlist-offers')->everyFiveMinutes();
         $this->scheduleCommands($schedule);
     }
 
@@ -122,3 +124,4 @@ class Kernel extends ConsoleKernel
         require base_path('routes/console.php');
     }
 }
+

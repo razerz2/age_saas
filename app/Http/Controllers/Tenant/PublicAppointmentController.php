@@ -10,14 +10,24 @@ use App\Models\Tenant\Calendar;
 use App\Models\Tenant\Doctor;
 use App\Models\Tenant\BusinessHour;
 use App\Models\Tenant\AppointmentType;
+use App\Services\Tenant\NotificationDispatcher;
+use App\Services\Tenant\WaitlistService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Session;
+use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Str;
 use Carbon\Carbon;
 
 class PublicAppointmentController extends Controller
 {
+    public function __construct(
+        private readonly WaitlistService $waitlistService,
+        private readonly NotificationDispatcher $notificationDispatcher
+    )
+    {
+    }
+
     /**
      * Exibe o formulário de criação de agendamento público
      */
@@ -105,6 +115,32 @@ class PublicAppointmentController extends Controller
                 ->withErrors(['calendar_id' => 'Calendário não encontrado.'])
                 ->withInput();
         }
+
+        $intentWaitlist = (string) $request->input('intent_waitlist', '0') === '1';
+        if ($intentWaitlist) {
+            try {
+                $result = $this->waitlistService->joinWaitlist([
+                    'doctor_id' => $calendar->doctor_id,
+                    'patient_id' => $patientId,
+                    'starts_at' => $data['starts_at'],
+                    'ends_at' => $data['ends_at'],
+                ]);
+            } catch (ValidationException $e) {
+                $firstError = collect($e->errors())->flatten()->first() ?? 'Não foi possível entrar na fila de espera.';
+
+                return redirect()->back()
+                    ->withInput()
+                    ->withErrors($e->errors())
+                    ->with('error', $firstError);
+            }
+
+            $message = $result['created']
+                ? 'Você entrou na fila de espera desse horário. Quando a vaga ficar disponível, enviaremos um link para confirmar.'
+                : 'Você já está na fila de espera desse horário. Quando a vaga ficar disponível, enviaremos um link para confirmar.';
+
+            return redirect()->route('public.appointment.create', ['slug' => $tenant])
+                ->with('success', $message);
+        }
         
         $data['id'] = Str::uuid();
         $data['patient_id'] = $patientId; // Usa o paciente da sessão
@@ -113,6 +149,23 @@ class PublicAppointmentController extends Controller
         $data['origin'] = 'public'; // Identificar origem como público
 
         // Aplicar lógica de appointment_mode baseado na configuração
+        $data['confirmation_token'] = $this->generateUniqueConfirmationToken();
+
+        $confirmationEnabled = tenant_setting_bool('appointments.confirmation.enabled', false);
+        $confirmationTtlMinutes = max(1, tenant_setting_int('appointments.confirmation.ttl_minutes', 30));
+        if ($confirmationEnabled) {
+            $data['status'] = 'pending_confirmation';
+            $data['confirmation_expires_at'] = now()->addMinutes($confirmationTtlMinutes);
+            $data['confirmed_at'] = null;
+            $data['expired_at'] = null;
+            $data['canceled_at'] = null;
+            $data['cancellation_reason'] = null;
+        } else {
+            $data['confirmed_at'] = now();
+            $data['confirmation_expires_at'] = null;
+            $data['expired_at'] = null;
+        }
+
         $mode = \App\Models\Tenant\TenantSetting::get('appointments.default_appointment_mode', 'user_choice');
         if ($mode === 'presencial') {
             $data['appointment_mode'] = 'presencial';
@@ -123,6 +176,17 @@ class PublicAppointmentController extends Controller
         }
 
         $appointment = Appointment::create($data);
+
+        if ($appointment->isHold()) {
+            $this->notificationDispatcher->dispatchAppointment(
+                $appointment,
+                'appointment.pending_confirmation',
+                [
+                    'event' => 'appointment_created_pending_confirmation',
+                    'origin' => 'public',
+                ]
+            );
+        }
 
         // Salva o ID do agendamento na sessão para permitir visualização
         Session::put('last_appointment_id', $appointment->id);
@@ -210,6 +274,124 @@ class PublicAppointmentController extends Controller
     /**
      * API Pública: Buscar calendários por médico
      */
+    public function confirmByToken(Request $request, $tenant, $token)
+    {
+        $tenantModel = Tenant::where('subdomain', $tenant)->first();
+        if (!$tenantModel) {
+            abort(404, 'Clinica nao encontrada.');
+        }
+
+        $tenantModel->makeCurrent();
+
+        $appointment = Appointment::where('confirmation_token', $token)->firstOrFail();
+
+        Session::put('last_appointment_id', $appointment->id);
+        Session::put('last_appointment_patient_id', $appointment->patient_id);
+
+        if (!$appointment->isHold()) {
+            return redirect()->route('public.appointment.show', [
+                'slug' => $tenant,
+                'appointment_id' => $appointment->id,
+            ])->with('error', 'Este agendamento nao esta pendente de confirmacao.');
+        }
+
+        if (!$appointment->confirmation_expires_at || now()->gte($appointment->confirmation_expires_at)) {
+            $appointment->update([
+                'status' => 'expired',
+                'expired_at' => now(),
+                'confirmation_expires_at' => null,
+            ]);
+
+            $this->notificationDispatcher->dispatchAppointment(
+                $appointment,
+                'appointment.expired',
+                ['event' => 'appointment_expired_on_public_confirm_attempt']
+            );
+
+            $this->waitlistService->onSlotReleased(
+                $appointment->doctor_id,
+                $appointment->starts_at,
+                $appointment->ends_at
+            );
+
+            return redirect()->route('public.appointment.show', [
+                'slug' => $tenant,
+                'appointment_id' => $appointment->id,
+            ])->with('error', 'O prazo de confirmacao expirou.');
+        }
+
+        $appointment->update([
+            'status' => 'scheduled',
+            'confirmed_at' => now(),
+            'confirmation_expires_at' => null,
+            'expired_at' => null,
+            'canceled_at' => null,
+            'cancellation_reason' => null,
+        ]);
+
+        $this->notificationDispatcher->dispatchAppointment(
+            $appointment,
+            'appointment.confirmed',
+            ['event' => 'appointment_confirmed_public']
+        );
+
+        return redirect()->route('public.appointment.show', [
+            'slug' => $tenant,
+            'appointment_id' => $appointment->id,
+        ])->with('success', 'Agendamento confirmado com sucesso.');
+    }
+
+    public function cancelByToken(Request $request, $tenant, $token)
+    {
+        $tenantModel = Tenant::where('subdomain', $tenant)->first();
+        if (!$tenantModel) {
+            abort(404, 'Clinica nao encontrada.');
+        }
+
+        $tenantModel->makeCurrent();
+
+        $validated = $request->validate([
+            'reason' => ['nullable', 'string', 'max:2000'],
+        ]);
+
+        $appointment = Appointment::where('confirmation_token', $token)->firstOrFail();
+
+        Session::put('last_appointment_id', $appointment->id);
+        Session::put('last_appointment_patient_id', $appointment->patient_id);
+
+        if (in_array($appointment->status, ['canceled', 'cancelled'], true)) {
+            return redirect()->route('public.appointment.show', [
+                'slug' => $tenant,
+                'appointment_id' => $appointment->id,
+            ])->with('info', 'Este agendamento ja esta cancelado.');
+        }
+
+        $appointment->update([
+            'status' => 'canceled',
+            'canceled_at' => now(),
+            'cancellation_reason' => $validated['reason'] ?? null,
+            'confirmation_expires_at' => null,
+            'expired_at' => null,
+        ]);
+
+        $this->notificationDispatcher->dispatchAppointment(
+            $appointment,
+            'appointment.canceled',
+            ['event' => 'appointment_canceled_public']
+        );
+
+        $this->waitlistService->onSlotReleased(
+            $appointment->doctor_id,
+            $appointment->starts_at,
+            $appointment->ends_at
+        );
+
+        return redirect()->route('public.appointment.show', [
+            'slug' => $tenant,
+            'appointment_id' => $appointment->id,
+        ])->with('success', 'Agendamento cancelado com sucesso.');
+    }
+
     public function getCalendarsByDoctor($tenant, $doctorId)
     {
         $tenantModel = Tenant::where('subdomain', $tenant)->first();
@@ -320,22 +502,25 @@ class PublicAppointmentController extends Controller
 
         $date = Carbon::parse($request->date);
         $weekday = $date->dayOfWeek;
-        
+
         $businessHours = BusinessHour::where('doctor_id', $doctorId)
             ->where('weekday', $weekday)
             ->orderBy('start_time')
             ->get();
 
         if ($businessHours->isEmpty()) {
-            return response()->json([]);
+            return response()->json([
+                'slots' => [],
+                'available' => [],
+            ]);
         }
 
         $calendars = Calendar::where('doctor_id', $doctorId)->pluck('id');
-        
-        $existingAppointments = \App\Models\Tenant\Appointment::whereIn('calendar_id', $calendars)
+
+        $existingAppointments = Appointment::whereIn('calendar_id', $calendars)
             ->whereDate('starts_at', $date->format('Y-m-d'))
-            ->whereIn('status', ['scheduled', 'rescheduled'])
-            ->get();
+            ->whereIn('status', ['scheduled', 'rescheduled', 'pending_confirmation'])
+            ->get(['starts_at', 'ends_at', 'status', 'confirmation_expires_at']);
 
         $duration = 30;
         if ($request->appointment_type_id) {
@@ -345,13 +530,13 @@ class PublicAppointmentController extends Controller
             }
         }
 
+        $slots = [];
         $availableSlots = [];
 
         foreach ($businessHours as $businessHour) {
             $startTime = Carbon::parse($date->format('Y-m-d') . ' ' . $businessHour->start_time);
             $endTime = Carbon::parse($date->format('Y-m-d') . ' ' . $businessHour->end_time);
-            
-            // Verificar se há intervalo configurado
+
             $breakStartTime = null;
             $breakEndTime = null;
             if ($businessHour->break_start_time && $businessHour->break_end_time) {
@@ -364,27 +549,59 @@ class PublicAppointmentController extends Controller
             while ($currentSlot->copy()->addMinutes($duration)->lte($endTime)) {
                 $slotStart = $currentSlot->copy();
                 $slotEnd = $currentSlot->copy()->addMinutes($duration);
-                
-                // Verificar se o slot está dentro do intervalo (se houver)
+
+                $slotPayload = [
+                    'label' => $slotStart->format('H:i'),
+                    'starts_at' => $slotStart->format('Y-m-d H:i:s'),
+                    'ends_at' => $slotEnd->format('Y-m-d H:i:s'),
+                    'status' => 'FREE',
+                ];
+
                 $isInBreak = false;
                 if ($breakStartTime && $breakEndTime) {
-                    // Verifica se o slot se sobrepõe ao intervalo
                     $isInBreak = ($slotStart->lt($breakEndTime) && $slotEnd->gt($breakStartTime));
                 }
-                
+
                 if ($isInBreak) {
-                    // Pular este slot pois está no intervalo
+                    $slotPayload['status'] = 'DISABLED';
+                    $slotPayload['reason'] = 'BREAK';
+                    $slots[] = $slotPayload;
                     $currentSlot->addMinutes($duration);
                     continue;
                 }
 
-                $hasConflict = $existingAppointments->filter(function($appointment) use ($slotStart, $slotEnd) {
+                $holdAppointment = $existingAppointments->first(function ($appointment) use ($slotStart, $slotEnd) {
+                    if ($appointment->status !== 'pending_confirmation') {
+                        return false;
+                    }
+
                     $apptStart = Carbon::parse($appointment->starts_at);
                     $apptEnd = Carbon::parse($appointment->ends_at);
                     return $slotStart->lt($apptEnd) && $slotEnd->gt($apptStart);
-                })->isNotEmpty();
+                });
 
-                if (!$hasConflict) {
+                if ($holdAppointment) {
+                    $slotPayload['status'] = 'HOLD';
+                    if ($holdAppointment->confirmation_expires_at) {
+                        $slotPayload['hold_expires_at'] = $holdAppointment->confirmation_expires_at->format('Y-m-d H:i:s');
+                    }
+                } else {
+                    $busyAppointment = $existingAppointments->first(function ($appointment) use ($slotStart, $slotEnd) {
+                        if (!in_array($appointment->status, ['scheduled', 'rescheduled'], true)) {
+                            return false;
+                        }
+
+                        $apptStart = Carbon::parse($appointment->starts_at);
+                        $apptEnd = Carbon::parse($appointment->ends_at);
+                        return $slotStart->lt($apptEnd) && $slotEnd->gt($apptStart);
+                    });
+
+                    if ($busyAppointment) {
+                        $slotPayload['status'] = 'BUSY';
+                    }
+                }
+
+                if ($slotPayload['status'] === 'FREE') {
                     $availableSlots[] = [
                         'start' => $slotStart->format('H:i'),
                         'end' => $slotEnd->format('H:i'),
@@ -393,11 +610,15 @@ class PublicAppointmentController extends Controller
                     ];
                 }
 
+                $slots[] = $slotPayload;
                 $currentSlot->addMinutes($duration);
             }
         }
 
-        return response()->json($availableSlots);
+        return response()->json([
+            'slots' => $slots,
+            'available' => $availableSlots,
+        ]);
     }
 
     /**
@@ -478,5 +699,13 @@ class PublicAppointmentController extends Controller
             ], 500);
         }
     }
-}
 
+    private function generateUniqueConfirmationToken(): string
+    {
+        do {
+            $token = Str::random(64);
+        } while (Appointment::where('confirmation_token', $token)->exists());
+
+        return $token;
+    }
+}

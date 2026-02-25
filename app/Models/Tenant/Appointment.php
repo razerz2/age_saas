@@ -18,12 +18,17 @@ class Appointment extends Model
     protected $fillable = [
         'id', 'calendar_id', 'doctor_id', 'appointment_type', 'patient_id',
         'specialty_id', 'starts_at', 'ends_at',
+        'confirmation_expires_at', 'confirmed_at', 'canceled_at', 'expired_at', 'cancellation_reason', 'confirmation_token',
         'status', 'notes', 'recurring_appointment_id', 'google_event_id', 'apple_event_id', 'appointment_mode', 'origin'
     ];
 
     protected $casts = [
         'starts_at' => 'datetime',
         'ends_at' => 'datetime',
+        'confirmation_expires_at' => 'datetime',
+        'confirmed_at' => 'datetime',
+        'canceled_at' => 'datetime',
+        'expired_at' => 'datetime',
         'appointment_mode' => 'string',
     ];
 
@@ -112,7 +117,9 @@ class Appointment extends Model
         $translations = [
             'scheduled' => 'Agendado',
             'rescheduled' => 'Reagendado',
+            'pending_confirmation' => 'Aguardando confirmação',
             'canceled' => 'Cancelado',
+            'expired' => 'Expirado',
             'attended' => 'Atendido',
             'no_show' => 'Não Compareceu',
             'confirmed' => 'Confirmado',
@@ -132,10 +139,14 @@ class Appointment extends Model
     {
         return [
             'scheduled',
+            'rescheduled',
+            'pending_confirmation',
             'confirmed',
+            'expired',
             'arrived',
             'in_service',
             'completed',
+            'canceled',
             'cancelled',
         ];
     }
@@ -146,5 +157,29 @@ class Appointment extends Model
     public function scopeForDay($query, $date)
     {
         return $query->whereDate('starts_at', $date);
+    }
+
+    /**
+     * Indica se o agendamento ocupa slot de agenda.
+     */
+    public function occupiesSlot(): bool
+    {
+        return in_array($this->status, ['scheduled', 'rescheduled', 'pending_confirmation'], true);
+    }
+
+    /**
+     * Indica se o agendamento estÃ¡ em hold (aguardando confirmaÃ§Ã£o).
+     */
+    public function isHold(): bool
+    {
+        return $this->status === 'pending_confirmation';
+    }
+
+    /**
+     * Indica se o agendamento jÃ¡ foi confirmado (ocupa slot final).
+     */
+    public function isConfirmed(): bool
+    {
+        return in_array($this->status, ['scheduled', 'rescheduled'], true);
     }
 }

@@ -5,10 +5,14 @@ namespace App\Http\Controllers\Tenant;
 use App\Http\Controllers\Controller;
 use App\Models\Tenant\TenantSetting;
 use App\Models\Tenant\Integrations;
+use App\Models\Tenant\Appointment;
 use App\Models\Platform\Tenant;
 use App\Models\Platform\Pais;
 use App\Models\Platform\Estado;
 use App\Models\Platform\Cidade;
+use App\Services\Tenant\NotificationContextBuilder;
+use App\Services\Tenant\NotificationTemplateService;
+use App\Services\Tenant\TemplateRenderer;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
@@ -19,7 +23,7 @@ class SettingsController extends Controller
     /**
      * Exibe a página de configurações
      */
-    public function index()
+    public function index(Request $request)
     {
         $appearanceLogoLight = TenantSetting::get('appearance.logo_light', TenantSetting::get('appearance.logo', ''));
         $appearanceLogoDark = TenantSetting::get('appearance.logo_dark', '');
@@ -42,6 +46,12 @@ class SettingsController extends Controller
             'appointments.cancellation_hours' => TenantSetting::get('appointments.cancellation_hours', '24'),
             'appointments.reminder_hours' => TenantSetting::get('appointments.reminder_hours', '24'),
             'appointments.default_appointment_mode' => TenantSetting::get('appointments.default_appointment_mode', 'user_choice'),
+            'appointments.confirmation.enabled' => tenant_setting_bool('appointments.confirmation.enabled', false),
+            'appointments.confirmation.ttl_minutes' => tenant_setting_int('appointments.confirmation.ttl_minutes', 30),
+            'appointments.waitlist.enabled' => tenant_setting_bool('appointments.waitlist.enabled', false),
+            'appointments.waitlist.offer_ttl_minutes' => tenant_setting_int('appointments.waitlist.offer_ttl_minutes', 15),
+            'appointments.waitlist.allow_when_confirmed' => tenant_setting_bool('appointments.waitlist.allow_when_confirmed', true),
+            'appointments.waitlist.max_per_slot' => tenant_setting_nullable_int('appointments.waitlist.max_per_slot', null),
             
             // Calendário
             'calendar.default_start_time' => TenantSetting::get('calendar.default_start_time', '08:00'),
@@ -154,6 +164,7 @@ class SettingsController extends Controller
             $publicBookingUrl = url('/customer/' . $currentTenant->subdomain . '/agendamento/identificar');
         }
 
+        $editor = $this->buildEditorViewData($currentTenant, $request);
         $localizacao = $currentTenant ? $currentTenant->localizacao : null;
         $brazilId = Pais::where('nome', 'Brasil')->first()->id_pais ?? 31;
 
@@ -167,8 +178,177 @@ class SettingsController extends Controller
             'publicBookingUrl',
             'currentTenant',
             'localizacao',
-            'brazilId'
+            'brazilId',
+            'editor'
         ));
+    }
+
+    /**
+     * Salva override do template de notificacao para tenant/canal/key.
+     */
+    public function updateNotificationTemplate(
+        Request $request,
+        NotificationTemplateService $templateService,
+        NotificationContextBuilder $contextBuilder,
+        TemplateRenderer $renderer
+    )
+    {
+        $validated = $request->validate([
+            'channel' => 'required|string|in:email,whatsapp',
+            'key' => 'required|string|max:255',
+            'subject' => 'nullable|string|max:255',
+            'content' => 'required|string|min:1',
+        ]);
+
+        $tenant = Tenant::current();
+        if (!$tenant) {
+            return redirect()
+                ->route('tenant.settings.index', ['slug' => request()->route('slug')])
+                ->with('error', 'Tenant nao encontrado.');
+        }
+
+        $defaultTemplate = $templateService->getDefaultTemplate($validated['channel'], $validated['key']);
+        $subject = $validated['subject'] ?? null;
+        if ($validated['channel'] === 'email' && !empty($defaultTemplate['subject']) && trim((string) $subject) === '') {
+            return back()
+                ->withErrors(['subject' => 'O assunto e obrigatorio para templates de email.'])
+                ->withInput();
+        }
+
+        $unknownPlaceholders = [];
+        try {
+            $preview = $this->renderNotificationPreview(
+                $tenant,
+                $validated['channel'],
+                $validated['key'],
+                $subject,
+                $validated['content'],
+                $contextBuilder,
+                $renderer
+            );
+            $unknownPlaceholders = is_array($preview['unknown_placeholders'] ?? null)
+                ? $preview['unknown_placeholders']
+                : [];
+        } catch (\Throwable $e) {
+            \Log::warning('Falha ao validar placeholders no editor (save).', [
+                'tenant_id' => (string) $tenant->id,
+                'channel' => $validated['channel'],
+                'key' => $validated['key'],
+                'error' => $e->getMessage(),
+            ]);
+        }
+
+        $templateService->saveOverride(
+            (string) $tenant->id,
+            $validated['channel'],
+            $validated['key'],
+            $subject,
+            $validated['content']
+        );
+
+        $redirect = redirect()->to($this->buildEditorSettingsUrl($validated['channel'], $validated['key']))
+            ->with('success', 'Template salvo.');
+
+        if (is_array($unknownPlaceholders) && $unknownPlaceholders !== []) {
+            $redirect->with('editor_unknown_placeholders', array_values(array_unique($unknownPlaceholders)));
+        }
+
+        return $redirect;
+    }
+
+    /**
+     * Remove override para voltar ao template padrao do sistema.
+     */
+    public function restoreNotificationTemplate(Request $request, NotificationTemplateService $templateService)
+    {
+        $validated = $request->validate([
+            'channel' => 'required|string|in:email,whatsapp',
+            'key' => 'required|string|max:255',
+        ]);
+
+        $tenant = Tenant::current();
+        if (!$tenant) {
+            return redirect()
+                ->route('tenant.settings.index', ['slug' => request()->route('slug')])
+                ->with('error', 'Tenant nao encontrado.');
+        }
+
+        $templateService->restoreDefault((string) $tenant->id, $validated['channel'], $validated['key']);
+
+        return redirect()->to($this->buildEditorSettingsUrl($validated['channel'], $validated['key']))
+            ->with('success', 'Template restaurado para o padrão.');
+    }
+
+    /**
+     * Gera preview renderizado sem salvar override.
+     */
+    public function previewNotificationTemplate(
+        Request $request,
+        NotificationTemplateService $templateService,
+        NotificationContextBuilder $contextBuilder,
+        TemplateRenderer $renderer
+    ) {
+        $validated = $request->validate([
+            'channel' => 'required|string|in:email,whatsapp',
+            'key' => 'required|string|max:255',
+            'subject' => 'nullable|string|max:255',
+            'content' => 'required|string|min:1',
+        ]);
+
+        $tenant = Tenant::current();
+        if (!$tenant) {
+            return redirect()
+                ->route('tenant.settings.index', ['slug' => request()->route('slug')])
+                ->with('error', 'Tenant nao encontrado.');
+        }
+
+        $defaultTemplate = $templateService->getDefaultTemplate($validated['channel'], $validated['key']);
+        $subject = $validated['subject'] ?? null;
+        if ($validated['channel'] === 'email' && !empty($defaultTemplate['subject']) && trim((string) $subject) === '') {
+            return back()
+                ->withErrors(['subject' => 'O assunto e obrigatorio para templates de email.'])
+                ->withInput();
+        }
+
+        try {
+            $preview = $this->renderNotificationPreview(
+                $tenant,
+                $validated['channel'],
+                $validated['key'],
+                $subject,
+                $validated['content'],
+                $contextBuilder,
+                $renderer
+            );
+        } catch (\Throwable $e) {
+            \Log::warning('Falha ao gerar preview de template.', [
+                'tenant_id' => (string) $tenant->id,
+                'channel' => $validated['channel'],
+                'key' => $validated['key'],
+                'error' => $e->getMessage(),
+            ]);
+
+            $preview = [
+                'channel' => $validated['channel'],
+                'key' => $validated['key'],
+                'context_source' => 'mock',
+                'context_warning' => 'Nao foi possivel montar o contexto de preview. Exibindo texto sem substituicoes adicionais.',
+                'unknown_placeholders' => [],
+                'subject_input' => $subject,
+                'content_input' => $validated['content'],
+                'subject_rendered' => $subject,
+                'content_rendered' => $validated['content'],
+            ];
+        }
+
+        $request->merge([
+            'tab' => 'editor',
+            'channel' => $validated['channel'],
+            'key' => $validated['key'],
+        ]);
+        $request->attributes->set('editor_preview', $preview);
+
+        return $this->index($request);
     }
 
     /**
@@ -265,6 +445,12 @@ class SettingsController extends Controller
             'appointments_cancellation_hours' => 'nullable|integer|min:1',
             'appointments_reminder_hours' => 'nullable|integer|min:1|max:168',
             'appointments_default_appointment_mode' => 'required|in:presencial,online,user_choice',
+            'appointments_confirmation_enabled' => 'boolean',
+            'appointments_confirmation_ttl_minutes' => 'nullable|integer|min:1|max:1440',
+            'appointments_waitlist_enabled' => 'boolean',
+            'appointments_waitlist_offer_ttl_minutes' => 'nullable|integer|min:1|max:1440',
+            'appointments_waitlist_allow_when_confirmed' => 'boolean',
+            'appointments_waitlist_max_per_slot' => 'nullable|integer|min:1',
         ]);
 
         TenantSetting::set('appointments.default_duration', $request->appointments_default_duration);
@@ -285,6 +471,32 @@ class SettingsController extends Controller
 
         TenantSetting::set('appointments.reminder_hours', $request->appointments_reminder_hours ?? 24);
         TenantSetting::set('appointments.default_appointment_mode', $request->appointments_default_appointment_mode);
+        TenantSetting::set(
+            'appointments.confirmation.enabled',
+            $request->has('appointments_confirmation_enabled') ? 'true' : 'false'
+        );
+        TenantSetting::set(
+            'appointments.confirmation.ttl_minutes',
+            (string) ($request->appointments_confirmation_ttl_minutes ?? 30)
+        );
+        TenantSetting::set(
+            'appointments.waitlist.enabled',
+            $request->has('appointments_waitlist_enabled') ? 'true' : 'false'
+        );
+        TenantSetting::set(
+            'appointments.waitlist.offer_ttl_minutes',
+            (string) ($request->appointments_waitlist_offer_ttl_minutes ?? 15)
+        );
+        TenantSetting::set(
+            'appointments.waitlist.allow_when_confirmed',
+            $request->has('appointments_waitlist_allow_when_confirmed') ? 'true' : 'false'
+        );
+
+        $maxPerSlot = $request->appointments_waitlist_max_per_slot;
+        TenantSetting::set(
+            'appointments.waitlist.max_per_slot',
+            ($maxPerSlot === null || $maxPerSlot === '') ? null : (string) $maxPerSlot
+        );
 
         return redirect()->route('tenant.settings.index', ['slug' => tenant()->subdomain])
             ->with('success', 'Configurações de agendamentos atualizadas com sucesso.');
@@ -650,6 +862,330 @@ class SettingsController extends Controller
         $redirectUrl = route('tenant.settings.index', ['slug' => tenant()->subdomain]) . '#appearance';
         return redirect($redirectUrl)
             ->with('success', 'Configurações de aparência atualizadas com sucesso.');
+    }
+
+    private function renderNotificationPreview(
+        Tenant $tenant,
+        string $channel,
+        string $key,
+        ?string $subject,
+        string $content,
+        NotificationContextBuilder $contextBuilder,
+        TemplateRenderer $renderer
+    ): array {
+        $latestAppointment = Appointment::query()
+            ->with([
+                'patient',
+                'doctor.user',
+                'doctor.specialties',
+                'calendar.doctor.user',
+                'specialty',
+                'type',
+            ])
+            ->orderByDesc('starts_at')
+            ->orderByDesc('created_at')
+            ->first();
+
+        $contextWarning = null;
+        if ($latestAppointment) {
+            try {
+                $context = $contextBuilder->buildForAppointment($latestAppointment);
+                $contextSource = 'appointment';
+            } catch (\Throwable $e) {
+                $context = $this->buildMockEditorPreviewContext($tenant);
+                $contextSource = 'mock';
+                $contextWarning = 'Falha ao montar contexto real do ultimo agendamento. Preview usando contexto basico.';
+            }
+        } else {
+            $context = $this->buildMockEditorPreviewContext($tenant);
+            $contextSource = 'mock';
+            $contextWarning = 'Nenhum agendamento encontrado. Preview usando contexto basico (dados da clinica + campos vazios).';
+        }
+
+        if (str_starts_with($key, 'waitlist.')) {
+            $context = $this->applyWaitlistPreviewFallback($context, $tenant);
+        }
+
+        $unknownPlaceholders = $this->detectUnknownPlaceholders(
+            $channel === 'email' ? $subject : null,
+            $content,
+            $context,
+            $renderer
+        );
+
+        return [
+            'channel' => $channel,
+            'key' => $key,
+            'context_source' => $contextSource,
+            'context_warning' => $contextWarning,
+            'unknown_placeholders' => $unknownPlaceholders,
+            'subject_input' => $subject,
+            'content_input' => $content,
+            'subject_rendered' => $channel === 'email' && $subject !== null
+                ? $renderer->render($subject, $context)
+                : null,
+            'content_rendered' => $renderer->render($content, $context),
+        ];
+    }
+
+    private function buildMockEditorPreviewContext(Tenant $tenant): array
+    {
+        $tenant->loadMissing(['localizacao.cidade', 'localizacao.estado']);
+
+        $street = trim((string) ($tenant->localizacao?->endereco ?? ''));
+        $number = trim((string) ($tenant->localizacao?->n_endereco ?? ''));
+        $district = trim((string) ($tenant->localizacao?->bairro ?? ''));
+        $city = trim((string) ($tenant->localizacao?->cidade?->nome_cidade ?? ''));
+        $state = trim((string) ($tenant->localizacao?->estado?->uf ?? ''));
+        $zip = trim((string) ($tenant->localizacao?->cep ?? ''));
+
+        $addressParts = array_values(array_filter([
+            trim($street . ($number !== '' ? ', ' . $number : '')),
+            $district,
+            trim($city . ($state !== '' ? '/' . $state : '')),
+            $zip,
+        ], static fn ($value) => $value !== ''));
+
+        return [
+            'clinic' => [
+                'name' => (string) ($tenant->trade_name ?: $tenant->legal_name ?: ''),
+                'phone' => (string) ($tenant->phone ?? ''),
+                'email' => (string) ($tenant->email ?? ''),
+                'address' => implode(' - ', $addressParts),
+                'slug' => (string) ($tenant->subdomain ?? ''),
+            ],
+            'patient' => [
+                'name' => '',
+                'phone' => '',
+                'email' => '',
+            ],
+            'doctor' => [
+                'name' => '',
+                'specialty' => '',
+            ],
+            'professional' => [
+                'name' => '',
+                'specialty' => '',
+            ],
+            'appointment' => [
+                'date' => '',
+                'time' => '',
+                'datetime' => '',
+                'starts_at' => '',
+                'ends_at' => '',
+                'type' => '',
+                'mode' => '',
+                'status' => '',
+                'confirmation_expires_at' => '',
+            ],
+            'links' => [
+                'appointment_confirm' => '',
+                'appointment_cancel' => '',
+                'appointment_details' => '',
+                'waitlist_offer' => '',
+            ],
+            'waitlist' => [
+                'offer_expires_at' => '',
+                'status' => '',
+            ],
+        ];
+    }
+
+    private function applyWaitlistPreviewFallback(array $context, Tenant $tenant): array
+    {
+        $offerTtlMinutes = max(1, tenant_setting_int('appointments.waitlist.offer_ttl_minutes', 15));
+        $offerExpires = now()->addMinutes($offerTtlMinutes)->format('d/m/Y H:i');
+
+        $offerExpiresAt = data_get($context, 'waitlist.offer_expires_at');
+        if (!is_string($offerExpiresAt) || trim($offerExpiresAt) === '') {
+            data_set($context, 'waitlist.offer_expires_at', $offerExpires);
+        }
+
+        $waitlistStatus = data_get($context, 'waitlist.status');
+        if (!is_string($waitlistStatus) || trim($waitlistStatus) === '') {
+            data_set($context, 'waitlist.status', 'OFFERED');
+        }
+
+        $waitlistOfferLink = data_get($context, 'links.waitlist_offer');
+        if (!is_string($waitlistOfferLink) || trim($waitlistOfferLink) === '') {
+            $slug = (string) ($tenant->subdomain ?? '');
+            $fallbackUrl = $slug !== '' ? url('/customer/' . $slug . '/agendamento/oferta/preview') : '#';
+            data_set($context, 'links.waitlist_offer', $fallbackUrl);
+        }
+
+        return $context;
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function detectUnknownPlaceholders(
+        ?string $subject,
+        string $content,
+        array $context,
+        TemplateRenderer $renderer
+    ): array {
+        $placeholders = $renderer->extractPlaceholders($content);
+        if ($subject !== null && $subject !== '') {
+            $placeholders = array_merge($placeholders, $renderer->extractPlaceholders($subject));
+        }
+
+        if ($placeholders === []) {
+            return [];
+        }
+
+        $missing = new \stdClass();
+        $unknown = [];
+
+        foreach ($placeholders as $placeholder) {
+            $value = data_get($context, $placeholder, $missing);
+            if ($value === $missing) {
+                $unknown[] = (string) $placeholder;
+            }
+        }
+
+        return array_values(array_unique($unknown));
+    }
+
+    private function buildEditorSettingsUrl(string $channel, string $key): string
+    {
+        return route('tenant.settings.index', [
+            'slug' => tenant()->subdomain,
+            'tab' => 'editor',
+            'channel' => $channel,
+            'key' => $key,
+        ]);
+    }
+
+    private function buildEditorViewData(?Tenant $currentTenant, Request $request): array
+    {
+        $service = app(NotificationTemplateService::class);
+        $channels = array_values(array_filter(
+            (array) config('notification_templates.channels', ['email', 'whatsapp']),
+            static fn ($item) => in_array($item, ['email', 'whatsapp'], true)
+        ));
+
+        if ($channels === []) {
+            $channels = ['email', 'whatsapp'];
+        }
+
+        $keys = $service->listKeys();
+        $requestedChannel = strtolower((string) $request->input('channel', $request->query('channel', 'email')));
+        $channel = in_array($requestedChannel, $channels, true) ? $requestedChannel : $channels[0];
+        $requestedKey = (string) $request->input('key', $request->query('key', ''));
+        $key = $this->resolveEditorKey($keys, $channel, $requestedKey);
+
+        $defaultTemplate = null;
+        $effectiveTemplate = null;
+        $isCustom = false;
+        $subjectRequired = false;
+        $preview = null;
+
+        if ($currentTenant && $key) {
+            try {
+                $defaultTemplate = $service->getDefaultTemplate($channel, $key);
+                $effectiveTemplate = $service->getEffectiveTemplate((string) $currentTenant->id, $channel, $key);
+                $isCustom = $service->getOverride((string) $currentTenant->id, $channel, $key) !== null;
+                $subjectRequired = $channel === 'email' && !empty(trim((string) ($defaultTemplate['subject'] ?? '')));
+            } catch (\Illuminate\Validation\ValidationException) {
+                $defaultTemplate = null;
+                $effectiveTemplate = null;
+                $isCustom = false;
+                $subjectRequired = false;
+            }
+        }
+
+        $previewPayload = $request->attributes->get('editor_preview');
+        if (is_array($previewPayload)) {
+            $preview = $previewPayload;
+            if (
+                ($previewPayload['channel'] ?? null) === $channel
+                && ($previewPayload['key'] ?? null) === $key
+                && is_array($effectiveTemplate)
+            ) {
+                $effectiveTemplate['subject'] = $previewPayload['subject_input'] ?? $effectiveTemplate['subject'] ?? null;
+                $effectiveTemplate['content'] = $previewPayload['content_input'] ?? $effectiveTemplate['content'] ?? '';
+            }
+        }
+
+        return [
+            'channels' => $channels,
+            'keys' => $keys,
+            'current_channel' => $channel,
+            'current_key' => $key,
+            'default_template' => $defaultTemplate,
+            'effective_template' => $effectiveTemplate,
+            'is_custom' => $isCustom,
+            'subject_required' => $subjectRequired,
+            'preview' => $preview,
+            'variables' => $this->notificationTemplateVariables(),
+        ];
+    }
+
+    private function resolveEditorKey(array $keys, string $channel, string $requestedKey): ?string
+    {
+        foreach ($keys as $item) {
+            $itemKey = (string) ($item['key'] ?? '');
+            $itemChannels = (array) ($item['channels'] ?? []);
+            if ($itemKey === $requestedKey && in_array($channel, $itemChannels, true)) {
+                return $itemKey;
+            }
+        }
+
+        foreach ($keys as $item) {
+            $itemKey = (string) ($item['key'] ?? '');
+            $itemChannels = (array) ($item['channels'] ?? []);
+            if ($itemKey !== '' && in_array($channel, $itemChannels, true)) {
+                return $itemKey;
+            }
+        }
+
+        return null;
+    }
+
+    private function notificationTemplateVariables(): array
+    {
+        return [
+            'Clinic' => [
+                '{{clinic.name}}',
+                '{{clinic.phone}}',
+                '{{clinic.email}}',
+                '{{clinic.address}}',
+                '{{clinic.slug}}',
+            ],
+            'Patient' => [
+                '{{patient.name}}',
+                '{{patient.phone}}',
+                '{{patient.email}}',
+            ],
+            'Doctor / Professional' => [
+                '{{doctor.name}}',
+                '{{doctor.specialty}}',
+                '{{professional.name}}',
+                '{{professional.specialty}}',
+            ],
+            'Appointment' => [
+                '{{appointment.date}}',
+                '{{appointment.time}}',
+                '{{appointment.datetime}}',
+                '{{appointment.starts_at}}',
+                '{{appointment.ends_at}}',
+                '{{appointment.type}}',
+                '{{appointment.mode}}',
+                '{{appointment.status}}',
+                '{{appointment.confirmation_expires_at}}',
+            ],
+            'Links' => [
+                '{{links.appointment_confirm}}',
+                '{{links.appointment_cancel}}',
+                '{{links.appointment_details}}',
+                '{{links.waitlist_offer}}',
+            ],
+            'Waitlist' => [
+                '{{waitlist.offer_expires_at}}',
+                '{{waitlist.status}}',
+            ],
+        ];
     }
 }
 

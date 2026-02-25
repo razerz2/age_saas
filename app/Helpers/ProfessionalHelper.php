@@ -262,3 +262,57 @@ if (!function_exists('tenant_setting')) {
     }
 }
 
+if (!function_exists('tenant_setting_bool')) {
+    /**
+     * LÃª uma setting do tenant como boolean.
+     */
+    function tenant_setting_bool(string $key, bool $default = false): bool
+    {
+        $defaultValue = $default ? 'true' : 'false';
+        $value = tenant_setting($key, $defaultValue);
+
+        if (is_bool($value)) {
+            return $value;
+        }
+
+        if ($value === null) {
+            return $default;
+        }
+
+        return in_array(strtolower(trim((string) $value)), ['1', 'true', 'yes', 'on'], true);
+    }
+}
+
+if (!function_exists('tenant_setting_int')) {
+    /**
+     * LÃª uma setting do tenant como inteiro.
+     */
+    function tenant_setting_int(string $key, int $default = 0): int
+    {
+        $value = tenant_setting($key, $default);
+
+        if ($value === null || $value === '') {
+            return $default;
+        }
+
+        $intValue = filter_var($value, FILTER_VALIDATE_INT);
+        return $intValue === false ? $default : (int) $intValue;
+    }
+}
+
+if (!function_exists('tenant_setting_nullable_int')) {
+    /**
+     * LÃª uma setting do tenant como inteiro anulÃ¡vel.
+     */
+    function tenant_setting_nullable_int(string $key, ?int $default = null): ?int
+    {
+        $value = tenant_setting($key, $default);
+
+        if ($value === null || $value === '') {
+            return $default;
+        }
+
+        $intValue = filter_var($value, FILTER_VALIDATE_INT);
+        return $intValue === false ? $default : (int) $intValue;
+    }
+}

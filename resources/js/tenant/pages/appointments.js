@@ -59,6 +59,9 @@ export function init() {
 	const timeSelect = document.getElementById('appointment_time');
 	const startsAtInput = document.getElementById('starts_at');
 	const endsAtInput = document.getElementById('ends_at');
+	const intentWaitlistInput = document.getElementById('intent_waitlist');
+	const slotWaitlistAlert = document.getElementById('slot_waitlist_alert');
+	const slotWaitlistAlertMessage = document.getElementById('slot_waitlist_alert_message');
 	const calendarIdInput = document.getElementById('calendar_id');
 	const businessHoursModal = document.getElementById('businessHoursModal');
 	const btnShowBusinessHours = document.getElementById('btn-show-business-hours');
@@ -106,6 +109,8 @@ export function init() {
 	const initialTimeEnd = form ? form.dataset.initialTimeEnd : null;
 	const initialStartsAt = form ? form.dataset.initialStartsAt : null;
 	const initialEndsAt = form ? form.dataset.initialEndsAt : null;
+	const waitlistAlertDefaultMessage =
+		'Você escolheu um horário já reservado. Você será encaminhado para a fila de espera e receberá uma notificação com link se a vaga ficar disponível.';
 
 	function setTimeState(placeholder, disabled = true, clearHidden = true) {
 		timeSelect.innerHTML = `<option value="">${placeholder}</option>`;
@@ -114,6 +119,121 @@ export function init() {
 		if (clearHidden) {
 			startsAtInput.value = '';
 			endsAtInput.value = '';
+		}
+
+		if (intentWaitlistInput) {
+			intentWaitlistInput.value = '0';
+		}
+		if (slotWaitlistAlert) {
+			slotWaitlistAlert.style.display = 'none';
+			slotWaitlistAlert.setAttribute('aria-hidden', 'true');
+		}
+		if (slotWaitlistAlertMessage) {
+			slotWaitlistAlertMessage.textContent = waitlistAlertDefaultMessage;
+		}
+	}
+
+	function formatHoldExpiry(value) {
+		if (!value) return '';
+		const parsed = new Date(String(value).replace(' ', 'T'));
+		if (Number.isNaN(parsed.getTime())) return '';
+
+		return parsed.toLocaleString('pt-BR', {
+			day: '2-digit',
+			month: '2-digit',
+			year: 'numeric',
+			hour: '2-digit',
+			minute: '2-digit',
+		});
+	}
+
+	function setWaitlistIntent(active, status = '', holdExpiresAt = '') {
+		if (intentWaitlistInput) {
+			intentWaitlistInput.value = active ? '1' : '0';
+		}
+
+		if (!slotWaitlistAlert) return;
+
+		if (!active) {
+			slotWaitlistAlert.style.display = 'none';
+			slotWaitlistAlert.setAttribute('aria-hidden', 'true');
+			if (slotWaitlistAlertMessage) {
+				slotWaitlistAlertMessage.textContent = waitlistAlertDefaultMessage;
+			}
+			return;
+		}
+
+		let message = waitlistAlertDefaultMessage;
+		if (status === 'HOLD' && holdExpiresAt) {
+			const formatted = formatHoldExpiry(holdExpiresAt);
+			if (formatted) {
+				message += ` Reserva atual até ${formatted}.`;
+			}
+		}
+
+		if (slotWaitlistAlertMessage) {
+			slotWaitlistAlertMessage.textContent = message;
+		}
+		slotWaitlistAlert.style.display = '';
+		slotWaitlistAlert.setAttribute('aria-hidden', 'false');
+	}
+
+	function getStatusReasonLabel(reason) {
+		if (!reason) return '';
+
+		switch (String(reason).toUpperCase()) {
+			case 'BREAK':
+				return 'Intervalo';
+			case 'RECURRING_BLOCK':
+				return 'Bloqueio da agenda';
+			default:
+				return String(reason);
+		}
+	}
+
+	function getOptionLabelFromStatus(baseLabel, status, reason, holdExpiresAt) {
+		const cleanBase = baseLabel || '';
+		switch (status) {
+			case 'HOLD': {
+				const holdSuffix = holdExpiresAt ? ` até ${formatHoldExpiry(holdExpiresAt)}` : '';
+				return `⏳ ${cleanBase} (Reservado${holdSuffix})`;
+			}
+			case 'BUSY':
+				return `${cleanBase} (Ocupado)`;
+			case 'DISABLED': {
+				const reasonLabel = getStatusReasonLabel(reason);
+				return reasonLabel ? `${cleanBase} (Indisponível - ${reasonLabel})` : `${cleanBase} (Indisponível)`;
+			}
+			default:
+				return cleanBase;
+		}
+	}
+
+	function syncSelectedSlotState({ fromInitialLoad = false } = {}) {
+		const selectedOption = timeSelect.options[timeSelect.selectedIndex];
+		if (!selectedOption || !selectedOption.value) {
+			startsAtInput.value = '';
+			endsAtInput.value = '';
+			setWaitlistIntent(false);
+			return;
+		}
+
+		const status = String(selectedOption.dataset.status || 'FREE').toUpperCase();
+		if (status === 'DISABLED') {
+			timeSelect.value = '';
+			startsAtInput.value = '';
+			endsAtInput.value = '';
+			setWaitlistIntent(false);
+			return;
+		}
+
+		startsAtInput.value = selectedOption.dataset.startsAt || selectedOption.dataset.start || '';
+		endsAtInput.value = selectedOption.dataset.endsAt || selectedOption.dataset.end || '';
+
+		if (!fromInitialLoad && (status === 'HOLD' || status === 'BUSY')) {
+			setWaitlistIntent(true, status, selectedOption.dataset.holdExpiresAt || '');
+		} else {
+			setWaitlistIntent(false);
 		}
 	}
 
@@ -313,43 +433,72 @@ export function init() {
 				return response.json();
 			})
 			.then((data) => {
-				const slots = Array.isArray(data) ? data : Array.isArray(data?.data) ? data.data : [];
+				const legacySlots = Array.isArray(data)
+					? data
+					: Array.isArray(data?.data)
+						? data.data
+						: Array.isArray(data?.available)
+							? data.available
+							: [];
+				const slots = Array.isArray(data?.slots)
+					? data.slots
+					: legacySlots.map((slot) => ({
+						...slot,
+						status: slot.status || 'FREE',
+					}));
+
 				timeSelect.innerHTML = '<option value="">Selecione um horário</option>';
 
 				if (slots.length === 0) {
 					timeSelect.innerHTML = '<option value="">Nenhum horário disponível para esta data</option>';
 					timeSelect.disabled = true;
+					syncSelectedSlotState();
 					return;
 				}
 
 				let selectedFound = false;
 				slots.forEach((slot) => {
-					const slotStart = slot.datetime_start || slot.start || slot.start_time;
-					const slotEnd = slot.datetime_end || slot.end || slot.end_time;
+					const slotStart = slot.starts_at || slot.datetime_start || slot.start || slot.start_time || '';
+					const slotEnd = slot.ends_at || slot.datetime_end || slot.end || slot.end_time || '';
+					const status = String(slot.status || 'FREE').toUpperCase();
+					const reason = slot.reason || '';
+					const holdExpiresAt = slot.hold_expires_at || '';
 					const slotLabel =
 						slot.label ||
 						(slot.start_time && slot.end_time
 							? `${slot.start_time} - ${slot.end_time}`
 							: slot.start && slot.end
 								? `${slot.start} - ${slot.end}`
-								: slot.start);
+								: slot.start || slotStart);
 
 					const option = document.createElement('option');
-					option.value = slot.label || slot.start || slotStart || '';
-					option.textContent = slotLabel || '';
-					option.dataset.start = slotStart || '';
-					option.dataset.end = slotEnd || '';
+					option.value = slot.label || slot.start_time || slot.start || slotStart || '';
+					option.textContent = getOptionLabelFromStatus(slotLabel || '', status, reason, holdExpiresAt);
+					option.dataset.startsAt = slotStart;
+					option.dataset.endsAt = slotEnd;
+					option.dataset.start = slotStart;
+					option.dataset.end = slotEnd;
+					option.dataset.status = status;
+					option.dataset.holdExpiresAt = holdExpiresAt || '';
+
+					if (status === 'DISABLED') {
+						option.disabled = true;
+					}
 
 					if (
 						initial &&
-						initialTimeStart &&
-						initialTimeEnd &&
-						((slot.start_time && slot.end_time && slot.start_time === initialTimeStart && slot.end_time === initialTimeEnd) ||
-							(slot.start && slot.end && slot.start.includes(initialTimeStart)))
+						(
+							(initialStartsAt && initialEndsAt && slotStart === initialStartsAt && slotEnd === initialEndsAt) ||
+							(initialTimeStart &&
+								initialTimeEnd &&
+								((slot.start_time && slot.end_time && slot.start_time === initialTimeStart && slot.end_time === initialTimeEnd) ||
+									(slot.start && slot.end && slot.start.includes(initialTimeStart)) ||
+									(slot.label && slot.label.includes(initialTimeStart))))
+						)
 					) {
 						option.selected = true;
-						startsAtInput.value = slotStart || '';
-						endsAtInput.value = slotEnd || '';
+						startsAtInput.value = slotStart;
+						endsAtInput.value = slotEnd;
 						selectedFound = true;
 					}
 
@@ -361,24 +510,30 @@ export function init() {
 				if (initial && !selectedFound && initialTimeStart && initialTimeEnd && initialStartsAt && initialEndsAt) {
 					const option = document.createElement('option');
 					option.value = `${initialTimeStart}-${initialTimeEnd}`;
-					option.textContent = `${initialTimeStart} - ${initialTimeEnd} (horÃ¡rio atual)`;
+					option.textContent = `${initialTimeStart} - ${initialTimeEnd} (horário atual)`;
+					option.dataset.startsAt = initialStartsAt;
+					option.dataset.endsAt = initialEndsAt;
 					option.dataset.start = initialStartsAt;
 					option.dataset.end = initialEndsAt;
+					option.dataset.status = 'FREE';
+					option.dataset.holdExpiresAt = '';
 					option.selected = true;
 					option.style.color = '#dc3545';
 					timeSelect.insertBefore(option, timeSelect.firstChild.nextSibling);
 					startsAtInput.value = initialStartsAt;
 					endsAtInput.value = initialEndsAt;
+					selectedFound = true;
 				}
 
 				if (!selectedFound && !initial) {
 					startsAtInput.value = '';
 					endsAtInput.value = '';
 				}
+
+				syncSelectedSlotState({ fromInitialLoad: initial });
 			})
 			.catch(() => {
-				timeSelect.innerHTML = '<option value="">Nenhum horário disponível</option>';
-				timeSelect.disabled = true;
+				setTimeState('Nenhum horário disponível', true);
 			});
 	}
 
@@ -443,14 +598,7 @@ export function init() {
 	}
 
 	timeSelect.addEventListener('change', () => {
-		const selectedOption = timeSelect.options[timeSelect.selectedIndex];
-		if (selectedOption && selectedOption.value) {
-			startsAtInput.value = selectedOption.dataset.start || '';
-			endsAtInput.value = selectedOption.dataset.end || '';
-		} else {
-			startsAtInput.value = '';
-			endsAtInput.value = '';
-		}
+		syncSelectedSlotState();
 	});
 
 	if (form) {

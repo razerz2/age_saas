@@ -116,6 +116,105 @@
                     Se "Paciente escolhe", o campo serÃ¡ exibido para seleÃ§Ã£o.
                 </p>
             </div>
+            <div class="md:col-span-2">
+                <div class="p-4 border border-gray-200 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700">
+                    <h3 class="text-sm font-semibold text-gray-900 dark:text-white mb-3">
+                        Confirmação com Prazo (Hold)
+                    </h3>
+                    <div class="space-y-4">
+                        <label class="flex items-start cursor-pointer">
+                            <input type="checkbox"
+                                   id="appointments_confirmation_enabled"
+                                   name="appointments_confirmation_enabled"
+                                   value="1"
+                                   {{ ($settings['appointments.confirmation.enabled'] ?? false) ? 'checked' : '' }}
+                                   class="mt-1 w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
+                            <div class="ml-3">
+                                <span class="block text-sm font-medium text-gray-900 dark:text-white">Habilitar confirmação com prazo</span>
+                                <span class="block text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                    Se desabilitado, o comportamento atual permanece inalterado.
+                                </span>
+                            </div>
+                        </label>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                Prazo de confirmação (minutos)
+                            </label>
+                            <input type="number" name="appointments_confirmation_ttl_minutes"
+                                   value="{{ $settings['appointments.confirmation.ttl_minutes'] ?? '30' }}"
+                                   min="1" max="1440" step="1"
+                                   class="w-full md:w-72 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white">
+                            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                Valor padrão: 30 minutos.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="md:col-span-2">
+                <div class="p-4 border border-gray-200 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700">
+                    <h3 class="text-sm font-semibold text-gray-900 dark:text-white mb-3">
+                        Waitlist (Fila)
+                    </h3>
+                    <div class="space-y-4">
+                        <label class="flex items-start cursor-pointer">
+                            <input type="checkbox"
+                                   id="appointments_waitlist_enabled"
+                                   name="appointments_waitlist_enabled"
+                                   value="1"
+                                   {{ ($settings['appointments.waitlist.enabled'] ?? false) ? 'checked' : '' }}
+                                   class="mt-1 w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
+                            <div class="ml-3">
+                                <span class="block text-sm font-medium text-gray-900 dark:text-white">Habilitar waitlist</span>
+                                <span class="block text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                    Se desabilitado, não altera o fluxo atual de agendamento.
+                                </span>
+                            </div>
+                        </label>
+
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                    TTL da oferta (minutos)
+                                </label>
+                                <input type="number" name="appointments_waitlist_offer_ttl_minutes"
+                                       value="{{ $settings['appointments.waitlist.offer_ttl_minutes'] ?? '15' }}"
+                                       min="1" max="1440" step="1"
+                                       class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white">
+                                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Valor padrão: 15.</p>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                    Máximo por slot
+                                </label>
+                                <input type="number" name="appointments_waitlist_max_per_slot"
+                                       value="{{ $settings['appointments.waitlist.max_per_slot'] ?? '' }}"
+                                       min="1" step="1"
+                                       placeholder="Sem limite"
+                                       class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white">
+                                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Deixe vazio para ilimitado.</p>
+                            </div>
+
+                            <div>
+                                <label class="flex items-start cursor-pointer mt-7">
+                                    <input type="checkbox"
+                                           id="appointments_waitlist_allow_when_confirmed"
+                                           name="appointments_waitlist_allow_when_confirmed"
+                                           value="1"
+                                           {{ ($settings['appointments.waitlist.allow_when_confirmed'] ?? true) ? 'checked' : '' }}
+                                           class="mt-1 w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
+                                    <div class="ml-3">
+                                        <span class="block text-sm font-medium text-gray-900 dark:text-white">Permitir waitlist quando confirmado</span>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <div class="flex justify-end">

@@ -30,7 +30,10 @@
 </div>
 
 <!-- Main Settings Card -->
-<div class="max-w-7xl mx-auto" x-data="{ tab: '{{ request()->get('tab', 'clinica') }}' }" data-alpine="true">
+<div class="mx-auto"
+     :class="tab === 'editor' ? 'max-w-[96rem]' : 'max-w-7xl'"
+     x-data="{ tab: '{{ request()->get('tab', 'clinica') }}' }"
+     data-alpine="true">
     <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
         
         <!-- HEADER DE ABAS (UMA VEZ) -->
@@ -108,6 +111,16 @@
                     <span>Notificações</span>
                 </button>
                 
+                <!-- Editor -->
+                <button @click="tab = 'editor'"
+                        :class="tab === 'editor' ? 'border-blue-500 text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300'"
+                        class="whitespace-nowrap py-4 px-4 border-b-2 font-medium text-sm flex items-center gap-2 transition-colors duration-200 min-w-fit">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5h8m-8 7h8m-8 7h8M5 5h.01M5 12h.01M5 19h.01"></path>
+                    </svg>
+                    <span>Editor</span>
+                </button>
+
                 <!-- Financeiro (apenas admin) -->
                 @if(auth()->user()->can('manage-finance'))
                 <button @click="tab = 'financeiro'" 
@@ -154,6 +167,27 @@
 
         <!-- CONTEÚDO -->
         <div class="p-6">
+            @if(session('success'))
+                <div class="mb-4 rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800 dark:border-green-800 dark:bg-green-900/20 dark:text-green-300">
+                    {{ session('success') }}
+                </div>
+            @endif
+
+            @if(session('error'))
+                <div class="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800 dark:border-red-800 dark:bg-red-900/20 dark:text-red-300">
+                    {{ session('error') }}
+                </div>
+            @endif
+
+            @if($errors->any())
+                <div class="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800 dark:border-red-800 dark:bg-red-900/20 dark:text-red-300">
+                    <ul class="list-disc pl-5 space-y-1">
+                        @foreach($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
             <!-- Clínica -->
             <div x-show="tab === 'clinica'" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" x-transition:leave="transition ease-in duration-150" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0">
                 @include('tenant.settings.tabs.clinica')
@@ -189,6 +223,11 @@
             <!-- Notificações -->
             <div x-show="tab === 'notificacoes'" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" x-transition:leave="transition ease-in duration-150" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0">
                 @include('tenant.settings.tabs.notificacoes')
+            </div>
+
+            <!-- Editor -->
+            <div x-show="tab === 'editor'" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" x-transition:leave="transition ease-in duration-150" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0">
+                @include('tenant.settings.tabs.editor')
             </div>
 
             <!-- Financeiro (apenas admin) -->
