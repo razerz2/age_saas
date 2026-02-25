@@ -91,7 +91,7 @@
 
             <div class="flex items-center justify-end gap-3 flex-nowrap">
                 <a href="{{ workspace_route('tenant.finance.accounts.edit', ['slug' => tenant()->subdomain, 'account' => $account->id]) }}"
-                   class="inline-flex items-center gap-2 px-4 py-2 bg-primary text-white hover:bg-primary/90 font-medium rounded-md transition-colors">
+                   class="btn btn-outline tenant-action-edit inline-flex items-center gap-2">
                     Editar
                 </a>
                 <a href="{{ workspace_route('tenant.finance.accounts.index', ['slug' => tenant()->subdomain]) }}"
@@ -103,4 +103,3 @@
     </div>
 
 @endsection
-

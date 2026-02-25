@@ -50,6 +50,11 @@ use App\Http\Controllers\Tenant\CalendarSyncStateController;
 
 // Notifications
 use App\Http\Controllers\Tenant\NotificationController;
+use App\Http\Controllers\Tenant\CampaignController;
+use App\Http\Controllers\Tenant\CampaignAssetController;
+use App\Http\Controllers\Tenant\CampaignDispatchController;
+use App\Http\Controllers\Tenant\CampaignRunController;
+use App\Http\Controllers\Tenant\CampaignRecipientController;
 
 // Settings
 use App\Http\Controllers\Tenant\SettingsController;
@@ -709,6 +714,54 @@ Route::prefix('workspace/{slug}')
         Route::post('notifications/{id}/read', [NotificationController::class, 'markAsRead'])->name('notifications.read');
         Route::post('notifications/mark-all-read', [NotificationController::class, 'markAllAsRead'])->name('notifications.mark-all-read');
         Route::resource('notifications', NotificationController::class)->only(['index', 'show']);
+
+        // =====================================================================
+        // CAMPAIGNS
+        // =====================================================================
+        Route::get('campaigns', [CampaignController::class, 'index'])->name('campaigns.index');
+        Route::get('campaigns/grid-data', [CampaignController::class, 'gridData'])->name('campaigns.grid');
+        Route::get('campaigns/create', [CampaignController::class, 'create'])
+            ->middleware(['campaign.module.enabled'])
+            ->name('campaigns.create');
+        Route::post('campaigns', [CampaignController::class, 'store'])
+            ->middleware(['campaign.module.enabled'])
+            ->name('campaigns.store');
+        Route::post('campaigns/assets', [CampaignAssetController::class, 'store'])
+            ->middleware(['campaign.module.enabled'])
+            ->name('campaigns.assets.store');
+        Route::post('campaigns/{campaign}/send-test', [CampaignDispatchController::class, 'sendTest'])
+            ->middleware(['campaign.module.enabled'])
+            ->name('campaigns.sendTest');
+        Route::post('campaigns/{campaign}/start', [CampaignDispatchController::class, 'start'])
+            ->middleware(['campaign.module.enabled'])
+            ->name('campaigns.start');
+        Route::post('campaigns/{campaign}/schedule', [CampaignDispatchController::class, 'schedule'])
+            ->middleware(['campaign.module.enabled'])
+            ->name('campaigns.schedule');
+        Route::post('campaigns/{campaign}/pause', [CampaignDispatchController::class, 'pause'])
+            ->middleware(['campaign.module.enabled'])
+            ->name('campaigns.pause');
+        Route::post('campaigns/{campaign}/resume', [CampaignDispatchController::class, 'resume'])
+            ->middleware(['campaign.module.enabled'])
+            ->name('campaigns.resume');
+        Route::get('campaigns/{campaign}/runs/grid-data', [CampaignRunController::class, 'gridData'])
+            ->name('campaigns.runs.grid');
+        Route::get('campaigns/{campaign}/runs', [CampaignRunController::class, 'index'])
+            ->name('campaigns.runs.index');
+        Route::get('campaigns/{campaign}/recipients/grid-data', [CampaignRecipientController::class, 'gridData'])
+            ->name('campaigns.recipients.grid');
+        Route::get('campaigns/{campaign}/recipients', [CampaignRecipientController::class, 'index'])
+            ->name('campaigns.recipients.index');
+        Route::get('campaigns/{campaign}', [CampaignController::class, 'show'])->name('campaigns.show');
+        Route::get('campaigns/{campaign}/edit', [CampaignController::class, 'edit'])
+            ->middleware(['campaign.module.enabled'])
+            ->name('campaigns.edit');
+        Route::put('campaigns/{campaign}', [CampaignController::class, 'update'])
+            ->middleware(['campaign.module.enabled'])
+            ->name('campaigns.update');
+        Route::delete('campaigns/{campaign}', [CampaignController::class, 'destroy'])
+            ->middleware(['campaign.module.enabled'])
+            ->name('campaigns.destroy');
 
         // =====================================================================
         // MEDICAL APPOINTMENTS (Atendimento Médico)

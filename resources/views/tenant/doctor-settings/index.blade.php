@@ -1,6 +1,6 @@
 @extends('layouts.tailadmin.app')
 
-@section('title', 'Configurações')
+@section('title', 'ConfiguraÃƒÂ§ÃƒÂµes')
 @section('page', 'doctor-settings')
 
 @section('content')
@@ -9,7 +9,7 @@
     <div class="page-header mb-6">
         <div class="flex items-center justify-between">
             <div>
-                <h1 class="text-2xl font-semibold text-gray-900 dark:text-white mb-2">Configurações</h1>
+                <h1 class="text-2xl font-semibold text-gray-900 dark:text-white mb-2">ConfiguraÃƒÂ§ÃƒÂµes</h1>
                 <nav class="flex" aria-label="Breadcrumb">
                     <ol class="inline-flex items-center space-x-1 md:space-x-3">
                         <li class="inline-flex items-center">
@@ -21,7 +21,7 @@
                         <li aria-current="page">
                             <div class="flex items-center">
                                 <x-icon name="chevron-right" size="text-sm" class="text-gray-400" />
-                                <span class="ml-1 text-gray-500 dark:text-gray-400 md:ml-2">Configurações</span>
+                                <span class="ml-1 text-gray-500 dark:text-gray-400 md:ml-2">ConfiguraÃƒÂ§ÃƒÂµes</span>
                             </div>
                         </li>
                     </ol>
@@ -79,13 +79,13 @@
                 <li class="nav-item mr-2" role="presentation">
                     <button class="nav-link active inline-flex items-center px-4 py-2 rounded-t-lg border border-transparent text-gray-600 dark:text-gray-300 hover:text-blue-600 hover:border-blue-600" id="calendar-tab" data-bs-toggle="tab" data-bs-target="#calendar" type="button" role="tab">
                         <x-icon name="calendar-month-outline" size="text-sm" class="mr-2" />
-                        Calendário
+                        CalendÃƒÂ¡rio
                     </button>
                 </li>
                 <li class="nav-item mr-2" role="presentation">
                     <button class="nav-link inline-flex items-center px-4 py-2 rounded-t-lg border border-transparent text-gray-600 dark:text-gray-300 hover:text-blue-600 hover:border-blue-600" id="hours-tab" data-bs-toggle="tab" data-bs-target="#hours" type="button" role="tab">
                         <x-icon name="clock-outline" size="text-sm" class="mr-2" />
-                        Horários
+                        HorÃƒÂ¡rios
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
@@ -97,12 +97,12 @@
             </ul>
 
             <div class="tab-content mt-6" id="settingsTabsContent">
-                {{-- Aba Calendário --}}
+                {{-- Aba CalendÃƒÂ¡rio --}}
                 <div class="tab-pane fade show active" id="calendar" role="tabpanel">
                     <div class="rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/20 p-6">
                         <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
                             <x-icon name="calendar-month-outline" size="text-lg" class="mr-2 text-blue-600" />
-                            Calendário
+                            CalendÃƒÂ¡rio
                         </h3>
 
                         @if($calendar)
@@ -117,7 +117,7 @@
                                         </label>
                                         <input type="text" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white @error('name') border-red-500 @enderror"
                                                name="name" value="{{ old('name', $calendar->name) }}"
-                                               placeholder="Ex: Calendário Principal" required>
+                                               placeholder="Ex: CalendÃƒÂ¡rio Principal" required>
                                         @error('name')
                                             <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
                                         @enderror
@@ -128,8 +128,8 @@
                                         </label>
                                         <input type="text" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white @error('external_id') border-red-500 @enderror"
                                                name="external_id" value="{{ old('external_id', $calendar->external_id) }}"
-                                               placeholder="ID do calendário em sistema externo (opcional)">
-                                        <small class="text-gray-500 dark:text-gray-400">ID usado para sincronização com calendários externos</small>
+                                               placeholder="ID do calendÃƒÂ¡rio em sistema externo (opcional)">
+                                        <small class="text-gray-500 dark:text-gray-400">ID usado para sincronizaÃƒÂ§ÃƒÂ£o com calendÃƒÂ¡rios externos</small>
                                         @error('external_id')
                                             <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
                                         @enderror
@@ -139,7 +139,7 @@
                                 <div class="flex justify-end mt-6">
                                     <button type="submit" class="btn btn-primary inline-flex items-center">
                                         <x-icon name="content-save-outline" size="text-sm" class="mr-2" />
-                                        Salvar Calendário
+                                        Salvar CalendÃƒÂ¡rio
                                     </button>
                                 </div>
                             </form>
@@ -151,7 +151,7 @@
                                 <div class="bg-blue-50 border border-blue-200 text-blue-800 rounded-md p-4 mb-6">
                                     <div class="flex items-start">
                                         <x-icon name="information-outline" size="text-lg" class="mr-2 mt-0.5" />
-                                        <span>Nenhum calendário cadastrado. Preencha os dados abaixo para criar um.</span>
+                                        <span>Nenhum calendÃƒÂ¡rio cadastrado. Preencha os dados abaixo para criar um.</span>
                                     </div>
                                 </div>
 
@@ -162,7 +162,7 @@
                                         </label>
                                         <input type="text" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white @error('name') border-red-500 @enderror"
                                                name="name" value="{{ old('name') }}"
-                                               placeholder="Ex: Calendário Principal" required>
+                                               placeholder="Ex: CalendÃƒÂ¡rio Principal" required>
                                         @error('name')
                                             <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
                                         @enderror
@@ -173,8 +173,8 @@
                                         </label>
                                         <input type="text" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white @error('external_id') border-red-500 @enderror"
                                                name="external_id" value="{{ old('external_id') }}"
-                                               placeholder="ID do calendário em sistema externo (opcional)">
-                                        <small class="text-gray-500 dark:text-gray-400">ID usado para sincronização com calendários externos</small>
+                                               placeholder="ID do calendÃƒÂ¡rio em sistema externo (opcional)">
+                                        <small class="text-gray-500 dark:text-gray-400">ID usado para sincronizaÃƒÂ§ÃƒÂ£o com calendÃƒÂ¡rios externos</small>
                                         @error('external_id')
                                             <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
                                         @enderror
@@ -184,7 +184,7 @@
                                 <div class="flex justify-end mt-6">
                                     <button type="submit" class="btn btn-primary inline-flex items-center">
                                         <x-icon name="plus" size="text-sm" class="mr-2" />
-                                        Criar Calendário
+                                        Criar CalendÃƒÂ¡rio
                                     </button>
                                 </div>
                             </form>
@@ -192,17 +192,17 @@
                     </div>
                 </div>
 
-                {{-- Aba Horários --}}
+                {{-- Aba HorÃƒÂ¡rios --}}
                 <div class="tab-pane fade" id="hours" role="tabpanel">
                     <div class="rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/20 p-6">
                         <div class="flex items-center justify-between mb-4">
                             <h3 class="text-lg font-semibold text-gray-900 dark:text-white flex items-center">
                                 <x-icon name="clock-outline" size="text-lg" class="mr-2 text-blue-600" />
-                                Horários de Atendimento
+                                HorÃƒÂ¡rios de Atendimento
                             </h3>
                             <button type="button" class="btn btn-primary inline-flex items-center" data-bs-toggle="modal" data-bs-target="#addHourModal">
                                 <x-icon name="plus" size="text-sm" class="mr-2" />
-                                Novo Horário
+                                Novo HorÃƒÂ¡rio
                             </button>
                         </div>
 
@@ -212,15 +212,15 @@
                                     <thead class="bg-gray-100 dark:bg-gray-800">
                                         <tr>
                                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Dia da Semana</th>
-                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Horário Início</th>
-                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Horário Fim</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">HorÃƒÂ¡rio InÃƒÂ­cio</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">HorÃƒÂ¡rio Fim</th>
                                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Intervalo</th>
-                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider" style="width: 140px;">Ações</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider" style="width: 140px;">AÃƒÂ§ÃƒÂµes</th>
                                         </tr>
                                     </thead>
                                     <tbody class="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
                                         @php
-                                            $days = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
+                                            $days = ['Domingo', 'Segunda', 'TerÃƒÂ§a', 'Quarta', 'Quinta', 'Sexta', 'SÃƒÂ¡bado'];
                                         @endphp
                                         @foreach($businessHours as $hour)
                                             <tr class="hover:bg-gray-50 dark:hover:bg-gray-800">
@@ -235,7 +235,7 @@
                                                     @endif
                                                 </td>
                                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
-                                                    <button type="button" class="inline-flex items-center px-3 py-1.5 bg-amber-100 hover:bg-amber-200 text-amber-700 dark:bg-amber-900 dark:text-amber-300 dark:hover:bg-amber-800 text-xs font-medium rounded-md transition-colors"
+                                                    <button type="button" class="inline-flex items-center px-3 py-1.5 bg-amber-100 hover:bg-amber-200 text-amber-700 dark:bg-amber-900 dark:text-amber-300 dark:hover:bg-amber-800 text-xs font-medium rounded-md transition-colors tenant-action-edit"
                                                             data-action="edit-hour"
                                                             data-hour-id="{{ $hour->id }}"
                                                             data-weekday="{{ $hour->weekday }}"
@@ -246,16 +246,15 @@
                                                         Editar
                                                     </button>
                                                     <form action="{{ workspace_route('tenant.doctor-settings.destroy-business-hour', $hour->id) }}"
-                                                          method="POST" class="inline"
-                                                          data-confirm-submit="true"
-                                                          data-confirm-title="Remover horário"
-                                                          data-confirm-message="Tem certeza que deseja remover este horário?"
-                                                          data-confirm-confirm-text="Remover"
-                                                          data-confirm-cancel-text="Cancelar"
-                                                          data-confirm-type="warning">
+                                                          method="POST" class="inline" id="doctor-settings-hours-delete-form-{{ $hour->id }}">
                                                         @csrf
                                                         @method('DELETE')
-                                                        <button type="submit" class="btn btn-danger">
+                                                        <button type="button"
+                                                            class="btn btn-outline tenant-action-delete"
+                                                            data-delete-trigger="1"
+                                                            data-delete-form="#doctor-settings-hours-delete-form-{{ $hour->id }}"
+                                                            data-delete-title="Remover horário"
+                                                            data-delete-message="Tem certeza que deseja remover este horário?">
                                                             Excluir
                                                         </button>
                                                     </form>
@@ -269,7 +268,7 @@
                             <div class="bg-blue-50 border border-blue-200 text-blue-800 rounded-md p-4">
                                 <div class="flex items-start">
                                     <x-icon name="information-outline" size="text-lg" class="mr-2 mt-0.5" />
-                                    <span>Nenhum horário cadastrado. Clique em "Novo Horário" para adicionar.</span>
+                                    <span>Nenhum horÃƒÂ¡rio cadastrado. Clique em "Novo HorÃƒÂ¡rio" para adicionar.</span>
                                 </div>
                             </div>
                         @endif
@@ -296,9 +295,9 @@
                                     <thead class="bg-gray-100 dark:bg-gray-800">
                                         <tr>
                                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Nome</th>
-                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Duração (min)</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">DuraÃƒÂ§ÃƒÂ£o (min)</th>
                                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Status</th>
-                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider" style="width: 140px;">Ações</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider" style="width: 140px;">AÃƒÂ§ÃƒÂµes</th>
                                         </tr>
                                     </thead>
                                     <tbody class="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
@@ -314,7 +313,7 @@
                                                     @endif
                                                 </td>
                                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
-                                                    <button type="button" class="inline-flex items-center px-3 py-1.5 bg-amber-100 hover:bg-amber-200 text-amber-700 dark:bg-amber-900 dark:text-amber-300 dark:hover:bg-amber-800 text-xs font-medium rounded-md transition-colors"
+                                                    <button type="button" class="inline-flex items-center px-3 py-1.5 bg-amber-100 hover:bg-amber-200 text-amber-700 dark:bg-amber-900 dark:text-amber-300 dark:hover:bg-amber-800 text-xs font-medium rounded-md transition-colors tenant-action-edit"
                                                             data-action="edit-type"
                                                             data-type-id="{{ $type->id }}"
                                                             data-type-name="{{ $type->name }}"
@@ -323,16 +322,15 @@
                                                         Editar
                                                     </button>
                                                     <form action="{{ workspace_route('tenant.doctor-settings.destroy-appointment-type', $type->id) }}"
-                                                          method="POST" class="inline"
-                                                          data-confirm-submit="true"
-                                                          data-confirm-title="Remover tipo de atendimento"
-                                                          data-confirm-message="Tem certeza que deseja remover este tipo de atendimento?"
-                                                          data-confirm-confirm-text="Remover"
-                                                          data-confirm-cancel-text="Cancelar"
-                                                          data-confirm-type="warning">
+                                                          method="POST" class="inline" id="doctor-settings-types-delete-form-{{ $type->id }}">
                                                         @csrf
                                                         @method('DELETE')
-                                                        <button type="submit" class="btn btn-danger">
+                                                        <button type="button"
+                                                            class="btn btn-outline tenant-action-delete"
+                                                            data-delete-trigger="1"
+                                                            data-delete-form="#doctor-settings-types-delete-form-{{ $type->id }}"
+                                                            data-delete-title="Remover tipo"
+                                                            data-delete-message="Tem certeza que deseja remover este tipo de atendimento?">
                                                             Excluir
                                                         </button>
                                                     </form>
@@ -356,14 +354,14 @@
         </div>
     </div>
 
-    {{-- Modal Adicionar Horário --}}
+    {{-- Modal Adicionar HorÃƒÂ¡rio --}}
     <div class="modal fade" id="addHourModal" tabindex="-1">
         <div class="modal-dialog">
             <div class="modal-content">
                 <form action="{{ workspace_route('tenant.doctor-settings.store-business-hour') }}" method="POST">
                     @csrf
                     <div class="modal-header">
-                        <h5 class="modal-title">Novo Horário de Atendimento</h5>
+                        <h5 class="modal-title">Novo HorÃƒÂ¡rio de Atendimento</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                     </div>
                     <div class="modal-body">
@@ -375,11 +373,11 @@
                                 <option value="">Selecione um dia da semana</option>
                                 <option value="0" data-name="Domingo">Domingo</option>
                                 <option value="1" data-name="Segunda-feira">Segunda-feira</option>
-                                <option value="2" data-name="Terça-feira">Terça-feira</option>
+                                <option value="2" data-name="TerÃƒÂ§a-feira">TerÃƒÂ§a-feira</option>
                                 <option value="3" data-name="Quarta-feira">Quarta-feira</option>
                                 <option value="4" data-name="Quinta-feira">Quinta-feira</option>
                                 <option value="5" data-name="Sexta-feira">Sexta-feira</option>
-                                <option value="6" data-name="Sábado">Sábado</option>
+                                <option value="6" data-name="SÃƒÂ¡bado">SÃƒÂ¡bado</option>
                             </select>
                             <div class="mt-3 flex gap-2">
                                 <button type="button" id="add-weekday-btn" class="btn btn-primary">
@@ -401,7 +399,7 @@
                             <div>
                                 <div class="mb-4">
                                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                        Horário Início <span class="text-red-500">*</span>
+                                        HorÃƒÂ¡rio InÃƒÂ­cio <span class="text-red-500">*</span>
                                     </label>
                                     <input type="time" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white @error('start_time') border-red-500 @enderror"
                                            name="start_time" value="{{ old('start_time') }}" required>
@@ -412,7 +410,7 @@
                                 </div>
                                 <div class="mb-4">
                                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                        Horário Fim <span class="text-red-500">*</span>
+                                        HorÃƒÂ¡rio Fim <span class="text-red-500">*</span>
                                     </label>
                                     <input type="time" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white @error('end_time') border-red-500 @enderror"
                                            name="end_time" value="{{ old('end_time') }}" required>
@@ -425,7 +423,7 @@
                             <div>
                                 <div class="mb-4">
                                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                        Início do Intervalo
+                                        InÃƒÂ­cio do Intervalo
                                     </label>
                                     <input type="time" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white @error('break_start_time') border-red-500 @enderror"
                                            name="break_start_time" value="{{ old('break_start_time') }}">
@@ -457,7 +455,7 @@
         </div>
     </div>
 
-    {{-- Modal Editar Horário --}}
+    {{-- Modal Editar HorÃƒÂ¡rio --}}
     <div class="modal fade" id="editHourModal" tabindex="-1">
         <div class="modal-dialog">
             <div class="modal-content">
@@ -465,7 +463,7 @@
                     @csrf
                     @method('PUT')
                     <div class="modal-header">
-                        <h5 class="modal-title">Editar Horário de Atendimento</h5>
+                        <h5 class="modal-title">Editar HorÃƒÂ¡rio de Atendimento</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                     </div>
                     <div class="modal-body">
@@ -476,25 +474,25 @@
                             <select name="weekday" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white" required>
                                 <option value="0">Domingo</option>
                                 <option value="1">Segunda-feira</option>
-                                <option value="2">Terça-feira</option>
+                                <option value="2">TerÃƒÂ§a-feira</option>
                                 <option value="3">Quarta-feira</option>
                                 <option value="4">Quinta-feira</option>
                                 <option value="5">Sexta-feira</option>
-                                <option value="6">Sábado</option>
+                                <option value="6">SÃƒÂ¡bado</option>
                             </select>
                         </div>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6 business-hours-form-layout">
                             <div>
                                 <div class="mb-4">
                                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                        Horário Início <span class="text-red-500">*</span>
+                                        HorÃƒÂ¡rio InÃƒÂ­cio <span class="text-red-500">*</span>
                                     </label>
                                     <input type="time" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white" name="start_time" required>
                                     <small class="text-xs text-gray-400" style="visibility: hidden;">Opcional</small>
                                 </div>
                                 <div class="mb-4">
                                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                        Horário Fim <span class="text-red-500">*</span>
+                                        HorÃƒÂ¡rio Fim <span class="text-red-500">*</span>
                                     </label>
                                     <input type="time" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white" name="end_time" required>
                                     <small class="text-xs text-gray-400" style="visibility: hidden;">Opcional</small>
@@ -503,7 +501,7 @@
                             <div>
                                 <div class="mb-4">
                                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                        Início do Intervalo
+                                        InÃƒÂ­cio do Intervalo
                                     </label>
                                     <input type="time" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white" name="break_start_time">
                                     <small class="text-xs text-gray-400">Opcional</small>
@@ -544,7 +542,7 @@
                             </label>
                             <input type="text" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white @error('name') border-red-500 @enderror"
                                    name="name" value="{{ old('name') }}"
-                                   placeholder="Ex: Consulta Médica, Retorno, etc." required>
+                                   placeholder="Ex: Consulta MÃƒÂ©dica, Retorno, etc." required>
                             @error('name')
                                 <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
                             @enderror
@@ -552,7 +550,7 @@
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                    Duração (minutos) <span class="text-red-500">*</span>
+                                    DuraÃƒÂ§ÃƒÂ£o (minutos) <span class="text-red-500">*</span>
                                 </label>
                                 <input type="number" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white @error('duration_min') border-red-500 @enderror"
                                        name="duration_min" value="{{ old('duration_min', 30) }}"
@@ -605,7 +603,7 @@
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                    Duração (minutos) <span class="text-red-500">*</span>
+                                    DuraÃƒÂ§ÃƒÂ£o (minutos) <span class="text-red-500">*</span>
                                 </label>
                                 <input type="number" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white" name="duration_min" min="1" required>
                             </div>
@@ -630,3 +628,4 @@
     </div>
 
 @endsection
+

@@ -56,7 +56,7 @@
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">{{ $oauthAccount->user_id ?? 'N/A' }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">{{ $oauthAccount->expires_at ? $oauthAccount->expires_at->format('d/m/Y H:i') : 'N/A' }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                    <a href="{{ workspace_route('tenant.oauth-accounts.show', $oauthAccount->id) }}" class="inline-flex items-center px-3 py-1.5 bg-blue-100 hover:bg-blue-200 text-blue-700 dark:bg-blue-900 dark:text-blue-300 dark:hover:bg-blue-800 text-xs font-medium rounded-md transition-colors">Ver</a>
+                                    <a href="{{ workspace_route('tenant.oauth-accounts.show', $oauthAccount->id) }}" class="btn btn-outline table-action-btn tenant-action-view">Ver</a>
                                 </td>
                             </tr>
                         @endforeach
@@ -67,5 +67,4 @@
     </div>
 
 @endsection
-
 

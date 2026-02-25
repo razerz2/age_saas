@@ -120,19 +120,24 @@
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
                                     <a href="{{ workspace_route('tenant.finance.categories.show', ['slug' => tenant()->subdomain, 'category' => $category->id]) }}"
-                                       class="inline-flex items-center px-3 py-1.5 bg-blue-100 hover:bg-blue-200 text-blue-700 dark:bg-blue-900 dark:text-blue-300 dark:hover:bg-blue-800 text-xs font-medium rounded-md transition-colors">
+                                       class="btn btn-outline table-action-btn tenant-action-view">
                                         Ver
                                     </a>
                                     <a href="{{ workspace_route('tenant.finance.categories.edit', ['slug' => tenant()->subdomain, 'category' => $category->id]) }}"
-                                       class="inline-flex items-center px-3 py-1.5 bg-amber-100 hover:bg-amber-200 text-amber-700 dark:bg-amber-900 dark:text-amber-300 dark:hover:bg-amber-800 text-xs font-medium rounded-md transition-colors">
+                                       class="btn btn-outline table-action-btn tenant-action-edit">
                                         Editar
                                     </a>
-                                    <form action="{{ workspace_route('tenant.finance.categories.destroy', ['slug' => tenant()->subdomain, 'category' => $category->id]) }}"
-                                          method="POST" class="inline"
-                                          onsubmit="event.preventDefault(); confirmAction({ title: 'Excluir categoria', message: 'Tem certeza que deseja excluir esta categoria?', confirmText: 'Excluir', cancelText: 'Cancelar', type: 'error', onConfirm: () => event.target.submit() }); return false;">
+                                    <form id="finance-categories-delete-form-{{ $category->id }}"
+                                          action="{{ workspace_route('tenant.finance.categories.destroy', ['slug' => tenant()->subdomain, 'category' => $category->id]) }}"
+                                          method="POST" class="inline">
                                         @csrf
                                         @method('DELETE')
-                                        <button type="submit" class="inline-flex items-center px-3 py-1.5 bg-red-100 hover:bg-red-200 text-red-700 dark:bg-red-900 dark:text-red-300 dark:hover:bg-red-800 text-xs font-medium rounded-md transition-colors">
+                                        <button type="button"
+                                                class="btn btn-outline table-action-btn tenant-action-delete"
+                                                data-delete-trigger="1"
+                                                data-delete-form="#finance-categories-delete-form-{{ $category->id }}"
+                                                data-delete-title="Excluir categoria"
+                                                data-delete-message="Tem certeza que deseja excluir esta categoria?">
                                             Excluir
                                         </button>
                                     </form>

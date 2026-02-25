@@ -68,14 +68,19 @@
                 </div>
             </div>
 
-            <form action="{{ workspace_route('tenant.recurring-appointments.destroy', ['id' => $recurringAppointment->id]) }}" method="POST">
+            <form id="recurring-appointments-delete-form-{{ $recurringAppointment->id }}" action="{{ workspace_route('tenant.recurring-appointments.destroy', ['id' => $recurringAppointment->id]) }}" method="POST">
                 @csrf
                 @method('DELETE')
 
                 <div class="flex items-center justify-end gap-2">
                     <a href="{{ workspace_route('tenant.recurring-appointments.show', ['id' => $recurringAppointment->id]) }}" class="btn btn-outline">                        <x-icon name="arrow-left" class="w-4 h-4 mr-2" />                        Voltar
                     </a>
-                    <button type="submit" class="btn btn-danger">                        <x-icon name="trash-can-outline" class="w-4 h-4 mr-2" />                        Confirmar Cancelamento
+                    <button type="button" class="btn btn-outline tenant-action-delete"
+                        data-delete-trigger="1"
+                        data-delete-form="#recurring-appointments-delete-form-{{ $recurringAppointment->id }}"
+                        data-delete-title="Cancelar recorrência"
+                        data-delete-message="Tem certeza que deseja cancelar esta recorrência?">
+                        <x-icon name="trash-can-outline" class="w-4 h-4 mr-2" />                        Confirmar Cancelamento
                     </button>
                 </div>
             </form>

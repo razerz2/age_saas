@@ -15,6 +15,7 @@ class Kernel extends ConsoleKernel
         // Carrega configurações de comandos do banco de dados
         $schedule->command('appointments:expire-pending')->everyFiveMinutes();
         $schedule->command('appointments:expire-waitlist-offers')->everyFiveMinutes();
+        $schedule->command('campaigns:run-automated')->everyFiveMinutes()->withoutOverlapping();
         $this->scheduleCommands($schedule);
     }
 

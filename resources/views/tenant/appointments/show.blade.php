@@ -182,13 +182,14 @@
                     </a>
 
                     <div class="flex flex-wrap items-center justify-end gap-3">
-                        <a href="{{ workspace_route('tenant.appointments.edit', $appointment->id) }}" class="btn btn-outline inline-flex items-center">
+                        <a href="{{ workspace_route('tenant.appointments.edit', $appointment->id) }}" class="btn btn-outline inline-flex items-center tenant-action-edit">
                             <x-icon name="pencil-outline" class="w-4 h-4 mr-2" />
                             Editar
                         </a>
 
                         @if (auth('tenant')->user() && auth('tenant')->user()->role === 'admin')
                             <form
+                                id="appointments-delete-form-{{ $appointment->id }}"
                                 action="{{ workspace_route('tenant.appointments.destroy', $appointment->id) }}"
                                 method="POST"
                                 class="inline"
@@ -196,7 +197,11 @@
                                 @csrf
                                 @method('DELETE')
 
-                                <button type="submit" class="btn btn-danger inline-flex items-center">
+                                <button type="button" class="btn btn-outline inline-flex items-center tenant-action-delete"
+                                    data-delete-trigger="1"
+                                    data-delete-form="#appointments-delete-form-{{ $appointment->id }}"
+                                    data-delete-title="Excluir agendamento"
+                                    data-delete-message="Tem certeza que deseja excluir este agendamento?">
                                     <x-icon name="trash-can-outline" class="w-4 h-4 mr-2" />
                                     Excluir
                                 </button>

@@ -195,17 +195,17 @@
                                                             title="Status da integração">
                                                         <x-icon name="information-outline" class="" />
                                                     </button>
-                                                    <form action="{{ workspace_route('tenant.integrations.google.disconnect', ['doctor' => $doctor->id]) }}"
-                                                          method="POST"
-                                                          data-confirm="disconnect-google"
-                                                          data-confirm-title="Desconectar Google Calendar"
-                                                          data-confirm-message="Tem certeza que deseja desconectar a integração do Google Calendar para este médico?\n\nOs eventos já criados no Google Calendar não serão removidos automaticamente."
-                                                          data-confirm-confirm-text="Desconectar"
-                                                          data-confirm-cancel-text="Cancelar"
-                                                          data-confirm-type="warning">
+                                                    <form id="integrations-google-delete-form-{{ $doctor->id }}"
+                                                          action="{{ workspace_route('tenant.integrations.google.disconnect', ['doctor' => $doctor->id]) }}"
+                                                          method="POST">
                                                         @csrf
                                                         @method('DELETE')
-                                                        <button type="submit" class="btn btn-danger">
+                                                        <button type="button"
+                                                                class="btn btn-outline table-action-btn tenant-action-delete"
+                                                                data-delete-trigger="1"
+                                                                data-delete-form="#integrations-google-delete-form-{{ $doctor->id }}"
+                                                                data-delete-title="Desconectar Google Calendar"
+                                                                data-delete-message="Tem certeza que deseja desconectar a integração do Google Calendar para este médico?">
                                                             <x-icon name="link-variant-off" class=" mr-1" />
                                                             Desconectar
                                                         </button>
@@ -249,3 +249,4 @@
         
     </div>
 @endsection
+

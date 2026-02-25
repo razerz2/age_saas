@@ -143,7 +143,7 @@
                     </a>
 
                     <div class="flex flex-wrap items-center justify-end gap-3">
-                        <a href="{{ workspace_route('tenant.recurring-appointments.edit', ['id' => $recurringAppointment->id]) }}" class="btn btn-outline inline-flex items-center">
+                        <a href="{{ workspace_route('tenant.recurring-appointments.edit', ['id' => $recurringAppointment->id]) }}" class="btn btn-outline tenant-action-edit inline-flex items-center">
                             <x-icon name="pencil-outline" class="w-4 h-4 mr-2" />
                             Editar
                         </a>

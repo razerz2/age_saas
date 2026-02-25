@@ -77,22 +77,26 @@
                     </a>
 
                     <div class="flex flex-wrap items-center justify-end gap-3">
-                        <a href="{{ workspace_route('tenant.specialties.edit', $specialty->id) }}" class="btn btn-outline inline-flex items-center">
+                        <a href="{{ workspace_route('tenant.specialties.edit', $specialty->id) }}" class="btn btn-outline inline-flex items-center tenant-action-edit">
                             <x-icon name="pencil-outline" size="text-sm" class="mr-2" />
                             Editar
                         </a>
 
                         <form
+                            id="specialties-delete-form-{{ $specialty->id }}"
                             action="{{ workspace_route('tenant.specialties.destroy', $specialty->id) }}"
                             method="POST"
                             class="inline"
-                            data-confirm-specialty-delete
                             data-specialty-name="{{ $specialty->name }}"
                         >
                             @csrf
                             @method('DELETE')
 
-                            <button type="submit" class="btn btn-danger inline-flex items-center">
+                            <button type="button" class="btn btn-outline tenant-action-delete inline-flex items-center"
+                                data-delete-trigger="1"
+                                data-delete-form="#specialties-delete-form-{{ $specialty->id }}"
+                                data-delete-title="Excluir especialidade"
+                                data-delete-message="Tem certeza que deseja excluir {{ $specialty->name }}?">
                                 <x-icon name="trash-can-outline" size="text-sm" class="mr-2" />
                                 Excluir
                             </button>

@@ -146,7 +146,7 @@
                         </a>
 
                         <div class="flex flex-wrap items-center justify-end gap-3">
-                            <a href="{{ workspace_route('tenant.users.edit', $user->id) }}" class="btn btn-outline">
+                            <a href="{{ workspace_route('tenant.users.edit', $user->id) }}" class="btn btn-outline tenant-action-edit">
                                 <x-icon name="pencil-outline" size="text-sm" />
                                 Editar
                             </a>
@@ -163,11 +163,15 @@
                                 </a>
                             @endif
 
-                            <form action="{{ workspace_route('tenant.users.destroy', $user->id) }}" method="POST" class="inline"
+                            <form id="user-delete-form-{{ $user->id }}" action="{{ workspace_route('tenant.users.destroy', $user->id) }}" method="POST" class="inline"
                                 data-confirm-user-delete="true" data-user-name="{{ 'o usuário ' . $user->name }}">
                                 @csrf
                                 @method('DELETE')
-                                <button type="submit" class="btn btn-danger">
+                                <button type="button" class="btn btn-outline tenant-action-delete"
+                                    data-delete-trigger="1"
+                                    data-delete-form="#user-delete-form-{{ $user->id }}"
+                                    data-delete-title="Excluir usuário"
+                                    data-delete-message="Tem certeza que deseja excluir o usuário {{ $user->name }}?">
                                     <x-icon name="trash-can-outline" size="text-sm" />
                                     Excluir
                                 </button>

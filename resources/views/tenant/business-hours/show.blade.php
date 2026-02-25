@@ -69,16 +69,20 @@
                     </a>
 
                     <div class="flex flex-wrap items-center justify-end gap-3">
-                        <a href="{{ workspace_route('tenant.business-hours.edit', $businessHour->id) }}" class="btn btn-outline inline-flex items-center">
+                        <a href="{{ workspace_route('tenant.business-hours.edit', $businessHour->id) }}" class="btn btn-outline inline-flex items-center tenant-action-edit">
                             <x-icon name="pencil-outline" class="w-4 h-4 mr-2" />
                             Editar
                         </a>
 
-                        <form action="{{ workspace_route('tenant.business-hours.destroy', $businessHour->id) }}" method="POST" class="inline">
+                        <form id="business-hours-delete-form-{{ $businessHour->id }}" action="{{ workspace_route('tenant.business-hours.destroy', $businessHour->id) }}" method="POST" class="inline">
                             @csrf
                             @method('DELETE')
 
-                            <button type="submit" class="btn btn-danger inline-flex items-center">
+                            <button type="button" class="btn btn-outline inline-flex items-center tenant-action-delete"
+                                data-delete-trigger="1"
+                                data-delete-form="#business-hours-delete-form-{{ $businessHour->id }}"
+                                data-delete-title="Excluir horário"
+                                data-delete-message="Tem certeza que deseja excluir este horário?">
                                 <x-icon name="trash-can-outline" class="w-4 h-4 mr-2" />
                                 Excluir
                             </button>

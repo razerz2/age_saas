@@ -45,6 +45,7 @@ class Module
             ['key' => 'forms', 'name' => 'Formulários', 'icon' => 'fa-file-alt'],
             ['key' => 'reports', 'name' => 'Relatórios', 'icon' => 'fa-chart-bar'],
             ['key' => 'integrations', 'name' => 'Integrações', 'icon' => 'fa-plug'],
+            ['key' => 'campaigns', 'name' => 'Campanhas', 'icon' => 'fa-bullhorn'],
             ['key' => 'finance', 'name' => 'Financeiro', 'icon' => 'fa-dollar-sign'],
             ['key' => 'settings', 'name' => 'Configurações', 'icon' => 'fa-cog'],
         ];

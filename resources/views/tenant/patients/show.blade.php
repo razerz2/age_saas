@@ -155,7 +155,7 @@
                     <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-end">
                         @can('patients.update')
                             <a href="{{ workspace_route('tenant.patients.edit', $patient->id) }}"
-                               class="btn btn-primary inline-flex items-center">
+                               class="btn btn-outline tenant-action-edit inline-flex items-center">
                                 <x-icon name="pencil-outline" size="text-sm" class="mr-2" />
                                 Editar
                             </a>
@@ -165,16 +165,14 @@
                             <x-icon name="key-outline" size="text-sm" class="mr-2" />
                             {{ isset($patient->login) ? 'Editar Login' : 'Criar Login' }}
                         </a>
-                        <form action="{{ workspace_route('tenant.patients.destroy', $patient->id) }}" method="POST" class="inline"
-                              data-confirm-submit="true"
-                              data-confirm-title="Excluir paciente"
-                              data-confirm-message="Tem certeza que deseja excluir este paciente? Esta ação não pode ser desfeita."
-                              data-confirm-confirm-text="Excluir"
-                              data-confirm-cancel-text="Cancelar"
-                              data-confirm-type="error">
+                        <form id="patients-delete-form-{{ $patient->id }}" action="{{ workspace_route('tenant.patients.destroy', $patient->id) }}" method="POST" class="inline">
                             @csrf
                             @method('DELETE')
-                            <button type="submit" class="btn btn-danger inline-flex items-center">
+                            <button type="button" class="btn btn-outline tenant-action-delete inline-flex items-center"
+                                data-delete-trigger="1"
+                                data-delete-form="#patients-delete-form-{{ $patient->id }}"
+                                data-delete-title="Excluir paciente"
+                                data-delete-message="Tem certeza que deseja excluir este paciente? Esta ação não pode ser desfeita.">
                                 <x-icon name="trash-can-outline" size="text-sm" class="mr-2" />
                                 Excluir
                             </button>

@@ -12,6 +12,7 @@
     $settings = \App\Models\Tenant\TenantSetting::getAll();
     $defaultMode = $settings['appointments.default_appointment_mode'] ?? 'user_choice';
     $hasOnlineAccess = ($user && $user->role === 'admin') || in_array('online_appointments', $userModules);
+    $hasCampaignsAccess = ($user && $user->role === 'admin') || in_array('campaigns', $userModules);
     $financeEnabled = tenant_setting('finance.enabled') === 'true';
     $hasFinanceAccess = $financeEnabled && (($user && $user->role === 'admin') || in_array('finance', $userModules));
     $hasSettingsAccess = ($user && $user->role === 'admin') || in_array('settings', $userModules);
@@ -151,6 +152,18 @@
                             <span class="menu-item-text truncate min-w-0" :class="sidebarToggle ? 'xl:hidden' : ''">Agend. Recorrentes</span>
                         </a>
                     </li>
+
+                    @if($hasCampaignsAccess)
+                        <li>
+                            <a
+                                href="{{ workspace_route('tenant.campaigns.index') }}"
+                                class="menu-item group {{ request()->routeIs('tenant.campaigns.*') ? 'menu-item-active' : 'menu-item-inactive' }}"
+                            >
+                                <i class="mdi mdi-bullhorn-outline text-sm {{ request()->routeIs('tenant.campaigns.*') ? 'menu-item-icon-active' : 'menu-item-icon-inactive' }}"></i>
+                                <span class="menu-item-text truncate min-w-0" :class="sidebarToggle ? 'xl:hidden' : ''">Campanhas</span>
+                            </a>
+                        </li>
+                    @endif
 
                     @if($hasOnlineAccess && $defaultMode !== 'presencial')
                         <li>

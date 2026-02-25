@@ -20,8 +20,23 @@
     $variantClasses = $variants[$color] ?? $variants['gray'];
     $isDisabled = $attributes->has('disabled');
     $stateClasses = $isDisabled ? 'cursor-not-allowed opacity-50 pointer-events-none' : 'cursor-pointer';
+    $normalizedTitle = mb_strtolower(trim((string) $title));
+    $semanticClass = '';
 
-    $baseClasses = trim("table-action-btn inline-flex items-center justify-center text-xs font-medium rounded-lg transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-gray-900 {$stateClasses} {$variantClasses}");
+    if (str_starts_with($normalizedTitle, 'ver') || str_starts_with($normalizedTitle, 'visualizar') || str_starts_with($normalizedTitle, 'view')) {
+        $semanticClass = 'tenant-action-view';
+    } elseif (str_starts_with($normalizedTitle, 'editar') || str_starts_with($normalizedTitle, 'edit')) {
+        $semanticClass = 'tenant-action-edit';
+    } elseif (
+        str_starts_with($normalizedTitle, 'excluir') ||
+        str_starts_with($normalizedTitle, 'remover') ||
+        str_starts_with($normalizedTitle, 'desconectar') ||
+        str_starts_with($normalizedTitle, 'delete')
+    ) {
+        $semanticClass = 'tenant-action-delete';
+    }
+
+    $baseClasses = trim("table-action-btn inline-flex items-center justify-center text-xs font-medium rounded-lg transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-gray-900 {$stateClasses} {$variantClasses} {$semanticClass}");
 
     $mergedAttributes = $attributes->merge([
         'class' => $baseClasses,

@@ -1,5 +1,7 @@
-
+import { initTenantDeleteConfirm } from './shared/deleteConfirm';
 document.addEventListener('DOMContentLoaded', () => {
+    initTenantDeleteConfirm();
+
     const page = document.body?.dataset?.page;
     if (!page) return;
 

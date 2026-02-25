@@ -155,22 +155,20 @@
                     </a>
 
                     <div class="flex flex-wrap items-center justify-end gap-3">
-                        <a href="{{ workspace_route('tenant.doctors.edit', $doctor->id) }}" class="btn btn-outline inline-flex items-center">
+                        <a href="{{ workspace_route('tenant.doctors.edit', $doctor->id) }}" class="btn btn-outline inline-flex items-center tenant-action-edit">
                             <x-icon name="pencil-outline" size="text-sm" class="mr-2" />
                             Editar
                         </a>
 
                         @if(!$doctor->hasAppointments())
-                            <form action="{{ workspace_route('tenant.doctors.destroy', $doctor->id) }}" method="POST" class="inline"
-                                  data-confirm-submit="true"
-                                  data-confirm-title="Excluir médico"
-                                  data-confirm-message="Tem certeza que deseja excluir este médico? Esta ação não pode ser desfeita."
-                                  data-confirm-confirm-text="Excluir"
-                                  data-confirm-cancel-text="Cancelar"
-                                  data-confirm-type="error">
+                            <form id="doctors-delete-form-{{ $doctor->id }}" action="{{ workspace_route('tenant.doctors.destroy', $doctor->id) }}" method="POST" class="inline">
                                 @csrf
                                 @method('DELETE')
-                                <button type="submit" class="btn btn-danger inline-flex items-center">
+                                <button type="button" class="btn btn-outline tenant-action-delete inline-flex items-center"
+                                    data-delete-trigger="1"
+                                    data-delete-form="#doctors-delete-form-{{ $doctor->id }}"
+                                    data-delete-title="Excluir médico"
+                                    data-delete-message="Tem certeza que deseja excluir este médico? Esta ação não pode ser desfeita.">
                                     <x-icon name="trash-can-outline" size="text-sm" class="mr-2" />
                                     Excluir
                                 </button>

@@ -275,3 +275,93 @@
 .dark #users-grid .gridjs-pages button[aria-current="page"] {
     background-color: rgba(255, 255, 255, 0.10) !important;
 }
+
+/* Pilot: Users table header highlight + action colors */
+[data-page="users"] #users-grid .gridjs-th {
+    font-weight: 700 !important;
+    font-size: 1rem !important;
+    line-height: 1.5rem !important;
+    color: #111827 !important;
+}
+
+body.dark[data-page="users"] #users-grid .gridjs-th {
+    color: rgba(255, 255, 255, 0.92) !important;
+}
+
+[data-page="users"] #users-grid .table-action-btn {
+    width: 2.25rem;
+    height: 2.25rem;
+    min-width: 2.25rem;
+    padding: 0.35rem !important;
+}
+
+[data-page="users"] #users-grid .table-action-btn svg {
+    width: 0.95rem !important;
+    height: 0.95rem !important;
+}
+
+[data-page="users"] .tenant-action-view {
+    color: #2563eb !important;
+    border-color: #93c5fd !important;
+}
+
+[data-page="users"] .tenant-action-view:hover {
+    color: #1d4ed8 !important;
+    border-color: #60a5fa !important;
+    background-color: #eff6ff !important;
+}
+
+body.dark[data-page="users"] .tenant-action-view {
+    color: #60a5fa !important;
+    border-color: rgba(96, 165, 250, 0.5) !important;
+}
+
+body.dark[data-page="users"] .tenant-action-view:hover {
+    color: #93c5fd !important;
+    border-color: rgba(96, 165, 250, 0.75) !important;
+    background-color: rgba(37, 99, 235, 0.18) !important;
+}
+
+[data-page="users"] .tenant-action-edit {
+    color: #d97706 !important;
+    border-color: #fcd34d !important;
+}
+
+[data-page="users"] .tenant-action-edit:hover {
+    color: #b45309 !important;
+    border-color: #f59e0b !important;
+    background-color: #fffbeb !important;
+}
+
+body.dark[data-page="users"] .tenant-action-edit {
+    color: #fbbf24 !important;
+    border-color: rgba(251, 191, 36, 0.5) !important;
+}
+
+body.dark[data-page="users"] .tenant-action-edit:hover {
+    color: #fde68a !important;
+    border-color: rgba(251, 191, 36, 0.75) !important;
+    background-color: rgba(245, 158, 11, 0.18) !important;
+}
+
+[data-page="users"] .tenant-action-delete {
+    color: #dc2626 !important;
+    border-color: #fca5a5 !important;
+}
+
+[data-page="users"] .tenant-action-delete:hover {
+    color: #b91c1c !important;
+    border-color: #f87171 !important;
+    background-color: #fef2f2 !important;
+}
+
+body.dark[data-page="users"] .tenant-action-delete {
+    color: #f87171 !important;
+    border-color: rgba(248, 113, 113, 0.5) !important;
+}
+
+body.dark[data-page="users"] .tenant-action-delete:hover {
+    color: #fecaca !important;
+    border-color: rgba(248, 113, 113, 0.75) !important;
+    background-color: rgba(220, 38, 38, 0.2) !important;
+}

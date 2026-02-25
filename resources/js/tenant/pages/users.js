@@ -9,14 +9,12 @@ export function init() {
     ) {
         return;
     }
-    bindDeleteConfirm();
     bindUsersIndexRowClick();
     bindPasswordTools();
     bindAvatarPreview();
     bindWebcam();
     bindRoleModules();
     bindModuleBulkActions();
-    exposeLegacyDeleteConfirm();
 }
 
 function bindUsersIndexRowClick() {
@@ -113,47 +111,6 @@ function bindModuleBulkActions() {
             });
         }
     });
-}
-
-function bindDeleteConfirm() {
-    document.addEventListener('submit', (event) => {
-        const form = event.target.closest('[data-confirm-user-delete]');
-        if (!form) {
-            return;
-        }
-        event.preventDefault();
-
-        const userName = form.dataset.userName || 'este usuÃƒÂ¡rio';
-        confirmAction({
-            title: 'Excluir usuÃƒÂ¡rio',
-            message: `Tem certeza que deseja excluir ${userName}? Esta aÃƒÂ§ÃƒÂ£o nÃƒÂ£o pode ser desfeita.`,
-            confirmText: 'Excluir',
-            cancelText: 'Cancelar',
-            type: 'error',
-            onConfirm: () => form.submit(),
-        });
-    });
-}
-
-function exposeLegacyDeleteConfirm() {
-    window.confirmDeleteUser = (event, userName) => {
-        if (event) {
-            event.preventDefault();
-        }
-        const form = event?.target?.closest('form');
-        if (!form) {
-            return false;
-        }
-        confirmAction({
-            title: 'Excluir usuÃƒÂ¡rio',
-            message: `Tem certeza que deseja excluir o usuÃƒÂ¡rio "${userName}"?\n\nEsta aÃƒÂ§ÃƒÂ£o nÃƒÂ£o pode ser desfeita.`,
-            confirmText: 'Excluir',
-            cancelText: 'Cancelar',
-            type: 'error',
-            onConfirm: () => form.submit(),
-        });
-        return false;
-    };
 }
 
 function bindPasswordTools() {

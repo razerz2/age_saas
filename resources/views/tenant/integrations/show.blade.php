@@ -35,7 +35,7 @@
                             Informações da Integração
                         </h4>
                         <div class="flex items-center justify-end gap-3 flex-nowrap">
-                            <x-tailadmin-button variant="warning" size="sm" href="{{ workspace_route('tenant.integrations.edit', $integration->id) }}" class="inline-flex items-center gap-2">
+                            <x-tailadmin-button variant="warning" size="sm" href="{{ workspace_route('tenant.integrations.edit', $integration->id) }}" class="inline-flex items-center gap-2 tenant-action-edit">
                                 <x-icon name="pencil" class="" /> Editar
                             </x-tailadmin-button>
                             <x-tailadmin-button variant="secondary" size="sm" href="{{ workspace_route('tenant.integrations.index') }}"

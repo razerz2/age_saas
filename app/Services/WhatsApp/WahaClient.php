@@ -169,6 +169,73 @@ class WahaClient
         }
     }
 
+    public function sendFileFromUrl(string $chatId, string $fileUrl, ?string $caption = null): array
+    {
+        if (!$this->isConfigured()) {
+            return [
+                'ok' => false,
+                'status' => null,
+                'body' => ['message' => 'WAHA nao esta configurado corretamente.'],
+            ];
+        }
+
+        $endpoint = $this->baseUrl . '/api/sendFile';
+        $payload = [
+            'session' => $this->session,
+            'chatId' => $chatId,
+            'file' => [
+                'url' => $fileUrl,
+            ],
+        ];
+
+        if ($caption !== null && trim($caption) !== '') {
+            $payload['caption'] = $caption;
+        }
+
+        try {
+            $response = $this->request()->post($endpoint, $payload);
+
+            $body = $response->json();
+            if ($body === null && $response->body() !== '') {
+                $body = ['raw' => $response->body()];
+            }
+
+            if (!$response->successful()) {
+                Log::warning('❌ WAHA sendFile request failed', [
+                    'endpoint' => $endpoint,
+                    'status_code' => $response->status(),
+                    'body' => self::summarizeBody($body),
+                ]);
+            }
+
+            if (is_array($body) && isset($body['error'])) {
+                Log::warning('❌ WAHA sendFile error response', [
+                    'endpoint' => $endpoint,
+                    'status_code' => $response->status(),
+                    'body' => self::summarizeBody($body),
+                ]);
+            }
+
+            return [
+                'ok' => $response->successful(),
+                'status' => $response->status(),
+                'body' => $body,
+            ];
+        } catch (\Throwable $e) {
+            Log::warning('⚠️ Falha ao enviar arquivo WAHA', [
+                'base_url' => $this->baseUrl,
+                'session' => $this->session,
+                'error' => $e->getMessage(),
+            ]);
+
+            return [
+                'ok' => false,
+                'status' => null,
+                'body' => ['error' => $e->getMessage()],
+            ];
+        }
+    }
+
     protected function request(): PendingRequest
     {
         return Http::timeout($this->timeout)

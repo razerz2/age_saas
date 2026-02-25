@@ -99,11 +99,11 @@
                                             <div class="flex items-center gap-2">
                                                 <x-tailadmin-button variant="secondary" size="sm"
                                                     href="{{ workspace_route('tenant.integrations.show', $integration->id) }}"
-                                                    class="border-info text-info bg-info/10 hover:bg-info/20 dark:border-info/40 dark:text-info dark:hover:bg-info/30">
+                                                    class="border-info text-info bg-info/10 hover:bg-info/20 dark:border-info/40 dark:text-info dark:hover:bg-info/30 tenant-action-view">
                                                     Ver
                                                 </x-tailadmin-button>
                                                 <x-tailadmin-button variant="warning" size="sm"
-                                                    href="{{ workspace_route('tenant.integrations.edit', $integration->id) }}">
+                                                    href="{{ workspace_route('tenant.integrations.edit', $integration->id) }}" class="tenant-action-edit">
                                                     Editar
                                                 </x-tailadmin-button>
                                             </div>

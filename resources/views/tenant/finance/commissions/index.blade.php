@@ -146,7 +146,7 @@
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                     <a href="{{ workspace_route('tenant.finance.commissions.show', ['slug' => tenant()->subdomain, 'commission' => $commission->id]) }}"
-                                       class="inline-flex items-center px-3 py-1.5 bg-blue-100 hover:bg-blue-200 text-blue-700 dark:bg-blue-900 dark:text-blue-300 dark:hover:bg-blue-800 text-xs font-medium rounded-md transition-colors">
+                                       class="btn btn-outline table-action-btn tenant-action-view">
                                         Ver
                                     </a>
                                 </td>
@@ -167,4 +167,3 @@
     </div>
 
 @endsection
-

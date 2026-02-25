@@ -4,6 +4,7 @@ namespace App\Services\Tenant;
 
 use App\Models\Tenant\TenantSetting;
 use App\Services\WhatsappTenantService;
+use App\Services\WhatsApp\WahaClient;
 use Illuminate\Support\Facades\Log;
 use RuntimeException;
 use Throwable;
@@ -91,6 +92,91 @@ class WhatsAppSender
         }
     }
 
+    public function sendMediaFromUrl(
+        string $tenantId,
+        string $to,
+        string $mediaUrl,
+        ?string $caption = null,
+        array $meta = []
+    ): bool {
+        $payloadMeta = $this->sanitizeMeta($meta);
+        $key = (string) ($payloadMeta['key'] ?? 'unknown');
+        $provider = $this->resolveProvider();
+        $auditMessage = trim(($caption ? $caption . "\n" : '') . $mediaUrl);
+
+        try {
+            $this->applyTenantWhatsAppConfig();
+
+            if (!str_contains(strtolower($provider), 'waha')) {
+                throw new RuntimeException('Envio de mídia disponível apenas para o provedor WAHA neste MVP.');
+            }
+
+            $chatId = WahaClient::formatChatIdFromPhone($to);
+            if ($chatId === '') {
+                throw new RuntimeException('Telefone inválido para envio de mídia via WhatsApp.');
+            }
+
+            $client = WahaClient::fromConfig();
+            if (!$client->isConfigured()) {
+                throw new RuntimeException('WAHA não configurado corretamente para envio de mídia.');
+            }
+
+            $sessionResult = $client->getSessionStatus();
+            $sessionBody = is_array($sessionResult['body'] ?? null) ? $sessionResult['body'] : [];
+            $sessionState = strtoupper((string) ($sessionBody['status'] ?? $sessionBody['state'] ?? ''));
+            $workingStates = ['WORKING', 'CONNECTED', 'READY', 'ONLINE'];
+
+            if (empty($sessionResult['ok']) || !in_array($sessionState, $workingStates, true)) {
+                throw new RuntimeException('Sessão WAHA indisponível para envio de mídia.');
+            }
+
+            $sendResult = $client->sendFileFromUrl($chatId, $mediaUrl, $caption);
+            $sendBody = is_array($sendResult['body'] ?? null) ? $sendResult['body'] : [];
+
+            if (empty($sendResult['ok']) || isset($sendBody['error'])) {
+                $message = isset($sendBody['error'])
+                    ? (string) $sendBody['error']
+                    : 'WAHA retornou falha ao enviar mídia.';
+
+                throw new RuntimeException($message);
+            }
+
+            $this->deliveryLogger->logSuccess(
+                $tenantId,
+                'whatsapp',
+                $key,
+                $provider,
+                $to,
+                null,
+                $auditMessage !== '' ? $auditMessage : $mediaUrl,
+                $payloadMeta
+            );
+
+            return true;
+        } catch (Throwable $e) {
+            Log::warning('whatsapp_media_send_failed', array_merge($payloadMeta, [
+                'tenant_id' => trim($tenantId) !== '' ? $tenantId : null,
+                'channel' => 'whatsapp',
+                'to_masked' => $this->maskPhone($to),
+                'error' => $e->getMessage(),
+            ]));
+
+            $this->deliveryLogger->logError(
+                $tenantId,
+                'whatsapp',
+                $key,
+                $provider,
+                $to,
+                null,
+                $auditMessage !== '' ? $auditMessage : $mediaUrl,
+                $e,
+                $payloadMeta
+            );
+
+            return false;
+        }
+    }
+
     private function maskPhone(string $phone): string
     {
         $digits = preg_replace('/\D+/', '', $phone) ?? '';
@@ -115,11 +201,19 @@ class WhatsAppSender
             'key',
             'template_source',
             'is_override',
-            'run_id',
-            'provider_message_id',
-            'http_status',
-            'unknown_placeholders',
-        ];
+                'run_id',
+                'campaign_id',
+                'campaign_run_id',
+                'campaign_recipient_id',
+                'destination',
+                'channel',
+                'media_source',
+                'media_kind',
+                'asset_id',
+                'provider_message_id',
+                'http_status',
+                'unknown_placeholders',
+            ];
 
         $sanitized = [];
         foreach ($allowedKeys as $allowedKey) {
@@ -165,6 +259,31 @@ class WhatsAppSender
         }
 
         return 'whatsapp:' . $globalProvider;
+    }
+
+    private function applyTenantWhatsAppConfig(): void
+    {
+        $providerSettings = TenantSetting::whatsappProvider();
+        $driver = strtolower(trim((string) ($providerSettings['driver'] ?? 'global')));
+        $globalProvider = function_exists('sysconfig')
+            ? sysconfig('WHATSAPP_PROVIDER', config('services.whatsapp.provider', 'whatsapp_business'))
+            : config('services.whatsapp.provider', 'whatsapp_business');
+
+        config([
+            'services.whatsapp.provider' => $driver === 'global'
+                ? $globalProvider
+                : ($providerSettings['provider'] ?? 'whatsapp_business'),
+            'services.whatsapp.business.api_url' => config('services.whatsapp.business.api_url', 'https://graph.facebook.com/v18.0'),
+            'services.whatsapp.business.token' => $providerSettings['meta_access_token'] ?? '',
+            'services.whatsapp.business.phone_id' => $providerSettings['meta_phone_number_id'] ?? '',
+            'services.whatsapp.zapi.api_url' => $providerSettings['zapi_api_url'] ?? 'https://api.z-api.io',
+            'services.whatsapp.zapi.token' => $providerSettings['zapi_token'] ?? '',
+            'services.whatsapp.zapi.client_token' => $providerSettings['zapi_client_token'] ?? '',
+            'services.whatsapp.zapi.instance_id' => $providerSettings['zapi_instance_id'] ?? '',
+            'services.whatsapp.waha.base_url' => $providerSettings['waha_base_url'] ?? '',
+            'services.whatsapp.waha.api_key' => $providerSettings['waha_api_key'] ?? '',
+            'services.whatsapp.waha.session' => $providerSettings['waha_session'] ?? 'default',
+        ]);
     }
 
     private function shouldLogBody(): bool

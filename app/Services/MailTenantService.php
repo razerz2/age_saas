@@ -15,7 +15,7 @@ class MailTenantService
      * Envia email usando SMTP do tenant ou global
      * Aplica automaticamente o layout de email configurado
      */
-    public static function send($to, $subject, $view, $data = [])
+    public static function send($to, $subject, $view, $data = [], array $attachments = [])
     {
         try {
             // Verifica se a funcionalidade de notificação por email está habilitada no plano
@@ -65,10 +65,35 @@ class MailTenantService
                 ]);
             }
 
-            Mail::send([], [], function ($message) use ($to, $subject, $html) {
+            Mail::send([], [], function ($message) use ($to, $subject, $html, $attachments) {
                 $message->to($to)
                     ->subject($subject)
                     ->html($html);
+
+                foreach ($attachments as $attachment) {
+                    if (!is_array($attachment)) {
+                        continue;
+                    }
+
+                    $path = trim((string) ($attachment['path'] ?? ''));
+                    if ($path === '' || !is_file($path)) {
+                        continue;
+                    }
+
+                    $options = [];
+                    $filename = trim((string) ($attachment['filename'] ?? ''));
+                    $mime = trim((string) ($attachment['mime'] ?? ''));
+
+                    if ($filename !== '') {
+                        $options['as'] = $filename;
+                    }
+
+                    if ($mime !== '') {
+                        $options['mime'] = $mime;
+                    }
+
+                    $message->attach($path, $options);
+                }
             });
 
             Log::info('📧 Email enviado', ['to' => $to, 'subject' => $subject, 'driver' => $provider['driver']]);
@@ -82,4 +107,3 @@ class MailTenantService
         }
     }
 }
-

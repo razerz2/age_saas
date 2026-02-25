@@ -53,7 +53,7 @@
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">{{ $syncState->provider ?? 'N/A' }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">{{ $syncState->last_sync_at ? $syncState->last_sync_at->format('d/m/Y H:i') : 'N/A' }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
-                                    <a href="{{ workspace_route('tenant.calendar-sync.show', $syncState->id) }}" class="btn btn-outline">
+                                    <a href="{{ workspace_route('tenant.calendar-sync.show', $syncState->id) }}" class="btn btn-outline table-action-btn tenant-action-view">
                                         <x-icon name="eye-outline" class="w-4 h-4 mr-1" />
                                         Ver
                                     </a>

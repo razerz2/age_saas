@@ -64,15 +64,19 @@
                                     <td class="px-4 py-3 text-sm text-gray-700 dark:text-gray-200">{{ $response->status ?? 'N/A' }}</td>
                                     <td class="px-4 py-3 text-sm text-right">
                                         <div class="flex flex-wrap justify-end gap-2">
-                                            <a href="{{ workspace_route('tenant.responses.show', $response->id) }}" class="btn btn-outline">Ver</a>
-                                            <a href="{{ workspace_route('tenant.responses.edit', $response->id) }}" class="btn btn-outline">Editar</a>
-                                            <form action="{{ workspace_route('tenant.responses.destroy', $response->id) }}"
+                                            <a href="{{ workspace_route('tenant.responses.show', $response->id) }}" class="btn btn-outline tenant-action-view">Ver</a>
+                                            <a href="{{ workspace_route('tenant.responses.edit', $response->id) }}" class="btn btn-outline tenant-action-edit">Editar</a>
+                                            <form id="responses-delete-form-{{ $response->id }}" action="{{ workspace_route('tenant.responses.destroy', $response->id) }}"
                                                   method="POST"
                                                   class="delete-response-form"
                                                   data-confirm-delete="true" data-form-name="{{ $response->form->name ?? 'N/A' }}" data-patient-name="{{ $response->patient->full_name ?? 'N/A' }}">
                                                 @csrf
                                                 @method('DELETE')
-                                                <button type="submit" class="btn btn-danger">
+                                                <button type="button" class="btn btn-outline tenant-action-delete"
+                                                    data-delete-trigger="1"
+                                                    data-delete-form="#responses-delete-form-{{ $response->id }}"
+                                                    data-delete-title="Excluir resposta"
+                                                    data-delete-message="Tem certeza que deseja excluir esta resposta?">
                                                     <x-icon name="trash-can-outline" class="w-4 h-4 mr-1" />
                                                     Excluir
                                                 </button>
@@ -90,4 +94,3 @@
 </div>
 
 @endsection
-

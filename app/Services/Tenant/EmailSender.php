@@ -16,13 +16,42 @@ class EmailSender
 
     public function send(string $tenantId, string $to, string $subject, string $message, array $meta = []): bool
     {
+        return $this->sendInternal($tenantId, $to, $subject, $message, $meta, []);
+    }
+
+    /**
+     * @param array<int,array{path:string,filename?:string,mime?:string}> $attachments
+     */
+    public function sendCampaign(
+        string $tenantId,
+        string $to,
+        string $subject,
+        string $message,
+        array $attachments = [],
+        array $meta = []
+    ): bool {
+        return $this->sendInternal($tenantId, $to, $subject, $message, $meta, $attachments);
+    }
+
+    /**
+     * @param array<int,array{path:string,filename?:string,mime?:string}> $attachments
+     */
+    private function sendInternal(
+        string $tenantId,
+        string $to,
+        string $subject,
+        string $message,
+        array $meta = [],
+        array $attachments = []
+    ): bool
+    {
         $payloadMeta = $this->sanitizeMeta($meta);
         $normalizedMessage = str_replace(["\r\n", "\r"], "\n", $message);
         $key = (string) ($payloadMeta['key'] ?? 'unknown');
         $provider = $this->resolveProvider();
 
         try {
-            MailTenantService::send($to, $subject, $normalizedMessage);
+            MailTenantService::send($to, $subject, $normalizedMessage, [], $attachments);
 
             $logPayload = array_merge($payloadMeta, [
                 'tenant_id' => trim($tenantId) !== '' ? $tenantId : null,
@@ -107,11 +136,19 @@ class EmailSender
             'key',
             'template_source',
             'is_override',
-            'run_id',
-            'provider_message_id',
-            'http_status',
-            'unknown_placeholders',
-        ];
+                'run_id',
+                'campaign_id',
+                'campaign_run_id',
+                'campaign_recipient_id',
+                'destination',
+                'channel',
+                'media_source',
+                'media_kind',
+                'asset_id',
+                'provider_message_id',
+                'http_status',
+                'unknown_placeholders',
+            ];
 
         $sanitized = [];
         foreach ($allowedKeys as $allowedKey) {
