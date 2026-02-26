@@ -1,18 +1,8 @@
-# Deploy e Operação (Índice Global)
+﻿# Deploy e Operacao (Indice Global)
 
-Este documento serve como índice para tópicos de deploy, build e operação em produção.
+## Topicos
 
-## Tópicos esperados
-
-- Processo de build de assets (Vite, npm, etc.).
-- Configuração de variáveis de ambiente por ambiente (`ENV.md`).
-- Filas, jobs e workers.
-- Monitoramento básico.
-
-## Documentos relacionados
-
-- `ENV.md` — variáveis de ambiente e exemplos.
-- `HARDENING_PRODUCAO.md` — recomendações de hardening para produção.
-- Documentos específicos de módulos (ex.: financeiro) podem detalhar passos extras.
-
-> Este arquivo ainda é um índice. Detalhes finos devem ser adicionados de forma incremental conforme a operação evoluir.
+- Variaveis de ambiente por ambiente: `../10-platform/guides/ENV.md`
+- Hardening de producao: `../10-platform/operations/HARDENING_PRODUCAO.md`
+- Operacoes de migracao em tenant: `../20-tenant/operations/INSTRUCOES_MIGRATION.md`
+- Limpeza de migrations: `../20-tenant/operations/MIGRATIONS_CLEANUP.md`

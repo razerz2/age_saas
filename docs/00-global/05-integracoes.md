@@ -1,24 +1,24 @@
-# Integrações (Índice Global)
+﻿# Integracoes (Indice Global)
 
-Este documento organiza, em um só lugar, links para a documentação de integrações externas.
+Este documento aponta para integracoes externas e guias de configuracao.
 
-## Integrações principais
+## Pagamentos
 
-- **Pagamentos / Asaas**
-  - `SISTEMA_PAGAMENTOS_ASAAS.md`
-  - `MODULO_FINANCEIRO_COMPLETO.md`
-  - `MODULO_FINANCEIRO_TENANT.md`
+- `../20-tenant/integrations/SISTEMA_PAGAMENTOS_ASAAS.md`
+- `../20-tenant/finance/MODULO_FINANCEIRO_TENANT.md`
+- `../20-tenant/finance/MODULO_FINANCEIRO_COMPLETO.md`
 
-- **Calendários**
-  - `INTEGRACAO_GOOGLE_CALENDAR.md`
-  - `INTEGRACAO_APPLE_CALENDAR.md`
+## Calendarios
 
-- **Email**
-  - `CONFIGURACAO_EMAIL.md`
-  - `CONFIGURACAO_TITAN_EMAIL.md`
+- `../20-tenant/integrations/INTEGRACAO_GOOGLE_CALENDAR.md`
+- `../20-tenant/integrations/INTEGRACAO_APPLE_CALENDAR.md`
 
-- **Ambiente / Infra**
-  - `ENV.md`
-  - `HARDENING_PRODUCAO.md`
+## Email
 
-> Conteúdo consolidado a partir dos documentos existentes em `/docs`. Novas integrações devem linkar para cá.
+- `../10-platform/integrations/CONFIGURACAO_EMAIL.md`
+- `../10-platform/integrations/CONFIGURACAO_TITAN_EMAIL.md`
+
+## Ambiente e operacao
+
+- `../10-platform/guides/ENV.md`
+- `../10-platform/operations/HARDENING_PRODUCAO.md`

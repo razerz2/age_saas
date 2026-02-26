@@ -1,3 +1,55 @@
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+function buildUrl(template, appointmentId) {
+    return template.replace('__ID__', encodeURIComponent(appointmentId));
+}
+
+function renderDetailsLoading(container) {
+    container.innerHTML = `
+        <div class="h-full min-h-[220px] flex items-center justify-center text-center text-gray-500 dark:text-gray-400">
+            <div>
+                <div class="inline-flex items-center justify-center w-10 h-10 rounded-full border-2 border-gray-200 border-t-blue-500 animate-spin"></div>
+                <p class="mt-3 text-sm">Carregando detalhes do agendamento...</p>
+            </div>
+        </div>
+    `;
+}
+
+function renderError(container, message) {
+    container.innerHTML = `
+        <div class="rounded-lg border border-red-200 bg-red-50 p-4 dark:border-red-800 dark:bg-red-900/20">
+            <div class="flex items-start gap-2 text-red-700 dark:text-red-300 text-sm">
+                <span class="mdi mdi-alert-circle-outline text-base mt-0.5"></span>
+                <span>${message}</span>
+            </div>
+        </div>
+    `;
+}
+
+function extractApiErrorMessage(payload, fallback = 'Erro ao atualizar status.') {
+    if (!payload || typeof payload !== 'object') {
+        return fallback;
+    }
+
+    if (typeof payload.message === 'string' && payload.message.trim()) {
+        return payload.message.trim();
+    }
+
+    if (payload.errors && typeof payload.errors === 'object') {
+        for (const value of Object.values(payload.errors)) {
+            if (Array.isArray(value) && value.length > 0) {
+                return String(value[0]);
+            }
+
+            if (typeof value === 'string' && value.trim()) {
+                return value.trim();
+            }
+        }
+    }
+
+    return fallback;
+}
+
 export function init() {
     const configEl = document.getElementById('medical-appointments-config');
     if (!configEl) {
@@ -13,10 +65,80 @@ export function init() {
         initialId: configEl.dataset.initialId || '',
     };
 
+    const getCsrfToken = () => {
+        const tokenFromMeta = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+        return tokenFromMeta || config.csrf || '';
+    };
+
     const appointmentDetails = document.getElementById('appointment-details');
+    const formResponseModal = document.getElementById('form-response-modal');
+    const formResponseModalDialog = document.getElementById('form-response-modal-dialog');
+    const formResponseModalBody = document.getElementById('form-response-modal-body');
+
+    const normalizeFormResponseModalDialog = () => {
+        if (!formResponseModalDialog) {
+            return;
+        }
+
+        [
+            'w-screen',
+            'h-screen',
+            'min-h-screen',
+            'h-full',
+            'max-w-full',
+            'max-h-full',
+        ].forEach((className) => formResponseModalDialog.classList.remove(className));
+
+        formResponseModalDialog.classList.add('w-full', 'max-w-4xl', 'max-h-[80vh]', 'flex', 'flex-col');
+        formResponseModalDialog.style.maxWidth = '56rem';
+        formResponseModalDialog.style.maxHeight = '80vh';
+    };
+
+    const openFormResponseModal = () => {
+        if (!formResponseModal) {
+            return;
+        }
+
+        normalizeFormResponseModalDialog();
+        formResponseModal.classList.remove('hidden');
+        formResponseModal.classList.add('flex');
+        formResponseModal.setAttribute('aria-hidden', 'false');
+        document.body.classList.add('overflow-hidden');
+    };
+
+    const closeFormResponseModal = () => {
+        if (!formResponseModal) {
+            return;
+        }
+
+        formResponseModal.classList.add('hidden');
+        formResponseModal.classList.remove('flex');
+        formResponseModal.setAttribute('aria-hidden', 'true');
+        document.body.classList.remove('overflow-hidden');
+    };
+
+    const renderFormResponseLoading = () => {
+        if (!formResponseModalBody) {
+            return;
+        }
+
+        formResponseModalBody.innerHTML = `
+            <div class="flex items-center justify-center py-12 text-center text-gray-500 dark:text-gray-400">
+                <div>
+                    <div class="mx-auto inline-flex h-10 w-10 animate-spin rounded-full border-2 border-gray-200 border-t-blue-500"></div>
+                    <p class="mt-3 text-sm">Carregando formulario...</p>
+                </div>
+            </div>
+        `;
+    };
 
     const loadAppointmentDetails = (appointmentId) => {
         if (!appointmentId || !appointmentDetails || !config.detailsUrlTemplate) {
+            return;
+        }
+
+        if (!UUID_PATTERN.test(appointmentId)) {
+            renderError(appointmentDetails, 'ID de agendamento invalido. Atualize a pagina e tente novamente.');
             return;
         }
 
@@ -29,7 +151,9 @@ export function init() {
             clickedItem.classList.add('active-item');
         }
 
-        fetch(config.detailsUrlTemplate.replace('__ID__', appointmentId), {
+        renderDetailsLoading(appointmentDetails);
+
+        fetch(buildUrl(config.detailsUrlTemplate, appointmentId), {
             method: 'GET',
             headers: {
                 'X-Requested-With': 'XMLHttpRequest',
@@ -38,28 +162,19 @@ export function init() {
             credentials: 'same-origin',
         })
             .then(async (response) => {
-                const contentType = response.headers.get('content-type');
+                const contentType = response.headers.get('content-type') || '';
 
-                if (contentType && contentType.includes('application/json')) {
+                if (contentType.includes('application/json')) {
                     const data = await response.json();
                     if (!data.success) {
-                        throw new Error(data.message || 'Erro ao carregar detalhes');
+                        throw new Error(data.message || 'Erro ao carregar detalhes.');
                     }
-                    return data.html || data;
+                    return data.html || '';
                 }
 
                 if (!response.ok) {
-                    const text = await response.text();
-                    if (text.includes('<!DOCTYPE') || text.includes('<html')) {
-                        const match = text.match(/403|Forbidden|nÃ£o tem permissÃ£o/i);
-                        if (match) {
-                            throw new Error('VocÃª nÃ£o tem permissÃ£o para visualizar este agendamento.');
-                        }
-                        throw new Error(
-                            'Erro ao carregar detalhes. Verifique se vocÃª tem permissÃ£o para visualizar este agendamento.',
-                        );
-                    }
-                    throw new Error(text || 'Erro ao carregar detalhes');
+                    const fallback = await response.text();
+                    throw new Error(fallback || 'Erro ao carregar detalhes.');
                 }
 
                 return response.text();
@@ -70,33 +185,18 @@ export function init() {
             .catch((error) => {
                 // eslint-disable-next-line no-console
                 console.error('Erro ao carregar detalhes:', error);
-                let errorMessage = 'Erro ao carregar detalhes do agendamento.';
-
-                if (error.message) {
-                    if (
-                        error.message.includes('permissÃ£o') ||
-                        error.message.includes('403') ||
-                        error.message.includes('Forbidden')
-                    ) {
-                        errorMessage = 'VocÃª nÃ£o tem permissÃ£o para visualizar este agendamento.';
-                    } else if (error.message.includes('404') || error.message.includes('nÃ£o encontrado')) {
-                        errorMessage = 'Agendamento nÃ£o encontrado.';
-                    } else if (!error.message.includes('<!DOCTYPE') && !error.message.includes('<html')) {
-                        errorMessage = error.message;
-                    }
-                }
-
-                appointmentDetails.innerHTML = `
-                    <div class="alert alert-danger">
-                        <i class="mdi mdi-alert-circle me-1"></i>
-                        ${errorMessage}
-                    </div>
-                `;
+                const message = error?.message?.trim() || 'Erro ao carregar detalhes do agendamento.';
+                renderError(appointmentDetails, message);
             });
     };
 
     const updateStatus = (appointmentId, status) => {
         if (!appointmentId || !status || !config.updateStatusUrlTemplate) {
+            return;
+        }
+
+        if (!UUID_PATTERN.test(appointmentId)) {
+            showAlert({ type: 'error', title: 'Erro', message: 'ID de agendamento invalido.' });
             return;
         }
 
@@ -107,34 +207,77 @@ export function init() {
             cancelText: 'Cancelar',
             type: 'warning',
             onConfirm: () => {
-                const formData = new FormData();
-                formData.append('status', status);
-                formData.append('_token', config.csrf);
+                const csrfToken = getCsrfToken();
+                if (!csrfToken) {
+                    showAlert({
+                        type: 'error',
+                        title: 'Sessao expirada',
+                        message: 'Token CSRF nao encontrado. Recarregue a pagina e tente novamente.',
+                    });
+                    return;
+                }
 
-                fetch(config.updateStatusUrlTemplate.replace('__ID__', appointmentId), {
+                fetch(buildUrl(config.updateStatusUrlTemplate, appointmentId), {
                     method: 'POST',
-                    body: formData,
+                    credentials: 'same-origin',
                     headers: {
+                        'X-CSRF-TOKEN': csrfToken,
                         'X-Requested-With': 'XMLHttpRequest',
                         Accept: 'application/json',
+                        'Content-Type': 'application/json',
                     },
+                    body: JSON.stringify({ status }),
                 })
-                    .then((response) => response.json())
+                    .then(async (response) => {
+                        const statusCode = response.status;
+                        const rawText = await response.text();
+                        let data = null;
+
+                        try {
+                            data = rawText ? JSON.parse(rawText) : null;
+                        } catch (error) {
+                            data = null;
+                        }
+
+                        // Debug temporario para diagnosticar contrato frontend/backend
+                        // eslint-disable-next-line no-console
+                        console.info('updateStatus response', { statusCode, rawText, data });
+
+                        if (!response.ok) {
+                            if (response.status === 419) {
+                                throw new Error('Sessao expirada (CSRF). Recarregue a pagina e tente novamente.');
+                            }
+
+                            throw new Error(
+                                extractApiErrorMessage(
+                                    data,
+                                    rawText?.trim() || `Erro HTTP ${statusCode} ao atualizar status.`,
+                                ),
+                            );
+                        }
+
+                        return data || {};
+                    })
                     .then((data) => {
                         if (data.success) {
                             window.location.reload();
                         } else {
+                            const detailedMessage = extractApiErrorMessage(data, 'Erro ao atualizar status.');
                             showAlert({
                                 type: 'error',
                                 title: 'Erro',
-                                message: `Erro ao atualizar status: ${data.message || 'Erro desconhecido'}`,
+                                message: detailedMessage,
                             });
                         }
                     })
                     .catch((error) => {
                         // eslint-disable-next-line no-console
-                        console.error('Erro:', error);
-                        showAlert({ type: 'error', title: 'Erro', message: 'Erro ao atualizar status' });
+                        console.error('Erro ao atualizar status:', error);
+                        showAlert({
+                            type: 'error',
+                            title: 'Erro',
+                            message: error?.message?.trim() || 'Erro ao atualizar status.',
+                        });
                     });
             },
         });
@@ -142,6 +285,11 @@ export function init() {
 
     const completeAppointment = (appointmentId) => {
         if (!appointmentId || !config.completeUrlTemplate) {
+            return;
+        }
+
+        if (!UUID_PATTERN.test(appointmentId)) {
+            showAlert({ type: 'error', title: 'Erro', message: 'ID de agendamento invalido.' });
             return;
         }
 
@@ -155,7 +303,7 @@ export function init() {
                 const formData = new FormData();
                 formData.append('_token', config.csrf);
 
-                fetch(config.completeUrlTemplate.replace('__ID__', appointmentId), {
+                fetch(buildUrl(config.completeUrlTemplate, appointmentId), {
                     method: 'POST',
                     body: formData,
                     headers: {
@@ -180,8 +328,8 @@ export function init() {
                     })
                     .catch((error) => {
                         // eslint-disable-next-line no-console
-                        console.error('Erro:', error);
-                        showAlert({ type: 'error', title: 'Erro', message: 'Erro ao finalizar atendimento' });
+                        console.error('Erro ao finalizar atendimento:', error);
+                        showAlert({ type: 'error', title: 'Erro', message: 'Erro ao finalizar atendimento.' });
                     });
             },
         });
@@ -192,27 +340,19 @@ export function init() {
             return;
         }
 
-        const modalBody = document.getElementById('form-response-modal-body');
-        if (!modalBody) {
+        if (!UUID_PATTERN.test(appointmentId)) {
+            showAlert({ type: 'error', title: 'Erro', message: 'ID de agendamento invalido.' });
             return;
         }
 
-        modalBody.innerHTML = `
-            <div class="text-center py-4">
-                <div class="spinner-border text-primary" role="status">
-                    <span class="visually-hidden">Carregando...</span>
-                </div>
-                <p class="mt-2 text-muted">Carregando formulÃ¡rio...</p>
-            </div>
-        `;
-
-        const modalElement = document.getElementById('form-response-modal');
-        if (modalElement) {
-            const modal = new bootstrap.Modal(modalElement);
-            modal.show();
+        if (!formResponseModalBody) {
+            return;
         }
 
-        fetch(config.formResponseUrlTemplate.replace('__ID__', appointmentId), {
+        renderFormResponseLoading();
+        openFormResponseModal();
+
+        fetch(buildUrl(config.formResponseUrlTemplate, appointmentId), {
             method: 'GET',
             headers: {
                 'X-Requested-With': 'XMLHttpRequest',
@@ -222,27 +362,41 @@ export function init() {
             .then((response) => response.json())
             .then((data) => {
                 if (data.success) {
-                    modalBody.innerHTML = data.html;
+                    formResponseModalBody.innerHTML = data.html;
                 } else {
-                    modalBody.innerHTML = `
-                        <div class="alert alert-danger">
-                            <i class="mdi mdi-alert-circle me-1"></i>
-                            ${data.message || 'Erro ao carregar formulÃ¡rio.'}
+                    formResponseModalBody.innerHTML = `
+                        <div class="rounded-lg border border-red-200 bg-red-50 p-4 dark:border-red-800 dark:bg-red-900/20">
+                            <div class="text-sm text-red-700 dark:text-red-300">
+                                ${data.message || 'Erro ao carregar formulario.'}
+                            </div>
                         </div>
                     `;
                 }
             })
             .catch((error) => {
                 // eslint-disable-next-line no-console
-                console.error('Erro:', error);
-                modalBody.innerHTML = `
-                    <div class="alert alert-danger">
-                        <i class="mdi mdi-alert-circle me-1"></i>
-                        Erro ao carregar formulÃ¡rio. Tente novamente.
+                console.error('Erro ao carregar formulario:', error);
+                formResponseModalBody.innerHTML = `
+                    <div class="rounded-lg border border-red-200 bg-red-50 p-4 dark:border-red-800 dark:bg-red-900/20">
+                        <div class="text-sm text-red-700 dark:text-red-300">
+                            Erro ao carregar formulario. Tente novamente.
+                        </div>
                     </div>
                 `;
             });
     };
+
+    if (formResponseModal) {
+        formResponseModal.querySelectorAll('[data-form-response-modal-close]').forEach((trigger) => {
+            trigger.addEventListener('click', closeFormResponseModal);
+        });
+
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape' && !formResponseModal.classList.contains('hidden')) {
+                closeFormResponseModal();
+            }
+        });
+    }
 
     const appointmentList = document.getElementById('appointments-list');
     if (appointmentList) {
@@ -251,6 +405,7 @@ export function init() {
             if (!item) {
                 return;
             }
+
             event.preventDefault();
             loadAppointmentDetails(item.dataset.appointmentId);
         });

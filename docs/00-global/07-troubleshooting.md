@@ -1,24 +1,23 @@
-# Troubleshooting (Índice Global)
+﻿# Troubleshooting (Indice Global)
 
-Este documento lista categorias de problemas comuns e aponta para guias específicos.
+## Autenticacao e sessao
 
-## Categorias de problemas
+- `../20-tenant/troubleshooting/SOLUCAO_ERRO_419.md`
+- `../20-tenant/troubleshooting/GUIA_TESTE_SESSAO_EXPIRADA.md`
 
-- **Autenticação / Sessão**
-  - `SOLUCAO_ERRO_419.md` — erros de CSRF / sessão expirada.
-  - `GUIA_TESTE_SESSAO_EXPIRADA.md` — roteiro para testar fluxos de sessão.
+## Ambiente e configuracao
 
-- **Ambiente / Configuração**
-  - `ENV.md` — configuração de variáveis.
-  - `CORRECAO_APP_URL.md` — problemas relacionados a `APP_URL`.
+- `../10-platform/guides/ENV.md`
+- `../20-tenant/troubleshooting/CORRECAO_APP_URL.md`
 
-- **Integrações**
-  - `DIAGNOSTICO_GOOGLE_CALLBACK.md` — diagnóstico de callback do Google.
-  - `INTEGRACAO_GOOGLE_CALENDAR.md` / `INTEGRACAO_APPLE_CALENDAR.md` — guias completos.
+## Integracoes
 
-- **Financeiro**
-  - `CONCILIACAO_FINANCEIRA.md`
-  - `FLUXO_COBRANCA_COMPLETO.md`
-  - `FINANCE_GO_LIVE_CHECKLIST.md`
+- `../20-tenant/troubleshooting/DIAGNOSTICO_GOOGLE_CALLBACK.md`
+- `../20-tenant/integrations/INTEGRACAO_GOOGLE_CALENDAR.md`
+- `../20-tenant/integrations/INTEGRACAO_APPLE_CALENDAR.md`
 
-> Para problemas específicos de módulos (ex.: Tenant Financeiro), consulte também os documentos dedicados no diretório `/docs`.
+## Financeiro
+
+- `../20-tenant/finance/CONCILIACAO_FINANCEIRA.md`
+- `../20-tenant/finance/FLUXO_COBRANCA_COMPLETO.md`
+- `../20-tenant/finance/FINANCE_GO_LIVE_CHECKLIST.md`

@@ -784,23 +784,23 @@ Route::prefix('workspace/{slug}')
                 ->name('medical-appointments.session');
 
             // Detalhes do agendamento (AJAX)
-            Route::get('/atendimento/{appointment}/detalhes', [MedicalAppointmentController::class, 'details'])
-                ->where('appointment', '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}')
+            Route::get('/atendimento/appointments/{appointmentId}/detalhes', [MedicalAppointmentController::class, 'details'])
+                ->where('appointmentId', '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}')
                 ->name('medical-appointments.details');
 
             // Alterar status do atendimento
-            Route::post('/atendimento/{appointment}/status', [MedicalAppointmentController::class, 'updateStatus'])
-                ->where('appointment', '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}')
+            Route::post('/atendimento/appointments/{appointmentId}/status', [MedicalAppointmentController::class, 'updateStatus'])
+                ->where('appointmentId', '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}')
                 ->name('medical-appointments.update-status');
 
             // Concluir e ir para o próximo
-            Route::post('/atendimento/{appointment}/concluir', [MedicalAppointmentController::class, 'complete'])
-                ->where('appointment', '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}')
+            Route::post('/atendimento/appointments/{appointmentId}/concluir', [MedicalAppointmentController::class, 'complete'])
+                ->where('appointmentId', '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}')
                 ->name('medical-appointments.complete');
 
             // Buscar resposta do formulário
-            Route::get('/atendimento/{appointment}/formulario-resposta', [MedicalAppointmentController::class, 'getFormResponse'])
-                ->where('appointment', '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}')
+            Route::get('/atendimento/appointments/{appointmentId}/formulario-resposta', [MedicalAppointmentController::class, 'getFormResponse'])
+                ->where('appointmentId', '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}')
                 ->name('medical-appointments.form-response');
         });
 

@@ -13,6 +13,8 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Validator;
 use Carbon\Carbon;
 
 class MedicalAppointmentController extends Controller
@@ -117,7 +119,7 @@ class MedicalAppointmentController extends Controller
     /**
      * Exibe a tela de atendimento do dia
      */
-    public function session($date, Request $request)
+    public function session($slug, $date, Request $request)
     {
         // Garantir que o tenant está ativo e a conexão configurada
         $this->ensureTenantConnection();
@@ -236,7 +238,7 @@ class MedicalAppointmentController extends Controller
     /**
      * Retorna detalhes de um agendamento via AJAX
      */
-    public function details($appointment)
+    public function details($slug, $appointmentId)
     {
         try {
             // Garantir que o tenant está ativo e a conexão configurada
@@ -249,9 +251,7 @@ class MedicalAppointmentController extends Controller
             }
 
             // Se $appointment não for uma instância de Appointment, buscar pelo ID
-            if (!$appointment instanceof Appointment) {
-                $appointment = Appointment::findOrFail($appointment);
-            }
+            $appointment = $this->resolveAppointmentOrFail($slug, $appointmentId);
 
             // Carregar relacionamentos necessários primeiro
             $appointment->load(['calendar.doctor.user', 'patient', 'type', 'specialty']);
@@ -350,13 +350,24 @@ class MedicalAppointmentController extends Controller
         } catch (\Exception $e) {
             // Log do erro para debug
             \Log::error('Erro ao carregar detalhes do agendamento', [
-                'appointment_id' => $appointment->id ?? null,
+                'tenant_id' => tenant()?->id,
+                'workspace_slug' => $slug,
+                'appointment_id' => $appointmentId,
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
             ]);
 
             // Retornar uma view de erro amigável
             if (request()->ajax() || request()->wantsJson()) {
+                if (
+                    $e instanceof \Illuminate\Database\Eloquent\ModelNotFoundException ||
+                    $e instanceof \Symfony\Component\HttpKernel\Exception\NotFoundHttpException
+                ) {
+                    return response()->view('tenant.medical_appointments.partials.error', [
+                        'message' => 'Agendamento nao encontrado para este workspace.'
+                    ], 404);
+                }
+
                 return response()->view('tenant.medical_appointments.partials.error', [
                     'message' => 'Erro ao carregar detalhes do agendamento: ' . $e->getMessage()
                 ], 500);
@@ -369,7 +380,127 @@ class MedicalAppointmentController extends Controller
     /**
      * Atualiza o status do agendamento
      */
-    public function updateStatus(Request $request, Appointment $appointment)
+    public function updateStatus(Request $request, $slug, $appointmentId)
+    {
+        $this->ensureTenantConnection();
+        $user = Auth::guard('tenant')->user();
+
+        if (!$user) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Usuario nao autenticado.'
+            ], 401);
+        }
+
+        try {
+            if (config('app.debug')) {
+                Log::info('Medical appointment updateStatus request', [
+                    'tenant_id' => tenant()?->id,
+                    'workspace_slug' => $slug,
+                    'appointment_id' => $appointmentId,
+                    'user_id' => $user->id,
+                    'payload' => $request->all(),
+                ]);
+            }
+
+            if (!Str::isUuid($appointmentId)) {
+                Log::warning('UUID invalido recebido em updateStatus de atendimento medico', [
+                    'tenant_id' => tenant()?->id,
+                    'workspace_slug' => $slug,
+                    'appointment_id_received' => $appointmentId,
+                    'user_id' => $user->id,
+                ]);
+
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Identificador de agendamento invalido.'
+                ], 422);
+            }
+
+            $appointment = Appointment::find($appointmentId);
+            if (!$appointment) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Agendamento nao encontrado.'
+                ], 404);
+            }
+
+            $this->checkPermission($user, $appointment);
+
+            $validator = Validator::make($request->all(), [
+                'status' => 'required|string',
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $validator->errors()->first('status') ?: 'Status invalido.',
+                    'errors' => $validator->errors(),
+                ], 422);
+            }
+
+            $incomingStatus = (string) $request->input('status');
+            $statusAliases = [
+                'confirmed' => 'scheduled',
+                'arrived' => 'attended',
+                'in_service' => 'attended',
+                'completed' => 'attended',
+                'cancelled' => 'canceled',
+            ];
+            $targetStatus = $statusAliases[$incomingStatus] ?? $incomingStatus;
+            $allowedStatuses = ['scheduled', 'rescheduled', 'canceled', 'attended', 'no_show'];
+
+            if (!in_array($targetStatus, $allowedStatuses, true)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Status invalido para este agendamento.',
+                    'errors' => [
+                        'status' => [
+                            'Status recebido: ' . $incomingStatus,
+                            'Status permitido(s): ' . implode(', ', $allowedStatuses),
+                        ],
+                    ],
+                ], 422);
+            }
+
+            $updateData = ['status' => $targetStatus];
+            if ($targetStatus === 'canceled') {
+                $updateData['canceled_at'] = now();
+            } elseif ($appointment->canceled_at) {
+                $updateData['canceled_at'] = null;
+            }
+
+            $appointment->update($updateData);
+            $appointment->load(['calendar.doctor.user', 'patient', 'type', 'specialty']);
+
+            return response()->json([
+                'success' => true,
+                'ok' => true,
+                'message' => 'Status atualizado com sucesso.',
+                'status' => $targetStatus,
+                'label' => $appointment->status_translated,
+                'appointment' => $appointment,
+            ]);
+        } catch (\Throwable $e) {
+            Log::error('Erro em updateStatus de atendimento medico', [
+                'tenant_id' => tenant()?->id,
+                'workspace_slug' => $slug,
+                'appointment_id' => $appointmentId,
+                'user_id' => $user->id,
+                'payload' => $request->all(),
+                'error' => $e->getMessage(),
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Erro interno ao atualizar status.',
+            ], 500);
+        }
+    }
+    /**
+     * Conclui o atendimento e redireciona para o próximo
+     */
+    public function complete($slug, $appointmentId)
     {
         // Garantir que o tenant está ativo e a conexão configurada
         $this->ensureTenantConnection();
@@ -379,43 +510,33 @@ class MedicalAppointmentController extends Controller
         if (!$user) {
             return response()->json([
                 'success' => false,
-                'message' => 'Usuário não autenticado.'
+                'message' => 'Usuario nao autenticado.'
             ], 401);
         }
 
-        // Verificar permissão
-        $this->checkPermission($user, $appointment);
-
-        $request->validate([
-            'status' => 'required|in:scheduled,arrived,in_service,completed,cancelled',
-        ]);
-
-        $appointment->update([
-            'status' => $request->status,
-        ]);
-
-        if ($request->ajax()) {
-            return response()->json([
-                'success' => true,
-                'message' => 'Status atualizado com sucesso.',
-                'appointment' => $appointment->load(['calendar.doctor.user', 'patient', 'type', 'specialty']),
+        if (!Str::isUuid($appointmentId)) {
+            Log::warning('UUID invalido recebido em complete de atendimento medico', [
+                'tenant_id' => tenant()?->id,
+                'workspace_slug' => $slug,
+                'appointment_id_received' => $appointmentId,
+                'user_id' => $user->id,
             ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Identificador de agendamento invalido.'
+            ], 422);
         }
 
-        return redirect()->back()->with('success', 'Status atualizado com sucesso.');
-    }
+        $appointment = Appointment::find($appointmentId);
+        if (!$appointment) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Agendamento nao encontrado.'
+            ], 404);
+        }
 
-    /**
-     * Conclui o atendimento e redireciona para o próximo
-     */
-    public function complete(Appointment $appointment)
-    {
-        // Garantir que o tenant está ativo e a conexão configurada
-        $this->ensureTenantConnection();
-
-        $user = Auth::guard('tenant')->user();
-
-        // Verificar permissão
+        // Verificar permissao
         $this->checkPermission($user, $appointment);
 
         // Marcar como concluído
@@ -567,16 +688,42 @@ class MedicalAppointmentController extends Controller
     }
 
     /**
-     * Retorna a resposta do formulário para visualização no modal
+     * Resolve appointment by UUID and fail safely when id is invalid.
      */
-    public function getFormResponse($appointmentId)
+    private function resolveAppointmentOrFail($slug, $appointmentId): Appointment
+    {
+        if (!Str::isUuid($appointmentId)) {
+            Log::warning('UUID invalido recebido em atendimento medico', [
+                'tenant_id' => tenant()?->id,
+                'workspace_slug' => $slug,
+                'appointment_id_received' => $appointmentId,
+                'user_id' => Auth::guard('tenant')->id(),
+            ]);
+
+            abort(404, 'Agendamento nao encontrado para este workspace.');
+        }
+
+        return Appointment::findOrFail($appointmentId);
+    }
+
+    /**
+     * Retorna a resposta do formulario para visualizacao no modal.
+     */
+    public function getFormResponse($slug, $appointmentId)
     {
         try {
             // Garantir que o tenant está ativo e a conexão configurada
             $this->ensureTenantConnection();
 
             $user = Auth::guard('tenant')->user();
-            $appointment = Appointment::findOrFail($appointmentId);
+            if (!$user) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Usuario nao autenticado.'
+                ], 401);
+            }
+
+            $appointment = $this->resolveAppointmentOrFail($slug, $appointmentId);
 
             // Verificar permissão
             $this->checkPermission($user, $appointment);
@@ -623,14 +770,26 @@ class MedicalAppointmentController extends Controller
                 'html' => view('tenant.medical_appointments.partials.form-response-modal', compact('formResponse'))->render()
             ]);
         } catch (\Exception $e) {
-            Log::error('Erro ao buscar resposta do formulário', [
+            Log::error('Erro ao buscar resposta do formulario', [
+                'tenant_id' => tenant()?->id,
+                'workspace_slug' => $slug,
                 'appointment_id' => $appointmentId,
                 'error' => $e->getMessage()
             ]);
 
+            if (
+                $e instanceof \Illuminate\Database\Eloquent\ModelNotFoundException ||
+                $e instanceof \Symfony\Component\HttpKernel\Exception\NotFoundHttpException
+            ) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Agendamento nao encontrado para este workspace.'
+                ], 404);
+            }
+
             return response()->json([
                 'success' => false,
-                'message' => 'Erro ao carregar resposta do formulário: ' . $e->getMessage()
+                'message' => 'Erro ao carregar resposta do formulario: ' . $e->getMessage()
             ], 500);
         }
     }

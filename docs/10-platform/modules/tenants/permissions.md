@@ -1,0 +1,3 @@
+﻿# Permissions
+
+- module.access:tenants

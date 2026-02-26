@@ -1,0 +1,3 @@
+﻿# Database
+
+- platform.invoices

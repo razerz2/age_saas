@@ -1,0 +1,4 @@
+﻿# Backend
+
+- MedicalSpecialtyCatalogController
+- Model: MedicalSpecialtyCatalog

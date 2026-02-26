@@ -1,91 +1,68 @@
-# 📚 Documentação do Projeto
+﻿# Documentacao do Projeto
 
-Este diretório concentra a documentação estruturada do sistema de agendamento SaaS.
+Este diretorio concentra a documentacao estruturada do sistema de agendamento SaaS.
 
-> Para o índice antigo desta pasta, consulte **[README_legacy.md](README_legacy.md)**.
+> Para o indice legado desta pasta, consulte **[_legacy/README_legacy.md](_legacy/README_legacy.md)**.
 
-## 🧭 Navegação por áreas
+## Navegacao por areas
 
-- **00-global**  → Padrões, arquitetura geral, convenções de código e frontend.
-- **10-platform** → Área administrativa central (Platform).
-- **20-tenant**   → Área do tenant (clínicas).
-- **30-landing-page** → Landing page pública / marketing.
-- **40-portal-paciente** → Portal do paciente.
+- **00-global**: [00-global/00-visao-geral.md](00-global/00-visao-geral.md)
+- **10-platform**: [10-platform/README.md](10-platform/README.md)
+- **20-tenant**: [20-tenant/README.md](20-tenant/README.md)
+- **30-landing-page**: [30-landing-page/README.md](30-landing-page/README.md)
+- **40-portal-paciente**: [40-portal-paciente/README.md](40-portal-paciente/README.md)
 
-### Links rápidos
+## Atalhos por dominio
 
-- **[00-global/00-visao-geral.md](00-global/00-visao-geral.md)**
-- **[10-platform/README.md](10-platform/README.md)**
-- **[20-tenant/README.md](20-tenant/README.md)**
-- **[30-landing-page/README.md](30-landing-page/README.md)**
-- **[40-portal-paciente/README.md](40-portal-paciente/README.md)**
+### 10-platform
 
----
+- Guides: [10-platform/guides/](10-platform/guides)
+- Integrations: [10-platform/integrations/](10-platform/integrations)
+- Operations: [10-platform/operations/](10-platform/operations)
+- Modules: [10-platform/modules/README.md](10-platform/modules/README.md)
 
-## 🧩 Convenções
+### 20-tenant
 
-### Estrutura de pastas
+- Guides: [20-tenant/guides/](20-tenant/guides)
+- Integrations: [20-tenant/integrations/](20-tenant/integrations)
+- Finance: [20-tenant/finance/README.md](20-tenant/finance/README.md)
+- Troubleshooting: [20-tenant/troubleshooting/](20-tenant/troubleshooting)
+- Operations: [20-tenant/operations/](20-tenant/operations)
+- Modules: [20-tenant/modules/](20-tenant/modules)
 
-- Diretórios numerados definem o agrupamento lógico:
-  - `00-global/` → conteúdo transversal a todas as áreas.
-  - `10-*/`, `20-*/`, `30-*/`, `40-*/` → áreas principais do produto.
-- Cada área possui:
-  - `README.md` com visão geral da área.
-  - Arquivos numerados (`01-*.md`, `02-*.md`, ...) para tópicos internos.
-  - Um diretório `modules/` reservado para documentação por módulo (Etapa 2+).
+### 30-landing-page
 
-### Nome de arquivos
+- Guides: [30-landing-page/guides/](30-landing-page/guides)
+- Modules: [30-landing-page/modules/README.md](30-landing-page/modules/README.md)
 
-- Prefixo numérico (`01-`, `02-`, ...) define a ordem de leitura.
-- Sufixo descritivo em **kebab-case** (ex.: `01-visao-geral.md`, `03-estrutura-de-pastas.md`).
-- Para rascunhos ou versões alternativas usar:
-  - `*-new.md` ou `*_draft.md`.
+### 40-portal-paciente
 
-### Como adicionar um novo módulo (Etapas futuras)
+- Guides: [40-portal-paciente/guides/](40-portal-paciente/guides)
+- Modules: [40-portal-paciente/modules/README.md](40-portal-paciente/modules/README.md)
 
-1. Escolha a área (`10-platform`, `20-tenant`, `30-landing-page`, `40-portal-paciente`).
-2. Dentro de `modules/`, crie a pasta do módulo usando o nome canônico (ex.: `patients`, `appointments`).
-3. Use o template de módulo em `./_templates/module-template.md` como guia de estrutura.
-4. Atualize o `README.md` da área para incluir o novo módulo na lista.
+## Convencoes
 
-> **Importante:** Nesta etapa estamos apenas criando a estrutura base. A documentação detalhada de módulos virá em etapas futuras.
+- Diretorios numerados (`10-`, `20-`, `30-`, `40-`) representam dominios.
+- `README.md` de cada dominio funciona como indice local.
+- A documentacao por modulo fica em `<dominio>/modules/<modulo>/`.
+- O padrao de modulo usa 9 arquivos:
+  - `README.md`, `overview.md`, `routes.md`, `views.md`, `backend.md`, `frontend.md`, `database.md`, `permissions.md`, `troubleshooting.md`.
 
-### Como registrar mudanças de documentação
+## Changelog da documentacao
 
-1. Edite `docs/CHANGELOG.md`.
-2. Adicione uma nova seção com a data no formato `YYYY-MM-DD`.
-3. Liste, em bullet points, as mudanças relevantes na documentação (arquivos criados/alterados).
+Registre mudancas em [CHANGELOG.md](CHANGELOG.md) com data `YYYY-MM-DD`.
 
-Exemplo:
+## Rascunhos e templates
 
-```markdown
-2026-02-22
-- Criada estrutura base de documentação em /docs.
-- Adicionados templates em /docs/_templates.
-```
+- Rascunhos: `docs/_drafts/`
+- Templates: `docs/_templates/`
 
----
+## Referencias legadas
 
-## Como contribuir
-
-Para novo módulo, copie `docs/_templates/module-template.md` e crie pasta em `<area>/modules/<modulo>/`.
-
-## Rascunhos
-
-- Os arquivos de rascunho ficam em `docs/_drafts/README.md`.
-- Nota: vazio por enquanto.
-
----
-
-## 📎 Referências legadas
-
-Parte da documentação histórica permanece em arquivos na raiz do projeto:
+Documentos historicos permanecem na raiz do repositorio:
 
 - `ARQUITETURA.md`
 - `PLATFORM.md`
 - `TENANT.md`
 
-Esses documentos continuarão válidos e serão, aos poucos, consolidados dentro da nova estrutura (`00-global/*` e `*/modules/*`).
-
-Para o índice legacy desta pasta, veja **[README_legacy.md](README_legacy.md)**.
-
+O indice historico desta pasta esta em [_legacy/README_legacy.md](_legacy/README_legacy.md).

@@ -1,174 +1,143 @@
 @if($appointment)
-    <div class="appointment-details">
-        {{-- Informações do Paciente --}}
-        <div class="mb-4">
-            <h5 class="text-primary mb-3">
-                <i class="mdi mdi-account-heart me-2"></i>
-                Informações do Paciente
-            </h5>
-            <div class="row">
-                <div class="col-md-6">
-                    <p><strong>Nome:</strong> {{ $appointment->patient->full_name ?? 'N/A' }}</p>
-                    <p><strong>Telefone:</strong> {{ $appointment->patient->phone ?? 'N/A' }}</p>
-                    <p><strong>Email:</strong> {{ $appointment->patient->email ?? 'N/A' }}</p>
-                </div>
-                <div class="col-md-6">
-                    <p><strong>CPF:</strong> {{ $appointment->patient->cpf ?? 'N/A' }}</p>
-                    <p><strong>Data de Nascimento:</strong> 
-                        @if($appointment->patient->birth_date)
-                            {{ \Carbon\Carbon::parse($appointment->patient->birth_date)->format('d/m/Y') }}
-                        @else
-                            N/A
-                        @endif
-                    </p>
-                </div>
+    <div class="space-y-6">
+        <section class="rounded-lg border border-gray-200 dark:border-gray-700 p-4 bg-gray-50 dark:bg-gray-900/20">
+            <h3 class="text-base font-semibold text-gray-900 dark:text-gray-100 mb-3">Paciente</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+                <p class="text-gray-700 dark:text-gray-300"><span class="font-medium text-gray-900 dark:text-gray-100">Nome:</span> {{ $appointment->patient->full_name ?? 'N/A' }}</p>
+                <p class="text-gray-700 dark:text-gray-300"><span class="font-medium text-gray-900 dark:text-gray-100">Telefone:</span> {{ $appointment->patient->phone ?? 'N/A' }}</p>
+                <p class="text-gray-700 dark:text-gray-300"><span class="font-medium text-gray-900 dark:text-gray-100">Email:</span> {{ $appointment->patient->email ?? 'N/A' }}</p>
+                <p class="text-gray-700 dark:text-gray-300"><span class="font-medium text-gray-900 dark:text-gray-100">CPF:</span> {{ $appointment->patient->cpf ?? 'N/A' }}</p>
+                <p class="text-gray-700 dark:text-gray-300 md:col-span-2"><span class="font-medium text-gray-900 dark:text-gray-100">Data de Nascimento:</span>
+                    @if($appointment->patient->birth_date)
+                        {{ \Carbon\Carbon::parse($appointment->patient->birth_date)->format('d/m/Y') }}
+                    @else
+                        N/A
+                    @endif
+                </p>
             </div>
-        </div>
+        </section>
 
-        <hr>
-
-        {{-- Informações da Consulta --}}
-        <div class="mb-4">
-            <h5 class="text-primary mb-3">
-                <i class="mdi mdi-calendar-clock me-2"></i>
-                Informações da Consulta
-            </h5>
-            <div class="row">
-                <div class="col-md-6">
-                    <p><strong>Tipo de Consulta:</strong> {{ $appointment->type->name ?? 'N/A' }}</p>
-                    <p><strong>Médico:</strong> 
-                        @if($appointment->calendar && $appointment->calendar->doctor && $appointment->calendar->doctor->user)
-                            {{ $appointment->calendar->doctor->user->name_full ?? $appointment->calendar->doctor->user->name ?? 'N/A' }}
-                        @else
-                            N/A
-                        @endif
-                    </p>
-                    <p><strong>Especialidade:</strong> {{ $appointment->specialty->name ?? 'N/A' }}</p>
-                </div>
-                <div class="col-md-6">
-                    <p><strong>Horário:</strong> {{ $appointment->starts_at->format('d/m/Y H:i') }}</p>
-                    <p><strong>Duração:</strong> 
-                        @if($appointment->type && $appointment->type->duration_min)
-                            {{ $appointment->type->duration_min }} minutos
-                        @else
-                            N/A
-                        @endif
-                    </p>
-                    <p>
-                        <strong>Status:</strong>
-                        @php
-                            $statusClasses = [
-                                'scheduled' => 'badge-primary',
-                                'confirmed' => 'badge-info',
-                                'arrived' => 'badge-warning',
-                                'in_service' => 'badge-success',
-                                'completed' => 'badge-secondary',
-                                'cancelled' => 'badge-danger',
-                            ];
-                            $statusClass = $statusClasses[$appointment->status] ?? 'badge-secondary';
-                        @endphp
-                        <span class="badge {{ $statusClass }}">{{ $appointment->status_translated }}</span>
-                    </p>
-                </div>
+        <section class="rounded-lg border border-gray-200 dark:border-gray-700 p-4 bg-gray-50 dark:bg-gray-900/20">
+            <h3 class="text-base font-semibold text-gray-900 dark:text-gray-100 mb-3">Consulta</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+                <p class="text-gray-700 dark:text-gray-300"><span class="font-medium text-gray-900 dark:text-gray-100">Tipo:</span> {{ $appointment->type->name ?? 'N/A' }}</p>
+                <p class="text-gray-700 dark:text-gray-300"><span class="font-medium text-gray-900 dark:text-gray-100">Médico:</span>
+                    @if($appointment->calendar && $appointment->calendar->doctor && $appointment->calendar->doctor->user)
+                        {{ $appointment->calendar->doctor->user->name_full ?? $appointment->calendar->doctor->user->name ?? 'N/A' }}
+                    @else
+                        N/A
+                    @endif
+                </p>
+                <p class="text-gray-700 dark:text-gray-300"><span class="font-medium text-gray-900 dark:text-gray-100">Especialidade:</span> {{ $appointment->specialty->name ?? 'N/A' }}</p>
+                <p class="text-gray-700 dark:text-gray-300"><span class="font-medium text-gray-900 dark:text-gray-100">Horário:</span> {{ $appointment->starts_at->format('d/m/Y H:i') }}</p>
+                <p class="text-gray-700 dark:text-gray-300"><span class="font-medium text-gray-900 dark:text-gray-100">Duração:</span>
+                    @if($appointment->type && $appointment->type->duration_min)
+                        {{ $appointment->type->duration_min }} minutos
+                    @else
+                        N/A
+                    @endif
+                </p>
+                <p class="text-gray-700 dark:text-gray-300">
+                    <span class="font-medium text-gray-900 dark:text-gray-100">Status:</span>
+                    @php
+                        $statusClasses = [
+                            'scheduled' => 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300',
+                            'rescheduled' => 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300',
+                            'confirmed' => 'bg-cyan-100 text-cyan-700 dark:bg-cyan-900/30 dark:text-cyan-300',
+                            'arrived' => 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300',
+                            'in_service' => 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300',
+                            'attended' => 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300',
+                            'completed' => 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200',
+                            'canceled' => 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300',
+                            'cancelled' => 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300',
+                        ];
+                        $statusClass = $statusClasses[$appointment->status] ?? 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200';
+                    @endphp
+                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium {{ $statusClass }}">{{ $appointment->status_translated }}</span>
+                </p>
             </div>
-        </div>
+        </section>
 
         @if($appointment->notes)
-            <hr>
-            <div class="mb-4">
-                <h5 class="text-primary mb-3">
-                    <i class="mdi mdi-note-text me-2"></i>
-                    Observações
-                </h5>
-                <p class="text-muted">{{ $appointment->notes }}</p>
-            </div>
+            <section class="rounded-lg border border-gray-200 dark:border-gray-700 p-4 bg-gray-50 dark:bg-gray-900/20">
+                <h3 class="text-base font-semibold text-gray-900 dark:text-gray-100 mb-2">Observações</h3>
+                <p class="text-sm text-gray-700 dark:text-gray-300">{{ $appointment->notes }}</p>
+            </section>
         @endif
 
-        {{-- Seção: Formulário --}}
         @if(isset($form) && $form)
-            <hr>
-            <div class="mb-4">
-                <h5 class="text-primary mb-3">
-                    <i class="mdi mdi-file-document me-2"></i>
-                    Formulário
-                </h5>
-                <div class="d-flex align-items-center justify-content-between">
-                    <div>
-                        <p class="mb-1"><strong>Formulário:</strong> {{ $form->name }}</p>
+            <section class="rounded-lg border border-gray-200 dark:border-gray-700 p-4 bg-gray-50 dark:bg-gray-900/20">
+                <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+                    <div class="text-sm text-gray-700 dark:text-gray-300">
+                        <p><span class="font-medium text-gray-900 dark:text-gray-100">Formulário:</span> {{ $form->name }}</p>
                         @if(isset($formResponse) && $formResponse)
-                            <p class="mb-0">
-                                <span class="badge bg-success">
-                                    <i class="mdi mdi-check-circle me-1"></i>
-                                    Respondido
-                                </span>
-                                @if($formResponse->submitted_at)
-                                    <small class="text-muted ms-2">
-                                        em {{ $formResponse->submitted_at->format('d/m/Y H:i') }}
-                                    </small>
-                                @endif
+                            <p class="mt-1 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300">
+                                Respondido
                             </p>
                         @else
-                            <p class="mb-0">
-                                <span class="badge bg-warning">
-                                    <i class="mdi mdi-clock-outline me-1"></i>
-                                    Aguardando Resposta
-                                </span>
+                            <p class="mt-1 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300">
+                                Aguardando resposta
                             </p>
                         @endif
                     </div>
-                        @if(isset($formResponse) && $formResponse)
-                            <x-tailadmin-button type="button" variant="secondary" size="md"
-                                class="border-info text-info bg-info/10 hover:bg-info/20 dark:border-info/40 dark:text-info dark:hover:bg-info/30"
-                                data-medical-action="view-form-response" data-appointment-id="{{ $appointment->id }}">
-                                <i class="mdi mdi-eye"></i>
-                                Visualizar Resposta
-                            </x-tailadmin-button>
-                        @endif
+
+                    @if(isset($formResponse) && $formResponse)
+                        <x-tailadmin-button type="button" variant="secondary" size="sm"
+                            data-medical-action="view-form-response" data-appointment-id="{{ $appointment->id }}">
+                            <x-icon name="eye-outline" size="text-sm" class="mr-2" />
+                            Visualizar Resposta
+                        </x-tailadmin-button>
+                    @endif
                 </div>
-            </div>
+            </section>
         @endif
 
-        <hr>
+        <section>
+            <div class="flex flex-wrap gap-2">
+                @if($appointment->status === 'scheduled' || $appointment->status === 'confirmed')
+                    <x-tailadmin-button
+                        type="button"
+                        variant="secondary"
+                        size="md"
+                        class="border-amber-300 bg-amber-100 text-amber-900 hover:bg-amber-200 dark:border-amber-700 dark:bg-amber-900/30 dark:text-amber-200 dark:hover:bg-amber-900/50"
+                        title="Marcar paciente como chegou"
+                        data-medical-action="update-status"
+                        data-appointment-id="{{ $appointment->id }}"
+                        data-status="attended"
+                    >
+                        <x-icon name="check-circle-outline" size="text-sm" class="mr-1" />
+                        Paciente Chegou
+                    </x-tailadmin-button>
+                @endif
 
-        {{-- Ações --}}
-        <div class="flex flex-wrap gap-2">
-            @if($appointment->status === 'scheduled' || $appointment->status === 'confirmed')
-                <x-tailadmin-button type="button" variant="warning" size="md"
-                    data-medical-action="update-status" data-appointment-id="{{ $appointment->id }}" data-status="arrived">
-                    <i class="mdi mdi-account-check"></i>
-                    Paciente Chegou
-                </x-tailadmin-button>
-            @endif
+                @if($appointment->status === 'arrived')
+                    <x-tailadmin-button type="button" variant="success" size="md"
+                        data-medical-action="update-status" data-appointment-id="{{ $appointment->id }}" data-status="in_service">
+                        Iniciar Atendimento
+                    </x-tailadmin-button>
+                @endif
 
-            @if($appointment->status === 'arrived')
-                <x-tailadmin-button type="button" variant="success" size="md"
-                    data-medical-action="update-status" data-appointment-id="{{ $appointment->id }}" data-status="in_service">
-                    <i class="mdi mdi-play-circle"></i>
-                    Iniciar Atendimento
-                </x-tailadmin-button>
-            @endif
+                @if($appointment->status === 'in_service')
+                    <x-tailadmin-button type="button" variant="primary" size="md"
+                        data-medical-action="complete-appointment" data-appointment-id="{{ $appointment->id }}">
+                        Finalizar Atendimento
+                    </x-tailadmin-button>
+                @endif
 
-            @if($appointment->status === 'in_service')
-                <x-tailadmin-button type="button" variant="primary" size="md"
-                    data-medical-action="complete-appointment" data-appointment-id="{{ $appointment->id }}">
-                    <i class="mdi mdi-check-circle"></i>
-                    Finalizar Atendimento
-                </x-tailadmin-button>
-            @endif
-
-            @if(!in_array($appointment->status, ['completed', 'cancelled']))
-                <x-tailadmin-button type="button" variant="danger" size="md"
-                    data-medical-action="update-status" data-appointment-id="{{ $appointment->id }}" data-status="cancelled">
-                    <i class="mdi mdi-cancel"></i>
-                    Cancelar
-                </x-tailadmin-button>
-            @endif
-        </div>
+                @if(!in_array($appointment->status, ['completed', 'cancelled']))
+                    <x-tailadmin-button type="button" variant="danger" size="md"
+                        data-medical-action="update-status" data-appointment-id="{{ $appointment->id }}" data-status="canceled">
+                        Cancelar
+                    </x-tailadmin-button>
+                @endif
+            </div>
+        </section>
     </div>
 @else
-    <div class="text-center text-muted py-5">
-        <i class="mdi mdi-alert-circle" style="font-size: 3rem;"></i>
-        <p class="mt-2 mb-0">Agendamento não encontrado</p>
+    <div class="rounded-lg border border-red-200 bg-red-50 p-4 dark:border-red-800 dark:bg-red-900/20">
+        <div class="flex items-center gap-2 text-red-700 dark:text-red-300 text-sm">
+            <x-icon name="alert-circle-outline" size="text-base" />
+            Agendamento não encontrado.
+        </div>
     </div>
 @endif
-
