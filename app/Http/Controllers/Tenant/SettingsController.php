@@ -1146,44 +1146,44 @@ class SettingsController extends Controller
     private function notificationTemplateVariables(): array
     {
         return [
-            'Clinic' => [
-                '{{clinic.name}}',
-                '{{clinic.phone}}',
-                '{{clinic.email}}',
-                '{{clinic.address}}',
-                '{{clinic.slug}}',
+            'CLINIC' => [
+                ['key' => '{{clinic.name}}', 'description' => 'Nome da clínica'],
+                ['key' => '{{clinic.phone}}', 'description' => 'Telefone da clínica'],
+                ['key' => '{{clinic.email}}', 'description' => 'E-mail da clínica'],
+                ['key' => '{{clinic.address}}', 'description' => 'Endereço da clínica'],
+                ['key' => '{{clinic.slug}}', 'description' => 'Identificador da clínica'],
             ],
-            'Patient' => [
-                '{{patient.name}}',
-                '{{patient.phone}}',
-                '{{patient.email}}',
+            'PATIENT' => [
+                ['key' => '{{patient.name}}', 'description' => 'Nome do paciente'],
+                ['key' => '{{patient.phone}}', 'description' => 'Telefone do paciente'],
+                ['key' => '{{patient.email}}', 'description' => 'E-mail do paciente'],
             ],
-            'Doctor / Professional' => [
-                '{{doctor.name}}',
-                '{{doctor.specialty}}',
-                '{{professional.name}}',
-                '{{professional.specialty}}',
+            'DOCTOR / PROFESSIONAL' => [
+                ['key' => '{{doctor.name}}', 'description' => 'Nome do médico'],
+                ['key' => '{{doctor.specialty}}', 'description' => 'Especialidade do médico'],
+                ['key' => '{{professional.name}}', 'description' => 'Nome do profissional'],
+                ['key' => '{{professional.specialty}}', 'description' => 'Especialidade do profissional'],
             ],
-            'Appointment' => [
-                '{{appointment.date}}',
-                '{{appointment.time}}',
-                '{{appointment.datetime}}',
-                '{{appointment.starts_at}}',
-                '{{appointment.ends_at}}',
-                '{{appointment.type}}',
-                '{{appointment.mode}}',
-                '{{appointment.status}}',
-                '{{appointment.confirmation_expires_at}}',
+            'APPOINTMENT' => [
+                ['key' => '{{appointment.date}}', 'description' => 'Data da consulta'],
+                ['key' => '{{appointment.time}}', 'description' => 'Hora da consulta'],
+                ['key' => '{{appointment.datetime}}', 'description' => 'Data e hora da consulta'],
+                ['key' => '{{appointment.starts_at}}', 'description' => 'Início da consulta'],
+                ['key' => '{{appointment.ends_at}}', 'description' => 'Fim da consulta'],
+                ['key' => '{{appointment.type}}', 'description' => 'Tipo de consulta'],
+                ['key' => '{{appointment.mode}}', 'description' => 'Modalidade da consulta'],
+                ['key' => '{{appointment.status}}', 'description' => 'Status da consulta'],
+                ['key' => '{{appointment.confirmation_expires_at}}', 'description' => 'Prazo de confirmação da consulta'],
             ],
-            'Links' => [
-                '{{links.appointment_confirm}}',
-                '{{links.appointment_cancel}}',
-                '{{links.appointment_details}}',
-                '{{links.waitlist_offer}}',
+            'LINKS' => [
+                ['key' => '{{links.appointment_confirm}}', 'description' => 'Link para confirmar consulta'],
+                ['key' => '{{links.appointment_cancel}}', 'description' => 'Link para cancelar consulta'],
+                ['key' => '{{links.appointment_details}}', 'description' => 'Link com detalhes da consulta'],
+                ['key' => '{{links.waitlist_offer}}', 'description' => 'Link da oferta da lista de espera'],
             ],
-            'Waitlist' => [
-                '{{waitlist.offer_expires_at}}',
-                '{{waitlist.status}}',
+            'WAITLIST' => [
+                ['key' => '{{waitlist.offer_expires_at}}', 'description' => 'Validade da oferta da lista de espera'],
+                ['key' => '{{waitlist.status}}', 'description' => 'Status da lista de espera'],
             ],
         ];
     }

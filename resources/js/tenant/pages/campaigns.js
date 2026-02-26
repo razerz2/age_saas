@@ -1,10 +1,12 @@
 import { applyGridPageSizeSelector } from '../grid/pageSizeSelector';
+import { initTemplateVariablesUi } from '../shared/templateVariables';
 
 export function init() {
     initCampaignsGrid();
     initCampaignRunsGrid();
     initCampaignRecipientsGrid();
     initCampaignForm();
+    initTemplateVariablesUi();
 }
 
 function initCampaignsGrid() {

@@ -119,15 +119,14 @@ body[data-page] .gridjs-td {
     white-space: nowrap;
 }
 
-/* Global table headers highlight (Tenant index/list pages) */
-body[data-page] .gridjs-th,
-body[data-page] table thead th {
-    font-weight: 700;
-    font-size: 0.95rem;
-    line-height: 1.35rem;
+/* Global Grid.js table headers highlight (Tenant index/list pages) */
+body[data-page] .gridjs-th {
+    font-weight: 700 !important;
+    font-size: 1rem !important;
+    line-height: 1.5rem !important;
+    color: #111827 !important;
 }
 
-body.dark[data-page] .gridjs-th,
-body.dark[data-page] table thead th {
-    color: rgba(255, 255, 255, 0.92);
+body.dark[data-page] .gridjs-th {
+    color: rgba(255, 255, 255, 0.92) !important;
 }

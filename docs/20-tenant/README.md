@@ -25,9 +25,10 @@ Em construção. A documentação detalhada por módulo da área Tenant (ex.: pa
 - Calendar Sync: `docs/20-tenant/modules/calendar-sync/README.md`
 - Online Appointments: `docs/20-tenant/modules/online-appointments/README.md`
 - Notifications: `docs/20-tenant/modules/notifications/README.md`
+- Campaigns: `docs/20-tenant/modules/campaigns/README.md`
 - Integrations: `docs/20-tenant/modules/integrations/README.md`
 - Public Customer: `docs/20-tenant/modules/public-customer/README.md`
- - Medical Appointments: `docs/20-tenant/modules/medical-appointments/README.md`
+- Medical Appointments: `docs/20-tenant/modules/medical-appointments/README.md`
 
 ## Referências globais
 

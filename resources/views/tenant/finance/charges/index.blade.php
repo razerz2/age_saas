@@ -72,10 +72,12 @@
     @endif
 
     <!-- Main Content -->
-    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
-        <div class="p-6">
-            <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Lista de Cobranças</h2>
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
+        <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+            <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Lista de Cobranças</h2>
+        </div>
 
+        <div class="p-6">
             <form method="GET" class="flex flex-wrap gap-3 items-end mb-4">
                 <div>
                     <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Status</label>
@@ -207,4 +209,3 @@
     </div>
 
 @endsection
-

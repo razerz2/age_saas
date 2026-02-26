@@ -84,6 +84,7 @@ class CampaignController extends Controller
     {
         return view('tenant.campaigns.create', [
             'availableChannels' => $gate->availableChannels(),
+            'campaignVariables' => $this->campaignTemplateVariables(),
         ]);
     }
 
@@ -165,6 +166,7 @@ class CampaignController extends Controller
         return view('tenant.campaigns.edit', [
             'campaign' => $campaign,
             'availableChannels' => $gate->availableChannels(),
+            'campaignVariables' => $this->campaignTemplateVariables(),
         ]);
     }
 
@@ -420,5 +422,27 @@ class CampaignController extends Controller
         } catch (\Throwable) {
             return [null, null];
         }
+    }
+
+    private function campaignTemplateVariables(): array
+    {
+        return [
+            'CLÍNICA' => [
+                ['key' => '{{clinic.name}}', 'description' => 'Nome da clínica'],
+                ['key' => '{{clinic.phone}}', 'description' => 'Telefone da clínica'],
+                ['key' => '{{clinic.email}}', 'description' => 'E-mail da clínica'],
+                ['key' => '{{clinic.address}}', 'description' => 'Endereço da clínica'],
+            ],
+            'PACIENTE / CONTATO' => [
+                ['key' => '{{patient.name}}', 'description' => 'Nome do paciente'],
+                ['key' => '{{patient.phone}}', 'description' => 'Telefone do paciente'],
+                ['key' => '{{patient.email}}', 'description' => 'E-mail do paciente'],
+            ],
+            'LINKS' => [
+                ['key' => '{{links.public_booking}}', 'description' => 'Link para o agendamento público da clínica'],
+                ['key' => '{{links.portal}}', 'description' => 'Link do portal do cliente (se existir)'],
+                ['key' => '{{links.whatsapp}}', 'description' => 'Link de WhatsApp da clínica (se existir)'],
+            ],
+        ];
     }
 }

@@ -35,33 +35,31 @@
     </div>
 
     <!-- Main Content -->
-    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
-        <div class="p-6 border-b border-gray-200 dark:border-gray-700">
-            <div class="flex items-center justify-between">
-                <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Lista de Tipos de Consulta</h2>
-
-                <div class="flex items-center space-x-4">
-                    <form method="GET" action="{{ workspace_route('tenant.appointment-types.index') }}" class="flex items-center space-x-3">
-                        <select name="doctor_id" class="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white" onchange="this.form.submit()">
-                            <option value="">Todos os médicos</option>
-                            @foreach($doctors as $doctor)
-                                <option value="{{ $doctor->id }}" {{ request('doctor_id') == $doctor->id ? 'selected' : '' }}>
-                                    {{ $doctor->user->display_name ?? $doctor->user->name }}
-                                </option>
-                            @endforeach
-                        </select>
-                        @if(request('doctor_id'))
-                            <a href="{{ workspace_route('tenant.appointment-types.index') }}" class="inline-flex items-center px-3 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors">
-                                <x-icon name="filter-remove-outline" class="w-4 h-4 mr-2" />
-                                Limpar
-                            </a>
-                        @endif
-                    </form>
-                </div>
-            </div>
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
+        <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+            <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Lista de Tipos de Consulta</h2>
         </div>
 
         <div class="p-6">
+            <div class="mb-4 flex items-center justify-end">
+                <form method="GET" action="{{ workspace_route('tenant.appointment-types.index') }}" class="flex items-center space-x-3">
+                    <select name="doctor_id" class="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white" onchange="this.form.submit()">
+                        <option value="">Todos os médicos</option>
+                        @foreach($doctors as $doctor)
+                            <option value="{{ $doctor->id }}" {{ request('doctor_id') == $doctor->id ? 'selected' : '' }}>
+                                {{ $doctor->user->display_name ?? $doctor->user->name }}
+                            </option>
+                        @endforeach
+                    </select>
+                    @if(request('doctor_id'))
+                        <a href="{{ workspace_route('tenant.appointment-types.index') }}" class="inline-flex items-center px-3 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors">
+                            <x-icon name="filter-remove-outline" class="w-4 h-4 mr-2" />
+                            Limpar
+                        </a>
+                    @endif
+                </form>
+            </div>
+
             <div
                 id="appointment-types-grid-wrapper"
                 data-row-click-link-selector='a[title="Ver"]'

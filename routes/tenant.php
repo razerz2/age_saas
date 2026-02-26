@@ -196,6 +196,7 @@ Route::prefix('workspace/{slug}')
         // que rotas como "create" sejam capturadas como ID
         // =====================================================================
         Route::resource('users', UserController::class)->except(['show', 'edit', 'update', 'destroy']);
+        Route::get('users/doctors', [UserController::class, 'doctorsIndex'])->name('users.doctors.index');
         
         // Rotas específicas com {id} devem vir DEPOIS do resource
         // Usando where para garantir que {id} aceite apenas números
@@ -350,10 +351,14 @@ Route::prefix('workspace/{slug}')
             ->where('id', '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}')
             ->name('calendars.destroy');
 
+        Route::get('calendars/{id}/view', [CalendarController::class, 'view'])
+            ->where('id', '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}')
+            ->name('calendars.view');
+
         Route::get('calendars/events', [CalendarController::class, 'eventsRedirect'])
             ->name('calendars.events.redirect');
 
-        Route::get('calendars/{id}/events', [AppointmentController::class, 'events'])
+        Route::get('calendars/{id}/events', [CalendarController::class, 'events'])
             ->where('id', '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}')
             ->name('calendars.events');
 

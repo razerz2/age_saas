@@ -35,10 +35,12 @@
     </div>
 
     <!-- Main Content -->
-    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
-        <div class="p-6">
-            <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Lista de Calendários</h2>
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
+        <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+            <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Lista de Calendários</h2>
+        </div>
 
+        <div class="p-6">
             <div
                 id="calendars-grid-wrapper"
                 data-row-click-link-selector='a[title="Ver"]'

@@ -105,6 +105,7 @@
     $assetUploadUrl = \Illuminate\Support\Facades\Route::has('tenant.campaigns.assets.store')
         ? workspace_route('tenant.campaigns.assets.store')
         : '';
+    $campaignVariables = is_array($campaignVariables ?? null) ? $campaignVariables : [];
 @endphp
 
 <div class="mx-auto max-w-7xl">
@@ -254,6 +255,21 @@
                 @error('channels')
                     <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
                 @enderror
+            </div>
+
+            <div class="flex items-center justify-between gap-3">
+                <h3 class="text-base font-semibold text-gray-900 dark:text-white">Conteúdo da Campanha</h3>
+                <button
+                    type="button"
+                    class="btn btn-outline inline-flex items-center gap-2 border-blue-300 text-blue-700 hover:border-blue-400 hover:bg-blue-50 focus:ring-2 focus:ring-blue-500 dark:border-blue-700 dark:text-blue-300 dark:hover:bg-blue-900/20"
+                    data-variables-modal-open="campaign-variables-modal"
+                    title="Variáveis disponíveis"
+                    aria-label="Variáveis disponíveis"
+                    aria-expanded="false"
+                >
+                    <i class="mdi mdi-code-braces text-sm" aria-hidden="true"></i>
+                    Variáveis
+                </button>
             </div>
 
             <div id="campaign-email-section" data-channel-section="email" class="{{ $emailSelected ? '' : 'hidden' }}">
@@ -500,3 +516,12 @@
         </form>
     </div>
 </div>
+
+@include('tenant.components.variables-modal', [
+    'modalId' => 'campaign-variables-modal',
+    'title' => 'Variáveis disponíveis',
+    'hint' => 'Copie e cole no conteúdo da campanha usando o formato',
+    'variables' => $campaignVariables,
+])
+
+

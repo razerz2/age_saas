@@ -39,7 +39,7 @@
             $user = auth('tenant')->user();
         @endphp
         @if ($user && $user->role === 'doctor')
-            <li class="nav-item {{ request()->routeIs('tenant.calendars.events.*') ? 'active' : '' }}">
+            <li class="nav-item {{ request()->routeIs('tenant.calendars.events.*') || request()->routeIs('tenant.calendars.view') ? 'active' : '' }}">
                 <a class="nav-link" href="{{ workspace_route('tenant.calendars.events.redirect') }}" title="Agenda">
                     <span class="icon-bg"><i class="mdi mdi-calendar-check menu-icon"></i></span>
                     <span class="menu-title">Agenda</span>

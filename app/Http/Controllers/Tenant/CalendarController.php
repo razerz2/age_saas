@@ -4,13 +4,18 @@ namespace App\Http\Controllers\Tenant;
 
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\Tenant\Concerns\HasDoctorFilter;
+use App\Models\Tenant\AppointmentType;
+use App\Models\Tenant\BusinessHour;
 use App\Models\Tenant\Calendar;
 use App\Models\Tenant\Doctor;
+use App\Models\Tenant\RecurringAppointment;
 use App\Http\Requests\Tenant\StoreCalendarRequest;
 use App\Http\Requests\Tenant\UpdateCalendarRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Carbon\Carbon;
 
 class CalendarController extends Controller
 {
@@ -177,6 +182,36 @@ class CalendarController extends Controller
         return view('tenant.calendars.show', compact('calendar'));
     }
 
+    public function view($slug, $id)
+    {
+        $calendar = Calendar::with('doctor.user')->findOrFail($id);
+        $this->authorize('view', $calendar);
+
+        return view('tenant.calendars.view', [
+            'calendar' => $calendar,
+            'eventsUrl' => workspace_route('tenant.calendars.events', ['id' => $calendar->id]),
+            'tenantTimezone' => config('app.timezone', 'America/Sao_Paulo'),
+        ]);
+    }
+
+    public function events(Request $request, $slug, $id)
+    {
+        $calendar = Calendar::findOrFail($id);
+        $this->authorize('view', $calendar);
+
+        if (!$request->has('start')) {
+            $request->merge(['start' => Carbon::now()->startOfMonth()->toIso8601String()]);
+        }
+
+        if (!$request->has('end')) {
+            $request->merge(['end' => Carbon::now()->endOfMonth()->toIso8601String()]);
+        }
+
+        $request->headers->set('Accept', 'application/json');
+
+        return app(AppointmentController::class)->events($request, $slug, $id);
+    }
+
     public function edit($slug, $id)
     {
         $calendar = Calendar::findOrFail($id);
@@ -256,6 +291,7 @@ class CalendarController extends Controller
     public function destroy($slug, $id)
     {
         $calendar = Calendar::findOrFail($id);
+        $this->authorize('delete', $calendar);
         
         $user = Auth::guard('tenant')->user();
         
@@ -272,11 +308,23 @@ class CalendarController extends Controller
                 }
             }
         }
-        
-        $calendar->delete();
+
+        DB::transaction(function () use ($calendar) {
+            $doctorId = $calendar->doctor_id;
+
+            // Removendo o calendário primeiro para garantir cascade dos appointments.
+            $calendar->delete();
+
+            BusinessHour::where('doctor_id', $doctorId)->delete();
+
+            // Recorrências podem apontar para appointment_types; limpa vínculo antes de remover os tipos.
+            RecurringAppointment::where('doctor_id', $doctorId)->update(['appointment_type_id' => null]);
+
+            AppointmentType::where('doctor_id', $doctorId)->delete();
+        });
 
         return redirect()->route('tenant.calendars.index', ['slug' => tenant()->subdomain])
-            ->with('success', 'Agenda removida.');
+            ->with('success', 'Calendário removido com sucesso. Horários Comerciais e Tipos de Consulta vinculados também foram removidos.');
     }
 
     public function eventsRedirect()
@@ -304,7 +352,7 @@ class CalendarController extends Controller
         }
 
         if ($calendar) {
-            return redirect()->route('tenant.calendars.events', ['slug' => tenant()->subdomain, 'id' => $calendar->id]);
+            return redirect()->route('tenant.calendars.view', ['slug' => tenant()->subdomain, 'id' => $calendar->id]);
         }
 
         return redirect()->route('tenant.calendars.index', ['slug' => tenant()->subdomain])

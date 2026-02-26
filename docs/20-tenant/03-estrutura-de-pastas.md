@@ -50,6 +50,13 @@ Este arquivo é um **mapa rápido** da estrutura de código da área Tenant.
   - Frontend: `docs/20-tenant/modules/form-responses/frontend.md`.
   - Database: `docs/20-tenant/modules/form-responses/database.md`.
 
+- **Campaigns**
+  - Rotas: `docs/20-tenant/modules/campaigns/routes.md`.
+  - Views: `docs/20-tenant/modules/campaigns/views.md`.
+  - Backend: `docs/20-tenant/modules/campaigns/backend.md`.
+  - Frontend: `docs/20-tenant/modules/campaigns/frontend.md`.
+  - Database: `docs/20-tenant/modules/campaigns/database.md`.
+
 ## Documentação relacionada
 
 - `ARQUITETURA.md` — estrutura geral de pastas, rotas e controllers.

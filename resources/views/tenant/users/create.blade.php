@@ -7,6 +7,13 @@
 @php
     $commonUserDefaultModules = json_decode(App\Models\Tenant\TenantSetting::get('user_defaults.modules_common_user', '[]'), true) ?? [];
     $doctorDefaultModules = json_decode(App\Models\Tenant\TenantSetting::get('user_defaults.modules_doctor', '[]'), true) ?? [];
+    $doctorSectionVisible = old('role', 'user') === 'doctor';
+    $specialties = \App\Models\Tenant\MedicalSpecialty::orderBy('name')->get();
+    $oldDoctorSpecialties = old('doctor.specialties', []);
+    if (!is_array($oldDoctorSpecialties)) {
+        $oldDoctorSpecialties = [];
+    }
+    $professionalCustomizationEnabled = tenant_setting('professional.customization_enabled') === 'true';
 @endphp
 <div id="users-config" class="hidden"
     data-default-modules-user='@json($commonUserDefaultModules)'
@@ -283,6 +290,199 @@
                             </select>
                             @error('is_doctor')
                                 <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+                            @enderror
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Seção: Dados do Médico -->
+                <div id="doctor-data-section" class="mb-8 {{ $doctorSectionVisible ? '' : 'hidden' }}">
+                    <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4 flex items-center">
+                        <x-icon name="stethoscope" size="text-lg" class="mr-2 text-blue-600 dark:text-blue-400" />
+                        Dados do Médico
+                    </h3>
+
+                    <div class="rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/30 p-4 space-y-6">
+                        <div>
+                            <h4 class="text-sm font-semibold text-gray-900 dark:text-white mb-4">Dados Profissionais</h4>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                        Número CRM, CRP ou CRO
+                                    </label>
+                                    <input type="text"
+                                        name="doctor[crm_number]"
+                                        maxlength="50"
+                                        placeholder="Ex: 123456"
+                                        value="{{ old('doctor.crm_number') }}"
+                                        class="w-full px-3 py-2.5 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:text-white @error('doctor.crm_number') border-red-300 @enderror">
+                                    @error('doctor.crm_number')
+                                        <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+                                    @enderror
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                        Estado CRM, CRP ou CRO
+                                    </label>
+                                    <input type="text"
+                                        name="doctor[crm_state]"
+                                        maxlength="2"
+                                        placeholder="Ex: SP"
+                                        value="{{ old('doctor.crm_state') }}"
+                                        class="w-full px-3 py-2.5 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:text-white @error('doctor.crm_state') border-red-300 @enderror">
+                                    <small class="text-gray-500 dark:text-gray-400">Digite a sigla do estado (2 letras)</small>
+                                    @error('doctor.crm_state')
+                                        <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+                                    @enderror
+                                </div>
+                            </div>
+                            <div class="mt-6">
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                    Assinatura
+                                </label>
+                                <textarea
+                                    name="doctor[signature]"
+                                    rows="4"
+                                    placeholder="Digite a assinatura do médico (opcional)"
+                                    class="w-full px-3 py-2.5 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:text-white @error('doctor.signature') border-red-300 @enderror"
+                                >{{ old('doctor.signature') }}</textarea>
+                                @error('doctor.signature')
+                                    <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+                                @enderror
+                            </div>
+                        </div>
+
+                        @if ($professionalCustomizationEnabled)
+                            <div class="p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg">
+                                <h4 class="text-sm font-semibold text-gray-900 dark:text-white mb-4">
+                                    Personalização do Profissional (Opcional)
+                                </h4>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                            Tipo do Profissional (Singular)
+                                        </label>
+                                        <input type="text"
+                                            name="doctor[label_singular]"
+                                            maxlength="60"
+                                            placeholder="Ex: Psicólogo, Fisioterapeuta"
+                                            value="{{ old('doctor.label_singular') }}"
+                                            class="w-full px-3 py-2.5 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:text-white @error('doctor.label_singular') border-red-300 @enderror">
+                                        @error('doctor.label_singular')
+                                            <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+                                        @enderror
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                            Tipo do Profissional (Plural)
+                                        </label>
+                                        <input type="text"
+                                            name="doctor[label_plural]"
+                                            maxlength="60"
+                                            placeholder="Ex: Psicólogos, Fisioterapeutas"
+                                            value="{{ old('doctor.label_plural') }}"
+                                            class="w-full px-3 py-2.5 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:text-white @error('doctor.label_plural') border-red-300 @enderror">
+                                        @error('doctor.label_plural')
+                                            <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+                                        @enderror
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                            Registro Profissional (Rótulo)
+                                        </label>
+                                        <input type="text"
+                                            name="doctor[registration_label]"
+                                            maxlength="40"
+                                            placeholder="Ex: CRM, CRP, CRO, CREFITO"
+                                            value="{{ old('doctor.registration_label') }}"
+                                            class="w-full px-3 py-2.5 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:text-white @error('doctor.registration_label') border-red-300 @enderror">
+                                        @error('doctor.registration_label')
+                                            <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+                                        @enderror
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                            Registro Profissional Completo (Valor)
+                                        </label>
+                                        <input type="text"
+                                            name="doctor[registration_value]"
+                                            maxlength="100"
+                                            placeholder="Ex: CRM 55221, CRP 05/19999, CREFITO 123456-F"
+                                            value="{{ old('doctor.registration_value') }}"
+                                            class="w-full px-3 py-2.5 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:text-white @error('doctor.registration_value') border-red-300 @enderror">
+                                        @error('doctor.registration_value')
+                                            <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+                                        @enderror
+                                    </div>
+                                </div>
+                            </div>
+                        @endif
+
+                        <div>
+                            <h4 class="text-sm font-semibold text-gray-900 dark:text-white mb-2">Especialidades Médicas</h4>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                Selecione as especialidades do médico <span class="text-red-500">*</span>
+                            </label>
+                            <div class="grid grid-cols-1 md:grid-cols-12 gap-4 mb-4 items-end">
+                                <div class="md:col-span-8">
+                                    <select id="user-doctor-specialty-select"
+                                        class="w-full px-3 py-2.5 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:text-white @error('doctor.specialties') border-red-300 @enderror">
+                                        <option value="">Selecione uma especialidade</option>
+                                        @foreach ($specialties as $specialty)
+                                            <option value="{{ $specialty->id }}" data-name="{{ $specialty->name }}">{{ $specialty->name }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div class="md:col-span-4">
+                                    <div class="flex flex-col gap-2 sm:flex-row sm:justify-end">
+                                        <button type="button" id="user-doctor-add-specialty-btn" class="btn btn-primary">
+                                            <x-icon name="plus" size="text-sm" class="mr-2" />
+                                            Adicionar
+                                        </button>
+                                        <button type="button" id="user-doctor-clear-specialties-btn" class="btn btn-outline">
+                                            <x-icon name="trash-can-outline" size="text-sm" class="mr-2" />
+                                            Remover selecionadas
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div
+                                id="user-doctor-selected-specialties"
+                                class="p-4 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800"
+                                style="min-height: 60px;"
+                                data-initial-selected='@json($oldDoctorSpecialties)'
+                            >
+                                @if (!empty($oldDoctorSpecialties))
+                                    @foreach ($oldDoctorSpecialties as $specialtyId)
+                                        @php
+                                            $specialty = $specialties->firstWhere('id', $specialtyId);
+                                        @endphp
+                                        @if ($specialty)
+                                            <span class="inline-flex items-center gap-2 px-3 py-2 bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 rounded-full text-sm font-medium mr-2 mb-2 specialty-badge" data-id="{{ $specialty->id }}">
+                                                <x-icon name="file-document-outline" size="text-sm" />
+                                                {{ $specialty->name }}
+                                                <button type="button" class="text-blue-600 hover:text-blue-800 dark:text-blue-300 dark:hover:text-blue-100 ml-1" aria-label="Remover">
+                                                    <x-icon name="close" size="text-xs" />
+                                                </button>
+                                            </span>
+                                        @endif
+                                    @endforeach
+                                @else
+                                    <p class="text-gray-500 dark:text-gray-400 mb-0">
+                                        <x-icon name="information-outline" size="text-sm" class="inline mr-1" />
+                                        Nenhuma especialidade selecionada
+                                    </p>
+                                @endif
+                            </div>
+
+                            <div id="user-doctor-specialties-inputs"></div>
+
+                            @error('doctor.specialties')
+                                <p class="mt-2 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+                            @enderror
+                            @error('doctor.specialties.*')
+                                <p class="mt-2 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
                             @enderror
                         </div>
                     </div>

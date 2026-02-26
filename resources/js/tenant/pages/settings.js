@@ -1,10 +1,12 @@
 import { initTenantWhatsAppSettings } from '../components/whatsappProviderSettings';
+import { initTemplateVariablesUi } from '../shared/templateVariables';
 
 export function init() {
     ensureAlpine();
     bindSettingsActions();
     bindSettingsTabs();
     bindBookingLinkCopy();
+    initTemplateVariablesUi();
     bindLocationConfig();
     bindFinanceConfig();
     bindAppearancePreviews();

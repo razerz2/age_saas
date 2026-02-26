@@ -216,18 +216,10 @@
                     <h4 class="text-sm font-semibold text-gray-900 dark:text-white mb-3">Variáveis disponíveis</h4>
                     <p class="text-xs text-gray-500 dark:text-gray-400 mb-3">Copie e cole no template usando o formato <code>{{ '{' }}{{ '{' }}chave{{ '}' }}{{ '}' }}</code>.</p>
 
-                    <div class="space-y-4 max-h-[520px] overflow-y-auto pr-1">
-                        @foreach(($editor['variables'] ?? []) as $group => $items)
-                            <div>
-                                <p class="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400 mb-2">{{ $group }}</p>
-                                <div class="space-y-1">
-                                    @foreach($items as $variable)
-                                        <code class="block rounded border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 px-2 py-1 text-xs text-gray-700 dark:text-gray-300">{{ $variable }}</code>
-                                    @endforeach
-                                </div>
-                            </div>
-                        @endforeach
-                    </div>
+                    @include('tenant.components.variables-list', [
+                        'variables' => $editor['variables'] ?? [],
+                        'listContainerClass' => 'max-h-[520px] space-y-4 overflow-y-auto pr-1',
+                    ])
                 </div>
             </div>
         </aside>

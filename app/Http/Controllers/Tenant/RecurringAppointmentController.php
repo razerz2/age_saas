@@ -405,6 +405,7 @@ class RecurringAppointmentController extends Controller
     public function destroy($slug, $id)
     {
         $recurringAppointment = RecurringAppointment::findOrFail($id);
+        $this->authorize('delete', $recurringAppointment);
         
         // Desativar ao invés de deletar
         $recurringAppointment->update(['active' => false]);

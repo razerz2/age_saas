@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Tenant;
 
+use App\Models\Tenant\Doctor;
 use App\Models\Tenant\User;
 use App\Models\Tenant\TenantSetting;
 use App\Models\Tenant\Module;
@@ -11,10 +12,12 @@ use App\Http\Requests\Tenant\UpdateUserRequest;
 use App\Http\Requests\Tenant\ChangePasswordUserRequest;
 use App\Traits\HasFeatureAccess;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 
 class UserController extends Controller
@@ -23,7 +26,23 @@ class UserController extends Controller
     public function index()
     {
         $users = User::orderBy('name')->paginate(15);
-        return view('tenant.users.index', compact('users'));
+        return view('tenant.users.index', [
+            'users' => $users,
+            'doctorsOnly' => false,
+        ]);
+    }
+
+    public function doctorsIndex()
+    {
+        $query = User::query();
+        $this->applyDoctorUsersFilter($query);
+
+        $users = $query->orderBy('name')->paginate(15);
+
+        return view('tenant.users.index', [
+            'users' => $users,
+            'doctorsOnly' => true,
+        ]);
     }
 
     public function create()
@@ -34,6 +53,8 @@ class UserController extends Controller
     public function store(StoreUserRequest $request)
     {
         $data = $request->validated();
+        $doctorData = $data['doctor'] ?? [];
+        unset($data['doctor']);
         
         // Garante que role tenha um valor padrão
         $data['role'] = $data['role'] ?? 'user';
@@ -136,55 +157,70 @@ class UserController extends Controller
             $data['avatar'] = $avatarName;
         }
 
-        // Extrair doctor_ids e doctor_id antes de criar o usuário
+        // Extrair doctor_ids antes de criar o usuário
         // Se o usuário logado é médico ou admin, ignora doctor_ids
         $doctorIds = [];
         if ($loggedUser && $loggedUser->role !== 'doctor' && $loggedUser->role !== 'admin') {
             $doctorIds = $request->input('doctor_ids', []);
         }
-        $doctorId = $request->input('doctor_id');
-        unset($data['doctor_ids'], $data['doctor_id']);
+        unset($data['doctor_ids']);
 
         // Garantir que todo novo usuário esteja ativo por padrão
         $data['status'] = 'active';
+        $data['is_doctor'] = $data['role'] === 'doctor' ? true : (bool) ($data['is_doctor'] ?? false);
 
-        $user = User::create($data);
+        $user = null;
+        DB::transaction(function () use (&$user, $data, $doctorData, $doctorIds) {
+            $user = User::create($data);
 
-        // Se for role 'user', salvar permissões de médicos
-        if ($user->role === 'user' && !empty($doctorIds)) {
-            foreach ($doctorIds as $docId) {
-                \App\Models\Tenant\UserDoctorPermission::create([
-                    'user_id' => $user->id,
-                    'doctor_id' => $docId,
-                ]);
+            if ($user->role === 'doctor') {
+                $this->createDoctorForUser($user, $doctorData);
             }
-        }
 
-        // Se for role 'doctor', vincular ao médico selecionado
-        if ($user->role === 'doctor' && $doctorId) {
-            // O médico já deve estar vinculado ao usuário através do campo user_id na tabela doctors
-            // Mas podemos verificar se precisa criar o vínculo
-            $doctor = \App\Models\Tenant\Doctor::find($doctorId);
-            if ($doctor && $doctor->user_id !== $user->id) {
-                $doctor->update(['user_id' => $user->id]);
+            // Se for role 'user', salvar permissões de médicos
+            if ($user->role === 'user' && !empty($doctorIds)) {
+                foreach ($doctorIds as $docId) {
+                    \App\Models\Tenant\UserDoctorPermission::create([
+                        'user_id' => $user->id,
+                        'doctor_id' => $docId,
+                    ]);
+                }
             }
-        }
-
-        if ($user->role === 'doctor') {
-            return redirect()->route('tenant.doctors.create', [
-                'slug' => tenant()->subdomain,
-                'user_id' => $user->id,
-            ])->with('success', 'UsuÃ¡rio criado com sucesso. Agora complete o cadastro do mÃ©dico.');
-        }
+        });
 
         return redirect()->route('tenant.users.index', ['slug' => tenant()->subdomain])
             ->with('success', 'Usuário criado com sucesso.');
     }
-
     /**
-     * Mostra as informações do usuário.
-     * Agora usando o ID explícito.
+     * Cria e vincula o registro de médico ao usuário recém-criado.
      */
+    protected function createDoctorForUser(User $user, array $doctorData): Doctor
+    {
+        $doctor = Doctor::create([
+            'id' => (string) Str::uuid(),
+            'user_id' => $user->id,
+            'crm_number' => $doctorData['crm_number'] ?? null,
+            'crm_state' => $doctorData['crm_state'] ?? null,
+            'signature' => $doctorData['signature'] ?? null,
+            'label_singular' => $doctorData['label_singular'] ?? null,
+            'label_plural' => $doctorData['label_plural'] ?? null,
+            'registration_label' => $doctorData['registration_label'] ?? null,
+            'registration_value' => $doctorData['registration_value'] ?? null,
+        ]);
+
+        $specialties = collect($doctorData['specialties'] ?? [])
+            ->filter(fn ($id) => is_string($id) && $id !== '')
+            ->unique()
+            ->values()
+            ->all();
+
+        if (!empty($specialties)) {
+            $doctor->specialties()->sync($specialties);
+        }
+
+        return $doctor;
+    }
+
     protected function sanitizeModulesForRole(string $role, array $modules): array
     {
         if ($role === 'admin') {
@@ -477,6 +513,9 @@ class UserController extends Controller
         $limit = max(1, min(100, (int) $request->input('limit', 10)));
 
         $query = User::query();
+        if ($this->shouldFilterDoctorsOnly($request)) {
+            $this->applyDoctorUsersFilter($query);
+        }
 
         // Busca simples em nome e email
         $search = $request->input('search');
@@ -636,5 +675,19 @@ class UserController extends Controller
                 'total' => $paginator->total(),
             ],
         ]);
+    }
+
+    protected function shouldFilterDoctorsOnly(Request $request): bool
+    {
+        return strtolower((string) $request->input('role', '')) === 'doctor';
+    }
+
+    protected function applyDoctorUsersFilter(Builder $query): void
+    {
+        $query->where(function (Builder $builder) {
+            $builder->where('role', 'doctor')
+                ->orWhere('is_doctor', true)
+                ->orWhereHas('doctor');
+        });
     }
 }

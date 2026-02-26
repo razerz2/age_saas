@@ -1,6 +1,15 @@
 @extends('layouts.tailadmin.app')
 
-@section('title', 'Usuários')
+@php
+    $isDoctorsOnly = (bool) ($doctorsOnly ?? false);
+    $pageTitle = $isDoctorsOnly ? 'Todos os Médicos' : 'Usuários';
+    $cardTitle = $isDoctorsOnly ? 'Lista de Médicos' : 'Lista de Usuários';
+    $gridAjaxUrl = $isDoctorsOnly
+        ? workspace_route('tenant.users.grid-data') . '?role=doctor'
+        : workspace_route('tenant.users.grid-data');
+@endphp
+
+@section('title', $pageTitle)
 @section('page', 'users')
 
 @section('content')
@@ -9,7 +18,7 @@
         <div class="mb-6">
             <div class="flex items-center justify-between">
                 <div>
-                    <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Usuários</h1>
+                    <h1 class="text-2xl font-bold text-gray-900 dark:text-white">{{ $pageTitle }}</h1>
                     <nav class="flex mt-2" aria-label="Breadcrumb">
                         <ol class="inline-flex items-center space-x-1 md:space-x-3">
                             <li class="inline-flex items-center">
@@ -19,12 +28,30 @@
                                     Dashboard
                                 </a>
                             </li>
-                            <li>
-                                <div class="flex items-center">
-                                    <x-icon name="chevron-right" size="text-sm" class="text-gray-400" />
-                                    <span class="ml-1 text-gray-500 dark:text-gray-400">Usuários</span>
-                                </div>
-                            </li>
+                            @if ($isDoctorsOnly)
+                                <li>
+                                    <div class="flex items-center">
+                                        <x-icon name="chevron-right" size="text-sm" class="text-gray-400" />
+                                        <a href="{{ workspace_route('tenant.users.index') }}"
+                                            class="ml-1 text-gray-700 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white">
+                                            Usuários
+                                        </a>
+                                    </div>
+                                </li>
+                                <li>
+                                    <div class="flex items-center">
+                                        <x-icon name="chevron-right" size="text-sm" class="text-gray-400" />
+                                        <span class="ml-1 text-gray-500 dark:text-gray-400">Todos os Médicos</span>
+                                    </div>
+                                </li>
+                            @else
+                                <li>
+                                    <div class="flex items-center">
+                                        <x-icon name="chevron-right" size="text-sm" class="text-gray-400" />
+                                        <span class="ml-1 text-gray-500 dark:text-gray-400">Usuários</span>
+                                    </div>
+                                </li>
+                            @endif
                         </ol>
                     </nav>
                 </div>
@@ -65,7 +92,7 @@
         <!-- Card Principal -->
         <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
             <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
-                <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Lista de Usuários</h2>
+                <h2 class="text-lg font-semibold text-gray-900 dark:text-white">{{ $cardTitle }}</h2>
             </div>
 
             <div class="p-6">
@@ -94,7 +121,7 @@
                             ['name' => 'status_badge', 'label' => 'Status'],
                             ['name' => 'actions', 'label' => 'Ações'],
                         ]"
-                        ajaxUrl="{{ workspace_route('tenant.users.grid-data') }}"
+                        ajaxUrl="{{ $gridAjaxUrl }}"
                         :pagination="true"
                         :search="true"
                         :sort="true"

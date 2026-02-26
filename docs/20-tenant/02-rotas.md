@@ -49,6 +49,14 @@ As definições completas vivem em `routes/tenant.php`. Os detalhes por módulo 
   - Rotas para listar, visualizar e marcar notificações como lidas (`/workspace/{slug}/notifications/*`) e endpoint JSON.
   - Detalhamento em: `docs/20-tenant/modules/notifications/routes.md`.
 
+- **Campaigns**
+  - Rotas autenticadas para CRUD e execução de campanhas (`/workspace/{slug}/campaigns/*`), incluindo:
+    - `grid-data` (Grid.js server-side)
+    - upload de assets (`/campaigns/assets`)
+    - ações de disparo (`send-test`, `start`, `schedule`, `pause`, `resume`)
+    - histórico (runs e recipients)
+  - Detalhamento em: `docs/20-tenant/modules/campaigns/routes.md`.
+
 - **Integrations**
   - Rotas para CRUD de integrações (`/workspace/{slug}/integrations/*`).
   - Detalhamento em: `docs/20-tenant/modules/integrations/routes.md`.

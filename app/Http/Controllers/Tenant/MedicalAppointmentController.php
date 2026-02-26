@@ -101,7 +101,7 @@ class MedicalAppointmentController extends Controller
         $doctorIds = $request->doctor_ids ?? ($user->doctor ? [$user->doctor->id] : []);
 
         // Construir URL com múltiplos doctor_ids
-        $url = route('tenant.medical-appointments.session', ['date' => $date]);
+        $url = workspace_route('tenant.medical-appointments.session', ['date' => $date]);
         if (!empty($doctorIds)) {
             // Adicionar cada doctor_id como parâmetro separado na query string
             $queryParams = [];
@@ -451,13 +451,13 @@ class MedicalAppointmentController extends Controller
 
         if ($nextAppointment) {
             return redirect()
-                ->route('tenant.medical-appointments.session', ['date' => $date])
+                ->to(workspace_route('tenant.medical-appointments.session', ['date' => $date]))
                 ->with('selected_appointment', $nextAppointment->id)
                 ->with('success', 'Atendimento concluído. Próximo agendamento selecionado.');
         }
 
         return redirect()
-            ->route('tenant.medical-appointments.session', ['date' => $date])
+            ->to(workspace_route('tenant.medical-appointments.session', ['date' => $date]))
             ->with('info', 'Atendimento concluído. Não há mais agendamentos para hoje.');
     }
 

@@ -13,6 +13,7 @@ export function init() {
     bindPasswordTools();
     bindAvatarPreview();
     bindWebcam();
+    bindDoctorSpecialtiesSection();
     bindRoleModules();
     bindModuleBulkActions();
 }
@@ -417,6 +418,169 @@ function bindWebcam() {
     }
 }
 
+function bindDoctorSpecialtiesSection() {
+    const roleSelect = document.getElementById('role-select');
+    const specialtySelect = document.getElementById('user-doctor-specialty-select');
+    const addSpecialtyBtn = document.getElementById('user-doctor-add-specialty-btn');
+    const clearSpecialtiesBtn = document.getElementById('user-doctor-clear-specialties-btn');
+    const selectedContainer = document.getElementById('user-doctor-selected-specialties');
+    const inputsContainer = document.getElementById('user-doctor-specialties-inputs');
+    const form = document.querySelector('form');
+
+    if (!roleSelect || !specialtySelect || !selectedContainer || !inputsContainer) {
+        return;
+    }
+
+    const parseInitialSelected = () => {
+        const raw = selectedContainer.dataset.initialSelected;
+        if (raw) {
+            try {
+                const parsed = JSON.parse(raw);
+                if (Array.isArray(parsed)) {
+                    return parsed.map(String);
+                }
+            } catch (error) {
+                // noop
+            }
+        }
+
+        return Array.from(selectedContainer.querySelectorAll('.specialty-badge'))
+            .map((badge) => String(badge.dataset.id || ''))
+            .filter(Boolean);
+    };
+
+    let selectedSpecialties = parseInitialSelected();
+
+    const renderPlaceholder = () => {
+        selectedContainer.innerHTML =
+            '<p class="text-gray-500 dark:text-gray-400 mb-0"><svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>Nenhuma especialidade selecionada</p>';
+    };
+
+    const updateInputs = () => {
+        inputsContainer.innerHTML = '';
+        const disabled = roleSelect.value !== 'doctor';
+
+        selectedSpecialties.forEach((specialtyId) => {
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = 'doctor[specialties][]';
+            input.value = specialtyId;
+            input.disabled = disabled;
+            inputsContainer.appendChild(input);
+        });
+    };
+
+    const updateDisplay = () => {
+        selectedContainer.innerHTML = '';
+
+        if (selectedSpecialties.length === 0) {
+            renderPlaceholder();
+            updateInputs();
+            return;
+        }
+
+        selectedSpecialties.forEach((specialtyId) => {
+            const option = specialtySelect.querySelector(`option[value="${specialtyId}"]`);
+            if (!option) {
+                return;
+            }
+
+            const badge = document.createElement('span');
+            badge.className =
+                'inline-flex items-center gap-2 px-3 py-2 bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 rounded-full text-sm font-medium mr-2 mb-2 specialty-badge';
+            badge.dataset.id = specialtyId;
+            badge.innerHTML = `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>${option.dataset.name}`;
+
+            const removeBtn = document.createElement('button');
+            removeBtn.type = 'button';
+            removeBtn.className = 'text-blue-600 hover:text-blue-800 dark:text-blue-300 dark:hover:text-blue-100 ml-1';
+            removeBtn.setAttribute('aria-label', 'Remover');
+            removeBtn.innerHTML =
+                '<svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg>';
+            removeBtn.addEventListener('click', (event) => {
+                event.preventDefault();
+                selectedSpecialties = selectedSpecialties.filter((id) => id !== specialtyId);
+                updateDisplay();
+            });
+
+            badge.appendChild(removeBtn);
+            selectedContainer.appendChild(badge);
+        });
+
+        updateInputs();
+    };
+
+    const showWarning = (message) => {
+        if (typeof showAlert === 'function') {
+            showAlert({ type: 'warning', title: 'Atenção', message });
+        }
+    };
+
+    const addSpecialty = () => {
+        const specialtyId = specialtySelect.value;
+        if (!specialtyId) {
+            showWarning('Por favor, selecione uma especialidade.');
+            specialtySelect.focus();
+            return;
+        }
+
+        const normalizedId = String(specialtyId);
+        if (selectedSpecialties.includes(normalizedId)) {
+            showWarning('Esta especialidade já foi adicionada.');
+            specialtySelect.focus();
+            return;
+        }
+
+        selectedSpecialties.push(normalizedId);
+        specialtySelect.value = '';
+        updateDisplay();
+    };
+
+    addSpecialtyBtn?.addEventListener('click', (event) => {
+        event.preventDefault();
+        addSpecialty();
+    });
+
+    specialtySelect.addEventListener('keypress', (event) => {
+        if (event.key !== 'Enter') {
+            return;
+        }
+
+        event.preventDefault();
+        addSpecialty();
+    });
+
+    clearSpecialtiesBtn?.addEventListener('click', (event) => {
+        event.preventDefault();
+        if (selectedSpecialties.length === 0) {
+            return;
+        }
+
+        selectedSpecialties = [];
+        updateDisplay();
+    });
+
+    roleSelect.addEventListener('change', () => {
+        updateInputs();
+    });
+
+    form?.addEventListener('submit', (event) => {
+        if (roleSelect.value !== 'doctor') {
+            return;
+        }
+
+        if (selectedSpecialties.length > 0) {
+            return;
+        }
+
+        event.preventDefault();
+        showWarning('Por favor, selecione pelo menos uma especialidade médica.');
+        specialtySelect.focus();
+    });
+
+    updateDisplay();
+}
+
 function bindRoleModules() {
     const config = document.getElementById('users-config');
     const roleSelect = document.getElementById('role-select');
@@ -435,6 +599,7 @@ function bindRoleModules() {
 
     const isDoctorSelect = document.getElementById('is-doctor-select');
     const doctorPermissionsSection = document.getElementById('doctor-permissions-section');
+    const doctorDataSection = document.getElementById('doctor-data-section');
     const modulesSection = document.getElementById('modules-section');
     const isDoctorSection = document.getElementById('is-doctor-section');
     const modulesInfoText = document.getElementById('modules-info-text');
@@ -477,6 +642,16 @@ function bindRoleModules() {
         }
     };
 
+    const setDoctorDataEnabled = (enabled) => {
+        if (!doctorDataSection) {
+            return;
+        }
+
+        doctorDataSection.querySelectorAll('input, select, textarea, button').forEach((field) => {
+            field.disabled = !enabled;
+        });
+    };
+
     const toggleRoleSections = () => {
         const role = roleSelect.value;
 
@@ -493,6 +668,12 @@ function bindRoleModules() {
 
         if (doctorPermissionsSection) {
             setVisibility(doctorPermissionsSection, role === 'user' && loggedUserRole !== 'doctor');
+        }
+
+        if (doctorDataSection) {
+            const isDoctorRole = role === 'doctor';
+            setVisibility(doctorDataSection, isDoctorRole);
+            setDoctorDataEnabled(isDoctorRole);
         }
 
         if (modulesSection) {
