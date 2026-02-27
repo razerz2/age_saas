@@ -14,7 +14,7 @@ class CampaignRecipientController extends Controller
 {
     use HandlesGridRequests;
 
-    public function index(Campaign $campaign, Request $request)
+    public function index(string $slug, Campaign $campaign, Request $request)
     {
         $runId = $this->normalizeNullableInt($request->input('run_id', $request->input('campaign_run_id')));
 
@@ -24,7 +24,7 @@ class CampaignRecipientController extends Controller
         ]);
     }
 
-    public function gridData(Campaign $campaign, Request $request): JsonResponse
+    public function gridData(string $slug, Campaign $campaign, Request $request): JsonResponse
     {
         $page = $this->gridPage($request);
         $perPage = $this->gridPerPage($request);

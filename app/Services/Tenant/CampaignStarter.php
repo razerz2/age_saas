@@ -43,6 +43,7 @@ class CampaignStarter
             $campaign,
             $initiatedBy,
             $trigger,
+            $contextOverrides,
             &$created,
             &$run,
             &$totals

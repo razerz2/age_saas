@@ -323,17 +323,14 @@ class SeedRandomAppointments extends Command
 
         if (in_array('test_tag', $columns, true)) {
             $payload['test_tag'] = $tag;
-            return;
-        }
-
-        if (in_array('metadata', $columns, true)) {
+        } elseif (in_array('metadata', $columns, true)) {
             $payload['metadata'] = json_encode([
                 'is_test' => true,
                 'test_tag' => $tag,
             ], JSON_UNESCAPED_UNICODE);
-            return;
         }
 
+        // Mantem marcador textual legado para facilitar purge seguro em bases antigas.
         if (in_array('notes', $columns, true)) {
             $payload['notes'] = trim((string) ($payload['notes'] ?? '') . ' [test_appointment:' . $tag . ']');
         }

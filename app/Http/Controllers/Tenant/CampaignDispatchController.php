@@ -22,7 +22,7 @@ class CampaignDispatchController extends Controller
     ) {
     }
 
-    public function sendTest(Campaign $campaign, Request $request, CampaignChannelGate $gate): RedirectResponse
+    public function sendTest(string $slug, Campaign $campaign, Request $request, CampaignChannelGate $gate): RedirectResponse
     {
         $campaignChannels = $this->normalizeChannels($campaign->channels_json);
 
@@ -98,7 +98,7 @@ class CampaignDispatchController extends Controller
         return back()->with('warning', $result['error_message'] ?? 'Falha ao enviar teste da campanha.');
     }
 
-    public function start(Campaign $campaign, Request $request, CampaignChannelGate $gate): RedirectResponse
+    public function start(string $slug, Campaign $campaign, Request $request, CampaignChannelGate $gate): RedirectResponse
     {
         try {
             $gate->assertChannelsEnabled($this->normalizeChannels($campaign->channels_json));
@@ -123,7 +123,7 @@ class CampaignDispatchController extends Controller
             ->with($result['created'] ? 'success' : 'warning', $result['message']);
     }
 
-    public function schedule(Campaign $campaign, Request $request, CampaignChannelGate $gate): RedirectResponse
+    public function schedule(string $slug, Campaign $campaign, Request $request, CampaignChannelGate $gate): RedirectResponse
     {
         $validator = Validator::make($request->all(), [
             'scheduled_at' => ['required', 'date'],
@@ -177,7 +177,7 @@ class CampaignDispatchController extends Controller
         return back()->with('success', 'Campanha agendada com sucesso.');
     }
 
-    public function pause(Campaign $campaign): RedirectResponse
+    public function pause(string $slug, Campaign $campaign): RedirectResponse
     {
         $campaign->status = 'paused';
         $campaign->save();
@@ -185,7 +185,7 @@ class CampaignDispatchController extends Controller
         return back()->with('success', 'Campanha pausada.');
     }
 
-    public function resume(Campaign $campaign): RedirectResponse
+    public function resume(string $slug, Campaign $campaign): RedirectResponse
     {
         $campaign->status = 'active';
         $campaign->save();

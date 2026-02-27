@@ -114,7 +114,7 @@ class CampaignController extends Controller
             ->with('success', 'Campanha criada com sucesso.');
     }
 
-    public function show(Campaign $campaign, CampaignChannelGate $gate)
+    public function show(string $slug, Campaign $campaign, CampaignChannelGate $gate)
     {
         $availableChannels = $gate->availableChannels();
         $moduleEnabled = count($availableChannels) > 0;
@@ -159,7 +159,7 @@ class CampaignController extends Controller
         ]);
     }
 
-    public function edit(Campaign $campaign, CampaignChannelGate $gate)
+    public function edit(string $slug, Campaign $campaign, CampaignChannelGate $gate)
     {
         return view('tenant.campaigns.edit', [
             'campaign' => $campaign,
@@ -168,7 +168,7 @@ class CampaignController extends Controller
         ]);
     }
 
-    public function update(UpdateCampaignRequest $request, Campaign $campaign)
+    public function update(UpdateCampaignRequest $request, string $slug, Campaign $campaign)
     {
         $validated = $request->validated();
         $type = (string) ($validated['type'] ?? $request->input('type', 'manual'));
@@ -191,9 +191,9 @@ class CampaignController extends Controller
             ->with('success', 'Campanha atualizada com sucesso.');
     }
 
-    public function destroy(Campaign $campaign)
+    public function destroy(string $slug, Campaign $campaign)
     {
-        $slug = request()->route('slug') ?: tenant()->subdomain;
+        $slug = $slug !== '' ? $slug : (tenant()->subdomain ?? '');
 
         $campaign->delete();
 

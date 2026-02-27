@@ -6,6 +6,7 @@ use App\Models\Platform\Tenant as PlatformTenant;
 use App\Models\Tenant\Appointment;
 use Illuminate\Console\Command;
 use Illuminate\Database\QueryException;
+use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
@@ -34,7 +35,8 @@ class PurgeTestAppointments extends Command
         }
 
         $tag = trim((string) $this->option('tag')) ?: 'test';
-        $dryRun = (bool) $this->option('dry-run');
+        // Sem --confirm, o comando opera em modo dry-run por seguranca.
+        $dryRun = (bool) $this->option('dry-run') || !(bool) $this->option('confirm');
         $cascade = (bool) $this->option('cascade');
 
         $tenants = $this->resolveTenants((string) $this->option('tenant'), (bool) $this->option('all-tenants'));
@@ -49,6 +51,15 @@ class PurgeTestAppointments extends Command
             $count = 0;
             $filter = [];
             $error = null;
+            $connectionName = '-';
+            $databaseName = '-';
+            $diagnostics = [
+                'total' => 0,
+                'is_test' => null,
+                'tag_exact' => null,
+                'tag_lower' => null,
+                'notes_marker' => null,
+            ];
 
             try {
                 $tenant->makeCurrent();
@@ -56,10 +67,14 @@ class PurgeTestAppointments extends Command
                     throw new \RuntimeException('Tabela appointments nao encontrada no banco tenant.');
                 }
 
+                $connectionName = DB::connection('tenant')->getName();
+                $databaseName = $this->resolveCurrentDatabaseName();
+
                 $columns = Schema::connection('tenant')->getColumnListing('appointments');
                 $query = $this->buildTestQuery($columns, $tag);
                 $count = (clone $query)->count();
                 $filter = $this->describeFilter($columns, $tag);
+                $diagnostics = $this->collectDiagnostics($columns, $tag);
             } catch (Throwable $exception) {
                 $error = $exception->getMessage();
             } finally {
@@ -70,21 +85,40 @@ class PurgeTestAppointments extends Command
                 'count' => $count,
                 'filter' => $filter,
                 'error' => $error,
+                'connection' => $connectionName,
+                'database' => $databaseName,
+                'diagnostics' => $diagnostics,
             ];
 
             $previewRows[] = [
                 $tenant->subdomain ?: $tenant->id,
+                $connectionName,
+                $databaseName,
+                (string) $diagnostics['total'],
                 (string) $count,
                 $error ? 'erro' : 'ok',
                 $error ?: implode(', ', $filter),
             ];
+
+            $this->line(sprintf(
+                '[%s] diag total=%d is_test=%s tag_exact=%s tag_lower=%s notes_marker=%s',
+                $tenant->subdomain ?: $tenant->id,
+                (int) $diagnostics['total'],
+                $this->formatNullableInt($diagnostics['is_test']),
+                $this->formatNullableInt($diagnostics['tag_exact']),
+                $this->formatNullableInt($diagnostics['tag_lower']),
+                $this->formatNullableInt($diagnostics['notes_marker'])
+            ));
         }
 
         $this->newLine();
-        $this->table(['Tenant', 'Alvo', 'Status', 'Filtro/Erro'], $previewRows);
+        $this->table(
+            ['Tenant', 'Conexao', 'Database', 'Appointments', 'Alvo', 'Status', 'Filtro/Erro'],
+            $previewRows
+        );
 
         if ($dryRun) {
-            $this->info('Dry-run: nenhuma exclusao foi executada.');
+            $this->info('Dry-run: nenhuma exclusao foi executada (modo padrao sem --confirm).');
             return self::SUCCESS;
         }
 
@@ -133,13 +167,15 @@ class PurgeTestAppointments extends Command
                 $tenant->makeCurrent();
                 $columns = Schema::connection('tenant')->getColumnListing('appointments');
                 $query = $this->buildTestQuery($columns, $tag);
-                $appointmentIds = (clone $query)->pluck('id')->all();
+                $appointmentIds = (clone $query)->orderBy('starts_at')->pluck('id')->all();
+
+                $this->printDeletionPreview($appointmentIds);
 
                 if (!empty($appointmentIds) && $cascade) {
                     $this->purgeRelatedBeforeAppointments($appointmentIds);
                 }
 
-                $deleted = $query->delete();
+                $deleted = $this->deleteInChunks($appointmentIds);
                 $message = $cascade ? 'Apagado com cascade' : 'Apagado sem cascade';
             } catch (QueryException $exception) {
                 $errors = 1;
@@ -194,37 +230,51 @@ class PurgeTestAppointments extends Command
     /**
      * @param  array<int, string>  $columns
      */
-    private function buildTestQuery(array $columns, string $tag)
+    private function buildTestQuery(array $columns, string $tag): EloquentBuilder
     {
         $query = Appointment::query();
 
         $hasIsTest = in_array('is_test', $columns, true);
         $hasTestTag = in_array('test_tag', $columns, true);
+        $hasNotes = in_array('notes', $columns, true);
+        $hasMetadata = in_array('metadata', $columns, true);
+        $normalizedTag = mb_strtolower($tag);
+        $hasAnyFilter = $hasIsTest || $hasTestTag || $hasNotes || $hasMetadata;
 
-        if ($hasIsTest && $hasTestTag) {
-            return $query->where('is_test', true)->where('test_tag', $tag);
+        if (!$hasAnyFilter) {
+            throw new \RuntimeException(
+                'Nenhuma coluna de marcacao de teste encontrada (is_test/test_tag/metadata/notes).'
+            );
         }
 
-        if ($hasIsTest) {
-            return $query->where('is_test', true);
-        }
+        return $query->where(function (EloquentBuilder $filter) use (
+            $hasIsTest,
+            $hasTestTag,
+            $hasNotes,
+            $hasMetadata,
+            $normalizedTag
+        ): void {
+            if ($hasIsTest) {
+                $filter->orWhere('is_test', true);
+            }
 
-        if ($hasTestTag) {
-            return $query->where('test_tag', $tag);
-        }
+            if ($hasTestTag) {
+                $filter->orWhereRaw('lower(test_tag) = ?', [$normalizedTag]);
+            }
 
-        if (in_array('metadata', $columns, true)) {
-            return $query->where('metadata', 'like', '%"is_test":true%')
-                ->where('metadata', 'like', '%"test_tag":"' . $tag . '"%');
-        }
+            if ($hasMetadata) {
+                $filter->orWhere(function (EloquentBuilder $metadataFilter) use ($normalizedTag): void {
+                    $metadataFilter->whereRaw('lower(metadata) like ?', ['%"is_test":true%'])
+                        ->whereRaw('lower(metadata) like ?', ['%"test_tag":"' . $normalizedTag . '"%']);
+                });
+            }
 
-        if (in_array('notes', $columns, true)) {
-            return $query->where('notes', 'like', '%[test_appointment:' . $tag . ']%');
-        }
-
-        throw new \RuntimeException(
-            'Nenhuma coluna de marcacao de teste encontrada (is_test/test_tag/metadata/notes).'
-        );
+            if ($hasNotes) {
+                // Marcador legado usado pelos seeders quando is_test/test_tag nao estavam disponiveis.
+                $filter->orWhereRaw('lower(notes) like ?', ['%[test_appointment:' . $normalizedTag . ']%'])
+                    ->orWhereRaw('lower(notes) like ?', ['%[test_appointment:%']);
+            }
+        });
     }
 
     /**
@@ -233,24 +283,27 @@ class PurgeTestAppointments extends Command
      */
     private function describeFilter(array $columns, string $tag): array
     {
-        if (in_array('is_test', $columns, true) && in_array('test_tag', $columns, true)) {
-            return ['is_test=1', "test_tag={$tag}"];
-        }
+        $normalizedTag = mb_strtolower($tag);
+        $parts = [];
 
         if (in_array('is_test', $columns, true)) {
-            return ['is_test=1'];
+            $parts[] = 'is_test=1';
         }
 
         if (in_array('test_tag', $columns, true)) {
-            return ["test_tag={$tag}"];
+            $parts[] = 'lower(test_tag)=' . $normalizedTag;
         }
 
         if (in_array('metadata', $columns, true)) {
-            return ['metadata contains is_test/test_tag'];
+            $parts[] = 'metadata is_test/test_tag';
         }
 
         if (in_array('notes', $columns, true)) {
-            return ["notes like [test_appointment:{$tag}]"];
+            $parts[] = 'notes like [test_appointment:*]';
+        }
+
+        if (!empty($parts)) {
+            return ['OR(' . implode(' | ', $parts) . ')'];
         }
 
         return ['sem filtro valido'];
@@ -282,6 +335,106 @@ class PurgeTestAppointments extends Command
                 }
             });
         }
+    }
+
+    /**
+     * @param  array<int, string>  $columns
+     * @return array{total:int,is_test:int|null,tag_exact:int|null,tag_lower:int|null,notes_marker:int|null}
+     */
+    private function collectDiagnostics(array $columns, string $tag): array
+    {
+        $normalizedTag = mb_strtolower($tag);
+        $diagnostics = [
+            'total' => Appointment::query()->count(),
+            'is_test' => null,
+            'tag_exact' => null,
+            'tag_lower' => null,
+            'notes_marker' => null,
+        ];
+
+        if (in_array('is_test', $columns, true)) {
+            $diagnostics['is_test'] = Appointment::query()->where('is_test', true)->count();
+        }
+
+        if (in_array('test_tag', $columns, true)) {
+            $diagnostics['tag_exact'] = Appointment::query()->where('test_tag', $tag)->count();
+            $diagnostics['tag_lower'] = Appointment::query()
+                ->whereRaw('lower(test_tag) = ?', [$normalizedTag])
+                ->count();
+        }
+
+        if (in_array('notes', $columns, true)) {
+            $diagnostics['notes_marker'] = Appointment::query()
+                ->whereRaw('lower(notes) like ?', ['%[test_appointment:%'])
+                ->count();
+        }
+
+        return $diagnostics;
+    }
+
+    private function resolveCurrentDatabaseName(): string
+    {
+        $driver = (string) config('database.connections.tenant.driver');
+
+        return match ($driver) {
+            'pgsql' => (string) DB::connection('tenant')->scalar('select current_database()'),
+            'mysql' => (string) DB::connection('tenant')->scalar('select database()'),
+            default => (string) config('database.connections.tenant.database', '-'),
+        };
+    }
+
+    private function formatNullableInt(?int $value): string
+    {
+        return $value === null ? '-' : (string) $value;
+    }
+
+    /**
+     * @param  array<int, string>  $appointmentIds
+     */
+    private function printDeletionPreview(array $appointmentIds): void
+    {
+        if (empty($appointmentIds)) {
+            return;
+        }
+
+        $preview = Appointment::query()
+            ->with(['patient:id,full_name', 'doctor.user:id,name,name_full'])
+            ->whereIn('id', array_slice($appointmentIds, 0, 10))
+            ->orderBy('starts_at')
+            ->get();
+
+        $rows = $preview->map(function (Appointment $appointment): array {
+            return [
+                (string) $appointment->id,
+                (string) optional($appointment->starts_at)->format('Y-m-d H:i'),
+                (string) optional($appointment->doctor?->user)->name_full
+                    ?: (string) optional($appointment->doctor?->user)->name
+                    ?: '-',
+                (string) optional($appointment->patient)->full_name ?: '-',
+            ];
+        })->all();
+
+        $this->line('Preview dos IDs que serao removidos (ate 10 registros):');
+        $this->table(['ID', 'Inicio', 'Medico', 'Paciente'], $rows);
+        if (count($appointmentIds) > 10) {
+            $this->line('... ' . (count($appointmentIds) - 10) . ' registro(s) adicional(is).');
+        }
+    }
+
+    /**
+     * @param  array<int, string>  $appointmentIds
+     */
+    private function deleteInChunks(array $appointmentIds): int
+    {
+        $deleted = 0;
+
+        foreach (array_chunk($appointmentIds, 200) as $chunk) {
+            DB::connection('tenant')->transaction(function () use (&$deleted, $chunk): void {
+                $deleted += Appointment::query()->whereIn('id', $chunk)->delete();
+            });
+        }
+
+        return $deleted;
     }
 
     private function resolveTenants(string $tenantSlug, bool $allTenants): Collection

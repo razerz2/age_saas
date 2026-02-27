@@ -13,14 +13,14 @@ class CampaignRunController extends Controller
 {
     use HandlesGridRequests;
 
-    public function index(Campaign $campaign)
+    public function index(string $slug, Campaign $campaign)
     {
         return view('tenant.campaigns.runs.index', [
             'campaign' => $campaign,
         ]);
     }
 
-    public function gridData(Campaign $campaign, Request $request): JsonResponse
+    public function gridData(string $slug, Campaign $campaign, Request $request): JsonResponse
     {
         $page = $this->gridPage($request);
         $perPage = $this->gridPerPage($request);

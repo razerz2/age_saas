@@ -20,6 +20,10 @@ A Tenant e a area operacional de cada clinica.
 - `operations/`
 - `modules/`
 
+## Operacoes (Artisan)
+
+- `operations/COMANDOS_ARTISAN.md`
+
 ## Referencias globais
 
 - `../00-global/01-arquitetura.md`
