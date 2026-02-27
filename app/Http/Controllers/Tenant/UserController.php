@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Tenant;
 
+use App\Http\Controllers\Tenant\Concerns\HandlesGridRequests;
 use App\Models\Tenant\Doctor;
 use App\Models\Tenant\User;
 use App\Models\Tenant\TenantSetting;
@@ -23,6 +24,7 @@ use Illuminate\Http\Request;
 class UserController extends Controller
 {
     use HasFeatureAccess;
+    use HandlesGridRequests;
     public function index()
     {
         $users = User::orderBy('name')->paginate(15);
@@ -509,8 +511,8 @@ class UserController extends Controller
      */
     public function gridData(Request $request, $slug)
     {
-        $page = max(1, (int) $request->input('page', 1));
-        $limit = max(1, min(100, (int) $request->input('limit', 10)));
+        $page = $this->gridPage($request);
+        $perPage = $this->gridPerPage($request);
 
         $query = User::query();
         if ($this->shouldFilterDoctorsOnly($request)) {
@@ -518,38 +520,26 @@ class UserController extends Controller
         }
 
         // Busca simples em nome e email
-        $search = $request->input('search');
-        if (is_array($search) && !empty($search['value'])) {
-            $term = trim($search['value']);
+        $term = $this->gridSearch($request);
+        if ($term !== '') {
             $query->where(function ($q) use ($term) {
                 $q->where('name_full', 'like', "%{$term}%")
                   ->orWhere('email', 'like', "%{$term}%");
             });
         }
 
-        // Ordenação básica
-        $sort = $request->input('sort');
-        if (is_array($sort) && isset($sort['column'], $sort['direction'])) {
-            $column = $sort['column'];
-            $direction = strtolower($sort['direction']) === 'asc' ? 'asc' : 'desc';
+        $sort = $this->gridSort($request, [
+            'name_full' => 'name_full',
+            'email' => 'email',
+            'role_label' => 'role',
+        ], 'name_full', 'asc');
 
-            // Permitir ordenar apenas por colunas conhecidas
-            $sortable = [
-                'name_full' => 'name_full',
-                'email' => 'email',
-                'role_label' => 'role',
-            ];
-
-            if (isset($sortable[$column])) {
-                $query->orderBy($sortable[$column], $direction);
-            } else {
-                $query->orderBy('name_full');
-            }
-        } else {
-            $query->orderBy('name_full');
+        $query->orderBy($sort['column'], $sort['direction']);
+        if ($sort['column'] !== 'name_full') {
+            $query->orderBy('name_full', 'asc');
         }
 
-        $paginator = $query->paginate($limit, ['*'], 'page', $page);
+        $paginator = $query->paginate($perPage, ['*'], 'page', $page);
 
         $rows = $paginator->items();
 
@@ -668,12 +658,7 @@ class UserController extends Controller
 
         return response()->json([
             'data' => $data,
-            'meta' => [
-                'current_page' => $paginator->currentPage(),
-                'last_page' => $paginator->lastPage(),
-                'per_page' => $paginator->perPage(),
-                'total' => $paginator->total(),
-            ],
+            'meta' => $this->gridMeta($paginator),
         ]);
     }
 

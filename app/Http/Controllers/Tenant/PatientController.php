@@ -170,8 +170,10 @@ class PatientController extends Controller
 
     public function gridData(Request $request, $slug)
     {
-        $page  = max(1, (int) $request->input('page', 1));
-        $limit = max(1, min(100, (int) $request->input('limit', 10)));
+        $allowedPerPage = [10, 25, 50, 100];
+        $requestedPerPage = (int) $request->input('per_page', $request->input('limit', 10));
+        $perPage = in_array($requestedPerPage, $allowedPerPage, true) ? $requestedPerPage : 10;
+        $page = max(1, (int) $request->input('page', 1));
 
         $normalizeUtf8 = static function ($value, string $field, ?string $patientId = null) {
             if (!is_string($value)) {
@@ -205,40 +207,60 @@ class PatientController extends Controller
 
         $query = Patient::query();
 
+        try {
+            if (Schema::connection('tenant')->hasTable('patient_logins')) {
+                $query->with('login');
+            }
+        } catch (\Throwable $e) {
+            // Mantém a listagem sem relacionamento se a tabela não existir.
+        }
+
         // Busca simples
-        $search = $request->input('search');
-        if (is_array($search) && !empty($search['value'])) {
-            $term = trim($search['value']);
+        $search = $request->input('search', '');
+        if (is_array($search)) {
+            $search = $search['value'] ?? '';
+        }
+
+        $term = trim((string) $search);
+        if ($term !== '') {
             $query->where(function ($q) use ($term) {
                 $q->where('full_name', 'like', "%{$term}%")
-                  ->orWhere('email', 'like', "%{$term}%")
-                  ->orWhere('cpf', 'like', "%{$term}%");
+                    ->orWhere('email', 'like', "%{$term}%")
+                    ->orWhere('cpf', 'like', "%{$term}%");
             });
         }
 
         // Ordenação
-        $sort = $request->input('sort');
+        $sortParam = $request->input('sort');
+        $dirParam = $request->input('dir', 'asc');
         $sortable = [
-            'name'         => 'full_name',
-            'email'        => 'email',
-            'cpf'          => 'cpf',
-            'status_badge' => 'status',
+            'name' => 'full_name',
+            'email' => 'email',
+            'cpf' => 'cpf',
+            'status_badge' => 'is_active',
         ];
 
-        if (is_array($sort) && isset($sort['column'], $sort['direction'])) {
-            $column = $sort['column'];
-            $direction = strtolower($sort['direction']) === 'asc' ? 'asc' : 'desc';
+        $sortKey = null;
+        if (is_array($sortParam)) {
+            $sortKey = $sortParam['column'] ?? null;
+            $dirParam = $sortParam['direction'] ?? $dirParam;
+        } elseif (is_string($sortParam)) {
+            $sortKey = $sortParam;
+        }
 
-            if (isset($sortable[$column])) {
-                $query->orderBy($sortable[$column], $direction);
-            } else {
-                $query->orderBy('full_name');
-            }
+        $sortColumn = $sortable[$sortKey] ?? 'full_name';
+        $direction = strtolower((string) $dirParam) === 'desc' ? 'desc' : 'asc';
+
+        if ($sortColumn === 'full_name') {
+            $query->orderBy('full_name', $direction);
         } else {
+            $query->orderBy($sortColumn, $direction);
             $query->orderBy('full_name');
         }
 
-        $paginator = $query->paginate($limit, ['*'], 'page', $page);
+        $paginator = $query
+            ->paginate($perPage, ['*'], 'page', $page)
+            ->appends($request->query());
 
         $data = [];
 
@@ -258,25 +280,25 @@ class PatientController extends Controller
             $cpf = $normalizeUtf8((string) ($patient->cpf ?? '-'), 'cpf', (string) $patient->id);
 
             $data[] = [
-                'name'         => e($name),
-                'email'        => e($email),
-                'cpf'          => e($cpf),
+                'name' => e($name),
+                'email' => e($email),
+                'cpf' => e($cpf),
                 'status_badge' => $statusBadge,
-                'actions'      => $actions,
+                'actions' => $actions,
             ];
         }
 
-        $payload = [
+        return response()->json([
             'data' => $data,
             'meta' => [
-                'current_page' => $paginator->currentPage(),
-                'last_page'    => $paginator->lastPage(),
-                'per_page'     => $paginator->perPage(),
-                'total'        => $paginator->total(),
+                'page' => $paginator->currentPage(),
+                'per_page' => $paginator->perPage(),
+                'total' => $paginator->total(),
+                'last_page' => $paginator->lastPage(),
+                'from' => $paginator->firstItem() ?? 0,
+                'to' => $paginator->lastItem() ?? 0,
             ],
-        ];
-
-        return response()->json($payload, 200, [], JSON_INVALID_UTF8_SUBSTITUTE | JSON_UNESCAPED_UNICODE);
+        ], 200, [], JSON_INVALID_UTF8_SUBSTITUTE | JSON_UNESCAPED_UNICODE);
     }
 
     /**
@@ -603,5 +625,4 @@ class PatientController extends Controller
         }
     }
 }
-
 

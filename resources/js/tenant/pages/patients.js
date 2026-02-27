@@ -6,6 +6,8 @@ export function init() {
             wrapperSelector: '#patients-grid-wrapper',
             storageKey: 'tenant_patients_page_size',
             defaultLimit: 10,
+            queryParam: 'per_page',
+            pageQueryParam: 'page',
         })
     ) {
         return;

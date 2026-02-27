@@ -789,9 +789,17 @@ Route::prefix('workspace/{slug}')
                 ->name('medical-appointments.details');
 
             // Alterar status do atendimento
+            Route::get('/atendimento/appointments/{appointmentId}/status', [MedicalAppointmentController::class, 'updateStatusGet'])
+                ->where('appointmentId', '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}')
+                ->name('medical-appointments.update-status.get');
+
             Route::post('/atendimento/appointments/{appointmentId}/status', [MedicalAppointmentController::class, 'updateStatus'])
                 ->where('appointmentId', '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}')
                 ->name('medical-appointments.update-status');
+
+            // Reordenar fila do dia (ordem manual)
+            Route::post('/atendimento/dia/{date}/reorder', [MedicalAppointmentController::class, 'reorderQueue'])
+                ->name('medical-appointments.reorder');
 
             // Concluir e ir para o próximo
             Route::post('/atendimento/appointments/{appointmentId}/concluir', [MedicalAppointmentController::class, 'complete'])

@@ -19,7 +19,8 @@ class Appointment extends Model
         'id', 'calendar_id', 'doctor_id', 'appointment_type', 'patient_id',
         'specialty_id', 'starts_at', 'ends_at',
         'confirmation_expires_at', 'confirmed_at', 'canceled_at', 'expired_at', 'cancellation_reason', 'confirmation_token',
-        'status', 'notes', 'recurring_appointment_id', 'google_event_id', 'apple_event_id', 'appointment_mode', 'origin'
+        'status', 'queue_position', 'queue_updated_at', 'notes', 'recurring_appointment_id', 'google_event_id', 'apple_event_id', 'appointment_mode', 'origin',
+        'is_test', 'test_tag'
     ];
 
     protected $casts = [
@@ -29,7 +30,10 @@ class Appointment extends Model
         'confirmed_at' => 'datetime',
         'canceled_at' => 'datetime',
         'expired_at' => 'datetime',
+        'queue_position' => 'integer',
+        'queue_updated_at' => 'datetime',
         'appointment_mode' => 'string',
+        'is_test' => 'boolean',
     ];
 
     public $timestamps = true;

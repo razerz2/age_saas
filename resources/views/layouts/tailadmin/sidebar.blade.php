@@ -121,6 +121,18 @@
                         </a>
                     </li>
 
+                     @if(has_module('medical_appointments'))
+                        <li>
+                            <a
+                                href="{{ workspace_route('tenant.medical-appointments.index') }}"
+                                class="menu-item group {{ request()->routeIs('tenant.medical-appointments.*') ? 'menu-item-active' : 'menu-item-inactive' }}"
+                            >
+                                <i class="mdi mdi-account-heart {{ request()->routeIs('tenant.medical-appointments.*') ? 'menu-item-icon-active' : 'menu-item-icon-inactive' }}"></i>
+                                <span class="menu-item-text truncate min-w-0" :class="sidebarToggle ? 'xl:hidden' : ''">Atendimento</span>
+                            </a>
+                        </li>
+                    @endif
+
                     @if ($user && $user->role === 'doctor')
                         <li>
                             <a
@@ -177,17 +189,6 @@
                         </li>
                     @endif
 
-                    @if(has_module('medical_appointments'))
-                        <li>
-                            <a
-                                href="{{ workspace_route('tenant.medical-appointments.index') }}"
-                                class="menu-item group {{ request()->routeIs('tenant.medical-appointments.*') ? 'menu-item-active' : 'menu-item-inactive' }}"
-                            >
-                                <i class="mdi mdi-account-heart {{ request()->routeIs('tenant.medical-appointments.*') ? 'menu-item-icon-active' : 'menu-item-icon-inactive' }}"></i>
-                                <span class="menu-item-text truncate min-w-0" :class="sidebarToggle ? 'xl:hidden' : ''">Atendimento</span>
-                            </a>
-                        </li>
-                    @endif
                 </ul>
             </div>
 

@@ -4,6 +4,49 @@
     transition: background-color 0.2s ease, border-color 0.2s ease;
 }
 
+[data-page="medical_appointments"] .appointment-drag-handle {
+    display: none;
+    cursor: grab;
+    touch-action: none;
+    user-select: none;
+    pointer-events: auto;
+}
+
+[data-page="medical_appointments"] #appointments-list.manual-mode .appointment-drag-handle {
+    display: inline-flex;
+}
+
+[data-page="medical_appointments"] #appointments-list.manual-mode .appointment-item {
+    cursor: default;
+}
+
+[data-page="medical_appointments"] #appointments-list.manual-mode .appointment-item:active,
+[data-page="medical_appointments"] .appointment-drag-handle:active {
+    cursor: grabbing;
+}
+
+[data-page="medical_appointments"] .appointment-item-ghost,
+[data-page="medical_appointments"] .queue-ghost {
+    opacity: 0.45;
+}
+
+[data-page="medical_appointments"] .appointment-item-dragging,
+[data-page="medical_appointments"] .queue-drag {
+    background-color: #e2e8f0;
+}
+
+.dark [data-page="medical_appointments"] .appointment-item-dragging,
+[data-page="medical_appointments"].dark .appointment-item-dragging,
+.dark [data-page="medical_appointments"] .queue-drag,
+[data-page="medical_appointments"].dark .queue-drag {
+    background-color: rgba(148, 163, 184, 0.2);
+}
+
+[data-page="medical_appointments"] .queue-chosen {
+    outline: 2px dashed rgba(148, 163, 184, 0.8);
+    outline-offset: -2px;
+}
+
 [data-page="medical_appointments"] .appointment-item:hover {
     background-color: #f8fafc;
 }
@@ -33,30 +76,29 @@
     background-color: rgba(239, 68, 68, 0.12);
 }
 
-[data-page="medical_appointments"] #appointments-list::-webkit-scrollbar,
+[data-page="medical_appointments"] [data-queue-scroll="1"]::-webkit-scrollbar,
 [data-page="medical_appointments"] #appointment-details::-webkit-scrollbar {
     width: 8px;
     height: 8px;
 }
 
-[data-page="medical_appointments"] #appointments-list::-webkit-scrollbar-track,
+[data-page="medical_appointments"] [data-queue-scroll="1"]::-webkit-scrollbar-track,
 [data-page="medical_appointments"] #appointment-details::-webkit-scrollbar-track {
     background: #f1f5f9;
 }
 
-[data-page="medical_appointments"] #appointments-list::-webkit-scrollbar-thumb,
+[data-page="medical_appointments"] [data-queue-scroll="1"]::-webkit-scrollbar-thumb,
 [data-page="medical_appointments"] #appointment-details::-webkit-scrollbar-thumb {
     background: #cbd5e1;
     border-radius: 9999px;
 }
 
-[data-page="medical_appointments"] #appointments-list::-webkit-scrollbar-thumb:hover,
+[data-page="medical_appointments"] [data-queue-scroll="1"]::-webkit-scrollbar-thumb:hover,
 [data-page="medical_appointments"] #appointment-details::-webkit-scrollbar-thumb:hover {
     background: #94a3b8;
 }
 
 @media (max-width: 1280px) {
-    [data-page="medical_appointments"] #appointments-list,
     [data-page="medical_appointments"] #appointment-details {
         max-height: none;
     }

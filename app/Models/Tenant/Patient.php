@@ -2,6 +2,7 @@
 
 namespace App\Models\Tenant;
 
+use Database\Factories\Tenant\PatientFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -16,12 +17,13 @@ class Patient extends Model
     protected $keyType = 'uuid';
 
     protected $fillable = [
-        'id', 'full_name', 'cpf', 'birth_date', 'gender_id', 'email', 'phone', 'is_active'
+        'id', 'full_name', 'cpf', 'birth_date', 'gender_id', 'email', 'phone', 'is_active', 'is_test', 'test_tag'
     ];
 
     protected $casts = [
         'birth_date' => 'date',
         'is_active' => 'boolean',
+        'is_test' => 'boolean',
     ];
 
     public $timestamps = true;
@@ -55,5 +57,10 @@ class Patient extends Model
     public function address()
     {
         return $this->hasOne(PatientAddress::class);
+    }
+
+    protected static function newFactory()
+    {
+        return PatientFactory::new();
     }
 }

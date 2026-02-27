@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Tenant;
 
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\Tenant\Concerns\HandlesGridRequests;
 use App\Http\Controllers\Tenant\Concerns\HasDoctorFilter;
 use App\Models\Tenant\Appointment;
 use App\Models\Tenant\OnlineAppointmentInstruction;
@@ -18,6 +19,7 @@ use Carbon\Carbon;
 class OnlineAppointmentController extends Controller
 {
     use HasDoctorFilter;
+    use HandlesGridRequests;
     /**
      * Lista apenas agendamentos online
      */
@@ -292,11 +294,11 @@ class OnlineAppointmentController extends Controller
 
         $this->applyDoctorFilterWhereHas($query, 'calendar', 'doctor_id');
 
-        $page  = max(1, (int) $request->input('page', 1));
-        $limit = max(1, min(100, (int) $request->input('limit', 10)));
+        $page = $this->gridPage($request);
+        $perPage = $this->gridPerPage($request);
 
         // 🔎 Busca global
-        $search = trim((string) $request->input('search', ''));
+        $search = $this->gridSearch($request);
 
         if ($search !== '') {
             $query->where(function ($q) use ($search) {
@@ -316,20 +318,19 @@ class OnlineAppointmentController extends Controller
             'patient'     => 'patient_id',
             'doctor'      => 'doctor_id',
             'starts_at'   => 'starts_at',
+            'datetime'    => 'starts_at',
             'status'      => 'status',
+            'status_badge' => 'status',
             'created_at'  => 'created_at',
         ];
 
-        $sortField = (string) $request->input('sort', 'starts_at');
-        $sortDir   = strtolower((string) $request->input('direction', 'desc')) === 'asc' ? 'asc' : 'desc';
-
-        if (isset($sortable[$sortField])) {
-            $query->orderBy($sortable[$sortField], $sortDir);
-        } else {
+        $sort = $this->gridSort($request, $sortable, 'starts_at', 'desc');
+        $query->orderBy($sort['column'], $sort['direction']);
+        if ($sort['column'] !== 'starts_at') {
             $query->orderBy('starts_at', 'desc');
         }
 
-        $paginator = $query->paginate($limit, ['*'], 'page', $page);
+        $paginator = $query->paginate($perPage, ['*'], 'page', $page);
 
         $data = $paginator->getCollection()->map(function (Appointment $appointment) {
 
@@ -345,13 +346,7 @@ class OnlineAppointmentController extends Controller
 
         return response()->json([
             'data' => $data,
-            'meta' => [
-                'current_page' => $paginator->currentPage(),
-                'last_page'    => $paginator->lastPage(),
-                'per_page'     => $paginator->perPage(),
-                'total'        => $paginator->total(),
-            ],
+            'meta' => $this->gridMeta($paginator),
         ]);
     }
 }
-

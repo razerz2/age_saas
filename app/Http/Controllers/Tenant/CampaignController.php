@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Tenant;
 
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\Tenant\Concerns\HandlesGridRequests;
 use App\Http\Requests\Tenant\StoreCampaignRequest;
 use App\Http\Requests\Tenant\UpdateCampaignRequest;
 use App\Models\Tenant\Campaign;
@@ -14,6 +15,8 @@ use Illuminate\Http\Request;
 
 class CampaignController extends Controller
 {
+    use HandlesGridRequests;
+
     private const MODULE_DISABLED_MESSAGE = 'Campanhas indisponíveis: configure sua API de Email e/ou WhatsApp em Integrações.';
 
     public function index(Request $request, CampaignChannelGate $gate)
@@ -30,13 +33,13 @@ class CampaignController extends Controller
 
     public function gridData(Request $request)
     {
-        $page = max(1, (int) $request->input('page', 1));
-        $perPage = max(1, min(100, (int) $request->input('perPage', $request->input('limit', 10))));
+        $page = $this->gridPage($request);
+        $perPage = $this->gridPerPage($request);
         $moduleEnabled = app(CampaignChannelGate::class)->availableChannels() !== [];
 
         $query = Campaign::query();
 
-        $search = $this->extractSearchTerm($request);
+        $search = $this->gridSearch($request);
         if ($search !== '') {
             $query->where(function ($query) use ($search) {
                 $query->where('name', 'like', '%' . $search . '%')
@@ -71,12 +74,7 @@ class CampaignController extends Controller
 
         return response()->json([
             'data' => $data,
-            'meta' => [
-                'current_page' => $paginator->currentPage(),
-                'last_page' => $paginator->lastPage(),
-                'per_page' => $paginator->perPage(),
-                'total' => $paginator->total(),
-            ],
+            'meta' => $this->gridMeta($paginator),
         ]);
     }
 
@@ -227,17 +225,6 @@ class CampaignController extends Controller
         return '-';
     }
 
-    private function extractSearchTerm(Request $request): string
-    {
-        $search = $request->input('search');
-
-        if (is_array($search)) {
-            return trim((string) ($search['value'] ?? ''));
-        }
-
-        return trim((string) $search);
-    }
-
     private function applySort(Request $request, $query): void
     {
         $sortable = [
@@ -249,37 +236,11 @@ class CampaignController extends Controller
             'created_at' => 'created_at',
         ];
 
-        $sort = $request->input('sort');
-
-        if (is_array($sort) && isset($sort['column'], $sort['direction'])) {
-            $column = (string) $sort['column'];
-            $direction = strtolower((string) $sort['direction']) === 'asc' ? 'asc' : 'desc';
-
-            if (isset($sortable[$column])) {
-                $query->orderBy($sortable[$column], $direction);
-                return;
-            }
+        $sort = $this->gridSort($request, $sortable, 'created_at', 'desc');
+        $query->orderBy($sort['column'], $sort['direction']);
+        if ($sort['column'] !== 'created_at') {
+            $query->orderByDesc('created_at');
         }
-
-        if (is_string($sort) && $sort !== '') {
-            $column = $sort;
-            $direction = strtolower((string) $request->input('direction', 'asc')) === 'desc' ? 'desc' : 'asc';
-
-            if (str_contains($sort, ':')) {
-                [$column, $directionPart] = array_pad(explode(':', $sort, 2), 2, 'asc');
-                $direction = strtolower($directionPart) === 'desc' ? 'desc' : 'asc';
-            } elseif (str_starts_with($sort, '-')) {
-                $column = ltrim($sort, '-');
-                $direction = 'desc';
-            }
-
-            if (isset($sortable[$column])) {
-                $query->orderBy($sortable[$column], $direction);
-                return;
-            }
-        }
-
-        $query->orderByDesc('created_at');
     }
 
     private function formatType(string $type): string

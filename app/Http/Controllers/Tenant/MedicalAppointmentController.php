@@ -12,13 +12,20 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
+use Illuminate\Database\QueryException;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Validator;
 use Carbon\Carbon;
+use Symfony\Component\HttpKernel\Exception\HttpException;
 
 class MedicalAppointmentController extends Controller
 {
+    private ?bool $hasQueuePositionColumn = null;
+    private ?bool $hasQueueUpdatedAtColumn = null;
+
     /**
      * Exibe tela inicial com seleção de data e médico (se necessário)
      */
@@ -121,116 +128,27 @@ class MedicalAppointmentController extends Controller
      */
     public function session($slug, $date, Request $request)
     {
-        // Garantir que o tenant está ativo e a conexão configurada
         $this->ensureTenantConnection();
 
         $user = Auth::guard('tenant')->user();
         $dateCarbon = Carbon::parse($date);
-        
-        // Obter doctor_ids da query string (pode ser array ou string única)
-        $doctorIdsParam = $request->get('doctor_ids', []);
-        if (!is_array($doctorIdsParam)) {
-            // Se for string única, converter para array
-            $doctorIdsParam = $doctorIdsParam ? [$doctorIdsParam] : [];
-        }
-        $doctorIds = array_filter($doctorIdsParam); // Remove valores vazios
+        $doctorIds = $this->normalizeDoctorIdsFromRequest($request);
 
-        // Buscar agendamentos do dia
         $query = Appointment::with(['calendar.doctor.user', 'patient', 'type', 'specialty'])
             ->forDay($dateCarbon)
-            ->whereIn('status', ['scheduled', 'confirmed', 'arrived', 'in_service']);
+            ->whereIn('status', $this->dayQueueStatuses());
 
-        // Aplicar filtros baseado no role e permissões
-        if ($user->role === 'doctor') {
-            // Buscar o doctor diretamente do banco para garantir que existe
-            $doctor = Doctor::where('user_id', $user->id)->first();
-            
-            if ($doctor) {
-                $doctorIds = [$doctor->id];
-                Log::info('Filtrando agendamentos para médico', [
-                    'user_id' => $user->id,
-                    'doctor_ids' => $doctorIds,
-                ]);
-                
-                // Filtrar diretamente pelo doctor_id do calendar
-                $query->whereHas('calendar', function($q) use ($doctorIds) {
-                    $q->whereIn('doctor_id', $doctorIds);
-                });
-            } else {
-                // Se o usuário tem role doctor mas não tem vínculo com médico, não mostra nada
-                Log::warning('Usuário com role doctor mas sem registro na tabela doctors', [
-                    'user_id' => $user->id,
-                ]);
-                $query->whereRaw('1 = 0');
-            }
-        } elseif ($user->role === 'admin') {
-            // Admin: filtrar por médicos selecionados se fornecidos
-            if (!empty($doctorIds)) {
-                Log::info('Filtrando agendamentos para admin por médicos específicos', [
-                    'user_id' => $user->id,
-                    'doctor_ids' => $doctorIds,
-                ]);
-                
-                $query->whereHas('calendar', function($q) use ($doctorIds) {
-                    $q->whereIn('doctor_id', $doctorIds);
-                });
-            }
-            // Se não fornecido, admin vê tudo (sem filtro adicional)
-        } elseif ($user->role === 'user') {
-            // Usuário comum: filtrar por médicos selecionados e validar permissão
-            if (!empty($doctorIds)) {
-                $allowedDoctorIds = $user->allowedDoctors()->pluck('doctors.id')->toArray();
-                $invalidDoctorIds = array_diff($doctorIds, $allowedDoctorIds);
-                
-                if (!empty($invalidDoctorIds)) {
-                    // Sem permissão para um ou mais médicos
-                    Log::warning('Usuário comum tentando acessar médicos sem permissão', [
-                        'user_id' => $user->id,
-                        'doctor_ids' => $doctorIds,
-                        'invalid_ids' => $invalidDoctorIds,
-                    ]);
-                    abort(403, 'Você não tem permissão para acessar um ou mais médicos selecionados.');
-                }
-                
-                Log::info('Filtrando agendamentos para usuário comum por médicos específicos', [
-                    'user_id' => $user->id,
-                    'doctor_ids' => $doctorIds,
-                ]);
-                
-                $query->whereHas('calendar', function($q) use ($doctorIds) {
-                    $q->whereIn('doctor_id', $doctorIds);
-                });
-            } else {
-                // Se não fornecido, usar lista de médicos permitidos
-                $allowedDoctorIds = $user->allowedDoctors()->pluck('doctors.id')->toArray();
-                if (!empty($allowedDoctorIds)) {
-                    Log::info('Filtrando agendamentos para usuário comum', [
-                        'user_id' => $user->id,
-                        'allowed_doctor_ids' => $allowedDoctorIds
-                    ]);
-                    
-                    $query->whereHas('calendar', function($q) use ($allowedDoctorIds) {
-                        $q->whereIn('doctor_id', $allowedDoctorIds);
-                    });
-                } else {
-                    // Se não tem médicos permitidos, não mostra nada
-                    Log::info('Usuário comum sem médicos permitidos', [
-                        'user_id' => $user->id
-                    ]);
-                    $query->whereRaw('1 = 0');
-                }
-            }
+        $this->applyRoleDoctorFilter($query, $user, $doctorIds);
+
+        if ($this->hasQueuePositionColumn()) {
+            $query
+                ->orderByRaw('CASE WHEN queue_position IS NULL THEN 1 ELSE 0 END')
+                ->orderBy('queue_position', 'asc');
         }
 
-        // Ordenar por horário de início (starts_at)
-        $appointments = $query->orderBy('starts_at', 'asc')->get();
-
-        Log::info('Agendamentos encontrados', [
-            'user_id' => $user->id,
-            'user_role' => $user->role,
-            'doctor_ids' => $doctorIds,
-            'count' => $appointments->count(),
-        ]);
+        $appointments = $query
+            ->orderBy('starts_at', 'asc')
+            ->get();
 
         return view('tenant.medical_appointments.session', compact('appointments', 'date', 'doctorIds'));
     }
@@ -380,6 +298,23 @@ class MedicalAppointmentController extends Controller
     /**
      * Atualiza o status do agendamento
      */
+    public function updateStatusGet(Request $request, $slug, $appointmentId)
+    {
+        if ($request->expectsJson() || $request->ajax()) {
+            return response()->json([
+                'success' => false,
+                'ok' => false,
+                'message' => 'Metodo GET nao permitido para alteracao de status. Use POST.',
+            ], 405);
+        }
+
+        return redirect(workspace_route('tenant.medical-appointments.index'))
+            ->with('error', 'Metodo invalido para alterar status. Tente novamente pela tela de atendimento.');
+    }
+
+    /**
+     * Atualiza o status do agendamento
+     */
     public function updateStatus(Request $request, $slug, $appointmentId)
     {
         $this->ensureTenantConnection();
@@ -388,112 +323,323 @@ class MedicalAppointmentController extends Controller
         if (!$user) {
             return response()->json([
                 'success' => false,
-                'message' => 'Usuario nao autenticado.'
+                'ok' => false,
+                'message' => 'Usuario nao autenticado.',
             ], 401);
         }
 
         try {
-            if (config('app.debug')) {
-                Log::info('Medical appointment updateStatus request', [
-                    'tenant_id' => tenant()?->id,
-                    'workspace_slug' => $slug,
-                    'appointment_id' => $appointmentId,
-                    'user_id' => $user->id,
-                    'payload' => $request->all(),
-                ]);
-            }
-
             if (!Str::isUuid($appointmentId)) {
-                Log::warning('UUID invalido recebido em updateStatus de atendimento medico', [
-                    'tenant_id' => tenant()?->id,
-                    'workspace_slug' => $slug,
-                    'appointment_id_received' => $appointmentId,
-                    'user_id' => $user->id,
-                ]);
-
                 return response()->json([
                     'success' => false,
-                    'message' => 'Identificador de agendamento invalido.'
+                    'ok' => false,
+                    'message' => 'Identificador de agendamento invalido.',
                 ], 422);
             }
 
-            $appointment = Appointment::find($appointmentId);
+            $appointment = Appointment::with(['calendar.doctor.user', 'patient', 'type', 'specialty'])->find($appointmentId);
             if (!$appointment) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Agendamento nao encontrado.'
+                    'ok' => false,
+                    'message' => 'Agendamento nao encontrado.',
                 ], 404);
             }
 
             $this->checkPermission($user, $appointment);
 
-            $validator = Validator::make($request->all(), [
-                'status' => 'required|string',
-            ]);
-
-            if ($validator->fails()) {
+            $normalizedStatus = $this->normalizeIncomingMedicalStatus((string) $request->input('status', ''));
+            if ($normalizedStatus === null) {
                 return response()->json([
                     'success' => false,
-                    'message' => $validator->errors()->first('status') ?: 'Status invalido.',
-                    'errors' => $validator->errors(),
-                ], 422);
-            }
-
-            $incomingStatus = (string) $request->input('status');
-            $statusAliases = [
-                'confirmed' => 'scheduled',
-                'arrived' => 'attended',
-                'in_service' => 'attended',
-                'completed' => 'attended',
-                'cancelled' => 'canceled',
-            ];
-            $targetStatus = $statusAliases[$incomingStatus] ?? $incomingStatus;
-            $allowedStatuses = ['scheduled', 'rescheduled', 'canceled', 'attended', 'no_show'];
-
-            if (!in_array($targetStatus, $allowedStatuses, true)) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Status invalido para este agendamento.',
+                    'ok' => false,
+                    'message' => 'Status invalido para alteracao.',
                     'errors' => [
-                        'status' => [
-                            'Status recebido: ' . $incomingStatus,
-                            'Status permitido(s): ' . implode(', ', $allowedStatuses),
-                        ],
+                        'status' => ['Status invalido para alteracao.'],
                     ],
                 ], 422);
             }
 
-            $updateData = ['status' => $targetStatus];
+            $request->merge([
+                'status' => $normalizedStatus,
+            ]);
+
+            $validator = Validator::make($request->all(), [
+                'status' => 'required|string|in:arrived,in_service,completed,no_show,canceled,rescheduled',
+                'note' => 'nullable|string|max:2000',
+                'reschedule_at' => 'nullable|date',
+                'current_date' => 'nullable|date_format:Y-m-d',
+            ]);
+
+            $validator->after(function ($validator) use ($request) {
+                $status = (string) $request->input('status');
+                $note = trim((string) $request->input('note', ''));
+                $statusNeedsNote = in_array($status, ['no_show', 'canceled', 'rescheduled'], true);
+
+                if ($statusNeedsNote && $note === '') {
+                    $validator->errors()->add('note', 'Informe o motivo para o status selecionado.');
+                }
+
+                if ($status === 'rescheduled' && !$request->filled('reschedule_at')) {
+                    $validator->errors()->add('reschedule_at', 'Informe a nova data e hora da remarcacao.');
+                }
+            });
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'success' => false,
+                    'ok' => false,
+                    'message' => $validator->errors()->first() ?: 'Dados invalidos.',
+                    'errors' => $validator->errors(),
+                ], 422);
+            }
+
+            $targetStatus = (string) $request->input('status');
+            $note = trim((string) $request->input('note', ''));
+            $rescheduleAtRaw = $request->input('reschedule_at');
+
+            $updateData = [
+                'status' => $targetStatus,
+            ];
+
             if ($targetStatus === 'canceled') {
                 $updateData['canceled_at'] = now();
-            } elseif ($appointment->canceled_at) {
+                $updateData['cancellation_reason'] = $note;
+            } elseif ($targetStatus === 'no_show') {
                 $updateData['canceled_at'] = null;
+                $updateData['cancellation_reason'] = $note;
+            } else {
+                $updateData['canceled_at'] = null;
+                $updateData['cancellation_reason'] = null;
+            }
+
+            if ($targetStatus === 'rescheduled') {
+                $rescheduleAt = Carbon::parse((string) $rescheduleAtRaw);
+                $durationMinutes = max(
+                    5,
+                    (int) (
+                        $appointment->starts_at && $appointment->ends_at
+                            ? $appointment->starts_at->diffInMinutes($appointment->ends_at)
+                            : ($appointment->type->duration_min ?? 30)
+                    )
+                );
+
+                $updateData['starts_at'] = $rescheduleAt;
+                $updateData['ends_at'] = $rescheduleAt->copy()->addMinutes($durationMinutes);
+                if ($this->hasQueuePositionColumn()) {
+                    $updateData['queue_position'] = null;
+                }
+                if ($this->hasQueueUpdatedAtColumn()) {
+                    $updateData['queue_updated_at'] = now();
+                }
+                $updateData['cancellation_reason'] = $note;
+            }
+
+            if ($note !== '') {
+                $noteLine = sprintf('[%s] %s: %s', now()->format('d/m/Y H:i'), strtoupper($targetStatus), $note);
+                $existingNotes = trim((string) ($appointment->notes ?? ''));
+                $updateData['notes'] = $existingNotes === '' ? $noteLine : $existingNotes . PHP_EOL . $noteLine;
             }
 
             $appointment->update($updateData);
-            $appointment->load(['calendar.doctor.user', 'patient', 'type', 'specialty']);
+            $appointment->refresh()->load(['calendar.doctor.user', 'patient', 'type', 'specialty']);
+
+            $currentDate = (string) $request->input('current_date', '');
+            $removeFromDay = false;
+
+            if ($currentDate !== '') {
+                $removeFromDay = $appointment->starts_at?->format('Y-m-d') !== $currentDate
+                    || !in_array($appointment->status, $this->dayQueueStatuses(), true);
+            }
 
             return response()->json([
                 'success' => true,
                 'ok' => true,
                 'message' => 'Status atualizado com sucesso.',
-                'status' => $targetStatus,
+                'status' => $appointment->status,
                 'label' => $appointment->status_translated,
-                'appointment' => $appointment,
+                'remove_from_day' => $removeFromDay,
+                'appointment' => $this->serializeAppointmentForSession($appointment),
             ]);
+        } catch (HttpException $e) {
+            return response()->json([
+                'success' => false,
+                'ok' => false,
+                'message' => $e->getMessage() ?: 'Operacao nao permitida.',
+            ], $e->getStatusCode());
+        } catch (QueryException $e) {
+            $traceId = (string) Str::uuid();
+            $sqlState = (string) ($e->errorInfo[0] ?? $e->getCode());
+            $constraintName = (string) ($e->errorInfo[2] ?? '');
+
+            Log::error('Erro de banco em updateStatus de atendimento medico', [
+                'trace_id' => $traceId,
+                'tenant_id' => tenant()?->id,
+                'workspace_slug' => $slug,
+                'appointment_id' => $appointmentId,
+                'user_id' => $user->id,
+                'payload' => $request->all(),
+                'sql_state' => $sqlState,
+                'constraint' => $constraintName,
+                'error' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'exception' => get_class($e),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            if ($sqlState === '23514' && str_contains($constraintName, 'appointments_status_check')) {
+                return response()->json([
+                    'success' => false,
+                    'ok' => false,
+                    'message' => 'Status nao permitido pela configuracao atual do banco para este tenant.',
+                    'errors' => [
+                        'status' => ['Status nao permitido para este tenant. Atualize as migrations de status.'],
+                    ],
+                    'trace_id' => $traceId,
+                ], 422);
+            }
+
+            return response()->json([
+                'success' => false,
+                'ok' => false,
+                'message' => 'Erro interno ao atualizar status.',
+                'trace_id' => $traceId,
+            ], 500);
         } catch (\Throwable $e) {
+            $traceId = (string) Str::uuid();
+
             Log::error('Erro em updateStatus de atendimento medico', [
+                'trace_id' => $traceId,
                 'tenant_id' => tenant()?->id,
                 'workspace_slug' => $slug,
                 'appointment_id' => $appointmentId,
                 'user_id' => $user->id,
                 'payload' => $request->all(),
                 'error' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'exception' => get_class($e),
+                'trace' => $e->getTraceAsString(),
             ]);
 
             return response()->json([
                 'success' => false,
+                'ok' => false,
                 'message' => 'Erro interno ao atualizar status.',
+                'trace_id' => $traceId,
+            ], 500);
+        }
+    }
+
+    /**
+     * Persiste a ordem manual da fila do dia.
+     */
+    public function reorderQueue(Request $request, $slug, $date)
+    {
+        $this->ensureTenantConnection();
+        $user = Auth::guard('tenant')->user();
+
+        if (!$this->hasQueuePositionColumn()) {
+            return response()->json([
+                'success' => false,
+                'ok' => false,
+                'message' => 'Ordem manual indisponivel para este tenant. Execute as migrations do tenant e tente novamente.',
+            ], 422);
+        }
+
+        if (!$user) {
+            return response()->json([
+                'success' => false,
+                'ok' => false,
+                'message' => 'Usuario nao autenticado.',
+            ], 401);
+        }
+
+        try {
+            $validator = Validator::make($request->all(), [
+                'ordered_ids' => 'required|array|min:1',
+                'ordered_ids.*' => 'required|uuid',
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'success' => false,
+                    'ok' => false,
+                    'message' => $validator->errors()->first() ?: 'Ordem invalida.',
+                    'errors' => $validator->errors(),
+                ], 422);
+            }
+
+            $orderedIds = array_values(array_unique(array_map('strval', (array) $request->input('ordered_ids', []))));
+            $doctorIds = $this->normalizeDoctorIdsFromRequest($request);
+
+            $query = Appointment::query()
+                ->forDay(Carbon::parse($date))
+                ->whereIn('status', $this->dayQueueStatuses());
+
+            $this->applyRoleDoctorFilter($query, $user, $doctorIds);
+
+            $matchedIds = (clone $query)
+                ->whereIn('id', $orderedIds)
+                ->pluck('id')
+                ->map(fn ($id) => (string) $id)
+                ->all();
+
+            if (count($matchedIds) !== count($orderedIds)) {
+                $invalidIds = array_values(array_diff($orderedIds, $matchedIds));
+
+                return response()->json([
+                    'success' => false,
+                    'ok' => false,
+                    'message' => 'A lista possui agendamentos invalidos para o dia/tenant.',
+                    'errors' => [
+                        'ordered_ids' => $invalidIds,
+                    ],
+                ], 422);
+            }
+
+            $hasQueueUpdatedAtColumn = $this->hasQueueUpdatedAtColumn();
+
+            DB::connection('tenant')->transaction(function () use ($orderedIds, $hasQueueUpdatedAtColumn) {
+                foreach ($orderedIds as $index => $appointmentId) {
+                    $updateData = [
+                        'queue_position' => $index + 1,
+                    ];
+
+                    if ($hasQueueUpdatedAtColumn) {
+                        $updateData['queue_updated_at'] = now();
+                    }
+
+                    Appointment::where('id', $appointmentId)->update($updateData);
+                }
+            });
+
+            return response()->json([
+                'success' => true,
+                'ok' => true,
+                'message' => 'Ordem da fila atualizada.',
+                'ordered_ids' => $orderedIds,
+            ]);
+        } catch (HttpException $e) {
+            return response()->json([
+                'success' => false,
+                'ok' => false,
+                'message' => $e->getMessage() ?: 'Operacao nao permitida.',
+            ], $e->getStatusCode());
+        } catch (\Throwable $e) {
+            Log::error('Erro ao reordenar fila de atendimento', [
+                'tenant_id' => tenant()?->id,
+                'workspace_slug' => $slug,
+                'date' => $date,
+                'payload' => $request->all(),
+                'error' => $e->getMessage(),
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'ok' => false,
+                'message' => 'Erro interno ao reordenar fila.',
             ], 500);
         }
     }
@@ -549,7 +695,7 @@ class MedicalAppointmentController extends Controller
 
         $query = Appointment::with(['calendar.doctor.user', 'patient', 'type', 'specialty'])
             ->forDay(Carbon::parse($date))
-            ->whereIn('status', ['scheduled', 'confirmed', 'arrived', 'in_service'])
+            ->whereIn('status', $this->dayQueueStatuses())
             ->where('starts_at', '>', $appointment->starts_at);
 
         // Aplicar mesmos filtros de permissão
@@ -581,9 +727,185 @@ class MedicalAppointmentController extends Controller
             ->to(workspace_route('tenant.medical-appointments.session', ['date' => $date]))
             ->with('info', 'Atendimento concluído. Não há mais agendamentos para hoje.');
     }
+    /**
+     * @return array<int, string>
+     */
+    private function dayQueueStatuses(): array
+    {
+        return ['scheduled', 'confirmed', 'arrived', 'in_service', 'rescheduled'];
+    }
+
+    private function normalizeIncomingMedicalStatus(string $input): ?string
+    {
+        $normalized = mb_strtolower(trim($input), 'UTF-8');
+        $normalized = str_replace(
+            ['á', 'à', 'ã', 'â', 'é', 'ê', 'í', 'ó', 'ô', 'õ', 'ú', 'ç', '-', ' '],
+            ['a', 'a', 'a', 'a', 'e', 'e', 'i', 'o', 'o', 'o', 'u', 'c', '_', '_'],
+            $normalized
+        );
+
+        $map = [
+            'arrived' => 'arrived',
+            'chegou' => 'arrived',
+            'in_service' => 'in_service',
+            'em_atendimento' => 'in_service',
+            'completed' => 'completed',
+            'concluido' => 'completed',
+            'finalizado' => 'completed',
+            'no_show' => 'no_show',
+            'nao_compareceu' => 'no_show',
+            'canceled' => 'canceled',
+            'cancelado' => 'canceled',
+            'cancelled' => 'canceled',
+            'rescheduled' => 'rescheduled',
+            'remarcado' => 'rescheduled',
+        ];
+
+        return $map[$normalized] ?? null;
+    }
 
     /**
-     * Garante que a conexão do tenant está configurada
+     * @return array<int, string>
+     */
+    private function normalizeDoctorIdsFromRequest(Request $request): array
+    {
+        $doctorIdsParam = $request->input('doctor_ids', []);
+        if (!is_array($doctorIdsParam)) {
+            $doctorIdsParam = $doctorIdsParam ? [$doctorIdsParam] : [];
+        }
+
+        return array_values(array_filter(array_map('strval', $doctorIdsParam)));
+    }
+
+    /**
+     * Aplica filtro de acesso por role na query de atendimento do dia.
+     *
+     * @param array<int, string> $doctorIds
+     */
+    private function applyRoleDoctorFilter(Builder $query, $user, array &$doctorIds): void
+    {
+        if ($user->role === 'doctor') {
+            $doctor = Doctor::where('user_id', $user->id)->first();
+            if (!$doctor) {
+                $query->whereRaw('1 = 0');
+                $doctorIds = [];
+                return;
+            }
+
+            $doctorIds = [(string) $doctor->id];
+
+            $query->whereHas('calendar', function ($calendarQuery) use ($doctorIds) {
+                $calendarQuery->whereIn('doctor_id', $doctorIds);
+            });
+            return;
+        }
+
+        if ($user->role === 'admin') {
+            if (!empty($doctorIds)) {
+                $query->whereHas('calendar', function ($calendarQuery) use ($doctorIds) {
+                    $calendarQuery->whereIn('doctor_id', $doctorIds);
+                });
+            }
+            return;
+        }
+
+        if ($user->role === 'user') {
+            $allowedDoctorIds = $user->allowedDoctors()->pluck('doctors.id')->map(fn ($id) => (string) $id)->all();
+
+            if (empty($allowedDoctorIds)) {
+                $query->whereRaw('1 = 0');
+                $doctorIds = [];
+                return;
+            }
+
+            if (!empty($doctorIds)) {
+                $invalidDoctorIds = array_diff($doctorIds, $allowedDoctorIds);
+                if (!empty($invalidDoctorIds)) {
+                    abort(403, 'VocÃª nÃ£o tem permissÃ£o para acessar um ou mais mÃ©dicos selecionados.');
+                }
+
+                $query->whereHas('calendar', function ($calendarQuery) use ($doctorIds) {
+                    $calendarQuery->whereIn('doctor_id', $doctorIds);
+                });
+                return;
+            }
+
+            $doctorIds = $allowedDoctorIds;
+            $query->whereHas('calendar', function ($calendarQuery) use ($allowedDoctorIds) {
+                $calendarQuery->whereIn('doctor_id', $allowedDoctorIds);
+            });
+            return;
+        }
+
+        abort(403, 'VocÃª nÃ£o tem permissÃ£o para acessar atendimentos.');
+    }
+
+    /**
+     * Serializa dados essenciais para atualizar a fila sem reload.
+     */
+    private function serializeAppointmentForSession(Appointment $appointment): array
+    {
+        $doctorUser = optional(optional($appointment->calendar)->doctor)->user;
+
+        return [
+            'id' => (string) $appointment->id,
+            'status' => (string) $appointment->status,
+            'status_label' => (string) $appointment->status_translated,
+            'starts_at_iso' => $appointment->starts_at?->toIso8601String(),
+            'starts_at_time' => $appointment->starts_at?->format('H:i'),
+            'starts_at_display' => $appointment->starts_at?->format('d/m/Y H:i'),
+            'patient_name' => (string) ($appointment->patient->full_name ?? 'N/A'),
+            'doctor_name' => (string) ($doctorUser->name_full ?? $doctorUser->name ?? 'N/A'),
+            'type_name' => (string) ($appointment->type->name ?? 'Tipo nÃ£o informado'),
+            'queue_position' => $appointment->queue_position,
+        ];
+    }
+
+    private function hasQueuePositionColumn(): bool
+    {
+        if ($this->hasQueuePositionColumn !== null) {
+            return $this->hasQueuePositionColumn;
+        }
+
+        try {
+            $this->hasQueuePositionColumn = Schema::connection('tenant')->hasColumn('appointments', 'queue_position');
+        } catch (\Throwable $e) {
+            Log::warning('Falha ao verificar coluna queue_position', [
+                'tenant_id' => tenant()?->id,
+                'error' => $e->getMessage(),
+            ]);
+            $this->hasQueuePositionColumn = false;
+        }
+
+        return $this->hasQueuePositionColumn;
+    }
+
+    private function hasQueueUpdatedAtColumn(): bool
+    {
+        if ($this->hasQueueUpdatedAtColumn !== null) {
+            return $this->hasQueueUpdatedAtColumn;
+        }
+
+        if (!$this->hasQueuePositionColumn()) {
+            $this->hasQueueUpdatedAtColumn = false;
+            return false;
+        }
+
+        try {
+            $this->hasQueueUpdatedAtColumn = Schema::connection('tenant')->hasColumn('appointments', 'queue_updated_at');
+        } catch (\Throwable $e) {
+            Log::warning('Falha ao verificar coluna queue_updated_at', [
+                'tenant_id' => tenant()?->id,
+                'error' => $e->getMessage(),
+            ]);
+            $this->hasQueueUpdatedAtColumn = false;
+        }
+
+        return $this->hasQueueUpdatedAtColumn;
+    }
+
+    /**
+     * Garante que a conexao do tenant esta configurada.
      */
     private function ensureTenantConnection()
     {

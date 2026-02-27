@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Tenant;
 
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\Tenant\Concerns\HandlesGridRequests;
 use App\Models\Tenant\Doctor;
 use App\Models\Tenant\User;
 use App\Models\Tenant\MedicalSpecialty;
@@ -13,6 +14,8 @@ use Illuminate\Http\Request;
 
 class DoctorController extends Controller
 {
+    use HandlesGridRequests;
+
     public function index()
     {
         return view('tenant.doctors.index');
@@ -239,19 +242,16 @@ class DoctorController extends Controller
      */
     public function gridData(Request $request, $slug)
     {
-        $page  = max(1, (int) $request->input('page', 1));
-        $limit = max(1, min(100, (int) $request->input('limit', 10)));
+        $page = $this->gridPage($request);
+        $perPage = $this->gridPerPage($request);
 
         $query = Doctor::query()
             ->with(['specialties', 'user'])
             ->join('users', 'users.id', '=', 'doctors.user_id')
             ->select('doctors.*');
 
-        $search = $request->input('search');
-
-        if (is_array($search) && !empty($search['value'])) {
-            $term = trim($search['value']);
-
+        $term = $this->gridSearch($request);
+        if ($term !== '') {
             $query->where(function ($q) use ($term) {
                 $q->where('users.name', 'like', "%{$term}%")
                   ->orWhere('users.email', 'like', "%{$term}%")
@@ -259,28 +259,18 @@ class DoctorController extends Controller
             });
         }
 
-        $sort = $request->input('sort');
+        $sort = $this->gridSort($request, [
+            'name'  => 'users.name',
+            'email' => 'users.email',
+            'crm'   => 'doctors.crm_number',
+        ], 'name', 'asc');
 
-        if (is_array($sort) && isset($sort['column'], $sort['direction'])) {
-            $column = $sort['column'];
-            $direction = strtolower($sort['direction']) === 'asc' ? 'asc' : 'desc';
-
-            $sortable = [
-                'name'  => 'users.name',
-                'email' => 'users.email',
-                'crm'   => 'doctors.crm_number',
-            ];
-
-            if (isset($sortable[$column])) {
-                $query->orderBy($sortable[$column], $direction);
-            } else {
-                $query->orderBy('users.name');
-            }
-        } else {
-            $query->orderBy('users.name');
+        $query->orderBy($sort['column'], $sort['direction']);
+        if ($sort['column'] !== 'users.name') {
+            $query->orderBy('users.name', 'asc');
         }
 
-        $paginator = $query->paginate($limit, ['*'], 'page', $page);
+        $paginator = $query->paginate($perPage, ['*'], 'page', $page);
 
         $data = [];
 
@@ -304,12 +294,7 @@ class DoctorController extends Controller
 
         return response()->json([
             'data' => $data,
-            'meta' => [
-                'current_page' => $paginator->currentPage(),
-                'last_page'    => $paginator->lastPage(),
-                'per_page'     => $paginator->perPage(),
-                'total'        => $paginator->total(),
-            ],
+            'meta' => $this->gridMeta($paginator),
         ]);
     }
 }

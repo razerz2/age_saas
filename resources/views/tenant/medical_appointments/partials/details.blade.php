@@ -50,18 +50,26 @@
                             'completed' => 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200',
                             'canceled' => 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300',
                             'cancelled' => 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300',
+                            'no_show' => 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300',
                         ];
                         $statusClass = $statusClasses[$appointment->status] ?? 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200';
                     @endphp
-                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium {{ $statusClass }}">{{ $appointment->status_translated }}</span>
+                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium {{ $statusClass }}" data-role="detail-status-badge">{{ $appointment->status_translated }}</span>
                 </p>
             </div>
         </section>
 
+        @if($appointment->cancellation_reason)
+            <section class="rounded-lg border border-amber-200 dark:border-amber-800 p-4 bg-amber-50 dark:bg-amber-900/20">
+                <h3 class="text-base font-semibold text-amber-900 dark:text-amber-200 mb-2">Motivo de Status</h3>
+                <p class="text-sm text-amber-800 dark:text-amber-300">{{ $appointment->cancellation_reason }}</p>
+            </section>
+        @endif
+
         @if($appointment->notes)
             <section class="rounded-lg border border-gray-200 dark:border-gray-700 p-4 bg-gray-50 dark:bg-gray-900/20">
                 <h3 class="text-base font-semibold text-gray-900 dark:text-gray-100 mb-2">Observações</h3>
-                <p class="text-sm text-gray-700 dark:text-gray-300">{{ $appointment->notes }}</p>
+                <p class="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-line">{{ $appointment->notes }}</p>
             </section>
         @endif
 
@@ -94,26 +102,20 @@
 
         <section>
             <div class="flex flex-wrap gap-2">
-                @if($appointment->status === 'scheduled' || $appointment->status === 'confirmed')
+                @if(!in_array($appointment->status, ['completed', 'cancelled', 'canceled', 'no_show']))
                     <x-tailadmin-button
                         type="button"
                         variant="secondary"
                         size="md"
                         class="border-amber-300 bg-amber-100 text-amber-900 hover:bg-amber-200 dark:border-amber-700 dark:bg-amber-900/30 dark:text-amber-200 dark:hover:bg-amber-900/50"
-                        title="Marcar paciente como chegou"
-                        data-medical-action="update-status"
+                        title="Alterar status deste atendimento"
+                        data-medical-action="open-status-modal"
                         data-appointment-id="{{ $appointment->id }}"
-                        data-status="attended"
+                        data-current-status="{{ $appointment->status }}"
+                        data-current-starts-at="{{ $appointment->starts_at?->format('Y-m-d\\TH:i') }}"
                     >
                         <x-icon name="check-circle-outline" size="text-sm" class="mr-1" />
-                        Paciente Chegou
-                    </x-tailadmin-button>
-                @endif
-
-                @if($appointment->status === 'arrived')
-                    <x-tailadmin-button type="button" variant="success" size="md"
-                        data-medical-action="update-status" data-appointment-id="{{ $appointment->id }}" data-status="in_service">
-                        Iniciar Atendimento
+                        Alterar Status
                     </x-tailadmin-button>
                 @endif
 
@@ -121,13 +123,6 @@
                     <x-tailadmin-button type="button" variant="primary" size="md"
                         data-medical-action="complete-appointment" data-appointment-id="{{ $appointment->id }}">
                         Finalizar Atendimento
-                    </x-tailadmin-button>
-                @endif
-
-                @if(!in_array($appointment->status, ['completed', 'cancelled']))
-                    <x-tailadmin-button type="button" variant="danger" size="md"
-                        data-medical-action="update-status" data-appointment-id="{{ $appointment->id }}" data-status="canceled">
-                        Cancelar
                     </x-tailadmin-button>
                 @endif
             </div>

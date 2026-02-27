@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Tenant;
 
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\Tenant\Concerns\HandlesGridRequests;
 use App\Models\Tenant\MedicalSpecialty;
 use App\Http\Requests\Tenant\StoreMedicalSpecialtyRequest;
 use App\Http\Requests\Tenant\UpdateMedicalSpecialtyRequest;
@@ -10,6 +11,8 @@ use Illuminate\Http\Request;
 
 class MedicalSpecialtyController extends Controller
 {
+    use HandlesGridRequests;
+
     public function index()
     {
         return view('tenant.specialties.index');
@@ -67,43 +70,31 @@ class MedicalSpecialtyController extends Controller
      */
     public function gridData(Request $request, $slug)
     {
-        $page = max(1, (int) $request->input('page', 1));
-        $limit = max(1, min(100, (int) $request->input('limit', 10)));
+        $page = $this->gridPage($request);
+        $perPage = $this->gridPerPage($request);
 
         $query = MedicalSpecialty::query();
 
         // Busca simples em nome e código
-        $search = $request->input('search');
-        if (is_array($search) && !empty($search['value'])) {
-            $term = trim($search['value']);
-
+        $term = $this->gridSearch($request);
+        if ($term !== '') {
             $query->where(function ($q) use ($term) {
                 $q->where('name', 'like', "%{$term}%")
                   ->orWhere('code', 'like', "%{$term}%");
             });
         }
 
-        // Ordenação básica
-        $sort = $request->input('sort');
-        if (is_array($sort) && isset($sort['column'], $sort['direction'])) {
-            $column = $sort['column'];
-            $direction = strtolower($sort['direction']) === 'asc' ? 'asc' : 'desc';
+        $sort = $this->gridSort($request, [
+            'name' => 'name',
+            'code' => 'code',
+        ], 'name', 'asc');
 
-            $sortable = [
-                'name' => 'name',
-                'code' => 'code',
-            ];
-
-            if (isset($sortable[$column])) {
-                $query->orderBy($sortable[$column], $direction);
-            } else {
-                $query->orderBy('name');
-            }
-        } else {
-            $query->orderBy('name');
+        $query->orderBy($sort['column'], $sort['direction']);
+        if ($sort['column'] !== 'name') {
+            $query->orderBy('name', 'asc');
         }
 
-        $paginator = $query->paginate($limit, ['*'], 'page', $page);
+        $paginator = $query->paginate($perPage, ['*'], 'page', $page);
 
         $data = [];
 
@@ -121,12 +112,7 @@ class MedicalSpecialtyController extends Controller
 
         return response()->json([
             'data' => $data,
-            'meta' => [
-                'current_page' => $paginator->currentPage(),
-                'last_page'    => $paginator->lastPage(),
-                'per_page'     => $paginator->perPage(),
-                'total'        => $paginator->total(),
-            ],
+            'meta' => $this->gridMeta($paginator),
         ]);
     }
 }

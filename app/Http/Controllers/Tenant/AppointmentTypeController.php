@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Tenant;
 
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\Tenant\Concerns\HandlesGridRequests;
 use App\Http\Controllers\Tenant\Concerns\HasDoctorFilter;
 use App\Models\Tenant\AppointmentType;
 use App\Models\Tenant\Doctor;
@@ -15,6 +16,7 @@ use Illuminate\Support\Facades\Auth;
 class AppointmentTypeController extends Controller
 {
     use HasDoctorFilter;
+    use HandlesGridRequests;
     public function index(Request $request)
     {
         $query = AppointmentType::with(['doctor.user']);
@@ -151,11 +153,11 @@ class AppointmentTypeController extends Controller
 
         $this->applyDoctorFilter($query, 'doctor_id');
 
-        $page  = max(1, (int) $request->input('page', 1));
-        $limit = max(1, min(100, (int) $request->input('limit', 10)));
+        $page = $this->gridPage($request);
+        $perPage = $this->gridPerPage($request);
 
         // Busca global
-        $search = trim((string) $request->input('search', ''));
+        $search = $this->gridSearch($request);
         if ($search !== '') {
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
@@ -172,19 +174,17 @@ class AppointmentTypeController extends Controller
             'doctor'       => 'doctor_id',
             'duration_min' => 'duration_min',
             'price'        => 'price',
+            'color'        => 'color',
             'created_at'   => 'created_at',
         ];
 
-        $sortField = (string) $request->input('sort', 'name');
-        $sortDir   = strtolower((string) $request->input('direction', 'asc')) === 'desc' ? 'desc' : 'asc';
-
-        if (isset($sortable[$sortField])) {
-            $query->orderBy($sortable[$sortField], $sortDir);
-        } else {
+        $sort = $this->gridSort($request, $sortable, 'name', 'asc');
+        $query->orderBy($sort['column'], $sort['direction']);
+        if ($sort['column'] !== 'name') {
             $query->orderBy('name', 'asc');
         }
 
-        $paginator = $query->paginate($limit, ['*'], 'page', $page);
+        $paginator = $query->paginate($perPage, ['*'], 'page', $page);
 
         $data = $paginator->getCollection()->map(function (AppointmentType $type) {
 
@@ -207,12 +207,7 @@ class AppointmentTypeController extends Controller
 
         return response()->json([
             'data' => $data,
-            'meta' => [
-                'current_page' => $paginator->currentPage(),
-                'last_page'    => $paginator->lastPage(),
-                'per_page'     => $paginator->perPage(),
-                'total'        => $paginator->total(),
-            ],
+            'meta' => $this->gridMeta($paginator),
         ]);
     }
 

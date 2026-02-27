@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Tenant;
 
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\Tenant\Concerns\HandlesGridRequests;
 use App\Models\Tenant\Campaign;
 use App\Models\Tenant\CampaignRecipient;
 use Illuminate\Http\JsonResponse;
@@ -11,6 +12,8 @@ use Illuminate\Support\Str;
 
 class CampaignRecipientController extends Controller
 {
+    use HandlesGridRequests;
+
     public function index(Campaign $campaign, Request $request)
     {
         $runId = $this->normalizeNullableInt($request->input('run_id', $request->input('campaign_run_id')));
@@ -23,8 +26,8 @@ class CampaignRecipientController extends Controller
 
     public function gridData(Campaign $campaign, Request $request): JsonResponse
     {
-        $page = max(1, (int) $request->input('page', 1));
-        $perPage = max(1, min(100, (int) $request->input('perPage', $request->input('limit', 10))));
+        $page = $this->gridPage($request);
+        $perPage = $this->gridPerPage($request);
 
         $query = CampaignRecipient::query()
             ->where('campaign_id', $campaign->id);
@@ -34,7 +37,7 @@ class CampaignRecipientController extends Controller
             $query->where('campaign_run_id', $runId);
         }
 
-        $search = $this->extractSearchTerm($request);
+        $search = $this->gridSearch($request);
         if ($search !== '') {
             $query->where(function ($builder) use ($search) {
                 $builder->where('channel', 'like', '%' . $search . '%')
@@ -62,12 +65,7 @@ class CampaignRecipientController extends Controller
 
         return response()->json([
             'data' => $data,
-            'meta' => [
-                'current_page' => $paginator->currentPage(),
-                'last_page' => $paginator->lastPage(),
-                'per_page' => $paginator->perPage(),
-                'total' => $paginator->total(),
-            ],
+            'meta' => $this->gridMeta($paginator),
         ]);
     }
 
@@ -115,20 +113,10 @@ class CampaignRecipientController extends Controller
         return Str::limit($message, 120);
     }
 
-    private function extractSearchTerm(Request $request): string
-    {
-        $search = $request->input('search');
-
-        if (is_array($search)) {
-            return trim((string) ($search['value'] ?? ''));
-        }
-
-        return trim((string) $search);
-    }
-
     private function applySort(Request $request, $query): void
     {
         $sortable = [
+            'id' => 'id',
             'channel' => 'channel',
             'destination' => 'destination',
             'status' => 'status',
@@ -137,19 +125,11 @@ class CampaignRecipientController extends Controller
             'created_at' => 'created_at',
         ];
 
-        $sort = $request->input('sort');
-
-        if (is_array($sort) && isset($sort['column'], $sort['direction'])) {
-            $column = (string) $sort['column'];
-            $direction = strtolower((string) $sort['direction']) === 'asc' ? 'asc' : 'desc';
-
-            if (isset($sortable[$column])) {
-                $query->orderBy($sortable[$column], $direction);
-                return;
-            }
+        $sort = $this->gridSort($request, $sortable, 'id', 'desc');
+        $query->orderBy($sort['column'], $sort['direction']);
+        if ($sort['column'] !== 'id') {
+            $query->orderByDesc('id');
         }
-
-        $query->orderByDesc('id');
     }
 
     private function normalizeNullableInt(mixed $value): ?int

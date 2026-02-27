@@ -50,19 +50,15 @@ function initCampaignsGrid() {
 
     const baseUrl = appendQuery(gridUrl, {
         page: 1,
-        limit: defaultLimit,
+        per_page: defaultLimit,
     });
 
     new gridjs.Grid({
         columns,
-        server: {
-            url: baseUrl,
-            method: 'GET',
-            then: (data) => data.data || [],
-            total: (data) => Number(data?.meta?.total || 0),
-        },
+        server: buildServerConfig(baseUrl),
         search: {
             enabled: true,
+            debounceTimeout: 350,
             server: {
                 url: (prev, keyword) => appendQuery(prev, {
                     search: keyword || '',
@@ -82,8 +78,8 @@ function initCampaignsGrid() {
                     const direction = col.direction === 1 ? 'asc' : 'desc';
 
                     return appendQuery(prev, {
-                        'sort[column]': col.id,
-                        'sort[direction]': direction,
+                        sort: col.id,
+                        dir: direction,
                         page: 1,
                     });
                 },
@@ -95,7 +91,7 @@ function initCampaignsGrid() {
             server: {
                 url: (prev, page, limit) => appendQuery(prev, {
                     page: Number(page) + 1,
-                    limit: Number(limit),
+                    per_page: Number(limit),
                 }),
             },
         },
@@ -118,6 +114,8 @@ function initCampaignsGrid() {
             wrapperSelector: '#campaigns-grid-wrapper',
             storageKey: 'tenant_campaigns_page_size',
             defaultLimit,
+            queryParam: 'per_page',
+            pageQueryParam: 'page',
         })
     ) {
         return;
@@ -163,19 +161,15 @@ function initCampaignRunsGrid() {
 
     const baseUrl = appendQuery(gridUrl, {
         page: 1,
-        limit: defaultLimit,
+        per_page: defaultLimit,
     });
 
     new gridjs.Grid({
         columns,
-        server: {
-            url: baseUrl,
-            method: 'GET',
-            then: (data) => data.data || [],
-            total: (data) => Number(data?.meta?.total || 0),
-        },
+        server: buildServerConfig(baseUrl),
         search: {
             enabled: true,
+            debounceTimeout: 350,
             server: {
                 url: (prev, keyword) => appendQuery(prev, {
                     search: keyword || '',
@@ -195,8 +189,8 @@ function initCampaignRunsGrid() {
                     const direction = col.direction === 1 ? 'asc' : 'desc';
 
                     return appendQuery(prev, {
-                        'sort[column]': col.id,
-                        'sort[direction]': direction,
+                        sort: col.id,
+                        dir: direction,
                         page: 1,
                     });
                 },
@@ -208,7 +202,7 @@ function initCampaignRunsGrid() {
             server: {
                 url: (prev, page, limit) => appendQuery(prev, {
                     page: Number(page) + 1,
-                    limit: Number(limit),
+                    per_page: Number(limit),
                 }),
             },
         },
@@ -230,6 +224,8 @@ function initCampaignRunsGrid() {
         wrapperSelector: '#campaign-runs-grid-wrapper',
         storageKey: 'tenant_campaign_runs_page_size',
         defaultLimit,
+        queryParam: 'per_page',
+        pageQueryParam: 'page',
     });
 }
 
@@ -270,19 +266,15 @@ function initCampaignRecipientsGrid() {
 
     const baseUrl = appendQuery(gridUrl, {
         page: 1,
-        limit: defaultLimit,
+        per_page: defaultLimit,
     });
 
     new gridjs.Grid({
         columns,
-        server: {
-            url: baseUrl,
-            method: 'GET',
-            then: (data) => data.data || [],
-            total: (data) => Number(data?.meta?.total || 0),
-        },
+        server: buildServerConfig(baseUrl),
         search: {
             enabled: true,
+            debounceTimeout: 350,
             server: {
                 url: (prev, keyword) => appendQuery(prev, {
                     search: keyword || '',
@@ -302,8 +294,8 @@ function initCampaignRecipientsGrid() {
                     const direction = col.direction === 1 ? 'asc' : 'desc';
 
                     return appendQuery(prev, {
-                        'sort[column]': col.id,
-                        'sort[direction]': direction,
+                        sort: col.id,
+                        dir: direction,
                         page: 1,
                     });
                 },
@@ -315,7 +307,7 @@ function initCampaignRecipientsGrid() {
             server: {
                 url: (prev, page, limit) => appendQuery(prev, {
                     page: Number(page) + 1,
-                    limit: Number(limit),
+                    per_page: Number(limit),
                 }),
             },
         },
@@ -337,6 +329,8 @@ function initCampaignRecipientsGrid() {
         wrapperSelector: '#campaign-recipients-grid-wrapper',
         storageKey: 'tenant_campaign_recipients_page_size',
         defaultLimit,
+        queryParam: 'per_page',
+        pageQueryParam: 'page',
     });
 }
 
@@ -356,7 +350,7 @@ function resolveGridUrl(wrapper) {
 
 function resolveLimit(storageKey = 'tenant_campaigns_page_size') {
     const params = new URLSearchParams(window.location.search);
-    const fromQuery = Number.parseInt(params.get('limit') || '', 10);
+    const fromQuery = Number.parseInt(params.get('per_page') || params.get('limit') || '', 10);
     if ([10, 25, 50, 100].includes(fromQuery)) {
         return fromQuery;
     }
@@ -377,7 +371,8 @@ function appendQuery(url, params) {
     const targetUrl = new URL(url, window.location.origin);
 
     Object.entries(params || {}).forEach(([key, value]) => {
-        if (value === undefined || value === null) {
+        if (value === undefined || value === null || value === '') {
+            targetUrl.searchParams.delete(key);
             return;
         }
 
@@ -389,6 +384,26 @@ function appendQuery(url, params) {
     }
 
     return targetUrl.toString();
+}
+
+function buildServerConfig(url) {
+    return {
+        url,
+        method: 'GET',
+        handle: async (response) => {
+            if (!response.ok) {
+                throw new Error(`Erro ao carregar dados (HTTP ${response.status})`);
+            }
+
+            try {
+                return await response.json();
+            } catch (error) {
+                throw new Error('Resposta inválida do servidor');
+            }
+        },
+        then: (payload) => (Array.isArray(payload?.data) ? payload.data : []),
+        total: (payload) => Number(payload?.meta?.total || 0),
+    };
 }
 
 function bindCampaignsIndexRowClick() {

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Tenant;
 
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\Tenant\Concerns\HandlesGridRequests;
 use App\Http\Controllers\Tenant\Concerns\HasDoctorFilter;
 use App\Models\Tenant\Form;
 use App\Models\Tenant\FormResponse;
@@ -22,6 +23,7 @@ use Illuminate\Http\Request;
 class FormResponseController extends Controller
 {
     use HasDoctorFilter;
+    use HandlesGridRequests;
     /** -----------------------------------------
      *            LISTAR RESPOSTAS
      * -----------------------------------------*/
@@ -46,11 +48,14 @@ class FormResponseController extends Controller
             'appointment'
         ]);
 
-        $page  = max(1, (int) $request->input('page', 1));
-        $limit = max(1, min(100, (int) $request->input('limit', 10)));
+        // Aplicar filtro de médico através do relacionamento form.
+        $this->applyDoctorFilterWhereHas($query, 'form', 'doctor_id');
+
+        $page = $this->gridPage($request);
+        $perPage = $this->gridPerPage($request);
 
         // Busca global
-        $search = trim((string) $request->input('search', ''));
+        $search = $this->gridSearch($request);
         if ($search !== '') {
             $query->where(function ($q) use ($search) {
                 $q->whereHas('form', function ($sub) use ($search) {
@@ -66,19 +71,17 @@ class FormResponseController extends Controller
         $sortable = [
             'form'         => 'form_id',
             'patient'      => 'patient_id',
+            'appointment'  => 'appointment_id',
             'submitted_at' => 'submitted_at',
         ];
 
-        $sortField = (string) $request->input('sort', 'submitted_at');
-        $sortDir   = strtolower((string) $request->input('direction', 'desc')) === 'asc' ? 'asc' : 'desc';
-
-        if (isset($sortable[$sortField])) {
-            $query->orderBy($sortable[$sortField], $sortDir);
-        } else {
+        $sort = $this->gridSort($request, $sortable, 'submitted_at', 'desc');
+        $query->orderBy($sort['column'], $sort['direction']);
+        if ($sort['column'] !== 'submitted_at') {
             $query->orderBy('submitted_at', 'desc');
         }
 
-        $paginator = $query->paginate($limit, ['*'], 'page', $page);
+        $paginator = $query->paginate($perPage, ['*'], 'page', $page);
 
         $data = $paginator->getCollection()->map(function (FormResponse $response) {
 
@@ -95,12 +98,7 @@ class FormResponseController extends Controller
 
         return response()->json([
             'data' => $data,
-            'meta' => [
-                'current_page' => $paginator->currentPage(),
-                'last_page'    => $paginator->lastPage(),
-                'per_page'     => $paginator->perPage(),
-                'total'        => $paginator->total(),
-            ],
+            'meta' => $this->gridMeta($paginator),
         ]);
     }
 

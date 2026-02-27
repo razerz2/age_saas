@@ -86,6 +86,13 @@
                     :pagination="true"
                     :search="true"
                     :sort="true"
+                    :serverPagination="true"
+                    pageQueryParam="page"
+                    perPageQueryParam="per_page"
+                    searchQueryParam="search"
+                    sortQueryParam="sort"
+                    sortDirQueryParam="dir"
+                    :searchDebounce="350"
                 />
             </div>
         </div>

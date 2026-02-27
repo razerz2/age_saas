@@ -3,7 +3,8 @@ export function applyGridPageSizeSelector({
     storageKey,
     allowed = [10, 25, 50, 100],
     defaultLimit = 10,
-    queryParam = 'limit',
+    queryParam = 'per_page',
+    pageQueryParam = 'page',
 }) {
     if (!wrapperSelector || !storageKey) {
         return true;
@@ -36,11 +37,32 @@ export function applyGridPageSizeSelector({
     };
 
     const currentUrl = new URL(window.location.href);
-    const urlLimit = parseAllowedLimit(currentUrl.searchParams.get(queryParam));
+    const legacyQueryParam = queryParam === 'per_page' ? 'limit' : null;
+    const queryLimit = parseAllowedLimit(currentUrl.searchParams.get(queryParam));
+    const legacyLimit = legacyQueryParam
+        ? parseAllowedLimit(currentUrl.searchParams.get(legacyQueryParam))
+        : null;
+    const urlLimit = queryLimit || legacyLimit;
     const storedLimit = getStoredLimit();
+
+    if (!queryLimit && legacyLimit) {
+        currentUrl.searchParams.set(queryParam, String(legacyLimit));
+        currentUrl.searchParams.delete(legacyQueryParam);
+        if (pageQueryParam) {
+            currentUrl.searchParams.set(pageQueryParam, '1');
+        }
+        window.location.replace(currentUrl.toString());
+        return false;
+    }
 
     if (!urlLimit && storedLimit) {
         currentUrl.searchParams.set(queryParam, String(storedLimit));
+        if (legacyQueryParam) {
+            currentUrl.searchParams.delete(legacyQueryParam);
+        }
+        if (pageQueryParam) {
+            currentUrl.searchParams.set(pageQueryParam, '1');
+        }
         window.location.replace(currentUrl.toString());
         return false;
     }
@@ -103,6 +125,12 @@ export function applyGridPageSizeSelector({
 
             const nextUrl = new URL(window.location.href);
             nextUrl.searchParams.set(queryParam, String(nextLimit));
+            if (legacyQueryParam) {
+                nextUrl.searchParams.delete(legacyQueryParam);
+            }
+            if (pageQueryParam) {
+                nextUrl.searchParams.set(pageQueryParam, '1');
+            }
             window.location.assign(nextUrl.toString());
         });
 
