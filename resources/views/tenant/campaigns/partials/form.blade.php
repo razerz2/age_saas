@@ -261,7 +261,7 @@
                 <h3 class="text-base font-semibold text-gray-900 dark:text-white">Conteúdo da Campanha</h3>
                 <button
                     type="button"
-                    class="btn btn-outline inline-flex items-center gap-2 border-blue-300 text-blue-700 hover:border-blue-400 hover:bg-blue-50 focus:ring-2 focus:ring-blue-500 dark:border-blue-700 dark:text-blue-300 dark:hover:bg-blue-900/20"
+                    class="btn btn-primary btn-sm inline-flex items-center gap-2"
                     data-variables-modal-open="campaign-variables-modal"
                     title="Variáveis disponíveis"
                     aria-label="Variáveis disponíveis"
@@ -388,8 +388,43 @@
                         @enderror
                     </div>
                     <div id="whatsapp-text-wrapper" class="{{ $whatsappMessageType === 'text' ? '' : 'hidden' }}">
-                        <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">Texto <span class="text-red-500">*</span></label>
-                        <textarea name="content_json[whatsapp][text]" rows="4" {{ $whatsappSelected && $whatsappMessageType === 'text' ? '' : 'disabled' }}
+                        <div class="mb-2 flex items-center justify-between gap-3">
+                            <label for="campaign-whatsapp-text" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Texto <span class="text-red-500">*</span></label>
+                            <div class="relative" data-emoji-picker="whatsapp">
+                                <button
+                                    type="button"
+                                    class="btn btn-outline btn-sm inline-flex items-center gap-2 whitespace-nowrap"
+                                    data-emoji-toggle="1"
+                                    aria-label="Abrir seletor de emojis"
+                                    aria-haspopup="dialog"
+                                    aria-expanded="false"
+                                    aria-controls="campaign-whatsapp-emoji-popover"
+                                >
+                                    <i class="mdi mdi-emoticon-happy-outline text-base" aria-hidden="true"></i>
+                                    <span>Emojis</span>
+                                </button>
+                                <div
+                                    id="campaign-whatsapp-emoji-popover"
+                                    class="absolute right-0 top-full z-50 mt-2 hidden w-[360px] max-w-[92vw] overflow-hidden rounded-xl border border-stroke bg-white p-2 shadow-lg dark:border-strokedark dark:bg-boxdark"
+                                    data-emoji-popover="1"
+                                    role="dialog"
+                                    aria-modal="false"
+                                    aria-label="Seletor de emojis"
+                                >
+                                    <div class="mb-2 flex gap-2 overflow-x-auto pb-2">
+                                        <button type="button" data-emoji-tab="recent" class="whitespace-nowrap rounded-md border border-transparent px-2 py-1 text-xs font-medium text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-boxdark-2" aria-pressed="false">Recentes</button>
+                                        <button type="button" data-emoji-tab="faces" class="whitespace-nowrap rounded-md border border-transparent px-2 py-1 text-xs font-medium text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-boxdark-2" aria-pressed="true">Carinhas</button>
+                                        <button type="button" data-emoji-tab="gestures" class="whitespace-nowrap rounded-md border border-transparent px-2 py-1 text-xs font-medium text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-boxdark-2" aria-pressed="false">Gestos</button>
+                                        <button type="button" data-emoji-tab="objects" class="whitespace-nowrap rounded-md border border-transparent px-2 py-1 text-xs font-medium text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-boxdark-2" aria-pressed="false">Objetos</button>
+                                        <button type="button" data-emoji-tab="symbols" class="whitespace-nowrap rounded-md border border-transparent px-2 py-1 text-xs font-medium text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-boxdark-2" aria-pressed="false">Simbolos</button>
+                                    </div>
+                                    <div class="max-h-[300px] overflow-y-auto pr-1">
+                                        <div data-emoji-grid="1" class="grid grid-cols-10 gap-1 sm:grid-cols-12"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <textarea id="campaign-whatsapp-text" name="content_json[whatsapp][text]" rows="4" {{ $whatsappSelected && $whatsappMessageType === 'text' ? '' : 'disabled' }}
                             class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white @error('content_json.whatsapp.text') border-red-500 @enderror">{{ $whatsappText }}</textarea>
                         @error('content_json.whatsapp.text')
                             <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
@@ -523,5 +558,59 @@
     'hint' => 'Copie e cole no conteúdo da campanha usando o formato',
     'variables' => $campaignVariables,
 ])
+
+@once
+    @push('styles')
+        <style>
+            [data-page="campaigns"] [data-emoji-grid="1"] {
+                display: grid !important;
+                grid-template-columns: repeat(10, minmax(0, 1fr)) !important;
+                gap: 0.25rem !important;
+            }
+
+            @media (min-width: 640px) {
+                [data-page="campaigns"] [data-emoji-grid="1"] {
+                    grid-template-columns: repeat(12, minmax(0, 1fr)) !important;
+                }
+            }
+
+            [data-page="campaigns"] .emoji-btn {
+                display: inline-flex !important;
+                width: 32px !important;
+                height: 32px !important;
+                align-items: center !important;
+                justify-content: center !important;
+                border: 0 !important;
+                border-radius: 8px !important;
+                line-height: 1 !important;
+                padding: 0 !important;
+                background: transparent !important;
+                font-size: 1.125rem !important;
+            }
+
+            [data-page="campaigns"] .emoji-btn:hover {
+                background-color: #f3f4f6 !important;
+            }
+
+            .dark [data-page="campaigns"] .emoji-btn:hover,
+            [data-page="campaigns"].dark .emoji-btn:hover {
+                background-color: rgba(255, 255, 255, 0.06) !important;
+            }
+
+            [data-page="campaigns"] .emoji-tab-active {
+                border-color: #3b82f6 !important;
+                background-color: #eff6ff !important;
+                color: #1d4ed8 !important;
+            }
+
+            .dark [data-page="campaigns"] .emoji-tab-active,
+            [data-page="campaigns"].dark .emoji-tab-active {
+                border-color: rgba(96, 165, 250, 0.7) !important;
+                background-color: rgba(37, 99, 235, 0.3) !important;
+                color: #bfdbfe !important;
+            }
+        </style>
+    @endpush
+@endonce
 
 

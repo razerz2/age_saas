@@ -17,9 +17,9 @@ const STATUS_CLASS_MAP = {
 
 const STATUS_LABEL_MAP = {
     arrived: 'Chegou',
-    in_service: 'Em Atendimento',
-    completed: 'Concluido',
-    no_show: 'Nao Compareceu',
+    in_service: 'Em atendimento',
+    completed: 'Concluído',
+    no_show: 'Não compareceu',
     canceled: 'Cancelado',
     rescheduled: 'Remarcado',
 };
@@ -106,12 +106,35 @@ function getStatusLabel(status, fallback = '') {
     return fallback || STATUS_LABEL_MAP[normalized] || normalized;
 }
 
+function normalizeStatusCode(status) {
+    const normalized = String(status || '').trim().toUpperCase();
+
+    const map = {
+        ARRIVED: 'CHEGOU',
+        CHEGOU: 'CHEGOU',
+        IN_SERVICE: 'EM_ATENDIMENTO',
+        EM_ATENDIMENTO: 'EM_ATENDIMENTO',
+        COMPLETED: 'CONCLUIDO',
+        ATTENDED: 'CONCLUIDO',
+        CONCLUIDO: 'CONCLUIDO',
+        NO_SHOW: 'NAO_COMPARECEU',
+        NAO_COMPARECEU: 'NAO_COMPARECEU',
+        CANCELED: 'CANCELADO',
+        CANCELLED: 'CANCELADO',
+        CANCELADO: 'CANCELADO',
+        RESCHEDULED: 'REMARCADO',
+        REMARCADO: 'REMARCADO',
+    };
+
+    return map[normalized] || normalized;
+}
+
 function statusNeedsNote(status) {
-    return ['no_show', 'canceled', 'rescheduled'].includes(String(status || '').toLowerCase());
+    return ['NAO_COMPARECEU', 'CANCELADO', 'REMARCADO'].includes(normalizeStatusCode(status));
 }
 
 function statusNeedsReschedule(status) {
-    return String(status || '').toLowerCase() === 'rescheduled';
+    return normalizeStatusCode(status) === 'REMARCADO';
 }
 
 function parseTimestamp(value) {
@@ -642,7 +665,7 @@ export function init() {
     };
 
     const toggleStatusConditionalFields = () => {
-        const selectedStatus = String(statusSelect?.value || '').toLowerCase();
+        const selectedStatus = normalizeStatusCode(statusSelect?.value || '');
         const noteRequired = statusNeedsNote(selectedStatus);
         const rescheduleRequired = statusNeedsReschedule(selectedStatus);
 
@@ -677,7 +700,7 @@ export function init() {
         }
 
         statusAppointmentIdInput.value = appointmentId;
-        statusSelect.value = String(currentStatus || 'arrived').toLowerCase();
+        statusSelect.value = '';
         if (statusNote) {
             statusNote.value = '';
         }
@@ -733,7 +756,7 @@ export function init() {
         }
 
         const appointmentId = String(statusAppointmentIdInput.value || '').trim();
-        const status = String(statusSelect.value || '').toLowerCase();
+        const status = normalizeStatusCode(statusSelect.value || '');
         const note = String(statusNote?.value || '').trim();
         const rescheduleAt = String(statusRescheduleAt?.value || '').trim();
 

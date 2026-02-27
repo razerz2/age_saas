@@ -1,6 +1,32 @@
 import { applyGridPageSizeSelector } from '../grid/pageSizeSelector';
 import { initTemplateVariablesUi } from '../shared/templateVariables';
 
+const EMOJI_RECENTS_STORAGE_KEY = 'tenant_campaigns_whatsapp_recent_emojis';
+const EMOJI_RECENTS_LIMIT = 16;
+const EMOJI_CATEGORY_MAP = {
+    faces: '😀 😃 😄 😁 😆 😅 😂 🤣 😊 😇 🙂 🙃 😉 😌 😍 🥰 😘 😗 😙 😚 😋 😛 😝 😜 🤪 🤨 🧐 🤓 😎 🤩 🥳 😏 😒 😞 😔 😟 😕 🙁 ☹️ 😣 😖 😫 😩 🥺 😢 😭 😤 😠 😡 🤬 😳 🥵 🥶 😱 😨 😰 😥 😓 🤗 🤔 🫡 🤭 🤫 🤥 😶 😐 😑 😬 🙄 😯 😦 😧 😮 😲 🥱 😴 🤤 😪 😵 🤯 🫠'.trim().split(/\s+/),
+    gestures: '👍 👎 👌 🤌 🤏 ✌️ 🤞 🫰 🤟 🤘 🤙 👈 👉 👆 🖕 👇 ☝️ 🫵 👋 🤚 🖐️ ✋ 🖖 👏 🙌 🫶 👐 🤲 🙏 ✍️ 💪 🦾 🦵 🦿 🫱 🫲 🤝 🫳 🫴 👊 ✊ 🤛 🤜 🙋 🙋‍♀️ 🙋‍♂️ 🙆 🙆‍♀️ 🙆‍♂️ 🙅 🙅‍♀️ 🙅‍♂️ 🤷 🤷‍♀️ 🤷‍♂️ 🙎 🙎‍♀️ 🙎‍♂️ 🙍 🙍‍♀️ 🙍‍♂️ 💁 💁‍♀️ 💁‍♂️ 🙇 🙇‍♀️ 🙇‍♂️'.trim().split(/\s+/),
+    objects: '💬 🗨️ 💭 📢 📣 🔔 🔕 📱 💻 ⌨️ 🖥️ 🖨️ 📞 ☎️ 📧 ✉️ 📨 📩 🗓️ 📅 📆 ⏰ ⏱️ ⏲️ ⌛ ⏳ 📝 📌 📍 📎 🗂️ 📂 📁 🗃️ 🧾 💼 🧰 ⚙️ 🔧 🔨 🧪 🧫 🧬 💉 💊 🩺 🩹 🩻 ⚕️ 🧴 🧼 🚑 🏥 🎉 🎊 🎈 🎁 🏆 🥇 🥈 🥉 ⭐ 🌟 🔥 ✅ ✔️ ❗ ❓'.trim().split(/\s+/),
+    symbols: '❤️ 🧡 💛 💚 💙 💜 🖤 🤍 🤎 💔 ❣️ 💕 💞 💓 💗 💖 💘 💝 ☮️ ✝️ ☪️ 🕉️ ☸️ ✡️ 🔯 🕎 ☯️ ☦️ 🛐 ♈ ♉ ♊ ♋ ♌ ♍ ♎ ♏ ♐ ♑ ♒ ♓ ⛎ ♾️ 🔁 🔂 ▶️ ⏸️ ⏹️ ⏺️ ⏭️ ⏮️ 🔼 🔽 ⬆️ ⬇️ ⬅️ ➡️ ↗️ ↘️ ↙️ ↖️ ↔️ ↕️ ♻️ ⚠️ 🚫 ⛔ ✅ ☑️ ✔️ ❌ ❎ ➕ ➖ ✖️ ➗ #️⃣ *️⃣ 0️⃣ 1️⃣ 2️⃣ 3️⃣ 4️⃣ 5️⃣ 6️⃣ 7️⃣ 8️⃣ 9️⃣'.trim().split(/\s+/),
+};
+
+function insertAtCursor(textarea, textToInsert) {
+    if (!textarea || textarea.disabled) {
+        return;
+    }
+
+    const value = String(textarea.value || '');
+    const start = Number.isInteger(textarea.selectionStart) ? textarea.selectionStart : value.length;
+    const end = Number.isInteger(textarea.selectionEnd) ? textarea.selectionEnd : start;
+
+    textarea.value = `${value.slice(0, start)}${textToInsert}${value.slice(end)}`;
+
+    const nextCursor = start + textToInsert.length;
+    textarea.focus();
+    textarea.setSelectionRange(nextCursor, nextCursor);
+    textarea.dispatchEvent(new Event('input', { bubbles: true }));
+}
+
 export function init() {
     initCampaignsGrid();
     initCampaignRunsGrid();
@@ -480,6 +506,175 @@ function bindCampaignsIndexRowClick() {
     });
 }
 
+function initWhatsappEmojiPicker(form, textarea) {
+    const pickerRoot = form.querySelector('[data-emoji-picker="whatsapp"]');
+    const toggleButton = pickerRoot?.querySelector('[data-emoji-toggle="1"]');
+    const popover = pickerRoot?.querySelector('[data-emoji-popover="1"]');
+    const grid = pickerRoot?.querySelector('[data-emoji-grid="1"]');
+    const categoryButtons = Array.from(pickerRoot?.querySelectorAll('[data-emoji-tab]') || []);
+
+    if (!pickerRoot || !toggleButton || !popover || !grid || !textarea || categoryButtons.length === 0) {
+        return null;
+    }
+
+    let activeCategory = 'faces';
+
+    const readRecents = () => {
+        try {
+            const parsed = JSON.parse(localStorage.getItem(EMOJI_RECENTS_STORAGE_KEY) || '[]');
+            if (!Array.isArray(parsed)) {
+                return [];
+            }
+
+            return parsed
+                .map((value) => String(value || '').trim())
+                .filter(Boolean)
+                .slice(0, EMOJI_RECENTS_LIMIT);
+        } catch (error) {
+            return [];
+        }
+    };
+
+    const writeRecents = (list) => {
+        try {
+            localStorage.setItem(EMOJI_RECENTS_STORAGE_KEY, JSON.stringify(list.slice(0, EMOJI_RECENTS_LIMIT)));
+        } catch (error) {
+            // noop
+        }
+    };
+
+    const upsertRecent = (emoji) => {
+        const normalized = String(emoji || '').trim();
+        if (!normalized) {
+            return;
+        }
+
+        const merged = [normalized, ...readRecents().filter((item) => item !== normalized)];
+        writeRecents(merged);
+    };
+
+    const getActiveEmojis = () => {
+        if (activeCategory === 'recent') {
+            return readRecents();
+        }
+
+        return EMOJI_CATEGORY_MAP[activeCategory] || [];
+    };
+
+    const renderCategories = () => {
+        categoryButtons.forEach((button) => {
+            const isActive = button.dataset.emojiTab === activeCategory;
+            button.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+            button.classList.toggle('emoji-tab-active', isActive);
+        });
+    };
+
+    const renderGrid = () => {
+        const emojis = getActiveEmojis();
+        grid.innerHTML = '';
+
+        if (emojis.length === 0) {
+            const emptyState = document.createElement('p');
+            emptyState.className = 'col-span-full px-1 py-3 text-xs text-gray-500 dark:text-gray-400';
+            emptyState.textContent = 'Sem emojis recentes ainda.';
+            grid.appendChild(emptyState);
+            return;
+        }
+
+        emojis.forEach((emoji) => {
+            const button = document.createElement('button');
+            button.type = 'button';
+            button.dataset.emoji = emoji;
+            button.className = 'emoji-btn';
+            button.setAttribute('aria-label', `Inserir emoji ${emoji}`);
+            button.textContent = emoji;
+            grid.appendChild(button);
+        });
+    };
+
+    const open = () => {
+        if (textarea.disabled) {
+            return;
+        }
+
+        popover.classList.remove('hidden');
+        toggleButton.setAttribute('aria-expanded', 'true');
+        renderCategories();
+        renderGrid();
+
+        window.requestAnimationFrame(() => {
+            popover.classList.remove('left-0', 'right-auto');
+            popover.classList.add('right-0');
+
+            const rect = popover.getBoundingClientRect();
+            if (rect.right > window.innerWidth - 8) {
+                popover.classList.remove('right-0');
+                popover.classList.add('left-0', 'right-auto');
+            }
+        });
+    };
+
+    const close = () => {
+        popover.classList.add('hidden');
+        toggleButton.setAttribute('aria-expanded', 'false');
+    };
+
+    const isOpen = () => !popover.classList.contains('hidden');
+
+    toggleButton.addEventListener('click', (event) => {
+        event.preventDefault();
+        if (isOpen()) {
+            close();
+            return;
+        }
+        open();
+    });
+
+    categoryButtons.forEach((button) => {
+        button.addEventListener('click', () => {
+            activeCategory = button.dataset.emojiTab || 'faces';
+            renderCategories();
+            renderGrid();
+        });
+    });
+
+    grid.addEventListener('click', (event) => {
+        const emojiButton = event.target.closest('[data-emoji]');
+        if (!emojiButton) {
+            return;
+        }
+
+        const emoji = emojiButton.dataset.emoji || '';
+        if (!emoji) {
+            return;
+        }
+
+        insertAtCursor(textarea, emoji);
+        upsertRecent(emoji);
+        close();
+    });
+
+    document.addEventListener('click', (event) => {
+        if (!isOpen()) {
+            return;
+        }
+
+        if (pickerRoot.contains(event.target)) {
+            return;
+        }
+
+        close();
+    });
+
+    document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape' && isOpen()) {
+            close();
+        }
+    });
+
+    return { close };
+}
+
 function initCampaignForm() {
     const form = document.getElementById('campaign-form');
     if (!form) {
@@ -495,6 +690,7 @@ function initCampaignForm() {
     const whatsappMessageTypeSelect = form.querySelector('#whatsapp-message-type');
     const whatsappMediaSourceSelect = form.querySelector('#whatsapp-media-source');
     const whatsappTextWrapper = form.querySelector('#whatsapp-text-wrapper');
+    const whatsappTextArea = form.querySelector('#campaign-whatsapp-text');
     const whatsappMediaWrapper = form.querySelector('#whatsapp-media-wrapper');
     const whatsappMediaUrlWrapper = form.querySelector('#whatsapp-media-url-wrapper');
     const whatsappMediaAssetWrapper = form.querySelector('#whatsapp-media-asset-wrapper');
@@ -518,6 +714,7 @@ function initCampaignForm() {
     const requireWhatsappCheck = form.querySelector('#audience-require-whatsapp-check');
     const assetUploadUrl = form.dataset.assetUploadUrl || '';
     const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+    const emojiPickerController = initWhatsappEmojiPicker(form, whatsappTextArea);
 
     const whatsappKindToUploadKind = {
         image: 'whatsapp_image',
@@ -659,8 +856,9 @@ function initCampaignForm() {
     const updateWhatsappMode = (isWhatsappEnabled) => {
         const messageType = (whatsappMessageTypeSelect?.value || '').toLowerCase();
         const mediaSource = (whatsappMediaSourceSelect?.value || '').toLowerCase();
+        const isTextModeEnabled = isWhatsappEnabled && messageType === 'text';
 
-        toggleContainerState(whatsappTextWrapper, isWhatsappEnabled && messageType === 'text');
+        toggleContainerState(whatsappTextWrapper, isTextModeEnabled);
         toggleContainerState(whatsappMediaWrapper, isWhatsappEnabled && messageType === 'media');
         toggleContainerState(
             whatsappMediaUrlWrapper,
@@ -670,6 +868,10 @@ function initCampaignForm() {
             whatsappMediaAssetWrapper,
             isWhatsappEnabled && messageType === 'media' && mediaSource === 'upload',
         );
+
+        if (!isTextModeEnabled) {
+            emojiPickerController?.close();
+        }
     };
 
     const updateChannelSections = () => {

@@ -143,7 +143,20 @@
                                     $statusClass = $statusClasses[$appointment->status] ?? 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200';
                                 @endphp
 
-                                <div class="appointment-item w-full border-b border-gray-100 px-4 py-3 transition-colors dark:border-gray-700 {{ $isSelected ? 'active-item' : '' }} {{ $isLate ? 'is-late' : '' }}"
+                                <div
+                                    @class([
+                                        'day-queue-item',
+                                        'appointment-item',
+                                        'w-full',
+                                        'px-4',
+                                        'py-3',
+                                        'transition-colors',
+                                        'duration-150',
+                                        'active-item' => $isSelected,
+                                        'is-late' => $isLate,
+                                        'bg-emerald-50/60 border border-emerald-100 hover:bg-emerald-100/60 hover:border-emerald-200 dark:bg-emerald-900/20 dark:border-emerald-800/40 dark:hover:bg-emerald-900/30 dark:hover:border-emerald-700/50' => !$isSelected && !$isLate,
+                                        'border-b border-gray-100 dark:border-gray-700' => $isSelected || $isLate,
+                                    ])
                                      data-queue-item="1"
                                      data-appointment-id="{{ $appointment->id }}"
                                      data-start-at="{{ $appointment->starts_at?->toIso8601String() }}"
@@ -257,12 +270,13 @@
                     <div>
                         <label for="medical-status-select" class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-200">Novo status</label>
                         <select id="medical-status-select" class="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 focus:border-brand-500 focus:outline-none dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200" required>
-                            <option value="arrived">CHEGOU</option>
-                            <option value="in_service">EM_ATENDIMENTO</option>
-                            <option value="completed">CONCLUIDO</option>
-                            <option value="no_show">NAO_COMPARECEU</option>
-                            <option value="canceled">CANCELADO</option>
-                            <option value="rescheduled">REMARCADO</option>
+                            <option value="" disabled selected>Selecione o status</option>
+                            <option value="CHEGOU">Chegou</option>
+                            <option value="EM_ATENDIMENTO">Em atendimento</option>
+                            <option value="CONCLUIDO">Concluído</option>
+                            <option value="NAO_COMPARECEU">Não compareceu</option>
+                            <option value="CANCELADO">Cancelado</option>
+                            <option value="REMARCADO">Remarcado</option>
                         </select>
                     </div>
 
