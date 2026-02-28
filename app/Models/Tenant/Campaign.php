@@ -20,6 +20,13 @@ class Campaign extends Model
         'content_json',
         'audience_json',
         'automation_json',
+        'rules_json',
+        'schedule_mode',
+        'starts_at',
+        'ends_at',
+        'schedule_weekdays',
+        'schedule_times',
+        'timezone',
         'scheduled_at',
         'created_by',
     ];
@@ -29,6 +36,11 @@ class Campaign extends Model
         'content_json' => 'array',
         'audience_json' => 'array',
         'automation_json' => 'array',
+        'rules_json' => 'array',
+        'schedule_weekdays' => 'array',
+        'schedule_times' => 'array',
+        'starts_at' => 'datetime',
+        'ends_at' => 'datetime',
         'scheduled_at' => 'datetime',
     ];
 

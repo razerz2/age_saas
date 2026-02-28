@@ -705,8 +705,19 @@ function initCampaignForm() {
     const emailAttachmentsList = form.querySelector('#email-attachments-list');
     const emailAttachmentsUploadFeedback = form.querySelector('#email-attachments-upload-feedback');
 
-    const automationSection = form.querySelector('#campaign-automation-section');
-    const automationInputs = Array.from(form.querySelectorAll('.js-automation-input'));
+    const schedulingSection = form.querySelector('#campaign-scheduling-section');
+    const scheduleInputs = Array.from(form.querySelectorAll('.js-schedule-input'));
+    const scheduleModeSelect = form.querySelector('#campaign-schedule-mode');
+    const scheduleEndsAtWrapper = form.querySelector('#campaign-ends-at-wrapper');
+    const scheduleEndsAtInput = form.querySelector('#campaign-ends-at');
+    const scheduleWeekdaysAllButton = form.querySelector('#campaign-weekdays-all');
+    const scheduleWeekdayCheckboxes = Array.from(form.querySelectorAll('.js-schedule-weekday-checkbox'));
+    const scheduleTimesList = form.querySelector('#campaign-times-list');
+    const scheduleAddTimeButton = form.querySelector('#campaign-add-time');
+    const rulesSection = form.querySelector('#campaign-rules-section');
+    const rulesList = form.querySelector('#campaign-rules-list');
+    const rulesAddButton = form.querySelector('#campaign-rules-add');
+    const ruleTemplate = form.querySelector('#campaign-rule-template');
 
     const requireEmailField = form.querySelector('#audience-require-email');
     const requireWhatsappField = form.querySelector('#audience-require-whatsapp');
@@ -715,6 +726,8 @@ function initCampaignForm() {
     const assetUploadUrl = form.dataset.assetUploadUrl || '';
     const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
     const emojiPickerController = initWhatsappEmojiPicker(form, whatsappTextArea);
+    const ruleFieldOperatorsMap = parseDataJson(form.dataset.ruleFieldOperators);
+    const ruleValueOptionsMap = parseDataJson(form.dataset.ruleValueOptions);
 
     const whatsappKindToUploadKind = {
         image: 'whatsapp_image',
@@ -761,6 +774,19 @@ function initCampaignForm() {
 
         element.classList.add('text-gray-500', 'dark:text-gray-400');
     };
+
+    function parseDataJson(payload) {
+        if (!payload) {
+            return {};
+        }
+
+        try {
+            const parsed = JSON.parse(payload);
+            return parsed && typeof parsed === 'object' ? parsed : {};
+        } catch (error) {
+            return {};
+        }
+    }
 
     const parseJson = async (response) => {
         try {
@@ -885,16 +911,236 @@ function initCampaignForm() {
         updateAudienceRequirements(channels);
     };
 
-    const updateAutomationSection = () => {
-        const enabled = typeSelect?.value === 'automated';
-
-        if (automationSection) {
-            automationSection.classList.toggle('hidden', !enabled);
+    const addScheduleTimeRow = (value = '') => {
+        if (!scheduleTimesList) {
+            return;
         }
 
-        automationInputs.forEach((input) => {
+        const item = document.createElement('li');
+        item.className = 'js-schedule-time-item flex items-center gap-2';
+
+        const input = document.createElement('input');
+        input.type = 'time';
+        input.name = 'times[]';
+        input.value = value || '';
+        input.className = 'js-schedule-input js-schedule-time-input w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white';
+
+        const removeButton = document.createElement('button');
+        removeButton.type = 'button';
+        removeButton.className = 'js-remove-schedule-time btn btn-outline btn-sm whitespace-nowrap';
+        removeButton.textContent = 'Remover';
+
+        item.appendChild(input);
+        item.appendChild(removeButton);
+        scheduleTimesList.appendChild(item);
+    };
+
+    const updateScheduleMode = (enabled) => {
+        if (!scheduleModeSelect || !scheduleEndsAtWrapper || !scheduleEndsAtInput) {
+            return;
+        }
+
+        const isPeriodMode = scheduleModeSelect.value === 'period';
+        scheduleEndsAtWrapper.classList.toggle('hidden', !isPeriodMode);
+        scheduleEndsAtInput.disabled = !enabled || !isPeriodMode;
+    };
+
+    const updateSchedulingSection = () => {
+        const enabled = typeSelect?.value === 'automated';
+
+        if (schedulingSection) {
+            schedulingSection.classList.toggle('hidden', !enabled);
+        }
+
+        scheduleInputs.forEach((input) => {
             input.disabled = !enabled;
         });
+
+        if (scheduleWeekdaysAllButton) {
+            scheduleWeekdaysAllButton.disabled = !enabled;
+        }
+
+        if (scheduleAddTimeButton) {
+            scheduleAddTimeButton.disabled = !enabled;
+        }
+
+        if (scheduleTimesList && scheduleTimesList.querySelectorAll('.js-schedule-time-item').length === 0) {
+            addScheduleTimeRow('09:00');
+        }
+
+        if (scheduleTimesList) {
+            scheduleTimesList.querySelectorAll('.js-remove-schedule-time').forEach((button) => {
+                button.disabled = !enabled;
+            });
+        }
+
+        if (rulesSection) {
+            rulesSection.classList.toggle('hidden', !enabled);
+            rulesSection.querySelectorAll('.js-campaign-rule-input, .js-campaign-rule-remove').forEach((element) => {
+                element.disabled = !enabled;
+            });
+        }
+
+        updateScheduleMode(enabled);
+        reindexRuleRows();
+
+        if (!enabled && rulesList) {
+            rulesList.querySelectorAll('.js-campaign-rule-input, .js-campaign-rule-remove').forEach((element) => {
+                element.disabled = true;
+            });
+        }
+
+        if (rulesAddButton) {
+            rulesAddButton.disabled = !enabled;
+        }
+    };
+
+    const operatorRequiresValue = (operator) => !['is_null', 'is_not_null', 'birthday_today'].includes(operator);
+    const selectValueOperators = ['=', '!='];
+
+    const operatorLabelMap = {};
+    Array.from(form.querySelectorAll('.js-campaign-rule-operator option')).forEach((option) => {
+        const value = String(option.value || '').trim();
+        if (value !== '') {
+            operatorLabelMap[value] = option.textContent || value;
+        }
+    });
+
+    const setRuleRowIndex = (row, index) => {
+        row.dataset.ruleIndex = String(index);
+
+        const fieldSelect = row.querySelector('.js-campaign-rule-field');
+        const operatorSelect = row.querySelector('.js-campaign-rule-operator');
+        if (fieldSelect) {
+            fieldSelect.name = `rules_json[conditions][${index}][field]`;
+        }
+
+        if (operatorSelect) {
+            operatorSelect.name = `rules_json[conditions][${index}][op]`;
+        }
+    };
+
+    const updateRuleValueMode = (row) => {
+        const index = Number.parseInt(row.dataset.ruleIndex || '0', 10) || 0;
+        const fieldSelect = row.querySelector('.js-campaign-rule-field');
+        const operatorSelect = row.querySelector('.js-campaign-rule-operator');
+        const valueWrapper = row.querySelector('.js-campaign-rule-value-wrapper');
+        const textInput = row.querySelector('.js-campaign-rule-value-input');
+        const valueSelect = row.querySelector('.js-campaign-rule-value-select');
+
+        if (!fieldSelect || !operatorSelect || !valueWrapper || !textInput || !valueSelect) {
+            return;
+        }
+
+        const field = String(fieldSelect.value || '').trim();
+        const operator = String(operatorSelect.value || '').trim();
+        const requiresValue = field !== '' && operatorRequiresValue(operator);
+        const predefinedOptions = Array.isArray(ruleValueOptionsMap[field]) ? ruleValueOptionsMap[field] : [];
+        const useSelect = requiresValue && predefinedOptions.length > 0 && selectValueOperators.includes(operator);
+
+        valueWrapper.classList.toggle('hidden', !requiresValue);
+        textInput.name = '';
+        valueSelect.name = '';
+
+        if (!requiresValue) {
+            textInput.disabled = true;
+            valueSelect.disabled = true;
+            valueSelect.classList.add('hidden');
+            return;
+        }
+
+        if (useSelect) {
+            const candidateValue = String(textInput.value || valueSelect.value || '').trim();
+            valueSelect.innerHTML = '<option value="">Selecione</option>';
+
+            predefinedOptions.forEach((option) => {
+                const value = String(option?.value ?? '').trim();
+                const label = String(option?.label ?? value);
+                if (value === '') {
+                    return;
+                }
+
+                const element = document.createElement('option');
+                element.value = value;
+                element.textContent = label;
+                valueSelect.appendChild(element);
+            });
+
+            valueSelect.value = candidateValue;
+            textInput.value = valueSelect.value || candidateValue;
+
+            textInput.disabled = true;
+            valueSelect.disabled = false;
+            valueSelect.classList.remove('hidden');
+            valueSelect.name = `rules_json[conditions][${index}][value]`;
+            return;
+        }
+
+        textInput.disabled = false;
+        valueSelect.disabled = true;
+        valueSelect.classList.add('hidden');
+        textInput.name = `rules_json[conditions][${index}][value]`;
+    };
+
+    const updateRuleOperatorOptions = (row) => {
+        const fieldSelect = row.querySelector('.js-campaign-rule-field');
+        const operatorSelect = row.querySelector('.js-campaign-rule-operator');
+        if (!fieldSelect || !operatorSelect) {
+            return;
+        }
+
+        const field = String(fieldSelect.value || '').trim();
+        const allowedOperators = Array.isArray(ruleFieldOperatorsMap[field]) ? ruleFieldOperatorsMap[field] : [];
+        const currentOperator = String(operatorSelect.value || '').trim();
+
+        operatorSelect.innerHTML = '<option value="">Selecione</option>';
+
+        allowedOperators.forEach((operator) => {
+            const option = document.createElement('option');
+            option.value = operator;
+            option.textContent = operatorLabelMap[operator] || operator;
+            operatorSelect.appendChild(option);
+        });
+
+        if (allowedOperators.includes(currentOperator)) {
+            operatorSelect.value = currentOperator;
+        } else if (allowedOperators.length > 0) {
+            operatorSelect.value = allowedOperators[0];
+        } else {
+            operatorSelect.value = '';
+        }
+
+        operatorSelect.disabled = field === '';
+    };
+
+    const updateRuleRow = (row) => {
+        updateRuleOperatorOptions(row);
+        updateRuleValueMode(row);
+    };
+
+    const reindexRuleRows = () => {
+        if (!rulesList) {
+            return;
+        }
+
+        Array.from(rulesList.querySelectorAll('.js-campaign-rule-row')).forEach((row, index) => {
+            setRuleRowIndex(row, index);
+            updateRuleRow(row);
+        });
+    };
+
+    const createRuleRow = () => {
+        if (!ruleTemplate) {
+            return null;
+        }
+
+        const fragment = ruleTemplate.content.cloneNode(true);
+        const row = fragment.querySelector('.js-campaign-rule-row');
+        if (!row) {
+            return null;
+        }
+
+        return row;
     };
 
     const resolveWhatsappUploadKind = () => {
@@ -970,7 +1216,104 @@ function initCampaignForm() {
     });
 
     if (typeSelect) {
-        typeSelect.addEventListener('change', updateAutomationSection);
+        typeSelect.addEventListener('change', updateSchedulingSection);
+    }
+
+    if (scheduleModeSelect) {
+        scheduleModeSelect.addEventListener('change', () => {
+            updateScheduleMode(typeSelect?.value === 'automated');
+        });
+    }
+
+    if (scheduleWeekdaysAllButton) {
+        scheduleWeekdaysAllButton.addEventListener('click', () => {
+            scheduleWeekdayCheckboxes.forEach((checkbox) => {
+                checkbox.checked = true;
+            });
+        });
+    }
+
+    if (scheduleAddTimeButton) {
+        scheduleAddTimeButton.addEventListener('click', () => {
+            addScheduleTimeRow('');
+            updateSchedulingSection();
+        });
+    }
+
+    if (scheduleTimesList) {
+        scheduleTimesList.addEventListener('click', (event) => {
+            const button = event.target.closest('.js-remove-schedule-time');
+            if (!button) {
+                return;
+            }
+
+            event.preventDefault();
+            const item = button.closest('.js-schedule-time-item');
+            if (!item) {
+                return;
+            }
+
+            item.remove();
+
+            if (scheduleTimesList.querySelectorAll('.js-schedule-time-item').length === 0) {
+                addScheduleTimeRow('');
+            }
+
+            updateSchedulingSection();
+        });
+    }
+
+    if (rulesAddButton) {
+        rulesAddButton.addEventListener('click', () => {
+            if (!rulesList) {
+                return;
+            }
+
+            const row = createRuleRow();
+            if (!row) {
+                return;
+            }
+
+            rulesList.appendChild(row);
+            reindexRuleRows();
+            updateSchedulingSection();
+        });
+    }
+
+    if (rulesList) {
+        rulesList.addEventListener('change', (event) => {
+            const row = event.target.closest('.js-campaign-rule-row');
+            if (!row) {
+                return;
+            }
+
+            const target = event.target;
+            if (target.classList.contains('js-campaign-rule-value-select')) {
+                const textInput = row.querySelector('.js-campaign-rule-value-input');
+                if (textInput) {
+                    textInput.value = target.value || '';
+                }
+            }
+
+            updateRuleRow(row);
+        });
+
+        rulesList.addEventListener('click', (event) => {
+            const button = event.target.closest('.js-campaign-rule-remove');
+            if (!button) {
+                return;
+            }
+
+            event.preventDefault();
+            const row = button.closest('.js-campaign-rule-row');
+            if (!row) {
+                return;
+            }
+
+            row.remove();
+            reindexRuleRows();
+            updateSchedulingSection();
+        });
     }
 
     if (whatsappMessageTypeSelect) {
@@ -1125,6 +1468,6 @@ function initCampaignForm() {
     });
 
     updateChannelSections();
-    updateAutomationSection();
+    updateSchedulingSection();
     updateWhatsappUploadAccept();
 }

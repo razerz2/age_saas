@@ -22,8 +22,8 @@ Mapa rápido do módulo de **Campanhas** do Tenant.
   - Agendar envio (`schedule`) com `StartCampaignJob`.
   - Pausar/retomar (`pause`/`resume`).
 - Execução automatizada (tipo `automated`):
-  - Runner de automação diário por trigger (`birthday`, `inactive_patients`).
-  - Idempotência diária por lock (`campaign_automation_locks`).
+  - Runner por programação (`schedule_*`) com avaliação a cada minuto.
+  - Idempotência por lock de minuto (`window_key`) em `campaign_automation_locks`.
   - UI mostra última execução e próxima execução prevista.
 - Gating de canais por integrações do tenant:
   - Opções de canal dinâmicas no formulário conforme integrações configuradas.
@@ -39,8 +39,8 @@ Mapa rápido do módulo de **Campanhas** do Tenant.
 ## O que o módulo ainda não faz (escopo fora do MVP atual)
 
 - Editor completo de audiência (além de “Pacientes ativos” com flags automáticas de exigir email/whatsapp).
-- Triggers além de `birthday` e `inactive_patients`.
-- Execução “exatamente no segundo”: automações rodam por janela (tolerância em minutos) e dependem do scheduler/cron.
+- Triggers avançados além das regras de audiência (`rules_json`) do MVP.
+- Execução “exatamente no segundo”: automações rodam por minuto e dependem do scheduler/cron.
 - Envio de mídia por WhatsApp via upload em provedores diferentes de WAHA (no MVP, mídia é suportada apenas no WAHA).
 - Download/gerenciamento de assets na UI (o endpoint registra e retorna `asset_id`, sem `url` pública no response).
 - Relatórios avançados por campanha (dashboards, funis, conversões etc.).
@@ -79,6 +79,8 @@ Mapa rápido do módulo de **Campanhas** do Tenant.
   - `database/migrations/tenant/2026_02_25_000009_create_campaign_recipients_table.php`
   - `database/migrations/tenant/2026_02_25_000010_create_assets_table.php`
   - `database/migrations/tenant/2026_02_25_000011_create_campaign_automation_locks_table.php`
+  - `database/migrations/tenant/2026_02_28_000012_add_scheduling_fields_to_campaigns_table.php`
+  - `database/migrations/tenant/2026_02_28_000013_add_rules_json_to_campaigns_table.php`
+  - `database/migrations/tenant/2026_02_28_000014_update_campaign_automation_locks_for_minute_window.php`
   - `database/migrations/tenant/2026_02_25_000006_create_notification_deliveries_table.php`
 - Config: `config/campaigns.php`
-

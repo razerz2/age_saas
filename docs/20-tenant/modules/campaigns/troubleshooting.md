@@ -41,19 +41,32 @@ Checklist (causa → solução):
   - Ajustar no form (select “Automatizada”) e salvar.
 - `status` não é `active`:
   - Retomar campanha se estiver `paused` (`resume`).
-- `automation_json` inválido:
-  - Trigger deve ser `birthday` ou `inactive_patients`.
-  - Schedule deve ser `daily` com `time` no formato `HH:MM`.
-  - Timezone deve ser válida (fallback é `config('campaigns.automation.default_timezone')`).
-  - Validação/parse: `app/Services/Tenant/CampaignAutomationRunner.php`.
-- Fora da janela de horário:
-  - O runner só executa dentro de uma tolerância de minutos (`config('campaigns.automation.window_tolerance_minutes')`).
-- Lock do dia já existe:
-  - `campaign_automation_locks` tem índice único por (`campaign_id`, `trigger`, `window_date`).
-  - Se já houver lock (mesmo `done`), o runner pula a campanha no mesmo dia/trigger.
+- Programação inválida/incompleta:
+  - `starts_at` ausente.
+  - `schedule_mode=period` sem `ends_at`.
+  - `ends_at < starts_at`.
+  - `schedule_times` vazio ou fora de `HH:MM`.
+- Fora da janela de execução:
+  - `now` (timezone da campanha/tenant) não bate com dia/horário configurado (`weekdays` + `times`).
+- Lock do minuto já existe:
+  - `campaign_automation_locks` usa `window_key` (`YYYY-MM-DD HH:MM`).
+  - Unique por (`campaign_id`, `window_key`) impede disparo duplicado no mesmo minuto.
 - Scheduler/cron não está rodando:
-  - Verificar `app/Console/Kernel.php` (agenda `campaigns:run-automated` everyFiveMinutes).
+  - Verificar `app/Console/Kernel.php` (agenda `campaigns:run-automated` everyMinute).
+  - Verificar cron do host: `* * * * * php artisan schedule:run`.
   - Verificar execução do cron/queue no ambiente.
+- Worker de fila não está rodando:
+  - O runner cria run/recipients e despacha `ProcessCampaignRunJob`.
+  - Sem worker da fila `campaigns`, os destinatários podem ficar em `pending`.
+
+Logs úteis:
+
+- `campaign_automation_skip_invalid`
+- `campaign_automation_skip_schedule`
+- `campaign_automation_skip_locked`
+- `campaign_automation_skip_channels`
+- `campaign_automation_started`
+- `campaign_automation_start_failed`
 
 ## Recipients ficam `pending`
 
@@ -118,4 +131,3 @@ Solução:
 
 - Ajustar o campo `modules` do usuário para incluir `campaigns` (ou usar um usuário admin).
 - Referência: `resources/views/layouts/tailadmin/sidebar.blade.php` (`$hasCampaignsAccess`).
-

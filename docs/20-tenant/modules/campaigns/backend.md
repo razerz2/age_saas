@@ -21,8 +21,9 @@ Fontes principais:
 - `create()` / `edit()`:
   - Renderiza form com canais disponíveis.
 - `store()` / `update()`:
-  - Persiste `channels_json`, `content_json`, `audience_json`, `automation_json`, `scheduled_at`.
+  - Persiste `channels_json`, `content_json`, `audience_json`, `automation_json`, `rules_json`, `schedule_*`, `scheduled_at`.
   - `automation_json` é `null` quando `type=manual`.
+  - `store()` define campanhas `type=automated` como `status=active` por padrão (manual permanece `draft`).
 - `show()`:
   - Calcula `unavailableChannels` (diferença entre canais da campanha e canais disponíveis).
   - Para campanhas automatizadas:
@@ -116,21 +117,37 @@ Gera audiência (MVP) com `source=patients`:
   - `patients.is_active` é `true` por padrão (pode ser controlado via `audience_json.filters.patient.is_active`).
   - `audience_json.require.email` e `audience_json.require.whatsapp` controlam exclusões por ausência de contato.
 
+Regras opcionais (`rules_json`) para campanhas agendadas:
+
+- Aplicadas com whitelist de campos/operadores em `App\Support\Tenant\CampaignPatientRules`.
+- Campos MVP: `gender`, `is_active`, `birth_date`, `city`, `state`.
+- Operadores MVP: `=`, `!=`, `in`, `not_in`, `is_null`, `is_not_null`, `birthday_today`.
+- `birthday_today` tenta `CONVERT_TZ` e faz fallback para comparação por `Carbon::now(tenant_tz)` quando necessário.
+
 ### `App\Services\Tenant\CampaignAutomationRunner`
 
 Avalia e inicia campanhas automatizadas:
 
 - Seleciona campanhas `type=automated` e `status=active`.
-- Valida `automation_json`:
-  - `trigger` ∈ {`birthday`, `inactive_patients`}
-  - `schedule.type` = `daily`
-  - `schedule.time` = `HH:MM`
-  - `timezone` válido (fallback: `config('campaigns.automation.default_timezone')`)
-- Janela de horário:
-  - Executa apenas se `abs(diffMinutes(now_local, scheduledAt)) <= window_tolerance_minutes`.
+- Resolve programação a partir dos campos `schedule_*` (fonte de verdade):
+  - `schedule_mode` (`period|indefinite`)
+  - `starts_at` obrigatório
+  - `ends_at` obrigatório quando `period`
+  - `schedule_weekdays` (fallback para todos os dias quando legado vazio)
+  - `schedule_times` (`HH:MM`, com fallback legado para `automation_json.schedule.time` quando existir)
+  - `timezone` da campanha (fallback para timezone do tenant)
+- Elegibilidade por minuto (timezone local do tenant/campanha):
+  - `starts_at <= now`
+  - em `period`, `now <= ends_at`
+  - `dayOfWeek(now)` pertence a `schedule_weekdays`
+  - `now->format('H:i')` pertence a `schedule_times`
 - Idempotência:
-  - Cria lock em `campaign_automation_locks` (unique) para (`campaign_id`, `trigger`, `window_date`).
-  - Se violar unique, considera “já executado no dia” e pula.
+  - Cria lock em `campaign_automation_locks` com `window_key` (`YYYY-MM-DD HH:MM`).
+  - Unique por (`campaign_id`, `window_key`) evita disparo duplicado no mesmo minuto.
+  - Tratamento de race-condition por captura de unique violation (`QueryException`).
+- Logs estruturados:
+  - Eventos de skip/start com `tenant_id`, `campaign_id`, `window_key`, `eligibility` e `reason`.
+  - Eventos de erro com contexto completo para troubleshooting.
 
 ### Render e envio
 
@@ -183,5 +200,4 @@ Avalia e inicia campanhas automatizadas:
   - `--tenant=*` filtra por id/subdomain.
   - `--dry-run` apenas contabiliza elegibilidade, não cria lock/run.
 - Scheduler:
-  - `app/Console/Kernel.php` agenda `campaigns:run-automated` `everyFiveMinutes()->withoutOverlapping()`.
-
+  - `app/Console/Kernel.php` agenda `campaigns:run-automated` `everyMinute()->withoutOverlapping()`.

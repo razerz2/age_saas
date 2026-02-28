@@ -16,6 +16,8 @@ class CampaignAutomationLock extends Model
         'campaign_id',
         'trigger',
         'window_date',
+        'window_key',
+        'timezone',
         'status',
         'run_id',
         'error_message',

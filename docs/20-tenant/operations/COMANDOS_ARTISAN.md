@@ -142,6 +142,9 @@ Esta lista e uma referencia rapida. Para opcoes/parametros detalhados, rode `php
 ### Campanhas/Notificacoes
 
 - `campaigns:run-automated` Run automated campaigns for eligible tenants
+- Exemplos:
+  - `php artisan campaigns:run-automated --tenant=clinica_boavida`
+  - `php artisan campaigns:run-automated --tenant=clinica_boavida --dry-run`
 
 ### Financeiro/Faturas (cuidado)
 
@@ -165,6 +168,8 @@ Esta lista e uma referencia rapida. Para opcoes/parametros detalhados, rode `php
 Alguns comandos rodam automaticamente via scheduler. Para ver o estado atual:
 - `php artisan schedule:list`
 
+Cron recomendado no servidor:
+- `* * * * * php artisan schedule:run`
+
 Referencia de definicao:
 - `app/Console/Kernel.php` (agenda, por exemplo, `appointments:expire-pending`, `appointments:mark-overdue`, `campaigns:run-automated`).
-

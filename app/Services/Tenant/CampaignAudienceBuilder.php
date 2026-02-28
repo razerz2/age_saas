@@ -5,6 +5,7 @@ namespace App\Services\Tenant;
 use App\Models\Tenant\Appointment;
 use App\Models\Tenant\Campaign;
 use App\Models\Tenant\Patient;
+use App\Support\Tenant\CampaignPatientRules;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -42,6 +43,10 @@ class CampaignAudienceBuilder
             $query->where('patients.is_active', $filterIsActive);
         } else {
             $query->where('patients.is_active', true);
+        }
+
+        if (strtolower((string) $campaign->type) === 'automated') {
+            $query = CampaignPatientRules::applyToPatientQuery($query, $campaign->rules_json, $timezone);
         }
 
         if ($trigger === 'birthday') {
@@ -215,18 +220,21 @@ class CampaignAudienceBuilder
     {
         $timezone = trim((string) data_get($context, 'context.automation.timezone', ''));
         if ($timezone === '') {
+            $timezone = trim((string) ($campaign->timezone ?? ''));
+        }
+        if ($timezone === '') {
             $timezone = trim((string) data_get($campaign->automation_json, 'timezone', ''));
         }
 
         if ($timezone === '') {
-            $timezone = (string) config('campaigns.automation.default_timezone', 'America/Campo_Grande');
+            $timezone = (string) config('app.timezone', 'America/Sao_Paulo');
         }
 
         try {
             Carbon::now($timezone);
             return $timezone;
         } catch (Throwable) {
-            return (string) config('campaigns.automation.default_timezone', 'America/Campo_Grande');
+            return (string) config('app.timezone', 'America/Sao_Paulo');
         }
     }
 

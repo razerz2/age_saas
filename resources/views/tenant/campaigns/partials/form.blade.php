@@ -89,11 +89,119 @@
 
     $automationData = is_array($campaign?->automation_json) ? $campaign->automation_json : [];
     $automationEnabled = $typeValue === 'automated';
-    $automationTrigger = old('automation_json.trigger', data_get($automationData, 'trigger', 'birthday'));
-    $automationTimeRaw = old('automation_json.schedule.time', data_get($automationData, 'schedule.time', '09:00'));
-    $automationTime = preg_match('/^\d{2}:\d{2}/', (string) $automationTimeRaw)
-        ? substr((string) $automationTimeRaw, 0, 5)
-        : '09:00';
+    $tenantTimezone = trim((string) ($tenantTimezone ?? ''));
+    if ($tenantTimezone === '') {
+        $tenantTimezone = function_exists('tenant_setting')
+            ? (string) tenant_setting('timezone', config('app.timezone', 'America/Sao_Paulo'))
+            : (string) config('app.timezone', 'America/Sao_Paulo');
+    }
+
+    $scheduleMode = old('schedule_mode', $campaign?->schedule_mode ?? 'period');
+    if (!in_array($scheduleMode, ['period', 'indefinite'], true)) {
+        $scheduleMode = 'period';
+    }
+
+    $startsAtFallback = $campaign?->starts_at ? $campaign->starts_at->format('Y-m-d\TH:i') : null;
+    $startsAtValue = old('starts_at', $startsAtFallback);
+    $endsAtFallback = $campaign?->ends_at ? $campaign->ends_at->format('Y-m-d\TH:i') : null;
+    $endsAtValue = old('ends_at', $endsAtFallback);
+
+    $weekdayLabels = [
+        0 => 'Dom',
+        1 => 'Seg',
+        2 => 'Ter',
+        3 => 'Qua',
+        4 => 'Qui',
+        5 => 'Sex',
+        6 => 'Sab',
+    ];
+    $rawWeekdays = old('weekdays', $campaign?->schedule_weekdays ?? [1, 2, 3, 4, 5]);
+    if (!is_array($rawWeekdays)) {
+        $rawWeekdays = [$rawWeekdays];
+    }
+    $selectedWeekdays = [];
+    foreach ($rawWeekdays as $weekday) {
+        if (!is_numeric($weekday)) {
+            continue;
+        }
+
+        $weekdayValue = (int) $weekday;
+        if ($weekdayValue < 0 || $weekdayValue > 6) {
+            continue;
+        }
+
+        if (!in_array($weekdayValue, $selectedWeekdays, true)) {
+            $selectedWeekdays[] = $weekdayValue;
+        }
+    }
+    sort($selectedWeekdays);
+
+    $rawScheduleTimes = old('times', $campaign?->schedule_times ?? []);
+    if (!is_array($rawScheduleTimes) || $rawScheduleTimes === []) {
+        $legacyTime = trim((string) data_get($automationData, 'schedule.time', ''));
+        $rawScheduleTimes = $legacyTime !== '' ? [$legacyTime] : ['09:00'];
+    }
+    $scheduleTimes = [];
+    foreach ($rawScheduleTimes as $rawTime) {
+        $time = trim((string) $rawTime);
+        if (preg_match('/^\d{2}:\d{2}$/', $time) !== 1) {
+            continue;
+        }
+
+        if (!in_array($time, $scheduleTimes, true)) {
+            $scheduleTimes[] = $time;
+        }
+    }
+    sort($scheduleTimes);
+    if ($scheduleTimes === []) {
+        $scheduleTimes = ['09:00'];
+    }
+
+    $campaignTimezone = trim((string) old('timezone', $campaign?->timezone ?? data_get($automationData, 'timezone', $tenantTimezone)));
+    if ($campaignTimezone === '') {
+        $campaignTimezone = $tenantTimezone;
+    }
+
+    $ruleFieldOptions = is_array($ruleFieldOptions ?? null) ? $ruleFieldOptions : [];
+    $ruleOperatorOptions = is_array($ruleOperatorOptions ?? null) ? $ruleOperatorOptions : [];
+    $ruleFieldOperators = is_array($ruleFieldOperators ?? null) ? $ruleFieldOperators : [];
+    $ruleValueOptions = is_array($ruleValueOptions ?? null) ? $ruleValueOptions : [];
+
+    $rulesData = old('rules_json', $campaign?->rules_json);
+    $rulesLogic = strtoupper(trim((string) data_get($rulesData, 'logic', 'AND')));
+    if (!in_array($rulesLogic, ['AND', 'OR'], true)) {
+        $rulesLogic = 'AND';
+    }
+
+    $rawRuleConditions = data_get($rulesData, 'conditions', []);
+    if (!is_array($rawRuleConditions)) {
+        $rawRuleConditions = [];
+    }
+
+    $ruleConditions = [];
+    foreach ($rawRuleConditions as $condition) {
+        if (!is_array($condition)) {
+            continue;
+        }
+
+        $field = strtolower(trim((string) ($condition['field'] ?? '')));
+        $operator = strtolower(trim((string) ($condition['op'] ?? '')));
+        $value = $condition['value'] ?? '';
+
+        if (is_array($value)) {
+            $value = implode(', ', array_map(fn ($item) => (string) $item, $value));
+        } elseif (is_bool($value)) {
+            $value = $value ? '1' : '0';
+        } else {
+            $value = (string) $value;
+        }
+
+        $ruleConditions[] = [
+            'field' => $field,
+            'op' => $operator,
+            'value' => $value,
+        ];
+    }
 
     $requireEmail = $emailSelected ? 1 : 0;
     $requireWhatsapp = $whatsappSelected ? 1 : 0;
@@ -182,6 +290,8 @@
             method="POST"
             class="space-y-8 p-6"
             data-asset-upload-url="{{ $assetUploadUrl }}"
+            data-rule-field-operators='@json($ruleFieldOperators)'
+            data-rule-value-options='@json($ruleValueOptions)'
         >
             @csrf
             @if (($httpMethod ?? 'POST') !== 'POST')
@@ -210,7 +320,7 @@
                     <select id="campaign-type" name="type" required
                         class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white @error('type') border-red-500 @enderror">
                         <option value="manual" @selected($typeValue === 'manual')>Manual</option>
-                        <option value="automated" @selected($typeValue === 'automated')>Automatizada</option>
+                        <option value="automated" @selected($typeValue === 'automated')>Automatizada (Agendada)</option>
                     </select>
                     @error('type')
                         <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
@@ -520,25 +630,313 @@
                 </div>
             </div>
 
-            <div id="campaign-automation-section" class="{{ $automationEnabled ? '' : 'hidden' }}">
-                <h3 class="mb-3 text-base font-semibold text-gray-900 dark:text-white">Automação</h3>
-                <input type="hidden" class="js-automation-input" name="automation_json[version]" value="{{ old('automation_json.version', 1) }}" {{ $automationEnabled ? '' : 'disabled' }}>
-                <input type="hidden" class="js-automation-input" name="automation_json[schedule][type]" value="{{ old('automation_json.schedule.type', 'daily') }}" {{ $automationEnabled ? '' : 'disabled' }}>
-                <input type="hidden" class="js-automation-input" name="automation_json[timezone]" value="{{ old('automation_json.timezone', 'America/Campo_Grande') }}" {{ $automationEnabled ? '' : 'disabled' }}>
+            <div id="campaign-scheduling-section" class="{{ $automationEnabled ? '' : 'hidden' }}">
+                <h3 class="mb-3 text-base font-semibold text-gray-900 dark:text-white">Programação</h3>
                 <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
                     <div>
-                        <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">Trigger <span class="text-red-500">*</span></label>
-                        <select class="js-automation-input w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white @error('automation_json.trigger') border-red-500 @enderror"
-                            name="automation_json[trigger]" {{ $automationEnabled ? '' : 'disabled' }}>
-                            <option value="birthday" @selected($automationTrigger === 'birthday')>Aniversário</option>
-                            <option value="inactive_patients" @selected($automationTrigger === 'inactive_patients')>Pacientes inativos</option>
+                        <label for="campaign-schedule-mode" class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">Modo <span class="text-red-500">*</span></label>
+                        <select
+                            id="campaign-schedule-mode"
+                            class="js-schedule-input w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white @error('schedule_mode') border-red-500 @enderror"
+                            name="schedule_mode"
+                            {{ $automationEnabled ? '' : 'disabled' }}
+                        >
+                            <option value="period" @selected($scheduleMode === 'period')>Período</option>
+                            <option value="indefinite" @selected($scheduleMode === 'indefinite')>Indefinida</option>
                         </select>
+                        @error('schedule_mode')
+                            <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+                        @enderror
                     </div>
+
                     <div>
-                        <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">Horário diário <span class="text-red-500">*</span></label>
-                        <input class="js-automation-input w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white @error('automation_json.schedule.time') border-red-500 @enderror"
-                            type="time" name="automation_json[schedule][time]" value="{{ $automationTime }}" {{ $automationEnabled ? '' : 'disabled' }}>
+                        <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">Timezone</label>
+                        <input
+                            type="text"
+                            value="{{ $campaignTimezone }}"
+                            readonly
+                            class="w-full rounded-lg border border-gray-300 bg-gray-50 px-3 py-2 text-sm text-gray-600 shadow-sm dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300"
+                        >
+                        <input
+                            type="hidden"
+                            class="js-schedule-input"
+                            name="timezone"
+                            value="{{ $campaignTimezone }}"
+                            {{ $automationEnabled ? '' : 'disabled' }}
+                        >
+                        @error('timezone')
+                            <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+                        @enderror
                     </div>
+
+                    <div>
+                        <label for="campaign-starts-at" class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">Início <span class="text-red-500">*</span></label>
+                        <input
+                            id="campaign-starts-at"
+                            class="js-schedule-input w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white @error('starts_at') border-red-500 @enderror"
+                            type="datetime-local"
+                            name="starts_at"
+                            value="{{ $startsAtValue }}"
+                            {{ $automationEnabled ? '' : 'disabled' }}
+                        >
+                        @error('starts_at')
+                            <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    <div id="campaign-ends-at-wrapper" class="{{ $scheduleMode === 'indefinite' ? 'hidden' : '' }}">
+                        <label for="campaign-ends-at" class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">Fim <span class="text-red-500">*</span></label>
+                        <input
+                            id="campaign-ends-at"
+                            class="js-schedule-input w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white @error('ends_at') border-red-500 @enderror"
+                            type="datetime-local"
+                            name="ends_at"
+                            value="{{ $endsAtValue }}"
+                            {{ $automationEnabled && $scheduleMode === 'period' ? '' : 'disabled' }}
+                        >
+                        @error('ends_at')
+                            <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+                        @enderror
+                    </div>
+                </div>
+
+                <div class="mt-4 rounded-lg border border-gray-200 p-4 dark:border-gray-700">
+                    <div class="mb-3 flex items-center justify-between gap-3">
+                        <h4 class="text-sm font-medium text-gray-800 dark:text-gray-100">Dias da semana</h4>
+                        <button
+                            type="button"
+                            id="campaign-weekdays-all"
+                            class="btn btn-outline btn-sm"
+                            {{ $automationEnabled ? '' : 'disabled' }}
+                        >
+                            Todos os dias
+                        </button>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-7">
+                        @foreach ($weekdayLabels as $weekdayValue => $weekdayLabel)
+                            <label class="inline-flex items-center gap-2 rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-700 dark:border-gray-600 dark:text-gray-200">
+                                <input
+                                    type="checkbox"
+                                    class="js-schedule-input js-schedule-weekday-checkbox h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                                    name="weekdays[]"
+                                    value="{{ $weekdayValue }}"
+                                    @checked(in_array($weekdayValue, $selectedWeekdays, true))
+                                    {{ $automationEnabled ? '' : 'disabled' }}
+                                >
+                                {{ $weekdayLabel }}
+                            </label>
+                        @endforeach
+                    </div>
+                    @error('weekdays')
+                        <p class="mt-2 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+                    @enderror
+                    @error('weekdays.*')
+                        <p class="mt-2 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+                    @enderror
+                </div>
+
+                <div class="mt-4 rounded-lg border border-gray-200 p-4 dark:border-gray-700">
+                    <div class="mb-3 flex items-center justify-between gap-3">
+                        <h4 class="text-sm font-medium text-gray-800 dark:text-gray-100">Horários</h4>
+                        <button
+                            type="button"
+                            id="campaign-add-time"
+                            class="btn btn-outline btn-sm"
+                            {{ $automationEnabled ? '' : 'disabled' }}
+                        >
+                            Adicionar horário
+                        </button>
+                    </div>
+
+                    <ul id="campaign-times-list" class="space-y-2">
+                        @foreach ($scheduleTimes as $timeValue)
+                            <li class="js-schedule-time-item flex items-center gap-2">
+                                <input
+                                    type="time"
+                                    name="times[]"
+                                    value="{{ $timeValue }}"
+                                    class="js-schedule-input js-schedule-time-input w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white @error('times') border-red-500 @enderror @error('times.*') border-red-500 @enderror"
+                                    {{ $automationEnabled ? '' : 'disabled' }}
+                                >
+                                <button
+                                    type="button"
+                                    class="js-remove-schedule-time btn btn-outline btn-sm whitespace-nowrap"
+                                    {{ $automationEnabled ? '' : 'disabled' }}
+                                >
+                                    Remover
+                                </button>
+                            </li>
+                        @endforeach
+                    </ul>
+
+                    @error('times')
+                        <p class="mt-2 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+                    @enderror
+                    @error('times.*')
+                        <p class="mt-2 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+                    @enderror
+                </div>
+
+                <div id="campaign-rules-section" class="mt-4 rounded-lg border border-gray-200 p-4 dark:border-gray-700">
+                    <div class="mb-3">
+                        <h4 class="text-sm font-medium text-gray-800 dark:text-gray-100">Regras (opcional)</h4>
+                        <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Combine condições com AND/OR para filtrar pacientes antes do envio.</p>
+                    </div>
+
+                    <div class="mb-3 w-full max-w-xs">
+                        <label for="campaign-rules-logic" class="mb-1 block text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">Lógica</label>
+                        <select
+                            id="campaign-rules-logic"
+                            name="rules_json[logic]"
+                            class="js-campaign-rule-input w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white @error('rules_json.logic') border-red-500 @enderror"
+                            {{ $automationEnabled ? '' : 'disabled' }}
+                        >
+                            <option value="AND" @selected($rulesLogic === 'AND')>AND (todas)</option>
+                            <option value="OR" @selected($rulesLogic === 'OR')>OR (qualquer)</option>
+                        </select>
+                        @error('rules_json.logic')
+                            <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    <div class="mb-3 flex items-center justify-between gap-3">
+                        <p class="text-xs text-gray-500 dark:text-gray-400">Para operadores de lista (`in`, `not_in`), use vírgulas entre os valores.</p>
+                        <button
+                            type="button"
+                            id="campaign-rules-add"
+                            class="btn btn-outline btn-sm whitespace-nowrap"
+                            {{ $automationEnabled ? '' : 'disabled' }}
+                        >
+                            Adicionar condição
+                        </button>
+                    </div>
+
+                    <div id="campaign-rules-list" class="space-y-3">
+                        @foreach ($ruleConditions as $index => $condition)
+                            <div class="js-campaign-rule-row rounded-lg border border-gray-200 p-3 dark:border-gray-700">
+                                <div class="grid grid-cols-1 gap-3 lg:grid-cols-12">
+                                    <div class="lg:col-span-4">
+                                        <label class="mb-1 block text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">Campo</label>
+                                        <select
+                                            class="js-campaign-rule-input js-campaign-rule-field w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white @error('rules_json.conditions.' . $index . '.field') border-red-500 @enderror"
+                                            name="rules_json[conditions][{{ $index }}][field]"
+                                            {{ $automationEnabled ? '' : 'disabled' }}
+                                        >
+                                            <option value="">Selecione</option>
+                                            @foreach ($ruleFieldOptions as $fieldOption)
+                                                @php
+                                                    $fieldValue = (string) ($fieldOption['value'] ?? '');
+                                                @endphp
+                                                <option value="{{ $fieldValue }}" @selected($fieldValue === ($condition['field'] ?? ''))>
+                                                    {{ $fieldOption['label'] ?? $fieldValue }}
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+
+                                    <div class="lg:col-span-3">
+                                        <label class="mb-1 block text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">Operador</label>
+                                        <select
+                                            class="js-campaign-rule-input js-campaign-rule-operator w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white @error('rules_json.conditions.' . $index . '.op') border-red-500 @enderror"
+                                            name="rules_json[conditions][{{ $index }}][op]"
+                                            {{ $automationEnabled ? '' : 'disabled' }}
+                                        >
+                                            <option value="">Selecione</option>
+                                            @foreach ($ruleOperatorOptions as $operatorOption)
+                                                @php
+                                                    $operatorValue = (string) ($operatorOption['value'] ?? '');
+                                                @endphp
+                                                <option value="{{ $operatorValue }}" @selected($operatorValue === ($condition['op'] ?? ''))>
+                                                    {{ $operatorOption['label'] ?? $operatorValue }}
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+
+                                    <div class="js-campaign-rule-value-wrapper lg:col-span-4">
+                                        <label class="mb-1 block text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">Valor</label>
+                                        <input
+                                            type="text"
+                                            class="js-campaign-rule-input js-campaign-rule-value-input w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white @error('rules_json.conditions.' . $index . '.value') border-red-500 @enderror"
+                                            name="rules_json[conditions][{{ $index }}][value]"
+                                            value="{{ $condition['value'] ?? '' }}"
+                                            {{ $automationEnabled ? '' : 'disabled' }}
+                                        >
+                                        <select
+                                            class="js-campaign-rule-input js-campaign-rule-value-select hidden w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                                            disabled
+                                        ></select>
+                                    </div>
+
+                                    <div class="flex items-end lg:col-span-1">
+                                        <button
+                                            type="button"
+                                            class="js-campaign-rule-remove btn btn-outline btn-sm w-full"
+                                            {{ $automationEnabled ? '' : 'disabled' }}
+                                        >
+                                            Remover
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+
+                    <template id="campaign-rule-template">
+                        <div class="js-campaign-rule-row rounded-lg border border-gray-200 p-3 dark:border-gray-700">
+                            <div class="grid grid-cols-1 gap-3 lg:grid-cols-12">
+                                <div class="lg:col-span-4">
+                                    <label class="mb-1 block text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">Campo</label>
+                                    <select class="js-campaign-rule-input js-campaign-rule-field w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white">
+                                        <option value="">Selecione</option>
+                                        @foreach ($ruleFieldOptions as $fieldOption)
+                                            @php
+                                                $fieldValue = (string) ($fieldOption['value'] ?? '');
+                                            @endphp
+                                            <option value="{{ $fieldValue }}">{{ $fieldOption['label'] ?? $fieldValue }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div class="lg:col-span-3">
+                                    <label class="mb-1 block text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">Operador</label>
+                                    <select class="js-campaign-rule-input js-campaign-rule-operator w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white">
+                                        <option value="">Selecione</option>
+                                        @foreach ($ruleOperatorOptions as $operatorOption)
+                                            @php
+                                                $operatorValue = (string) ($operatorOption['value'] ?? '');
+                                            @endphp
+                                            <option value="{{ $operatorValue }}">{{ $operatorOption['label'] ?? $operatorValue }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div class="js-campaign-rule-value-wrapper lg:col-span-4">
+                                    <label class="mb-1 block text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">Valor</label>
+                                    <input type="text" class="js-campaign-rule-input js-campaign-rule-value-input w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white">
+                                    <select class="js-campaign-rule-input js-campaign-rule-value-select hidden w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white" disabled></select>
+                                </div>
+                                <div class="flex items-end lg:col-span-1">
+                                    <button type="button" class="js-campaign-rule-remove btn btn-outline btn-sm w-full">Remover</button>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+
+                    @error('rules_json')
+                        <p class="mt-2 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+                    @enderror
+                    @error('rules_json.conditions')
+                        <p class="mt-2 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+                    @enderror
+                    @error('rules_json.conditions.*.field')
+                        <p class="mt-2 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+                    @enderror
+                    @error('rules_json.conditions.*.op')
+                        <p class="mt-2 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+                    @enderror
+                    @error('rules_json.conditions.*.value')
+                        <p class="mt-2 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+                    @enderror
                 </div>
             </div>
 

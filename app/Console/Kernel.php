@@ -16,7 +16,7 @@ class Kernel extends ConsoleKernel
         $schedule->command('appointments:expire-pending')->everyFiveMinutes();
         $schedule->command('appointments:expire-waitlist-offers')->everyFiveMinutes();
         $schedule->command('appointments:mark-overdue')->everyFiveMinutes()->withoutOverlapping();
-        $schedule->command('campaigns:run-automated')->everyFiveMinutes()->withoutOverlapping();
+        $schedule->command('campaigns:run-automated')->everyMinute()->withoutOverlapping();
         $this->scheduleCommands($schedule);
     }
 

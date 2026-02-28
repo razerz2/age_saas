@@ -79,6 +79,17 @@ View:
   - Mostra/oculta automação em `#campaign-automation-section`.
   - Inputs `.js-automation-input` são habilitados apenas quando `type=automated`.
 
+### Regras (campanha agendada)
+
+- Bloco no form: `#campaign-rules-section` (visivel apenas para `type=automated`).
+- Lista de condicoes: `#campaign-rules-list`.
+- Adicao de condicao: `#campaign-rules-add`.
+- Cada linha possui:
+  - Campo (`.js-campaign-rule-field`)
+  - Operador (`.js-campaign-rule-operator`)
+  - Valor (`.js-campaign-rule-value-input` / `.js-campaign-rule-value-select`)
+- O JS oculta o valor para operadores sem valor (`is_null`, `is_not_null`, `birthday_today`) e reindexa os nomes `rules_json[conditions][i][...]` ao adicionar/remover linhas.
+
 ### WhatsApp: text vs media (URL vs upload)
 
 Elementos usados no form:
@@ -129,4 +140,7 @@ O JS:
 - Show desabilita botões de envio quando:
   - Módulo não está habilitado no tenant, ou
   - A campanha contém canais não disponíveis no tenant.
-
+- Show de campanha `automated`:
+  - Não exibe ações de `Iniciar agora` e `Agendar envio` como caminho principal.
+  - Exibe card informando disparo automático via programação.
+  - Mantém `Pausar/Retomar` disponível.

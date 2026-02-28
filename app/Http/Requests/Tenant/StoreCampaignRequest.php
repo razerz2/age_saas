@@ -3,7 +3,9 @@
 namespace App\Http\Requests\Tenant;
 
 use App\Services\Tenant\CampaignChannelGate;
+use App\Support\Tenant\CampaignPatientRules;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Arr;
 use Illuminate\Validation\Rule;
 
 class StoreCampaignRequest extends FormRequest
@@ -27,26 +29,76 @@ class StoreCampaignRequest extends FormRequest
             $rawChannels = [$rawChannels];
         }
 
-        if (!is_array($rawChannels)) {
+        if (is_array($rawChannels)) {
+            $normalizedChannels = [];
+            foreach ($rawChannels as $channel) {
+                $normalized = strtolower(trim((string) $channel));
+                if ($normalized === '') {
+                    continue;
+                }
+
+                if (!in_array($normalized, $normalizedChannels, true)) {
+                    $normalizedChannels[] = $normalized;
+                }
+            }
+
+            $this->merge([
+                'channels' => $normalizedChannels,
+                'channels_json' => $normalizedChannels,
+            ]);
+        }
+
+        if (!$this->isAutomatedType()) {
             return;
         }
 
-        $normalizedChannels = [];
-        foreach ($rawChannels as $channel) {
-            $normalized = strtolower(trim((string) $channel));
-            if ($normalized === '') {
-                continue;
-            }
-
-            if (!in_array($normalized, $normalizedChannels, true)) {
-                $normalizedChannels[] = $normalized;
-            }
+        $scheduleMode = strtolower(trim((string) $this->input('schedule_mode', 'period')));
+        if (!in_array($scheduleMode, ['period', 'indefinite'], true)) {
+            $scheduleMode = 'period';
         }
 
-        $this->merge([
-            'channels' => $normalizedChannels,
-            'channels_json' => $normalizedChannels,
-        ]);
+        $timezone = trim((string) $this->input('timezone', ''));
+        if ($timezone === '') {
+            $timezone = $this->resolveTenantTimezone();
+        }
+
+        $payload = [
+            'schedule_mode' => $scheduleMode,
+            'weekdays' => $this->normalizeWeekdays($this->input('weekdays', [])),
+            'times' => $this->normalizeTimes($this->input('times', [])),
+            'timezone' => $timezone,
+        ];
+
+        if ($scheduleMode === 'indefinite') {
+            $payload['ends_at'] = null;
+        }
+
+        $rawRules = $this->input('rules_json');
+        if (is_array($rawRules)) {
+            $rawConditions = $rawRules['conditions'] ?? [];
+            $conditions = [];
+
+            if (is_array($rawConditions)) {
+                foreach ($rawConditions as $condition) {
+                    if (!is_array($condition)) {
+                        continue;
+                    }
+
+                    $conditions[] = [
+                        'field' => strtolower(trim((string) ($condition['field'] ?? ''))),
+                        'op' => strtolower(trim((string) ($condition['op'] ?? ''))),
+                        'value' => $condition['value'] ?? null,
+                    ];
+                }
+            }
+
+            $payload['rules_json'] = [
+                'logic' => strtoupper(trim((string) ($rawRules['logic'] ?? 'AND'))),
+                'conditions' => $conditions,
+            ];
+        }
+
+        $this->merge($payload);
     }
 
     public function rules()
@@ -107,12 +159,27 @@ class StoreCampaignRequest extends FormRequest
             'audience_json' => ['required', 'array'],
             'audience_json.version' => ['required', 'integer', 'in:1'],
 
-            'automation_json' => ['nullable', 'array', 'required_if:type,automated'],
-            'automation_json.version' => ['required_if:type,automated', 'integer', 'in:1'],
-            'automation_json.trigger' => ['required_if:type,automated', 'in:birthday,inactive_patients'],
-            'automation_json.schedule' => ['required_if:type,automated', 'array'],
-            'automation_json.schedule.type' => ['required_if:type,automated', 'in:daily'],
-            'automation_json.schedule.time' => ['required_if:type,automated', 'date_format:H:i'],
+            'rules_json' => ['nullable', 'array'],
+            'rules_json.logic' => ['nullable', 'in:AND,OR'],
+            'rules_json.conditions' => ['nullable', 'array'],
+            'rules_json.conditions.*' => ['array'],
+            'rules_json.conditions.*.field' => ['nullable', Rule::in(CampaignPatientRules::allowedFields())],
+            'rules_json.conditions.*.op' => ['nullable', Rule::in(CampaignPatientRules::allowedOperators())],
+            'rules_json.conditions.*.value' => ['nullable'],
+
+            'schedule_mode' => [Rule::requiredIf(fn () => $this->isAutomatedType()), 'in:period,indefinite'],
+            'starts_at' => [Rule::requiredIf(fn () => $this->isAutomatedType()), 'date'],
+            'ends_at' => [
+                Rule::requiredIf(fn () => $this->isAutomatedType() && $this->isPeriodMode()),
+                'nullable',
+                'date',
+                'after_or_equal:starts_at',
+            ],
+            'weekdays' => [Rule::requiredIf(fn () => $this->isAutomatedType()), 'array', 'min:1'],
+            'weekdays.*' => ['integer', 'between:0,6'],
+            'times' => [Rule::requiredIf(fn () => $this->isAutomatedType()), 'array', 'min:1'],
+            'times.*' => ['date_format:H:i', 'distinct'],
+            'timezone' => [Rule::requiredIf(fn () => $this->isAutomatedType()), 'string', 'timezone'],
         ];
     }
 
@@ -189,6 +256,13 @@ class StoreCampaignRequest extends FormRequest
                     }
                 }
             }
+
+            if ($this->isAutomatedType() && $this->input('rules_json') !== null) {
+                $rulesValidation = CampaignPatientRules::validateAndNormalize($this->input('rules_json'));
+                foreach ($rulesValidation['errors'] as $key => $message) {
+                    $validator->errors()->add($key, $message);
+                }
+            }
         });
     }
 
@@ -211,16 +285,30 @@ class StoreCampaignRequest extends FormRequest
             'audience_json.array' => 'audience_json deve ser um objeto válido.',
             'audience_json.version.required' => 'audience_json.version é obrigatório.',
             'audience_json.version.in' => 'audience_json.version deve ser 1.',
-            'automation_json.required_if' => 'automation_json é obrigatório para campanhas automated.',
-            'automation_json.version.required_if' => 'automation_json.version é obrigatório para campanhas automated.',
-            'automation_json.version.in' => 'automation_json.version deve ser 1.',
-            'automation_json.trigger.required_if' => 'automation_json.trigger é obrigatório para campanhas automated.',
-            'automation_json.trigger.in' => 'automation_json.trigger deve ser birthday ou inactive_patients.',
-            'automation_json.schedule.required_if' => 'automation_json.schedule é obrigatório para campanhas automated.',
-            'automation_json.schedule.type.required_if' => 'automation_json.schedule.type é obrigatório para campanhas automated.',
-            'automation_json.schedule.type.in' => 'automation_json.schedule.type deve ser daily.',
-            'automation_json.schedule.time.required_if' => 'automation_json.schedule.time é obrigatório para campanhas automated.',
-            'automation_json.schedule.time.date_format' => 'automation_json.schedule.time deve estar no formato HH:MM.',
+            'rules_json.array' => 'Regras devem ser enviadas em formato de objeto.',
+            'rules_json.logic.in' => 'A lógica das regras deve ser AND ou OR.',
+            'rules_json.conditions.array' => 'As condições devem ser enviadas em lista.',
+            'rules_json.conditions.*.field.in' => 'Campo de regra não permitido.',
+            'rules_json.conditions.*.op.in' => 'Operador de regra não permitido.',
+            'schedule_mode.required' => 'O modo da programação é obrigatório para campanhas agendadas.',
+            'schedule_mode.in' => 'O modo da programação deve ser period ou indefinite.',
+            'starts_at.required' => 'A data de início é obrigatória para campanhas agendadas.',
+            'starts_at.date' => 'A data de início é inválida.',
+            'ends_at.required' => 'A data de fim é obrigatória quando o modo for período.',
+            'ends_at.date' => 'A data de fim é inválida.',
+            'ends_at.after_or_equal' => 'A data de fim deve ser maior ou igual à data de início.',
+            'weekdays.required' => 'Selecione pelo menos um dia da semana.',
+            'weekdays.array' => 'Os dias da semana devem estar em formato de lista.',
+            'weekdays.min' => 'Selecione pelo menos um dia da semana.',
+            'weekdays.*.integer' => 'Dia da semana inválido.',
+            'weekdays.*.between' => 'Dia da semana inválido. Use valores de 0 a 6.',
+            'times.required' => 'Adicione pelo menos um horário.',
+            'times.array' => 'Os horários devem estar em formato de lista.',
+            'times.min' => 'Adicione pelo menos um horário.',
+            'times.*.date_format' => 'Cada horário deve estar no formato HH:MM.',
+            'times.*.distinct' => 'Não repita horários.',
+            'timezone.required' => 'O timezone da campanha é obrigatório.',
+            'timezone.timezone' => 'O timezone informado é inválido.',
             'content_json.email.attachments.*.asset_id.integer' => 'Anexo inválido: asset_id deve ser numérico.',
             'content_json.email.attachments.*.source.in' => 'Anexo inválido: source deve ser upload.',
             'content_json.whatsapp.media.asset_id.integer' => 'O asset_id deve ser numérico quando source for upload.',
@@ -255,6 +343,108 @@ class StoreCampaignRequest extends FormRequest
     private function hasChannel(string $channel): bool
     {
         return in_array($channel, $this->requestedChannels(), true);
+    }
+
+    private function isAutomatedType(): bool
+    {
+        return strtolower(trim((string) $this->input('type', 'manual'))) === 'automated';
+    }
+
+    private function isPeriodMode(): bool
+    {
+        return strtolower(trim((string) $this->input('schedule_mode', 'period'))) === 'period';
+    }
+
+    /**
+     * @param mixed $weekdays
+     * @return array<int, int>
+     */
+    private function normalizeWeekdays(mixed $weekdays): array
+    {
+        $values = Arr::wrap($weekdays);
+        $normalized = [];
+
+        foreach ($values as $value) {
+            if (!is_numeric($value)) {
+                continue;
+            }
+
+            $day = (int) $value;
+            if ($day < 0 || $day > 6) {
+                continue;
+            }
+
+            if (!in_array($day, $normalized, true)) {
+                $normalized[] = $day;
+            }
+        }
+
+        sort($normalized);
+
+        return $normalized;
+    }
+
+    /**
+     * @param mixed $times
+     * @return array<int, string>
+     */
+    private function normalizeTimes(mixed $times): array
+    {
+        $values = Arr::wrap($times);
+        $normalized = [];
+
+        foreach ($values as $value) {
+            $time = $this->normalizeTime((string) $value);
+            if ($time === null) {
+                continue;
+            }
+
+            if (!in_array($time, $normalized, true)) {
+                $normalized[] = $time;
+            }
+        }
+
+        sort($normalized);
+
+        return $normalized;
+    }
+
+    private function normalizeTime(string $value): ?string
+    {
+        $trimmed = trim($value);
+        if (preg_match('/^\d{2}:\d{2}$/', $trimmed) !== 1) {
+            return null;
+        }
+
+        [$hourRaw, $minuteRaw] = explode(':', $trimmed, 2);
+        $hour = (int) $hourRaw;
+        $minute = (int) $minuteRaw;
+
+        if ($hour < 0 || $hour > 23 || $minute < 0 || $minute > 59) {
+            return null;
+        }
+
+        return sprintf('%02d:%02d', $hour, $minute);
+    }
+
+    private function resolveTenantTimezone(): string
+    {
+        $fallback = (string) config('app.timezone', 'America/Sao_Paulo');
+        $rawTimezone = function_exists('tenant_setting')
+            ? (string) tenant_setting('timezone', $fallback)
+            : $fallback;
+
+        $timezone = trim($rawTimezone);
+        if ($timezone === '') {
+            return $fallback;
+        }
+
+        try {
+            new \DateTimeZone($timezone);
+            return $timezone;
+        } catch (\Throwable) {
+            return $fallback;
+        }
     }
 
     private function isFilled($value): bool

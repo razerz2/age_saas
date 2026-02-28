@@ -23,7 +23,7 @@
         $campaignType = strtolower((string) ($campaign->type ?? 'manual'));
         $campaignStatus = strtolower((string) ($campaign->status ?? ''));
 
-        $typeLabel = $campaignType === 'automated' ? 'Automatizada' : 'Manual';
+        $typeLabel = $campaignType === 'automated' ? 'Agendada' : 'Manual';
         $typeClasses = $campaignType === 'automated'
             ? 'bg-violet-100 text-violet-800 dark:bg-violet-900/20 dark:text-violet-300'
             : 'bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-300';
@@ -194,7 +194,7 @@
                 <div class="flex">
                     <x-icon name="pause-circle-outline" size="text-lg" class="text-amber-600 dark:text-amber-400" />
                     <p class="ml-3 text-sm text-amber-800 dark:text-amber-200">
-                        Campanha pausada: a automação diária não será executada enquanto o status permanecer pausado.
+                        Campanha pausada: a programação agendada não será executada enquanto o status permanecer pausado.
                     </p>
                 </div>
             </div>
@@ -265,28 +265,38 @@
                 </form>
 
                 <div class="grid grid-cols-1 gap-3 lg:grid-cols-3">
-                    <form action="{{ $startRoute }}" method="POST" class="rounded-lg border border-gray-200 p-4 dark:border-gray-700">
-                        @csrf
-                        <h3 class="mb-2 text-sm font-semibold text-gray-900 dark:text-white">Iniciar envio</h3>
-                        <button type="submit" class="btn btn-primary w-full" {{ $dispatchActionsEnabled ? '' : 'disabled' }}>
-                            Iniciar agora
-                        </button>
-                    </form>
+                    @if ($campaignType === 'automated')
+                        <div class="rounded-lg border border-gray-200 p-4 dark:border-gray-700 lg:col-span-2">
+                            <h3 class="mb-2 text-sm font-semibold text-gray-900 dark:text-white">Disparo automático</h3>
+                            <p class="text-sm text-gray-600 dark:text-gray-300">
+                                Campanhas agendadas são disparadas automaticamente pela programação configurada.
+                                Use Pausar/Retomar para controlar a execução.
+                            </p>
+                        </div>
+                    @else
+                        <form action="{{ $startRoute }}" method="POST" class="rounded-lg border border-gray-200 p-4 dark:border-gray-700">
+                            @csrf
+                            <h3 class="mb-2 text-sm font-semibold text-gray-900 dark:text-white">Iniciar envio</h3>
+                            <button type="submit" class="btn btn-primary w-full" {{ $dispatchActionsEnabled ? '' : 'disabled' }}>
+                                Iniciar agora
+                            </button>
+                        </form>
 
-                    <form action="{{ $scheduleRoute }}" method="POST" class="rounded-lg border border-gray-200 p-4 dark:border-gray-700">
-                        @csrf
-                        <h3 class="mb-2 text-sm font-semibold text-gray-900 dark:text-white">Agendar envio</h3>
-                        <input
-                            type="datetime-local"
-                            name="scheduled_at"
-                            value="{{ old('scheduled_at', $defaultScheduleInput) }}"
-                            class="mb-2 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
-                            {{ $dispatchActionsEnabled ? '' : 'disabled' }}
-                        >
-                        <button type="submit" class="btn btn-outline w-full" {{ $dispatchActionsEnabled ? '' : 'disabled' }}>
-                            Agendar
-                        </button>
-                    </form>
+                        <form action="{{ $scheduleRoute }}" method="POST" class="rounded-lg border border-gray-200 p-4 dark:border-gray-700">
+                            @csrf
+                            <h3 class="mb-2 text-sm font-semibold text-gray-900 dark:text-white">Agendar envio</h3>
+                            <input
+                                type="datetime-local"
+                                name="scheduled_at"
+                                value="{{ old('scheduled_at', $defaultScheduleInput) }}"
+                                class="mb-2 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                                {{ $dispatchActionsEnabled ? '' : 'disabled' }}
+                            >
+                            <button type="submit" class="btn btn-outline w-full" {{ $dispatchActionsEnabled ? '' : 'disabled' }}>
+                                Agendar
+                            </button>
+                        </form>
+                    @endif
 
                     <div class="rounded-lg border border-gray-200 p-4 dark:border-gray-700">
                         <h3 class="mb-2 text-sm font-semibold text-gray-900 dark:text-white">Status da campanha</h3>
@@ -404,7 +414,7 @@
                 @if ($campaignType === 'automated')
                     <div class="rounded-xl border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-800">
                         <div class="border-b border-gray-200 px-6 py-4 dark:border-gray-700">
-                            <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Automação</h2>
+                            <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Programação</h2>
                         </div>
                         <div class="p-6">
                             @include('tenant.campaigns.partials.automation_summary', [
@@ -415,6 +425,19 @@
                             ])
                         </div>
                     </div>
+
+                    @if (!empty($rulesSummary['conditions']))
+                        <div class="rounded-xl border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-800">
+                            <div class="border-b border-gray-200 px-6 py-4 dark:border-gray-700">
+                                <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Regras</h2>
+                            </div>
+                            <div class="p-6">
+                                @include('tenant.campaigns.partials.rules_summary', [
+                                    'rulesSummary' => $rulesSummary,
+                                ])
+                            </div>
+                        </div>
+                    @endif
                 @endif
             </div>
         </div>

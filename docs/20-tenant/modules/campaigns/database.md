@@ -84,12 +84,17 @@ Model: `app/Models/Tenant/Asset.php`
 
 ### `campaign_automation_locks`
 
-Migration: `database/migrations/tenant/2026_02_25_000011_create_campaign_automation_locks_table.php`
+Migrations:
+
+- `database/migrations/tenant/2026_02_25_000011_create_campaign_automation_locks_table.php`
+- `database/migrations/tenant/2026_02_28_000014_update_campaign_automation_locks_for_minute_window.php`
 
 - `id`
 - `campaign_id` (FK → `campaigns`)
-- `trigger` (string)
-- `window_date` (date)
+- `trigger` (string, legado/deprecated)
+- `window_date` (date, legado/deprecated)
+- `window_key` (string `YYYY-MM-DD HH:MM`) — fonte de verdade para lock por minuto
+- `timezone` (string, opcional)
 - `status` (`locked|done|error`)
 - `run_id` (nullable, FK → `campaign_runs`)
 - `error_message` (500, nullable)
@@ -97,8 +102,8 @@ Migration: `database/migrations/tenant/2026_02_25_000011_create_campaign_automat
 
 Índices importantes:
 
-- Unique: (`campaign_id`, `trigger`, `window_date`) — `campaign_automation_locks_uq`
-- Index: (`status`, `window_date`) — `campaign_automation_locks_status_window_idx`
+- Unique: (`campaign_id`, `window_key`) — `campaign_automation_locks_campaign_window_uq`
+- Index: (`status`, `window_key`) — `campaign_automation_locks_status_window_key_idx`
 
 Model: `app/Models/Tenant/CampaignAutomationLock.php`
 
@@ -212,3 +217,44 @@ Produzido por `CampaignAudienceBuilder`.
 }
 ```
 
+
+## Atualização Etapa 1 (Agendada)
+
+A partir da migração `database/migrations/tenant/2026_02_28_000012_add_scheduling_fields_to_campaigns_table.php`, campanhas `type=automated` passam a usar os campos abaixo como fonte de verdade de programação:
+
+- `schedule_mode` (`period|indefinite`)
+- `starts_at` (datetime)
+- `ends_at` (datetime nullable quando `indefinite`)
+- `schedule_weekdays` (json array com padrão `0..6`, onde `0=domingo`)
+- `schedule_times` (json array `HH:MM`, sem duplicados)
+- `timezone` (IANA timezone)
+
+Compatibilidade:
+
+- `automation_json` permanece no schema como legado (deprecated), para leitura de dados antigos.
+- `scheduled_at` permanece no schema para o agendamento pontual de disparo manual (fluxo de ações de dispatch).
+- Para campanhas automáticas/agendadas, a programação recorrente deve considerar `schedule_*` como fonte de verdade.
+
+## Atualizacao Etapa 2 (Regras opcionais)
+
+A partir da migracao `database/migrations/tenant/2026_02_28_000013_add_rules_json_to_campaigns_table.php`, campanhas agendadas podem persistir filtros opcionais em `rules_json`:
+
+- `rules_json.logic` (`AND|OR`)
+- `rules_json.conditions[]` com:
+  - `field` em whitelist
+  - `op` em whitelist
+  - `value` quando aplicavel
+
+Formato padrao:
+
+```json
+{
+  "logic": "AND",
+  "conditions": [
+    {"field":"gender","op":"=","value":"F"},
+    {"field":"is_active","op":"=","value":true}
+  ]
+}
+```
+
+As regras sao aplicadas no `CampaignAudienceBuilder` como complemento dos filtros de audiencia existentes.
