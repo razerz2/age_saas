@@ -714,7 +714,6 @@ function initCampaignForm() {
     const scheduleWeekdayCheckboxes = Array.from(form.querySelectorAll('.js-schedule-weekday-checkbox'));
     const scheduleTimesList = form.querySelector('#campaign-times-list');
     const scheduleAddTimeButton = form.querySelector('#campaign-add-time');
-    const rulesSection = form.querySelector('#campaign-rules-section');
     const rulesList = form.querySelector('#campaign-rules-list');
     const rulesAddButton = form.querySelector('#campaign-rules-add');
     const ruleTemplate = form.querySelector('#campaign-rule-template');
@@ -974,37 +973,37 @@ function initCampaignForm() {
             });
         }
 
-        if (rulesSection) {
-            rulesSection.classList.toggle('hidden', !enabled);
-            rulesSection.querySelectorAll('.js-campaign-rule-input, .js-campaign-rule-remove').forEach((element) => {
-                element.disabled = !enabled;
-            });
-        }
-
         updateScheduleMode(enabled);
         reindexRuleRows();
-
-        if (!enabled && rulesList) {
-            rulesList.querySelectorAll('.js-campaign-rule-input, .js-campaign-rule-remove').forEach((element) => {
-                element.disabled = true;
-            });
-        }
-
-        if (rulesAddButton) {
-            rulesAddButton.disabled = !enabled;
-        }
     };
 
-    const operatorRequiresValue = (operator) => !['is_null', 'is_not_null', 'birthday_today'].includes(operator);
-    const selectValueOperators = ['=', '!='];
+    const noValueOperators = ['is_null', 'is_not_null', 'birthday_today'];
+    const inputOnlyValueOperators = ['in', 'not_in'];
+    const operatorFriendlyLabelMap = {
+        '=': 'É igual a',
+        '!=': 'É diferente de',
+        in: 'Está em (lista)',
+        not_in: 'Não está em (lista)',
+        is_null: 'Está vazio',
+        is_not_null: 'Não está vazio',
+        birthday_today: 'Faz aniversário hoje',
+    };
+    const operatorRequiresValue = (operator) => !noValueOperators.includes(operator);
+    const ruleValueControlClassName = 'js-campaign-rule-input w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white';
 
     const operatorLabelMap = {};
     Array.from(form.querySelectorAll('.js-campaign-rule-operator option')).forEach((option) => {
         const value = String(option.value || '').trim();
-        if (value !== '') {
-            operatorLabelMap[value] = option.textContent || value;
+        if (value === '') {
+            return;
         }
+
+        const label = operatorFriendlyLabelMap[value] || option.textContent || value;
+        operatorLabelMap[value] = label;
+        option.textContent = label;
     });
+
+    const resolveOperatorLabel = (operator) => operatorFriendlyLabelMap[operator] || operatorLabelMap[operator] || operator;
 
     const setRuleRowIndex = (row, index) => {
         row.dataset.ruleIndex = String(index);
@@ -1020,15 +1019,29 @@ function initCampaignForm() {
         }
     };
 
-    const updateRuleValueMode = (row) => {
+    const replaceRuleValueControl = (row, element) => {
+        const valueControlContainer = row.querySelector('.js-campaign-rule-value-control');
+        if (!valueControlContainer) {
+            return;
+        }
+
+        valueControlContainer.replaceChildren();
+        if (element) {
+            valueControlContainer.appendChild(element);
+        }
+    };
+
+    const getRuleValueControl = (row) => row.querySelector('.js-campaign-rule-value-control-element');
+
+    const updateRuleValueMode = (row, options = {}) => {
+        const { clearValue = false } = options;
         const index = Number.parseInt(row.dataset.ruleIndex || '0', 10) || 0;
         const fieldSelect = row.querySelector('.js-campaign-rule-field');
         const operatorSelect = row.querySelector('.js-campaign-rule-operator');
         const valueWrapper = row.querySelector('.js-campaign-rule-value-wrapper');
-        const textInput = row.querySelector('.js-campaign-rule-value-input');
-        const valueSelect = row.querySelector('.js-campaign-rule-value-select');
+        const currentValueControl = getRuleValueControl(row);
 
-        if (!fieldSelect || !operatorSelect || !valueWrapper || !textInput || !valueSelect) {
+        if (!fieldSelect || !operatorSelect || !valueWrapper) {
             return;
         }
 
@@ -1036,50 +1049,58 @@ function initCampaignForm() {
         const operator = String(operatorSelect.value || '').trim();
         const requiresValue = field !== '' && operatorRequiresValue(operator);
         const predefinedOptions = Array.isArray(ruleValueOptionsMap[field]) ? ruleValueOptionsMap[field] : [];
-        const useSelect = requiresValue && predefinedOptions.length > 0 && selectValueOperators.includes(operator);
+        const useSelect = requiresValue && predefinedOptions.length > 0 && !inputOnlyValueOperators.includes(operator);
+        const previousValue = clearValue ? '' : String(currentValueControl?.value || '').trim();
+        const valueName = `rules_json[conditions][${index}][value]`;
+        const shouldDisableValueControl = fieldSelect.disabled || operatorSelect.disabled;
 
         valueWrapper.classList.toggle('hidden', !requiresValue);
-        textInput.name = '';
-        valueSelect.name = '';
 
         if (!requiresValue) {
-            textInput.disabled = true;
-            valueSelect.disabled = true;
-            valueSelect.classList.add('hidden');
+            replaceRuleValueControl(row, null);
             return;
         }
 
         if (useSelect) {
-            const candidateValue = String(textInput.value || valueSelect.value || '').trim();
-            valueSelect.innerHTML = '<option value="">Selecione</option>';
+            const normalizedOptions = predefinedOptions
+                .map((option) => ({
+                    value: String(option?.value ?? '').trim(),
+                    label: String(option?.label ?? option?.value ?? '').trim(),
+                }))
+                .filter((option) => option.value !== '');
+            const validValues = normalizedOptions.map((option) => option.value);
+            const nextValue = validValues.includes(previousValue) ? previousValue : '';
 
-            predefinedOptions.forEach((option) => {
-                const value = String(option?.value ?? '').trim();
-                const label = String(option?.label ?? value);
-                if (value === '') {
-                    return;
-                }
+            const valueSelect = document.createElement('select');
+            valueSelect.className = `${ruleValueControlClassName} js-campaign-rule-value-control-element js-campaign-rule-value-select`;
+            valueSelect.name = valueName;
+            valueSelect.disabled = shouldDisableValueControl;
 
-                const element = document.createElement('option');
-                element.value = value;
-                element.textContent = label;
-                valueSelect.appendChild(element);
+            const placeholder = document.createElement('option');
+            placeholder.value = '';
+            placeholder.textContent = 'Selecione';
+            valueSelect.appendChild(placeholder);
+
+            normalizedOptions.forEach((option) => {
+                const selectOption = document.createElement('option');
+                selectOption.value = option.value;
+                selectOption.textContent = option.label || option.value;
+                valueSelect.appendChild(selectOption);
             });
 
-            valueSelect.value = candidateValue;
-            textInput.value = valueSelect.value || candidateValue;
-
-            textInput.disabled = true;
-            valueSelect.disabled = false;
-            valueSelect.classList.remove('hidden');
-            valueSelect.name = `rules_json[conditions][${index}][value]`;
+            valueSelect.value = nextValue;
+            replaceRuleValueControl(row, valueSelect);
             return;
         }
 
-        textInput.disabled = false;
-        valueSelect.disabled = true;
-        valueSelect.classList.add('hidden');
-        textInput.name = `rules_json[conditions][${index}][value]`;
+        const valueInput = document.createElement('input');
+        valueInput.type = 'text';
+        valueInput.className = `${ruleValueControlClassName} js-campaign-rule-value-control-element js-campaign-rule-value-input`;
+        valueInput.name = valueName;
+        valueInput.value = previousValue;
+        valueInput.disabled = shouldDisableValueControl;
+
+        replaceRuleValueControl(row, valueInput);
     };
 
     const updateRuleOperatorOptions = (row) => {
@@ -1098,7 +1119,7 @@ function initCampaignForm() {
         allowedOperators.forEach((operator) => {
             const option = document.createElement('option');
             option.value = operator;
-            option.textContent = operatorLabelMap[operator] || operator;
+            option.textContent = resolveOperatorLabel(operator);
             operatorSelect.appendChild(option);
         });
 
@@ -1113,9 +1134,9 @@ function initCampaignForm() {
         operatorSelect.disabled = field === '';
     };
 
-    const updateRuleRow = (row) => {
+    const updateRuleRow = (row, options = {}) => {
         updateRuleOperatorOptions(row);
-        updateRuleValueMode(row);
+        updateRuleValueMode(row, options);
     };
 
     const reindexRuleRows = () => {
@@ -1276,7 +1297,6 @@ function initCampaignForm() {
 
             rulesList.appendChild(row);
             reindexRuleRows();
-            updateSchedulingSection();
         });
     }
 
@@ -1288,14 +1308,18 @@ function initCampaignForm() {
             }
 
             const target = event.target;
-            if (target.classList.contains('js-campaign-rule-value-select')) {
-                const textInput = row.querySelector('.js-campaign-rule-value-input');
-                if (textInput) {
-                    textInput.value = target.value || '';
-                }
+            if (target.classList.contains('js-campaign-rule-field')) {
+                updateRuleRow(row, { clearValue: true });
+                return;
             }
 
-            updateRuleRow(row);
+            if (target.classList.contains('js-campaign-rule-operator')) {
+                const selectedOperator = String(target.value || '').trim();
+                updateRuleValueMode(row, { clearValue: noValueOperators.includes(selectedOperator) });
+                return;
+            }
+
+            updateRuleRow(row, { clearValue: false });
         });
 
         rulesList.addEventListener('click', (event) => {
@@ -1312,7 +1336,6 @@ function initCampaignForm() {
 
             row.remove();
             reindexRuleRows();
-            updateSchedulingSection();
         });
     }
 

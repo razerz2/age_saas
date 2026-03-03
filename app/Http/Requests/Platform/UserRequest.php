@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Requests;
+namespace App\Http\Requests\Platform;
 
 use Illuminate\Foundation\Http\FormRequest;
 use App\Models\Platform\User;
@@ -76,3 +76,4 @@ class UserRequest extends FormRequest
         ]);
     }
 }
+

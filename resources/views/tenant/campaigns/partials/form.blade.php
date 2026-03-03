@@ -166,6 +166,15 @@
     $ruleOperatorOptions = is_array($ruleOperatorOptions ?? null) ? $ruleOperatorOptions : [];
     $ruleFieldOperators = is_array($ruleFieldOperators ?? null) ? $ruleFieldOperators : [];
     $ruleValueOptions = is_array($ruleValueOptions ?? null) ? $ruleValueOptions : [];
+    $ruleOperatorFriendlyLabels = [
+        '=' => 'É igual a',
+        '!=' => 'É diferente de',
+        'in' => 'Está em (lista)',
+        'not_in' => 'Não está em (lista)',
+        'is_null' => 'Está vazio',
+        'is_not_null' => 'Não está vazio',
+        'birthday_today' => 'Faz aniversário hoje',
+    ];
 
     $rulesData = old('rules_json', $campaign?->rules_json);
     $rulesLogic = strtoupper(trim((string) data_get($rulesData, 'logic', 'AND')));
@@ -778,7 +787,9 @@
                     @enderror
                 </div>
 
-                <div id="campaign-rules-section" class="mt-4 rounded-lg border border-gray-200 p-4 dark:border-gray-700">
+            </div>
+
+            <div id="campaign-rules-section" class="mt-4 rounded-lg border border-gray-200 p-4 dark:border-gray-700">
                     <div class="mb-3">
                         <h4 class="text-sm font-medium text-gray-800 dark:text-gray-100">Regras (opcional)</h4>
                         <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Combine condições com AND/OR para filtrar pacientes antes do envio.</p>
@@ -790,7 +801,6 @@
                             id="campaign-rules-logic"
                             name="rules_json[logic]"
                             class="js-campaign-rule-input w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white @error('rules_json.logic') border-red-500 @enderror"
-                            {{ $automationEnabled ? '' : 'disabled' }}
                         >
                             <option value="AND" @selected($rulesLogic === 'AND')>AND (todas)</option>
                             <option value="OR" @selected($rulesLogic === 'OR')>OR (qualquer)</option>
@@ -806,7 +816,6 @@
                             type="button"
                             id="campaign-rules-add"
                             class="btn btn-outline btn-sm whitespace-nowrap"
-                            {{ $automationEnabled ? '' : 'disabled' }}
                         >
                             Adicionar condição
                         </button>
@@ -821,7 +830,6 @@
                                         <select
                                             class="js-campaign-rule-input js-campaign-rule-field w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white @error('rules_json.conditions.' . $index . '.field') border-red-500 @enderror"
                                             name="rules_json[conditions][{{ $index }}][field]"
-                                            {{ $automationEnabled ? '' : 'disabled' }}
                                         >
                                             <option value="">Selecione</option>
                                             @foreach ($ruleFieldOptions as $fieldOption)
@@ -840,40 +848,67 @@
                                         <select
                                             class="js-campaign-rule-input js-campaign-rule-operator w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white @error('rules_json.conditions.' . $index . '.op') border-red-500 @enderror"
                                             name="rules_json[conditions][{{ $index }}][op]"
-                                            {{ $automationEnabled ? '' : 'disabled' }}
                                         >
                                             <option value="">Selecione</option>
                                             @foreach ($ruleOperatorOptions as $operatorOption)
                                                 @php
                                                     $operatorValue = (string) ($operatorOption['value'] ?? '');
+                                                    $operatorLabel = $ruleOperatorFriendlyLabels[$operatorValue]
+                                                        ?? ($operatorOption['label'] ?? $operatorValue);
                                                 @endphp
                                                 <option value="{{ $operatorValue }}" @selected($operatorValue === ($condition['op'] ?? ''))>
-                                                    {{ $operatorOption['label'] ?? $operatorValue }}
+                                                    {{ $operatorLabel }}
                                                 </option>
                                             @endforeach
                                         </select>
                                     </div>
 
-                                    <div class="js-campaign-rule-value-wrapper lg:col-span-4">
+                                    @php
+                                        $conditionField = (string) ($condition['field'] ?? '');
+                                        $conditionOperator = (string) ($condition['op'] ?? '');
+                                        $conditionValue = (string) ($condition['value'] ?? '');
+                                        $conditionValueOptions = is_array($ruleValueOptions[$conditionField] ?? null)
+                                            ? $ruleValueOptions[$conditionField]
+                                            : [];
+                                        $conditionRequiresValue = !in_array($conditionOperator, ['is_null', 'is_not_null', 'birthday_today'], true)
+                                            && $conditionField !== '';
+                                        $conditionUsesSelect = $conditionRequiresValue
+                                            && !in_array($conditionOperator, ['in', 'not_in'], true)
+                                            && $conditionValueOptions !== [];
+                                    @endphp
+                                    <div class="js-campaign-rule-value-wrapper lg:col-span-4 {{ $conditionRequiresValue ? '' : 'hidden' }}">
                                         <label class="mb-1 block text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">Valor</label>
-                                        <input
-                                            type="text"
-                                            class="js-campaign-rule-input js-campaign-rule-value-input w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white @error('rules_json.conditions.' . $index . '.value') border-red-500 @enderror"
-                                            name="rules_json[conditions][{{ $index }}][value]"
-                                            value="{{ $condition['value'] ?? '' }}"
-                                            {{ $automationEnabled ? '' : 'disabled' }}
-                                        >
-                                        <select
-                                            class="js-campaign-rule-input js-campaign-rule-value-select hidden w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
-                                            disabled
-                                        ></select>
+                                        <div class="js-campaign-rule-value-control">
+                                            @if ($conditionRequiresValue && $conditionUsesSelect)
+                                                <select
+                                                    class="js-campaign-rule-input js-campaign-rule-value-control-element js-campaign-rule-value-select w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white @error('rules_json.conditions.' . $index . '.value') border-red-500 @enderror"
+                                                    name="rules_json[conditions][{{ $index }}][value]"
+                                                >
+                                                    <option value="">Selecione</option>
+                                                    @foreach ($conditionValueOptions as $valueOption)
+                                                        @php
+                                                            $valueOptionValue = (string) ($valueOption['value'] ?? '');
+                                                        @endphp
+                                                        <option value="{{ $valueOptionValue }}" @selected($valueOptionValue === $conditionValue)>
+                                                            {{ $valueOption['label'] ?? $valueOptionValue }}
+                                                        </option>
+                                                    @endforeach
+                                                </select>
+                                            @elseif ($conditionRequiresValue)
+                                                <input
+                                                    type="text"
+                                                    class="js-campaign-rule-input js-campaign-rule-value-control-element js-campaign-rule-value-input w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white @error('rules_json.conditions.' . $index . '.value') border-red-500 @enderror"
+                                                    name="rules_json[conditions][{{ $index }}][value]"
+                                                    value="{{ $conditionValue }}"
+                                                >
+                                            @endif
+                                        </div>
                                     </div>
 
                                     <div class="flex items-end lg:col-span-1">
                                         <button
                                             type="button"
                                             class="js-campaign-rule-remove btn btn-outline btn-sm w-full"
-                                            {{ $automationEnabled ? '' : 'disabled' }}
                                         >
                                             Remover
                                         </button>
@@ -905,15 +940,18 @@
                                         @foreach ($ruleOperatorOptions as $operatorOption)
                                             @php
                                                 $operatorValue = (string) ($operatorOption['value'] ?? '');
+                                                $operatorLabel = $ruleOperatorFriendlyLabels[$operatorValue]
+                                                    ?? ($operatorOption['label'] ?? $operatorValue);
                                             @endphp
-                                            <option value="{{ $operatorValue }}">{{ $operatorOption['label'] ?? $operatorValue }}</option>
+                                            <option value="{{ $operatorValue }}">{{ $operatorLabel }}</option>
                                         @endforeach
                                     </select>
                                 </div>
                                 <div class="js-campaign-rule-value-wrapper lg:col-span-4">
                                     <label class="mb-1 block text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">Valor</label>
-                                    <input type="text" class="js-campaign-rule-input js-campaign-rule-value-input w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white">
-                                    <select class="js-campaign-rule-input js-campaign-rule-value-select hidden w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white" disabled></select>
+                                    <div class="js-campaign-rule-value-control">
+                                        <input type="text" class="js-campaign-rule-input js-campaign-rule-value-control-element js-campaign-rule-value-input w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white">
+                                    </div>
                                 </div>
                                 <div class="flex items-end lg:col-span-1">
                                     <button type="button" class="js-campaign-rule-remove btn btn-outline btn-sm w-full">Remover</button>
@@ -938,7 +976,6 @@
                         <p class="mt-2 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
                     @enderror
                 </div>
-            </div>
 
             <div class="flex flex-col gap-3 border-t border-gray-200 pt-6 dark:border-gray-700 sm:flex-row sm:items-center sm:justify-between">
                 <a href="{{ $cancelUrl ?? workspace_route('tenant.campaigns.index') }}" class="btn btn-outline">Cancelar</a>

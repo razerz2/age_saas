@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Platform;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\InvoiceRequest;
+use App\Http\Requests\Platform\InvoiceRequest;
 use App\Models\Platform\Invoices;
 use App\Models\Platform\Subscription;
 use App\Models\Platform\Tenant;
@@ -309,3 +309,4 @@ class InvoiceController extends Controller
         }
     }
 }
+

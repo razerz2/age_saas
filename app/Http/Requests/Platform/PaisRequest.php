@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Requests;
+namespace App\Http\Requests\Platform;
 
 use Illuminate\Foundation\Http\FormRequest;
 
@@ -39,3 +39,4 @@ class PaisRequest extends FormRequest
         ];
     }
 }
+

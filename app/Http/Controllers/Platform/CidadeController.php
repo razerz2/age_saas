@@ -6,7 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Platform\Cidade;
 use App\Models\Platform\Estado;
 use App\Models\Platform\Pais;
-use App\Http\Requests\CidadeRequest;
+use App\Http\Requests\Platform\CidadeRequest;
 
 class CidadeController extends Controller
 {
@@ -53,3 +53,4 @@ class CidadeController extends Controller
         return redirect()->route('Platform.cidades.index')->with('success', 'Cidade excluída com sucesso.');
     }
 }
+

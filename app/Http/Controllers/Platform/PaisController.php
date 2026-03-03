@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Platform;
 
 use App\Http\Controllers\Controller;
 use App\Models\Platform\Pais;
-use App\Http\Requests\PaisRequest;
+use App\Http\Requests\Platform\PaisRequest;
 use Illuminate\Support\Facades\Log;
 
 class PaisController extends Controller
@@ -44,3 +44,4 @@ class PaisController extends Controller
         return view('platform.paises.show', compact('pais'));
     }
 }
+

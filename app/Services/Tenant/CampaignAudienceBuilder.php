@@ -45,9 +45,7 @@ class CampaignAudienceBuilder
             $query->where('patients.is_active', true);
         }
 
-        if (strtolower((string) $campaign->type) === 'automated') {
-            $query = CampaignPatientRules::applyToPatientQuery($query, $campaign->rules_json, $timezone);
-        }
+        $query = CampaignPatientRules::applyToPatientQuery($query, $campaign->rules_json, $timezone);
 
         if ($trigger === 'birthday') {
             $query->whereNotNull('patients.birth_date')

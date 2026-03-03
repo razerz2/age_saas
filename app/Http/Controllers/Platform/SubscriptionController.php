@@ -10,7 +10,7 @@ use App\Models\Platform\Invoices;
 use App\Models\Platform\PlanAccessRule;
 use App\Models\Tenant\TenantPlanLimit;
 use App\Services\AsaasService;
-use App\Http\Requests\SubscriptionRequest;
+use App\Http\Requests\Platform\SubscriptionRequest;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
@@ -471,3 +471,4 @@ class SubscriptionController extends Controller
         }
     }
 }
+

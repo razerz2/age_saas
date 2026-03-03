@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Requests;
+namespace App\Http\Requests\Platform;
 
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -151,3 +151,4 @@ class TenantRequest extends FormRequest
         return $cnpj[12] == $digit1 && $cnpj[13] == $digit2;
     }
 }
+

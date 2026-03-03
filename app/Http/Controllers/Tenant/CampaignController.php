@@ -110,7 +110,7 @@ class CampaignController extends Controller
             'content_json' => $this->extractJsonPayload($request, $validated, 'content_json'),
             'audience_json' => $this->extractJsonPayload($request, $validated, 'audience_json'),
             'automation_json' => $this->extractAutomationPayload($request, $validated, $type),
-            'rules_json' => $this->extractRulesPayload($request, $type),
+            'rules_json' => $this->extractRulesPayload($request),
             'schedule_mode' => $this->extractScheduleMode($request, $type),
             'starts_at' => $this->extractScheduleDate($request, 'starts_at', $type),
             'ends_at' => $this->extractScheduleDate($request, 'ends_at', $type),
@@ -202,7 +202,7 @@ class CampaignController extends Controller
             'audience_json' => $this->extractJsonPayload($request, $validated, 'audience_json'),
             'automation_json' => $this->extractAutomationPayload($request, $validated, $type)
                 ?? ($type === 'automated' ? $campaign->automation_json : null),
-            'rules_json' => $this->extractRulesPayload($request, $type),
+            'rules_json' => $this->extractRulesPayload($request),
             'schedule_mode' => $this->extractScheduleMode($request, $type),
             'starts_at' => $this->extractScheduleDate($request, 'starts_at', $type),
             'ends_at' => $this->extractScheduleDate($request, 'ends_at', $type),
@@ -376,12 +376,8 @@ class CampaignController extends Controller
         return $payload;
     }
 
-    private function extractRulesPayload(Request $request, string $type): ?array
+    private function extractRulesPayload(Request $request): ?array
     {
-        if ($type !== 'automated') {
-            return null;
-        }
-
         return CampaignPatientRules::normalizeRules($request->input('rules_json'));
     }
 

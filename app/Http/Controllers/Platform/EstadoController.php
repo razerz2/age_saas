@@ -5,7 +5,7 @@ namespace App\Http\Controllers\Platform;
 use App\Http\Controllers\Controller;
 use App\Models\Platform\Estado;
 use App\Models\Platform\Pais;
-use App\Http\Requests\EstadoRequest;
+use App\Http\Requests\Platform\EstadoRequest;
 
 class EstadoController extends Controller
 {
@@ -48,3 +48,4 @@ class EstadoController extends Controller
         return view('platform.estados.show', compact('estado', 'paises')); // <- passar
     }
 }
+

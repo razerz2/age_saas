@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Platform;
 
 use App\Http\Controllers\Controller;
 use App\Models\Platform\MedicalSpecialtyCatalog;
-use App\Http\Requests\MedicalSpecialtyCatalogRequest;
+use App\Http\Requests\Platform\MedicalSpecialtyCatalogRequest;
 
 class MedicalSpecialtyCatalogController extends Controller
 {
@@ -60,3 +60,4 @@ class MedicalSpecialtyCatalogController extends Controller
             ->with('success', 'Especialidade excluída com sucesso.');
     }
 }
+

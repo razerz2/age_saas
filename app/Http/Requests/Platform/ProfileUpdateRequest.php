@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Requests;
+namespace App\Http\Requests\Platform;
 
 use App\Models\Platform\User;
 use Illuminate\Foundation\Http\FormRequest;
@@ -21,3 +21,4 @@ class ProfileUpdateRequest extends FormRequest
         ];
     }
 }
+

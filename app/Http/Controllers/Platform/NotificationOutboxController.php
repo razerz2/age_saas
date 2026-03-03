@@ -5,7 +5,7 @@ namespace App\Http\Controllers\Platform;
 use App\Http\Controllers\Controller;
 use App\Models\Platform\NotificationOutbox;
 use App\Models\Platform\Tenant;
-use App\Http\Requests\NotificationOutboxRequest;
+use App\Http\Requests\Platform\NotificationOutboxRequest;
 
 class NotificationOutboxController extends Controller
 {

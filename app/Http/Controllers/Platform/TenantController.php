@@ -18,7 +18,7 @@ use App\Models\Platform\SystemSetting;
 use App\Services\TenantProvisioner;
 use App\Services\SystemSettingsService;
 use App\Services\AsaasService;
-use App\Http\Requests\TenantRequest;
+use App\Http\Requests\Platform\TenantRequest;
 use App\Mail\TenantAdminCredentialsMail;
 use App\Services\Platform\TenantCreatorService;
 
@@ -377,3 +377,4 @@ class TenantController extends Controller
         }
     }
 }
+

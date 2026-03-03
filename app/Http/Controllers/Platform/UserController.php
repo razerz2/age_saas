@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Platform;
 
 use App\Http\Controllers\Controller;
 use App\Models\Platform\User;
-use App\Http\Requests\UserRequest;
+use App\Http\Requests\Platform\UserRequest;
 use Illuminate\Support\Facades\Auth;
 
 class UserController extends Controller
@@ -126,3 +126,4 @@ class UserController extends Controller
         return back()->with('success', $msg);
     }
 }
+

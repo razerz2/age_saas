@@ -257,7 +257,7 @@ class StoreCampaignRequest extends FormRequest
                 }
             }
 
-            if ($this->isAutomatedType() && $this->input('rules_json') !== null) {
+            if ($this->input('rules_json') !== null) {
                 $rulesValidation = CampaignPatientRules::validateAndNormalize($this->input('rules_json'));
                 foreach ($rulesValidation['errors'] as $key => $message) {
                     $validator->errors()->add($key, $message);

@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Platform;
 
 use App\Http\Controllers\Controller;
 use App\Models\Platform\Plan;
-use App\Http\Requests\PlanRequest;
+use App\Http\Requests\Platform\PlanRequest;
 
 class PlanController extends Controller
 {
@@ -90,3 +90,4 @@ class PlanController extends Controller
         return redirect()->route('Platform.plans.index')->with('success', 'Plano excluído com sucesso!');
     }
 }
+

@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Requests;
+namespace App\Http\Requests\Platform;
 
 use Illuminate\Foundation\Http\FormRequest;
 use App\Models\Platform\Subscription;
@@ -94,3 +94,4 @@ class SubscriptionRequest extends FormRequest
         ]);
     }
 }
+
