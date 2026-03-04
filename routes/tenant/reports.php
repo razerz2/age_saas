@@ -15,51 +15,43 @@ Route::prefix('reports')->middleware(['module.access:reports'])->group(function 
 
     // Agendamentos
     Route::get('/appointments', [AppointmentReportController::class, 'index'])->name('reports.appointments');
-    Route::post('/appointments/data', [AppointmentReportController::class, 'data'])->name('reports.appointments.data');
-    Route::get('/appointments/export/excel', [AppointmentReportController::class, 'exportExcel'])->name('reports.appointments.export.excel');
-    Route::get('/appointments/export/pdf', [AppointmentReportController::class, 'exportPdf'])->name('reports.appointments.export.pdf');
-    Route::get('/appointments/export/csv', [AppointmentReportController::class, 'exportCsv'])->name('reports.appointments.export.csv');
+    Route::get('/appointments/grid-data', [AppointmentReportController::class, 'gridData'])->name('reports.appointments.grid-data');
+    Route::get('/appointments/export.xlsx', [AppointmentReportController::class, 'exportExcel'])->name('reports.appointments.export.xlsx');
+    Route::get('/appointments/export.pdf', [AppointmentReportController::class, 'exportPdf'])->name('reports.appointments.export.pdf');
 
     // Pacientes
     Route::get('/patients', [PatientReportController::class, 'index'])->name('reports.patients');
-    Route::post('/patients/data', [PatientReportController::class, 'data'])->name('reports.patients.data');
-    Route::get('/patients/export/excel', [PatientReportController::class, 'exportExcel'])->name('reports.patients.export.excel');
-    Route::get('/patients/export/pdf', [PatientReportController::class, 'exportPdf'])->name('reports.patients.export.pdf');
-    Route::get('/patients/export/csv', [PatientReportController::class, 'exportCsv'])->name('reports.patients.export.csv');
+    Route::get('/patients/grid-data', [PatientReportController::class, 'gridData'])->name('reports.patients.grid-data');
+    Route::get('/patients/export.xlsx', [PatientReportController::class, 'exportExcel'])->name('reports.patients.export.xlsx');
+    Route::get('/patients/export.pdf', [PatientReportController::class, 'exportPdf'])->name('reports.patients.export.pdf');
 
-    // Médicos
+    // Medicos
     Route::get('/doctors', [DoctorReportController::class, 'index'])->name('reports.doctors');
-    Route::post('/doctors/data', [DoctorReportController::class, 'data'])->name('reports.doctors.data');
-    Route::get('/doctors/export/excel', [DoctorReportController::class, 'exportExcel'])->name('reports.doctors.export.excel');
-    Route::get('/doctors/export/pdf', [DoctorReportController::class, 'exportPdf'])->name('reports.doctors.export.pdf');
-    Route::get('/doctors/export/csv', [DoctorReportController::class, 'exportCsv'])->name('reports.doctors.export.csv');
+    Route::get('/doctors/grid-data', [DoctorReportController::class, 'gridData'])->name('reports.doctors.grid-data');
+    Route::get('/doctors/export.xlsx', [DoctorReportController::class, 'exportExcel'])->name('reports.doctors.export.xlsx');
+    Route::get('/doctors/export.pdf', [DoctorReportController::class, 'exportPdf'])->name('reports.doctors.export.pdf');
 
-    // Recorrências
+    // Recorrencias
     Route::get('/recurring', [RecurringReportController::class, 'index'])->name('reports.recurring');
-    Route::post('/recurring/data', [RecurringReportController::class, 'data'])->name('reports.recurring.data');
-    Route::get('/recurring/export/excel', [RecurringReportController::class, 'exportExcel'])->name('reports.recurring.export.excel');
-    Route::get('/recurring/export/pdf', [RecurringReportController::class, 'exportPdf'])->name('reports.recurring.export.pdf');
-    Route::get('/recurring/export/csv', [RecurringReportController::class, 'exportCsv'])->name('reports.recurring.export.csv');
+    Route::get('/recurring/grid-data', [RecurringReportController::class, 'gridData'])->name('reports.recurring.grid-data');
+    Route::get('/recurring/export.xlsx', [RecurringReportController::class, 'exportExcel'])->name('reports.recurring.export.xlsx');
+    Route::get('/recurring/export.pdf', [RecurringReportController::class, 'exportPdf'])->name('reports.recurring.export.pdf');
 
-    // Formulários
+    // Formularios
     Route::get('/forms', [FormReportController::class, 'index'])->name('reports.forms');
-    Route::post('/forms/data', [FormReportController::class, 'data'])->name('reports.forms.data');
-    Route::get('/forms/export/excel', [FormReportController::class, 'exportExcel'])->name('reports.forms.export.excel');
-    Route::get('/forms/export/pdf', [FormReportController::class, 'exportPdf'])->name('reports.forms.export.pdf');
-    Route::get('/forms/export/csv', [FormReportController::class, 'exportCsv'])->name('reports.forms.export.csv');
+    Route::get('/forms/grid-data', [FormReportController::class, 'gridData'])->name('reports.forms.grid-data');
+    Route::get('/forms/export.xlsx', [FormReportController::class, 'exportExcel'])->name('reports.forms.export.xlsx');
+    Route::get('/forms/export.pdf', [FormReportController::class, 'exportPdf'])->name('reports.forms.export.pdf');
 
-    // Portal do Paciente
+    // Portal do paciente
     Route::get('/portal', [PortalReportController::class, 'index'])->name('reports.portal');
-    Route::post('/portal/data', [PortalReportController::class, 'data'])->name('reports.portal.data');
-    Route::get('/portal/export/excel', [PortalReportController::class, 'exportExcel'])->name('reports.portal.export.excel');
-    Route::get('/portal/export/pdf', [PortalReportController::class, 'exportPdf'])->name('reports.portal.export.pdf');
-    Route::get('/portal/export/csv', [PortalReportController::class, 'exportCsv'])->name('reports.portal.export.csv');
+    Route::get('/portal/grid-data', [PortalReportController::class, 'gridData'])->name('reports.portal.grid-data');
+    Route::get('/portal/export.xlsx', [PortalReportController::class, 'exportExcel'])->name('reports.portal.export.xlsx');
+    Route::get('/portal/export.pdf', [PortalReportController::class, 'exportPdf'])->name('reports.portal.export.pdf');
 
-    // Notificações
+    // Notificacoes
     Route::get('/notifications', [NotificationReportController::class, 'index'])->name('reports.notifications');
-    Route::post('/notifications/data', [NotificationReportController::class, 'data'])->name('reports.notifications.data');
-    Route::get('/notifications/export/excel', [NotificationReportController::class, 'exportExcel'])->name('reports.notifications.export.excel');
-    Route::get('/notifications/export/pdf', [NotificationReportController::class, 'exportPdf'])->name('reports.notifications.export.pdf');
-    Route::get('/notifications/export/csv', [NotificationReportController::class, 'exportCsv'])->name('reports.notifications.export.csv');
+    Route::get('/notifications/grid-data', [NotificationReportController::class, 'gridData'])->name('reports.notifications.grid-data');
+    Route::get('/notifications/export.xlsx', [NotificationReportController::class, 'exportExcel'])->name('reports.notifications.export.xlsx');
+    Route::get('/notifications/export.pdf', [NotificationReportController::class, 'exportPdf'])->name('reports.notifications.export.pdf');
 });
-

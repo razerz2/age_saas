@@ -35,6 +35,11 @@ class Form extends Model
         return $this->hasMany(FormQuestion::class);
     }
 
+    public function responses()
+    {
+        return $this->hasMany(FormResponse::class);
+    }
+
     public function specialty()
     {
         return $this->belongsTo(MedicalSpecialty::class);

@@ -2,86 +2,164 @@
 
 namespace App\Http\Controllers\Tenant\Reports;
 
+use App\Exports\Tenant\Reports\ReportQueryExport;
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\Tenant\Reports\Concerns\HandlesReportRequests;
 use App\Models\Tenant\Patient;
-use App\Models\Tenant\Appointment;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
-use Carbon\Carbon;
+use Maatwebsite\Excel\Facades\Excel;
 
 class PatientReportController extends Controller
 {
+    use HandlesReportRequests;
+
+    private const PDF_MAX_ROWS = 5000;
+
     public function index()
     {
         return view('tenant.reports.patients.index');
     }
 
-    public function data(Request $request)
+    public function gridData(Request $request)
     {
-        $query = Patient::withCount('appointments');
-
-        // Filtros
-        if ($request->filled('date_from')) {
-            $query->whereHas('appointments', function($q) use ($request) {
-                $q->whereDate('starts_at', '>=', $request->date_from);
-            });
-        }
-
-        if ($request->filled('date_to')) {
-            $query->whereHas('appointments', function($q) use ($request) {
-                $q->whereDate('starts_at', '<=', $request->date_to);
-            });
-        }
-
-        $patients = $query->orderBy('full_name')->get();
+        $query = $this->buildBaseQuery($request);
+        $this->applySearch($query, $request);
 
         $summary = [
-            'total' => $patients->count(),
-            'with_appointments' => $patients->where('appointments_count', '>', 0)->count(),
-            'new_this_month' => $patients->where('created_at', '>=', Carbon::now()->startOfMonth())->count(),
+            'total' => (clone $query)->count('patients.id'),
+            'with_appointments' => (clone $query)->has('appointments')->count('patients.id'),
+            'new_this_month' => (clone $query)->where('patients.created_at', '>=', now()->startOfMonth())->count('patients.id'),
         ];
 
-        // Gráfico radar (perfil do paciente)
-        $ageGroups = [
-            '0-18' => 0,
-            '19-30' => 0,
-            '31-50' => 0,
-            '51-70' => 0,
-            '70+' => 0,
-        ];
+        $this->applySort($query, $request);
 
-        foreach ($patients as $patient) {
-            if ($patient->birth_date) {
-                $age = Carbon::parse($patient->birth_date)->age;
-                if ($age <= 18) $ageGroups['0-18']++;
-                elseif ($age <= 30) $ageGroups['19-30']++;
-                elseif ($age <= 50) $ageGroups['31-50']++;
-                elseif ($age <= 70) $ageGroups['51-70']++;
-                else $ageGroups['70+']++;
-            }
-        }
+        $paginator = $this->paginateQuery($query, $request);
 
-        $table = $patients->map(function($patient) {
+        $rows = $paginator->getCollection()->map(function (Patient $patient) {
             return [
-                'id' => $patient->id,
-                'name' => $patient->full_name,
-                'email' => $patient->email ?? 'N/A',
-                'phone' => $patient->phone ?? 'N/A',
-                'appointments_count' => $patient->appointments_count ?? 0,
-                'created_at' => $patient->created_at->format('d/m/Y'),
+                'name' => e($patient->full_name ?? 'N/A'),
+                'email' => e($patient->email ?? '-'),
+                'phone' => e($patient->phone ?? '-'),
+                'appointments_count' => (int) ($patient->appointments_count ?? 0),
+                'created_at' => $patient->created_at ? $patient->created_at->format('d/m/Y') : '-',
+                'actions' => view('tenant.reports.patients.partials.actions', [
+                    'patient' => $patient,
+                ])->render(),
             ];
-        });
+        })->all();
 
-        return response()->json([
-            'summary' => $summary,
-            'chart' => [
-                'ageGroups' => $ageGroups,
-            ],
-            'table' => $table,
-        ]);
+        return $this->gridResponse($paginator, $rows, ['summary' => $summary]);
     }
 
-    public function exportExcel(Request $request) { return response()->json(['message' => 'Em desenvolvimento']); }
-    public function exportPdf(Request $request) { return response()->json(['message' => 'Em desenvolvimento']); }
-    public function exportCsv(Request $request) { return response()->json(['message' => 'Em desenvolvimento']); }
-}
+    public function exportExcel(Request $request)
+    {
+        $query = $this->buildBaseQuery($request);
+        $this->applySearch($query, $request);
+        $this->applySort($query, $request);
 
+        return Excel::download(new ReportQueryExport(
+            queryBuilder: $query,
+            headingsRow: ['Nome', 'E-mail', 'Telefone', 'Agendamentos', 'Cadastrado em'],
+            mapRow: static function (Patient $patient) {
+                return [
+                    $patient->full_name ?? 'N/A',
+                    $patient->email ?? '-',
+                    $patient->phone ?? '-',
+                    (int) ($patient->appointments_count ?? 0),
+                    $patient->created_at ? $patient->created_at->format('d/m/Y') : '-',
+                ];
+            },
+        ), 'relatorio-pacientes-' . now()->format('Ymd_His') . '.xlsx');
+    }
+
+    public function exportPdf(Request $request)
+    {
+        $query = $this->buildBaseQuery($request);
+        $this->applySearch($query, $request);
+        $this->applySort($query, $request);
+
+        $rows = $query->limit(self::PDF_MAX_ROWS + 1)->get();
+        $truncated = $rows->count() > self::PDF_MAX_ROWS;
+
+        if ($truncated) {
+            $rows = $rows->take(self::PDF_MAX_ROWS);
+        }
+
+        return Pdf::loadView('tenant.reports.patients.pdf', [
+            'rows' => $rows,
+            'generatedAt' => now(),
+            'activeFilters' => $this->activeFilters($request),
+            'truncated' => $truncated,
+            'pdfMaxRows' => self::PDF_MAX_ROWS,
+        ])->setPaper('a4', 'landscape')->download('relatorio-pacientes-' . now()->format('Ymd_His') . '.pdf');
+    }
+
+    private function buildBaseQuery(Request $request): Builder
+    {
+        $responsesFilter = function (Builder $appointmentsQuery) use ($request) {
+            if ($request->filled('date_from')) {
+                $appointmentsQuery->whereDate('starts_at', '>=', $request->input('date_from'));
+            }
+
+            if ($request->filled('date_to')) {
+                $appointmentsQuery->whereDate('starts_at', '<=', $request->input('date_to'));
+            }
+        };
+
+        $query = Patient::query()
+            ->select('patients.*')
+            ->withCount(['appointments as appointments_count' => $responsesFilter]);
+
+        if ($request->filled('date_from') || $request->filled('date_to')) {
+            $query->whereHas('appointments', $responsesFilter);
+        }
+
+        return $query;
+    }
+
+    private function applySearch(Builder $query, Request $request): void
+    {
+        $term = $this->resolveSearchTerm($request);
+        if ($term === '') {
+            return;
+        }
+
+        $query->where(function (Builder $searchQuery) use ($term) {
+            $like = '%' . $term . '%';
+
+            $searchQuery
+                ->where('patients.full_name', 'like', $like)
+                ->orWhere('patients.email', 'like', $like)
+                ->orWhere('patients.phone', 'like', $like)
+                ->orWhere('patients.cpf', 'like', $like);
+        });
+    }
+
+    private function applySort(Builder $query, Request $request): void
+    {
+        $sort = $this->resolveSort($request, [
+            'name' => 'patients.full_name',
+            'email' => 'patients.email',
+            'phone' => 'patients.phone',
+            'appointments_count' => 'appointments_count',
+            'created_at' => 'patients.created_at',
+        ], 'patients.full_name', 'asc');
+
+        $query
+            ->orderBy($sort['column'], $sort['direction'])
+            ->orderBy('patients.full_name');
+    }
+
+    private function activeFilters(Request $request): array
+    {
+        return array_filter([
+            'date_from' => $request->input('date_from'),
+            'date_to' => $request->input('date_to'),
+            'search' => $this->resolveSearchTerm($request),
+            'sort' => $request->input('sort'),
+            'dir' => $request->input('dir'),
+        ], static fn ($value) => $value !== null && $value !== '' && $value !== []);
+    }
+}

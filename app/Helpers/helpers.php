@@ -326,10 +326,26 @@ if (! function_exists('tenant_route')) {
 if (! function_exists('workspace_route')) {
     function workspace_route(string $routeName, $parameters = [])
     {
-        // Converte parâmetro único (int, string) para array associativo se necessário
-        // Assumimos que um valor único é o parâmetro 'id'
+        // Converte parâmetro único (int, string) para array associativo com base na rota.
+        // Ex.: tenant.forms.show -> {slug}/{form} => ['form' => $value]
         if (!is_array($parameters)) {
-            $parameters = $parameters !== null ? ['id' => $parameters] : [];
+            if ($parameters === null) {
+                $parameters = [];
+            } else {
+                $parameterName = 'id';
+                $namedRoute = app('router')->getRoutes()->getByName($routeName);
+
+                if ($namedRoute) {
+                    foreach ($namedRoute->parameterNames() as $name) {
+                        if ($name !== 'slug') {
+                            $parameterName = $name;
+                            break;
+                        }
+                    }
+                }
+
+                $parameters = [$parameterName => $parameters];
+            }
         }
         
         // Pega o slug do tenant atual (da rota, segment da URL, sessão ou tenant ativo)
