@@ -10,6 +10,8 @@
 - medical-specialties-catalog
 - notifications-outbox
 - notification-templates
+- whatsapp-official-templates
+- tenant-default-notification-templates
 - locations
 - users
 - settings

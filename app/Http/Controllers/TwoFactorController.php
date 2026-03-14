@@ -2,27 +2,30 @@
 
 namespace App\Http\Controllers;
 
+use App\Notifications\Platform\TwoFactorCodeOfficialNotification;
+use App\Services\TwoFactorCodeService;
+use App\Support\PlatformTwoFactorPhoneResolver;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\View\View;
-use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Session;
-use App\Services\TwoFactorCodeService;
-use App\Notifications\TwoFactorCodeNotification;
+use Illuminate\View\View;
 
 class TwoFactorController extends Controller
 {
     /**
-     * Exibe a página de configuração do 2FA
+     * Exibe a pagina de configuracao do 2FA
      */
     public function index(): View
     {
         $user = Auth::user();
-        
+
         return view('profile.two-factor.index', [
             'user' => $user,
             'qrCodeUrl' => $user->two_factor_secret ? $user->getTwoFactorQrCodeUrl() : null,
             'recoveryCodes' => $user->two_factor_recovery_codes ?? [],
+            'whatsappTwoFactorAvailable' => $this->resolvedWhatsAppPhone($user) !== null,
         ]);
     }
 
@@ -32,22 +35,19 @@ class TwoFactorController extends Controller
     public function generateSecret(): RedirectResponse
     {
         $user = Auth::user();
-        
-        // Gera nova chave secreta
+
         $secret = $user->generateTwoFactorSecret();
-        
-        // Gera códigos de recuperação
         $recoveryCodes = $user->generateRecoveryCodes();
-        
+
         Session::flash('two_factor_secret', $secret);
         Session::flash('two_factor_recovery_codes', $recoveryCodes);
-        
+
         return redirect()->route('Platform.two-factor.index')
-            ->with('success', 'Chave secreta gerada com sucesso! Escaneie o QR Code e confirme o código para ativar.');
+            ->with('success', 'Chave secreta gerada com sucesso! Escaneie o QR Code e confirme o codigo para ativar.');
     }
 
     /**
-     * Confirma e ativa o 2FA após verificar o código
+     * Confirma e ativa o 2FA apos verificar o codigo
      */
     public function confirm(Request $request): RedirectResponse
     {
@@ -56,22 +56,20 @@ class TwoFactorController extends Controller
         ]);
 
         $user = Auth::user();
-        
+
         if (!$user->two_factor_secret) {
-            return back()->withErrors(['code' => 'Chave secreta não encontrada. Gere uma nova chave primeiro.']);
+            return back()->withErrors(['code' => 'Chave secreta nao encontrada. Gere uma nova chave primeiro.']);
         }
 
         if ($user->verifyTwoFactorCode($request->code)) {
             $user->enableTwoFactor();
-            
-            // Recarrega o usuário para garantir que os dados estão atualizados
             $user->refresh();
-            
+
             return redirect()->route('Platform.two-factor.index')
-                ->with('success', 'Autenticação de dois fatores ativada com sucesso!');
+                ->with('success', 'Autenticacao de dois fatores ativada com sucesso!');
         }
 
-        return back()->withErrors(['code' => 'Código inválido. Verifique e tente novamente.']);
+        return back()->withErrors(['code' => 'Codigo invalido. Verifique e tente novamente.']);
     }
 
     /**
@@ -87,11 +85,11 @@ class TwoFactorController extends Controller
         $user->disableTwoFactor();
 
         return redirect()->route('Platform.two-factor.index')
-            ->with('success', 'Autenticação de dois fatores desativada com sucesso!');
+            ->with('success', 'Autenticacao de dois fatores desativada com sucesso!');
     }
 
     /**
-     * Regenera os códigos de recuperação
+     * Regenera os codigos de recuperacao
      */
     public function regenerateRecoveryCodes(Request $request): RedirectResponse
     {
@@ -100,22 +98,21 @@ class TwoFactorController extends Controller
         ]);
 
         $user = Auth::user();
-        
+
         if (!$user->hasTwoFactorEnabled()) {
-            return back()->withErrors(['password' => '2FA não está ativado.']);
+            return back()->withErrors(['password' => '2FA nao esta ativado.']);
         }
 
         $recoveryCodes = $user->generateRecoveryCodes();
-        
         Session::flash('two_factor_recovery_codes', $recoveryCodes);
-        
+
         return redirect()->route('Platform.two-factor.index')
-            ->with('success', 'Códigos de recuperação regenerados com sucesso!');
+            ->with('success', 'Codigos de recuperacao regenerados com sucesso!');
     }
 
     /**
-     * Define o método de 2FA (totp, email, whatsapp)
-     * Para email/whatsapp, envia código automaticamente para confirmação
+     * Define o metodo de 2FA (totp, email, whatsapp)
+     * Para email/whatsapp, envia codigo automaticamente para confirmacao
      */
     public function setMethod(Request $request): RedirectResponse
     {
@@ -125,45 +122,41 @@ class TwoFactorController extends Controller
 
         $user = Auth::user();
         $method = $request->method;
-        
-        // Se o método for TOTP, apenas salva o método
+
         if ($method === 'totp') {
             $user->two_factor_method = $method;
             $user->save();
-            
+
             return redirect()->route('Platform.two-factor.index')
-                ->with('success', 'Método de 2FA atualizado. Gere o QR Code para ativar.');
+                ->with('success', 'Metodo de 2FA atualizado. Gere o QR Code para ativar.');
         }
-        
-        // Para email/whatsapp, verifica se o usuário tem os dados necessários
+
         if ($method === 'email' && !$user->email) {
-            return back()->withErrors(['method' => 'É necessário ter um e-mail cadastrado para usar 2FA por e-mail.']);
+            return back()->withErrors(['method' => 'E necessario ter um e-mail cadastrado para usar 2FA por e-mail.']);
         }
 
-        if ($method === 'whatsapp' && !$user->telefone) {
-            return back()->withErrors(['method' => 'É necessário ter um telefone cadastrado para usar 2FA por WhatsApp.']);
+        if ($method === 'whatsapp' && $this->resolvedWhatsAppPhone($user) === null) {
+            $this->logUnavailableWhatsApp2fa($user);
+            return back()->withErrors(['method' => '2FA por WhatsApp indisponivel: usuario Platform sem telefone apto para envio oficial.']);
         }
 
-        // Salva o método escolhido
         $user->two_factor_method = $method;
         $user->save();
 
-        // Gera código e envia automaticamente
         $codeService = app(TwoFactorCodeService::class);
         $code = $codeService->generateCode($user, $method);
 
-        // Envia notificação
-        $user->notify(new TwoFactorCodeNotification($code, $method));
+        $user->notify(new TwoFactorCodeOfficialNotification($code, $method));
 
         Session::flash('two_factor_pending_method', $method);
         Session::flash('two_factor_pending_activation', true);
 
         return redirect()->route('Platform.two-factor.index')
-            ->with('success', "Código de verificação enviado via {$method}. Digite o código recebido para ativar o 2FA.");
+            ->with('success', "Codigo de verificacao enviado via {$method}. Digite o codigo recebido para ativar o 2FA.");
     }
 
     /**
-     * Ativa 2FA com método de código enviado (email/whatsapp)
+     * Ativa 2FA com metodo de codigo enviado (email/whatsapp)
      */
     public function activateWithCode(Request $request): RedirectResponse
     {
@@ -174,31 +167,29 @@ class TwoFactorController extends Controller
         $user = Auth::user();
         $method = $request->method;
 
-        // Verifica se o usuário tem email ou telefone conforme o método
         if ($method === 'email' && !$user->email) {
-            return back()->withErrors(['method' => 'É necessário ter um e-mail cadastrado para usar 2FA por e-mail.']);
+            return back()->withErrors(['method' => 'E necessario ter um e-mail cadastrado para usar 2FA por e-mail.']);
         }
 
-        if ($method === 'whatsapp' && !$user->telefone) {
-            return back()->withErrors(['method' => 'É necessário ter um telefone cadastrado para usar 2FA por WhatsApp.']);
+        if ($method === 'whatsapp' && $this->resolvedWhatsAppPhone($user) === null) {
+            $this->logUnavailableWhatsApp2fa($user);
+            return back()->withErrors(['method' => '2FA por WhatsApp indisponivel: usuario Platform sem telefone apto para envio oficial.']);
         }
 
-        // Gera código e envia
         $codeService = app(TwoFactorCodeService::class);
         $code = $codeService->generateCode($user, $method);
 
-        // Envia notificação
-        $user->notify(new TwoFactorCodeNotification($code, $method));
+        $user->notify(new TwoFactorCodeOfficialNotification($code, $method));
 
         Session::flash('two_factor_pending_method', $method);
         Session::flash('two_factor_pending_activation', true);
 
         return redirect()->route('Platform.two-factor.index')
-            ->with('success', "Código de verificação enviado via {$method}. Digite o código recebido para ativar o 2FA.");
+            ->with('success', "Codigo de verificacao enviado via {$method}. Digite o codigo recebido para ativar o 2FA.");
     }
 
     /**
-     * Confirma ativação com código enviado
+     * Confirma ativacao com codigo enviado
      */
     public function confirmWithCode(Request $request): RedirectResponse
     {
@@ -210,21 +201,34 @@ class TwoFactorController extends Controller
         $method = session('two_factor_pending_method', 'email');
 
         $codeService = app(TwoFactorCodeService::class);
-        
+
         if ($codeService->verifyCode($user, $request->code, $method)) {
             $user->two_factor_method = $method;
             $user->enableTwoFactor();
-            
-            // Recarrega o usuário para garantir que os dados estão atualizados
             $user->refresh();
-            
+
             Session::forget(['two_factor_pending_method', 'two_factor_pending_activation']);
-            
+
             return redirect()->route('Platform.two-factor.index')
-                ->with('success', 'Autenticação de dois fatores ativada com sucesso!');
+                ->with('success', 'Autenticacao de dois fatores ativada com sucesso!');
         }
 
-        return back()->withErrors(['code' => 'Código inválido ou expirado. Verifique e tente novamente.']);
+        return back()->withErrors(['code' => 'Codigo invalido ou expirado. Verifique e tente novamente.']);
+    }
+
+    private function resolvedWhatsAppPhone(object $user): ?string
+    {
+        return app(PlatformTwoFactorPhoneResolver::class)->resolve($user);
+    }
+
+    private function logUnavailableWhatsApp2fa(object $user): void
+    {
+        $resolved = app(PlatformTwoFactorPhoneResolver::class)->resolveWithReason($user);
+
+        Log::warning('platform_2fa_whatsapp_unavailable_on_settings', [
+            'user_id' => $user->id ?? null,
+            'user_type' => get_class($user),
+            'reason' => $resolved['reason'],
+        ]);
     }
 }
-

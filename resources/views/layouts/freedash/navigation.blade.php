@@ -155,6 +155,37 @@
         </li>
         @endif
 
+        {{-- WhatsApp --}}
+        @php
+            $platformModules = auth()->user()->modules ?? [];
+            if (is_string($platformModules)) {
+                $decodedModules = json_decode($platformModules, true);
+                $platformModules = is_array($decodedModules) ? $decodedModules : [];
+            }
+            if (!is_array($platformModules)) {
+                $platformModules = [];
+            }
+            $hasPlatformWhatsAppTemplates = in_array('whatsapp_official_templates', $platformModules, true);
+            $hasTenantDefaultTemplates = in_array('tenant_default_notification_templates', $platformModules, true);
+        @endphp
+        @if($hasPlatformWhatsAppTemplates || $hasTenantDefaultTemplates)
+        <li class="sidebar-item">
+            <a class="sidebar-link has-arrow" href="javascript:void(0)" aria-expanded="false">
+                <i class="fas fa-comment-dots"></i><span class="hide-menu"> WhatsApp </span>
+            </a>
+            <ul aria-expanded="false" class="collapse first-level base-level-line">
+                @if($hasPlatformWhatsAppTemplates)
+                <li class="sidebar-item"><a href="{{ route('Platform.whatsapp-official-templates.index') }}" class="sidebar-link">
+                    <span class="hide-menu"><i class="fas fa-list-alt"></i> Platform Templates</span></a></li>
+                @endif
+                @if($hasTenantDefaultTemplates)
+                <li class="sidebar-item"><a href="{{ route('Platform.tenant-default-notification-templates.index') }}" class="sidebar-link">
+                    <span class="hide-menu"><i class="fas fa-layer-group"></i> Tenant Default Templates</span></a></li>
+                @endif
+            </ul>
+        </li>
+        @endif
+
         {{-- Usuários --}}
         @if(in_array('users', auth()->user()->modules ?? []))
         <li class="sidebar-item">

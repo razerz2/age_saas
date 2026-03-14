@@ -34,6 +34,12 @@
         <input type="text" class="form-control w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white" name="META_PHONE_NUMBER_ID"
                value="{{ $settings['META_PHONE_NUMBER_ID'] ?? '' }}">
     </div>
+    <div class="mb-3">
+        <label>WABA ID</label>
+        <input type="text" class="form-control w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white" name="META_WABA_ID"
+               value="{{ $settings['META_WABA_ID'] ?? '' }}">
+        <small class="text-muted text-xs text-gray-500 dark:text-gray-400">Necessário para criar/sincronizar templates oficiais na Meta.</small>
+    </div>
     <div class="d-flex flex-column sm:flex-row gap-2 mb-2">
         <button type="button" class="btn btn-outline-secondary px-3 py-2 border border-gray-300 rounded-lg" id="btn-test-meta"
                 data-test-url="{{ $metaTestUrl ?? '#' }}">

@@ -18,6 +18,11 @@ use Illuminate\Support\Str;
 
 class TenantCreatorService
 {
+    public function __construct(
+        private readonly WhatsAppOfficialMessageService $officialWhatsApp
+    ) {
+    }
+
     /**
      * Centraliza a criação de um novo tenant, provisionamento de banco e envio de credenciais.
      */
@@ -128,6 +133,23 @@ class TenantCreatorService
                 'payment_method' => 'PIX',
             ]);
 
+            $this->officialWhatsApp->sendByKey(
+                'subscription.created',
+                $tenant->phone,
+                [
+                    'customer_name' => $tenant->trade_name,
+                    'tenant_name' => $tenant->trade_name,
+                    'plan_name' => $plan->name,
+                    'plan_amount' => 'R$ ' . number_format($plan->price_cents / 100, 2, ',', '.'),
+                    'due_date' => $endsAt->format('d/m/Y'),
+                ],
+                [
+                    'service' => static::class,
+                    'tenant_id' => (string) $tenant->id,
+                    'event' => 'subscription.created',
+                ]
+            );
+
             // Aplica as regras no banco do tenant
             $planService = new TenantPlanService();
             $planService->applyPlanRules($tenant, $plan);
@@ -151,6 +173,21 @@ class TenantCreatorService
                 Log::error("❌ Erro ao enviar email de credenciais: " . $e->getMessage());
             }
         }
+
+        $this->officialWhatsApp->sendByKey(
+            'tenant.welcome',
+            $tenant->phone,
+            [
+                'customer_name' => $tenant->trade_name,
+                'tenant_name' => $tenant->trade_name,
+                'login_url' => $loginUrl,
+            ],
+            [
+                'service' => static::class,
+                'tenant_id' => (string) $tenant->id,
+                'event' => 'tenant.welcome',
+            ]
+        );
     }
 
     private function syncAsaas(Tenant $tenant): void

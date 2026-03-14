@@ -21,14 +21,17 @@ use App\Services\AsaasService;
 use App\Http\Requests\Platform\TenantRequest;
 use App\Mail\TenantAdminCredentialsMail;
 use App\Services\Platform\TenantCreatorService;
+use App\Services\Platform\WhatsAppOfficialMessageService;
 
 class TenantController extends Controller
 {
     protected $tenantCreator;
+    protected WhatsAppOfficialMessageService $officialWhatsApp;
 
-    public function __construct(TenantCreatorService $tenantCreator)
+    public function __construct(TenantCreatorService $tenantCreator, WhatsAppOfficialMessageService $officialWhatsApp)
     {
         $this->tenantCreator = $tenantCreator;
+        $this->officialWhatsApp = $officialWhatsApp;
     }
 
     public function index()
@@ -364,6 +367,22 @@ class TenantController extends Controller
                 'email' => $tenant->email,
                 'admin_email' => $adminEmail
             ]);
+
+            $this->officialWhatsApp->sendByKey(
+                'credentials.resent',
+                $tenant->phone,
+                [
+                    'customer_name' => $tenant->trade_name,
+                    'tenant_name' => $tenant->trade_name,
+                    'login_url' => $loginUrl,
+                    'delivery_channel' => 'email',
+                ],
+                [
+                    'controller' => static::class,
+                    'tenant_id' => (string) $tenant->id,
+                    'event' => 'credentials.resent',
+                ]
+            );
 
             return back()->with('success', '✅ Credenciais enviadas com sucesso para ' . $tenant->email . '!');
         } catch (\Throwable $e) {

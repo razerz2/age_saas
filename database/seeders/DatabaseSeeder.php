@@ -19,6 +19,10 @@ class DatabaseSeeder extends Seeder
          $this->call(EstadosTableSeeder::class);
          $this->call(CidadesTableSeeder::class);
          $this->call(SubscriptionFeaturesSeeder::class);
+         // Baseline oficial da Platform (eventos SaaS apenas).
+         $this->call(WhatsAppOfficialTemplatesSeeder::class);
+         // Baseline operacional padrao do Tenant (dominio clinico).
+         $this->call(TenantDefaultNotificationTemplatesSeeder::class);
          //$this->call(TenantsSeeder::class);
     }
 }

@@ -197,7 +197,7 @@ class PreRegistrationWebhookController extends Controller
                             'pre_tenant_id' => $preTenant->id,
                             'tenant_id' => $tenantId,
                         ]);
-                        $processor = new PreTenantProcessorService();
+                        $processor = app(PreTenantProcessorService::class);
                         $processor->createSubscription($preTenant, $tenant, $payload);
                     } else {
                         // Assinatura existe, verifica se precisa sincronizar com Asaas
@@ -216,7 +216,7 @@ class PreRegistrationWebhookController extends Controller
                                 'pre_tenant_id' => $preTenant->id,
                                 'subscription_id' => $subscription->id,
                             ]);
-                            $processor = new PreTenantProcessorService();
+                            $processor = app(PreTenantProcessorService::class);
                             $processor->syncSubscriptionWithAsaas($subscription, $paymentDate);
                         } else {
                             Log::info("✅ Assinatura {$subscription->id} já está completa com sincronização no Asaas. Webhook ignorado (idempotência).", [
@@ -239,7 +239,7 @@ class PreRegistrationWebhookController extends Controller
         }
 
         try {
-            $processor = new PreTenantProcessorService();
+            $processor = app(PreTenantProcessorService::class);
             $processor->processPaid($preTenant, $payload);
 
             Log::info("✅ Pré-tenant {$preTenant->id} processado com sucesso após pagamento confirmado.");

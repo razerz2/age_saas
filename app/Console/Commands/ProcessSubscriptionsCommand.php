@@ -7,6 +7,7 @@ use App\Models\Platform\Subscription;
 use App\Models\Platform\Invoices;
 use App\Models\Platform\Tenant;
 use App\Services\AsaasService;
+use App\Services\Platform\WhatsAppOfficialMessageService;
 use App\Services\SystemNotificationService;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
@@ -14,6 +15,12 @@ use Carbon\Carbon;
 
 class ProcessSubscriptionsCommand extends Command
 {
+    public function __construct(
+        private readonly WhatsAppOfficialMessageService $officialWhatsApp
+    ) {
+        parent::__construct();
+    }
+
     protected $signature = 'subscriptions:subscriptions-process';
     protected $description = 'Gera faturas automáticas de assinaturas vencidas e renova os períodos.';
 
@@ -133,13 +140,13 @@ class ProcessSubscriptionsCommand extends Command
                     'value'             => $plan->price_cents / 100,
                     'dueDate'           => now()->addDays(5)->toDateString(),
                     'description'       => "Renovação de plano {$plan->name}",
-                    'externalReference' => (string) \Illuminate\Support\Str::uuid(),
+                    'externalReference' => (string) Str::uuid(),
                 ];
 
                 $payment = $asaas->createPayment($payload);
 
                 if (!empty($payment['id'])) {
-                    Invoices::create([
+                    $invoice = Invoices::create([
                         'subscription_id' => $sub->id,
                         'tenant_id'       => $tenant->id,
                         'amount_cents'    => $plan->price_cents,
@@ -149,6 +156,24 @@ class ProcessSubscriptionsCommand extends Command
                         'provider_id'     => $payment['id'],
                         'payment_link'    => $payment['invoiceUrl'] ?? ($payment['bankSlipUrl'] ?? null),
                     ]);
+
+                    $this->officialWhatsApp->sendByKey(
+                        'invoice.created',
+                        $tenant->phone,
+                        [
+                            'customer_name' => $tenant->trade_name,
+                            'tenant_name' => $tenant->trade_name,
+                            'invoice_amount' => 'R$ ' . number_format($invoice->amount_cents / 100, 2, ',', '.'),
+                            'due_date' => Carbon::parse($invoice->due_date)->format('d/m/Y'),
+                            'payment_link' => trim((string) ($invoice->payment_link ?: 'https://app.allsync.com.br/faturas')),
+                        ],
+                        [
+                            'command' => static::class,
+                            'invoice_id' => (string) $invoice->id,
+                            'tenant_id' => (string) $tenant->id,
+                            'event' => 'invoice.created',
+                        ]
+                    );
 
                     $sub->update([
                         'starts_at' => now(),
@@ -177,6 +202,27 @@ class ProcessSubscriptionsCommand extends Command
             $inv->update(['status' => 'overdue']);
             Subscription::where('id', $inv->subscription_id)->update(['status' => 'past_due']);
             $blockedTenants++;
+
+            $tenant = Tenant::query()->find($inv->tenant_id);
+            if ($tenant && $tenant->phone) {
+                $this->officialWhatsApp->sendByKey(
+                    'invoice.overdue',
+                    $tenant->phone,
+                    [
+                        'customer_name' => $tenant->trade_name,
+                        'tenant_name' => $tenant->trade_name,
+                        'invoice_amount' => 'R$ ' . number_format($inv->amount_cents / 100, 2, ',', '.'),
+                        'due_date' => Carbon::parse($inv->due_date)->format('d/m/Y'),
+                        'payment_link' => trim((string) ($inv->payment_link ?: 'https://app.allsync.com.br/faturas')),
+                    ],
+                    [
+                        'command' => static::class,
+                        'invoice_id' => (string) $inv->id,
+                        'tenant_id' => (string) $tenant->id,
+                        'event' => 'invoice.overdue',
+                    ]
+                );
+            }
         }
 
         SystemNotificationService::notify(

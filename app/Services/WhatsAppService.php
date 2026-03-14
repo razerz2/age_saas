@@ -24,7 +24,14 @@ class WhatsAppService
      */
     protected function resolveProvider(): WhatsAppProviderInterface
     {
-        $provider = config('services.whatsapp.provider', 'whatsapp_business');
+        $provider = function_exists('sysconfig')
+            ? (string) sysconfig('WHATSAPP_PROVIDER', config('services.whatsapp.provider', 'whatsapp_business'))
+            : (string) config('services.whatsapp.provider', 'whatsapp_business');
+
+        $provider = strtolower(trim($provider));
+        if ($provider === '') {
+            $provider = 'whatsapp_business';
+        }
 
         return match ($provider) {
             'zapi', 'z-api' => new ZApiProvider(),

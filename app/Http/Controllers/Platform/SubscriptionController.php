@@ -10,6 +10,7 @@ use App\Models\Platform\Invoices;
 use App\Models\Platform\PlanAccessRule;
 use App\Models\Tenant\TenantPlanLimit;
 use App\Services\AsaasService;
+use App\Services\Platform\WhatsAppOfficialMessageService;
 use App\Http\Requests\Platform\SubscriptionRequest;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
@@ -63,6 +64,29 @@ class SubscriptionController extends Controller
 
             // 🔹 Cria assinatura local
             $subscription = Subscription::create($data);
+
+            $subscription->loadMissing(['tenant', 'plan']);
+            $tenant = $subscription->tenant;
+            $plan = $subscription->plan;
+            if ($tenant && $plan) {
+                app(WhatsAppOfficialMessageService::class)->sendByKey(
+                    'subscription.created',
+                    $tenant->phone,
+                    [
+                        'customer_name' => $tenant->trade_name,
+                        'tenant_name' => $tenant->trade_name,
+                        'plan_name' => $plan->name,
+                        'plan_amount' => 'R$ ' . number_format($plan->price_cents / 100, 2, ',', '.'),
+                        'due_date' => optional($subscription->ends_at)->format('d/m/Y') ?? now()->format('d/m/Y'),
+                    ],
+                    [
+                        'controller' => static::class,
+                        'subscription_id' => (string) $subscription->id,
+                        'tenant_id' => (string) $tenant->id,
+                        'event' => 'subscription.created',
+                    ]
+                );
+            }
 
             // 🔹 Aplica regras de acesso ao tenant
             $this->applyAccessRulesToTenant($subscription);
@@ -289,7 +313,7 @@ class SubscriptionController extends Controller
                     $subscription->update(['asaas_subscription_id' => $response['subscription']['id']]);
 
                     if (!empty($response['payment_link'])) {
-                        Invoices::create([
+                        $invoice = Invoices::create([
                             'subscription_id'    => $subscription->id,
                             'tenant_id'          => $tenant->id,
                             'amount_cents'       => $plan->price_cents,
@@ -304,6 +328,25 @@ class SubscriptionController extends Controller
                             'asaas_sync_status'  => 'success',
                             'asaas_last_sync_at' => now(),
                         ]);
+
+                        app(WhatsAppOfficialMessageService::class)->sendByKey(
+                            'invoice.created',
+                            $tenant->phone,
+                            [
+                                'customer_name' => $tenant->trade_name,
+                                'tenant_name' => $tenant->trade_name,
+                                'invoice_amount' => 'R$ ' . number_format($invoice->amount_cents / 100, 2, ',', '.'),
+                                'due_date' => optional($invoice->due_date)->format('d/m/Y') ?? now()->format('d/m/Y'),
+                                'payment_link' => trim((string) ($invoice->payment_link ?: 'https://app.allsync.com.br/faturas')),
+                            ],
+                            [
+                                'controller' => static::class,
+                                'subscription_id' => (string) $subscription->id,
+                                'invoice_id' => (string) $invoice->id,
+                                'tenant_id' => (string) $tenant->id,
+                                'event' => 'invoice.created',
+                            ]
+                        );
                     }
                 }
 
@@ -339,7 +382,7 @@ class SubscriptionController extends Controller
                     return back()->withErrors(['general' => 'Não foi possível gerar fatura PIX no Asaas.']);
                 }
 
-                Invoices::create([
+                $invoice = Invoices::create([
                     'subscription_id'    => $subscription->id,
                     'tenant_id'          => $tenant->id,
                     'amount_cents'       => $plan->price_cents,
@@ -354,6 +397,25 @@ class SubscriptionController extends Controller
                     'asaas_sync_status'  => 'success',
                     'asaas_last_sync_at' => now(),
                 ]);
+
+                app(WhatsAppOfficialMessageService::class)->sendByKey(
+                    'invoice.created',
+                    $tenant->phone,
+                    [
+                        'customer_name' => $tenant->trade_name,
+                        'tenant_name' => $tenant->trade_name,
+                        'invoice_amount' => 'R$ ' . number_format($invoice->amount_cents / 100, 2, ',', '.'),
+                        'due_date' => optional($invoice->due_date)->format('d/m/Y') ?? now()->format('d/m/Y'),
+                        'payment_link' => trim((string) ($invoice->payment_link ?: 'https://app.allsync.com.br/faturas')),
+                    ],
+                    [
+                        'controller' => static::class,
+                        'subscription_id' => (string) $subscription->id,
+                        'invoice_id' => (string) $invoice->id,
+                        'tenant_id' => (string) $tenant->id,
+                        'event' => 'invoice.created',
+                    ]
+                );
 
                 $subscription->update([
                     'asaas_synced'       => true,

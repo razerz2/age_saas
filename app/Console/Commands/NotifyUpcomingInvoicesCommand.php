@@ -4,7 +4,7 @@ namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
 use App\Models\Platform\Invoices;
-use App\Services\WhatsAppService;
+use App\Services\Platform\WhatsAppOfficialMessageService;
 use App\Services\SystemNotificationService;
 use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
@@ -25,12 +25,12 @@ class NotifyUpcomingInvoicesCommand extends Command
      */
     protected $description = 'Notifica tenants sobre faturas próximas do vencimento (exclui faturas de cartão)';
 
-    protected WhatsAppService $whatsapp;
+    protected WhatsAppOfficialMessageService $officialWhatsApp;
 
-    public function __construct(WhatsAppService $whatsapp)
+    public function __construct(WhatsAppOfficialMessageService $officialWhatsApp)
     {
         parent::__construct();
-        $this->whatsapp = $whatsapp;
+        $this->officialWhatsApp = $officialWhatsApp;
     }
 
     /**
@@ -95,27 +95,27 @@ class NotifyUpcomingInvoicesCommand extends Command
                     continue;
                 }
 
-                // 🔹 Monta mensagem de notificação
                 $amount = number_format($invoice->amount_cents / 100, 2, ',', '.');
                 $dueDate = Carbon::parse($invoice->due_date)->format('d/m/Y');
-                $paymentLink = $invoice->payment_link ?? 'Link não disponível';
+                $paymentLink = trim((string) ($invoice->payment_link ?: 'https://app.allsync.com.br/faturas'));
 
-                $message = "🔔 *Lembrete de Fatura*\n\n"
-                    . "Olá {$tenant->trade_name}!\n\n"
-                    . "Sua fatura vence em {$daysBefore} " . ($daysBefore == 1 ? 'dia' : 'dias') . ".\n\n"
-                    . "💰 *Valor:* R$ {$amount}\n"
-                    . "📅 *Vencimento:* {$dueDate}\n"
-                    . "💳 *Forma de pagamento:* {$invoice->payment_method}\n\n";
-
-                if ($paymentLink !== 'Link não disponível') {
-                    $message .= "🔗 *Link para pagamento:*\n{$paymentLink}\n\n";
-                }
-
-                $message .= "Por favor, realize o pagamento até a data de vencimento.\n\n"
-                    . "Agradecemos pela preferência! 🙏";
-
-                // 🔹 Envia notificação via WhatsApp
-                $sent = $this->whatsapp->sendMessage($tenant->phone, $message);
+                $sent = $this->officialWhatsApp->sendByKey(
+                    'invoice.upcoming_due',
+                    $tenant->phone,
+                    [
+                        'customer_name' => $tenant->trade_name,
+                        'tenant_name' => $tenant->trade_name,
+                        'due_date' => $dueDate,
+                        'invoice_amount' => 'R$ ' . $amount,
+                        'payment_link' => $paymentLink,
+                    ],
+                    [
+                        'command' => static::class,
+                        'invoice_id' => (string) $invoice->id,
+                        'tenant_id' => (string) $tenant->id,
+                        'event' => 'invoice.upcoming_due',
+                    ]
+                );
 
                 if ($sent) {
                     // 🔹 Marca notified_upcoming_at para deduplicação

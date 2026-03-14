@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Services\Platform\TenantDefaultNotificationTemplateProvisioningService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Hash;
@@ -303,7 +304,29 @@ class TenantProvisioner
             }
 
             // --------------------------------------------------------------------
-            // 7. Finalização
+            // 7. Copiar baseline de templates default do Tenant (idempotente)
+            // --------------------------------------------------------------------
+            Log::info("🧩 Provisionando templates default de notificacao para tenant...");
+
+            try {
+                $result = app(TenantDefaultNotificationTemplateProvisioningService::class)
+                    ->syncForTenant($tenant, false, false);
+
+                Log::info("🟢 Templates default provisionados para tenant {$tenant->id}", [
+                    'inseridos' => $result['inserted'] ?? 0,
+                    'atualizados' => $result['updated'] ?? 0,
+                    'ignorados' => $result['skipped'] ?? 0,
+                    'motivo' => $result['reason'] ?? null,
+                ]);
+            } catch (\Throwable $e) {
+                Log::warning("⚠️ Falha ao provisionar templates default do tenant. Continuando fluxo.", [
+                    'tenant_id' => $tenant->id,
+                    'erro' => $e->getMessage(),
+                ]);
+            }
+
+            // --------------------------------------------------------------------
+            // 8. Finalização
             // --------------------------------------------------------------------
             Log::info("🏁 Banco do tenant criado com sucesso!", [
                 'tenant_id' => $tenant->id,

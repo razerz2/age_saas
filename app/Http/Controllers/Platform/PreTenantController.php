@@ -58,7 +58,7 @@ class PreTenantController extends Controller
                     ->with('warning', 'Este pré-cadastro já foi processado.');
             }
 
-            $processor = new PreTenantProcessorService();
+            $processor = app(PreTenantProcessorService::class);
             $processor->processPaid($preTenant);
 
             PreTenantLog::create([
@@ -138,7 +138,7 @@ class PreTenantController extends Controller
             }
 
             // Processa o pagamento seguindo a mesma rotina do webhook
-            $processor = new PreTenantProcessorService();
+            $processor = app(PreTenantProcessorService::class);
             
             // Simula payload do webhook para manter compatibilidade
             // O formato de data deve ser compatível com o que o Asaas envia (ISO 8601)

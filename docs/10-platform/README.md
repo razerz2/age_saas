@@ -29,6 +29,8 @@ A Platform e a area administrativa central do sistema.
 - `modules/medical-specialties-catalog/`
 - `modules/notifications-outbox/`
 - `modules/notification-templates/`
+- `modules/whatsapp-official-templates/` (inclui teste manual de envio via UI no Show)
+- `modules/tenant-default-notification-templates/`
 - `modules/locations/`
 - `modules/users/`
 - `modules/settings/`

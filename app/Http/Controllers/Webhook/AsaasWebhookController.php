@@ -90,7 +90,7 @@ class AsaasWebhookController extends Controller
                     ]);
                     
                     try {
-                        $processor = new PreTenantProcessorService();
+                        $processor = app(PreTenantProcessorService::class);
                         
                         // Verificar se já foi processado
                         $tenantCreatedLog = $preTenant->logs()->where('event', 'tenant_created')->first();

@@ -23,6 +23,8 @@ class AuthServiceProvider extends ServiceProvider
         \App\Models\Tenant\FormResponse::class => \App\Policies\Tenant\FormResponsePolicy::class,
         \App\Models\Platform\PreTenant::class => \App\Policies\Platform\PreTenantPolicy::class,
         \App\Models\Platform\ApiTenantToken::class => \App\Policies\Platform\ApiTenantTokenPolicy::class,
+        \App\Models\Platform\WhatsAppOfficialTemplate::class => \App\Policies\Platform\WhatsAppOfficialTemplatePolicy::class,
+        \App\Models\Platform\TenantDefaultNotificationTemplate::class => \App\Policies\Platform\TenantDefaultNotificationTemplatePolicy::class,
     ];
 
     /**

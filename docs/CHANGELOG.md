@@ -1,57 +1,86 @@
-﻿# ðŸ“ CHANGELOG da DocumentaÃ§Ã£o
+# CHANGELOG da Documentacao
+
+2026-03-14
+- Novo modulo Platform `tenant-default-notification-templates` para baseline operacional de Tenant (chaves `appointment.*` e `waitlist.*`) em tabela separada `tenant_default_notification_templates`.
+- Provisionamento de tenant atualizado para copiar baseline ativo para `tenant.notification_templates` com idempotencia.
+- Criado comando administrativo de compatibilidade para tenants existentes:
+  - `php artisan tenants:seed-default-notification-templates` (dry-run)
+  - `php artisan tenants:seed-default-notification-templates --tenant=<slug|uuid> --apply`
+  - `php artisan tenants:seed-default-notification-templates --all-tenants --apply [--overwrite]`
+- Platform `whatsapp-official-templates`: removido seed de chaves clinicas (`appointment.*`, `waitlist.*`) do baseline.
+- Documentado boundary de dominio: templates operacionais de clinica permanecem no Tenant (`config/notification_templates.php` + `notification_templates` tenant).
+- Adicionada orientacao de limpeza legada via comando administrativo:
+  - `php artisan whatsapp-official-templates:clean-clinical` (dry-run)
+  - `php artisan whatsapp-official-templates:clean-clinical --apply --mode=archive|delete`
+- Platform `whatsapp-official-templates`: criado baseline SaaS com 8 eventos reais (`invoice.*`, `tenant.*`, `security.*`, `subscription.*`, `credentials.*`).
+- Padronizacao de variaveis no baseline: `customer_name`, `tenant_name`, `invoice_amount`, `due_date`, `payment_link`, `code`.
+- Frontend do modulo atualizado com descricoes curtas por evento SaaS e suporte de categoria `SECURITY` no formulario.
+- Integracao Meta atualizada para mapear categoria interna `SECURITY` para `AUTHENTICATION`.
+- Platform `whatsapp-official-templates`: adicionado teste manual de envio na UI (Show) via modal + endpoint `test-send`.
+- Teste manual: geracao de payload baseada no schema remoto aprovado salvo em `meta_response` (inclui parametros dinamicos de `BUTTONS` quando aplicavel).
+- Melhorado diagnostico de erros da Meta e logs estruturados para suporte operacional do teste manual.
+
+2026-03-12
+- Modulo Platform `whatsapp-official-templates`: suporte a `sample_variables` (exemplos obrigatorios de variaveis) para criacao/submissao na Meta.
+- Ajustado payload da Graph API v22.0 para incluir `BODY.example.body_text` quando ha placeholders no `body_text`.
+- Validacao: bloqueia envio quando placeholders nao possuem exemplos em `sample_variables`.
+- Migration: adicionado campo `sample_variables` (JSON) em `whatsapp_official_templates`.
+- UI: create/edit/show com campo e exibicao de exemplos.
+- Correcao de encoding/mojibake no modulo (views e mensagens).
+
 
 2026-02-22
-- Criada estrutura base de documentaÃ§Ã£o em `/docs` organizada por Ã¡reas.
-- Adicionado `docs/README.md` como Ã­ndice principal da nova estrutura.
-- Preservado o Ã­ndice antigo em `docs/_legacy/README_legacy.md`.
-- Criada pasta `00-global/` com documento de visÃ£o geral.
-- Reservadas pastas para as Ã¡reas: `10-platform/`, `20-tenant/`, `30-landing-page/`, `40-portal-paciente/`.
-- Adicionados templates iniciais em `docs/_templates/` para Ã¡reas e mÃ³dulos.
+- Criada estrutura base de documentação em `/docs` organizada por áreas.
+- Adicionado `docs/README.md` como índice principal da nova estrutura.
+- Preservado o índice antigo em `docs/_legacy/README_legacy.md`.
+- Criada pasta `00-global/` com documento de visão geral.
+- Reservadas pastas para as áreas: `10-platform/`, `20-tenant/`, `30-landing-page/`, `40-portal-paciente/`.
+- Adicionados templates iniciais em `docs/_templates/` para áreas e módulos.
 
 2026-02-22
-- FinalizaÃ§Ã£o da Etapa 1.
-- Criados blocos completos de documentaÃ§Ã£o para `20-tenant`, `30-landing-page` e `40-portal-paciente` (READMEs, Ã­ndices e `modules/.gitkeep`).
-- Padronizados todos os READMEs de Ã¡rea com seÃ§Ãµes: Objetivo, Arquivos desta Ã¡rea, MÃ³dulos, ReferÃªncias globais.
-- Criada governanÃ§a de rascunhos em `docs/_drafts/README.md`.
-- Atualizado `docs/README.md` com seÃ§Ã£o "Como contribuir" e seÃ§Ã£o "Rascunhos".
-- IncluÃ­dos banners de reorganizaÃ§Ã£o no topo de `ARQUITETURA.md`, `PLATFORM.md` e `TENANT.md` apontando para `docs/README.md`.
+- Finalização da Etapa 1.
+- Criados blocos completos de documentação para `20-tenant`, `30-landing-page` e `40-portal-paciente` (READMEs, índices e `modules/.gitkeep`).
+- Padronizados todos os READMEs de área com seções: Objetivo, Arquivos desta área, Módulos, Referências globais.
+- Criada governança de rascunhos em `docs/_drafts/README.md`.
+- Atualizado `docs/README.md` com seção "Como contribuir" e seção "Rascunhos".
+- Incluídos banners de reorganização no topo de `ARQUITETURA.md`, `PLATFORM.md` e `TENANT.md` apontando para `docs/README.md`.
 
 2026-02-22
-- Etapa 3.1 (Tenant) â€” Ã­ndices e links.
-- Transformados `docs/20-tenant/02-rotas.md`, `03-estrutura-de-pastas.md` e `04-padroes-ui-tenant.md` em Ã­ndices que apontam para os mÃ³dulos pilotados (appointments, recurring-appointments, forms, form-responses).
-- Adicionados links cruzados para os arquivos de mÃ³dulo (`routes.md`, `views.md`, `frontend.md`, `database.md`) sem duplicar listas completas de rotas ou views.
+- Etapa 3.1 (Tenant) — índices e links.
+- Transformados `docs/20-tenant/02-rotas.md`, `03-estrutura-de-pastas.md` e `04-padroes-ui-tenant.md` em índices que apontam para os módulos pilotados (appointments, recurring-appointments, forms, form-responses).
+- Adicionados links cruzados para os arquivos de módulo (`routes.md`, `views.md`, `frontend.md`, `database.md`) sem duplicar listas completas de rotas ou views.
 
 2026-02-22
-- Etapa 4A.1 (Tenant) â€” business-hours.
-- Documentado o mÃ³dulo `business-hours` em `docs/20-tenant/modules/business-hours/` com os 9 arquivos padrÃ£o (README, overview, routes, views, backend, frontend, database, permissions, troubleshooting).
-- Atualizados Ã­ndices de Tenant para incluir o mÃ³dulo `business-hours` (`docs/20-tenant/README.md` e `docs/20-tenant/02-rotas.md`).
+- Etapa 4A.1 (Tenant) — business-hours.
+- Documentado o módulo `business-hours` em `docs/20-tenant/modules/business-hours/` com os 9 arquivos padrão (README, overview, routes, views, backend, frontend, database, permissions, troubleshooting).
+- Atualizados índices de Tenant para incluir o módulo `business-hours` (`docs/20-tenant/README.md` e `docs/20-tenant/02-rotas.md`).
 
 2026-02-22
-- Etapa 4A.2 (Tenant) â€” appointment-types.
-- Documentado o mÃ³dulo `appointment-types` em `docs/20-tenant/modules/appointment-types/` com os 9 arquivos padrÃ£o (README, overview, routes, views, backend, frontend, database, permissions, troubleshooting).
-- Atualizados Ã­ndices de Tenant para incluir o mÃ³dulo `appointment-types` (`docs/20-tenant/README.md` e `docs/20-tenant/02-rotas.md`).
+- Etapa 4A.2 (Tenant) — appointment-types.
+- Documentado o módulo `appointment-types` em `docs/20-tenant/modules/appointment-types/` com os 9 arquivos padrão (README, overview, routes, views, backend, frontend, database, permissions, troubleshooting).
+- Atualizados índices de Tenant para incluir o módulo `appointment-types` (`docs/20-tenant/README.md` e `docs/20-tenant/02-rotas.md`).
 
 2026-02-22
-- Etapa 4A.3 (Tenant) â€” calendar-sync.
-- Documentado o mÃ³dulo `calendar-sync` em `docs/20-tenant/modules/calendar-sync/` com os 9 arquivos padrÃ£o (README, overview, routes, views, backend, frontend, database, permissions, troubleshooting).
-- Atualizados Ã­ndices de Tenant para incluir o mÃ³dulo `calendar-sync` (`docs/20-tenant/README.md` e `docs/20-tenant/02-rotas.md`).
+- Etapa 4A.3 (Tenant) — calendar-sync.
+- Documentado o módulo `calendar-sync` em `docs/20-tenant/modules/calendar-sync/` com os 9 arquivos padrão (README, overview, routes, views, backend, frontend, database, permissions, troubleshooting).
+- Atualizados índices de Tenant para incluir o módulo `calendar-sync` (`docs/20-tenant/README.md` e `docs/20-tenant/02-rotas.md`).
 
 2026-02-22
-- Etapa 4B.1 (Tenant) â€” online-appointments + notifications.
-- Documentado o mÃ³dulo `online-appointments` em `docs/20-tenant/modules/online-appointments/` com os 9 arquivos padrÃ£o (README, overview, routes, views, backend, frontend, database, permissions, troubleshooting).
-- Documentado o mÃ³dulo `notifications` em `docs/20-tenant/modules/notifications/` com os 9 arquivos padrÃ£o (README, overview, routes, views, backend, frontend, database, permissions, troubleshooting).
-- Atualizados Ã­ndices de Tenant para incluir `online-appointments` e `notifications` (`docs/20-tenant/README.md` e `docs/20-tenant/02-rotas.md`).
+- Etapa 4B.1 (Tenant) — online-appointments + notifications.
+- Documentado o módulo `online-appointments` em `docs/20-tenant/modules/online-appointments/` com os 9 arquivos padrão (README, overview, routes, views, backend, frontend, database, permissions, troubleshooting).
+- Documentado o módulo `notifications` em `docs/20-tenant/modules/notifications/` com os 9 arquivos padrão (README, overview, routes, views, backend, frontend, database, permissions, troubleshooting).
+- Atualizados índices de Tenant para incluir `online-appointments` e `notifications` (`docs/20-tenant/README.md` e `docs/20-tenant/02-rotas.md`).
 
 2026-02-22
-- Etapa 4B.2 (Tenant) â€” integrations + public-customer.
-- Documentado o mÃ³dulo `integrations` em `docs/20-tenant/modules/integrations/` com os 9 arquivos padrÃ£o (README, overview, routes, views, backend, frontend, database, permissions, troubleshooting).
-- Documentado o mÃ³dulo `public-customer` em `docs/20-tenant/modules/public-customer/` com os 9 arquivos padrÃ£o (README, overview, routes, views, backend, frontend, database, permissions, troubleshooting).
-- Atualizados Ã­ndices de Tenant para incluir `integrations` e `public-customer` (`docs/20-tenant/README.md` e `docs/20-tenant/02-rotas.md`).
+- Etapa 4B.2 (Tenant) — integrations + public-customer.
+- Documentado o módulo `integrations` em `docs/20-tenant/modules/integrations/` com os 9 arquivos padrão (README, overview, routes, views, backend, frontend, database, permissions, troubleshooting).
+- Documentado o módulo `public-customer` em `docs/20-tenant/modules/public-customer/` com os 9 arquivos padrão (README, overview, routes, views, backend, frontend, database, permissions, troubleshooting).
+- Atualizados índices de Tenant para incluir `integrations` e `public-customer` (`docs/20-tenant/README.md` e `docs/20-tenant/02-rotas.md`).
 
 2026-02-22
-- Etapa 4B.3 (Tenant) â€” medical-appointments.
-- Documentado o mÃ³dulo `medical-appointments` em `docs/20-tenant/modules/medical-appointments/` com os 9 arquivos padrÃ£o (README, overview, routes, views, backend, frontend, database, permissions, troubleshooting).
-- Atualizados Ã­ndices de Tenant para incluir `medical-appointments` (`docs/20-tenant/README.md` e `docs/20-tenant/02-rotas.md`).
+- Etapa 4B.3 (Tenant) — medical-appointments.
+- Documentado o módulo `medical-appointments` em `docs/20-tenant/modules/medical-appointments/` com os 9 arquivos padrão (README, overview, routes, views, backend, frontend, database, permissions, troubleshooting).
+- Atualizados índices de Tenant para incluir `medical-appointments` (`docs/20-tenant/README.md` e `docs/20-tenant/02-rotas.md`).
 
 
 2026-02-26

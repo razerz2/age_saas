@@ -23,7 +23,7 @@ class WhatsappTenantService
                 if (!empty($provider['provider'])) {
                     config([
                         'services.whatsapp.provider' => $provider['provider'],
-                        'services.whatsapp.business.api_url' => config('services.whatsapp.business.api_url', 'https://graph.facebook.com/v18.0'),
+                        'services.whatsapp.business.api_url' => config('services.whatsapp.business.api_url', 'https://graph.facebook.com/v22.0'),
                         'services.whatsapp.business.token' => $provider['meta_access_token'] ?? '',
                         'services.whatsapp.business.phone_id' => $provider['meta_phone_number_id'] ?? '',
                         'services.whatsapp.zapi.api_url' => $provider['zapi_api_url'] ?? 'https://api.z-api.io',
@@ -59,8 +59,24 @@ class WhatsappTenantService
             }
 
             $globalProvider = sysconfig('WHATSAPP_PROVIDER', config('services.whatsapp.provider', 'whatsapp_business'));
+            $globalMetaApiUrl = self::resolveGlobalWhatsAppMetaValue(
+                ['WHATSAPP_META_BASE_URL', 'WHATSAPP_BUSINESS_API_URL', 'WHATSAPP_API_URL'],
+                (string) config('services.whatsapp.business.api_url', 'https://graph.facebook.com/v22.0')
+            );
+            $globalMetaToken = self::resolveGlobalWhatsAppMetaValue(
+                ['WHATSAPP_META_TOKEN', 'WHATSAPP_BUSINESS_TOKEN', 'META_ACCESS_TOKEN', 'BOT_META_ACCESS_TOKEN', 'bot_meta_access_token'],
+                (string) config('services.whatsapp.business.token', config('services.whatsapp.token', ''))
+            );
+            $globalMetaPhoneId = self::resolveGlobalWhatsAppMetaValue(
+                ['WHATSAPP_META_PHONE_NUMBER_ID', 'WHATSAPP_BUSINESS_PHONE_ID', 'META_PHONE_NUMBER_ID', 'BOT_META_PHONE_NUMBER_ID', 'bot_meta_phone_number_id'],
+                (string) config('services.whatsapp.business.phone_id', config('services.whatsapp.phone_id', ''))
+            );
+
             config([
                 'services.whatsapp.provider' => $globalProvider,
+                'services.whatsapp.business.api_url' => $globalMetaApiUrl,
+                'services.whatsapp.business.token' => $globalMetaToken,
+                'services.whatsapp.business.phone_id' => $globalMetaPhoneId,
             ]);
             $resolver->applyWahaConfig($resolver->resolveWahaConfig());
 
@@ -74,5 +90,21 @@ class WhatsappTenantService
             ]);
             return false;
         }
+    }
+
+    private static function resolveGlobalWhatsAppMetaValue(array $keys, string $fallback = ''): string
+    {
+        foreach ($keys as $key) {
+            $value = function_exists('sysconfig')
+                ? (string) sysconfig((string) $key, '')
+                : '';
+
+            $value = trim($value);
+            if ($value !== '') {
+                return $value;
+            }
+        }
+
+        return trim($fallback);
     }
 }

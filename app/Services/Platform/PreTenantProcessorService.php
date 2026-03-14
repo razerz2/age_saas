@@ -23,6 +23,11 @@ use App\Mail\TenantAdminCredentialsMail;
 
 class PreTenantProcessorService
 {
+    public function __construct(
+        private readonly WhatsAppOfficialMessageService $officialWhatsApp
+    ) {
+    }
+
     /**
      * Processa um pré-tenant pago
      */
@@ -483,6 +488,24 @@ class PreTenantProcessorService
                 'payment_method' => $paymentMethod,
             ]);
 
+            $this->officialWhatsApp->sendByKey(
+                'subscription.created',
+                $tenant->phone,
+                [
+                    'customer_name' => $tenant->trade_name,
+                    'tenant_name' => $tenant->trade_name,
+                    'plan_name' => $plan->name,
+                    'plan_amount' => 'R$ ' . number_format($plan->price_cents / 100, 2, ',', '.'),
+                    'due_date' => $paymentDate->copy()->addMonths($plan->period_months ?? 1)->format('d/m/Y'),
+                ],
+                [
+                    'service' => static::class,
+                    'tenant_id' => (string) $tenant->id,
+                    'subscription_id' => (string) $subscription->id,
+                    'event' => 'subscription.created',
+                ]
+            );
+
             Log::info("✅ Assinatura local criada com sucesso", [
                 'subscription_id' => $subscription->id,
                 'tenant_id' => $tenant->id,
@@ -620,7 +643,7 @@ class PreTenantProcessorService
                 $subscription->update(['asaas_subscription_id' => $response['subscription']['id']]);
 
                 if (!empty($response['payment_link'])) {
-                    Invoices::create([
+                    $invoice = Invoices::create([
                         'subscription_id' => $subscription->id,
                         'tenant_id' => $tenant->id,
                         'amount_cents' => $plan->price_cents,
@@ -635,6 +658,25 @@ class PreTenantProcessorService
                         'asaas_sync_status' => 'success',
                         'asaas_last_sync_at' => now(),
                     ]);
+
+                    $this->officialWhatsApp->sendByKey(
+                        'invoice.created',
+                        $tenant->phone,
+                        [
+                            'customer_name' => $tenant->trade_name,
+                            'tenant_name' => $tenant->trade_name,
+                            'invoice_amount' => 'R$ ' . number_format($invoice->amount_cents / 100, 2, ',', '.'),
+                            'due_date' => optional($invoice->due_date)->format('d/m/Y') ?? now()->format('d/m/Y'),
+                            'payment_link' => trim((string) ($invoice->payment_link ?: 'https://app.allsync.com.br/faturas')),
+                        ],
+                        [
+                            'service' => static::class,
+                            'subscription_id' => (string) $subscription->id,
+                            'invoice_id' => (string) $invoice->id,
+                            'tenant_id' => (string) $tenant->id,
+                            'event' => 'invoice.created',
+                        ]
+                    );
                 }
 
                 $subscription->update([
@@ -669,7 +711,7 @@ class PreTenantProcessorService
                     return;
                 }
 
-                Invoices::create([
+                $invoice = Invoices::create([
                     'subscription_id' => $subscription->id,
                     'tenant_id' => $tenant->id,
                     'amount_cents' => $plan->price_cents,
@@ -684,6 +726,25 @@ class PreTenantProcessorService
                     'asaas_sync_status' => 'success',
                     'asaas_last_sync_at' => now(),
                 ]);
+
+                $this->officialWhatsApp->sendByKey(
+                    'invoice.created',
+                    $tenant->phone,
+                    [
+                        'customer_name' => $tenant->trade_name,
+                        'tenant_name' => $tenant->trade_name,
+                        'invoice_amount' => 'R$ ' . number_format($invoice->amount_cents / 100, 2, ',', '.'),
+                        'due_date' => optional($invoice->due_date)->format('d/m/Y') ?? now()->format('d/m/Y'),
+                        'payment_link' => trim((string) ($invoice->payment_link ?: 'https://app.allsync.com.br/faturas')),
+                    ],
+                    [
+                        'service' => static::class,
+                        'subscription_id' => (string) $subscription->id,
+                        'invoice_id' => (string) $invoice->id,
+                        'tenant_id' => (string) $tenant->id,
+                        'event' => 'invoice.created',
+                    ]
+                );
 
                 $subscription->update([
                     'asaas_synced' => true,
@@ -774,6 +835,22 @@ class PreTenantProcessorService
             }
 
             Log::info("Email de boas-vindas enviado para {$preTenant->email}");
+
+            $this->officialWhatsApp->sendByKey(
+                'tenant.welcome',
+                $tenant->phone,
+                [
+                    'customer_name' => $tenant->trade_name,
+                    'tenant_name' => $tenant->trade_name,
+                    'login_url' => $loginUrl,
+                ],
+                [
+                    'service' => static::class,
+                    'tenant_id' => (string) $tenant->id,
+                    'pre_tenant_id' => (string) $preTenant->id,
+                    'event' => 'tenant.welcome',
+                ]
+            );
 
         } catch (\Throwable $e) {
             Log::error("Erro ao enviar email de boas-vindas", [
@@ -890,4 +967,3 @@ class PreTenantProcessorService
         }
     }
 }
-

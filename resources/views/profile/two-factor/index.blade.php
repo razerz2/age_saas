@@ -2,6 +2,10 @@
 
 @section('content')
 
+    @php
+        $whatsappTwoFactorAvailable = $whatsappTwoFactorAvailable ?? false;
+    @endphp
+
     <div class="container-fluid">
         
         <!-- Título e breadcrumb -->
@@ -127,21 +131,31 @@
                                         </div>
                                     </div>
                                     <div class="col-md-4 mb-3">
-                                        <div class="card border @if($user->two_factor_method === 'whatsapp') border-primary @endif">
+                                        <div class="card border @if($user->two_factor_method === 'whatsapp' && $whatsappTwoFactorAvailable) border-primary @endif">
                                             <div class="card-body text-center">
-                                                <input type="radio" name="method" value="whatsapp" id="method_whatsapp" 
-                                                       class="form-check-input" 
-                                                       @if($user->two_factor_method === 'whatsapp') checked @endif
+                                                <input type="radio" name="method" value="whatsapp" id="method_whatsapp"
+                                                       class="form-check-input"
+                                                       @if($user->two_factor_method === 'whatsapp' && $whatsappTwoFactorAvailable) checked @endif
+                                                       @if(!$whatsappTwoFactorAvailable) disabled @endif
                                                        onchange="this.form.submit()">
                                                 <label for="method_whatsapp" class="form-check-label w-100">
                                                     <i class="mdi mdi-whatsapp" style="font-size: 2rem; color: #25D366;"></i>
                                                     <h6 class="mt-2">WhatsApp</h6>
-                                                    <small class="text-muted">Código enviado por WhatsApp</small>
+                                                    @if($whatsappTwoFactorAvailable)
+                                                        <small class="text-muted">Codigo enviado por WhatsApp</small>
+                                                    @else
+                                                        <small class="text-muted">Indisponivel sem telefone apto no usuario Platform</small>
+                                                    @endif
                                                 </label>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
+                                @if(!$whatsappTwoFactorAvailable)
+                                    <div class="alert alert-warning mt-2 mb-0">
+                                        O 2FA via WhatsApp esta bloqueado para esta conta porque nao ha telefone valido para envio oficial.
+                                    </div>
+                                @endif
                             </form>
                         </div>
                     </div>

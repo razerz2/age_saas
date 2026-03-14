@@ -43,9 +43,11 @@ return [
 
         // Configurações para WhatsApp Business API
         'business' => [
-            'api_url' => env('WHATSAPP_BUSINESS_API_URL', 'https://graph.facebook.com/v18.0'),
-            'token' => env('WHATSAPP_BUSINESS_TOKEN'),
-            'phone_id' => env('WHATSAPP_BUSINESS_PHONE_ID'),
+            'api_url' => env('WHATSAPP_META_BASE_URL', env('WHATSAPP_BUSINESS_API_URL', env('WHATSAPP_API_URL', 'https://graph.facebook.com'))),
+            'api_version' => 'v22.0',
+            'token' => env('WHATSAPP_META_TOKEN', env('WHATSAPP_BUSINESS_TOKEN', env('WHATSAPP_TOKEN', env('META_ACCESS_TOKEN', env('BOT_META_ACCESS_TOKEN', env('bot_meta_access_token')))))),
+            'phone_id' => env('WHATSAPP_META_PHONE_NUMBER_ID', env('WHATSAPP_BUSINESS_PHONE_ID', env('WHATSAPP_PHONE_ID', env('META_PHONE_NUMBER_ID', env('BOT_META_PHONE_NUMBER_ID', env('bot_meta_phone_number_id')))))),
+            'waba_id' => env('WHATSAPP_META_WABA_ID', env('WHATSAPP_BUSINESS_ACCOUNT_ID', env('META_WABA_ID', env('BOT_META_WABA_ID', env('bot_meta_waba_id'))))),
         ],
 
         // Configurações para Z-API

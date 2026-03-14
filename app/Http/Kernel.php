@@ -83,6 +83,7 @@ class Kernel extends HttpKernel
         'verify.asaas.webhook.ip' => \App\Http\Middleware\VerifyAsaasWebhookIpWhitelist::class,
         'throttle.asaas.webhook' => \App\Http\Middleware\ThrottleAsaasWebhook::class,
         'module.access'      => \App\Http\Middleware\CheckModuleAccess::class,
+        'whatsapp.official.provider' => \App\Http\Middleware\EnsureWhatsAppOfficialProvider::class,
         'ensure.guard'       => \App\Http\Middleware\EnsureCorrectGuard::class,
         'platform.bot.token' => \App\Http\Middleware\Platform\BotApiTokenMiddleware::class,
 

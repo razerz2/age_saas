@@ -268,22 +268,70 @@ class WhatsAppSender
         $globalProvider = function_exists('sysconfig')
             ? sysconfig('WHATSAPP_PROVIDER', config('services.whatsapp.provider', 'whatsapp_business'))
             : config('services.whatsapp.provider', 'whatsapp_business');
+        $globalMetaApiUrl = $this->resolveGlobalWhatsAppMetaValue(
+            ['WHATSAPP_META_BASE_URL', 'WHATSAPP_BUSINESS_API_URL', 'WHATSAPP_API_URL'],
+            (string) config('services.whatsapp.business.api_url', 'https://graph.facebook.com/v22.0')
+        );
+        $globalMetaToken = $this->resolveGlobalWhatsAppMetaValue(
+            ['WHATSAPP_META_TOKEN', 'WHATSAPP_BUSINESS_TOKEN', 'META_ACCESS_TOKEN', 'BOT_META_ACCESS_TOKEN', 'bot_meta_access_token'],
+            (string) config('services.whatsapp.business.token', config('services.whatsapp.token', ''))
+        );
+        $globalMetaPhoneId = $this->resolveGlobalWhatsAppMetaValue(
+            ['WHATSAPP_META_PHONE_NUMBER_ID', 'WHATSAPP_BUSINESS_PHONE_ID', 'META_PHONE_NUMBER_ID', 'BOT_META_PHONE_NUMBER_ID', 'bot_meta_phone_number_id'],
+            (string) config('services.whatsapp.business.phone_id', config('services.whatsapp.phone_id', ''))
+        );
 
         config([
             'services.whatsapp.provider' => $driver === 'global'
                 ? $globalProvider
                 : ($providerSettings['provider'] ?? 'whatsapp_business'),
-            'services.whatsapp.business.api_url' => config('services.whatsapp.business.api_url', 'https://graph.facebook.com/v18.0'),
-            'services.whatsapp.business.token' => $providerSettings['meta_access_token'] ?? '',
-            'services.whatsapp.business.phone_id' => $providerSettings['meta_phone_number_id'] ?? '',
-            'services.whatsapp.zapi.api_url' => $providerSettings['zapi_api_url'] ?? 'https://api.z-api.io',
-            'services.whatsapp.zapi.token' => $providerSettings['zapi_token'] ?? '',
-            'services.whatsapp.zapi.client_token' => $providerSettings['zapi_client_token'] ?? '',
-            'services.whatsapp.zapi.instance_id' => $providerSettings['zapi_instance_id'] ?? '',
-            'services.whatsapp.waha.base_url' => $providerSettings['waha_base_url'] ?? '',
-            'services.whatsapp.waha.api_key' => $providerSettings['waha_api_key'] ?? '',
-            'services.whatsapp.waha.session' => $providerSettings['waha_session'] ?? 'default',
+            'services.whatsapp.business.api_url' => $driver === 'global'
+                ? $globalMetaApiUrl
+                : config('services.whatsapp.business.api_url', 'https://graph.facebook.com/v22.0'),
+            'services.whatsapp.business.token' => $driver === 'global'
+                ? $globalMetaToken
+                : ($providerSettings['meta_access_token'] ?? ''),
+            'services.whatsapp.business.phone_id' => $driver === 'global'
+                ? $globalMetaPhoneId
+                : ($providerSettings['meta_phone_number_id'] ?? ''),
+            'services.whatsapp.zapi.api_url' => $driver === 'global'
+                ? config('services.whatsapp.zapi.api_url', 'https://api.z-api.io')
+                : ($providerSettings['zapi_api_url'] ?? 'https://api.z-api.io'),
+            'services.whatsapp.zapi.token' => $driver === 'global'
+                ? config('services.whatsapp.zapi.token', '')
+                : ($providerSettings['zapi_token'] ?? ''),
+            'services.whatsapp.zapi.client_token' => $driver === 'global'
+                ? config('services.whatsapp.zapi.client_token', '')
+                : ($providerSettings['zapi_client_token'] ?? ''),
+            'services.whatsapp.zapi.instance_id' => $driver === 'global'
+                ? config('services.whatsapp.zapi.instance_id', '')
+                : ($providerSettings['zapi_instance_id'] ?? ''),
+            'services.whatsapp.waha.base_url' => $driver === 'global'
+                ? config('services.whatsapp.waha.base_url', '')
+                : ($providerSettings['waha_base_url'] ?? ''),
+            'services.whatsapp.waha.api_key' => $driver === 'global'
+                ? config('services.whatsapp.waha.api_key', '')
+                : ($providerSettings['waha_api_key'] ?? ''),
+            'services.whatsapp.waha.session' => $driver === 'global'
+                ? config('services.whatsapp.waha.session', 'default')
+                : ($providerSettings['waha_session'] ?? 'default'),
         ]);
+    }
+
+    private function resolveGlobalWhatsAppMetaValue(array $keys, string $fallback = ''): string
+    {
+        foreach ($keys as $key) {
+            $value = function_exists('sysconfig')
+                ? (string) sysconfig((string) $key, '')
+                : '';
+
+            $value = trim($value);
+            if ($value !== '') {
+                return $value;
+            }
+        }
+
+        return trim($fallback);
     }
 
     private function shouldLogBody(): bool

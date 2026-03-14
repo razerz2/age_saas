@@ -157,7 +157,7 @@ if (!function_exists('testConnection')) {
                     }
 
                     $response = Http::withToken($token)
-                        ->get("https://graph.facebook.com/v18.0/{$phoneId}/");
+                        ->get("https://graph.facebook.com/v22.0/{$phoneId}/");
 
                     return $response->successful()
                         ? ['status' => true, 'message' => 'Conexão Meta API OK!']

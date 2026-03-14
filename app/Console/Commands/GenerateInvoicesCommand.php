@@ -5,13 +5,19 @@ namespace App\Console\Commands;
 use Illuminate\Console\Command;
 use App\Models\Platform\Subscription;
 use App\Models\Platform\Invoices;
-use App\Services\AsaasService;
+use App\Services\Platform\WhatsAppOfficialMessageService;
 use App\Services\SystemNotificationService;
 use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
 
 class GenerateInvoicesCommand extends Command
 {
+    public function __construct(
+        private readonly WhatsAppOfficialMessageService $officialWhatsApp
+    ) {
+        parent::__construct();
+    }
+
     /**
      * The name and signature of the console command.
      *
@@ -43,7 +49,6 @@ class GenerateInvoicesCommand extends Command
 
         $this->info("🚀 Iniciando geração de faturas ({$daysBefore} dias antes do vencimento)...");
 
-        $asaas = new AsaasService();
         $generated = 0;
         $skipped = 0;
         $errors = 0;
@@ -115,6 +120,24 @@ class GenerateInvoicesCommand extends Command
                     'payment_method'  => $subscription->payment_method,
                     'provider'        => 'asaas',
                 ]);
+
+                $this->officialWhatsApp->sendByKey(
+                    'invoice.created',
+                    $tenant->phone,
+                    [
+                        'customer_name' => $tenant->trade_name,
+                        'tenant_name' => $tenant->trade_name,
+                        'invoice_amount' => 'R$ ' . number_format($invoice->amount_cents / 100, 2, ',', '.'),
+                        'due_date' => Carbon::parse($invoice->due_date)->format('d/m/Y'),
+                        'payment_link' => trim((string) ($invoice->payment_link ?: 'https://app.allsync.com.br/faturas')),
+                    ],
+                    [
+                        'command' => static::class,
+                        'invoice_id' => (string) $invoice->id,
+                        'tenant_id' => (string) $tenant->id,
+                        'event' => 'invoice.created',
+                    ]
+                );
 
                 $generated++;
                 Log::info("✅ Fatura gerada para assinatura {$subscription->id} (vencimento: {$nextDueDate->toDateString()})");

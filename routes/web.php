@@ -20,9 +20,13 @@ use App\Http\Controllers\Platform\KioskMonitorController;
 use App\Http\Controllers\Platform\PlanAccessManagerController;
 use App\Http\Controllers\Platform\PreTenantController;
 use App\Http\Controllers\Platform\NotificationTemplateController;
+use App\Http\Controllers\Platform\WhatsAppOfficialTemplateController;
+use App\Http\Controllers\Platform\TenantDefaultNotificationTemplateController;
 use App\Http\Controllers\Platform\ApiTenantTokenController;
 use App\Http\Controllers\Platform\ClinicNetworkController;
 use App\Models\Platform\SystemNotification;
+use App\Models\Platform\WhatsAppOfficialTemplate;
+use App\Models\Platform\TenantDefaultNotificationTemplate;
 use App\Http\Controllers\Platform\WhatsAppController;
 use App\Http\Controllers\Tenant\Integrations\GoogleCalendarController;
 use Illuminate\Support\Facades\Auth;
@@ -235,6 +239,62 @@ Route::middleware(['auth'])->prefix('Platform')->name('Platform.')->group(functi
             ->name('email-layouts.preview');
     });
 
+    // 🔸 Módulo: Templates WhatsApp Oficial (Meta Cloud API)
+    Route::middleware(['module.access:whatsapp_official_templates', 'whatsapp.official.provider'])->group(function () {
+        Route::get('whatsapp-official-templates', [WhatsAppOfficialTemplateController::class, 'index'])
+            ->middleware('can:viewAny,' . WhatsAppOfficialTemplate::class)
+            ->name('whatsapp-official-templates.index');
+        Route::get('whatsapp-official-templates/create', [WhatsAppOfficialTemplateController::class, 'create'])
+            ->middleware('can:create,' . WhatsAppOfficialTemplate::class)
+            ->name('whatsapp-official-templates.create');
+        Route::post('whatsapp-official-templates', [WhatsAppOfficialTemplateController::class, 'store'])
+            ->middleware('can:create,' . WhatsAppOfficialTemplate::class)
+            ->name('whatsapp-official-templates.store');
+        Route::get('whatsapp-official-templates/{whatsappOfficialTemplate}', [WhatsAppOfficialTemplateController::class, 'show'])
+            ->middleware('can:view,whatsappOfficialTemplate')
+            ->name('whatsapp-official-templates.show');
+        Route::get('whatsapp-official-templates/{whatsappOfficialTemplate}/edit', [WhatsAppOfficialTemplateController::class, 'edit'])
+            ->middleware('can:update,whatsappOfficialTemplate')
+            ->name('whatsapp-official-templates.edit');
+        Route::put('whatsapp-official-templates/{whatsappOfficialTemplate}', [WhatsAppOfficialTemplateController::class, 'update'])
+            ->middleware('can:update,whatsappOfficialTemplate')
+            ->name('whatsapp-official-templates.update');
+        Route::post('whatsapp-official-templates/{whatsappOfficialTemplate}/duplicate', [WhatsAppOfficialTemplateController::class, 'duplicate'])
+            ->middleware('can:duplicate,whatsappOfficialTemplate')
+            ->name('whatsapp-official-templates.duplicate');
+        Route::post('whatsapp-official-templates/{whatsappOfficialTemplate}/submit', [WhatsAppOfficialTemplateController::class, 'submitToMeta'])
+            ->middleware('can:submitToMeta,whatsappOfficialTemplate')
+            ->name('whatsapp-official-templates.submit');
+        Route::post('whatsapp-official-templates/{whatsappOfficialTemplate}/sync', [WhatsAppOfficialTemplateController::class, 'syncStatus'])
+            ->middleware('can:syncStatus,whatsappOfficialTemplate')
+            ->name('whatsapp-official-templates.sync');
+        Route::post('whatsapp-official-templates/{whatsappOfficialTemplate}/archive', [WhatsAppOfficialTemplateController::class, 'archive'])
+            ->middleware('can:archive,whatsappOfficialTemplate')
+            ->name('whatsapp-official-templates.archive');
+        Route::post('whatsapp-official-templates/{whatsappOfficialTemplate}/test-send', [WhatsAppOfficialTemplateController::class, 'testSend'])
+            ->middleware('can:testSend,whatsappOfficialTemplate')
+            ->name('whatsapp-official-templates.test-send');
+    });
+
+    // 🔸 Módulo: Tenant Default Notification Templates (baseline operacional)
+    Route::middleware('module.access:tenant_default_notification_templates')->group(function () {
+        Route::get('tenant-default-notification-templates', [TenantDefaultNotificationTemplateController::class, 'index'])
+            ->middleware('can:viewAny,' . TenantDefaultNotificationTemplate::class)
+            ->name('tenant-default-notification-templates.index');
+        Route::get('tenant-default-notification-templates/create', [TenantDefaultNotificationTemplateController::class, 'create'])
+            ->middleware('can:create,' . TenantDefaultNotificationTemplate::class)
+            ->name('tenant-default-notification-templates.create');
+        Route::post('tenant-default-notification-templates', [TenantDefaultNotificationTemplateController::class, 'store'])
+            ->middleware('can:create,' . TenantDefaultNotificationTemplate::class)
+            ->name('tenant-default-notification-templates.store');
+        Route::get('tenant-default-notification-templates/{tenantDefaultTemplate}/edit', [TenantDefaultNotificationTemplateController::class, 'edit'])
+            ->middleware('can:update,tenantDefaultTemplate')
+            ->name('tenant-default-notification-templates.edit');
+        Route::put('tenant-default-notification-templates/{tenantDefaultTemplate}', [TenantDefaultNotificationTemplateController::class, 'update'])
+            ->middleware('can:update,tenantDefaultTemplate')
+            ->name('tenant-default-notification-templates.update');
+    });
+
     // 🔸 Módulo: Localização (Países, Estados, Cidades)
     Route::middleware('module.access:locations')->group(function () {
         Route::resource('paises', PaisController::class)->except(['create', 'edit']);
@@ -253,6 +313,11 @@ Route::middleware(['auth'])->prefix('Platform')->name('Platform.')->group(functi
     Route::middleware('module.access:settings')->group(function () {
         Route::get('settings/', [SystemSettingsController::class, 'index'])->name('settings.index');
         Route::post('settings/update/general', [SystemSettingsController::class, 'updateGeneral'])->name('settings.update.general');
+        Route::get('settings/update/integrations', function () {
+            return redirect()
+                ->route('Platform.settings.index')
+                ->with('warning', 'Atualizacao de integracoes requer requisicao POST. Use o botao "Salvar Integracoes".');
+        })->name('settings.update.integrations.get');
         Route::post('settings/update/integrations', [SystemSettingsController::class, 'updateIntegrations'])->name('settings.update.integrations');
         Route::post('settings/update/logos', [SystemSettingsController::class, 'updateLogos'])->name('settings.update.logos');
         Route::post('settings/update/billing', [SystemSettingsController::class, 'updateBilling'])->name('settings.update.billing');

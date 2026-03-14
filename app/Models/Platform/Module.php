@@ -21,6 +21,8 @@ class Module
             ['key' => 'notifications_outbox', 'name' => 'Notificações', 'icon' => 'fa-bell'],
             ['key' => 'system_notifications', 'name' => 'Notificações do Sistema', 'icon' => 'fa-bell-slash'],
             ['key' => 'notification_templates', 'name' => 'Templates de Notificação', 'icon' => 'fa-envelope'],
+            ['key' => 'whatsapp_official_templates', 'name' => 'Templates WhatsApp Oficial', 'icon' => 'fa-comment-dots'],
+            ['key' => 'tenant_default_notification_templates', 'name' => 'Tenant Default Templates', 'icon' => 'fa-layer-group'],
             ['key' => 'locations', 'name' => 'Localização', 'icon' => 'fa-globe'],
             ['key' => 'users', 'name' => 'Usuários', 'icon' => 'fa-users'],
             ['key' => 'settings', 'name' => 'Configurações', 'icon' => 'fa-cog'],
