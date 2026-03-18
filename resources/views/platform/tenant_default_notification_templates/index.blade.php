@@ -1,25 +1,18 @@
 @extends('layouts.freedash.app')
-@section('title', 'Tenant Default Templates')
+@section('title', 'WhatsApp Nao Oficial - Templates Padrao Tenant')
 
 @section('content')
     <div class="page-breadcrumb">
         <div class="row">
             <div class="col-7 align-self-center">
-                <h4 class="page-title text-truncate text-dark font-weight-medium mb-1">Tenant Default Templates</h4>
+                <h4 class="page-title text-truncate text-dark font-weight-medium mb-1">WhatsApp Nao Oficial - Templates Padrao Tenant</h4>
                 <div class="d-flex align-items-center">
                     <nav aria-label="breadcrumb">
                         <ol class="breadcrumb m-0 p-0">
                             <li class="breadcrumb-item"><a href="{{ route('Platform.dashboard') }}" class="text-muted">Dashboard</a></li>
-                            <li class="breadcrumb-item text-muted active" aria-current="page">Tenant Default Templates</li>
+                            <li class="breadcrumb-item text-muted active" aria-current="page">Templates Padrao Tenant</li>
                         </ol>
                     </nav>
-                </div>
-            </div>
-            <div class="col-5 align-self-center">
-                <div class="customize-input float-end">
-                    <a href="{{ route('Platform.tenant-default-notification-templates.create') }}" class="btn btn-primary shadow-sm">
-                        <i class="fa fa-plus me-1"></i> Novo Template
-                    </a>
                 </div>
             </div>
         </div>
@@ -40,8 +33,16 @@
         @endif
 
         <div class="alert alert-info">
-            Baseline global do SaaS para templates operacionais do Tenant.
+            Baseline global para templates operacionais do Tenant no dominio WhatsApp Nao Oficial.
             Estes registros podem ser copiados para <code>tenant.notification_templates</code> no provisionamento.
+            Keys baseline: <code>appointment.pending_confirmation</code>, <code>appointment.confirmed</code>,
+            <code>appointment.canceled</code>, <code>appointment.expired</code>, <code>waitlist.joined</code>,
+            <code>waitlist.offered</code>.
+        </div>
+        <div class="alert alert-secondary">
+            Distincao visual:
+            <strong>Templates Internos Platform</strong> cobrem eventos SaaS da Platform;
+            <strong>Templates Padrao Tenant</strong> cobrem eventos clinicos operacionais do tenant.
         </div>
 
         <div class="card shadow-sm border-0 mb-3">
@@ -127,4 +128,3 @@
 
     @include('layouts.freedash.footer')
 @endsection
-

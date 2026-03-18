@@ -52,6 +52,11 @@ class WhatsAppOfficialTemplatePolicy
         return $this->hasPermission($user, 'send_to_meta');
     }
 
+    public function manageBindings(User $user): bool
+    {
+        return $this->hasPermission($user, 'edit_draft');
+    }
+
     private function hasPermission(User $user, string $ability): bool
     {
         $modules = $user->modules ?? [];

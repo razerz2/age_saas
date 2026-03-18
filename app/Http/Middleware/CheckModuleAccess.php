@@ -80,7 +80,24 @@ class CheckModuleAccess
             $userModules = [];
         }
         
-        if (!in_array($module, $userModules)) {
+        $moduleFallbacks = [
+            'whatsapp_official_tenant_templates' => ['whatsapp_official_templates'],
+        ];
+
+        $allowedModules = [$module];
+        if (array_key_exists($module, $moduleFallbacks)) {
+            $allowedModules = array_values(array_unique(array_merge($allowedModules, $moduleFallbacks[$module])));
+        }
+
+        $hasModuleAccess = false;
+        foreach ($allowedModules as $allowedModule) {
+            if (in_array($allowedModule, $userModules, true)) {
+                $hasModuleAccess = true;
+                break;
+            }
+        }
+
+        if (!$hasModuleAccess) {
             // Busca o nome do módulo com tratamento de erro
             try {
                 $moduleName = $moduleClass::getName($module) ?? ucfirst($module);
@@ -99,6 +116,7 @@ class CheckModuleAccess
                 'user_id' => $user->id,
                 'user_name' => $user->name ?? $user->name_full,
                 'module' => $module,
+                'allowed_modules' => $allowedModules,
                 'module_name' => $moduleName,
                 'user_modules' => $userModules,
                 'url' => $request->fullUrl()

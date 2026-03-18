@@ -140,17 +140,33 @@
         </li>
         @endif
 
-        {{-- Templates de Notificação --}}
-        @if(in_array('notification_templates', auth()->user()->modules ?? []))
+        {{-- Email --}}
+        @php
+            $platformModules = auth()->user()->modules ?? [];
+            if (is_string($platformModules)) {
+                $decodedModules = json_decode($platformModules, true);
+                $platformModules = is_array($decodedModules) ? $decodedModules : [];
+            }
+            if (!is_array($platformModules)) {
+                $platformModules = [];
+            }
+            $hasPlatformEmailTemplates = in_array('platform_email_templates', $platformModules, true);
+            $hasTenantEmailTemplates = in_array('tenant_email_templates', $platformModules, true);
+        @endphp
+        @if($hasPlatformEmailTemplates || $hasTenantEmailTemplates)
         <li class="sidebar-item">
             <a class="sidebar-link has-arrow" href="javascript:void(0)" aria-expanded="false">
-                <i class="fas fa-envelope"></i><span class="hide-menu"> Templates de Notificação </span>
+                <i class="fas fa-envelope"></i><span class="hide-menu"> Email </span>
             </a>
             <ul aria-expanded="false" class="collapse first-level base-level-line">
-                <li class="sidebar-item"><a href="{{ route('Platform.notification-templates.index') }}" class="sidebar-link">
-                    <span class="hide-menu"><i class="fas fa-list-alt"></i> Templates</span></a></li>
-                <li class="sidebar-item"><a href="{{ route('Platform.email-layouts.index') }}" class="sidebar-link">
-                    <span class="hide-menu"><i class="fas fa-palette"></i> Layouts de Email</span></a></li>
+                @if($hasPlatformEmailTemplates)
+                <li class="sidebar-item"><a href="{{ route('Platform.platform-email-templates.index') }}" class="sidebar-link">
+                    <span class="hide-menu"><i class="fas fa-list-alt"></i> Templates de Email Platform</span></a></li>
+                @endif
+                @if($hasTenantEmailTemplates)
+                <li class="sidebar-item"><a href="{{ route('Platform.tenant-email-templates.index') }}" class="sidebar-link">
+                    <span class="hide-menu"><i class="fas fa-building"></i> Templates de Email Tenant</span></a></li>
+                @endif
             </ul>
         </li>
         @endif
@@ -165,22 +181,51 @@
             if (!is_array($platformModules)) {
                 $platformModules = [];
             }
-            $hasPlatformWhatsAppTemplates = in_array('whatsapp_official_templates', $platformModules, true);
+            $hasPlatformWhatsAppOfficialTemplates = in_array('whatsapp_official_templates', $platformModules, true);
+            $hasOfficialTenantTemplates = in_array('whatsapp_official_tenant_templates', $platformModules, true)
+                || $hasPlatformWhatsAppOfficialTemplates;
+            $hasPlatformWhatsAppUnofficialTemplates = in_array('whatsapp_unofficial_templates', $platformModules, true);
             $hasTenantDefaultTemplates = in_array('tenant_default_notification_templates', $platformModules, true);
         @endphp
-        @if($hasPlatformWhatsAppTemplates || $hasTenantDefaultTemplates)
+        @if($hasPlatformWhatsAppOfficialTemplates || $hasOfficialTenantTemplates)
         <li class="sidebar-item">
             <a class="sidebar-link has-arrow" href="javascript:void(0)" aria-expanded="false">
-                <i class="fas fa-comment-dots"></i><span class="hide-menu"> WhatsApp </span>
+                <i class="fas fa-check-circle"></i><span class="hide-menu"> WhatsApp Oficial </span>
             </a>
             <ul aria-expanded="false" class="collapse first-level base-level-line">
-                @if($hasPlatformWhatsAppTemplates)
+                @if($hasPlatformWhatsAppOfficialTemplates)
                 <li class="sidebar-item"><a href="{{ route('Platform.whatsapp-official-templates.index') }}" class="sidebar-link">
-                    <span class="hide-menu"><i class="fas fa-list-alt"></i> Platform Templates</span></a></li>
+                    <span class="hide-menu"><i class="fas fa-list-alt"></i> Templates Oficiais Platform</span></a></li>
+                @if(Route::has('Platform.whatsapp-official-templates.bindings.index'))
+                <li class="sidebar-item"><a href="{{ route('Platform.whatsapp-official-templates.bindings.index') }}" class="sidebar-link">
+                    <span class="hide-menu"><i class="fas fa-link"></i> Vinculos Oficiais Platform</span></a></li>
+                @endif
+                @endif
+                @if($hasOfficialTenantTemplates && Route::has('Platform.whatsapp-official-tenant-templates.index'))
+                <li class="sidebar-item"><a href="{{ route('Platform.whatsapp-official-tenant-templates.index') }}" class="sidebar-link">
+                    <span class="hide-menu"><i class="fas fa-building"></i> Templates Oficiais Tenant</span></a></li>
+                @if(Route::has('Platform.whatsapp-official-tenant-templates.bindings.index'))
+                <li class="sidebar-item"><a href="{{ route('Platform.whatsapp-official-tenant-templates.bindings.index') }}" class="sidebar-link">
+                    <span class="hide-menu"><i class="fas fa-link"></i> Vinculos Oficiais Tenant</span></a></li>
+                @endif
+                @endif
+            </ul>
+        </li>
+        @endif
+
+        @if($hasPlatformWhatsAppUnofficialTemplates || $hasTenantDefaultTemplates)
+        <li class="sidebar-item">
+            <a class="sidebar-link has-arrow" href="javascript:void(0)" aria-expanded="false">
+                <i class="fas fa-comment-dots"></i><span class="hide-menu"> WhatsApp Nao Oficial </span>
+            </a>
+            <ul aria-expanded="false" class="collapse first-level base-level-line">
+                @if($hasPlatformWhatsAppUnofficialTemplates)
+                <li class="sidebar-item"><a href="{{ route('Platform.whatsapp-unofficial-templates.index') }}" class="sidebar-link">
+                    <span class="hide-menu"><i class="fas fa-database"></i> Templates Internos Platform</span></a></li>
                 @endif
                 @if($hasTenantDefaultTemplates)
                 <li class="sidebar-item"><a href="{{ route('Platform.tenant-default-notification-templates.index') }}" class="sidebar-link">
-                    <span class="hide-menu"><i class="fas fa-layer-group"></i> Tenant Default Templates</span></a></li>
+                    <span class="hide-menu"><i class="fas fa-building"></i> Templates Padrao Tenant</span></a></li>
                 @endif
             </ul>
         </li>

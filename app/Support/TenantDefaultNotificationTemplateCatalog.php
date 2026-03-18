@@ -28,6 +28,7 @@ class TenantDefaultNotificationTemplateCatalog
                     'links.appointment_confirm',
                     'links.appointment_cancel',
                 ],
+                'is_active' => true,
             ],
             [
                 'channel' => 'whatsapp',
@@ -46,6 +47,7 @@ class TenantDefaultNotificationTemplateCatalog
                     'appointment.mode',
                     'links.appointment_details',
                 ],
+                'is_active' => true,
             ],
             [
                 'channel' => 'whatsapp',
@@ -62,6 +64,7 @@ class TenantDefaultNotificationTemplateCatalog
                     'appointment.time',
                     'professional.name',
                 ],
+                'is_active' => true,
             ],
             [
                 'channel' => 'whatsapp',
@@ -78,6 +81,7 @@ class TenantDefaultNotificationTemplateCatalog
                     'appointment.time',
                     'professional.name',
                 ],
+                'is_active' => true,
             ],
             [
                 'channel' => 'whatsapp',
@@ -94,6 +98,7 @@ class TenantDefaultNotificationTemplateCatalog
                     'appointment.time',
                     'professional.name',
                 ],
+                'is_active' => true,
             ],
             [
                 'channel' => 'whatsapp',
@@ -112,8 +117,8 @@ class TenantDefaultNotificationTemplateCatalog
                     'waitlist.offer_expires_at',
                     'links.waitlist_offer',
                 ],
+                'is_active' => true,
             ],
         ];
     }
 }
-

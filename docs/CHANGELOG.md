@@ -1,5 +1,17 @@
 # CHANGELOG da Documentacao
 
+2026-03-14 (WhatsApp)
+- Consolidada a documentacao dos modulos de WhatsApp apos a separacao Oficial vs Nao Oficial:
+  - `whatsapp-official-templates` (catalogo global + fluxo Meta)
+  - `whatsapp-official-tenant-templates` (baseline oficial tenant: eventos clinicos + fluxo Meta)
+  - `whatsapp-unofficial-templates` (catalogo interno nao oficial + teste manual/preview)
+  - `tenant-default-notification-templates` (baseline nao oficial tenant + provisionamento)
+- Oficial Tenant: documentados os fluxos de:
+  - lookup por nome canonico remoto (fallback quando nome local diverge)
+  - envio usando schema remoto aprovado (placeholders efetivos)
+  - mapeamento semantico por `key/slot` para evitar troca de significado nos placeholders
+- Troubleshooting: documentados erros Meta `132001` e `132000` e o caso de envio com conteudo trocado (mapeamento semantico).
+
 2026-03-14
 - Novo modulo Platform `tenant-default-notification-templates` para baseline operacional de Tenant (chaves `appointment.*` e `waitlist.*`) em tabela separada `tenant_default_notification_templates`.
 - Provisionamento de tenant atualizado para copiar baseline ativo para `tenant.notification_templates` com idempotencia.
@@ -7,7 +19,7 @@
   - `php artisan tenants:seed-default-notification-templates` (dry-run)
   - `php artisan tenants:seed-default-notification-templates --tenant=<slug|uuid> --apply`
   - `php artisan tenants:seed-default-notification-templates --all-tenants --apply [--overwrite]`
-- Platform `whatsapp-official-templates`: removido seed de chaves clinicas (`appointment.*`, `waitlist.*`) do baseline.
+- Platform `whatsapp-official-templates`: documentado baseline SaaS (Platform) e baseline clinico (Tenant) no catalogo global, com navegacao separada.
 - Documentado boundary de dominio: templates operacionais de clinica permanecem no Tenant (`config/notification_templates.php` + `notification_templates` tenant).
 - Adicionada orientacao de limpeza legada via comando administrativo:
   - `php artisan whatsapp-official-templates:clean-clinical` (dry-run)

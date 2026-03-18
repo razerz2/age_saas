@@ -12,7 +12,15 @@
 
 <div class="alert alert-info">
     Este modulo define o baseline padrao de templates operacionais do Tenant.
-    Ele e separado do modulo de Templates WhatsApp Oficial da Platform.
+    Ele pertence ao dominio WhatsApp Nao Oficial e e separado do modulo de Templates WhatsApp Oficial da Platform.
+</div>
+<div class="alert alert-secondary">
+    Padrao recomendado de variaveis Tenant: <code>patient.name</code>, <code>clinic.name</code>,
+    <code>appointment.date</code>, <code>appointment.time</code>, <code>professional.name</code>,
+    <code>links.appointment_confirm</code>, <code>links.appointment_cancel</code>, <code>links.waitlist_offer</code>.
+</div>
+<div class="alert alert-light border">
+    Observacao: estes templates sao baseline operacional para provisionamento tenant e nao dependem de cadastro na Meta.
 </div>
 
 <div class="row">
@@ -100,4 +108,3 @@
     })();
 </script>
 @endpush
-

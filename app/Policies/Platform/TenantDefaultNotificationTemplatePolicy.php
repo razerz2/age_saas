@@ -19,7 +19,7 @@ class TenantDefaultNotificationTemplatePolicy
 
     public function create(User $user): bool
     {
-        return $this->hasPermission($user, 'create');
+        return false;
     }
 
     public function update(User $user, TenantDefaultNotificationTemplate $template): bool
@@ -46,4 +46,3 @@ class TenantDefaultNotificationTemplatePolicy
         return in_array('tenant_default_notification_templates.' . $ability, $modules, true);
     }
 }
-

@@ -14,6 +14,7 @@ class NotificationDispatcher
     public const CHANNELS = ['email', 'whatsapp'];
 
     public function __construct(
+        private readonly WhatsAppUnofficialTemplateResolutionService $whatsAppUnofficialTemplateResolutionService,
         private readonly NotificationTemplateService $templateService,
         private readonly NotificationContextBuilder $contextBuilder,
         private readonly TemplateRenderer $renderer,
@@ -86,7 +87,10 @@ class NotificationDispatcher
      *     message:string,
      *     template_source:string,
      *     is_override:bool,
-     *     unknown_placeholders:list<string>
+     *     unknown_placeholders:list<string>,
+     *     template_resolution_scope:?string,
+     *     used_platform_fallback:bool,
+     *     template_fallback_reason:?string
      * }>
      */
     public function buildMessageForAppointment(Appointment $appointment, string $key, ?array $channels = null, array $meta = []): array
@@ -121,6 +125,9 @@ class NotificationDispatcher
                     'channel' => $channel,
                     'key' => $key,
                     'template_source' => $payload['template_source'],
+                    'template_resolution_scope' => $payload['template_resolution_scope'],
+                    'used_platform_fallback' => $payload['used_platform_fallback'],
+                    'template_fallback_reason' => $payload['template_fallback_reason'],
                     'subject_sha256' => $payload['subject'] !== null ? hash('sha256', $payload['subject']) : null,
                     'subject_length' => $payload['subject'] !== null ? strlen($payload['subject']) : 0,
                     'message_sha256' => hash('sha256', $payload['message']),
@@ -154,14 +161,53 @@ class NotificationDispatcher
      *     message:string,
      *     template_source:string,
      *     is_override:bool,
-     *     unknown_placeholders:list<string>
+     *     unknown_placeholders:list<string>,
+     *     template_resolution_scope:?string,
+     *     used_platform_fallback:bool,
+     *     template_fallback_reason:?string
      * }
      */
     private function buildChannelPayload(string $tenantId, string $channel, string $key, array $context, array $baseMeta): array
     {
-        $template = $this->templateService->getEffectiveTemplate($tenantId, $channel, $key);
-        $subjectTemplate = $channel === 'email' ? (string) ($template['subject'] ?? '') : '';
-        $contentTemplate = (string) $template['content'];
+        $template = null;
+        $subjectTemplate = '';
+        $contentTemplate = '';
+        $templateSource = 'default';
+        $isOverride = false;
+        $resolutionScope = null;
+        $usedPlatformFallback = false;
+        $templateFallbackReason = null;
+
+        if ($channel === 'whatsapp') {
+            $resolutionScope = $this->resolveWhatsAppTemplateScope($baseMeta);
+            $resolved = $this->whatsAppUnofficialTemplateResolutionService->resolve($tenantId, $key, $resolutionScope);
+
+            if ($resolved !== null) {
+                $contentTemplate = (string) ($resolved['content'] ?? '');
+                $templateSource = trim((string) ($resolved['source'] ?? 'tenant_custom'));
+                if ($templateSource === '') {
+                    $templateSource = 'tenant_custom';
+                }
+                $usedPlatformFallback = (bool) ($resolved['used_platform_fallback'] ?? false);
+                $isOverride = $templateSource === 'tenant_custom';
+            } else {
+                $templateFallbackReason = $resolutionScope === WhatsAppUnofficialTemplateResolutionService::SCOPE_TENANT_THEN_PLATFORM
+                    ? 'resolver_not_found_tenant_or_platform'
+                    : 'resolver_not_found_tenant';
+            }
+        }
+
+        if ($contentTemplate === '') {
+            $template = $this->templateService->getEffectiveTemplate($tenantId, $channel, $key);
+            $subjectTemplate = $channel === 'email' ? (string) ($template['subject'] ?? '') : '';
+            $contentTemplate = (string) $template['content'];
+            $isOverride = (bool) ($template['is_override'] ?? false);
+            $templateSource = $isOverride ? 'override' : 'default';
+
+            if ($channel === 'whatsapp' && $templateFallbackReason === null) {
+                $templateFallbackReason = 'resolver_not_used';
+            }
+        }
 
         $placeholders = array_merge(
             $this->renderer->extractPlaceholders($contentTemplate),
@@ -190,16 +236,17 @@ class NotificationDispatcher
             );
         }
 
-        $isOverride = (bool) ($template['is_override'] ?? false);
-
         return [
             'channel' => $channel,
             'key' => $key,
             'subject' => $subject,
             'message' => $message,
-            'template_source' => $isOverride ? 'override' : 'default',
+            'template_source' => $templateSource,
             'is_override' => $isOverride,
             'unknown_placeholders' => $unknownPlaceholders,
+            'template_resolution_scope' => $resolutionScope,
+            'used_platform_fallback' => $usedPlatformFallback,
+            'template_fallback_reason' => $templateFallbackReason,
         ];
     }
 
@@ -263,6 +310,10 @@ class NotificationDispatcher
             'event',
             'key',
             'template_source',
+            'template_resolution_scope',
+            'allow_platform_fallback',
+            'used_platform_fallback',
+            'template_fallback_reason',
             'run_id',
         ];
 
@@ -314,7 +365,10 @@ class NotificationDispatcher
      *     message:string,
      *     template_source:string,
      *     is_override:bool,
-     *     unknown_placeholders:list<string>
+     *     unknown_placeholders:list<string>,
+     *     template_resolution_scope:?string,
+     *     used_platform_fallback:bool,
+     *     template_fallback_reason:?string
      * }  $payload
      */
     private function deliverChannel(string $tenantId, array $payload, array $context, array $baseMeta): void
@@ -345,6 +399,9 @@ class NotificationDispatcher
                 'template_source' => $payload['template_source'],
                 'is_override' => $payload['is_override'],
                 'unknown_placeholders' => $payload['unknown_placeholders'],
+                'template_resolution_scope' => $payload['template_resolution_scope'],
+                'used_platform_fallback' => $payload['used_platform_fallback'],
+                'template_fallback_reason' => $payload['template_fallback_reason'],
             ]));
 
             return;
@@ -409,5 +466,20 @@ class NotificationDispatcher
         }
 
         return filter_var((string) env('NOTIFICATION_LOG_BODY', 'false'), FILTER_VALIDATE_BOOLEAN);
+    }
+
+    private function resolveWhatsAppTemplateScope(array $meta): string
+    {
+        $scope = strtolower(trim((string) ($meta['template_resolution_scope'] ?? '')));
+        if ($scope === WhatsAppUnofficialTemplateResolutionService::SCOPE_TENANT_THEN_PLATFORM) {
+            return WhatsAppUnofficialTemplateResolutionService::SCOPE_TENANT_THEN_PLATFORM;
+        }
+
+        $allowFallback = $meta['allow_platform_fallback'] ?? false;
+        if (filter_var($allowFallback, FILTER_VALIDATE_BOOLEAN)) {
+            return WhatsAppUnofficialTemplateResolutionService::SCOPE_TENANT_THEN_PLATFORM;
+        }
+
+        return WhatsAppUnofficialTemplateResolutionService::SCOPE_TENANT_ONLY;
     }
 }

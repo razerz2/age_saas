@@ -11,6 +11,8 @@
 - notifications-outbox
 - notification-templates
 - whatsapp-official-templates
+- whatsapp-official-tenant-templates
+- whatsapp-unofficial-templates
 - tenant-default-notification-templates
 - locations
 - users

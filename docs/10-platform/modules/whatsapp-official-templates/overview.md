@@ -11,9 +11,23 @@ Modulo da Platform para:
 
 Escopo de dominio:
 
-- este modulo nao deve conter templates operacionais de clinica (`appointment.*`, `waitlist.*`);
-- notificacoes operacionais continuam no Tenant (catalogo `config/notification_templates.php` + overrides na tabela tenant `notification_templates`);
-- o baseline operacional global fica no modulo Platform `tenant-default-notification-templates` (tabela `tenant_default_notification_templates`), sem misturar com templates oficiais Meta.
+- este modulo e o catalogo global oficial da Meta (`whatsapp_official_templates`);
+- inclui templates oficiais de dominio Platform (SaaS) e templates oficiais de dominio Tenant (clinico);
+- notificacoes nao oficiais continuam separadas no modulo `tenant-default-notification-templates`.
+
+Navegacao Platform:
+
+- `WhatsApp Oficial`:
+  - `Templates Oficiais Platform`
+  - `Templates Oficiais Tenant`
+- `WhatsApp Nao Oficial`:
+  - `Templates Internos Platform`
+  - `Templates Padrao Tenant`
+
+Observacao de arquitetura:
+
+- `Templates Oficiais Platform` e `Templates Oficiais Tenant` sao navegacoes/CRUDs separados sobre o mesmo catalogo global (`whatsapp_official_templates`);
+- a separacao e por dominio (keys SaaS vs keys clinicas) e por guard-rails de UX, nao por duplicacao de dados.
 
 Baseline SaaS (seeder Platform):
 
@@ -26,6 +40,27 @@ Baseline SaaS (seeder Platform):
 - `subscription.created`
 - `subscription.recovery_started`
 - `credentials.resent`
+
+Baseline Tenant oficial (seeder Platform):
+
+- `appointment.pending_confirmation`
+- `appointment.confirmed`
+- `appointment.canceled`
+- `appointment.expired`
+- `waitlist.joined`
+- `waitlist.offered`
+
+Padrao de variaveis tenant oficial:
+
+- `patient_name`, `clinic_name`, `appointment_date`, `appointment_time`, `professional_name`
+- `appointment_confirm_link`, `appointment_cancel_link`, `appointment_details_link`
+- `waitlist_offer_expires_at`, `waitlist_offer_link`
+
+Observacao:
+
+- os templates tenant oficiais entram no catalogo global;
+- o modulo `whatsapp-official-tenant-templates` e uma visao/CRUD separada do dominio Tenant (clinico) dentro do mesmo catalogo global;
+- neste momento, nao ha configuracao por tenant (mapeamento tenant -> template) documentada como fonte de verdade: a separacao e por dominio/keys.
 
 Integracao runtime Platform:
 

@@ -1,0 +1,78 @@
+<?php
+
+namespace App\Support;
+
+class WhatsAppOfficialTenantEventCatalog
+{
+    /**
+     * @return array<int, array{key: string, label: string, domain: string}>
+     */
+    public static function all(): array
+    {
+        return [
+            ['key' => 'appointment.pending_confirmation', 'label' => 'Agendamento pendente de confirmacao', 'domain' => 'tenant'],
+            ['key' => 'appointment.confirmed', 'label' => 'Agendamento confirmado', 'domain' => 'tenant'],
+            ['key' => 'appointment.canceled', 'label' => 'Agendamento cancelado', 'domain' => 'tenant'],
+            ['key' => 'appointment.expired', 'label' => 'Agendamento expirado', 'domain' => 'tenant'],
+            ['key' => 'waitlist.joined', 'label' => 'Entrada na fila de espera', 'domain' => 'tenant'],
+            ['key' => 'waitlist.offered', 'label' => 'Oferta de vaga na fila de espera', 'domain' => 'tenant'],
+
+            ['key' => 'invoice.created', 'label' => 'Fatura criada', 'domain' => 'platform'],
+            ['key' => 'invoice.upcoming_due', 'label' => 'Lembrete de fatura a vencer', 'domain' => 'platform'],
+            ['key' => 'invoice.overdue', 'label' => 'Fatura vencida', 'domain' => 'platform'],
+            ['key' => 'tenant.suspended_due_to_overdue', 'label' => 'Tenant suspenso por inadimplencia', 'domain' => 'platform'],
+            ['key' => 'tenant.welcome', 'label' => 'Boas-vindas ao tenant', 'domain' => 'platform'],
+            ['key' => 'subscription.created', 'label' => 'Assinatura criada', 'domain' => 'platform'],
+            ['key' => 'subscription.recovery_started', 'label' => 'Recovery de assinatura iniciado', 'domain' => 'platform'],
+            ['key' => 'credentials.resent', 'label' => 'Reenvio de credenciais', 'domain' => 'platform'],
+            ['key' => 'security.2fa_code', 'label' => 'Codigo de verificacao (2FA)', 'domain' => 'platform'],
+        ];
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    public static function keys(): array
+    {
+        return array_values(array_map(
+            static fn (array $item): string => (string) $item['key'],
+            self::all()
+        ));
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    public static function labelsByKey(): array
+    {
+        $labels = [];
+        foreach (self::all() as $item) {
+            $labels[(string) $item['key']] = (string) $item['label'];
+        }
+
+        return $labels;
+    }
+
+    /**
+     * @return array<string, array<int, array{key: string, label: string, domain: string}>>
+     */
+    public static function groupedByDomain(): array
+    {
+        $groups = [
+            'tenant' => [],
+            'platform' => [],
+        ];
+
+        foreach (self::all() as $item) {
+            $domain = (string) ($item['domain'] ?? 'platform');
+            if (!array_key_exists($domain, $groups)) {
+                $groups[$domain] = [];
+            }
+
+            $groups[$domain][] = $item;
+        }
+
+        return $groups;
+    }
+}
+

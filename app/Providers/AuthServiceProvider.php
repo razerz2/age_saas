@@ -24,7 +24,11 @@ class AuthServiceProvider extends ServiceProvider
         \App\Models\Platform\PreTenant::class => \App\Policies\Platform\PreTenantPolicy::class,
         \App\Models\Platform\ApiTenantToken::class => \App\Policies\Platform\ApiTenantTokenPolicy::class,
         \App\Models\Platform\WhatsAppOfficialTemplate::class => \App\Policies\Platform\WhatsAppOfficialTemplatePolicy::class,
+        \App\Models\Platform\WhatsAppOfficialTenantTemplate::class => \App\Policies\Platform\WhatsAppOfficialTenantTemplatePolicy::class,
+        \App\Models\Platform\WhatsAppUnofficialTemplate::class => \App\Policies\Platform\WhatsAppUnofficialTemplatePolicy::class,
         \App\Models\Platform\TenantDefaultNotificationTemplate::class => \App\Policies\Platform\TenantDefaultNotificationTemplatePolicy::class,
+        \App\Models\Platform\PlatformEmailTemplate::class => \App\Policies\Platform\PlatformEmailTemplatePolicy::class,
+        \App\Models\Platform\TenantEmailTemplate::class => \App\Policies\Platform\TenantEmailTemplatePolicy::class,
     ];
 
     /**

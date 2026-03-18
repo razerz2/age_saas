@@ -2,11 +2,12 @@
 
 Menu (Platform):
 
-- `WhatsApp`
-  - `Platform Templates` (modulo oficial Meta)
-  - `Tenant Default Templates` (baseline operacional de tenant)
+- `WhatsApp Oficial`
+  - `Templates Oficiais Platform` (modulo oficial Meta)
+- `WhatsApp Nao Oficial`
+  - `Templates Internos Platform`
+  - `Templates Padrao Tenant` (baseline operacional de tenant)
 
 Observacao:
 
-- telas separadas para evitar mistura de dominio entre templates SaaS da Platform e templates operacionais do Tenant.
-
+- telas separadas para evitar mistura entre dominio Oficial e Nao Oficial.

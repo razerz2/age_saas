@@ -19,13 +19,21 @@ use App\Http\Controllers\Platform\SystemSettingsController;
 use App\Http\Controllers\Platform\KioskMonitorController;
 use App\Http\Controllers\Platform\PlanAccessManagerController;
 use App\Http\Controllers\Platform\PreTenantController;
-use App\Http\Controllers\Platform\NotificationTemplateController;
+use App\Http\Controllers\Platform\PlatformEmailTemplateController;
+use App\Http\Controllers\Platform\TenantEmailTemplateController;
+use App\Http\Controllers\Platform\WhatsAppUnofficialTemplateController;
 use App\Http\Controllers\Platform\WhatsAppOfficialTemplateController;
+use App\Http\Controllers\Platform\WhatsAppOfficialTemplateBindingController;
+use App\Http\Controllers\Platform\WhatsAppOfficialTenantTemplateController;
 use App\Http\Controllers\Platform\TenantDefaultNotificationTemplateController;
 use App\Http\Controllers\Platform\ApiTenantTokenController;
 use App\Http\Controllers\Platform\ClinicNetworkController;
 use App\Models\Platform\SystemNotification;
+use App\Models\Platform\PlatformEmailTemplate;
+use App\Models\Platform\TenantEmailTemplate;
+use App\Models\Platform\WhatsAppUnofficialTemplate;
 use App\Models\Platform\WhatsAppOfficialTemplate;
+use App\Models\Platform\WhatsAppOfficialTenantTemplate;
 use App\Models\Platform\TenantDefaultNotificationTemplate;
 use App\Http\Controllers\Platform\WhatsAppController;
 use App\Http\Controllers\Tenant\Integrations\GoogleCalendarController;
@@ -211,24 +219,70 @@ Route::middleware(['auth'])->prefix('Platform')->name('Platform.')->group(functi
             ->whereUuid('system_notification');
     });
 
-    // 🔸 Módulo: Templates de Notificação
+    // 🔸 Módulo: Templates de Email Platform
+    Route::middleware('module.access:platform_email_templates')->group(function () {
+        Route::get('platform-email-templates', [PlatformEmailTemplateController::class, 'index'])
+            ->middleware('can:viewAny,' . PlatformEmailTemplate::class)
+            ->name('platform-email-templates.index');
+        Route::get('platform-email-templates/{platformEmailTemplate}', [PlatformEmailTemplateController::class, 'show'])
+            ->middleware('can:view,platformEmailTemplate')
+            ->whereUuid('platformEmailTemplate')
+            ->name('platform-email-templates.show');
+        Route::get('platform-email-templates/{platformEmailTemplate}/edit', [PlatformEmailTemplateController::class, 'edit'])
+            ->middleware('can:update,platformEmailTemplate')
+            ->whereUuid('platformEmailTemplate')
+            ->name('platform-email-templates.edit');
+        Route::put('platform-email-templates/{platformEmailTemplate}', [PlatformEmailTemplateController::class, 'update'])
+            ->middleware('can:update,platformEmailTemplate')
+            ->whereUuid('platformEmailTemplate')
+            ->name('platform-email-templates.update');
+        Route::post('platform-email-templates/{platformEmailTemplate}/restore', [PlatformEmailTemplateController::class, 'restore'])
+            ->middleware('can:restore,platformEmailTemplate')
+            ->whereUuid('platformEmailTemplate')
+            ->name('platform-email-templates.restore');
+        Route::post('platform-email-templates/{platformEmailTemplate}/toggle', [PlatformEmailTemplateController::class, 'toggle'])
+            ->middleware('can:toggle,platformEmailTemplate')
+            ->whereUuid('platformEmailTemplate')
+            ->name('platform-email-templates.toggle');
+        Route::post('platform-email-templates/{platformEmailTemplate}/test-send', [PlatformEmailTemplateController::class, 'testSend'])
+            ->middleware('can:update,platformEmailTemplate')
+            ->whereUuid('platformEmailTemplate')
+            ->name('platform-email-templates.test-send');
+    });
+
+    // 🔸 Módulo: Templates de Email Tenant (baseline)
+    Route::middleware('module.access:tenant_email_templates')->group(function () {
+        Route::get('tenant-email-templates', [TenantEmailTemplateController::class, 'index'])
+            ->middleware('can:viewAny,' . TenantEmailTemplate::class)
+            ->name('tenant-email-templates.index');
+        Route::get('tenant-email-templates/{tenantEmailTemplate}', [TenantEmailTemplateController::class, 'show'])
+            ->middleware('can:view,tenantEmailTemplate')
+            ->whereUuid('tenantEmailTemplate')
+            ->name('tenant-email-templates.show');
+        Route::get('tenant-email-templates/{tenantEmailTemplate}/edit', [TenantEmailTemplateController::class, 'edit'])
+            ->middleware('can:update,tenantEmailTemplate')
+            ->whereUuid('tenantEmailTemplate')
+            ->name('tenant-email-templates.edit');
+        Route::put('tenant-email-templates/{tenantEmailTemplate}', [TenantEmailTemplateController::class, 'update'])
+            ->middleware('can:update,tenantEmailTemplate')
+            ->whereUuid('tenantEmailTemplate')
+            ->name('tenant-email-templates.update');
+        Route::post('tenant-email-templates/{tenantEmailTemplate}/restore', [TenantEmailTemplateController::class, 'restore'])
+            ->middleware('can:restore,tenantEmailTemplate')
+            ->whereUuid('tenantEmailTemplate')
+            ->name('tenant-email-templates.restore');
+        Route::post('tenant-email-templates/{tenantEmailTemplate}/toggle', [TenantEmailTemplateController::class, 'toggle'])
+            ->middleware('can:toggle,tenantEmailTemplate')
+            ->whereUuid('tenantEmailTemplate')
+            ->name('tenant-email-templates.toggle');
+        Route::post('tenant-email-templates/{tenantEmailTemplate}/test-send', [TenantEmailTemplateController::class, 'testSend'])
+            ->middleware('can:update,tenantEmailTemplate')
+            ->whereUuid('tenantEmailTemplate')
+            ->name('tenant-email-templates.test-send');
+    });
+
+    // 🔸 Módulo: Layouts de Email
     Route::middleware('module.access:notification_templates')->group(function () {
-        Route::resource('notification-templates', NotificationTemplateController::class)
-            ->except(['show', 'create', 'store']);
-        
-        Route::post('notification-templates/{notificationTemplate}/restore', 
-            [NotificationTemplateController::class, 'restore'])
-            ->name('notification-templates.restore');
-        
-        Route::post('notification-templates/{notificationTemplate}/test', 
-            [NotificationTemplateController::class, 'testSend'])
-            ->name('notification-templates.test');
-        
-        Route::post('notification-templates/{notificationTemplate}/toggle', 
-            [NotificationTemplateController::class, 'toggle'])
-            ->name('notification-templates.toggle');
-        
-        // Layouts de Email
         Route::get('email-layouts', [\App\Http\Controllers\Platform\EmailLayoutController::class, 'index'])
             ->name('email-layouts.index');
         Route::get('email-layouts/{emailLayout}/edit', [\App\Http\Controllers\Platform\EmailLayoutController::class, 'edit'])
@@ -244,6 +298,12 @@ Route::middleware(['auth'])->prefix('Platform')->name('Platform.')->group(functi
         Route::get('whatsapp-official-templates', [WhatsAppOfficialTemplateController::class, 'index'])
             ->middleware('can:viewAny,' . WhatsAppOfficialTemplate::class)
             ->name('whatsapp-official-templates.index');
+        Route::get('whatsapp-official-templates/bindings', [WhatsAppOfficialTemplateBindingController::class, 'platformIndex'])
+            ->middleware('can:manageBindings,' . WhatsAppOfficialTemplate::class)
+            ->name('whatsapp-official-templates.bindings.index');
+        Route::post('whatsapp-official-templates/bindings', [WhatsAppOfficialTemplateBindingController::class, 'upsertPlatform'])
+            ->middleware('can:manageBindings,' . WhatsAppOfficialTemplate::class)
+            ->name('whatsapp-official-templates.bindings.upsert');
         Route::get('whatsapp-official-templates/create', [WhatsAppOfficialTemplateController::class, 'create'])
             ->middleware('can:create,' . WhatsAppOfficialTemplate::class)
             ->name('whatsapp-official-templates.create');
@@ -276,22 +336,89 @@ Route::middleware(['auth'])->prefix('Platform')->name('Platform.')->group(functi
             ->name('whatsapp-official-templates.test-send');
     });
 
+    // 🔸 Módulo: Templates WhatsApp Oficial Tenant (baseline oficial tenant)
+    Route::middleware(['module.access:whatsapp_official_tenant_templates', 'whatsapp.official.provider'])->group(function () {
+        Route::get('whatsapp-official-tenant-templates', [WhatsAppOfficialTenantTemplateController::class, 'index'])
+            ->middleware('can:viewAny,' . WhatsAppOfficialTenantTemplate::class)
+            ->name('whatsapp-official-tenant-templates.index');
+        Route::get('whatsapp-official-tenant-templates/bindings', [WhatsAppOfficialTemplateBindingController::class, 'tenantIndex'])
+            ->middleware('can:manageBindings,' . WhatsAppOfficialTenantTemplate::class)
+            ->name('whatsapp-official-tenant-templates.bindings.index');
+        Route::post('whatsapp-official-tenant-templates/bindings', [WhatsAppOfficialTemplateBindingController::class, 'upsertTenant'])
+            ->middleware('can:manageBindings,' . WhatsAppOfficialTenantTemplate::class)
+            ->name('whatsapp-official-tenant-templates.bindings.upsert');
+        Route::get('whatsapp-official-tenant-templates/create', [WhatsAppOfficialTenantTemplateController::class, 'create'])
+            ->middleware('can:create,' . WhatsAppOfficialTenantTemplate::class)
+            ->name('whatsapp-official-tenant-templates.create');
+        Route::post('whatsapp-official-tenant-templates', [WhatsAppOfficialTenantTemplateController::class, 'store'])
+            ->middleware('can:create,' . WhatsAppOfficialTenantTemplate::class)
+            ->name('whatsapp-official-tenant-templates.store');
+        Route::get('whatsapp-official-tenant-templates/{whatsappOfficialTemplate}', [WhatsAppOfficialTenantTemplateController::class, 'show'])
+            ->middleware('can:viewAny,' . WhatsAppOfficialTenantTemplate::class)
+            ->name('whatsapp-official-tenant-templates.show');
+        Route::get('whatsapp-official-tenant-templates/{whatsappOfficialTemplate}/edit', [WhatsAppOfficialTenantTemplateController::class, 'edit'])
+            ->middleware('can:update,' . WhatsAppOfficialTenantTemplate::class)
+            ->name('whatsapp-official-tenant-templates.edit');
+        Route::put('whatsapp-official-tenant-templates/{whatsappOfficialTemplate}', [WhatsAppOfficialTenantTemplateController::class, 'update'])
+            ->middleware('can:update,' . WhatsAppOfficialTenantTemplate::class)
+            ->name('whatsapp-official-tenant-templates.update');
+        Route::post('whatsapp-official-tenant-templates/{whatsappOfficialTemplate}/submit', [WhatsAppOfficialTenantTemplateController::class, 'submitToMeta'])
+            ->middleware('can:submitToMeta,' . WhatsAppOfficialTenantTemplate::class)
+            ->name('whatsapp-official-tenant-templates.submit');
+        Route::post('whatsapp-official-tenant-templates/{whatsappOfficialTemplate}/republish', [WhatsAppOfficialTenantTemplateController::class, 'republishToMeta'])
+            ->middleware('can:submitToMeta,' . WhatsAppOfficialTenantTemplate::class)
+            ->name('whatsapp-official-tenant-templates.republish');
+        Route::post('whatsapp-official-tenant-templates/{whatsappOfficialTemplate}/sync', [WhatsAppOfficialTenantTemplateController::class, 'syncStatus'])
+            ->middleware('can:syncStatus,' . WhatsAppOfficialTenantTemplate::class)
+            ->name('whatsapp-official-tenant-templates.sync');
+        Route::post('whatsapp-official-tenant-templates/{whatsappOfficialTemplate}/test-send', [WhatsAppOfficialTenantTemplateController::class, 'testSend'])
+            ->middleware('can:testSend,' . WhatsAppOfficialTenantTemplate::class)
+            ->name('whatsapp-official-tenant-templates.test-send');
+    });
+
+    // 🔸 Módulo: Templates WhatsApp Não Oficial (internos da Platform)
+    Route::middleware('module.access:whatsapp_unofficial_templates')->group(function () {
+        Route::get('whatsapp-unofficial-templates', [WhatsAppUnofficialTemplateController::class, 'index'])
+            ->middleware('can:viewAny,' . WhatsAppUnofficialTemplate::class)
+            ->name('whatsapp-unofficial-templates.index');
+        Route::get('whatsapp-unofficial-templates/{whatsappUnofficialTemplate}', [WhatsAppUnofficialTemplateController::class, 'show'])
+            ->middleware('can:view,whatsappUnofficialTemplate')
+            ->whereUuid('whatsappUnofficialTemplate')
+            ->name('whatsapp-unofficial-templates.show');
+        Route::get('whatsapp-unofficial-templates/{whatsappUnofficialTemplate}/edit', [WhatsAppUnofficialTemplateController::class, 'edit'])
+            ->middleware('can:update,whatsappUnofficialTemplate')
+            ->whereUuid('whatsappUnofficialTemplate')
+            ->name('whatsapp-unofficial-templates.edit');
+        Route::put('whatsapp-unofficial-templates/{whatsappUnofficialTemplate}', [WhatsAppUnofficialTemplateController::class, 'update'])
+            ->middleware('can:update,whatsappUnofficialTemplate')
+            ->whereUuid('whatsappUnofficialTemplate')
+            ->name('whatsapp-unofficial-templates.update');
+        Route::post('whatsapp-unofficial-templates/{whatsappUnofficialTemplate}/preview', [WhatsAppUnofficialTemplateController::class, 'preview'])
+            ->middleware('can:preview,whatsappUnofficialTemplate')
+            ->whereUuid('whatsappUnofficialTemplate')
+            ->name('whatsapp-unofficial-templates.preview');
+        Route::post('whatsapp-unofficial-templates/{whatsappUnofficialTemplate}/test-send', [WhatsAppUnofficialTemplateController::class, 'testSend'])
+            ->middleware('can:testSend,whatsappUnofficialTemplate')
+            ->whereUuid('whatsappUnofficialTemplate')
+            ->name('whatsapp-unofficial-templates.test-send');
+        Route::post('whatsapp-unofficial-templates/{whatsappUnofficialTemplate}/toggle', [WhatsAppUnofficialTemplateController::class, 'toggle'])
+            ->middleware('can:toggle,whatsappUnofficialTemplate')
+            ->whereUuid('whatsappUnofficialTemplate')
+            ->name('whatsapp-unofficial-templates.toggle');
+    });
+
     // 🔸 Módulo: Tenant Default Notification Templates (baseline operacional)
     Route::middleware('module.access:tenant_default_notification_templates')->group(function () {
         Route::get('tenant-default-notification-templates', [TenantDefaultNotificationTemplateController::class, 'index'])
             ->middleware('can:viewAny,' . TenantDefaultNotificationTemplate::class)
             ->name('tenant-default-notification-templates.index');
-        Route::get('tenant-default-notification-templates/create', [TenantDefaultNotificationTemplateController::class, 'create'])
-            ->middleware('can:create,' . TenantDefaultNotificationTemplate::class)
-            ->name('tenant-default-notification-templates.create');
-        Route::post('tenant-default-notification-templates', [TenantDefaultNotificationTemplateController::class, 'store'])
-            ->middleware('can:create,' . TenantDefaultNotificationTemplate::class)
-            ->name('tenant-default-notification-templates.store');
         Route::get('tenant-default-notification-templates/{tenantDefaultTemplate}/edit', [TenantDefaultNotificationTemplateController::class, 'edit'])
             ->middleware('can:update,tenantDefaultTemplate')
+            ->whereUuid('tenantDefaultTemplate')
             ->name('tenant-default-notification-templates.edit');
         Route::put('tenant-default-notification-templates/{tenantDefaultTemplate}', [TenantDefaultNotificationTemplateController::class, 'update'])
             ->middleware('can:update,tenantDefaultTemplate')
+            ->whereUuid('tenantDefaultTemplate')
             ->name('tenant-default-notification-templates.update');
     });
 

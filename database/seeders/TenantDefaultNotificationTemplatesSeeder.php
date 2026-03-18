@@ -29,7 +29,7 @@ class TenantDefaultNotificationTemplatesSeeder extends Seeder
                     'subject' => $template['subject'],
                     'content' => (string) $template['content'],
                     'variables' => json_encode($template['variables'] ?? [], JSON_UNESCAPED_UNICODE),
-                    'is_active' => true,
+                    'is_active' => (bool) ($template['is_active'] ?? true),
                     'created_at' => $now,
                     'updated_at' => $now,
                 ];

@@ -112,6 +112,23 @@ Solucao:
 - revisar o schema remoto aprovado no Show (quantidade de placeholders do `BODY`);
 - reenviar o teste manual garantindo que os valores informados cobrem a quantidade esperada.
 
+## Erro Meta 132001 (template nao encontrado)
+
+Sintoma:
+
+- erro HTTP 404 com:
+  - `(#132001) Template name does not exist in the translation`
+
+Causa:
+
+- o nome/idioma consultado nao corresponde a um template existente na WABA configurada;
+- em ambientes com legado, pode haver divergencia entre `meta_template_name` local e o nome canonico remoto.
+
+Solucao:
+
+- sincronizar o template (`Sincronizar Status`) para atualizar `meta_response` e confirmar nome/idioma remoto;
+- se o template ainda nao existir remotamente, submeter (`Enviar para Meta`) e sincronizar ate ficar `APPROVED`.
+
 ## Erro Meta 131008 (botao dinamico exige parametro)
 
 Sintoma:
@@ -160,11 +177,16 @@ Acao:
 - no Create/Edit do template, preencher `sample_variables` com um exemplo para cada placeholder presente no `body_text`;
 - reenviar o template para a Meta.
 
-## Limpeza de chaves clinicas legadas na Platform
+## Comando legado: limpeza de chaves clinicas
 
-Sintoma:
+Quando usar:
 
-- existem registros `appointment.*`/`waitlist.*` em `whatsapp_official_templates` da Platform.
+- somente em instalacoes antigas onde registros clinicos foram cadastrados por engano no catalogo oficial e precisam ser arquivados/removidos.
+
+Importante:
+
+- na arquitetura atual, `appointment.*`/`waitlist.*` podem fazer parte do baseline oficial tenant e sao geridos no modulo `whatsapp-official-tenant-templates`.
+- use o comando abaixo apenas em instalacoes antigas onde essas chaves existiam por engano e devem ser removidas/arquivadas.
 
 Acao:
 

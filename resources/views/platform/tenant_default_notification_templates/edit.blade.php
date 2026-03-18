@@ -1,16 +1,16 @@
 @extends('layouts.freedash.app')
-@section('title', 'Editar Tenant Default Template')
+@section('title', 'WhatsApp Nao Oficial - Editar Template Padrao Tenant')
 
 @section('content')
     <div class="page-breadcrumb">
         <div class="row">
             <div class="col-7 align-self-center">
-                <h4 class="page-title text-truncate text-dark font-weight-medium mb-1">Editar Tenant Default Template</h4>
+                <h4 class="page-title text-truncate text-dark font-weight-medium mb-1">WhatsApp Nao Oficial - Editar Template Padrao Tenant</h4>
                 <div class="d-flex align-items-center">
                     <nav aria-label="breadcrumb">
                         <ol class="breadcrumb m-0 p-0">
                             <li class="breadcrumb-item"><a href="{{ route('Platform.dashboard') }}" class="text-muted">Dashboard</a></li>
-                            <li class="breadcrumb-item"><a href="{{ route('Platform.tenant-default-notification-templates.index') }}" class="text-muted">Tenant Default Templates</a></li>
+                            <li class="breadcrumb-item"><a href="{{ route('Platform.tenant-default-notification-templates.index') }}" class="text-muted">Templates Padrao Tenant</a></li>
                             <li class="breadcrumb-item text-muted active" aria-current="page">Editar</li>
                         </ol>
                     </nav>
@@ -43,4 +43,3 @@
 
     @include('layouts.freedash.footer')
 @endsection
-

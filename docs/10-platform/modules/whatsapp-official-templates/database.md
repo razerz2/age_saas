@@ -31,8 +31,11 @@ Constraints/indices:
 
 Seeder inicial:
 
-- `Database\Seeders\WhatsAppOfficialTemplatesSeeder`
-- Baseline SaaS da Platform:
+- `Database\Seeders\WhatsAppOfficialTemplatesSeeder` (baseline SaaS / Platform)
+- `Database\Seeders\WhatsAppOfficialTenantTemplatesSeeder` (baseline clinico / Tenant)
+
+Baseline SaaS da Platform:
+
   - `invoice.created`
   - `invoice.upcoming_due`
   - `invoice.overdue`
@@ -42,5 +45,16 @@ Seeder inicial:
   - `subscription.created`
   - `subscription.recovery_started`
   - `credentials.resent`
-- O seeder nao cadastra `appointment.*` ou `waitlist.*`.
-- Templates clinicos permanecem no dominio Tenant (`config/notification_templates.php` + tabela tenant `notification_templates`).
+
+Baseline Tenant oficial (clinico) no catalogo global:
+
+  - `appointment.pending_confirmation`
+  - `appointment.confirmed`
+  - `appointment.canceled`
+  - `appointment.expired`
+  - `waitlist.joined`
+  - `waitlist.offered`
+
+Observacao:
+
+- o baseline nao oficial tenant (templates livres, sem Meta) permanece no modulo `tenant-default-notification-templates`.

@@ -29,10 +29,15 @@ class WhatsAppSender
             $logPayload = array_merge($payloadMeta, [
                 'tenant_id' => trim($tenantId) !== '' ? $tenantId : null,
                 'channel' => 'whatsapp',
+                'provider' => $provider,
                 'to_masked' => $this->maskPhone($to),
                 'message_sha256' => hash('sha256', $normalizedMessage),
                 'message_length' => strlen($normalizedMessage),
                 'contains_especialidade' => str_contains(strtolower($normalizedMessage), 'especialidade'),
+                'template_resolution_scope' => $payloadMeta['template_resolution_scope'] ?? null,
+                'template_source' => $payloadMeta['template_source'] ?? null,
+                'used_platform_fallback' => $payloadMeta['used_platform_fallback'] ?? null,
+                'template_fallback_reason' => $payloadMeta['template_fallback_reason'] ?? null,
                 'sent' => $sent,
             ]);
 
@@ -72,6 +77,7 @@ class WhatsAppSender
             Log::warning('whatsapp_real_send_failed', array_merge($payloadMeta, [
                 'tenant_id' => trim($tenantId) !== '' ? $tenantId : null,
                 'channel' => 'whatsapp',
+                'provider' => $provider,
                 'to_masked' => $this->maskPhone($to),
                 'error' => $e->getMessage(),
             ]));
@@ -201,19 +207,22 @@ class WhatsAppSender
             'key',
             'template_source',
             'is_override',
-                'run_id',
-                'campaign_id',
-                'campaign_run_id',
-                'campaign_recipient_id',
-                'destination',
-                'channel',
-                'media_source',
-                'media_kind',
-                'asset_id',
-                'provider_message_id',
-                'http_status',
-                'unknown_placeholders',
-            ];
+            'template_resolution_scope',
+            'used_platform_fallback',
+            'template_fallback_reason',
+            'run_id',
+            'campaign_id',
+            'campaign_run_id',
+            'campaign_recipient_id',
+            'destination',
+            'channel',
+            'media_source',
+            'media_kind',
+            'asset_id',
+            'provider_message_id',
+            'http_status',
+            'unknown_placeholders',
+        ];
 
         $sanitized = [];
         foreach ($allowedKeys as $allowedKey) {

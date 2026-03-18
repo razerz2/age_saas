@@ -5,7 +5,7 @@
 Verifique se o baseline foi seedado:
 
 ```bash
-php artisan db:seed --class=TenantDefaultNotificationTemplatesSeeder
+php artisan db:seed --class=Database\\Seeders\\TenantDefaultNotificationTemplatesSeeder
 ```
 
 ## Tenant novo sem templates em `notification_templates`
@@ -15,18 +15,25 @@ php artisan db:seed --class=TenantDefaultNotificationTemplatesSeeder
 3. execute backfill:
 
 ```bash
-php artisan tenants:seed-default-notification-templates --tenant=<slug> --apply
+php artisan tenants:seed-default-whatsapp-unofficial-templates --tenant=<slug> --apply
 ```
 
 ## Backfill em todos os tenants (dry-run)
 
 ```bash
-php artisan tenants:seed-default-notification-templates --all-tenants
+php artisan tenants:seed-default-whatsapp-unofficial-templates
 ```
 
 ## Atualizar tambem registros existentes
 
 ```bash
-php artisan tenants:seed-default-notification-templates --all-tenants --apply --overwrite
+php artisan tenants:seed-default-whatsapp-unofficial-templates --apply --overwrite
 ```
 
+## Compatibilidade com comando legado
+
+Tambem e aceito:
+
+```bash
+php artisan tenants:seed-default-notification-templates --all-tenants --apply
+```

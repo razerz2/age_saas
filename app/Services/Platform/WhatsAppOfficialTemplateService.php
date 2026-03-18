@@ -151,14 +151,7 @@ class WhatsAppOfficialTemplateService
             throw new DomainException('Template arquivado não pode ser enviado para a Meta.');
         }
 
-        $sampleErrors = WhatsAppOfficialTemplateValidator::validateSampleVariablesConsistency(
-            (string) $template->body_text,
-            $template->sample_variables,
-            true
-        );
-        if (isset($sampleErrors['sample_variables'])) {
-            throw new DomainException($sampleErrors['sample_variables']);
-        }
+        $this->assertTemplateReadyForMetaSubmission($template);
 
         $payload = $this->buildMetaPayload($template);
         $context = $this->context($template);
@@ -180,6 +173,54 @@ class WhatsAppOfficialTemplateService
         ));
 
         return $template;
+    }
+
+    /**
+     * @throws WhatsAppMetaConfigurationException
+     * @throws WhatsAppMetaApiException
+     */
+    public function republishAsNewTemplate(WhatsAppOfficialTemplate $template, ?string $actorId = null): WhatsAppOfficialTemplate
+    {
+        $this->assertOfficialProviderActive();
+        $actorId = $this->normalizeActorId($actorId);
+
+        if ($template->status === WhatsAppOfficialTemplate::STATUS_ARCHIVED) {
+            throw new DomainException('Template arquivado nÃ£o pode ser republicado na Meta.');
+        }
+
+        $this->assertTemplateReadyForMetaSubmission($template);
+
+        $previousRemoteId = $template->meta_template_id ? (string) $template->meta_template_id : null;
+        $previousRemoteStatus = (string) $template->status;
+        $previousMetaResponse = $template->meta_response;
+
+        // Descarta o vinculo remoto antigo apenas no contexto desta nova submissao.
+        $template->meta_template_id = null;
+        $template->meta_waba_id = null;
+        $template->meta_response = null;
+        $template->last_synced_at = null;
+        $template->status = WhatsAppOfficialTemplate::STATUS_DRAFT;
+
+        Log::info('wa_official_template_republish_requested', array_merge(
+            $this->context($template),
+            [
+                'previous_remote_template_id' => $previousRemoteId,
+                'previous_status' => $previousRemoteStatus,
+                'previous_meta_snapshot_present' => is_array($previousMetaResponse),
+            ]
+        ));
+
+        $republishedTemplate = $this->submitToMeta($template, $actorId);
+
+        Log::info('wa_official_template_republished_to_meta', array_merge(
+            $this->context($republishedTemplate),
+            [
+                'previous_remote_template_id' => $previousRemoteId,
+                'new_remote_template_id' => $republishedTemplate->meta_template_id,
+            ]
+        ));
+
+        return $republishedTemplate;
     }
 
     /**
@@ -338,6 +379,50 @@ class WhatsAppOfficialTemplateService
             'PENDING', 'IN_REVIEW', 'PENDING_REVIEW' => WhatsAppOfficialTemplate::STATUS_PENDING,
             default => WhatsAppOfficialTemplate::STATUS_PENDING,
         };
+    }
+
+    private function assertTemplateReadyForMetaSubmission(WhatsAppOfficialTemplate $template): void
+    {
+        $metaTemplateName = strtolower(trim((string) $template->meta_template_name));
+        if ($metaTemplateName === '' || preg_match('/^[a-z0-9_]+$/', $metaTemplateName) !== 1) {
+            throw new DomainException(
+                'Template incompleto para envio: Nome Meta invalido. Use apenas letras minusculas, numeros e underscore.'
+            );
+        }
+
+        $language = trim((string) $template->language);
+        if ($language === '') {
+            throw new DomainException('Template incompleto para envio: idioma obrigatorio.');
+        }
+
+        $category = strtoupper(trim((string) $template->category));
+        if (!in_array($category, ['UTILITY', 'SECURITY', 'AUTHENTICATION'], true)) {
+            throw new DomainException('Template incompleto para envio: categoria invalida.');
+        }
+
+        $bodyText = trim((string) $template->body_text);
+        if ($bodyText === '') {
+            throw new DomainException('Template incompleto para envio: body_text obrigatorio.');
+        }
+
+        $placeholderErrors = WhatsAppOfficialTemplateValidator::validatePlaceholderConsistency(
+            (string) $template->body_text,
+            $template->variables
+        );
+        foreach (['body_text', 'variables'] as $field) {
+            if (isset($placeholderErrors[$field])) {
+                throw new DomainException((string) $placeholderErrors[$field]);
+            }
+        }
+
+        $sampleErrors = WhatsAppOfficialTemplateValidator::validateSampleVariablesConsistency(
+            (string) $template->body_text,
+            $template->sample_variables,
+            true
+        );
+        if (isset($sampleErrors['sample_variables'])) {
+            throw new DomainException((string) $sampleErrors['sample_variables']);
+        }
     }
 
     /**

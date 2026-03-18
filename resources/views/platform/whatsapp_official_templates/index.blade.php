@@ -37,7 +37,10 @@
                 </div>
             </div>
             <div class="col-5 align-self-center">
-                <div class="customize-input float-end">
+                <div class="customize-input float-end d-flex gap-2">
+                    <a href="{{ route('Platform.whatsapp-official-templates.bindings.index') }}" class="btn btn-outline-primary shadow-sm">
+                        <i class="fas fa-link me-1"></i> Vinculos Ativos
+                    </a>
                     <a href="{{ route('Platform.whatsapp-official-templates.create') }}" class="btn btn-primary shadow-sm">
                         <i class="fa fa-plus me-1"></i> Novo Template
                     </a>

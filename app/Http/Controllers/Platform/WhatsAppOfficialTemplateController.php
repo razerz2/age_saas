@@ -10,6 +10,7 @@ use App\Http\Requests\Platform\UpdateWhatsAppOfficialTemplateRequest;
 use App\Models\Platform\WhatsAppOfficialTemplate;
 use App\Services\Platform\WhatsAppOfficialMessageService;
 use App\Services\Platform\WhatsAppOfficialTemplateService;
+use App\Support\WhatsAppOfficialTenantEventCatalog;
 use DomainException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -32,6 +33,7 @@ class WhatsAppOfficialTemplateController extends Controller
 
         $query = WhatsAppOfficialTemplate::query()
             ->officialProvider()
+            ->whereIn('key', $this->platformEventKeys())
             ->orderBy('key')
             ->orderByDesc('version');
 
@@ -367,5 +369,18 @@ class WhatsAppOfficialTemplateController extends Controller
                 'message' => 'Erro interno ao executar teste de template.',
             ], 500);
         }
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    private function platformEventKeys(): array
+    {
+        $events = WhatsAppOfficialTenantEventCatalog::groupedByDomain()['platform'] ?? [];
+
+        return array_values(array_map(
+            static fn (array $event): string => (string) ($event['key'] ?? ''),
+            array_filter($events, static fn (array $event): bool => trim((string) ($event['key'] ?? '')) !== '')
+        ));
     }
 }
