@@ -23,6 +23,10 @@ class WhatsAppOfficialTenantEventCatalog
             ['key' => 'tenant.suspended_due_to_overdue', 'label' => 'Tenant suspenso por inadimplencia', 'domain' => 'platform'],
             ['key' => 'tenant.welcome', 'label' => 'Boas-vindas ao tenant', 'domain' => 'platform'],
             ['key' => 'subscription.created', 'label' => 'Assinatura criada', 'domain' => 'platform'],
+            ['key' => 'trial.ends_in_7_days', 'label' => 'Trial termina em 7 dias', 'domain' => 'platform'],
+            ['key' => 'trial.ends_in_3_days', 'label' => 'Trial termina em 3 dias', 'domain' => 'platform'],
+            ['key' => 'trial.ends_today', 'label' => 'Trial termina hoje', 'domain' => 'platform'],
+            ['key' => 'trial.expired', 'label' => 'Trial expirado', 'domain' => 'platform'],
             ['key' => 'subscription.recovery_started', 'label' => 'Recovery de assinatura iniciado', 'domain' => 'platform'],
             ['key' => 'credentials.resent', 'label' => 'Reenvio de credenciais', 'domain' => 'platform'],
             ['key' => 'security.2fa_code', 'label' => 'Codigo de verificacao (2FA)', 'domain' => 'platform'],
@@ -75,4 +79,3 @@ class WhatsAppOfficialTenantEventCatalog
         return $groups;
     }
 }
-

@@ -53,6 +53,11 @@ class Kernel extends ConsoleKernel
                 'frequency' => 'daily',
             ],
             [
+                'command' => 'subscriptions:notify-trial-reminders',
+                'default_time' => '09:00',
+                'frequency' => 'daily',
+            ],
+            [
                 'command' => 'tenants:purge-canceled',
                 'default_time' => '03:00',
                 'frequency' => 'daily',

@@ -7,6 +7,8 @@ Escopo:
 - templates clinicos operacionais (`appointment.*`, `waitlist.*`);
 - tabela separada da Platform (`tenant_default_notification_templates`);
 - separado de `whatsapp_official_templates` (eventos SaaS oficiais da Platform).
+- catalogo controlado: nao existe criacao manual via UI (sem rotas `create/store` e policy `create=false`);
+- baseline populado via seeder (idempotente); apenas edicao/ativacao e permitida.
 
 Keys baseline atuais:
 

@@ -1,4 +1,4 @@
-@extends('layouts.tailadmin.app')
+﻿@extends('layouts.tailadmin.app')
 
 @section('title', 'Criar Paciente')
 @section('page', 'patients')
@@ -7,8 +7,9 @@
 
 
     <div id="patients-address-config"
-         data-states-url="{{ route('api.public.estados', ['pais' => 31]) }}"
-         data-cities-url-template="{{ route('api.public.cidades', ['estado' => '__ID__']) }}">
+         data-states-url="{{ route('api.public.estados') }}"
+         data-cities-url-template="{{ route('api.public.cidades', ['estado' => '__ID__']) }}"
+         data-zipcode-url-template="{{ route('api.zipcode', ['zipcode' => '__CEP__']) }}">
     </div>
 
     <div class="page-header mb-6">
@@ -84,7 +85,7 @@
                         </div>
                         <div>
                             <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                                Gênero
+                                GÃªnero
                             </label>
                             <select name="gender_id" class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white @error('gender_id') border-red-500 @enderror">
                                 <option value="">Selecione...</option>
@@ -102,7 +103,7 @@
                 </div>
 
                 <div>
-                    <h5 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Informações de Contato</h5>
+                    <h5 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">InformaÃ§Ãµes de Contato</h5>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
                             <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -130,8 +131,7 @@
                 </div>
 
                 <div>
-                    <h5 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Endereço</h5>
-                    <input type="hidden" name="pais_id" value="31">
+                    <h5 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">EndereÃ§o</h5>
 
                     <div class="space-y-4">
                         <div class="grid grid-cols-1 gap-4" data-patient-address-grid="line-1">
@@ -148,7 +148,7 @@
                             </div>
                             <div>
                             <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                                Número <span class="text-red-500">*</span>
+                                NÃºmero <span class="text-red-500">*</span>
                             </label>
                             <input type="text" class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white @error('number') border-red-500 @enderror"
                                    name="number" value="{{ old('number') }}"

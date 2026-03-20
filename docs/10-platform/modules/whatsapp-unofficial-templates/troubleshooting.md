@@ -11,6 +11,10 @@ Verifique se o usuario possui:
 
 A `key` deve ser unica em `whatsapp_unofficial_templates`.
 
+Observacao operacional:
+
+- se uma `key` baseline for alterada manualmente via edicao, um novo `db:seed` pode recriar a `key` original ausente (catalogo controlado).
+
 ## Variaveis invalidas
 
 O campo `variables` deve ser JSON valido quando informado.
@@ -20,6 +24,7 @@ O campo `variables` deve ser JSON valido quando informado.
 Execute os seeders da Platform:
 
 - `php artisan db:seed --class=Database\\Seeders\\WhatsAppUnofficialTemplatesSeeder`
+- ou `php artisan db:seed` (inclui este seeder no `DatabaseSeeder`).
 
 ## Fallback Platform nao ocorre
 

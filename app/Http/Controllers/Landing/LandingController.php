@@ -4,25 +4,33 @@ namespace App\Http\Controllers\Landing;
 
 use App\Http\Controllers\Controller;
 use App\Models\Platform\Plan;
-use App\Models\Platform\Pais;
 use Illuminate\Http\Request;
 
 class LandingController extends Controller
 {
+    public function __construct()
+    {
+        $landingTrialPlan = Plan::publiclyAvailable()
+            ->where('trial_enabled', true)
+            ->where('trial_days', '>', 0)
+            ->orderBy('price_cents', 'asc')
+            ->first();
+
+        view()->share('landingTrialPlan', $landingTrialPlan);
+    }
+
     /**
-     * Exibe a página principal da landing
+     * Exibe a pagina principal da landing
      */
     public function index()
     {
-        $plans = Plan::where('is_active', true)
-            ->where('category', Plan::CATEGORY_COMMERCIAL)
-            ->get();
-        
+        $plans = Plan::publiclyAvailable()->get();
+
         return view('landing.index', compact('plans'));
     }
 
     /**
-     * Exibe a página de funcionalidades detalhadas
+     * Exibe a pagina de funcionalidades detalhadas
      */
     public function features()
     {
@@ -30,25 +38,19 @@ class LandingController extends Controller
     }
 
     /**
-     * Exibe a página de planos
+     * Exibe a pagina de planos
      */
     public function plans()
     {
-        // Busca apenas planos comerciais ativos, ordenados por preço (menor para maior)
-        $plans = Plan::where('is_active', true)
-            ->where('category', Plan::CATEGORY_COMMERCIAL)
+        $plans = Plan::publiclyAvailable()
             ->orderBy('price_cents', 'asc')
             ->get();
-        
-        // Busca o ID do Brasil para o pré-cadastro
-        $brazil = Pais::where('nome', 'Brasil')->first();
-        $brazilId = $brazil ? $brazil->id_pais : 31; // 31 é o ID padrão no seeder
-        
-        return view('landing.plans', compact('plans', 'brazilId'));
+
+        return view('landing.plans', compact('plans'));
     }
 
     /**
-     * Exibe a página de contato
+     * Exibe a pagina de contato
      */
     public function contact()
     {
@@ -56,7 +58,7 @@ class LandingController extends Controller
     }
 
     /**
-     * Exibe a página de manual do sistema
+     * Exibe a pagina de manual do sistema
      */
     public function manual()
     {
@@ -64,24 +66,22 @@ class LandingController extends Controller
     }
 
     /**
-     * Processa o pré-cadastro (integração com o PreRegisterController existente)
+     * Processa o pre-cadastro (integracao com o PreRegisterController existente)
      */
     public function storePreRegister(Request $request)
     {
-        // Redireciona para o controller de pré-cadastro existente
         $preRegisterController = new \App\Http\Controllers\PreRegisterController();
+
         return $preRegisterController->store($request);
     }
 
     /**
-     * Retorna os dados de um plano específico em JSON (para modal)
+     * Retorna os dados de um plano especifico em JSON (para modal)
      */
     public function getPlan($id)
     {
-        $plan = Plan::where('is_active', true)
-            ->where('category', Plan::CATEGORY_COMMERCIAL)
-            ->findOrFail($id);
-        
+        $plan = Plan::publiclyAvailable()->findOrFail($id);
+
         return response()->json([
             'id' => $plan->id,
             'name' => $plan->name,
@@ -89,6 +89,8 @@ class LandingController extends Controller
             'formatted_price' => $plan->formatted_price,
             'periodicity' => $plan->periodicity === 'yearly' ? 'Faturamento anual' : 'Faturamento mensal',
             'features' => $plan->features ?? [],
+            'trial_enabled' => $plan->hasCommercialTrial(),
+            'trial_days' => $plan->trial_days,
         ]);
     }
 }

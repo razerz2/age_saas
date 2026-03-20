@@ -27,9 +27,13 @@
     </div>
 
     <div class="container-fluid">
-        <div class="card shadow-sm border-0">
+            <div class="card shadow-sm border-0">
             <div class="card-body">
                 <h4 class="card-title mb-4">Informações da Assinatura</h4>
+                @php
+                    $tenant = $subscription->tenant;
+                    $grantsAccess = $tenant?->subscriptionGrantsAccess($subscription) ?? false;
+                @endphp
 
                 <div class="row mb-3">
                     <div class="col-md-6">
@@ -38,7 +42,17 @@
                     </div>
                     <div class="col-md-6">
                         <label class="fw-bold">Plano</label>
-                        <p>{{ $subscription->plan->name ?? '-' }}</p>
+                        <p>
+                            {{ $subscription->plan->name ?? '-' }}
+                            @if ($subscription->plan)
+                                <span class="badge {{ $subscription->plan->planTypeBadgeClass() }} ms-1">
+                                    {{ $subscription->plan->planTypeLabel() }}
+                                </span>
+                                <span class="badge {{ $subscription->plan->landingVisibilityBadgeClass() }} ms-1">
+                                    {{ $subscription->plan->landingVisibilityLabel() }}
+                                </span>
+                            @endif
+                        </p>
                     </div>
                 </div>
 
@@ -81,6 +95,34 @@
                     <div class="col-md-4">
                         <label class="fw-bold">Renovação Automática</label>
                         <p>{{ $subscription->auto_renew ? 'Sim' : 'Não' }}</p>
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label class="fw-bold">Esta assinatura libera acesso?</label>
+                        <p>
+                            <span class="badge {{ $grantsAccess ? 'bg-success' : 'bg-secondary' }}">
+                                {{ $grantsAccess ? 'Sim, libera acesso' : 'Não libera acesso' }}
+                            </span>
+                        </p>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="fw-bold">Situação comercial da tenant</label>
+                        <p>
+                            @if ($tenant)
+                                <span class="badge {{ $tenant->commercialAccessSummaryBadgeClass() }}">
+                                    {{ $tenant->commercialAccessSummaryLabel() }}
+                                </span>
+                                @if (! $tenant->isEligibleForAccess())
+                                    <small class="d-block text-muted mt-1">
+                                        {{ $tenant->commercialAccessStatusLabel() }}
+                                    </small>
+                                @endif
+                            @else
+                                -
+                            @endif
+                        </p>
                     </div>
                 </div>
             </div>

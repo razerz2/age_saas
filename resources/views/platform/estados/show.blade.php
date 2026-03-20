@@ -27,12 +27,8 @@
                             <p class="mb-0">{{ $estado->uf }}</p>
                         </div>
                         <div class="col-md-3">
-                            <label class="fw-semibold text-muted">País:</label>
-                            <p class="mb-0">{{ $estado->pais->nome ?? '-' }}</p>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="fw-semibold text-muted">Criado em:</label>
-                            <p class="mb-0">{{ $estado->created_at?->format('d/m/Y H:i') ?? '-' }}</p>
+                            <label class="fw-semibold text-muted">Código IBGE:</label>
+                            <p class="mb-0">{{ $estado->ibge_id ?: '-' }}</p>
                         </div>
                     </div>
 
@@ -44,7 +40,6 @@
                 </div>
             </div>
 
-            {{-- Modal Editar --}}
             <div class="modal fade" id="modalEdit" tabindex="-1" aria-hidden="true">
                 <div class="modal-dialog modal-dialog-centered">
                     <div class="modal-content border-0 shadow">
@@ -67,15 +62,8 @@
                                     <input type="text" name="uf" maxlength="2" class="form-control text-uppercase" value="{{ $estado->uf }}" required>
                                 </div>
                                 <div class="mb-3">
-                                    <label class="form-label">País *</label>
-                                    <select name="pais_id" class="form-select" required>
-                                        <option value="">Selecione...</option>
-                                        @foreach ($paises as $pais)
-                                            <option value="{{ $pais->id_pais }}" @selected($estado->pais_id == $pais->id_pais)>
-                                                {{ $pais->nome }}
-                                            </option>
-                                        @endforeach
-                                    </select>
+                                    <label class="form-label">Código IBGE</label>
+                                    <input type="number" name="ibge_id" class="form-control" value="{{ $estado->ibge_id }}">
                                 </div>
                             </div>
                             <div class="modal-footer">

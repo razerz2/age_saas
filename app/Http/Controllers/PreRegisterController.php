@@ -10,10 +10,15 @@ use App\Models\Platform\PreTenant;
 use App\Models\Platform\PreTenantLog;
 use App\Models\Platform\Tenant;
 use App\Models\Platform\Plan;
+use App\Models\Platform\Subscription;
 use App\Services\AsaasService;
+use App\Services\Platform\PreTenantProcessorService;
+use App\Services\Platform\TenantPlanService;
 
 class PreRegisterController extends Controller
 {
+    private const BRAZIL_COUNTRY_ID = 31;
+
     public function store(Request $request)
     {
         try {
@@ -45,6 +50,7 @@ class PreRegisterController extends Controller
                 'phone' => 'nullable|string|max:20',
                 'document' => 'nullable|string|max:30',
                 'plan_id' => 'required|uuid|exists:plans,id',
+                'trial' => 'nullable|boolean',
                 'accept_terms' => 'required|accepted',
                 'subdomain_suggested' => 'nullable|string|max:100', // Mantido para compatibilidade, mas não será usado
                 'address' => 'required|string|max:255',
@@ -52,7 +58,6 @@ class PreRegisterController extends Controller
                 'complement' => 'nullable|string|max:100',
                 'neighborhood' => 'required|string|max:100',
                 'zipcode' => 'required|string|max:20',
-                'country_id' => 'required|integer|exists:paises,id_pais',
                 'state_id' => 'required|integer|exists:estados,id_estado',
                 'city_id' => 'required|integer|exists:cidades,id_cidade',
             ], [
@@ -67,7 +72,6 @@ class PreRegisterController extends Controller
                 'address_number.required' => 'O número é obrigatório.',
                 'neighborhood.required' => 'O bairro é obrigatório.',
                 'zipcode.required' => 'O CEP é obrigatório.',
-                'country_id.required' => 'O país é obrigatório.',
                 'state_id.required' => 'O estado é obrigatório.',
                 'city_id.required' => 'A cidade é obrigatória.',
             ]);
@@ -98,11 +102,11 @@ class PreRegisterController extends Controller
                 $request->fantasy_name ?? $request->name
             );
 
-            // Buscar plano
-            $plan = Plan::findOrFail($request->plan_id);
-            if (!$plan->is_active) {
+            // Buscar plano exclusivamente entre os elegíveis para comercialização pública
+            $plan = Plan::publiclyAvailable()->find($request->plan_id);
+            if (!$plan) {
                 return response()->json([
-                    'error' => 'O plano selecionado não está disponível.',
+                    'error' => 'O plano selecionado não está disponível para contratação pública.',
                 ], 422);
             }
 
@@ -117,6 +121,10 @@ class PreRegisterController extends Controller
                 return response()->json([
                     'error' => 'O plano selecionado não possui um preço válido. Entre em contato com o suporte.',
                 ], 422);
+            }
+
+            if ($request->boolean('trial')) {
+                return $this->handleCommercialTrial($request, $plan, $subdomain);
             }
 
             // Criar pré-tenant dentro de transação para garantir rollback em caso de erro
@@ -136,7 +144,7 @@ class PreRegisterController extends Controller
                     'complement' => $request->complement,
                     'neighborhood' => $request->neighborhood,
                     'zipcode' => $request->zipcode,
-                    'country_id' => $request->country_id,
+                    'country_id' => self::BRAZIL_COUNTRY_ID,
                     'state_id' => $request->state_id,
                     'city_id' => $request->city_id,
                     'status' => 'pending',
@@ -448,10 +456,132 @@ class PreRegisterController extends Controller
     }
 
     /**
-     * Gera um subdomínio único baseado no nome fornecido
-     * 
-     * @param string $name Nome fantasia ou nome legal
-     * @return string Subdomínio único
+     * Inicia trial comercial sem fluxo financeiro.
+     */
+    private function handleCommercialTrial(Request $request, Plan $plan, string $subdomain)
+    {
+        if (! $plan->hasCommercialTrial()) {
+            return response()->json([
+                'error' => 'Este plano nao esta disponivel para teste gratuito no momento.',
+            ], 422);
+        }
+
+        DB::beginTransaction();
+
+        try {
+            $preTenant = PreTenant::create([
+                'name' => $request->name,
+                'fantasy_name' => $request->fantasy_name,
+                'email' => $request->email,
+                'phone' => $request->phone,
+                'document' => $request->document,
+                'plan_id' => $plan->id,
+                'subdomain_suggested' => $subdomain,
+                'address' => $request->address,
+                'address_number' => $request->address_number,
+                'complement' => $request->complement,
+                'neighborhood' => $request->neighborhood,
+                'zipcode' => $request->zipcode,
+                'country_id' => self::BRAZIL_COUNTRY_ID,
+                'state_id' => $request->state_id,
+                'city_id' => $request->city_id,
+                'status' => 'paid',
+                'raw_payload' => array_merge($request->all(), ['trial' => true]),
+            ]);
+
+            PreTenantLog::create([
+                'pre_tenant_id' => $preTenant->id,
+                'event' => 'pre_register_trial_created',
+                'payload' => [
+                    'plan_id' => $plan->id,
+                    'trial_days' => $plan->trial_days,
+                    'message' => 'Pre-cadastro trial criado sem fluxo financeiro.',
+                ],
+            ]);
+
+            DB::commit();
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            throw $e;
+        }
+
+        $processor = app(PreTenantProcessorService::class);
+        $tenant = $processor->createTenantFromPreTenant($preTenant);
+
+        if (! $tenant) {
+            return response()->json([
+                'error' => 'Nao foi possivel provisionar o ambiente de teste no momento.',
+            ], 500);
+        }
+
+        $hasActiveTrial = Subscription::query()
+            ->where('tenant_id', $tenant->id)
+            ->where('is_trial', true)
+            ->whereIn('status', ['active', 'trialing'])
+            ->whereNotNull('trial_ends_at')
+            ->where('trial_ends_at', '>', now())
+            ->exists();
+
+        if ($hasActiveTrial) {
+            return response()->json([
+                'error' => 'Ja existe um trial ativo para esta tenant.',
+            ], 422);
+        }
+
+        $trialStartsAt = now();
+        $trialEndsAt = $trialStartsAt->copy()->addDays((int) $plan->trial_days);
+
+        $subscription = Subscription::create([
+            'tenant_id' => $tenant->id,
+            'plan_id' => $plan->id,
+            'starts_at' => $trialStartsAt,
+            'ends_at' => $trialEndsAt,
+            // Campos financeiros mantidos apenas por compatibilidade de schema legado.
+            'due_day' => max(1, min(31, (int) $trialStartsAt->day)),
+            'status' => 'trialing',
+            'auto_renew' => false,
+            'payment_method' => 'PIX',
+            'is_trial' => true,
+            'trial_ends_at' => $trialEndsAt,
+            'asaas_synced' => false,
+            'asaas_sync_status' => 'skipped',
+            'asaas_last_error' => null,
+            'asaas_last_sync_at' => now(),
+        ]);
+
+        PreTenantLog::create([
+            'pre_tenant_id' => $preTenant->id,
+            'event' => 'trial_subscription_created',
+            'payload' => [
+                'tenant_id' => $tenant->id,
+                'subscription_id' => $subscription->id,
+                'trial_ends_at' => $trialEndsAt->toDateTimeString(),
+            ],
+        ]);
+
+        app(TenantPlanService::class)->applyPlanRules($tenant, $plan);
+
+        try {
+            $processor->sendWelcomeEmail($tenant, $preTenant);
+        } catch (\Throwable $e) {
+            Log::warning('Falha ao enviar email de boas-vindas no trial comercial', [
+                'tenant_id' => $tenant->id,
+                'pre_tenant_id' => $preTenant->id,
+                'error' => $e->getMessage(),
+            ]);
+        }
+
+        return response()->json([
+            'success' => true,
+            'trial' => true,
+            'message' => "Teste gratis iniciado por {$plan->trial_days} dias. Sem cartao de credito.",
+            'redirect_url' => route('tenant.login', ['slug' => $tenant->subdomain]),
+            'tenant_id' => $tenant->id,
+            'trial_ends_at' => $trialEndsAt->toDateTimeString(),
+        ]);
+    }
+    /**
+     * Gera um subdominio unico baseado no nome fornecido.
      */
     private function generateUniqueSubdomain(string $name): string
     {

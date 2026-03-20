@@ -7,7 +7,6 @@ Modulo base:
 Permissoes suportadas na policy:
 
 - `tenant_default_notification_templates.view`
-- `tenant_default_notification_templates.create`
 - `tenant_default_notification_templates.edit`
 
 Regra:
@@ -15,3 +14,6 @@ Regra:
 - possuir o modulo base ja libera acesso;
 - chaves granulares podem ser usadas como alternativa.
 
+Restricao intencional:
+
+- `create` e sempre bloqueado na policy (catalogo controlado via seeder).

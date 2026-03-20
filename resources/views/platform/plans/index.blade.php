@@ -28,7 +28,6 @@
     </div>
 
     <div class="container-fluid">
-        <!-- Lista de Planos -->
         <div class="row">
             <div class="col-12">
                 <div class="card shadow-sm">
@@ -46,10 +45,13 @@
                                         <th>#</th>
                                         <th>Nome</th>
                                         <th>Categoria</th>
+                                        <th>Tipo</th>
+                                        <th>Landing</th>
+                                        <th>Trial</th>
                                         <th>Periodicidade</th>
-                                        <th>Preço</th>
+                                        <th>Preco</th>
                                         <th>Status</th>
-                                        <th class="text-center">Ações</th>
+                                        <th class="text-center">Acoes</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -58,21 +60,26 @@
                                             <td>{{ $loop->iteration }}</td>
                                             <td>{{ $plan->name }}</td>
                                             <td>
-                                                @php
-                                                    $categoryLabel = match($plan->category) {
-                                                        'commercial' => 'Comercial',
-                                                        'contractual' => 'Contratual',
-                                                        'sandbox' => 'Sandbox',
-                                                        default => $plan->category
-                                                    };
-                                                    $categoryClass = match($plan->category) {
-                                                        'commercial' => 'bg-info',
-                                                        'contractual' => 'bg-primary',
-                                                        'sandbox' => 'bg-warning text-dark',
-                                                        default => 'bg-secondary'
-                                                    };
-                                                @endphp
-                                                <span class="badge {{ $categoryClass }}">{{ $categoryLabel }}</span>
+                                                <span class="badge {{ $plan->categoryBadgeClass() }}">
+                                                    {{ $plan->categoryLabel() }}
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <span class="badge {{ $plan->planTypeBadgeClass() }}">
+                                                    {{ $plan->planTypeLabel() }}
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <span class="badge {{ $plan->landingVisibilityBadgeClass() }}">
+                                                    {{ $plan->landingVisibilityLabel() }}
+                                                </span>
+                                            </td>
+                                            <td>
+                                                @if($plan->hasCommercialTrial())
+                                                    <span class="badge bg-info">{{ $plan->trialDaysLabel() }}</span>
+                                                @else
+                                                    <span class="badge bg-secondary">Sem trial</span>
+                                                @endif
                                             </td>
                                             <td>
                                                 {{ $plan->periodicity === 'monthly' ? 'Mensal' : 'Anual' }}
@@ -84,20 +91,17 @@
                                                 </span>
                                             </td>
                                             <td class="text-center">
-                                                <a title="Visualizar" href="{{ route('Platform.plans.show', $plan->id) }}"
-                                                    class="btn btn-sm btn-info text-white">
+                                                <a title="Visualizar" href="{{ route('Platform.plans.show', $plan->id) }}" class="btn btn-sm btn-info text-white">
                                                     <i class="fas fa-eye"></i>
                                                 </a>
-                                                <a title="Editar" href="{{ route('Platform.plans.edit', $plan->id) }}"
-                                                    class="btn btn-sm btn-warning text-white">
+                                                <a title="Editar" href="{{ route('Platform.plans.edit', $plan->id) }}" class="btn btn-sm btn-warning text-white">
                                                     <i class="fa fa-edit"></i>
                                                 </a>
-                                                <form action="{{ route('Platform.plans.destroy', $plan->id) }}"
-                                                    method="POST" class="d-inline"
-                                                    onsubmit="return confirmSubmit(event, 'Deseja realmente excluir este plano? Esta ação não pode ser desfeita.', 'Confirmar Exclusão')">
+                                                <form action="{{ route('Platform.plans.destroy', $plan->id) }}" method="POST" class="d-inline"
+                                                    onsubmit="return confirmSubmit(event, 'Deseja realmente excluir este plano? Esta acao nao pode ser desfeita.', 'Confirmar Exclusao')">
                                                     @csrf
                                                     @method('DELETE')
-                                                    <button type="submit" title="Exclusão" class="btn btn-sm btn-danger">
+                                                    <button type="submit" title="Exclusao" class="btn btn-sm btn-danger">
                                                         <i class="fa fa-trash"></i>
                                                     </button>
                                                 </form>
@@ -129,4 +133,3 @@
         });
     </script>
 @endpush
-

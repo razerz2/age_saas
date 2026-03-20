@@ -75,6 +75,7 @@
                                         <th>Tenant</th>
                                         <th>Plano</th>
                                         <th>Status</th>
+                                        <th>Acesso da Tenant</th>
                                         <th>Início</th>
                                         <th>Vencimento</th>
                                         <th>Renovação</th>
@@ -86,7 +87,20 @@
                                         <tr>
                                             <td>{{ $loop->iteration }}</td>
                                             <td>{{ $subscription->tenant->trade_name ?? '-' }}</td>
-                                            <td>{{ $subscription->plan->name ?? '-' }}</td>
+                                            <td>
+                                                {{ $subscription->plan->name ?? '-' }}
+                                                @if ($subscription->plan)
+                                                    <div class="mt-1">
+                                                        <span class="badge {{ $subscription->plan->planTypeBadgeClass() }}">
+                                                            {{ $subscription->plan->planTypeLabel() }}
+                                                        </span>
+                                                        <span
+                                                            class="badge {{ $subscription->plan->landingVisibilityBadgeClass() }}">
+                                                            {{ $subscription->plan->landingVisibilityLabel() }}
+                                                        </span>
+                                                    </div>
+                                                @endif
+                                            </td>
                                             <td>
                                                 <span
                                                     class="badge 
@@ -96,6 +110,22 @@
                                                 @else bg-info @endif">
                                                     {{ $subscription->statusLabel() }}
                                                 </span>
+                                            </td>
+                                            <td>
+                                                @php
+                                                    $tenant = $subscription->tenant;
+                                                    $grantsAccess = $tenant?->subscriptionGrantsAccess($subscription) ?? false;
+                                                @endphp
+
+                                                <span class="badge {{ $grantsAccess ? 'bg-success' : 'bg-secondary' }}">
+                                                    {{ $grantsAccess ? 'Libera acesso' : 'Nao libera acesso' }}
+                                                </span>
+
+                                                @if ($tenant)
+                                                    <small class="d-block text-muted mt-1">
+                                                        {{ $tenant->commercialAccessSummaryLabel() }}
+                                                    </small>
+                                                @endif
                                             </td>
                                             <td>{{ $subscription->starts_at->format('d/m/Y') }}</td>
                                             <td>{{ $subscription->ends_at ? $subscription->ends_at->format('d/m/Y') : '-' }}

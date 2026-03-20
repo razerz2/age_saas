@@ -7,7 +7,6 @@ use App\Models\Tenant\TenantSetting;
 use App\Models\Tenant\Integrations;
 use App\Models\Tenant\Appointment;
 use App\Models\Platform\Tenant;
-use App\Models\Platform\Pais;
 use App\Models\Platform\Estado;
 use App\Models\Platform\Cidade;
 use App\Services\Tenant\NotificationContextBuilder;
@@ -20,6 +19,8 @@ use Illuminate\Support\Str;
 
 class SettingsController extends Controller
 {
+    private const BRAZIL_COUNTRY_ID = 31;
+
     /**
      * Exibe a página de configurações
      */
@@ -166,7 +167,6 @@ class SettingsController extends Controller
 
         $editor = $this->buildEditorViewData($currentTenant, $request);
         $localizacao = $currentTenant ? $currentTenant->localizacao : null;
-        $brazilId = Pais::where('nome', 'Brasil')->first()->id_pais ?? 31;
 
         return view('tenant.settings.index', compact(
             'settings', 
@@ -178,7 +178,6 @@ class SettingsController extends Controller
             'publicBookingUrl',
             'currentTenant',
             'localizacao',
-            'brazilId',
             'editor'
         ));
     }
@@ -385,7 +384,7 @@ class SettingsController extends Controller
             'complemento' => $request->complemento,
             'bairro' => $request->bairro,
             'cep' => $request->cep,
-            'pais_id' => 31, // Brasil fixo
+            'pais_id' => self::BRAZIL_COUNTRY_ID,
             'estado_id' => $request->estado_id,
             'cidade_id' => $request->cidade_id,
         ]);

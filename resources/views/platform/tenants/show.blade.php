@@ -5,6 +5,52 @@
         <div class="row justify-content-center">
             <div class="col-lg-10 col-md-12">
 
+                @if (session('success'))
+                    <div class="alert alert-success alert-dismissible fade show shadow-sm" role="alert">
+                        <i class="fas fa-check-circle me-1"></i> {{ session('success') }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                @endif
+
+                @if (session('warning'))
+                    <div class="alert alert-warning alert-dismissible fade show shadow-sm" role="alert">
+                        <i class="fas fa-exclamation-triangle me-1"></i> {{ session('warning') }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                @endif
+
+                @if (session('error'))
+                    <div class="alert alert-danger alert-dismissible fade show shadow-sm" role="alert">
+                        <i class="fas fa-times-circle me-1"></i> {{ session('error') }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                @endif
+
+                @if (session('tenant_needs_commercial_regularization') && ! $tenant->isEligibleForAccess())
+                    @php
+                        $creationRegularizationQuery = array_filter([
+                            'tenant_id' => $tenant->id,
+                            'plan_id' => $tenant->preferredRegularizationPlanId(),
+                            'origin' => $tenant->commercialAccessStatusKey() === 'trial_expired' ? 'trial' : null,
+                            'conversion_from_trial' => $tenant->commercialAccessStatusKey() === 'trial_expired' ? 1 : null,
+                        ]);
+                    @endphp
+                    <div class="alert alert-warning border-start border-warning border-4 shadow-sm">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        <strong>Tenant criada com pendencia comercial.</strong>
+                        <div class="mt-2">
+                            O ambiente tecnico foi provisionado, mas o acesso segue bloqueado.
+                            Proximo passo: vincular plano e criar/ativar assinatura para liberar o acesso.
+                        </div>
+                        @if (in_array('subscriptions', auth()->user()->modules ?? []))
+                            <a href="{{ route('Platform.subscriptions.create', $creationRegularizationQuery) }}"
+                                class="btn btn-sm btn-warning mt-3">
+                                <i class="fas fa-arrow-right me-1"></i> Regularizar agora
+                            </a>
+                        @endif
+                    </div>
+                @endif
+
                 <div class="card shadow-sm border-0">
                     <div class="card-header bg-white d-flex justify-content-between align-items-center">
                         <h4 class="card-title mb-0">
@@ -52,18 +98,6 @@
                                 <p class="mb-0">{{ $tenant->subdomain }}</p>
                             </div>
 
-                            <div class="col-md-4">
-                                <label class="fw-semibold text-muted">Rede de Clínicas:</label>
-                                <p class="mb-0">
-                                    @if($tenant->network)
-                                        <a href="{{ route('Platform.clinic-networks.edit', $tenant->network->id) }}" class="text-primary text-decoration-none">
-                                            <i class="fas fa-network-wired me-1"></i>{{ $tenant->network->name }}
-                                        </a>
-                                    @else
-                                        <span class="text-muted">Nenhuma rede</span>
-                                    @endif
-                                </p>
-                            </div>
 
                             <div class="col-md-4">
                                 <label class="fw-semibold text-muted">Status:</label>
@@ -79,6 +113,105 @@
                                     {{ $tenant->trial_ends_at ? $tenant->trial_ends_at->format('d/m/Y') : '-' }}
                                 </p>
                             </div>
+                        </div>
+
+                        @php
+                            $activeSubscription = $tenant->activeSubscriptionRelation;
+                            $regularizationQuery = array_filter([
+                                'tenant_id' => $tenant->id,
+                                'plan_id' => $tenant->preferredRegularizationPlanId(),
+                                'origin' => $tenant->commercialAccessStatusKey() === 'trial_expired' ? 'trial' : null,
+                                'conversion_from_trial' => $tenant->commercialAccessStatusKey() === 'trial_expired' ? 1 : null,
+                            ]);
+                        @endphp
+
+                        <div class="mt-5">
+                            <h5 class="text-primary fw-bold mb-3">
+                                <i class="fas fa-clipboard-check me-2"></i> Resumo Comercial
+                            </h5>
+
+                            <div class="row g-3">
+                                <div class="col-md-4">
+                                    <label class="fw-semibold text-muted">Elegibilidade de Acesso:</label>
+                                    <p class="mb-0">
+                                        <span class="badge {{ $tenant->commercialAccessSummaryBadgeClass() }}">
+                                            {{ $tenant->commercialAccessSummaryLabel() }}
+                                        </span>
+                                        @if (! $tenant->isEligibleForAccess())
+                                            <small class="d-block text-muted mt-1">
+                                                Motivo: {{ $tenant->commercialAccessStatusLabel() }}
+                                            </small>
+                                        @endif
+                                    </p>
+                                </div>
+
+                                <div class="col-md-4">
+                                    <label class="fw-semibold text-muted">Plano por Assinatura:</label>
+                                    <p class="mb-0">
+                                        {{ $activeSubscription?->plan?->name ?? '-' }}
+                                        @if ($activeSubscription?->plan)
+                                            <span class="badge {{ $activeSubscription->plan->planTypeBadgeClass() }} ms-1">
+                                                {{ $activeSubscription->plan->planTypeLabel() }}
+                                            </span>
+                                        @endif
+                                    </p>
+                                </div>
+
+                                <div class="col-md-4">
+                                    <label class="fw-semibold text-muted">Status da Assinatura:</label>
+                                    <p class="mb-0">
+                                        @if ($activeSubscription)
+                                            <span
+                                                class="badge @if ($activeSubscription->status == 'active') bg-success @elseif($activeSubscription->status == 'past_due') bg-warning @elseif($activeSubscription->status == 'canceled') bg-danger @else bg-info @endif">
+                                                {{ $activeSubscription->statusLabel() }}
+                                            </span>
+                                        @else
+                                            <span class="badge bg-secondary">Sem assinatura ativa</span>
+                                        @endif
+                                    </p>
+                                </div>
+
+                                <div class="col-md-4">
+                                    <label class="fw-semibold text-muted">Vigência:</label>
+                                    <p class="mb-0">
+                                        @if ($activeSubscription)
+                                            {{ $activeSubscription->starts_at?->format('d/m/Y') ?? '-' }} até
+                                            {{ $activeSubscription->ends_at?->format('d/m/Y') ?? 'indeterminada' }}
+                                        @else
+                                            -
+                                        @endif
+                                    </p>
+                                </div>
+                            </div>
+
+                            @if (! $tenant->isEligibleForAccess())
+                                <div class="alert alert-warning mt-3 mb-0">
+                                    <i class="fas fa-exclamation-triangle me-2"></i>
+                                    <strong>
+                                        {{ $tenant->commercialAccessStatusKey() === 'trial_expired'
+                                            ? 'Trial expirado: conversao para plano pago pendente.'
+                                            : 'Acesso bloqueado ate ativacao comercial.' }}
+                                    </strong>
+                                    <div class="mt-2">
+                                        @if ($tenant->commercialAccessStatusKey() === 'trial_expired')
+                                            O periodo de teste terminou e o acesso foi pausado.
+                                            Proximo passo: criar assinatura paga e aguardar confirmacao de pagamento.
+                                        @else
+                                            Ambiente provisionado com sucesso, porem ainda sem elegibilidade comercial.
+                                            Proximo passo: vincular um plano e criar/ativar uma assinatura valida.
+                                        @endif
+                                    </div>
+                                    @if (in_array('subscriptions', auth()->user()->modules ?? []))
+                                        <a href="{{ route('Platform.subscriptions.create', $regularizationQuery) }}"
+                                            class="btn btn-sm btn-warning mt-3">
+                                            <i class="fas fa-file-signature me-1"></i>
+                                            {{ $tenant->commercialAccessStatusKey() === 'trial_expired'
+                                                ? 'Converter Trial em Plano Pago'
+                                                : 'Criar Assinatura' }}
+                                        </a>
+                                    @endif
+                                </div>
+                            @endif
                         </div>
 
                         {{-- Localização --}}
@@ -129,10 +262,6 @@
                                         </p>
                                     </div>
 
-                                    <div class="col-md-4">
-                                        <label class="fw-semibold text-muted">País:</label>
-                                        <p class="mb-0">{{ $tenant->localizacao->pais->nome ?? '-' }}</p>
-                                    </div>
                                 </div>
                             @else
                                 <div class="alert alert-light border mt-2">
@@ -256,8 +385,7 @@
                     </div>
                 </div>
 
-                {{-- Informações do Asaas (Apenas para venda direta / Sem Rede) --}}
-                @if(!$tenant->network_id)
+                {{-- Informações do Asaas --}}
                 <div class="card shadow-sm border-0 mt-4">
                     <div class="card-body">
                         <h4 class="card-title mb-4">Informações do Asaas</h4>
@@ -314,7 +442,6 @@
                         </div>
                     </div>
                 </div>
-                @endif
 
             </div>
         </div>
@@ -385,3 +512,4 @@
         }
     </script>
 @endsection
+

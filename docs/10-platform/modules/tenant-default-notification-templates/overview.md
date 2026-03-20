@@ -2,10 +2,21 @@
 
 Modulo da Platform para manter o baseline padrao de templates operacionais usados pelos tenants.
 
+Catalogo controlado:
+
+- nao e permitido criar templates manualmente (rotas `create/store` nao existem);
+- baseline e populado via seeder (idempotente) e pode ser ajustado apenas por edicao;
+- cada `key` representa um evento clinico (nao e um template livre).
+
 Boundary de dominio:
 
 - `whatsapp-official-templates`: catalogo oficial global da Meta (inclui eventos SaaS da Platform e baseline clinico oficial do Tenant);
 - `tenant-default-notification-templates`: eventos clinicos operacionais do Tenant (dominio WhatsApp Nao Oficial).
+
+Diferenca Platform vs Tenant (nao oficial):
+
+- Platform: eventos SaaS (baseline em `whatsapp-unofficial-templates`).
+- Tenant: eventos clinicos (baseline neste modulo).
 
 Navegacao Platform:
 

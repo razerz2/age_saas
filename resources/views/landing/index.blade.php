@@ -18,13 +18,20 @@
                     tudo em um único sistema completo na nuvem.
                 </p>
                 <div class="flex flex-col sm:flex-row gap-4 justify-center">
-                    <a href="#pre-cadastro" class="bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-lg font-semibold text-lg transition-colors shadow-lg hover:shadow-xl">
-                        Testar Agora
+                    <a href="{{ route('landing.plans', array_filter(['trial' => 1, 'plan_id' => $landingTrialPlan?->id])) }}" class="bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-lg font-semibold text-lg transition-colors shadow-lg hover:shadow-xl">
+                        Testar Gratis
                     </a>
                     <a href="{{ route('landing.features') }}" class="bg-white hover:bg-gray-50 text-blue-600 border-2 border-blue-600 px-8 py-4 rounded-lg font-semibold text-lg transition-colors">
                         Ver Funcionalidades
                     </a>
                 </div>
+                @if($landingTrialPlan && $landingTrialPlan->hasCommercialTrial())
+                    <div class="mt-4 flex flex-wrap items-center justify-center gap-4 text-sm text-blue-700">
+                        <span>Teste gratis por {{ $landingTrialPlan->trial_days }} dias</span>
+                        <span>Sem cartao de credito</span>
+                        <span>Cancele quando quiser</span>
+                    </div>
+                @endif
             </div>
         </div>
     </section>

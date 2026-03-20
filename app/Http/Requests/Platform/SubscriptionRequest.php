@@ -2,9 +2,10 @@
 
 namespace App\Http\Requests\Platform;
 
-use Illuminate\Foundation\Http\FormRequest;
+use App\Models\Platform\Plan;
 use App\Models\Platform\Subscription;
 use App\Models\Platform\Tenant;
+use Illuminate\Foundation\Http\FormRequest;
 
 class SubscriptionRequest extends FormRequest
 {
@@ -15,15 +16,23 @@ class SubscriptionRequest extends FormRequest
 
     public function rules(): array
     {
+        $plan = null;
+        if ($this->filled('plan_id')) {
+            $plan = Plan::query()->find($this->input('plan_id'));
+        }
+
+        $isTestPlan = (bool) $plan?->isTest();
+
         return [
-            'tenant_id'      => ['required', 'uuid', 'exists:tenants,id'],
-            'plan_id'        => ['required', 'uuid', 'exists:plans,id'],
-            'starts_at'      => ['required', 'date'],
-            'ends_at'        => ['nullable', 'date', 'after_or_equal:starts_at'],
-            'due_day'        => ['required', 'integer', 'min:1', 'max:31'],
-            'status'         => ['required', 'in:active,past_due,canceled,trialing,pending'],
-            'auto_renew'     => ['boolean'],
-            'payment_method' => ['required', 'in:PIX,BOLETO,CREDIT_CARD,DEBIT_CARD'],
+            'tenant_id' => ['required', 'uuid', 'exists:tenants,id'],
+            'plan_id' => ['required', 'uuid', 'exists:plans,id'],
+            'starts_at' => ['required', 'date'],
+            'ends_at' => ['nullable', 'date', 'after_or_equal:starts_at'],
+            'conversion_from_trial' => ['nullable', 'boolean'],
+            'due_day' => [$isTestPlan ? 'nullable' : 'required', 'integer', 'min:1', 'max:31'],
+            'status' => [$isTestPlan ? 'nullable' : 'required', 'in:active,past_due,canceled,trialing,pending'],
+            'auto_renew' => ['boolean'],
+            'payment_method' => [$isTestPlan ? 'nullable' : 'required', 'in:PIX,BOLETO,CREDIT_CARD,DEBIT_CARD'],
         ];
     }
 
@@ -31,23 +40,23 @@ class SubscriptionRequest extends FormRequest
     {
         return [
             'tenant_id.required' => 'Selecione um tenant.',
-            'tenant_id.exists'   => 'O tenant selecionado é inválido.',
+            'tenant_id.exists' => 'O tenant selecionado e invalido.',
 
-            'plan_id.required'   => 'Selecione um plano.',
-            'plan_id.exists'     => 'O plano selecionado é inválido.',
+            'plan_id.required' => 'Selecione um plano.',
+            'plan_id.exists' => 'O plano selecionado e invalido.',
 
-            'starts_at.required' => 'A data de início é obrigatória.',
-            'ends_at.after_or_equal' => 'A data de término deve ser igual ou posterior à data de início.',
+            'starts_at.required' => 'A data de inicio e obrigatoria.',
+            'ends_at.after_or_equal' => 'A data de termino deve ser igual ou posterior a data de inicio.',
 
-            'due_day.required'   => 'O dia de vencimento é obrigatório.',
-            'due_day.min'        => 'O dia de vencimento deve ser no mínimo 1.',
-            'due_day.max'        => 'O dia de vencimento deve ser no máximo 31.',
+            'due_day.required' => 'O dia de vencimento e obrigatorio.',
+            'due_day.min' => 'O dia de vencimento deve ser no minimo 1.',
+            'due_day.max' => 'O dia de vencimento deve ser no maximo 31.',
 
-            'status.required'    => 'O status é obrigatório.',
-            'status.in'          => 'O status informado é inválido.',
+            'status.required' => 'O status e obrigatorio.',
+            'status.in' => 'O status informado e invalido.',
 
-            'payment_method.required' => 'Selecione o método de pagamento.',
-            'payment_method.in'       => 'O método de pagamento informado é inválido.',
+            'payment_method.required' => 'Selecione o metodo de pagamento.',
+            'payment_method.in' => 'O metodo de pagamento informado e invalido.',
         ];
     }
 
@@ -55,22 +64,49 @@ class SubscriptionRequest extends FormRequest
     {
         $validator->after(function ($validator) {
             $tenantId = $this->tenant_id;
+            $conversionFromTrial = $this->boolean('conversion_from_trial');
+            $currentSubscription = $this->route('subscription');
+            $currentSubscriptionId = $currentSubscription instanceof Subscription
+                ? $currentSubscription->id
+                : $currentSubscription;
+            $selectedPlan = $this->filled('plan_id')
+                ? Plan::query()->find($this->plan_id)
+                : null;
+
+            if ($conversionFromTrial && $selectedPlan?->isTest()) {
+                $validator->errors()->add(
+                    'plan_id',
+                    'A conversao de trial nao permite planos de teste.'
+                );
+
+                return;
+            }
 
             if ($tenantId) {
-                // 🔍 1️⃣ Impede criação se já tiver assinatura ativa
-                $alreadyHasActive = Subscription::where('tenant_id', $tenantId)
-                    ->whereIn('status', ['active', 'trialing'])
-                    ->exists();
+                $activeSubscriptionQuery = Subscription::where('tenant_id', $tenantId)
+                    ->whereIn('status', ['active', 'trialing']);
+
+                if ($conversionFromTrial) {
+                    $activeSubscriptionQuery->where(function ($query) {
+                        $query->whereNull('is_trial')
+                            ->orWhere('is_trial', false);
+                    });
+                }
+
+                if (!empty($currentSubscriptionId)) {
+                    $activeSubscriptionQuery->where('id', '!=', $currentSubscriptionId);
+                }
+
+                $alreadyHasActive = $activeSubscriptionQuery->exists();
 
                 if ($alreadyHasActive) {
                     $validator->errors()->add(
                         'tenant_id',
-                        'Este tenant já possui uma assinatura ativa ou em teste.'
+                        'Este tenant ja possui uma assinatura ativa ou em teste.'
                     );
-                    return; // não precisa seguir se já deu erro
+                    return;
                 }
 
-                // 🔍 2️⃣ Verifica se o tenant tem erro de sincronização com o Asaas
                 $tenant = Tenant::find($tenantId);
 
                 if (
@@ -79,8 +115,7 @@ class SubscriptionRequest extends FormRequest
                 ) {
                     $validator->errors()->add(
                         'tenant_id',
-                        'Não é possível criar a assinatura: o tenant está pendente ou com erro de sincronização no Asaas. '
-                            . 'Corrija o sincronismo antes de prosseguir.'
+                        'Nao e possivel criar a assinatura: o tenant esta pendente ou com erro de sincronizacao no Asaas. Corrija o sincronismo antes de prosseguir.'
                     );
                 }
             }
@@ -91,7 +126,7 @@ class SubscriptionRequest extends FormRequest
     {
         $this->merge([
             'auto_renew' => $this->boolean('auto_renew'),
+            'conversion_from_trial' => $this->boolean('conversion_from_trial'),
         ]);
     }
 }
-

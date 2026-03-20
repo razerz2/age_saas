@@ -18,6 +18,8 @@ use Illuminate\Support\Str;
 
 class TenantCreatorService
 {
+    private const BRAZIL_COUNTRY_ID = 31;
+
     public function __construct(
         private readonly WhatsAppOfficialMessageService $officialWhatsApp
     ) {
@@ -28,7 +30,10 @@ class TenantCreatorService
      */
     public function create(array $data): Tenant
     {
+        // Compatibilidade temporaria: `tenants.plan_id` ainda pode chegar do fluxo de criacao.
+        // A fonte comercial oficial permanece sendo `subscriptions.plan_id`.
         $planId = $data['plan_id'] ?? null;
+        unset($data['network_id']);
 
         DB::beginTransaction();
 
@@ -53,7 +58,7 @@ class TenantCreatorService
                     'complemento' => $data['complemento'] ?? null,
                     'bairro'      => $data['bairro'] ?? null,
                     'cep'         => $data['cep'] ?? null,
-                    'pais_id'     => $data['pais_id'] ?? 31, // Brasil fixo por padrão
+                    'pais_id'     => self::BRAZIL_COUNTRY_ID,
                     'estado_id'   => $data['estado_id'] ?? null,
                     'cidade_id'   => $data['cidade_id'] ?? null,
                 ]);
@@ -124,11 +129,11 @@ class TenantCreatorService
 
             Subscription::create([
                 'tenant_id' => $tenant->id,
-                'plan_id'   => $plan->id,
-                'status'    => 'active',
+                'plan_id' => $plan->id,
+                'status' => 'active',
                 'starts_at' => $startsAt,
-                'ends_at'   => $endsAt,
-                'due_day'   => 1,
+                'ends_at' => $endsAt,
+                'due_day' => 1,
                 'auto_renew' => true,
                 'payment_method' => 'PIX',
             ]);
@@ -150,13 +155,14 @@ class TenantCreatorService
                 ]
             );
 
-            // Aplica as regras no banco do tenant
             $planService = new TenantPlanService();
             $planService->applyPlanRules($tenant, $plan);
 
-            Log::info("✅ Assinatura ativa criada para tenant {$tenant->id} no plano {$plan->name}");
+            Log::info("Assinatura ativa criada para tenant {$tenant->id} no plano {$plan->name}", [
+                'test_plan' => $plan->isTest(),
+            ]);
         } catch (\Throwable $e) {
-            Log::error("❌ Erro ao criar assinatura automática: " . $e->getMessage());
+            Log::error('Erro ao criar assinatura automatica: ' . $e->getMessage());
         }
     }
 
@@ -199,3 +205,4 @@ class TenantCreatorService
         }
     }
 }
+

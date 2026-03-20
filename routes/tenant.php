@@ -159,6 +159,7 @@ Route::prefix('workspace/{slug}')
         'tenant.from.guard',
         'ensure.guard',
         'tenant.auth',
+        'tenant.commercial.eligibility',
     ])
     ->group(function () {
 

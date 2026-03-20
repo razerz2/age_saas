@@ -7,6 +7,8 @@ Escopo:
 - templates internos nao oficiais da Platform;
 - sem aprovacao/cadastro na Meta;
 - usado como catalogo para envio interno via providers nao oficiais.
+- catalogo controlado: nao existe criacao manual via UI (sem rotas `create/store` e policy `create=false`);
+- baseline populado via seeder (idempotente); apenas edicao/ativacao e permitida.
 
 Baseline inicial (confirmado por eventos reais da Platform):
 

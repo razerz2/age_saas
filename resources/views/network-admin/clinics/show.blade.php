@@ -136,10 +136,6 @@
                         </p>
                     </div>
 
-                    <div class="col-md-4">
-                        <label class="fw-semibold text-muted">País:</label>
-                        <p class="mb-0">{{ $clinic->localizacao->pais->nome ?? '-' }}</p>
-                    </div>
                 </div>
             </div>
         </div>
@@ -211,4 +207,3 @@
     }
 </style>
 @endpush
-

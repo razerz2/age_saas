@@ -109,7 +109,7 @@
                         </div>
 
                         {{-- Localização --}}
-                        @if ($preTenant->address || $preTenant->pais)
+                        @if ($preTenant->address || $preTenant->estado || $preTenant->cidade)
                             <div class="mt-5">
                                 <h5 class="text-primary fw-bold mb-3">
                                     <i class="fas fa-map-marker-alt me-2"></i> Localização
@@ -149,12 +149,6 @@
                                         </div>
                                     @endif
 
-                                    @if ($preTenant->pais)
-                                        <div class="col-md-3">
-                                            <label class="fw-semibold text-muted">País:</label>
-                                            <p class="mb-0">{{ $preTenant->pais->nome ?? '-' }}</p>
-                                        </div>
-                                    @endif
                                 </div>
                             </div>
                         @endif
@@ -277,4 +271,3 @@
     </div>
     @include('layouts.freedash.footer')
 @endsection
-

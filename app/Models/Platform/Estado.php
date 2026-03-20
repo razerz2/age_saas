@@ -15,7 +15,18 @@ class Estado extends Model
         'uf',
         'nome_estado',
         'pais_id',
+        'ibge_id',
     ];
+
+    public function scopeByUf($query, string $uf)
+    {
+        return $query->whereRaw('UPPER(uf) = ?', [mb_strtoupper(trim($uf))]);
+    }
+
+    public function scopeByIbgeId($query, int|string $ibgeId)
+    {
+        return $query->where('ibge_id', (int) $ibgeId);
+    }
 
     public function pais()
     {

@@ -23,6 +23,8 @@ use App\Mail\TenantAdminCredentialsMail;
 
 class PreTenantProcessorService
 {
+    private const BRAZIL_COUNTRY_ID = 31;
+
     public function __construct(
         private readonly WhatsAppOfficialMessageService $officialWhatsApp
     ) {
@@ -289,7 +291,7 @@ class PreTenantProcessorService
             ]);
 
             // Criar localização se houver
-            if ($preTenant->address || $preTenant->country_id) {
+            if ($preTenant->address || $preTenant->state_id || $preTenant->city_id) {
                 TenantLocalizacao::create([
                     'tenant_id' => $tenant->id,
                     'endereco' => $preTenant->address ?? '',
@@ -297,7 +299,7 @@ class PreTenantProcessorService
                     'complemento' => $preTenant->complement,
                     'bairro' => $preTenant->neighborhood,
                     'cep' => $preTenant->zipcode,
-                    'pais_id' => $preTenant->country_id,
+                    'pais_id' => self::BRAZIL_COUNTRY_ID,
                     'estado_id' => $preTenant->state_id,
                     'cidade_id' => $preTenant->city_id,
                 ]);
@@ -427,6 +429,7 @@ class PreTenantProcessorService
                 'plan_name' => $plan->name,
                 'plan_price_cents' => $plan->price_cents,
             ]);
+            $isTestPlan = $plan->isTest();
 
             // Extrair dados do webhook
             $paymentData = $webhookPayload['payment'] ?? [];
@@ -450,10 +453,14 @@ class PreTenantProcessorService
             $billingType = $paymentData['billingType'] ?? 'PIX';
             $paymentMethod = match($billingType) {
                 'CREDIT_CARD' => 'CREDIT_CARD',
-                'DEBIT_CARD' => 'CREDIT_CARD', // Trata débito como crédito para assinatura
-                'BOLETO' => 'PIX', // Boleto será tratado como PIX para renovação
+                'DEBIT_CARD' => 'CREDIT_CARD', // Trata debito como credito para assinatura
+                'BOLETO' => 'PIX', // Boleto sera tratado como PIX para renovacao
                 default => 'PIX',
             };
+            $autoRenew = true;
+            if ($isTestPlan) {
+                $paymentMethod = 'PIX';
+            }
 
             // Verificar se já existe assinatura para este tenant
             $existingSubscription = Subscription::where('tenant_id', $tenant->id)->latest()->first();
@@ -461,8 +468,10 @@ class PreTenantProcessorService
                 Log::warning("⚠️ Já existe assinatura para tenant {$tenant->id}", [
                     'existing_subscription_id' => $existingSubscription->id,
                 ]);
-                // Usa a assinatura existente e apenas sincroniza com Asaas
-                $this->syncSubscriptionWithAsaas($existingSubscription, $paymentDate);
+                // Usa a assinatura existente e apenas sincroniza com Asaas quando for plano comercial
+                if (! $isTestPlan) {
+                    $this->syncSubscriptionWithAsaas($existingSubscription, $paymentDate);
+                }
                 return;
             }
 
@@ -484,7 +493,7 @@ class PreTenantProcessorService
                 'starts_at' => $paymentDate,
                 'ends_at' => $paymentDate->copy()->addMonths($plan->period_months ?? 1),
                 'due_day' => $dueDay,
-                'auto_renew' => true,
+                'auto_renew' => $autoRenew,
                 'payment_method' => $paymentMethod,
             ]);
 
@@ -538,8 +547,17 @@ class PreTenantProcessorService
             // Aplicar regras de acesso ao tenant
             $this->applyAccessRulesToTenant($subscription);
 
-            // Sincronizar com Asaas (seguindo o mesmo padrão do SubscriptionController)
-            $this->syncSubscriptionWithAsaas($subscription, $paymentDate);
+            // Sincronizar com Asaas (seguindo o mesmo padrao do SubscriptionController)
+            if ($isTestPlan) {
+                $subscription->update([
+                    'asaas_synced' => false,
+                    'asaas_sync_status' => 'skipped',
+                    'asaas_last_error' => null,
+                    'asaas_last_sync_at' => now(),
+                ]);
+            } else {
+                $this->syncSubscriptionWithAsaas($subscription, $paymentDate);
+            }
 
         } catch (\Throwable $e) {
             Log::error('Erro ao criar assinatura', [
@@ -563,6 +581,17 @@ class PreTenantProcessorService
 
             if (!$tenant || !$plan) {
                 Log::warning("Tenant ou plano não encontrado para assinatura {$subscription->id}");
+                return;
+            }
+
+            if ($plan->isTest()) {
+                $subscription->update([
+                    'asaas_synced' => false,
+                    'asaas_sync_status' => 'skipped',
+                    'asaas_last_error' => null,
+                    'asaas_last_sync_at' => now(),
+                ]);
+                Log::info("Assinatura {$subscription->id} ignorada no Asaas: plano de teste.");
                 return;
             }
 
@@ -967,3 +996,7 @@ class PreTenantProcessorService
         }
     }
 }
+
+
+
+

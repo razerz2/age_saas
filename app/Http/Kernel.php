@@ -136,6 +136,7 @@ class Kernel extends HttpKernel
          * 📣 Verifica se módulo de campanhas está disponível no tenant
          */
         'campaign.module.enabled' => \App\Http\Middleware\Tenant\EnsureCampaignModuleEnabled::class,
+        'tenant.commercial.eligibility' => \App\Http\Middleware\EnsureTenantCommercialEligibility::class,
 
         
     ];

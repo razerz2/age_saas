@@ -31,8 +31,8 @@
                             <p class="mb-0">{{ $cidade->estado->nome_estado ?? '-' }}</p>
                         </div>
                         <div class="col-md-6">
-                            <label class="fw-semibold text-muted">País:</label>
-                            <p class="mb-0">{{ $cidade->estado->pais->nome ?? '-' }}</p>
+                            <label class="fw-semibold text-muted">Codigo IBGE:</label>
+                            <p class="mb-0">{{ $cidade->ibge_id ?? '-' }}</p>
                         </div>
                         <div class="col-md-6">
                             <label class="fw-semibold text-muted">Criado em:</label>
@@ -48,7 +48,6 @@
                 </div>
             </div>
 
-            {{-- Modal Editar --}}
             <div class="modal fade" id="modalEdit" tabindex="-1" aria-hidden="true">
                 <div class="modal-dialog modal-dialog-centered">
                     <div class="modal-content border-0 shadow">
@@ -69,6 +68,10 @@
                                 <div class="mb-3">
                                     <label class="form-label">UF</label>
                                     <input type="text" name="uf" maxlength="2" class="form-control text-uppercase" value="{{ $cidade->uf }}">
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Codigo IBGE</label>
+                                    <input type="number" name="ibge_id" class="form-control" value="{{ $cidade->ibge_id }}">
                                 </div>
                                 <div class="mb-3">
                                     <label class="form-label">Estado *</label>

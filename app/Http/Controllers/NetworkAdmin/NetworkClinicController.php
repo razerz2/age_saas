@@ -79,7 +79,6 @@ class NetworkClinicController extends Controller
             ->with([
                 'localizacao.cidade',
                 'localizacao.estado',
-                'localizacao.pais',
                 'subscriptions' => function ($query) {
                     $query->where('status', 'active')
                         ->where(function ($q) {
@@ -102,4 +101,3 @@ class NetworkClinicController extends Controller
         ]);
     }
 }
-

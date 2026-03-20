@@ -8,6 +8,12 @@ Verifique se o baseline foi seedado:
 php artisan db:seed --class=Database\\Seeders\\TenantDefaultNotificationTemplatesSeeder
 ```
 
+Ou rode todos os seeders:
+
+```bash
+php artisan db:seed
+```
+
 ## Tenant novo sem templates em `notification_templates`
 
 1. confirme que existem registros ativos em `tenant_default_notification_templates`;

@@ -55,6 +55,13 @@
                             <p class="text-gray-600 text-sm">{{ $plan->description }}</p>
                         </div>
                         @endif
+
+                        @if($plan->hasCommercialTrial())
+                        <div class="mb-4 rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-center">
+                            <p class="text-sm font-semibold text-blue-700">Teste gratis por {{ $plan->trial_days }} dias</p>
+                            <p class="text-xs text-blue-600">Sem cartao de credito • Cancele quando quiser</p>
+                        </div>
+                        @endif
                         
                         <ul class="space-y-4 mb-8">
                             @if(!empty($plan->features) && is_array($plan->features) && count($plan->features) > 0)
@@ -78,10 +85,16 @@
                             @endif
                         </ul>
                         
-                        <div class="mt-8">
-                            <button onclick="openPreRegisterModal('{{ $plan->id }}', '{{ addslashes($plan->name) }}', '{{ $plan->formatted_price }}')" 
-                                class="w-full {{ $loop->index === 1 && $plans->count() >= 3 ? 'bg-blue-600 hover:bg-blue-700' : 'bg-gray-900 hover:bg-gray-800' }} text-white px-6 py-3 rounded-lg font-semibold transition-colors shadow-lg">
-                                Escolher Plano
+                        <div class="mt-8 space-y-2">
+                            @if($plan->hasCommercialTrial())
+                            <button onclick="openPreRegisterModal('{{ $plan->id }}', '{{ addslashes($plan->name) }}', '{{ $plan->formatted_price }}', true, {{ (int) $plan->trial_days }})" 
+                                class="w-full bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors shadow-lg">
+                                Testar Gratis
+                            </button>
+                            @endif
+                            <button onclick="openPreRegisterModal('{{ $plan->id }}', '{{ addslashes($plan->name) }}', '{{ $plan->formatted_price }}', false, 0)" 
+                                class="w-full {{ $loop->index === 1 && $plans->count() >= 3 ? 'bg-gray-900 hover:bg-gray-800' : 'bg-gray-800 hover:bg-gray-700' }} text-white px-6 py-3 rounded-lg font-semibold transition-colors shadow-lg">
+                                Contratar Plano
                             </button>
                         </div>
                     </div>
@@ -285,10 +298,15 @@
             <form id="preRegisterForm" class="p-6">
                 @csrf
                 <input type="hidden" name="plan_id" id="selected_plan_id">
+                <input type="hidden" name="trial" id="selected_trial" value="0">
                 
                 <div id="planSummary" class="mb-6 p-4 bg-blue-50 rounded-lg">
                     <p class="text-gray-700"><strong>Plano selecionado:</strong> <span id="selected_plan_name"></span></p>
                     <p class="text-gray-700"><strong>Valor:</strong> <span id="selected_plan_price"></span>/mês</p>
+                </div>
+                <div id="trialSummary" class="hidden mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                    <p class="text-sm font-semibold text-blue-800" id="trialSummaryText"></p>
+                    <p class="text-xs text-blue-700">Sem cartao de credito. Nenhuma cobranca sera gerada durante o trial.</p>
                 </div>
                 
                 <div id="noPlanWarning" class="hidden mb-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg text-yellow-800">
@@ -356,7 +374,6 @@
                     </div>
 
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <input type="hidden" id="country_id" name="country_id" value="{{ $brazilId }}">
                         <div>
                             <label for="zipcode" class="block text-sm font-medium text-gray-700 mb-1">CEP *</label>
                             <input type="text" id="zipcode" name="zipcode" required placeholder="00000-000"
@@ -416,7 +433,7 @@
                     </button>
                     <button type="submit" 
                         class="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold transition-colors">
-                        Continuar para Pagamento
+                        <span id="preRegisterSubmitLabel">Continuar para Pagamento</span>
                     </button>
                 </div>
             </form>
@@ -488,6 +505,8 @@
     let currentPlanId = null;
     let currentPlanName = null;
     let currentPlanPrice = null;
+    let currentPlanTrialEnabled = false;
+    let currentPlanTrialDays = 0;
 
     async function openPlanModal(planId) {
         try {
@@ -535,6 +554,8 @@
             currentPlanId = plan.id;
             currentPlanName = plan.name;
             currentPlanPrice = plan.formatted_price;
+            currentPlanTrialEnabled = Boolean(plan.trial_enabled);
+            currentPlanTrialDays = Number(plan.trial_days || 0);
             
             // Mostrar modal
             document.getElementById('planModal').classList.remove('hidden');
@@ -553,16 +574,42 @@
         currentPlanId = null;
         currentPlanName = null;
         currentPlanPrice = null;
+        currentPlanTrialEnabled = false;
+        currentPlanTrialDays = 0;
     }
     
     function selectPlanFromModal() {
         if (currentPlanId) {
             closePlanModal();
-            openPreRegisterModal(currentPlanId, currentPlanName, currentPlanPrice);
+            openPreRegisterModal(currentPlanId, currentPlanName, currentPlanPrice, currentPlanTrialEnabled, currentPlanTrialDays);
         }
     }
     
-    function openPreRegisterModal(planId, planName, planPrice) {
+    function setTrialMode(isTrial, trialDays = 0) {
+        const trialInput = document.getElementById('selected_trial');
+        const trialSummary = document.getElementById('trialSummary');
+        const trialSummaryText = document.getElementById('trialSummaryText');
+        const submitLabel = document.getElementById('preRegisterSubmitLabel');
+        const enabled = Boolean(isTrial);
+        const days = Number(trialDays || 0);
+
+        trialInput.value = enabled ? '1' : '0';
+
+        if (enabled) {
+            trialSummary.classList.remove('hidden');
+            trialSummaryText.textContent = days > 0
+                ? `Teste gratis por ${days} dias. O acesso e liberado imediatamente.`
+                : 'Teste gratis habilitado para este plano.';
+            submitLabel.textContent = 'Iniciar Teste Gratis';
+            return;
+        }
+
+        trialSummary.classList.add('hidden');
+        trialSummaryText.textContent = '';
+        submitLabel.textContent = 'Continuar para Pagamento';
+    }
+
+    function openPreRegisterModal(planId, planName, planPrice, isTrial = false, trialDays = 0) {
         // Validar se há plan_id antes de abrir o modal
         if (!planId) {
             alert('Por favor, selecione um plano cadastrado. Entre em contato com nossa equipe comercial para mais informações.');
@@ -573,6 +620,7 @@
         document.getElementById('selected_plan_id').value = planId || '';
         document.getElementById('selected_plan_name').textContent = planName;
         document.getElementById('selected_plan_price').textContent = planPrice;
+        setTrialMode(isTrial, trialDays);
         
         // Mostrar/ocultar aviso baseado na presença de plan_id
         const noPlanWarning = document.getElementById('noPlanWarning');
@@ -586,53 +634,54 @@
         document.getElementById('preRegisterModal').classList.add('flex');
         document.body.style.overflow = 'hidden';
 
-        // Carregar estados para o Brasil (fixo)
-        const countryId = document.getElementById('country_id').value;
-        if (countryId) {
-            loadStates(countryId);
-        }
+        loadStates();
     }
 
-    // Lógica de Localização (País -> Estado -> Cidade)
-    const countrySelect = document.getElementById('country_id');
+    // Lógica de Localização (Estado -> Cidade)
     const stateSelect = document.getElementById('state_id');
     const citySelect = document.getElementById('city_id');
+    const statesUrl = `{{ route('api.public.estados') }}`;
+    const citiesUrlTemplate = `{{ route('api.public.cidades', ['estado' => ':id']) }}`;
+    const zipcodeUrlTemplate = `{{ route('api.zipcode', ['zipcode' => '__CEP__']) }}`;
+    let statesLoaded = false;
 
-    async function loadStates(countryId) {
-        if (!countryId) {
-            stateSelect.innerHTML = '<option value="">Selecione o país primeiro</option>';
-            citySelect.innerHTML = '<option value="">Selecione o estado primeiro</option>';
+    async function loadStates() {
+        if (!stateSelect) {
+            return;
+        }
+
+        if (statesLoaded) {
             return;
         }
 
         stateSelect.innerHTML = '<option value="">Carregando estados...</option>';
         
         try {
-            console.log('Carregando estados para o país ID:', countryId);
-            const response = await fetch(`{{ route('api.public.estados', ['pais' => ':id']) }}`.replace(':id', countryId));
+            const response = await fetch(statesUrl);
             const data = await response.json();
-            
-            console.log('Estados carregados:', data.length);
             
             stateSelect.innerHTML = '<option value="">Selecione o estado</option>';
             if (data.length === 0) {
                 stateSelect.innerHTML = '<option value="">Nenhum estado encontrado</option>';
+                return;
             }
             
             data.forEach(state => {
                 const option = document.createElement('option');
                 option.value = state.id_estado;
+                option.dataset.uf = state.uf || '';
                 option.textContent = state.nome_estado;
                 stateSelect.appendChild(option);
             });
+            statesLoaded = true;
         } catch (error) {
             console.error('Erro ao carregar estados:', error);
             stateSelect.innerHTML = '<option value="">Erro ao carregar estados</option>';
         }
     }
 
-    async function loadCities(stateId) {
-        if (!stateId) {
+    async function loadCities(stateId, preferredCityId = '') {
+        if (!citySelect || !stateId) {
             citySelect.innerHTML = '<option value="">Selecione o estado primeiro</option>';
             return;
         }
@@ -640,19 +689,89 @@
         citySelect.innerHTML = '<option value="">Carregando...</option>';
         
         try {
-            const response = await fetch(`{{ route('api.public.cidades', ['estado' => ':id']) }}`.replace(':id', stateId));
+            const response = await fetch(citiesUrlTemplate.replace(':id', stateId));
             const data = await response.json();
             
             citySelect.innerHTML = '<option value="">Selecione a cidade</option>';
             data.forEach(city => {
                 const option = document.createElement('option');
-                option.value = city.id_city || city.id_cidade; // Suporta ambos os formatos se necessário
+                option.value = city.id_cidade;
+                option.dataset.name = city.nome_cidade;
                 option.textContent = city.nome_cidade;
+                if (preferredCityId && String(preferredCityId) === String(city.id_cidade)) {
+                    option.selected = true;
+                }
                 citySelect.appendChild(option);
             });
         } catch (error) {
             console.error('Erro ao carregar cidades:', error);
             citySelect.innerHTML = '<option value="">Erro ao carregar</option>';
+        }
+    }
+
+    function selectStateByUf(uf) {
+        if (!stateSelect || !uf) {
+            return '';
+        }
+
+        const normalizedUf = String(uf).toUpperCase();
+        for (let i = 0; i < stateSelect.options.length; i += 1) {
+            const option = stateSelect.options[i];
+            if ((option.dataset.uf || '').toUpperCase() === normalizedUf) {
+                stateSelect.selectedIndex = i;
+                return option.value;
+            }
+        }
+
+        return '';
+    }
+
+    function selectCityByName(cityName) {
+        if (!citySelect || !cityName) {
+            return '';
+        }
+
+        const normalizedName = String(cityName).trim().toLowerCase();
+        for (let i = 0; i < citySelect.options.length; i += 1) {
+            const option = citySelect.options[i];
+            if ((option.dataset.name || '').trim().toLowerCase() === normalizedName) {
+                citySelect.selectedIndex = i;
+                return option.value;
+            }
+        }
+
+        return '';
+    }
+
+    async function applyZipcodeLookup(payload) {
+        if (!payload || typeof payload !== 'object') {
+            return;
+        }
+
+        if (payload.street) {
+            document.getElementById('address').value = payload.street;
+        }
+        if (payload.neighborhood) {
+            document.getElementById('neighborhood').value = payload.neighborhood;
+        }
+
+        let selectedStateId = '';
+        if (payload.state?.id) {
+            selectedStateId = String(payload.state.id);
+            stateSelect.value = selectedStateId;
+        } else if (payload.fallback?.state_uf) {
+            selectedStateId = selectStateByUf(payload.fallback.state_uf);
+        }
+
+        if (selectedStateId) {
+            const preferredCityId = payload.city?.id ? String(payload.city.id) : '';
+            await loadCities(selectedStateId, preferredCityId);
+        }
+
+        if (payload.city?.id && citySelect) {
+            citySelect.value = String(payload.city.id);
+        } else if (payload.fallback?.city_name) {
+            selectCityByName(payload.fallback.city_name);
         }
     }
 
@@ -665,7 +784,7 @@
     const documentField = document.getElementById('document');
 
     if (zipcodeField) {
-        zipcodeField.addEventListener('input', function(e) {
+        zipcodeField.addEventListener('input', async function(e) {
             let value = e.target.value.replace(/\D/g, '');
             if (value.length > 8) value = value.substring(0, 8);
             if (value.length > 5) {
@@ -673,18 +792,21 @@
             }
             e.target.value = value;
 
-            // Busca automática de CEP ao completar 8 dígitos
-            if (value.replace(/\D/g, '').length === 8) {
-                fetch(`https://viacep.com.br/ws/${value.replace(/\D/g, '')}/json/`)
-                    .then(response => response.json())
-                    .then(data => {
-                        if (!data.erro) {
-                            document.getElementById('address').value = data.logradouro;
-                            document.getElementById('neighborhood').value = data.bairro;
-                            // Aqui poderíamos selecionar o estado/cidade se tivéssemos os IDs, 
-                            // mas por enquanto apenas preenchemos os campos de texto.
-                        }
-                    });
+            // Busca automática de CEP ao completar 8 dígitos via endpoint interno
+            const digits = value.replace(/\D/g, '');
+            if (digits.length === 8 && zipcodeUrlTemplate) {
+                try {
+                    await loadStates();
+                    const response = await fetch(zipcodeUrlTemplate.replace('__CEP__', digits));
+                    if (!response.ok) {
+                        return;
+                    }
+
+                    const payload = await response.json();
+                    await applyZipcodeLookup(payload);
+                } catch (error) {
+                    console.error('Erro ao consultar CEP interno:', error);
+                }
             }
         });
     }
@@ -715,6 +837,7 @@
         document.getElementById('preRegisterModal').classList.remove('flex');
         document.body.style.overflow = 'auto';
         document.getElementById('preRegisterForm').reset();
+        setTrialMode(false, 0);
         document.getElementById('formError').classList.add('hidden');
         document.getElementById('formSuccess').classList.add('hidden');
     }
@@ -723,6 +846,7 @@
         e.preventDefault();
         
         const planId = document.getElementById('selected_plan_id').value;
+        const isTrial = document.getElementById('selected_trial').value === '1';
         const acceptTerms = document.querySelector('input[name="accept_terms"]').checked;
         
         // Validar se há plan_id antes de enviar
@@ -762,10 +886,20 @@
             if (response.ok && data.success) {
                 successDiv.textContent = 'Pré-cadastro realizado com sucesso! Redirecionando para pagamento...';
                 successDiv.classList.remove('hidden');
+
+                if (isTrial) {
+                    successDiv.textContent = 'Teste gratis iniciado com sucesso! Redirecionando para o login da sua tenant...';
+                }
+
+                if (isTrial && data.redirect_url) {
+                    window.location.href = data.redirect_url;
+                    return;
+                }
                 
                 if (data.payment_url) {
                     // Redireciona imediatamente para a página de pagamento do Asaas
                     window.location.href = data.payment_url;
+                    return;
                 } else {
                     errorDiv.textContent = 'Erro: Link de pagamento não foi gerado. Entre em contato com o suporte.';
                     errorDiv.classList.remove('hidden');
@@ -789,5 +923,37 @@
             errorDiv.classList.remove('hidden');
         }
     });
+
+    async function tryOpenModalFromQuery() {
+        const params = new URLSearchParams(window.location.search);
+        const planId = params.get('plan_id');
+        const wantsTrial = params.get('trial') === '1';
+
+        if (!planId) {
+            return;
+        }
+
+        try {
+            const response = await fetch('{{ url("/planos/json") }}/' + planId);
+            if (!response.ok) {
+                return;
+            }
+
+            const plan = await response.json();
+            const canTrial = wantsTrial && Boolean(plan.trial_enabled);
+
+            openPreRegisterModal(
+                plan.id,
+                plan.name,
+                plan.formatted_price,
+                canTrial,
+                Number(plan.trial_days || 0)
+            );
+        } catch (error) {
+            console.error('Nao foi possivel abrir pre-cadastro via query string', error);
+        }
+    }
+
+    tryOpenModalFromQuery();
 </script>
 @endpush

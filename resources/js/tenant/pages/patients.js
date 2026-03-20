@@ -349,6 +349,9 @@ function bindAddressForm() {
 
     const statesUrl = config.dataset.statesUrl || '';
     const citiesUrlTemplate = config.dataset.citiesUrlTemplate || '';
+    const zipcodeUrlTemplate = config.dataset.zipcodeUrlTemplate || '';
+    let initialCityId = currentCityId;
+    let statesLoadedPromise = null;
 
     const loadStates = async () => {
         if (!stateSelect || !statesUrl) {
@@ -380,7 +383,7 @@ function bindAddressForm() {
         }
     };
 
-    const loadCities = async (stateId) => {
+    const loadCities = async (stateId, preferredCityId = '') => {
         if (!citySelect || !stateId || !citiesUrlTemplate) {
             if (citySelect) {
                 citySelect.innerHTML = '<option value=\"\">Selecione o estado primeiro</option>';
@@ -392,20 +395,118 @@ function bindAddressForm() {
             const response = await fetch(citiesUrlTemplate.replace('__ID__', stateId));
             const data = await response.json();
             citySelect.innerHTML = '<option value=\"\">Selecione a cidade</option>';
+            const cityToSelect = preferredCityId || initialCityId;
             data.forEach((city) => {
                 const option = document.createElement('option');
                 option.value = city.id_cidade;
                 option.dataset.name = city.nome_cidade;
                 option.textContent = city.nome_cidade;
-                if (currentCityId && String(currentCityId) === String(city.id_cidade)) {
+                if (cityToSelect && String(cityToSelect) === String(city.id_cidade)) {
                     option.selected = true;
                 }
                 citySelect.appendChild(option);
             });
+            if (cityToSelect) {
+                initialCityId = '';
+            }
         } catch (error) {
             // eslint-disable-next-line no-console
             console.error('Erro ao carregar cidades:', error);
             citySelect.innerHTML = '<option value=\"\">Erro ao carregar</option>';
+        }
+    };
+
+    const ensureStatesLoaded = () => {
+        if (!statesLoadedPromise) {
+            statesLoadedPromise = loadStates();
+        }
+
+        return statesLoadedPromise;
+    };
+
+    const selectStateByUf = (uf) => {
+        if (!stateSelect || !uf) {
+            return '';
+        }
+
+        const normalizedUf = String(uf).toUpperCase();
+        for (let i = 0; i < stateSelect.options.length; i += 1) {
+            const option = stateSelect.options[i];
+            if ((option.dataset.abbr || '').toUpperCase() === normalizedUf) {
+                stateSelect.selectedIndex = i;
+                return option.value;
+            }
+        }
+
+        return '';
+    };
+
+    const selectCityByName = (cityName) => {
+        if (!citySelect || !cityName) {
+            return;
+        }
+
+        const normalizedName = String(cityName).trim().toLowerCase();
+        for (let i = 0; i < citySelect.options.length; i += 1) {
+            const option = citySelect.options[i];
+            if ((option.dataset.name || '').trim().toLowerCase() === normalizedName) {
+                citySelect.selectedIndex = i;
+                if (cityNameInput) {
+                    cityNameInput.value = option.dataset.name || cityName;
+                }
+                break;
+            }
+        }
+    };
+
+    const applyZipcodeLookup = async (payload) => {
+        if (!payload || typeof payload !== 'object') {
+            return;
+        }
+
+        if (addressField && typeof payload.street === 'string') {
+            addressField.value = payload.street;
+        }
+        if (neighborhoodField && typeof payload.neighborhood === 'string') {
+            neighborhoodField.value = payload.neighborhood;
+        }
+
+        let selectedStateId = '';
+
+        if (payload.state?.id && stateSelect) {
+            selectedStateId = String(payload.state.id);
+            stateSelect.value = selectedStateId;
+            if (stateAbbrInput) {
+                stateAbbrInput.value = payload.state.uf || '';
+            }
+        } else if (payload.fallback?.state_uf) {
+            selectedStateId = selectStateByUf(payload.fallback.state_uf);
+            if (stateAbbrInput) {
+                stateAbbrInput.value = payload.fallback.state_uf || '';
+            }
+        }
+
+        if (selectedStateId) {
+            const preferredCityId = payload.city?.id ? String(payload.city.id) : '';
+            await loadCities(selectedStateId, preferredCityId);
+        }
+
+        if (payload.city?.id && citySelect) {
+            citySelect.value = String(payload.city.id);
+            const selectedCityOption = citySelect.options[citySelect.selectedIndex];
+            if (cityNameInput) {
+                cityNameInput.value = selectedCityOption?.dataset?.name || payload.city.name || '';
+            }
+        } else if (payload.fallback?.city_name) {
+            selectCityByName(payload.fallback.city_name);
+            if (cityNameInput && !cityNameInput.value) {
+                cityNameInput.value = payload.fallback.city_name;
+            }
+        }
+
+        if (Array.isArray(payload.warnings) && payload.warnings.length > 0) {
+            // eslint-disable-next-line no-console
+            console.warn('Avisos no preenchimento automatico por CEP:', payload.warnings);
         }
     };
 
@@ -432,46 +533,26 @@ function bindAddressForm() {
         }
         event.target.value = value;
 
-        if (value.replace(/\D/g, '').length === 8) {
-            fetch(`https://viacep.com.br/ws/${value.replace(/\D/g, '')}/json/`)
-                .then((response) => response.json())
-                .then((data) => {
-                    if (!data.erro) {
-                        if (addressField) addressField.value = data.logradouro;
-                        if (neighborhoodField) neighborhoodField.value = data.bairro;
-
-                        if (data.uf && stateSelect) {
-                            for (let i = 0; i < stateSelect.options.length; i += 1) {
-                                if (stateSelect.options[i].dataset.abbr === data.uf) {
-                                    stateSelect.selectedIndex = i;
-                                    if (stateAbbrInput) {
-                                        stateAbbrInput.value = data.uf;
-                                    }
-                                    loadCities(stateSelect.value).then(() => {
-                                        if (data.localidade && citySelect) {
-                                            for (let j = 0; j < citySelect.options.length; j += 1) {
-                                                if (
-                                                    citySelect.options[j].dataset.name.toLowerCase() ===
-                                                    data.localidade.toLowerCase()
-                                                ) {
-                                                    citySelect.selectedIndex = j;
-                                                    if (cityNameInput) {
-                                                        cityNameInput.value = data.localidade;
-                                                    }
-                                                    break;
-                                                }
-                                            }
-                                        }
-                                    });
-                                    break;
-                                }
-                            }
-                        }
+        const digits = value.replace(/\D/g, '');
+        if (digits.length === 8 && zipcodeUrlTemplate) {
+            const zipcodeUrl = zipcodeUrlTemplate.replace('__CEP__', digits);
+            ensureStatesLoaded()
+                .then(() => fetch(zipcodeUrl))
+                .then(async (response) => {
+                    if (!response.ok) {
+                        return;
                     }
+
+                    const payload = await response.json();
+                    await applyZipcodeLookup(payload);
+                })
+                .catch((error) => {
+                    // eslint-disable-next-line no-console
+                    console.error('Erro ao consultar CEP interno:', error);
                 });
         }
     });
 
-    loadStates();
+    ensureStatesLoaded();
 }
 

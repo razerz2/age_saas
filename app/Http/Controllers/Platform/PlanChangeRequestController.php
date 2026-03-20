@@ -99,6 +99,37 @@ class PlanChangeRequestController extends Controller
             $method->setAccessible(true);
             $method->invoke($subscriptionController, $subscription);
 
+            if ($newPlan->isTest()) {
+                $asaas = new AsaasService();
+
+                if (!empty($subscription->asaas_subscription_id)) {
+                    try {
+                        $asaas->deleteSubscription($subscription->asaas_subscription_id);
+                    } catch (\Throwable $e) {
+                        Log::warning('Falha ao cancelar assinatura Asaas durante mudanca para plano de teste.', [
+                            'subscription_id' => $subscription->id,
+                            'error' => $e->getMessage(),
+                        ]);
+                    }
+                }
+
+                $subscription->update([
+                    'payment_method' => 'PIX',
+                    'status' => 'active',
+                    'asaas_subscription_id' => null,
+                    'asaas_synced' => false,
+                    'asaas_sync_status' => 'skipped',
+                    'asaas_last_error' => null,
+                    'asaas_last_sync_at' => now(),
+                ]);
+
+                DB::commit();
+
+                return redirect()
+                    ->route('Platform.plan-change-requests.index')
+                    ->with('success', 'Solicitacao aprovada: plano de teste aplicado sem cobranca.');
+            }
+
             // Atualizar TODAS as faturas pendentes (pending ou overdue) para o novo valor do plano
             $pendingInvoices = Invoices::where('subscription_id', $subscription->id)
                 ->whereIn('status', ['pending', 'overdue'])

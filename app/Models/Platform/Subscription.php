@@ -26,8 +26,9 @@ class Subscription extends Model
         'status',
         'auto_renew',
         'payment_method',
+        'is_trial',
+        'trial_ends_at',
 
-        // 🔹 Campos de sincronização com Asaas
         'asaas_subscription_id',
         'asaas_synced',
         'asaas_sync_status',
@@ -41,10 +42,31 @@ class Subscription extends Model
         'billing_anchor_date' => 'date',
         'recovery_started_at' => 'datetime',
         'auto_renew' => 'boolean',
+        'is_trial' => 'boolean',
+        'trial_ends_at' => 'datetime',
         'asaas_last_sync_at' => 'datetime',
     ];
 
-    // 🔗 Relações
+    protected static function booted(): void
+    {
+        static::saving(function (self $subscription) {
+            $plan = null;
+
+            if ($subscription->relationLoaded('plan')) {
+                $plan = $subscription->plan;
+            } elseif (!empty($subscription->plan_id)) {
+                $plan = Plan::query()->find($subscription->plan_id);
+            }
+
+            if ($plan?->isTest()) {
+                // Hardening comercial: plano de teste nao pode ficar pendente/cancelado.
+                $subscription->status = 'active';
+                $subscription->due_day = (int) ($subscription->due_day ?: 1);
+                $subscription->payment_method = $subscription->payment_method ?: 'PIX';
+            }
+        });
+    }
+
     public function tenant()
     {
         return $this->belongsTo(Tenant::class, 'tenant_id');
@@ -60,7 +82,6 @@ class Subscription extends Model
         return $this->belongsTo(Plan::class, 'plan_id');
     }
 
-    // 🧠 Helpers
     public function isActive(): bool
     {
         return $this->status === 'active';
@@ -68,6 +89,10 @@ class Subscription extends Model
 
     public function statusLabel(): string
     {
+        if ($this->is_trial && in_array($this->status, ['active', 'trialing'], true)) {
+            return 'Em teste';
+        }
+
         return match ($this->status) {
             'pending' => 'Pendente',
             'active' => 'Ativa',
@@ -77,7 +102,6 @@ class Subscription extends Model
             default => ucfirst($this->status),
         };
     }
-
 
     public function getIsExpiredAttribute()
     {
@@ -93,10 +117,60 @@ class Subscription extends Model
     {
         return match ($this->payment_method) {
             'PIX' => 'PIX',
-            'BOLETO' => 'Boleto Bancário',
-            'CREDIT_CARD' => 'Cartão de Crédito',
-            'DEBIT_CARD' => 'Cartão de Débito',
+            'BOLETO' => 'Boleto Bancario',
+            'CREDIT_CARD' => 'Cartao de Credito',
+            'DEBIT_CARD' => 'Cartao de Debito',
+            null => 'Nao aplicavel',
             default => 'Desconhecido',
         };
+    }
+
+    public function isTestPlan(): bool
+    {
+        $this->loadMissing('plan');
+
+        return (bool) $this->plan?->isTest();
+    }
+
+    public function isTrialActive(): bool
+    {
+        if (! $this->is_trial || ! in_array($this->status, ['active', 'trialing'], true)) {
+            return false;
+        }
+
+        if (! $this->trial_ends_at) {
+            return false;
+        }
+
+        return now()->lte($this->trial_ends_at);
+    }
+
+    public function isTrialExpired(): bool
+    {
+        if (! $this->is_trial || ! $this->trial_ends_at) {
+            return false;
+        }
+
+        return now()->gt($this->trial_ends_at);
+    }
+
+    public function daysRemainingInTrial(): ?int
+    {
+        if (! $this->is_trial || ! $this->trial_ends_at) {
+            return null;
+        }
+
+        if ($this->isTrialExpired()) {
+            return 0;
+        }
+
+        $remaining = now()->startOfDay()->diffInDays($this->trial_ends_at->copy()->startOfDay(), false);
+
+        return max(0, $remaining);
+    }
+
+    public function usesFinancialFlow(): bool
+    {
+        return ! $this->isTestPlan() && ! $this->is_trial;
     }
 }

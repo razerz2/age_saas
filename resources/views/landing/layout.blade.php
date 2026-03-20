@@ -67,7 +67,7 @@
                 
                 <!-- CTA Button -->
                 <div class="hidden md:flex md:items-center md:space-x-4">
-                    <a href="{{ route('landing.plans') }}" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium transition-colors">
+                    <a href="{{ route('landing.plans', array_filter(['trial' => 1, 'plan_id' => $landingTrialPlan?->id])) }}" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium transition-colors">
                         Testar Grátis
                     </a>
                 </div>
@@ -89,7 +89,7 @@
                     <a href="{{ route('landing.features') }}" class="block px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-md text-base font-medium">Funcionalidades</a>
                     <a href="{{ route('landing.plans') }}" class="block px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-md text-base font-medium">Planos</a>
                     <a href="{{ route('landing.contact') }}" class="block px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-md text-base font-medium">Contato</a>
-                    <a href="{{ route('landing.plans') }}" class="block px-3 py-2 bg-blue-600 text-white rounded-md text-base font-medium text-center">Testar Grátis</a>
+                    <a href="{{ route('landing.plans', array_filter(['trial' => 1, 'plan_id' => $landingTrialPlan?->id])) }}" class="block px-3 py-2 bg-blue-600 text-white rounded-md text-base font-medium text-center">Testar Grátis</a>
                 </div>
             </div>
         </nav>

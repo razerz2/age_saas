@@ -20,6 +20,7 @@ class CidadeRequest extends FormRequest
             'nome_cidade' => ['required', 'string', 'max:255', 'unique:cidades,nome_cidade,' . $cidadeId . ',id_cidade'],
             'uf'          => ['nullable', 'string', 'size:2'],
             'estado_id'   => ['required', 'integer', 'exists:estados,id_estado'],
+            'ibge_id'     => ['nullable', 'integer'],
         ];
     }
 

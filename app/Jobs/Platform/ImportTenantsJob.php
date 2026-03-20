@@ -128,6 +128,8 @@ class ImportTenantsJob implements ShouldQueue
 
                 $tenantData = array_merge($row, [
                     'network_id' => $network->id,
+                    // Mantido para compatibilidade legada; a elegibilidade comercial
+                    // continua dependente da assinatura criada pelo TenantCreatorService.
                     'plan_id'    => $plan->id,
                     'pais_id'    => 31,
                     'estado_id'  => $estadoId,
@@ -198,4 +200,3 @@ class ImportTenantsJob implements ShouldQueue
         return $rows;
     }
 }
-

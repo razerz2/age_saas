@@ -10,8 +10,10 @@ Middleware:
 Rotas:
 
 - `GET Platform.tenant-default-notification-templates.index`
-- `GET Platform.tenant-default-notification-templates.create`
-- `POST Platform.tenant-default-notification-templates.store`
 - `GET Platform.tenant-default-notification-templates.edit`
 - `PUT Platform.tenant-default-notification-templates.update`
 
+Restricao intencional:
+
+- rotas `create/store` nao existem neste modulo (catalogo controlado via seeder);
+- policy `create` retorna `false`.

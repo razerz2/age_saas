@@ -148,8 +148,8 @@ Subscription (N) ── (1) Plan
 - `asaas_last_sync_at` - Data da última sincronização
 - `asaas_last_error` - Último erro
 
-**Nota sobre `past_due` vs `suspended_at`:**
-O status `past_due` na subscription representa inadimplência lógica, mas o bloqueio efetivo de acesso é controlado exclusivamente via `tenant.suspended_at`. Uma subscription pode estar `active` ou `past_due`, mas o que determina se o tenant tem acesso ao sistema é o campo `suspended_at` do tenant.
+**Nota sobre `past_due`, `suspended_at` e elegibilidade comercial:**
+O status `past_due` na subscription representa inadimplência lógica. O bloqueio técnico de acesso na área autenticada considera a regra de elegibilidade comercial (`Tenant::isEligibleForAccess()`) em conjunto com status/suspensão do tenant. Na prática, uma tenant só acessa `/workspace/{slug}` quando possui assinatura ativa com plano vinculado e não está bloqueada por status operacional.
 
 **Tabela `invoices`:**
 - `provider` - Provedor (`asaas`)
@@ -232,7 +232,7 @@ O método `syncWithAsaas()` é responsável por sincronizar a assinatura local c
 
 Tenants vinculados a uma **Rede de Clínicas** utilizam planos da categoria `contractual`. Para estes casos, as regras de pagamento do sistema são ignoradas:
 
-1.  **Sem Assinatura (Subscription)**: O sistema não cria registros na tabela `subscriptions` para estes tenants. O acesso é liberado diretamente via `plan_id` no model `Tenant`.
+1.  **Sem Assinatura (Subscription)**: O sistema pode não criar registros na tabela `subscriptions` para estes tenants, mas isso **não** libera acesso por si só. `tenants.plan_id` isolado não é critério de acesso à área autenticada.
 2.  **Sem Cobrança Automática**: O Asaas não é utilizado para gerenciar faturas recorrentes destes tenants. A gestão financeira entre a rede e as clínicas é feita de forma externa ao sistema de pagamentos automatizado.
 3.  **Liberação de Funcionalidades**: O `FeatureAccessService` reconhece o plano contratual e libera os limites e features configurados normalmente.
 
@@ -1050,4 +1050,3 @@ O sistema possui os seguintes comandos agendados para gestão automática de fat
 - ✅ **Purga com proteções:** Verifica assinaturas ativas/pendentes e invoices pendentes antes de purgar
 - ✅ **Purga com --dry-run:** Opção para simular purga sem fazer alterações
 - ✅ **Campos de auditoria:** `suspended_at`, `canceled_at` (tenants), `recovery_started_at` (subscriptions) para rastreamento completo
-

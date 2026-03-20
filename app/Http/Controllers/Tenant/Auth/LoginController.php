@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Tenant\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Http\Middleware\EnsureTenantCommercialEligibility;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -55,6 +56,16 @@ class LoginController extends Controller
 
         if (!$tenant) {
             return back()->withErrors(['email' => 'Tenant inválido.']);
+        }
+
+        if (! $tenant->isEligibleForAccess() && ! $this->tenantCanAuthenticateDespiteCommercialBlock($tenant)) {
+            $blockedMessage = method_exists($tenant, 'commercialAccessBlockedMessage')
+                ? $tenant->commercialAccessBlockedMessage()
+                : EnsureTenantCommercialEligibility::BLOCKED_ACCESS_MESSAGE;
+
+            return back()
+                ->withInput($request->except('password'))
+                ->with('error', $blockedMessage);
         }
 
         // 🔧 IMPORTANTE: Ativar o tenant ANTES de buscar o usuário
@@ -219,4 +230,10 @@ class LoginController extends Controller
         DB::purge('tenant');  // Limpa a conexão existente
         DB::reconnect('tenant'); // Reconnecta com as novas configurações
     }
+    protected function tenantCanAuthenticateDespiteCommercialBlock(Tenant $tenant): bool
+    {
+        return method_exists($tenant, 'expiredTrialSubscription')
+            && (bool) $tenant->expiredTrialSubscription();
+    }
 }
+

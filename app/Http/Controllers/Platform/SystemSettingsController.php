@@ -2,8 +2,6 @@
 
 namespace App\Http\Controllers\Platform;
 
-use App\Models\Platform\Pais; // ✅ importante
-
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Services\Providers\ProviderConfigResolver;
@@ -20,18 +18,16 @@ use Illuminate\Support\Str;
 
 class SystemSettingsController extends Controller
 {
+    private const BRAZIL_COUNTRY_ID = 31;
     /**
-     * Exibe a página de configurações.
+     * Exibe a pÃ¡gina de configuraÃ§Ãµes.
      */
     public function index()
     {
-        $paises = Pais::orderBy('nome')->get();
-
         $settings = [
             'timezone' => sysconfig('timezone', 'America/Sao_Paulo'),
-            'country_id' => sysconfig('country_id'), // armazenará o id_pais
             'language' => sysconfig('language', 'pt_BR'),
-            // demais integrações
+            // demais integraÃ§Ãµes
             'ASAAS_API_URL' => sysconfig('ASAAS_API_URL', env('ASAAS_API_URL')),
             'ASAAS_API_KEY' => sysconfig('ASAAS_API_KEY', env('ASAAS_API_KEY')),
             'ASAAS_ENV' => sysconfig('ASAAS_ENV', env('ASAAS_ENV', 'sandbox')),
@@ -61,18 +57,18 @@ class SystemSettingsController extends Controller
             'tenant.default_logo' => sysconfig('tenant.default_logo'),
             'tenant.default_logo_mini' => sysconfig('tenant.default_logo_mini'),
             'tenant.default_favicon' => sysconfig('tenant.default_favicon'),
-            // Configurações de Billing
+            // ConfiguraÃ§Ãµes de Billing
             'billing.invoice_days_before_due' => sysconfig('billing.invoice_days_before_due', 10),
             'billing.notify_days_before_due' => sysconfig('billing.notify_days_before_due', 5),
             'billing.recovery_days_after_suspension' => sysconfig('billing.recovery_days_after_suspension', 5),
             'billing.purge_days_after_cancellation' => sysconfig('billing.purge_days_after_cancellation', 90),
-            // Configurações de Notificações
+            // ConfiguraÃ§Ãµes de NotificaÃ§Ãµes
             'notifications.enabled' => sysconfig('notifications.enabled', '1') === '1',
             'notifications.update_interval' => (int) sysconfig('notifications.update_interval', 5),
             'notifications.display_count' => (int) sysconfig('notifications.display_count', 5),
             'notifications.show_badge' => sysconfig('notifications.show_badge', '1') === '1',
             'notifications.sound_enabled' => sysconfig('notifications.sound_enabled', '0') === '1',
-            // Tipos de eventos para notificações
+            // Tipos de eventos para notificaÃ§Ãµes
             'notifications.types.payment' => sysconfig('notifications.types.payment', '1') === '1',
             'notifications.types.invoice' => sysconfig('notifications.types.invoice', '1') === '1',
             'notifications.types.subscription' => sysconfig('notifications.types.subscription', '1') === '1',
@@ -84,29 +80,28 @@ class SystemSettingsController extends Controller
         // Comandos agendados
         $scheduledCommands = $this->getScheduledCommands();
 
-        return view('platform.settings.index', compact('settings', 'paises', 'scheduledCommands'));
+        return view('platform.settings.index', compact('settings', 'scheduledCommands'));
     }
 
     /**
-     * Atualiza as configurações gerais (timezone, país, idioma)
+     * Atualiza as configuraÃ§Ãµes gerais (timezone, paÃ­s, idioma)
      */
     public function updateGeneral(Request $request)
     {
         $request->validate([
             'timezone' => 'required|string',
-            'country_id' => 'nullable|integer|exists:paises,id_pais',
             'language' => 'required|string',
         ]);
 
         set_sysconfig('timezone', $request->timezone);
-        set_sysconfig('country_id', $request->country_id);
+        set_sysconfig('country_id', self::BRAZIL_COUNTRY_ID);
         set_sysconfig('language', $request->language);
 
-        return back()->with('success', 'Configurações gerais atualizadas com sucesso.');
+        return back()->with('success', 'ConfiguraÃ§Ãµes gerais atualizadas com sucesso.');
     }
 
     /**
-     * Atualiza integrações ASAAS / Meta / Z-API / Email
+     * Atualiza integraÃ§Ãµes ASAAS / Meta / Z-API / Email
      */
     public function updateIntegrations(Request $request)
     {
@@ -132,7 +127,7 @@ class SystemSettingsController extends Controller
             'MAIL_FROM_NAME' => 'nullable|string',
         ]);
 
-        // Lista de campos que serão atualizados
+        // Lista de campos que serÃ£o atualizados
         $fields = [
             'ASAAS_API_KEY',
             'ASAAS_ENV',
@@ -155,7 +150,7 @@ class SystemSettingsController extends Controller
             'MAIL_FROM_NAME',
         ];
 
-        // Atualiza configurações no banco
+        // Atualiza configuraÃ§Ãµes no banco
         foreach ($fields as $field) {
             if ($request->filled($field)) {
                 set_sysconfig($field, $request->$field);
@@ -165,7 +160,7 @@ class SystemSettingsController extends Controller
         // Atualiza o .env
         updateEnv($request->only($fields));
 
-        return back()->with('success', 'Integrações e configurações de e-mail atualizadas com sucesso.');
+        return back()->with('success', 'IntegraÃ§Ãµes e configuraÃ§Ãµes de e-mail atualizadas com sucesso.');
     }
 
     /**
@@ -195,10 +190,10 @@ class SystemSettingsController extends Controller
         ]);
 
         try {
-            // Processar logo padrão do sistema
+            // Processar logo padrÃ£o do sistema
             if ($request->hasFile('system_default_logo')) {
                 $path = $request->file('system_default_logo')->store('platform/system-logos', 'public');
-                Log::info('Logo padrão do sistema salva', ['path' => $path]);
+                Log::info('Logo padrÃ£o do sistema salva', ['path' => $path]);
                 set_sysconfig('system.default_logo', $path);
             } elseif ($request->input('remove_system_default_logo') == '1') {
                 $oldLogo = sysconfig('system.default_logo');
@@ -208,10 +203,10 @@ class SystemSettingsController extends Controller
                 set_sysconfig('system.default_logo', null);
             }
 
-            // Processar favicon padrão do sistema
+            // Processar favicon padrÃ£o do sistema
             if ($request->hasFile('system_default_favicon')) {
                 $path = $request->file('system_default_favicon')->store('platform/system-favicons', 'public');
-                Log::info('Favicon padrão do sistema salvo', ['path' => $path]);
+                Log::info('Favicon padrÃ£o do sistema salvo', ['path' => $path]);
                 set_sysconfig('system.default_favicon', $path);
             } elseif ($request->input('remove_system_default_favicon') == '1') {
                 $oldFavicon = sysconfig('system.default_favicon');
@@ -226,7 +221,7 @@ class SystemSettingsController extends Controller
                 $path = $request->file('platform_logo')->store('platform/logos', 'public');
                 Log::info('Logo da plataforma salva', ['path' => $path]);
                 set_sysconfig('platform.logo', $path);
-                Log::info('Configuração salva', ['key' => 'platform.logo', 'value' => $path]);
+                Log::info('ConfiguraÃ§Ã£o salva', ['key' => 'platform.logo', 'value' => $path]);
             } elseif ($request->input('remove_platform_logo') == '1') {
                 $oldLogo = sysconfig('platform.logo');
                 if ($oldLogo && Storage::disk('public')->exists($oldLogo)) {
@@ -271,7 +266,7 @@ class SystemSettingsController extends Controller
                 set_sysconfig('landing.favicon', null);
             }
 
-            // Processar logo padrão para tenants
+            // Processar logo padrÃ£o para tenants
             if ($request->hasFile('tenant_default_logo')) {
                 $path = $request->file('tenant_default_logo')->store('platform/tenant-logos', 'public');
                 set_sysconfig('tenant.default_logo', $path);
@@ -283,7 +278,7 @@ class SystemSettingsController extends Controller
                 set_sysconfig('tenant.default_logo', null);
             }
 
-            // Processar logo retrátil padrão para tenants
+            // Processar logo retrÃ¡til padrÃ£o para tenants
             if ($request->hasFile('tenant_default_logo_mini')) {
                 $path = $request->file('tenant_default_logo_mini')->store('platform/tenant-logos', 'public');
                 set_sysconfig('tenant.default_logo_mini', $path);
@@ -295,7 +290,7 @@ class SystemSettingsController extends Controller
                 set_sysconfig('tenant.default_logo_mini', null);
             }
 
-            // Processar favicon padrão para tenants
+            // Processar favicon padrÃ£o para tenants
             if ($request->hasFile('tenant_default_favicon')) {
                 $path = $request->file('tenant_default_favicon')->store('platform/tenant-favicons', 'public');
                 set_sysconfig('tenant.default_favicon', $path);
@@ -307,7 +302,7 @@ class SystemSettingsController extends Controller
                 set_sysconfig('tenant.default_favicon', null);
             }
 
-            // Limpar cache de configurações e views
+            // Limpar cache de configuraÃ§Ãµes e views
             Cache::flush();
             Artisan::call('view:clear');
             Artisan::call('config:clear');
@@ -320,7 +315,7 @@ class SystemSettingsController extends Controller
     }
 
     /**
-     * Atualiza configurações de billing
+     * Atualiza configuraÃ§Ãµes de billing
      */
     public function updateBilling(Request $request)
     {
@@ -331,7 +326,7 @@ class SystemSettingsController extends Controller
             'billing_purge_days_after_cancellation' => 'nullable|integer|min:30|max:365',
         ]);
 
-        // Atualiza configurações de billing
+        // Atualiza configuraÃ§Ãµes de billing
         if ($request->filled('billing_invoice_days_before_due')) {
             set_sysconfig('billing.invoice_days_before_due', $request->input('billing_invoice_days_before_due'));
         }
@@ -345,11 +340,11 @@ class SystemSettingsController extends Controller
             set_sysconfig('billing.purge_days_after_cancellation', $request->input('billing_purge_days_after_cancellation'));
         }
 
-        return back()->with('success', 'Configurações de billing atualizadas com sucesso.');
+        return back()->with('success', 'ConfiguraÃ§Ãµes de billing atualizadas com sucesso.');
     }
 
     /**
-     * Atualiza configurações de notificações
+     * Atualiza configuraÃ§Ãµes de notificaÃ§Ãµes
      */
     public function updateNotifications(Request $request)
     {
@@ -367,14 +362,14 @@ class SystemSettingsController extends Controller
             'notify_webhook' => 'nullable|boolean',
         ]);
 
-        // Atualiza configurações de notificações
+        // Atualiza configuraÃ§Ãµes de notificaÃ§Ãµes
         set_sysconfig('notifications.enabled', $request->has('notifications_enabled') ? '1' : '0');
         set_sysconfig('notifications.update_interval', (string) $request->input('notifications_update_interval'));
         set_sysconfig('notifications.display_count', (string) $request->input('notifications_display_count'));
         set_sysconfig('notifications.show_badge', $request->has('notifications_show_badge') ? '1' : '0');
         set_sysconfig('notifications.sound_enabled', $request->has('notifications_sound_enabled') ? '1' : '0');
         
-        // Atualiza configurações de tipos de eventos
+        // Atualiza configuraÃ§Ãµes de tipos de eventos
         set_sysconfig('notifications.types.payment', $request->has('notify_payment') ? '1' : '0');
         set_sysconfig('notifications.types.invoice', $request->has('notify_invoice') ? '1' : '0');
         set_sysconfig('notifications.types.subscription', $request->has('notify_subscription') ? '1' : '0');
@@ -382,11 +377,11 @@ class SystemSettingsController extends Controller
         set_sysconfig('notifications.types.command', $request->has('notify_command') ? '1' : '0');
         set_sysconfig('notifications.types.webhook', $request->has('notify_webhook') ? '1' : '0');
 
-        return back()->with('success', 'Configurações de notificações atualizadas com sucesso.');
+        return back()->with('success', 'ConfiguraÃ§Ãµes de notificaÃ§Ãµes atualizadas com sucesso.');
     }
 
     /**
-     * Retorna lista de comandos padrão do sistema
+     * Retorna lista de comandos padrÃ£o do sistema
      */
     private function getDefaultCommandsList(): array
     {
@@ -394,64 +389,71 @@ class SystemSettingsController extends Controller
             [
                 'key' => 'subscriptions:subscriptions-process',
                 'name' => 'Processamento de Assinaturas',
-                'description' => 'Gera faturas automáticas de assinaturas vencidas e renova os períodos.',
+                'description' => 'Gera faturas automÃ¡ticas de assinaturas vencidas e renova os perÃ­odos.',
                 'default_time' => '01:00',
                 'frequency' => 'daily',
             ],
             [
                 'key' => 'invoices:generate',
-                'name' => 'Geração Automática de Faturas',
+                'name' => 'GeraÃ§Ã£o AutomÃ¡tica de Faturas',
                 'description' => 'Gera faturas automaticamente X dias antes do vencimento (PIX/Boleto).',
                 'default_time' => '01:30',
                 'frequency' => 'daily',
             ],
             [
                 'key' => 'invoices:notify-upcoming',
-                'name' => 'Notificações de Faturas Próximas',
-                'description' => 'Envia notificações Y dias antes do vencimento (exclui faturas de cartão).',
+                'name' => 'NotificaÃ§Ãµes de Faturas PrÃ³ximas',
+                'description' => 'Envia notificaÃ§Ãµes Y dias antes do vencimento (exclui faturas de cartÃ£o).',
                 'default_time' => '01:45',
                 'frequency' => 'daily',
             ],
             [
                 'key' => 'invoices:invoices-check-overdue',
-                'name' => 'Verificação de Faturas Vencidas',
-                'description' => 'Marca faturas vencidas e suspende tenants imediatamente (sem período de carência).',
+                'name' => 'VerificaÃ§Ã£o de Faturas Vencidas',
+                'description' => 'Marca faturas vencidas e suspende tenants imediatamente (sem perÃ­odo de carÃªncia).',
                 'default_time' => '02:00',
                 'frequency' => 'daily',
             ],
             [
                 'key' => 'subscriptions:process-recovery',
                 'name' => 'Processamento de Recovery',
-                'description' => 'Inicia processo de recovery para assinaturas de cartão suspensas ≥ 5 dias.',
+                'description' => 'Inicia processo de recovery para assinaturas de cartÃ£o suspensas â‰¥ 5 dias.',
                 'default_time' => '02:30',
+                'frequency' => 'daily',
+            ],
+            [
+                'key' => 'subscriptions:notify-trial-reminders',
+                'name' => 'Lembretes de Trial Comercial',
+                'description' => 'Dispara lembretes de trial (7 dias, 3 dias, hoje e expirado) com idempotÃªncia por assinatura/evento.',
+                'default_time' => '09:00',
                 'frequency' => 'daily',
             ],
             [
                 'key' => 'tenants:purge-canceled',
                 'name' => 'Purga de Tenants Cancelados',
-                'description' => 'Remove dados e banco de tenants cancelados há X dias (padrão: 90 dias).',
+                'description' => 'Remove dados e banco de tenants cancelados hÃ¡ X dias (padrÃ£o: 90 dias).',
                 'default_time' => '03:00',
                 'frequency' => 'daily',
             ],
             [
                 'key' => 'recurring-appointments:process',
                 'name' => 'Processamento de Agendamentos Recorrentes',
-                'description' => 'Processa agendamentos recorrentes e gera sessões automaticamente.',
+                'description' => 'Processa agendamentos recorrentes e gera sessÃµes automaticamente.',
                 'default_time' => '03:00',
                 'frequency' => 'daily',
             ],
             [
                 'key' => 'google-calendar:renew-recurring-events',
-                'name' => 'Renovação de Eventos Recorrentes (Google Calendar)',
-                'description' => 'Renova eventos recorrentes no Google Calendar que estão próximos do fim.',
+                'name' => 'RenovaÃ§Ã£o de Eventos Recorrentes (Google Calendar)',
+                'description' => 'Renova eventos recorrentes no Google Calendar que estÃ£o prÃ³ximos do fim.',
                 'default_time' => '04:00',
                 'default_day' => 1,
                 'frequency' => 'monthly',
             ],
             [
                 'key' => 'appointments:notify-upcoming',
-                'name' => 'Lembretes de Agendamentos Próximos',
-                'description' => 'Envia lembretes automáticos aos pacientes sobre agendamentos próximos (email/WhatsApp).',
+                'name' => 'Lembretes de Agendamentos PrÃ³ximos',
+                'description' => 'Envia lembretes automÃ¡ticos aos pacientes sobre agendamentos prÃ³ximos (email/WhatsApp).',
                 'default_time' => '08:00',
                 'frequency' => 'daily',
             ],
@@ -459,18 +461,18 @@ class SystemSettingsController extends Controller
     }
 
     /**
-     * Retorna lista de comandos agendados com suas configurações
+     * Retorna lista de comandos agendados com suas configuraÃ§Ãµes
      */
     private function getScheduledCommands(): array
     {
-        // Comandos padrão do sistema (hardcoded)
+        // Comandos padrÃ£o do sistema (hardcoded)
         $defaultCommands = $this->getDefaultCommandsList();
 
         // Carrega comandos customizados do banco (adicionados pela interface)
         $customCommandsJson = sysconfig('commands.custom_list', '[]');
         $customCommands = json_decode($customCommandsJson, true) ?: [];
 
-        // Remove duplicados da lista customizada (comandos que já existem na lista padrão)
+        // Remove duplicados da lista customizada (comandos que jÃ¡ existem na lista padrÃ£o)
         $defaultCommandKeys = array_column($defaultCommands, 'key');
         $customCommands = array_filter($customCommands, function($cmd) use ($defaultCommandKeys) {
             return !in_array($cmd['key'], $defaultCommandKeys);
@@ -482,7 +484,7 @@ class SystemSettingsController extends Controller
             set_sysconfig('commands.custom_list', json_encode($customCommands, JSON_UNESCAPED_UNICODE));
         }
 
-        // Remove duplicados dentro da própria lista customizada (caso existam)
+        // Remove duplicados dentro da prÃ³pria lista customizada (caso existam)
         $seen = [];
         $customCommands = array_filter($customCommands, function($cmd) use (&$seen) {
             if (in_array($cmd['key'], $seen)) {
@@ -501,17 +503,17 @@ class SystemSettingsController extends Controller
             set_sysconfig('commands.custom_list', json_encode($customCommands, JSON_UNESCAPED_UNICODE));
         }
 
-        // Merge: comandos padrão + comandos customizados
+        // Merge: comandos padrÃ£o + comandos customizados
         $allCommands = array_merge($defaultCommands, $customCommands);
 
-        // Carrega configurações do banco para cada comando
+        // Carrega configuraÃ§Ãµes do banco para cada comando
         foreach ($allCommands as &$command) {
             $command['enabled'] = sysconfig("commands.{$command['key']}.enabled", '1') === '1';
             $command['time'] = sysconfig("commands.{$command['key']}.time", $command['default_time']);
             if (isset($command['default_day'])) {
                 $command['day'] = (int) sysconfig("commands.{$command['key']}.day", $command['default_day']);
             }
-            // Marca se é customizado (não pode ser removido da lista padrão)
+            // Marca se Ã© customizado (nÃ£o pode ser removido da lista padrÃ£o)
             $command['is_custom'] = !in_array($command['key'], array_column($defaultCommands, 'key'));
         }
 
@@ -519,7 +521,7 @@ class SystemSettingsController extends Controller
     }
 
     /**
-     * Retorna lista de comandos disponíveis no sistema (para adicionar novos)
+     * Retorna lista de comandos disponÃ­veis no sistema (para adicionar novos)
      */
     public function getAvailableCommands()
     {
@@ -527,7 +529,7 @@ class SystemSettingsController extends Controller
             $artisan = \Illuminate\Support\Facades\Artisan::all();
             $commands = [];
             
-            // Lista de comandos padrão do Laravel que não devem aparecer
+            // Lista de comandos padrÃ£o do Laravel que nÃ£o devem aparecer
             $excludedPrefixes = [
                 'make:', 'route:', 'config:', 'cache:', 'view:', 'migrate:', 
                 'db:', 'queue:', 'schedule:', 'vendor:', 'tinker', 'serve', 
@@ -548,7 +550,7 @@ class SystemSettingsController extends Controller
                 if (!$shouldExclude) {
                     $commands[] = [
                         'signature' => $signature,
-                        'description' => $command->getDescription() ?: 'Sem descrição',
+                        'description' => $command->getDescription() ?: 'Sem descriÃ§Ã£o',
                     ];
                 }
             }
@@ -560,13 +562,13 @@ class SystemSettingsController extends Controller
             
             return response()->json($commands);
         } catch (\Exception $e) {
-            Log::error('Erro ao buscar comandos disponíveis', ['error' => $e->getMessage()]);
+            Log::error('Erro ao buscar comandos disponÃ­veis', ['error' => $e->getMessage()]);
             return response()->json(['error' => $e->getMessage()], 500);
         }
     }
 
     /**
-     * Atualiza configurações de comandos agendados
+     * Atualiza configuraÃ§Ãµes de comandos agendados
      */
     public function updateScheduledCommands(Request $request)
     {
@@ -582,33 +584,33 @@ class SystemSettingsController extends Controller
             $enabled = $request->has($enabledKey) ? '1' : '0';
             set_sysconfig("commands.{$key}.enabled", $enabled);
 
-            // Atualiza horário se fornecido
+            // Atualiza horÃ¡rio se fornecido
             if ($request->filled($timeKey)) {
                 $time = $request->input($timeKey);
                 // Valida formato HH:MM
                 if (preg_match('/^([0-1][0-9]|2[0-3]):[0-5][0-9]$/', $time)) {
                     set_sysconfig("commands.{$key}.time", $time);
                 } else {
-                    Log::warning("Horário inválido para comando {$key}: {$time}");
+                    Log::warning("HorÃ¡rio invÃ¡lido para comando {$key}: {$time}");
                 }
             }
 
-            // Atualiza dia do mês (para comandos mensais)
+            // Atualiza dia do mÃªs (para comandos mensais)
             if ($command['frequency'] === 'monthly' && $request->filled($dayKey)) {
                 $day = (int) $request->input($dayKey);
                 if ($day >= 1 && $day <= 28) {
                     set_sysconfig("commands.{$key}.day", (string) $day);
                 } else {
-                    Log::warning("Dia inválido para comando {$key}: {$day}");
+                    Log::warning("Dia invÃ¡lido para comando {$key}: {$day}");
                 }
             }
         }
 
-        return back()->with('success', 'Configurações de comandos agendados atualizadas com sucesso.');
+        return back()->with('success', 'ConfiguraÃ§Ãµes de comandos agendados atualizadas com sucesso.');
     }
 
     /**
-     * Adiciona um novo comando customizado à lista de agendados
+     * Adiciona um novo comando customizado Ã  lista de agendados
      */
     public function addScheduledCommand(Request $request)
     {
@@ -625,7 +627,7 @@ class SystemSettingsController extends Controller
         try {
             $artisan = \Illuminate\Support\Facades\Artisan::all();
             if (!isset($artisan[$request->command_signature])) {
-                return back()->with('error', 'Comando não encontrado no sistema. Verifique se o comando está registrado.');
+                return back()->with('error', 'Comando nÃ£o encontrado no sistema. Verifique se o comando estÃ¡ registrado.');
             }
         } catch (\Exception $e) {
             return back()->with('error', 'Erro ao verificar comando: ' . $e->getMessage());
@@ -635,21 +637,21 @@ class SystemSettingsController extends Controller
         $customCommandsJson = sysconfig('commands.custom_list', '[]');
         $customCommands = json_decode($customCommandsJson, true) ?: [];
 
-        // Verifica se o comando já existe (tanto na lista padrão quanto na customizada)
+        // Verifica se o comando jÃ¡ existe (tanto na lista padrÃ£o quanto na customizada)
         $commandKey = $request->command_signature;
         
-        // Verifica na lista padrão
+        // Verifica na lista padrÃ£o
         $defaultCommands = $this->getDefaultCommandsList();
         foreach ($defaultCommands as $cmd) {
             if ($cmd['key'] === $commandKey) {
-                return back()->with('error', 'Este comando já está na lista padrão do sistema e não pode ser adicionado novamente.');
+                return back()->with('error', 'Este comando jÃ¡ estÃ¡ na lista padrÃ£o do sistema e nÃ£o pode ser adicionado novamente.');
             }
         }
         
         // Verifica na lista customizada
         foreach ($customCommands as $cmd) {
             if ($cmd['key'] === $commandKey) {
-                return back()->with('error', 'Este comando já está na lista de agendados. Remova o duplicado antes de adicionar novamente.');
+                return back()->with('error', 'Este comando jÃ¡ estÃ¡ na lista de agendados. Remova o duplicado antes de adicionar novamente.');
             }
         }
 
@@ -669,7 +671,7 @@ class SystemSettingsController extends Controller
         $customCommands[] = $newCommand;
         set_sysconfig('commands.custom_list', json_encode($customCommands, JSON_UNESCAPED_UNICODE));
 
-        // Configura valores padrão
+        // Configura valores padrÃ£o
         set_sysconfig("commands.{$commandKey}.enabled", '1');
         set_sysconfig("commands.{$commandKey}.time", $request->command_time);
         if ($request->command_frequency === 'monthly') {
@@ -684,12 +686,12 @@ class SystemSettingsController extends Controller
      */
     public function removeScheduledCommand(Request $request, $commandKey)
     {
-        // Verifica se é um comando padrão (não pode ser removido)
+        // Verifica se Ã© um comando padrÃ£o (nÃ£o pode ser removido)
         $defaultCommands = $this->getDefaultCommandsList();
         $defaultCommandKeys = array_column($defaultCommands, 'key');
         
         if (in_array($commandKey, $defaultCommandKeys)) {
-            return back()->with('error', 'Comandos padrão do sistema não podem ser removidos.');
+            return back()->with('error', 'Comandos padrÃ£o do sistema nÃ£o podem ser removidos.');
         }
 
         // Carrega comandos customizados
@@ -705,7 +707,7 @@ class SystemSettingsController extends Controller
         $customCommands = array_values($customCommands);
         set_sysconfig('commands.custom_list', json_encode($customCommands, JSON_UNESCAPED_UNICODE));
 
-        // Remove configurações do comando
+        // Remove configuraÃ§Ãµes do comando
         \App\Models\Platform\SystemSetting::where('key', 'like', "commands.{$commandKey}.%")->delete();
 
         return back()->with('success', 'Comando removido com sucesso!');
@@ -720,14 +722,14 @@ class SystemSettingsController extends Controller
         $customCommandsJson = sysconfig('commands.custom_list', '[]');
         $customCommands = json_decode($customCommandsJson, true) ?: [];
 
-        // Obtém lista de comandos padrão
+        // ObtÃ©m lista de comandos padrÃ£o
         $defaultCommands = $this->getDefaultCommandsList();
         $defaultCommandKeys = array_column($defaultCommands, 'key');
 
         $removedCount = 0;
         $seen = [];
 
-        // Remove duplicados: comandos que já existem na lista padrão
+        // Remove duplicados: comandos que jÃ¡ existem na lista padrÃ£o
         $customCommands = array_filter($customCommands, function($cmd) use ($defaultCommandKeys, &$removedCount) {
             if (in_array($cmd['key'], $defaultCommandKeys)) {
                 $removedCount++;
@@ -736,7 +738,7 @@ class SystemSettingsController extends Controller
             return true;
         });
 
-        // Remove duplicados dentro da própria lista customizada
+        // Remove duplicados dentro da prÃ³pria lista customizada
         $customCommands = array_filter($customCommands, function($cmd) use (&$seen, &$removedCount) {
             if (in_array($cmd['key'], $seen)) {
                 $removedCount++;
@@ -758,7 +760,7 @@ class SystemSettingsController extends Controller
     }
 
     /**
-     * Testa conexão de um serviço (ASAAS / META / EMAIL / WHATSAPP)
+     * Testa conexÃ£o de um serviÃ§o (ASAAS / META / EMAIL / WHATSAPP)
      */
     public function testConnection(Request $request, $service)
     {
@@ -792,7 +794,7 @@ class SystemSettingsController extends Controller
     }
 
     /**
-     * Envia mensagem de teste via Meta (WhatsApp Business) usando provider específico
+     * Envia mensagem de teste via Meta (WhatsApp Business) usando provider especÃ­fico
      */
     public function testMetaSend(Request $request)
     {
@@ -802,7 +804,7 @@ class SystemSettingsController extends Controller
         ]);
 
         try {
-            // Instancia diretamente o provider Meta, que lê apenas as configs META
+            // Instancia diretamente o provider Meta, que lÃª apenas as configs META
             $provider = new WhatsAppBusinessProvider();
 
             $ok = $provider->sendMessage($validated['number'], $validated['message']);
@@ -816,7 +818,7 @@ class SystemSettingsController extends Controller
 
             return response()->json([
                 'status' => 'ERROR',
-                'message' => 'Falha ao enviar mensagem de teste Meta. Verifique as configurações.',
+                'message' => 'Falha ao enviar mensagem de teste Meta. Verifique as configuraÃ§Ãµes.',
             ]);
         } catch (\Throwable $e) {
             return response()->json([
@@ -827,7 +829,7 @@ class SystemSettingsController extends Controller
     }
 
     /**
-     * Envia mensagem de teste via Z-API usando provider específico
+     * Envia mensagem de teste via Z-API usando provider especÃ­fico
      */
     public function testZapiSend(Request $request)
     {
@@ -837,7 +839,7 @@ class SystemSettingsController extends Controller
         ]);
 
         try {
-            // Instancia diretamente o provider Z-API, que lê apenas as configs Z-API
+            // Instancia diretamente o provider Z-API, que lÃª apenas as configs Z-API
             $provider = new ZApiProvider();
 
             $ok = $provider->sendMessage($validated['number'], $validated['message']);
@@ -851,7 +853,7 @@ class SystemSettingsController extends Controller
 
             return response()->json([
                 'status' => 'ERROR',
-                'message' => 'Falha ao enviar mensagem de teste Z-API. Verifique as configurações.',
+                'message' => 'Falha ao enviar mensagem de teste Z-API. Verifique as configuraÃ§Ãµes.',
             ]);
         } catch (\Throwable $e) {
             return response()->json([
@@ -862,7 +864,7 @@ class SystemSettingsController extends Controller
     }
 
     /**
-     * Envia mensagem de teste via WAHA (apenas diagnóstico na Platform)
+     * Envia mensagem de teste via WAHA (apenas diagnÃ³stico na Platform)
      */
     public function testWahaSend(Request $request)
     {
@@ -881,7 +883,7 @@ class SystemSettingsController extends Controller
 
             return response()->json([
                 'status' => 'ERROR',
-                'message' => 'Telefone inválido para WhatsApp. Use DDD + número (ex: 67999998888).',
+                'message' => 'Telefone invÃ¡lido para WhatsApp. Use DDD + nÃºmero (ex: 67999998888).',
             ]);
         }
 

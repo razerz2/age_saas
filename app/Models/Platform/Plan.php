@@ -5,10 +5,14 @@ namespace App\Models\Platform;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
+use Illuminate\Database\Eloquent\Builder;
 
 class Plan extends Model
 {
     use HasFactory, HasUuids;
+
+    public const TYPE_REAL = 'real';
+    public const TYPE_TEST = 'test';
 
     protected $connection = 'pgsql';
     protected $table = 'plans';
@@ -22,6 +26,10 @@ class Plan extends Model
         'period_months',
         'price_cents',
         'category',
+        'plan_type',
+        'show_on_landing_page',
+        'trial_enabled',
+        'trial_days',
         'features',
         'is_active',
     ];
@@ -32,6 +40,9 @@ class Plan extends Model
 
     protected $casts = [
         'features' => 'array',
+        'show_on_landing_page' => 'boolean',
+        'trial_enabled' => 'boolean',
+        'trial_days' => 'integer',
         'is_active' => 'boolean',
     ];
 
@@ -74,5 +85,99 @@ class Plan extends Model
     public function accessRule()
     {
         return $this->hasOne(PlanAccessRule::class, 'plan_id');
+    }
+
+    public function isReal(): bool
+    {
+        return $this->plan_type === self::TYPE_REAL;
+    }
+
+    public function isTest(): bool
+    {
+        return $this->plan_type === self::TYPE_TEST;
+    }
+
+    public function isVisibleOnLanding(): bool
+    {
+        return (bool) $this->show_on_landing_page;
+    }
+
+    public function hasCommercialTrial(): bool
+    {
+        return $this->isReal()
+            && (bool) $this->is_active
+            && (bool) $this->trial_enabled
+            && (int) $this->trial_days > 0;
+    }
+
+    public function trialDaysLabel(): string
+    {
+        $days = (int) $this->trial_days;
+
+        if ($days <= 0) {
+            return 'Sem trial';
+        }
+
+        return $days . ' ' . ($days === 1 ? 'dia' : 'dias');
+    }
+
+    public function categoryLabel(): string
+    {
+        return match ($this->category) {
+            self::CATEGORY_COMMERCIAL => 'Comercial',
+            self::CATEGORY_CONTRACTUAL => 'Contratual',
+            self::CATEGORY_SANDBOX => 'Sandbox',
+            default => (string) $this->category,
+        };
+    }
+
+    public function categoryBadgeClass(): string
+    {
+        return match ($this->category) {
+            self::CATEGORY_COMMERCIAL => 'bg-info',
+            self::CATEGORY_CONTRACTUAL => 'bg-primary',
+            self::CATEGORY_SANDBOX => 'bg-warning text-dark',
+            default => 'bg-secondary',
+        };
+    }
+
+    public function planTypeLabel(): string
+    {
+        return $this->isTest() ? 'Teste' : 'Producao';
+    }
+
+    public function planTypeBadgeClass(): string
+    {
+        return $this->isTest() ? 'bg-warning text-dark' : 'bg-success';
+    }
+
+    public function landingVisibilityLabel(): string
+    {
+        return $this->isVisibleOnLanding() ? 'Visivel na Landing' : 'Oculto na Landing';
+    }
+
+    public function landingVisibilityBadgeClass(): string
+    {
+        return $this->isVisibleOnLanding() ? 'bg-primary' : 'bg-secondary';
+    }
+
+    /**
+     * Escopo para planos disponíveis à comercialização pública.
+     */
+    public function scopePubliclyAvailable(Builder $query): Builder
+    {
+        return $query
+            ->where('category', self::CATEGORY_COMMERCIAL)
+            ->where('is_active', true)
+            ->where('plan_type', self::TYPE_REAL)
+            ->where('show_on_landing_page', true);
+    }
+
+    public function isPubliclyAvailable(): bool
+    {
+        return $this->category === self::CATEGORY_COMMERCIAL
+            && (bool) $this->is_active
+            && $this->isReal()
+            && $this->isVisibleOnLanding();
     }
 }

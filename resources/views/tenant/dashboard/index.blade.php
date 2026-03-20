@@ -3,6 +3,33 @@
 @section('page', 'dashboard')
 
 @section('content')
+@if($activeTrialSubscription)
+<div class="mb-6 rounded-2xl border p-4 {{ $trialExpiringSoon ? 'border-amber-300 bg-amber-50 dark:border-amber-700 dark:bg-amber-900/20' : 'border-blue-200 bg-blue-50 dark:border-blue-700 dark:bg-blue-900/20' }}">
+    <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+            <p class="text-sm font-semibold {{ $trialExpiringSoon ? 'text-amber-800 dark:text-amber-200' : 'text-blue-800 dark:text-blue-200' }}">
+                Voce esta testando gratuitamente.
+            </p>
+            <p class="text-sm {{ $trialExpiringSoon ? 'text-amber-700 dark:text-amber-300' : 'text-blue-700 dark:text-blue-300' }}">
+                @if($trialDaysRemaining === 0)
+                    Seu teste expira hoje.
+                @else
+                    Faltam {{ $trialDaysRemaining }} {{ $trialDaysRemaining === 1 ? 'dia' : 'dias' }}.
+                @endif
+            </p>
+        </div>
+        <a href="{{ workspace_route('tenant.subscription.show') }}"
+            class="inline-flex items-center rounded-lg {{ $trialExpiringSoon ? 'bg-amber-600 hover:bg-amber-700' : 'bg-blue-600 hover:bg-blue-700' }} px-3 py-2 text-sm font-medium text-white">
+            Fazer upgrade
+        </a>
+    </div>
+    @if($trialExpiringSoon)
+        <p class="mt-3 text-xs font-medium text-amber-700 dark:text-amber-300">
+            Seu teste expira em breve. Escolha um plano para continuar.
+        </p>
+    @endif
+</div>
+@endif
 <!-- Filtro Global de Período -->
 <div class="mb-6 rounded-2xl border border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-white/[0.03]">
     <form method="GET" action="{{ route('tenant.dashboard', tenant('slug')) }}" class="flex flex-wrap items-center justify-between gap-4">
@@ -316,3 +343,4 @@
     </div>
 </div>
 @endsection
+

@@ -7,7 +7,6 @@ Modulo base:
 Permissoes suportadas na policy:
 
 - `whatsapp_unofficial_templates.view`
-- `whatsapp_unofficial_templates.create`
 - `whatsapp_unofficial_templates.edit`
 
 Acoes adicionais de policy:
@@ -19,3 +18,7 @@ Regra:
 
 - possuir o modulo base libera acesso;
 - chaves granulares podem ser usadas como alternativa.
+
+Restricao intencional:
+
+- `create` e sempre bloqueado na policy (catalogo controlado via seeder).

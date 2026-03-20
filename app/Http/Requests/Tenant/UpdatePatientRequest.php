@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 
 namespace App\Http\Requests\Tenant;
 
@@ -25,7 +25,7 @@ class UpdatePatientRequest extends FormRequest
             'phone'      => ['nullable', 'string', 'max:20'],
             'is_active'  => ['required', 'boolean'],
             
-            // Campos de endereço (opcionais)
+            // Campos de endereÃ§o (opcionais)
             'postal_code'    => ['nullable', 'string', 'max:10'],
             'street'         => ['nullable', 'string', 'max:255'],
             'number'         => ['nullable', 'string', 'max:20'],
@@ -33,39 +33,39 @@ class UpdatePatientRequest extends FormRequest
             'neighborhood'  => ['nullable', 'string', 'max:255'],
             'city'           => ['nullable', 'string', 'max:255'],
             'state'          => ['nullable', 'string', 'max:2'],
-            'pais_id'        => ['nullable', 'integer'],
             'estado_id'      => ['nullable', 'integer'],
             'cidade_id'      => ['nullable', 'integer'],
         ];
     }
 
     /**
-     * Personaliza as mensagens de erro de validação.
+     * Personaliza as mensagens de erro de validaÃ§Ã£o.
      */
     public function messages()
     {
         return [
-            'full_name.required' => 'O nome completo é obrigatório.',
-            'full_name.string' => 'O nome completo deve ser uma string válida.',
-            'full_name.max' => 'O nome completo não pode ter mais que 255 caracteres.',
+            'full_name.required' => 'O nome completo Ã© obrigatÃ³rio.',
+            'full_name.string' => 'O nome completo deve ser uma string vÃ¡lida.',
+            'full_name.max' => 'O nome completo nÃ£o pode ter mais que 255 caracteres.',
 
-            'cpf.required' => 'O CPF é obrigatório.',
-            'cpf.string' => 'O CPF deve ser uma string válida.',
-            'cpf.max' => 'O CPF não pode ter mais que 14 caracteres.',
-            'cpf.unique' => 'Este CPF já está cadastrado.',
+            'cpf.required' => 'O CPF Ã© obrigatÃ³rio.',
+            'cpf.string' => 'O CPF deve ser uma string vÃ¡lida.',
+            'cpf.max' => 'O CPF nÃ£o pode ter mais que 14 caracteres.',
+            'cpf.unique' => 'Este CPF jÃ¡ estÃ¡ cadastrado.',
 
-            'birth_date.date' => 'A data de nascimento deve ser uma data válida.',
+            'birth_date.date' => 'A data de nascimento deve ser uma data vÃ¡lida.',
 
-            'gender_id.exists' => 'O gênero selecionado é inválido.',
+            'gender_id.exists' => 'O gÃªnero selecionado Ã© invÃ¡lido.',
 
-            'email.email' => 'Por favor, insira um e-mail válido.',
+            'email.email' => 'Por favor, insira um e-mail vÃ¡lido.',
 
-            'phone.string' => 'O telefone deve ser uma string válida.',
-            'phone.max' => 'O telefone não pode ter mais que 20 caracteres.',
-            'is_active.required' => 'O status do paciente � obrigat�rio.',
+            'phone.string' => 'O telefone deve ser uma string vÃ¡lida.',
+            'phone.max' => 'O telefone nÃ£o pode ter mais que 20 caracteres.',
+            'is_active.required' => 'O status do paciente é obrigatório.',
             'is_active.boolean' => 'O campo "Ativo" deve ser verdadeiro ou falso.',
         ];
     }
 }
+
 
 

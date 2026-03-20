@@ -4,6 +4,12 @@
 @section('page', 'subscription')
 
 @section('content')
+    @php
+        $currentTenant = tenant();
+        $hasExpiredTrial = $currentTenant instanceof \App\Models\Platform\Tenant
+            ? (! $currentTenant->isEligibleForAccess() && (bool) $currentTenant->expiredTrialSubscription())
+            : false;
+    @endphp
 
     <div class="page-header">
         <h3 class="page-title">Minha Assinatura</h3>
@@ -38,6 +44,22 @@
             <i class="mdi mdi-alert-circle me-2"></i>
             {{ session('error') }}
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+        </div>
+    @endif
+
+    @if ($hasExpiredTrial)
+        <div class="alert alert-danger">
+            <i class="mdi mdi-alert-circle me-2"></i>
+            <strong>Seu período de teste expirou.</strong>
+            <div class="mt-2">Seu acesso foi pausado. Escolha um plano para continuar com acesso completo.</div>
+            <div class="mt-3 d-flex flex-wrap gap-2">
+                <x-tailadmin-button variant="primary" size="sm" href="{{ workspace_route('tenant.plan-change-request.create') }}">
+                    Escolher plano
+                </x-tailadmin-button>
+                <x-tailadmin-button variant="secondary" size="sm" href="{{ workspace_route('tenant.plan-change-request.create') }}">
+                    Regularizar agora
+                </x-tailadmin-button>
+            </div>
         </div>
     @endif
 

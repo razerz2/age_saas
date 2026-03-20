@@ -9,11 +9,8 @@
                 <div class="d-flex align-items-center">
                     <nav aria-label="breadcrumb">
                         <ol class="breadcrumb m-0 p-0">
-                            <li class="breadcrumb-item"><a href="{{ route('Platform.dashboard') }}"
-                                    class="text-muted">Dashboard</a>
-                            </li>
-                            <li class="breadcrumb-item"><a href="{{ route('Platform.subscriptions.index') }}"
-                                    class="text-muted">Assinaturas</a></li>
+                            <li class="breadcrumb-item"><a href="{{ route('Platform.dashboard') }}" class="text-muted">Dashboard</a></li>
+                            <li class="breadcrumb-item"><a href="{{ route('Platform.subscriptions.index') }}" class="text-muted">Assinaturas</a></li>
                             <li class="breadcrumb-item text-muted active" aria-current="page">Editar</li>
                         </ol>
                     </nav>
@@ -32,7 +29,6 @@
     <div class="container-fluid">
         <div class="card shadow-sm border-0">
             <div class="card-body">
-                {{-- ✅ Alertas de sucesso --}}
                 @if (session('success'))
                     <div class="alert alert-success alert-dismissible fade show" role="alert">
                         <i class="fas fa-check-circle me-1"></i> {{ session('success') }}
@@ -40,7 +36,6 @@
                     </div>
                 @endif
 
-                {{-- ⚠️ Alertas de aviso --}}
                 @if (session('warning'))
                     <div class="alert alert-warning alert-dismissible fade show" role="alert">
                         <i class="fas fa-exclamation-triangle me-1"></i> {{ session('warning') }}
@@ -48,7 +43,6 @@
                     </div>
                 @endif
 
-                {{-- 🔹 Exibição de erros de validação --}}
                 @if ($errors->any())
                     <div class="alert alert-danger alert-dismissible fade show shadow-sm" role="alert">
                         <strong>Ops!</strong> Verifique os erros abaixo:
@@ -60,7 +54,9 @@
                         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
                     </div>
                 @endif
+
                 <h4 class="card-title mb-4">Atualizar Assinatura</h4>
+
                 <form method="POST" action="{{ route('Platform.subscriptions.update', $subscription->id) }}">
                     @csrf
                     @method('PUT')
@@ -81,17 +77,25 @@
                             <label class="form-label">Plano</label>
                             <select name="plan_id" class="form-select" required>
                                 @foreach ($plans as $plan)
-                                    <option value="{{ $plan->id }}" @selected(old('plan_id', $subscription->plan_id) == $plan->id)>
-                                        {{ $plan->name }} ({{ $plan->formatted_price }})
+                                    <option
+                                        value="{{ $plan->id }}"
+                                        data-is-test="{{ $plan->isTest() ? '1' : '0' }}"
+                                        @selected(old('plan_id', $subscription->plan_id) == $plan->id)
+                                    >
+                                        {{ $plan->name }} ({{ $plan->formatted_price }}) - {{ $plan->planTypeLabel() }} / {{ $plan->landingVisibilityLabel() }}
                                     </option>
                                 @endforeach
                             </select>
                         </div>
                     </div>
 
+                    <div id="test-plan-billing-alert" class="alert alert-info d-none" role="alert">
+                        <strong>Plano de teste:</strong> Plano de teste nao possui cobranca. A renovacao automatica apenas estende a validade do acesso.
+                    </div>
+
                     <div class="row mb-3">
                         <div class="col-md-4">
-                            <label class="form-label">Início</label>
+                            <label class="form-label">Inicio</label>
                             <input type="date" name="starts_at" id="starts_at"
                                 value="{{ old('starts_at', $subscription->starts_at->format('Y-m-d')) }}"
                                 class="form-control" required>
@@ -102,7 +106,7 @@
                                 value="{{ old('ends_at', optional($subscription->ends_at)->format('Y-m-d')) }}"
                                 class="form-control" readonly>
                         </div>
-                        <div class="col-md-4">
+                        <div class="col-md-4" id="due-day-wrapper">
                             <label class="form-label">Dia de Vencimento</label>
                             <input type="number" name="due_day" min="1" max="28"
                                 value="{{ old('due_day', $subscription->due_day) }}" class="form-control" required>
@@ -110,7 +114,7 @@
                     </div>
 
                     <div class="row mb-3">
-                        <div class="col-md-4">
+                        <div class="col-md-4" id="status-wrapper">
                             <label class="form-label">Status</label>
                             <select name="status" class="form-select @error('status') is-invalid @enderror" required>
                                 <option value="active" @selected(old('status', $subscription->status) == 'active')>Ativa</option>
@@ -123,25 +127,23 @@
                             @enderror
                         </div>
 
-                        {{-- 🔹 Novo campo: Método de Pagamento --}}
-                        <div class="col-md-4">
-                            <label class="form-label">Método de Pagamento</label>
-                            <select name="payment_method" class="form-select @error('payment_method') is-invalid @enderror"
-                                required>
-                                <option value="PIX"
-                                    {{ old('payment_method', $subscription->payment_method) == 'PIX' ? 'selected' : '' }}>
-                                    PIX / Boleto</option>
-                                <option value="CREDIT_CARD"
-                                    {{ old('payment_method', $subscription->payment_method) == 'CREDIT_CARD' ? 'selected' : '' }}>
-                                    Cartão de Crédito / Débito</option>
+                        <div class="col-md-4" id="payment-method-wrapper">
+                            <label class="form-label">Metodo de Pagamento</label>
+                            <select name="payment_method" class="form-select @error('payment_method') is-invalid @enderror" required>
+                                <option value="PIX" {{ old('payment_method', $subscription->payment_method) == 'PIX' ? 'selected' : '' }}>
+                                    PIX / Boleto
+                                </option>
+                                <option value="CREDIT_CARD" {{ old('payment_method', $subscription->payment_method) == 'CREDIT_CARD' ? 'selected' : '' }}>
+                                    Cartao de Credito / Debito
+                                </option>
                             </select>
                             @error('payment_method')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
 
-                        <div class="col-md-4">
-                            <label class="form-label">Renovação Automática</label><br>
+                        <div class="col-md-4" id="auto-renew-wrapper">
+                            <label class="form-label">Renovacao Automatica</label><br>
                             <div class="form-check form-switch mt-2">
                                 <input type="checkbox" class="form-check-input" name="auto_renew" value="1"
                                     @checked(old('auto_renew', $subscription->auto_renew))>
@@ -175,14 +177,19 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // Planos e duração em meses
             const plans = @json($plansData);
 
             const planSelect = document.querySelector('[name="plan_id"]');
             const startInput = document.querySelector('#starts_at');
             const endInput = document.querySelector('#ends_at');
+            const testAlert = document.getElementById('test-plan-billing-alert');
+            const dueDayWrapper = document.getElementById('due-day-wrapper');
+            const paymentMethodWrapper = document.getElementById('payment-method-wrapper');
+            const statusWrapper = document.getElementById('status-wrapper');
+            const dueDayInput = document.querySelector('[name="due_day"]');
+            const paymentMethodInput = document.querySelector('[name="payment_method"]');
+            const statusInput = document.querySelector('[name="status"]');
 
-            // Função que calcula a data final
             function calcularFim() {
                 const planId = planSelect.value;
                 const startDate = startInput.value;
@@ -192,7 +199,9 @@
                 }
 
                 const plano = plans.find(p => p.id === planId);
-                if (!plano) return;
+                if (!plano) {
+                    return;
+                }
 
                 const dataInicio = new Date(startDate);
                 dataInicio.setMonth(dataInicio.getMonth() + plano.months);
@@ -204,12 +213,36 @@
                 endInput.value = `${yyyy}-${mm}-${dd}`;
             }
 
-            // Atualiza automaticamente ao alterar plano ou data inicial
-            planSelect.addEventListener('change', calcularFim);
+            function toggleFinancialFieldsByPlan() {
+                const option = planSelect.options[planSelect.selectedIndex];
+                const isTestPlan = option?.dataset?.isTest === '1';
+
+                testAlert.classList.toggle('d-none', !isTestPlan);
+                dueDayWrapper.classList.toggle('d-none', isTestPlan);
+                paymentMethodWrapper.classList.toggle('d-none', isTestPlan);
+                statusWrapper.classList.toggle('d-none', isTestPlan);
+
+                dueDayInput.disabled = isTestPlan;
+                paymentMethodInput.disabled = isTestPlan;
+                statusInput.disabled = isTestPlan;
+                dueDayInput.required = !isTestPlan;
+                paymentMethodInput.required = !isTestPlan;
+                statusInput.required = !isTestPlan;
+
+                if (isTestPlan && statusInput) {
+                    statusInput.value = 'active';
+                }
+            }
+
+            planSelect.addEventListener('change', function() {
+                calcularFim();
+                toggleFinancialFieldsByPlan();
+            });
+
             startInput.addEventListener('change', calcularFim);
 
-            // ⚙️ Atualiza automaticamente ao carregar a página (mantém valor coerente)
             calcularFim();
+            toggleFinancialFieldsByPlan();
         });
     </script>
 @endpush

@@ -4,32 +4,34 @@ namespace App\Http\Controllers\Platform;
 
 use App\Http\Controllers\Controller;
 use App\Models\Platform\Estado;
-use App\Models\Platform\Pais;
 use App\Http\Requests\Platform\EstadoRequest;
 
 class EstadoController extends Controller
 {
+    private const BRAZIL_COUNTRY_ID = 31;
+
     public function index()
     {
-        $paises = Pais::orderBy('nome')->get();
-        $estados = Estado::with('pais')->orderBy('nome_estado')->get();
+        $estados = Estado::where('pais_id', self::BRAZIL_COUNTRY_ID)->orderBy('nome_estado')->get();
 
-        return view('platform.estados.index', compact('estados', 'paises'));
+        return view('platform.estados.index', compact('estados'));
     }
 
     public function store(EstadoRequest $request)
     {
-        $request->validate();
-        Estado::create($request->all());
+        $data = $request->validated();
+        $data['pais_id'] = self::BRAZIL_COUNTRY_ID;
+        Estado::create($data);
 
         return redirect()->back()->with('success', 'Estado cadastrado com sucesso!');
     }
 
     public function update(EstadoRequest $request, $id)
     {
-        $request->validate();
+        $data = $request->validated();
+        $data['pais_id'] = self::BRAZIL_COUNTRY_ID;
         $estado = Estado::findOrFail($id);
-        $estado->update($request->all());
+        $estado->update($data);
         
         return redirect()->back()->with('success', 'Estado atualizado com sucesso!');
     }
@@ -42,10 +44,9 @@ class EstadoController extends Controller
 
     public function show($id)
     {
-        $estado  = Estado::with('pais')->findOrFail($id);
-        $paises  = Pais::orderBy('nome')->get(['id_pais', 'nome']); // <- adicionar
+        $estado = Estado::findOrFail($id);
 
-        return view('platform.estados.show', compact('estado', 'paises')); // <- passar
+        return view('platform.estados.show', compact('estado'));
     }
 }
 

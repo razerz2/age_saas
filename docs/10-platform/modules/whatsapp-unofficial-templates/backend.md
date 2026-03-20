@@ -5,7 +5,6 @@ Componentes principais:
 - controller: `app/Http/Controllers/Platform/WhatsAppUnofficialTemplateController.php`
 - servico de teste manual/preview: `app/Services/Platform/WhatsAppUnofficialTemplateManualTestService.php`
 - requests:
-  - `StoreWhatsAppUnofficialTemplateRequest`
   - `UpdateWhatsAppUnofficialTemplateRequest`
 - policy: `app/Policies/Platform/WhatsAppUnofficialTemplatePolicy.php`
 - model: `app/Models/Platform/WhatsAppUnofficialTemplate.php`
@@ -16,8 +15,9 @@ Componentes principais:
 
 Observacao:
 
-- CRUD base apenas (list/create/show/edit/update/toggle);
-- seeding idempotente via `upsert` por `key`.
+- catalogo controlado: sem criacao manual via UI (sem rotas `create/store` e policy `create=false`);
+- operacoes expostas: list/show/edit/update/preview/test-send/toggle;
+- baseline populado por seeder idempotente via `upsert` por `key`.
 
 Hierarquia implementada no resolver:
 

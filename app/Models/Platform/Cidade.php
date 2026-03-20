@@ -15,7 +15,13 @@ class Cidade extends Model
         'estado_id',
         'uf',
         'nome_cidade',
+        'ibge_id',
     ];
+
+    public function scopeByIbgeId($query, int|string $ibgeId)
+    {
+        return $query->where('ibge_id', (int) $ibgeId);
+    }
 
     public function estado()
     {

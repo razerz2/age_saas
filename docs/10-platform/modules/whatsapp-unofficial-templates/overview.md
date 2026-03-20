@@ -2,11 +2,22 @@
 
 Modulo da Platform para manter templates internos de WhatsApp nao oficial.
 
+Catalogo controlado:
+
+- nao e permitido criar templates manualmente (rotas `create/store` nao existem);
+- baseline e populado via seeder (idempotente) e pode ser ajustado apenas por edicao;
+- cada `key` representa um evento (nao e um template livre).
+
 Boundary de dominio:
 
 - `whatsapp-official-templates`: templates oficiais da Meta (Cloud API);
 - `whatsapp-unofficial-templates`: templates internos da Platform para runtime nao oficial;
 - `tenant-default-notification-templates`: baseline operacional padrao por tenant (nao oficial).
+
+Diferenca Platform vs Tenant (nao oficial):
+
+- Platform (este modulo): eventos SaaS (`invoice.*`, `subscription.*`, `tenant.*`, `security.*`, `credentials.*`).
+- Tenant (baseline): eventos clinicos (`appointment.*`, `waitlist.*`) em `tenant-default-notification-templates`.
 
 Campos principais:
 

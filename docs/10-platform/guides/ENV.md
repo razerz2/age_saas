@@ -341,7 +341,7 @@ FILESYSTEM_DISK=local
 Algumas configurações podem ser alteradas via interface administrativa (Platform → Settings), sendo armazenadas na tabela `system_settings`:
 
 - `timezone`
-- `country_id`
+- `country_id` (legado tecnico, fixo em Brasil)
 - `language`
 - `ASAAS_API_URL`
 - `ASAAS_API_KEY`
@@ -363,7 +363,6 @@ Essas configurações têm prioridade sobre as variáveis de ambiente quando def
 **Nota:** Esta documentação foi revisada e atualizada para incluir:
 - Variáveis de ambiente do Google Calendar (GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET)
 - Todas as variáveis necessárias para o funcionamento completo do sistema
-
 
 
 

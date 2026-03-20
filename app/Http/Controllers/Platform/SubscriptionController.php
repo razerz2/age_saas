@@ -20,7 +20,7 @@ class SubscriptionController extends Controller
 {
     public function index()
     {
-        $subscriptions = Subscription::with(['tenant', 'plan'])
+        $subscriptions = Subscription::with(['plan', 'tenant.activeSubscriptionRelation.plan'])
             ->orderBy('created_at', 'desc')
             ->get();
 
@@ -30,15 +30,41 @@ class SubscriptionController extends Controller
     public function create()
     {
         $tenants = Tenant::orderBy('trade_name')->get();
-        $plans = Plan::orderBy('name')->get();
+        $conversionFromTrial = request()->boolean('conversion_from_trial')
+            || request()->query('origin') === 'trial';
+        $preselectedTenantId = request()->query('tenant_id');
+        $preselectedPlanId = request()->query('plan_id');
 
-        return view('platform.subscriptions.create', compact('tenants', 'plans'));
+        $plansQuery = Plan::query()->orderBy('name');
+        if ($conversionFromTrial) {
+            $plansQuery
+                ->where('plan_type', Plan::TYPE_REAL)
+                ->where('is_active', true);
+        }
+        $plans = $plansQuery->get();
+
+        $regularizationTenant = null;
+        if (!empty($preselectedTenantId)) {
+            $regularizationTenant = Tenant::with([
+                'activeSubscriptionRelation.plan',
+                'subscriptions.plan',
+            ])->find($preselectedTenantId);
+        }
+
+        return view('platform.subscriptions.create', compact(
+            'tenants',
+            'plans',
+            'preselectedTenantId',
+            'preselectedPlanId',
+            'regularizationTenant',
+            'conversionFromTrial'
+        ));
     }
 
     public function show(Subscription $subscription)
     {
         // 🔹 Carrega as relações (ex: tenant e plan, se existirem)
-        $subscription->load(['tenant', 'plan']);
+        $subscription->load(['plan', 'tenant.activeSubscriptionRelation.plan']);
 
         // 🔹 Retorna a view com os dados
         return view('platform.subscriptions.show', compact('subscription'));
@@ -50,20 +76,29 @@ class SubscriptionController extends Controller
         try {
             $data = $request->validated();
             $data['auto_renew'] = $request->has('auto_renew');
+            $conversionFromTrial = $request->boolean('conversion_from_trial');
 
-            // 🔹 Define plano e período
             $plan = Plan::findOrFail($data['plan_id']);
+            if ($conversionFromTrial && ! $plan->isReal()) {
+                return back()->withInput()->withErrors([
+                    'plan_id' => 'A conversao de trial so permite planos reais ativos.',
+                ]);
+            }
+
+            $data = $this->normalizeFinancialDataForPlan($data, $plan);
             $data['starts_at'] = $data['starts_at'] ?? now();
             $data['ends_at'] = \Carbon\Carbon::parse($data['starts_at'])
                 ->addDays($plan->period_months * 30);
 
-            // 🔹 Define status inicial
-            $data['status'] = ($data['status'] ?? null) === 'trialing'
-                ? 'trialing'
-                : 'pending';
+            $data['status'] = $plan->isTest()
+                ? 'active'
+                : (($data['status'] ?? null) === 'trialing' ? 'trialing' : 'pending');
 
-            // 🔹 Cria assinatura local
             $subscription = Subscription::create($data);
+
+            if ($conversionFromTrial) {
+                $this->closeOpenTrialSubscriptionsForTenant($data['tenant_id'], $subscription->id);
+            }
 
             $subscription->loadMissing(['tenant', 'plan']);
             $tenant = $subscription->tenant;
@@ -88,34 +123,35 @@ class SubscriptionController extends Controller
                 );
             }
 
-            // 🔹 Aplica regras de acesso ao tenant
             $this->applyAccessRulesToTenant($subscription);
 
-            // 🔹 Chama o método de sincronização (centralizado)
-            $result = $this->syncWithAsaas($subscription);
+            $result = $this->syncWithAsaas($subscription, true);
 
-            // 🔹 Se houve falha de sincronização, apenas avisa
             if ($result === false) {
                 return redirect()
                     ->route('Platform.subscriptions.index')
-                    ->with('warning', 'Assinatura criada, mas houve falha na sincronização com o Asaas. Verifique os logs.');
+                    ->with('warning', 'Assinatura criada, mas houve falha na sincronizacao com o Asaas. Verifique os logs.');
             }
 
-            // 🔹 Caso contrário, sucesso
+            $successMessage = $plan->isTest()
+                ? 'Assinatura de teste criada com sucesso. Nenhuma cobranca foi gerada.'
+                : ($conversionFromTrial
+                    ? 'Conversao de trial iniciada com sucesso. O acesso sera liberado conforme o pagamento.'
+                    : 'Assinatura criada com sucesso e sincronizada com o Asaas!');
+
             return redirect()
                 ->route('Platform.subscriptions.index')
-                ->with('success', 'Assinatura criada com sucesso e sincronizada com o Asaas!');
+                ->with('success', $successMessage);
         } catch (\Throwable $e) {
-            Log::error("💥 Erro ao criar assinatura: {$e->getMessage()}", [
+            Log::error("Erro ao criar assinatura: {$e->getMessage()}", [
                 'trace' => $e->getTraceAsString(),
             ]);
 
-            // Marca assinatura como falha de sincronização, se já existir
             if (isset($subscription)) {
                 $subscription->update([
-                    'asaas_synced'       => false,
-                    'asaas_sync_status'  => 'failed',
-                    'asaas_last_error'   => $e->getMessage(),
+                    'asaas_synced' => false,
+                    'asaas_sync_status' => 'failed',
+                    'asaas_last_error' => $e->getMessage(),
                     'asaas_last_sync_at' => now(),
                 ]);
             }
@@ -125,7 +161,6 @@ class SubscriptionController extends Controller
             ]);
         }
     }
-
 
     public function edit(Subscription $subscription)
     {
@@ -144,18 +179,37 @@ class SubscriptionController extends Controller
             $data = $request->validated();
             $data['auto_renew'] = $request->has('auto_renew');
 
-            // 🔹 Campos críticos que exigem ressincronização
-            $camposCriticos = ['plan_id', 'payment_method', 'auto_renew', 'status'];
-            $houveMudanca = false;
+            $targetPlan = Plan::findOrFail($data['plan_id']);
 
-            foreach ($camposCriticos as $campo) {
-                if (array_key_exists($campo, $data) && $subscription->{$campo} != $data[$campo]) {
-                    $houveMudanca = true;
+            if ((bool) $subscription->is_trial && $targetPlan->isTest()) {
+                return back()
+                    ->withInput()
+                    ->withErrors(['plan_id' => 'Nao e permitido manter assinatura de trial em plano de teste.']);
+            }
+
+            $data = $this->normalizeFinancialDataForPlan($data, $targetPlan);
+
+            if ((bool) $subscription->is_trial && $targetPlan->isReal()) {
+                $data['is_trial'] = false;
+                $data['trial_ends_at'] = null;
+
+                if (($data['status'] ?? null) === 'trialing') {
+                    $data['status'] = 'pending';
+                }
+            }
+
+            $previousPlanId = $subscription->plan_id;
+
+            $criticalFields = ['plan_id', 'payment_method', 'auto_renew', 'status'];
+            $hasCriticalChange = false;
+
+            foreach ($criticalFields as $field) {
+                if (array_key_exists($field, $data) && $subscription->{$field} != $data[$field]) {
+                    $hasCriticalChange = true;
                     break;
                 }
             }
 
-            // 🔹 Atualiza assinatura local (NUNCA sobrescreve IDs de integração)
             unset(
                 $data['asaas_subscription_id'],
                 $data['asaas_synced'],
@@ -166,45 +220,41 @@ class SubscriptionController extends Controller
 
             $subscription->update($data);
 
-            // 🔹 Se o plano mudou, aplica novas regras de acesso
-            if (isset($data['plan_id']) && $subscription->plan_id != $data['plan_id']) {
+            if (isset($data['plan_id']) && $previousPlanId != $data['plan_id']) {
                 $this->applyAccessRulesToTenant($subscription->fresh());
             }
 
-            // 🔹 Se houve mudança crítica → reenviar sincronismo ao Asaas
-            if ($houveMudanca) {
-                Log::info("🔁 Mudança crítica detectada na assinatura {$subscription->id}. Reenviando sincronismo...");
-                $this->syncWithAsaas($subscription);
+            if ($hasCriticalChange) {
+                Log::info("Mudanca critica detectada na assinatura {$subscription->id}. Reenviando sincronismo...");
+                $this->syncWithAsaas($subscription, true);
             }
 
-            // 🔹 Atualiza invoice local se valor do plano mudou
             $plan = $subscription->plan;
             $invoice = $subscription->invoices()->latest()->first();
 
-            if ($invoice && $plan && $invoice->amount_cents != $plan->price_cents) {
+            if ($invoice && $plan && ! $plan->isTest() && $invoice->amount_cents != $plan->price_cents) {
                 $invoice->update([
-                    'amount_cents'       => $plan->price_cents,
-                    'asaas_sync_status'  => 'pending',
+                    'amount_cents' => $plan->price_cents,
+                    'asaas_sync_status' => 'pending',
                     'asaas_last_sync_at' => now(),
                 ]);
 
-                Log::info("💰 Fatura {$invoice->id} atualizada com novo valor do plano {$plan->name} ({$plan->price_cents}).");
+                Log::info("Fatura {$invoice->id} atualizada com novo valor do plano {$plan->name} ({$plan->price_cents}).");
             }
 
-            // 🔹 Caso assinatura já tenha ID do Asaas e ainda não esteja marcada como sincronizada
-            if ($subscription->asaas_subscription_id && !$subscription->asaas_synced) {
+            if ($subscription->asaas_subscription_id && ! $subscription->asaas_synced) {
                 $subscription->update([
-                    'asaas_synced'       => true,
-                    'asaas_sync_status'  => 'success',
+                    'asaas_synced' => true,
+                    'asaas_sync_status' => 'success',
                     'asaas_last_sync_at' => now(),
                 ]);
             }
 
             return redirect()
                 ->route('Platform.subscriptions.index')
-                ->with('success', 'Assinatura atualizada com sucesso.' . ($houveMudanca ? ' Sincronismo reenviado ao Asaas.' : ''));
+                ->with('success', 'Assinatura atualizada com sucesso.' . ($hasCriticalChange ? ' Sincronismo reenviado ao Asaas.' : ''));
         } catch (\Throwable $e) {
-            Log::error("❌ Erro ao atualizar assinatura: {$e->getMessage()}", [
+            Log::error("Erro ao atualizar assinatura: {$e->getMessage()}", [
                 'trace' => $e->getTraceAsString(),
             ]);
 
@@ -214,6 +264,35 @@ class SubscriptionController extends Controller
         }
     }
 
+    private function normalizeFinancialDataForPlan(array $data, Plan $plan): array
+    {
+        if ($plan->isTest()) {
+            // Compatibilidade de schema legado: os campos ainda existem, mas sem uso financeiro.
+            $data['due_day'] = (int) ($data['due_day'] ?? 1);
+            $data['payment_method'] = 'PIX';
+            $data['status'] = 'active';
+        }
+
+        return $data;
+    }
+
+    private function closeOpenTrialSubscriptionsForTenant(string $tenantId, string $newSubscriptionId): void
+    {
+        Subscription::query()
+            ->where('tenant_id', $tenantId)
+            ->where('id', '!=', $newSubscriptionId)
+            ->where('is_trial', true)
+            ->whereIn('status', ['active', 'trialing'])
+            ->update([
+                'status' => 'canceled',
+                'ends_at' => now(),
+                'auto_renew' => false,
+                'asaas_synced' => false,
+                'asaas_sync_status' => 'skipped',
+                'asaas_last_error' => null,
+                'asaas_last_sync_at' => now(),
+            ]);
+    }
 
 
 
@@ -238,94 +317,133 @@ class SubscriptionController extends Controller
     }
 
     // Outras funções (show, renew, getByTenant) permanecem as mesmas...
-    public function syncWithAsaas(Subscription $subscription)
+    public function syncWithAsaas(Subscription $subscription, bool $silent = false)
     {
         try {
             $asaas = new AsaasService();
+            $subscription->loadMissing(['tenant', 'plan']);
             $tenant = $subscription->tenant;
-            $plan   = $subscription->plan;
+            $plan = $subscription->plan;
 
-            // 🔹 Status inicial — aguardando sincronização
+            if (! $tenant || ! $plan) {
+                Log::warning("Subscription {$subscription->id}: tenant/plano ausentes para sincronismo.");
+                if ($silent) {
+                    return false;
+                }
+
+                return back()->withErrors(['general' => 'Nao foi possivel sincronizar: tenant ou plano ausente.']);
+            }
+
+            if ($plan->isTest()) {
+                if (!empty($subscription->asaas_subscription_id)) {
+                    try {
+                        $asaas->deleteSubscription($subscription->asaas_subscription_id);
+                    } catch (\Throwable $e) {
+                        Log::warning('Nao foi possivel cancelar assinatura Asaas ao migrar para plano teste.', [
+                            'subscription_id' => $subscription->id,
+                            'error' => $e->getMessage(),
+                        ]);
+                    }
+                }
+
+                $subscription->update([
+                    'asaas_subscription_id' => null,
+                    'asaas_synced' => false,
+                    'asaas_sync_status' => 'skipped',
+                    'asaas_last_error' => null,
+                    'asaas_last_sync_at' => now(),
+                    'status' => 'active',
+                ]);
+
+                if ($silent) {
+                    return true;
+                }
+
+                return redirect()->back()->with('warning', 'Plano de teste: fluxo financeiro ignorado e sem cobranca.');
+            }
+
             $subscription->update([
-                'asaas_synced'       => false,
-                'asaas_sync_status'  => 'pending',
-                'asaas_last_error'   => null,
+                'asaas_synced' => false,
+                'asaas_sync_status' => 'pending',
+                'asaas_last_error' => null,
                 'asaas_last_sync_at' => now(),
             ]);
 
-            // 🔹 1. Garantir cliente vinculado no Asaas
-            if (!$tenant->asaas_customer_id) {
+            if (! $tenant->asaas_customer_id) {
                 $search = $asaas->searchCustomer($tenant->email);
 
-                if (!empty($search['data'][0]['id'])) {
+                if (! empty($search['data'][0]['id'])) {
                     $tenant->update(['asaas_customer_id' => $search['data'][0]['id']]);
                 } else {
                     $customerResponse = $asaas->createCustomer($tenant);
-                    if (empty($customerResponse) || !isset($customerResponse['id'])) {
+                    if (empty($customerResponse) || ! isset($customerResponse['id'])) {
                         $subscription->update([
-                            'asaas_synced'       => false,
-                            'asaas_sync_status'  => 'pending',
-                            'asaas_last_error'   => 'Falha ao criar cliente no Asaas (resposta vazia ou inválida).',
+                            'asaas_synced' => false,
+                            'asaas_sync_status' => 'pending',
+                            'asaas_last_error' => 'Falha ao criar cliente no Asaas (resposta vazia ou invalida).',
                             'asaas_last_sync_at' => now(),
                         ]);
 
-                        Log::warning("⚠️ Subscription {$subscription->id}: resposta inválida ao criar cliente no Asaas.");
-                        return back()->withErrors(['general' => 'Não foi possível sincronizar com o Asaas no momento. Tente novamente.']);
+                        Log::warning("Subscription {$subscription->id}: resposta invalida ao criar cliente no Asaas.");
+                        if ($silent) {
+                            return false;
+                        }
+
+                        return back()->withErrors(['general' => 'Nao foi possivel sincronizar com o Asaas no momento. Tente novamente.']);
                     }
 
                     $tenant->update(['asaas_customer_id' => $customerResponse['id']]);
                 }
             }
 
-            // 🔹 2. Pagamento com CARTÃO + auto-renovação
             if ($subscription->payment_method === 'CREDIT_CARD' && $subscription->auto_renew) {
-
                 if ($subscription->asaas_subscription_id) {
-                    // Atualiza assinatura existente
                     $asaas->updateSubscription($subscription->asaas_subscription_id, [
-                        'value'       => $plan->price_cents / 100,
+                        'value' => $plan->price_cents / 100,
                         'description' => "Assinatura atualizada ({$plan->name})",
                     ]);
-                    Log::info("🔄 Assinatura {$subscription->id} atualizada no Asaas.");
+                    Log::info("Assinatura {$subscription->id} atualizada no Asaas.");
                 } else {
-                    // Cria nova assinatura
                     $response = $asaas->createSubscription([
-                        'customer'    => $tenant->asaas_customer_id,
-                        'value'       => $plan->price_cents / 100,
-                        'cycle'       => 'MONTHLY',
+                        'customer' => $tenant->asaas_customer_id,
+                        'value' => $plan->price_cents / 100,
+                        'cycle' => 'MONTHLY',
                         'nextDueDate' => now()->toDateString(),
                         'description' => "Assinatura do plano {$plan->name}",
                     ]);
 
-                    if (empty($response) || !isset($response['subscription']['id'])) {
+                    if (empty($response) || ! isset($response['subscription']['id'])) {
                         $subscription->update([
-                            'asaas_synced'       => false,
-                            'asaas_sync_status'  => 'pending',
-                            'asaas_last_error'   => 'Falha ao criar assinatura no Asaas (resposta vazia ou inválida).',
+                            'asaas_synced' => false,
+                            'asaas_sync_status' => 'pending',
+                            'asaas_last_error' => 'Falha ao criar assinatura no Asaas (resposta vazia ou invalida).',
                             'asaas_last_sync_at' => now(),
                         ]);
 
-                        Log::warning("⚠️ Subscription {$subscription->id}: resposta inválida ao criar assinatura no Asaas.");
-                        return back()->withErrors(['general' => 'Não foi possível criar a assinatura no Asaas.']);
+                        Log::warning("Subscription {$subscription->id}: resposta invalida ao criar assinatura no Asaas.");
+                        if ($silent) {
+                            return false;
+                        }
+
+                        return back()->withErrors(['general' => 'Nao foi possivel criar a assinatura no Asaas.']);
                     }
 
-                    // Sucesso — registra ID e fatura local
                     $subscription->update(['asaas_subscription_id' => $response['subscription']['id']]);
 
-                    if (!empty($response['payment_link'])) {
+                    if (! empty($response['payment_link'])) {
                         $invoice = Invoices::create([
-                            'subscription_id'    => $subscription->id,
-                            'tenant_id'          => $tenant->id,
-                            'amount_cents'       => $plan->price_cents,
-                            'due_date'           => $response['payment']['dueDate'] ?? now()->addDay(),
-                            'status'             => 'pending',
-                            'payment_link'       => $response['payment_link'],
-                            'payment_method'     => 'CREDIT_CARD',
-                            'provider'           => 'asaas',
-                            'provider_id'        => $response['subscription']['id'],
-                            'asaas_payment_id'   => $response['payment']['id'] ?? null,
-                            'asaas_synced'       => true,
-                            'asaas_sync_status'  => 'success',
+                            'subscription_id' => $subscription->id,
+                            'tenant_id' => $tenant->id,
+                            'amount_cents' => $plan->price_cents,
+                            'due_date' => $response['payment']['dueDate'] ?? now()->addDay(),
+                            'status' => 'pending',
+                            'payment_link' => $response['payment_link'],
+                            'payment_method' => 'CREDIT_CARD',
+                            'provider' => 'asaas',
+                            'provider_id' => $response['subscription']['id'],
+                            'asaas_payment_id' => $response['payment']['id'] ?? null,
+                            'asaas_synced' => true,
+                            'asaas_sync_status' => 'success',
                             'asaas_last_sync_at' => now(),
                         ]);
 
@@ -351,50 +469,51 @@ class SubscriptionController extends Controller
                 }
 
                 $subscription->update([
-                    'asaas_synced'       => true,
-                    'asaas_sync_status'  => 'success',
-                    'asaas_last_error'   => null,
+                    'asaas_synced' => true,
+                    'asaas_sync_status' => 'success',
+                    'asaas_last_error' => null,
                     'asaas_last_sync_at' => now(),
-                    'status'             => 'pending',
+                    'status' => 'pending',
                 ]);
-            }
-
-            // 🔹 3. Pagamento PIX + auto-renovação
-            elseif ($subscription->payment_method === 'PIX' && $subscription->auto_renew) {
+            } elseif ($subscription->payment_method === 'PIX' && $subscription->auto_renew) {
                 $response = $asaas->createPayment([
-                    'customer'          => $tenant->asaas_customer_id,
-                    'billingType'       => 'PIX',
-                    'dueDate'           => now()->addDays(5)->toDateString(),
-                    'value'             => $plan->price_cents / 100,
-                    'description'       => "Assinatura do plano {$plan->name}",
+                    'customer' => $tenant->asaas_customer_id,
+                    'billingType' => 'PIX',
+                    'dueDate' => now()->addDays(5)->toDateString(),
+                    'value' => $plan->price_cents / 100,
+                    'description' => "Assinatura do plano {$plan->name}",
                     'externalReference' => $subscription->id,
                 ]);
 
-                if (empty($response) || !isset($response['id'])) {
+                if (empty($response) || ! isset($response['id'])) {
                     $subscription->update([
-                        'asaas_synced'       => false,
-                        'asaas_sync_status'  => 'pending',
-                        'asaas_last_error'   => 'Falha ao criar fatura PIX no Asaas (resposta vazia ou inválida).',
+                        'asaas_synced' => false,
+                        'asaas_sync_status' => 'pending',
+                        'asaas_last_error' => 'Falha ao criar fatura PIX no Asaas (resposta vazia ou invalida).',
                         'asaas_last_sync_at' => now(),
                     ]);
 
-                    Log::warning("⚠️ Subscription {$subscription->id}: resposta inválida ao criar fatura PIX.");
-                    return back()->withErrors(['general' => 'Não foi possível gerar fatura PIX no Asaas.']);
+                    Log::warning("Subscription {$subscription->id}: resposta invalida ao criar fatura PIX.");
+                    if ($silent) {
+                        return false;
+                    }
+
+                    return back()->withErrors(['general' => 'Nao foi possivel gerar fatura PIX no Asaas.']);
                 }
 
                 $invoice = Invoices::create([
-                    'subscription_id'    => $subscription->id,
-                    'tenant_id'          => $tenant->id,
-                    'amount_cents'       => $plan->price_cents,
-                    'due_date'           => now()->addDays(5),
-                    'status'             => 'pending',
-                    'payment_link'       => $response['invoiceUrl'] ?? null,
-                    'payment_method'     => 'PIX',
-                    'provider'           => 'asaas',
-                    'provider_id'        => $response['id'],
-                    'asaas_payment_id'   => $response['id'],
-                    'asaas_synced'       => true,
-                    'asaas_sync_status'  => 'success',
+                    'subscription_id' => $subscription->id,
+                    'tenant_id' => $tenant->id,
+                    'amount_cents' => $plan->price_cents,
+                    'due_date' => now()->addDays(5),
+                    'status' => 'pending',
+                    'payment_link' => $response['invoiceUrl'] ?? null,
+                    'payment_method' => 'PIX',
+                    'provider' => 'asaas',
+                    'provider_id' => $response['id'],
+                    'asaas_payment_id' => $response['id'],
+                    'asaas_synced' => true,
+                    'asaas_sync_status' => 'success',
                     'asaas_last_sync_at' => now(),
                 ]);
 
@@ -418,47 +537,49 @@ class SubscriptionController extends Controller
                 );
 
                 $subscription->update([
-                    'asaas_synced'       => true,
-                    'asaas_sync_status'  => 'success',
+                    'asaas_synced' => true,
+                    'asaas_sync_status' => 'success',
                     'asaas_last_sync_at' => now(),
-                    'asaas_last_error'   => null,
-                    'status'             => 'pending',
+                    'asaas_last_error' => null,
+                    'status' => 'pending',
                 ]);
-            }
-
-            // 🔹 4. Cancelamento / método alterado
-            elseif ($subscription->asaas_subscription_id) {
+            } elseif ($subscription->asaas_subscription_id) {
                 $asaas->deleteSubscription($subscription->asaas_subscription_id);
                 $subscription->update([
                     'asaas_subscription_id' => null,
-                    'asaas_synced'          => true,
-                    'asaas_sync_status'     => 'canceled',
-                    'asaas_last_error'      => null,
-                    'asaas_last_sync_at'    => now(),
+                    'asaas_synced' => true,
+                    'asaas_sync_status' => 'canceled',
+                    'asaas_last_error' => null,
+                    'asaas_last_sync_at' => now(),
                 ]);
-                Log::info("🗑️ Assinatura {$subscription->id} removida no Asaas (mudança de método ou auto_renew desativado).");
-            }
-
-            // 🔹 5. Trial / sem integração
-            else {
+                Log::info("Assinatura {$subscription->id} removida no Asaas (mudanca de metodo ou auto_renew desativado).");
+            } else {
                 $subscription->update([
-                    'asaas_synced'       => false,
-                    'asaas_sync_status'  => 'skipped',
-                    'asaas_last_error'   => null,
+                    'asaas_synced' => false,
+                    'asaas_sync_status' => 'skipped',
+                    'asaas_last_error' => null,
                     'asaas_last_sync_at' => now(),
                 ]);
             }
 
-            return redirect()->back()->with('success', 'Sincronização com Asaas concluída com sucesso!');
+            if ($silent) {
+                return true;
+            }
+
+            return redirect()->back()->with('success', 'Sincronizacao com Asaas concluida com sucesso!');
         } catch (\Throwable $e) {
-            Log::error("❌ Erro ao sincronizar assinatura com Asaas: {$e->getMessage()}");
+            Log::error("Erro ao sincronizar assinatura com Asaas: {$e->getMessage()}");
 
             $subscription->update([
-                'asaas_synced'       => false,
-                'asaas_sync_status'  => 'failed',
-                'asaas_last_error'   => $e->getMessage(),
+                'asaas_synced' => false,
+                'asaas_sync_status' => 'failed',
+                'asaas_last_error' => $e->getMessage(),
                 'asaas_last_sync_at' => now(),
             ]);
+
+            if ($silent) {
+                return false;
+            }
 
             return back()->withErrors(['general' => 'Erro ao sincronizar com Asaas.']);
         }
@@ -533,4 +654,5 @@ class SubscriptionController extends Controller
         }
     }
 }
+
 

@@ -10,10 +10,21 @@ Conceitos:
 - **Override (tenant)**: fica no banco (tabela `notification_templates`) por `(tenant_id, channel, key)`.
 - **Restaurar padrão**: remove o override; o sistema volta a usar o default automaticamente.
 
+Catálogo controlado (keys/eventos):
+
+- cada `key` representa um evento do sistema (ex.: `appointment.*`, `waitlist.*`);
+- o usuário não cria novas keys pelo Editor; apenas edita o conteúdo das keys existentes;
+- keys novas entram por baseline/controladoria (Platform) e/ou atualização do catálogo.
+
 ## Canais
 
 - `email`: possui `subject` (quando o template default define subject) e `content`.
 - `whatsapp`: possui apenas `content` (subject é ignorado).
+
+WhatsApp Oficial vs Não Oficial (importante):
+
+- este Editor opera templates **texto** do domínio WhatsApp Não Oficial;
+- templates **oficiais** (Meta Cloud API) são geridos na Platform e seguem outro fluxo de governança/aprovação (ver `docs/10-platform/modules/whatsapp-official-templates/`).
 
 ## Keys (tipos) suportadas
 
@@ -47,4 +58,3 @@ Toda tentativa de envio real (success/error) é registrada no banco do tenant:
 - `notification_deliveries` (ver `database.md`)
 
 Por padrão, a auditoria não armazena o corpo completo da mensagem (LGPD); registra hashes e tamanho.
-

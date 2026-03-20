@@ -9,6 +9,8 @@
 - pre-tenants
 - medical-specialties-catalog
 - notifications-outbox
+- platform-email-templates
+- tenant-email-templates
 - notification-templates
 - whatsapp-official-templates
 - whatsapp-official-tenant-templates

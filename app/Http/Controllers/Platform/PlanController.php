@@ -11,6 +11,7 @@ class PlanController extends Controller
     public function index()
     {
         $plans = Plan::orderBy('created_at', 'desc')->get();
+
         return view('platform.plans.index', compact('plans'));
     }
 
@@ -21,31 +22,25 @@ class PlanController extends Controller
 
     public function store(PlanRequest $request)
     {
-        // ✅ Dados já validados e com price_cents convertido corretamente
         $data = $request->validated();
 
-        // ❌ Remover esta linha — já convertemos na Request
-        // $data['price_cents'] = (int) round($data['price_cents'] * 100);
-
-        // 🔹 Converte o campo de texto "features_json" em array (se existir)
         if ($request->filled('features_json')) {
             $data['features'] = array_filter(
                 preg_split('/\r\n|\r|\n/', $request->features_json)
             );
         }
 
-        // 🔹 Garante boolean no campo is_active (checkbox)
         $data['is_active'] = $request->has('is_active');
+        $data['show_on_landing_page'] = $request->has('show_on_landing_page');
+        $data['plan_type'] = $data['plan_type'] ?? Plan::TYPE_REAL;
+        $data = $this->normalizeTrialSettings($data);
 
-        // 🔹 Cria o plano
         Plan::create($data);
 
         return redirect()
             ->route('Platform.plans.index')
             ->with('success', 'Plano criado com sucesso!');
     }
-
-
 
     public function show(Plan $plan)
     {
@@ -59,23 +54,19 @@ class PlanController extends Controller
 
     public function update(PlanRequest $request, Plan $plan)
     {
-        // ✅ Usa apenas os dados validados (price_cents já convertido para centavos no PlanRequest)
         $data = $request->validated();
 
-        // ❌ Remover conversão duplicada — já convertemos no PlanRequest
-        // $data['price_cents'] = (int) round($data['price_cents'] * 100);
-
-        // 🔹 Converte texto de features (multilinha) para array
         if ($request->filled('features_json')) {
             $data['features'] = array_filter(
                 preg_split('/\r\n|\r|\n/', $request->features_json)
             );
         }
 
-        // 🔹 Garante boolean correto
         $data['is_active'] = $request->has('is_active');
+        $data['show_on_landing_page'] = $request->has('show_on_landing_page');
+        $data['plan_type'] = $data['plan_type'] ?? Plan::TYPE_REAL;
+        $data = $this->normalizeTrialSettings($data);
 
-        // 🔹 Atualiza o plano
         $plan->update($data);
 
         return redirect()
@@ -87,7 +78,19 @@ class PlanController extends Controller
     {
         $plan->delete();
 
-        return redirect()->route('Platform.plans.index')->with('success', 'Plano excluído com sucesso!');
+        return redirect()->route('Platform.plans.index')->with('success', 'Plano excluido com sucesso!');
+    }
+
+    private function normalizeTrialSettings(array $data): array
+    {
+        $isRealPlan = ($data['plan_type'] ?? Plan::TYPE_REAL) === Plan::TYPE_REAL;
+        $trialEnabled = $isRealPlan && ! empty($data['trial_enabled']);
+
+        $data['trial_enabled'] = $trialEnabled;
+        $data['trial_days'] = $trialEnabled
+            ? (int) ($data['trial_days'] ?? 0)
+            : null;
+
+        return $data;
     }
 }
-

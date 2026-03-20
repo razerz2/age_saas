@@ -14,6 +14,10 @@ it('seeds the platform saas baseline for official whatsapp templates', function 
         'security.2fa_code',
         'tenant.welcome',
         'subscription.created',
+        'trial.ends_in_7_days',
+        'trial.ends_in_3_days',
+        'trial.ends_today',
+        'trial.expired',
         'subscription.recovery_started',
         'credentials.resent',
     ];
@@ -53,7 +57,7 @@ it('is idempotent when running the official whatsapp templates seeder multiple t
         ->where('version', 1)
         ->get();
 
-    expect($rows)->toHaveCount(9);
+    expect($rows)->toHaveCount(13);
 
     $duplicates = WhatsAppOfficialTemplate::query()
         ->officialProvider()

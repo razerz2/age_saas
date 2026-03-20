@@ -277,14 +277,20 @@ function bindLocationConfig() {
 
     const currentEstadoId = config.dataset.currentStateId || '';
     const currentCidadeId = config.dataset.currentCityId || '';
-    const brazilId = config.dataset.brazilId || '';
-    const statesUrlTemplate = config.dataset.statesUrlTemplate || '';
+    const statesUrl = config.dataset.statesUrl || '';
     const citiesUrlTemplate = config.dataset.citiesUrlTemplate || '';
+    const zipcodeUrlTemplate = config.dataset.zipcodeUrlTemplate || '';
+    let initialCidadeId = currentCidadeId;
+    let statesLoadedPromise = null;
 
     const loadStates = async () => {
+        if (!statesUrl) {
+            return;
+        }
+
         stateSelect.innerHTML = '<option value=\"\">Carregando estados...</option>';
         try {
-            const response = await fetch(statesUrlTemplate.replace(':paisId', brazilId));
+            const response = await fetch(statesUrl);
             const data = await response.json();
             stateSelect.innerHTML = '<option value=\"\">Selecione o estado</option>';
             data.forEach((state) => {
@@ -305,7 +311,7 @@ function bindLocationConfig() {
         }
     };
 
-    const loadCities = async (stateId) => {
+    const loadCities = async (stateId, preferredCidadeId = '') => {
         if (!stateId) {
             citySelect.innerHTML = '<option value=\"\">Selecione o estado primeiro</option>';
             return;
@@ -315,18 +321,95 @@ function bindLocationConfig() {
             const response = await fetch(citiesUrlTemplate.replace(':id', stateId));
             const data = await response.json();
             citySelect.innerHTML = '<option value=\"\">Selecione a cidade</option>';
+            const cidadeToSelect = preferredCidadeId || initialCidadeId;
             data.forEach((city) => {
                 const option = document.createElement('option');
                 option.value = city.id_cidade;
                 option.dataset.name = city.nome_cidade;
                 option.textContent = city.nome_cidade;
-                if (currentCidadeId && String(currentCidadeId) === String(city.id_cidade)) {
+                if (cidadeToSelect && String(cidadeToSelect) === String(city.id_cidade)) {
                     option.selected = true;
                 }
                 citySelect.appendChild(option);
             });
+            if (cidadeToSelect) {
+                initialCidadeId = '';
+            }
         } catch (error) {
             citySelect.innerHTML = '<option value=\"\">Erro ao carregar</option>';
+        }
+    };
+
+    const ensureStatesLoaded = () => {
+        if (!statesLoadedPromise) {
+            statesLoadedPromise = loadStates();
+        }
+
+        return statesLoadedPromise;
+    };
+
+    const selectStateByUf = (uf) => {
+        if (!uf) {
+            return '';
+        }
+
+        const normalizedUf = String(uf).toUpperCase();
+        for (let i = 0; i < stateSelect.options.length; i += 1) {
+            const option = stateSelect.options[i];
+            if ((option.dataset.abbr || '').toUpperCase() === normalizedUf) {
+                stateSelect.selectedIndex = i;
+                return option.value;
+            }
+        }
+
+        return '';
+    };
+
+    const selectCityByName = (cityName) => {
+        if (!cityName) {
+            return;
+        }
+
+        const normalizedName = String(cityName).trim().toLowerCase();
+        for (let i = 0; i < citySelect.options.length; i += 1) {
+            const option = citySelect.options[i];
+            if ((option.dataset.name || '').trim().toLowerCase() === normalizedName) {
+                citySelect.selectedIndex = i;
+                break;
+            }
+        }
+    };
+
+    const applyZipcodeLookup = async (payload) => {
+        if (!payload || typeof payload !== 'object') {
+            return;
+        }
+
+        if (addressField && typeof payload.street === 'string') {
+            addressField.value = payload.street;
+        }
+
+        if (neighborhoodField && typeof payload.neighborhood === 'string') {
+            neighborhoodField.value = payload.neighborhood;
+        }
+
+        let selectedStateId = '';
+        if (payload.state?.id) {
+            selectedStateId = String(payload.state.id);
+            stateSelect.value = selectedStateId;
+        } else if (payload.fallback?.state_uf) {
+            selectedStateId = selectStateByUf(payload.fallback.state_uf);
+        }
+
+        if (selectedStateId) {
+            const preferredCidadeId = payload.city?.id ? String(payload.city.id) : '';
+            await loadCities(selectedStateId, preferredCidadeId);
+        }
+
+        if (payload.city?.id) {
+            citySelect.value = String(payload.city.id);
+        } else if (payload.fallback?.city_name) {
+            selectCityByName(payload.fallback.city_name);
         }
     };
 
@@ -336,48 +419,32 @@ function bindLocationConfig() {
 
     if (zipcodeField) {
         zipcodeField.addEventListener('input', (event) => {
-            let value = event.target.value.replace(/\\D/g, '');
+            let value = event.target.value.replace(/\D/g, '');
             if (value.length > 8) value = value.substring(0, 8);
             if (value.length > 5) {
                 value = value.substring(0, 5) + '-' + value.substring(5);
             }
             event.target.value = value;
 
-            if (value.replace(/\\D/g, '').length === 8) {
-                fetch(`https://viacep.com.br/ws/${value.replace(/\\D/g, '')}/json/`)
-                    .then((response) => response.json())
-                    .then((data) => {
-                        if (!data.erro) {
-                            if (addressField) addressField.value = data.logradouro;
-                            if (neighborhoodField) neighborhoodField.value = data.bairro;
-                            if (data.uf) {
-                                for (let i = 0; i < stateSelect.options.length; i += 1) {
-                                    if (stateSelect.options[i].dataset.abbr === data.uf) {
-                                        stateSelect.selectedIndex = i;
-                                        loadCities(stateSelect.value).then(() => {
-                                            if (data.localidade) {
-                                                for (let j = 0; j < citySelect.options.length; j += 1) {
-                                                    if (
-                                                        citySelect.options[j].dataset.name.toLowerCase() ===
-                                                        data.localidade.toLowerCase()
-                                                    ) {
-                                                        citySelect.selectedIndex = j;
-                                                        break;
-                                                    }
-                                                }
-                                            }
-                                        });
-                                        break;
-                                    }
-                                }
-                            }
+            const digits = value.replace(/\D/g, '');
+            if (digits.length === 8 && zipcodeUrlTemplate) {
+                const zipcodeUrl = zipcodeUrlTemplate.replace('__CEP__', digits);
+                ensureStatesLoaded()
+                    .then(() => fetch(zipcodeUrl))
+                    .then(async (response) => {
+                        if (!response.ok) {
+                            return;
                         }
-                    });
+
+                        const payload = await response.json();
+                        await applyZipcodeLookup(payload);
+                    })
+                    .catch(() => {});
             }
         });
     }
 
-    loadStates();
+    ensureStatesLoaded();
 }
 
 function bindFinanceConfig() {

@@ -253,8 +253,6 @@
                 <i class="fas fa-map"></i><span class="hide-menu"> Locais </span>
             </a>
             <ul aria-expanded="false" class="collapse first-level base-level-line">
-                <li class="sidebar-item"><a href="{{ route('Platform.paises.index') }}" class="sidebar-link">
-                    <span class="hide-menu"><i class="fas fa-list-alt"></i> Países</span></a></li>
                 <li class="sidebar-item"><a href="{{ route('Platform.estados.index') }}" class="sidebar-link">
                     <span class="hide-menu"><i class="fas fa-list-alt"></i> Estados</span></a></li>
                 <li class="sidebar-item"><a href="{{ route('Platform.cidades.index') }}" class="sidebar-link">

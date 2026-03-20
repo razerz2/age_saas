@@ -1,5 +1,19 @@
 # CHANGELOG da Documentacao
 
+2026-03-19 (Trial reminders)
+- Adicionada documentacao dos lembretes automaticos de trial comercial no backend de assinaturas:
+  - comando `subscriptions:notify-trial-reminders`
+  - eventos `trial.ends_in_7_days`, `trial.ends_in_3_days`, `trial.ends_today`, `trial.expired`
+  - canais email + WhatsApp oficial + notificacao interna
+  - idempotencia por `subscription_id + event_key + reference_date` em `trial_reminder_dispatches`
+- Atualizada documentacao de `settings` para incluir o novo comando agendado padrao.
+
+2026-03-18 (Templates)
+- Atualizada documentacao dos catalogos de templates:
+  - Email: `platform-email-templates`, `tenant-email-templates` (seeding, edicao-only, teste de envio).
+  - WhatsApp Nao Oficial: `whatsapp-unofficial-templates`, `tenant-default-notification-templates` (sem criacao manual, seeders).
+- Modulo `notification-templates` ajustado para refletir escopo atual de layouts de email.
+
 2026-03-14 (WhatsApp)
 - Consolidada a documentacao dos modulos de WhatsApp apos a separacao Oficial vs Nao Oficial:
   - `whatsapp-official-templates` (catalogo global + fluxo Meta)

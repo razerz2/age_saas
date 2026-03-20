@@ -102,6 +102,11 @@ class Tenant extends BaseTenant
      *  RELACIONAMENTOS
      * =====================================================
      */
+    /**
+     * Relacao legada.
+     * `tenants.plan_id` e mantido apenas para compatibilidade temporaria.
+     * Regras comerciais e de acesso devem usar assinatura ativa.
+     */
     public function plan()
     {
         return $this->belongsTo(\App\Models\Platform\Plan::class, 'plan_id');
@@ -126,18 +131,235 @@ class Tenant extends BaseTenant
     }
 
     /**
+     * Relacionamento com a assinatura ativa do tenant (quando existir).
+     */
+    public function activeSubscriptionRelation()
+    {
+        return $this->hasOne(Subscription::class, 'tenant_id')
+            ->whereIn('status', ['active', 'trialing'])
+            ->where(function ($query) {
+                $query
+                    ->where(function ($activeSubscriptionQuery) {
+                        $activeSubscriptionQuery
+                            ->where(function ($trialFlagQuery) {
+                                $trialFlagQuery->whereNull('is_trial')
+                                    ->orWhere('is_trial', false);
+                            })
+                            ->where(function ($periodQuery) {
+                                $periodQuery->whereNull('ends_at')
+                                    ->orWhere('ends_at', '>', now());
+                            });
+                    })
+                    ->orWhere(function ($trialQuery) {
+                        $trialQuery->where('is_trial', true)
+                            ->whereNotNull('trial_ends_at')
+                            ->where('trial_ends_at', '>', now());
+                    });
+            })
+            ->latest('starts_at');
+    }
+
+    /**
      * Retorna a assinatura ativa do tenant
      */
     public function activeSubscription()
     {
         return $this->subscriptions()
-            ->where('status', 'active')
+            ->whereIn('status', ['active', 'trialing'])
             ->where(function ($query) {
-                $query->whereNull('ends_at')
-                    ->orWhere('ends_at', '>', now());
+                $query
+                    ->where(function ($activeSubscriptionQuery) {
+                        $activeSubscriptionQuery
+                            ->where(function ($trialFlagQuery) {
+                                $trialFlagQuery->whereNull('is_trial')
+                                    ->orWhere('is_trial', false);
+                            })
+                            ->where(function ($periodQuery) {
+                                $periodQuery->whereNull('ends_at')
+                                    ->orWhere('ends_at', '>', now());
+                            });
+                    })
+                    ->orWhere(function ($trialQuery) {
+                        $trialQuery->where('is_trial', true)
+                            ->whereNotNull('trial_ends_at')
+                            ->where('trial_ends_at', '>', now());
+                    });
             })
             ->latest('starts_at')
             ->first();
+    }
+
+    /**
+     * Base para bloqueio futuro (NÃO aplicando no login ainda).
+     */
+    protected function resolvedActiveSubscription(): ?Subscription
+    {
+        if ($this->relationLoaded('activeSubscriptionRelation')) {
+            return $this->getRelation('activeSubscriptionRelation');
+        }
+
+        return $this->activeSubscription();
+    }
+
+    /**
+     * Fonte oficial do plano comercial vigente do tenant.
+     * Retorna apenas plano vinculado a assinatura ativa.
+     */
+    public function currentSubscriptionPlan(): ?Plan
+    {
+        $subscription = $this->resolvedActiveSubscription();
+
+        if (! $subscription) {
+            return null;
+        }
+
+        if ($subscription->relationLoaded('plan')) {
+            $plan = $subscription->getRelation('plan');
+
+            return $plan instanceof Plan ? $plan : null;
+        }
+
+        return $subscription->plan()->first();
+    }
+
+    /**
+     * Alias semantico para uso no dominio comercial.
+     */
+    public function commercialPlan(): ?Plan
+    {
+        return $this->currentSubscriptionPlan();
+    }
+
+    /**
+     * Prefill operacional para tela de regularizacao.
+     * Prioriza o plano comercial vigente e usa `tenants.plan_id` apenas como
+     * fallback de compatibilidade durante a transicao do legado.
+     */
+    public function preferredRegularizationPlanId(): ?string
+    {
+        $commercialPlanId = $this->currentSubscriptionPlan()?->id;
+
+        if ($commercialPlanId) {
+            return (string) $commercialPlanId;
+        }
+
+        return $this->plan_id ? (string) $this->plan_id : null;
+    }
+
+    public function isEligibleForAccess(): bool
+    {
+        return $this->currentSubscriptionPlan() !== null;
+    }
+
+    public function activeTrialSubscription(): ?Subscription
+    {
+        return $this->subscriptions()
+            ->where('is_trial', true)
+            ->whereIn('status', ['active', 'trialing'])
+            ->whereNotNull('trial_ends_at')
+            ->where('trial_ends_at', '>', now())
+            ->latest('trial_ends_at')
+            ->first();
+    }
+
+    public function expiredTrialSubscription(): ?Subscription
+    {
+        return $this->subscriptions()
+            ->where('is_trial', true)
+            ->whereNotNull('trial_ends_at')
+            ->where('trial_ends_at', '<=', now())
+            ->latest('trial_ends_at')
+            ->first();
+    }
+
+    public function trialDaysRemaining(): ?int
+    {
+        $trialSubscription = $this->activeTrialSubscription();
+
+        if (! $trialSubscription || ! $trialSubscription->trial_ends_at) {
+            return null;
+        }
+
+        $remaining = now()->startOfDay()->diffInDays($trialSubscription->trial_ends_at->copy()->startOfDay(), false);
+
+        return max(0, $remaining);
+    }
+
+    public function commercialAccessBlockedMessage(): string
+    {
+        if (! $this->isEligibleForAccess() && $this->expiredTrialSubscription()) {
+            return 'Seu período de teste expirou. Contrate um plano para continuar usando o sistema.';
+        }
+
+        return 'Seu ambiente foi criado, mas ainda não está liberado para uso. É necessário definir um plano e uma assinatura ativos.';
+    }
+
+    public function commercialAccessStatusKey(): string
+    {
+        if ($this->isEligibleForAccess()) {
+            return 'eligible';
+        }
+
+        if ($this->expiredTrialSubscription()) {
+            return 'trial_expired';
+        }
+
+        $subscription = $this->resolvedActiveSubscription();
+
+        if (! $subscription) {
+            return 'no_subscription';
+        }
+
+        return 'subscription_without_plan';
+    }
+
+    public function commercialAccessStatusLabel(): string
+    {
+        return match ($this->commercialAccessStatusKey()) {
+            'eligible' => 'Apta para acesso',
+            'trial_expired' => 'Trial expirado',
+            'no_subscription' => 'Sem assinatura',
+            'subscription_without_plan' => 'Assinatura sem plano',
+            default => 'Bloqueada comercialmente',
+        };
+    }
+
+    public function commercialAccessStatusBadgeClass(): string
+    {
+        return match ($this->commercialAccessStatusKey()) {
+            'eligible' => 'bg-success',
+            'trial_expired' => 'bg-danger',
+            'no_subscription' => 'bg-secondary',
+            'subscription_without_plan' => 'bg-warning text-dark',
+            default => 'bg-danger',
+        };
+    }
+
+    public function commercialAccessSummaryLabel(): string
+    {
+        return $this->isEligibleForAccess()
+            ? 'Apta para acesso'
+            : 'Bloqueada comercialmente';
+    }
+
+    public function commercialAccessSummaryBadgeClass(): string
+    {
+        return $this->isEligibleForAccess() ? 'bg-success' : 'bg-danger';
+    }
+
+    public function subscriptionGrantsAccess(?Subscription $subscription): bool
+    {
+        if (! $subscription) {
+            return false;
+        }
+
+        $activeSubscription = $this->resolvedActiveSubscription();
+
+        if (! $activeSubscription || $activeSubscription->id !== $subscription->id) {
+            return false;
+        }
+
+        return $this->isEligibleForAccess();
     }
 
     public function initializeTenant(array $attributes)

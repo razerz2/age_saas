@@ -57,19 +57,6 @@
                     </div>
 
                     <div class="mb-3">
-                        <label>País de preferência</label>
-                        <select class="form-select" name="country_id">
-                            <option value="">Selecione o país</option>
-                            @foreach ($paises as $pais)
-                                <option value="{{ $pais->id_pais }}"
-                                    {{ $settings['country_id'] == $pais->id_pais ? 'selected' : '' }}>
-                                    {{ $pais->nome }}
-                                </option>
-                            @endforeach
-                        </select>
-                    </div>
-
-                    <div class="mb-3">
                         <label>Idioma</label>
                         <select class="form-select" name="language">
                             <option value="pt_BR" {{ $settings['language'] == 'pt_BR' ? 'selected' : '' }}>Português

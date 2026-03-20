@@ -6,7 +6,6 @@
     <div class="row justify-content-center">
         <div class="col-lg-10 col-md-12">
 
-            {{-- Mensagens --}}
             @if (session('success'))
                 <div class="alert alert-success alert-dismissible fade show" role="alert">
                     {{ session('success') }}
@@ -25,20 +24,6 @@
                 </div>
 
                 <div class="card-body">
-                    {{-- 🔹 Filtro de País --}}
-                    <div class="row g-3 mb-3">
-                        <div class="col-md-4">
-                            <label class="form-label fw-semibold">País</label>
-                            <select id="pais" class="form-select">
-                                <option value="">Selecione o país...</option>
-                                @foreach ($paises as $pais)
-                                    <option value="{{ $pais->id_pais }}">{{ $pais->nome }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                    </div>
-
-                    {{-- 🔹 Tabela --}}
                     <div class="table-responsive">
                         <table id="dt-estados" class="table table-striped table-hover align-middle w-100">
                             <thead class="table-light">
@@ -46,7 +31,7 @@
                                     <th>#</th>
                                     <th>Nome</th>
                                     <th>UF</th>
-                                    <th>País</th>
+                                    <th>Código IBGE</th>
                                     <th class="text-end">Ações</th>
                                 </tr>
                             </thead>
@@ -56,7 +41,6 @@
                 </div>
             </div>
 
-            {{-- 🔹 Modal Criar --}}
             <div class="modal fade" id="modalCreate" tabindex="-1" aria-hidden="true">
                 <div class="modal-dialog modal-dialog-centered">
                     <div class="modal-content border-0 shadow">
@@ -76,13 +60,8 @@
                                     <input type="text" name="uf" maxlength="2" class="form-control text-uppercase" required>
                                 </div>
                                 <div class="mb-3">
-                                    <label class="form-label">País *</label>
-                                    <select name="pais_id" class="form-select" required>
-                                        <option value="">Selecione...</option>
-                                        @foreach ($paises as $pais)
-                                            <option value="{{ $pais->id_pais }}">{{ $pais->nome }}</option>
-                                        @endforeach
-                                    </select>
+                                    <label class="form-label">Código IBGE</label>
+                                    <input type="number" name="ibge_id" class="form-control">
                                 </div>
                             </div>
                             <div class="modal-footer">
@@ -96,7 +75,6 @@
                 </div>
             </div>
 
-            {{-- 🔹 Modal Editar --}}
             <div class="modal fade" id="modalEdit" tabindex="-1" aria-hidden="true">
                 <div class="modal-dialog modal-dialog-centered">
                     <div class="modal-content border-0 shadow">
@@ -117,13 +95,8 @@
                                     <input type="text" name="uf" id="edit-uf" maxlength="2" class="form-control text-uppercase" required>
                                 </div>
                                 <div class="mb-3">
-                                    <label class="form-label">País *</label>
-                                    <select name="pais_id" id="edit-pais" class="form-select" required>
-                                        <option value="">Selecione...</option>
-                                        @foreach ($paises as $pais)
-                                            <option value="{{ $pais->id_pais }}">{{ $pais->nome }}</option>
-                                        @endforeach
-                                    </select>
+                                    <label class="form-label">Código IBGE</label>
+                                    <input type="number" name="ibge_id" id="edit-ibge-id" class="form-control">
                                 </div>
                             </div>
                             <div class="modal-footer">
@@ -148,23 +121,10 @@
 <script>
 $(function() {
     const langUrl = "{{ asset('freedash/assets/js/datatables-lang/pt-BR.json') }}";
-    const routeEstados = "{{ route('Platform.api.estados', ['pais' => '__PAIS__']) }}";
+    const urlEstados = "{{ route('Platform.api.estados') }}";
+    let table = null;
 
-    let table;
-
-    // 🔹 Quando mudar o país
-    $('#pais').on('change', function () {
-        const paisId = $(this).val();
-        if (!paisId) {
-            if (table) {
-                table.clear().draw();
-            }
-            return;
-        }
-
-        const url = routeEstados.replace('__PAIS__', paisId);
-
-        // Destroi e recria a tabela
+    function mountTable() {
         if ($.fn.DataTable.isDataTable('#dt-estados')) {
             table.destroy();
             $('#dt-estados tbody').empty();
@@ -172,14 +132,14 @@ $(function() {
 
         table = $('#dt-estados').DataTable({
             ajax: {
-                url: url,
+                url: urlEstados,
                 dataSrc: ''
             },
             columns: [
                 { data: 'id_estado' },
                 { data: 'nome_estado' },
                 { data: 'uf' },
-                { data: 'pais_nome' },
+                { data: 'ibge_id', render: (data) => data ?? '-' },
                 {
                     data: null,
                     className: 'text-end',
@@ -194,13 +154,13 @@ $(function() {
                                     data-id="${row.id_estado}"
                                     data-nome="${row.nome_estado}"
                                     data-uf="${row.uf}"
-                                    data-pais="${row.pais_id}">
+                                    data-ibge-id="${row.ibge_id ?? ''}">
                                 <i class="fas fa-edit"></i>
                             </button>
                             <form action="/Platform/estados/${row.id_estado}" method="POST" class="d-inline" onsubmit="event.preventDefault(); showConfirm('Deseja realmente excluir este estado? Esta ação não pode ser desfeita.', 'Confirmar Exclusão').then(confirmed => { if(confirmed) event.target.submit(); }); return false;">
                                 @csrf
                                 @method('DELETE')
-                                <button title="Exclusão" class="btn btn-sm btn-outline-danger">
+                                <button title="Excluir" class="btn btn-sm btn-outline-danger">
                                     <i class="fas fa-trash-alt"></i>
                                 </button>
                             </form>`;
@@ -211,13 +171,14 @@ $(function() {
             pageLength: 10,
             language: { url: langUrl }
         });
-    });
+    }
 
-    // 🔹 Preenche modal editar
+    mountTable();
+
     $(document).on('click', '.btn-edit', function () {
         $('#edit-nome').val($(this).data('nome'));
         $('#edit-uf').val($(this).data('uf'));
-        $('#edit-pais').val($(this).data('pais'));
+        $('#edit-ibge-id').val($(this).data('ibge-id'));
         $('#formEdit').attr('action', `/Platform/estados/${$(this).data('id')}`);
         $('#modalEdit').modal('show');
     });

@@ -55,6 +55,38 @@
                             </div>
                         @endif
 
+                        @php
+                            $activeSubscription = $tenant->activeSubscriptionRelation;
+                            $regularizationQuery = array_filter([
+                                'tenant_id' => $tenant->id,
+                                'plan_id' => $tenant->preferredRegularizationPlanId(),
+                            ]);
+                        @endphp
+
+                        <div class="alert {{ $tenant->isEligibleForAccess() ? 'alert-success' : 'alert-warning' }}">
+                            <div class="d-flex flex-column">
+                                <strong>SituaÃ§Ã£o comercial: {{ $tenant->commercialAccessSummaryLabel() }}</strong>
+                                <span class="small mt-1">
+                                    Motivo atual: {{ $tenant->commercialAccessStatusLabel() }}
+                                </span>
+                                <span class="small mt-1">
+                                    Plano por assinatura: {{ $activeSubscription?->plan?->name ?? '-' }}
+                                    @if ($activeSubscription?->plan)
+                                        ({{ $activeSubscription->plan->planTypeLabel() }} /
+                                        {{ $activeSubscription->plan->landingVisibilityLabel() }})
+                                    @endif
+                                </span>
+                                @if (! $tenant->isEligibleForAccess() && in_array('subscriptions', auth()->user()->modules ?? []))
+                                    <div class="mt-2">
+                                        <a href="{{ route('Platform.subscriptions.create', $regularizationQuery) }}"
+                                            class="btn btn-sm btn-warning">
+                                            <i class="fas fa-file-signature me-1"></i> Regularizar agora
+                                        </a>
+                                    </div>
+                                @endif
+                            </div>
+                        </div>
+
                         <form method="POST" action="{{ route('Platform.tenants.update', $tenant->id) }}">
                             @csrf
                             @method('PUT')
@@ -84,17 +116,6 @@
                                         value="{{ old('subdomain', $tenant->subdomain) }}" required>
                                 </div>
 
-                                <div class="col-md-6">
-                                    <label class="form-label">Rede de Clínicas (opcional)</label>
-                                    <select name="network_id" class="form-select">
-                                        <option value="">Nenhuma rede</option>
-                                        @foreach($networks as $network)
-                                            <option value="{{ $network->id }}" @selected($tenant->network_id == $network->id)>
-                                                {{ $network->name }} ({{ $network->slug }})
-                                            </option>
-                                        @endforeach
-                                    </select>
-                                </div>
 
                                 <div class="col-md-6">
                                     <label class="form-label">Email</label>
@@ -133,10 +154,7 @@
 
                                 @php
                                     $loc = $localizacao ?? null;
-                                    $currentPaisId = $loc?->pais_id ?? sysconfig('country_id') ?? 31;
                                 @endphp
-
-                                <input type="hidden" id="pais" name="pais_id" value="{{ $currentPaisId }}">
 
                                 <div class="col-md-6">
                                     <label class="form-label">Estado</label>
@@ -215,24 +233,10 @@
 
     @push('scripts')
         <script>
-            const pais = document.getElementById('pais');
             const estado = document.getElementById('estado');
             const cidade = document.getElementById('cidade');
 
-            if (pais && estado && cidade) {
-                pais.addEventListener('change', function() {
-                    const urlEstados = "{{ route('Platform.api.estados', ['pais' => '__ID__']) }}".replace('__ID__',
-                        this.value);
-                    fetch(urlEstados)
-                        .then(r => r.json())
-                        .then(data => {
-                            estado.innerHTML = '<option value="">Selecione...</option>';
-                            data.forEach(e => estado.innerHTML +=
-                                `<option value="${e.id_estado}">${e.nome_estado}</option>`);
-                            cidade.innerHTML = '<option value="">Selecione o estado primeiro</option>';
-                        });
-                });
-
+            if (estado && cidade) {
                 estado.addEventListener('change', function() {
                     const urlCidades = "{{ route('Platform.api.cidades', ['estado' => '__ID__']) }}".replace('__ID__',
                         this.value);

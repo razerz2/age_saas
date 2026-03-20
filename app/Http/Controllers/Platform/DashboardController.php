@@ -53,7 +53,7 @@ class DashboardController extends Controller
         $months = collect(range(1, 12))->mapWithKeys(fn($m) => [$m => $clientsGrowth[$m] ?? 0]); // Preenche meses vazios com 0
 
         // === TOP 5 TENANTS MAIS ANTIGOS ===
-        $oldestTenants = Tenant::with('localizacao.estado')
+        $oldestTenants = Tenant::with('localizacao.estado', 'activeSubscriptionRelation.plan')
             ->orderBy('created_at', 'asc')
             ->take(5)
             ->get();

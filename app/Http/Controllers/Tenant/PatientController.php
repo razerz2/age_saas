@@ -22,6 +22,8 @@ use Spatie\Multitenancy\Models\Tenant;
 
 class PatientController extends Controller
 {
+    private const BRAZIL_COUNTRY_ID = 31;
+
     public function index()
     {
         try {
@@ -71,7 +73,7 @@ class PatientController extends Controller
 
         // Separar dados do paciente dos dados de endereço
         $addressData = [];
-        $addressFields = ['postal_code', 'street', 'number', 'complement', 'neighborhood', 'city', 'state', 'pais_id', 'estado_id', 'cidade_id'];
+        $addressFields = ['postal_code', 'street', 'number', 'complement', 'neighborhood', 'city', 'state', 'estado_id', 'cidade_id'];
         
         foreach ($addressFields as $field) {
             if (isset($data[$field])) {
@@ -85,6 +87,7 @@ class PatientController extends Controller
 
         // Criar endereço se houver dados
         if (!empty(array_filter($addressData))) {
+            $addressData['pais_id'] = self::BRAZIL_COUNTRY_ID;
             $addressData['id'] = Str::uuid();
             $addressData['patient_id'] = $patient->id;
             PatientAddress::create($addressData);
@@ -130,7 +133,7 @@ class PatientController extends Controller
 
         // Separar dados do paciente dos dados de endereço
         $addressData = [];
-        $addressFields = ['postal_code', 'street', 'number', 'complement', 'neighborhood', 'city', 'state', 'pais_id', 'estado_id', 'cidade_id'];
+        $addressFields = ['postal_code', 'street', 'number', 'complement', 'neighborhood', 'city', 'state', 'estado_id', 'cidade_id'];
         
         foreach ($addressFields as $field) {
             if (isset($data[$field])) {
@@ -143,6 +146,7 @@ class PatientController extends Controller
 
         // Atualizar ou criar endereço
         if (!empty(array_filter($addressData))) {
+            $addressData['pais_id'] = self::BRAZIL_COUNTRY_ID;
             if ($patient->address) {
                 $patient->address->update($addressData);
             } else {
@@ -625,4 +629,3 @@ class PatientController extends Controller
         }
     }
 }
-

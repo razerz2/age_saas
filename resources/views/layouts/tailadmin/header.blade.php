@@ -17,6 +17,13 @@
     $headerLogoDarkUrl = $headerLogoDarkPath
         ? Storage::url($headerLogoDarkPath) . $headerLogoVersion($headerLogoDarkPath)
         : $headerLogoLightUrl;
+    $headerTenant = tenant();
+    $showUpgradeButton = false;
+
+    if ($headerTenant instanceof \App\Models\Platform\Tenant) {
+        $showUpgradeButton = (bool) $headerTenant->activeTrialSubscription()
+            || (! $headerTenant->isEligibleForAccess() && (bool) $headerTenant->expiredTrialSubscription());
+    }
 @endphp
 
 <!-- Header -->
@@ -36,6 +43,13 @@
 
         <div :class="menuToggle ? 'flex' : 'hidden'" class="shadow-theme-md w-full items-center justify-between gap-4 px-5 py-4 xl:flex xl:justify-end xl:px-0 xl:shadow-none">
             <div class="2xsm:gap-3 flex items-center gap-2">
+                @if($showUpgradeButton)
+                    <a href="{{ workspace_route('tenant.subscription.show') }}"
+                        class="inline-flex items-center rounded-lg bg-primary px-3 py-2 text-sm font-medium text-white hover:bg-primary/90">
+                        Fazer upgrade
+                    </a>
+                @endif
+
                 <!-- Dark Mode -->
                 <button class="hover:text-dark-900 relative flex h-11 w-11 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-white" @click.prevent="darkMode = !darkMode">
                     <svg class="hidden dark:block" width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">

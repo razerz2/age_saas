@@ -16,8 +16,8 @@ class DatabaseSeeder extends Seeder
          $this->call(UsersSeeder::class);
          $this->call(MedicalSpecialtiesCatalogSeeder::class);
          $this->call(PaisesTableSeeder::class);
-         $this->call(EstadosTableSeeder::class);
-         $this->call(CidadesTableSeeder::class);
+         // Base oficial brasileira (IBGE), sem dependencia dos seeders manuais legados.
+         $this->call(OfficialIbgeLocationsSeeder::class);
          $this->call(SubscriptionFeaturesSeeder::class);
          // Baseline oficial da Platform (eventos SaaS apenas).
          $this->call(WhatsAppOfficialTemplatesSeeder::class);

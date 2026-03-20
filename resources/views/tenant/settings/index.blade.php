@@ -6,9 +6,9 @@
 @section('content')
 
 <div id="settings-config"
-     data-brazil-id="{{ $brazilId }}"
-     data-states-url-template="{{ route('api.public.estados', ['pais' => ':paisId']) }}"
+     data-states-url="{{ route('api.public.estados') }}"
      data-cities-url-template="{{ route('api.public.cidades', ['estado' => ':id']) }}"
+     data-zipcode-url-template="{{ route('api.zipcode', ['zipcode' => '__CEP__']) }}"
      data-current-state-id="{{ $localizacao->estado_id ?? '' }}"
      data-current-city-id="{{ $localizacao->cidade_id ?? '' }}"
      data-redirect-tab="{{ session('redirect_to_tab') }}"></div>

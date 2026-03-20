@@ -68,6 +68,7 @@
                                         <th>Nome Fantasia</th>
                                         <th>Razão Social</th>
                                         <th>Subdomínio</th>
+                                        <th>Comercial</th>
                                         <th>Banco</th>
                                         <th>Criado em</th>
                                         <th class="text-center">Ações</th>
@@ -80,6 +81,16 @@
                                             <td>{{ $tenant->trade_name }}</td>
                                             <td>{{ $tenant->legal_name }}</td>
                                             <td>{{ $tenant->subdomain }}</td>
+                                            <td>
+                                                <span class="badge {{ $tenant->commercialAccessSummaryBadgeClass() }}">
+                                                    {{ $tenant->commercialAccessSummaryLabel() }}
+                                                </span>
+                                                @if (! $tenant->isEligibleForAccess())
+                                                    <small class="d-block text-muted mt-1">
+                                                        {{ $tenant->commercialAccessStatusLabel() }}
+                                                    </small>
+                                                @endif
+                                            </td>
                                             <td>{{ $tenant->db_name ?? '-' }}</td>
                                             <td>{{ $tenant->created_at->format('d/m/Y') }}</td>
                                             <td class="text-center">

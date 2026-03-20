@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Tenant\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Http\Middleware\EnsureTenantCommercialEligibility;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
@@ -27,6 +28,10 @@ class TwoFactorChallengeController extends Controller
         $tenant = Tenant::find(session('login.tenant_id'));
         if (!$tenant) {
             return redirect()->route('tenant.login', ['slug' => $slug]);
+        }
+
+        if ($redirect = $this->redirectIfTenantIneligible($request, $tenant, $slug)) {
+            return $redirect;
         }
 
         $tenant->makeCurrent();
@@ -70,6 +75,10 @@ class TwoFactorChallengeController extends Controller
         $tenant = Tenant::find($tenantId);
         if (!$tenant) {
             return redirect()->route('tenant.login', ['slug' => $slug]);
+        }
+
+        if ($redirect = $this->redirectIfTenantIneligible($request, $tenant, $slug)) {
+            return $redirect;
         }
 
         $tenant->makeCurrent();
@@ -157,6 +166,10 @@ class TwoFactorChallengeController extends Controller
             return redirect()->route('tenant.login', ['slug' => $slug]);
         }
 
+        if ($redirect = $this->redirectIfTenantIneligible($request, $tenant, $slug)) {
+            return $redirect;
+        }
+
         $tenant->makeCurrent();
         $this->configureTenantDatabaseConnection($tenant);
 
@@ -178,5 +191,37 @@ class TwoFactorChallengeController extends Controller
 
         return back()->with('success', "Código reenviado via {$method}!");
     }
-}
 
+    protected function redirectIfTenantIneligible(Request $request, Tenant $tenant, ?string $fallbackSlug = null): ?RedirectResponse
+    {
+        if ($tenant->isEligibleForAccess() || $this->tenantCanAuthenticateDespiteCommercialBlock($tenant)) {
+            return null;
+        }
+
+        Auth::guard('tenant')->logout();
+
+        $request->session()->forget([
+            'tenant_slug',
+            'login.id',
+            'login.remember',
+            'login.tenant_id',
+            'two_factor_code_sent',
+        ]);
+        $request->session()->regenerateToken();
+
+        $slug = $tenant->subdomain ?: $fallbackSlug;
+        $blockedMessage = method_exists($tenant, 'commercialAccessBlockedMessage')
+            ? $tenant->commercialAccessBlockedMessage()
+            : EnsureTenantCommercialEligibility::BLOCKED_ACCESS_MESSAGE;
+
+        return redirect()
+            ->route('tenant.login', ['slug' => $slug])
+            ->with('error', $blockedMessage);
+    }
+
+    protected function tenantCanAuthenticateDespiteCommercialBlock(Tenant $tenant): bool
+    {
+        return method_exists($tenant, 'expiredTrialSubscription')
+            && (bool) $tenant->expiredTrialSubscription();
+    }
+}

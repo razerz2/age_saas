@@ -11,10 +11,10 @@ use App\Http\Controllers\Platform\NotificationOutboxController;
 use App\Http\Controllers\Platform\SystemNotificationController;
 use App\Http\Controllers\Platform\MedicalSpecialtyCatalogController;
 use App\Http\Controllers\Platform\UserController;
-use App\Http\Controllers\Platform\PaisController;
 use App\Http\Controllers\Platform\EstadoController;
 use App\Http\Controllers\Platform\CidadeController;
 use App\Http\Controllers\Platform\LocationController;
+use App\Http\Controllers\Platform\ZipcodeController;
 use App\Http\Controllers\Platform\SystemSettingsController;
 use App\Http\Controllers\Platform\KioskMonitorController;
 use App\Http\Controllers\Platform\PlanAccessManagerController;
@@ -105,8 +105,9 @@ Route::view('/politica-de-privacidade', 'public.privacy')->name('public.privacy'
 Route::view('/termos-de-servico', 'public.terms')->name('public.terms');
 
 // Rotas públicas de localização para pré-cadastro
-Route::get('/api/location/estados/{pais}', [\App\Http\Controllers\Platform\LocationController::class, 'getEstados'])->name('api.public.estados');
+Route::get('/api/location/estados', [\App\Http\Controllers\Platform\LocationController::class, 'getEstados'])->name('api.public.estados');
 Route::get('/api/location/cidades/{estado}', [\App\Http\Controllers\Platform\LocationController::class, 'getCidades'])->name('api.public.cidades');
+Route::get('/api/zipcode/{zipcode}', [ZipcodeController::class, 'show'])->name('api.zipcode');
 
 // Compatibilidade: URL antiga de login (raiz) -> padrão atual da Platform
 Route::redirect('/login', '/Platform/login', 301);
@@ -422,9 +423,8 @@ Route::middleware(['auth'])->prefix('Platform')->name('Platform.')->group(functi
             ->name('tenant-default-notification-templates.update');
     });
 
-    // 🔸 Módulo: Localização (Países, Estados, Cidades)
+    // 🔸 Módulo: Localização (Estados e Cidades - Brasil)
     Route::middleware('module.access:locations')->group(function () {
-        Route::resource('paises', PaisController::class)->except(['create', 'edit']);
         Route::resource('estados', EstadoController::class)->except(['create', 'edit']);
         Route::resource('cidades', CidadeController::class)->except(['create', 'edit']);
     });
@@ -468,7 +468,7 @@ Route::middleware(['auth'])->prefix('Platform')->name('Platform.')->group(functi
     // =======================================================
     // 🔸 Rotas auxiliares (sem restrição de módulo)
     // =======================================================
-    Route::get('/api/estados/{pais}', [LocationController::class, 'getEstados'])->name('api.estados');
+    Route::get('/api/estados', [LocationController::class, 'getEstados'])->name('api.estados');
     Route::get('/api/cidades/{estado}', [LocationController::class, 'getCidades'])->name('api.cidades');
 
     Route::post('whatsapp/send', [WhatsAppController::class, 'sendMessage'])->name('whatsapp.send');

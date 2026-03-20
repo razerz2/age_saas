@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Tenant;
 
 use App\Http\Controllers\Controller;
+use App\Models\Platform\Tenant as PlatformTenant;
 use App\Models\Tenant\Appointment;
 use App\Models\Tenant\Patient;
 use App\Models\Tenant\Doctor;
@@ -17,17 +18,43 @@ class DashboardController extends Controller
 {
     public function index()
     {
-        // ✅ Pega o usuário autenticado do guard tenant
+        // ? Pega o usuário autenticado do guard tenant
         $user = Auth::guard('tenant')->user();
+        $currentTenant = tenant();
 
-        // 🔹 Resolver período filtrado
+        $activeTrialSubscription = null;
+        $expiredTrialSubscription = null;
+        $trialDaysRemaining = null;
+        $trialExpiringSoon = false;
+        $trialExpired = false;
+
+        if ($currentTenant instanceof PlatformTenant) {
+            $activeTrialSubscription = $currentTenant->activeTrialSubscription();
+            $expiredTrialSubscription = $currentTenant->expiredTrialSubscription();
+            $trialDaysRemaining = $currentTenant->trialDaysRemaining();
+            $trialExpiringSoon = $trialDaysRemaining !== null && $trialDaysRemaining <= 3;
+            $trialExpired = ! $currentTenant->isEligibleForAccess() && $expiredTrialSubscription !== null;
+        }
+
+        if ($trialExpired) {
+            return view('tenant.dashboard.trial-expired', [
+                'user' => $user,
+                'currentTenant' => $currentTenant,
+                'expiredTrialSubscription' => $expiredTrialSubscription,
+                'blockedMessage' => method_exists($currentTenant, 'commercialAccessBlockedMessage')
+                    ? $currentTenant->commercialAccessBlockedMessage()
+                    : 'Seu acesso foi pausado. Escolha um plano para continuar usando o sistema.',
+            ]);
+        }
+
+        // ?? Resolver período filtrado
         $period = $this->resolvePeriod();
         $periodDescription = $this->getPeriodDescription($period);
 
-        // 🔹 Gerar chave de cache única para tenant + período
+        // ?? Gerar chave de cache única para tenant + período
         $cacheKey = $this->generateCacheKey($period);
 
-        // 🔹 Tentar obter dados do cache (15 minutos)
+        // ?? Tentar obter dados do cache (15 minutos)
         $dashboardData = Cache::remember($cacheKey, 900, function () use ($period) {
             return [
                 'stats' => $this->getPeriodStats($period),
@@ -42,6 +69,11 @@ class DashboardController extends Controller
         return view('tenant.dashboard.index', array_merge($dashboardData, [
             'user' => $user,
             'periodDescription' => $periodDescription,
+            'activeTrialSubscription' => $activeTrialSubscription,
+            'expiredTrialSubscription' => $expiredTrialSubscription,
+            'trialDaysRemaining' => $trialDaysRemaining,
+            'trialExpiringSoon' => $trialExpiringSoon,
+            'trialExpired' => $trialExpired,
         ]));
     }
 
@@ -316,3 +348,4 @@ class DashboardController extends Controller
             ->values();
     }
 }
+

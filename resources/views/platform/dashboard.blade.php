@@ -306,6 +306,7 @@
                                         <th class="border-0 text-muted font-14">Tenant</th>
                                         <th class="border-0 text-muted font-14 px-2">Contato</th>
                                         <th class="border-0 text-muted font-14 text-center">Status</th>
+                                        <th class="border-0 text-muted font-14 text-center">Comercial</th>
                                         <th class="border-0 text-muted font-14 text-center">Criação</th>
                                         <th class="border-0 text-muted font-14 text-center">Estado</th>
                                     </tr>
@@ -347,6 +348,12 @@
                                                     title="{{ ucfirst($tenant->status) }}"></i>
                                             </td>
 
+                                            <td class="border-top-0 text-center px-2 py-3">
+                                                <span class="badge {{ $tenant->commercialAccessSummaryBadgeClass() }}">
+                                                    {{ $tenant->commercialAccessSummaryLabel() }}
+                                                </span>
+                                            </td>
+
                                             <td class="border-top-0 text-center text-muted font-14 px-2 py-3">
                                                 {{ $tenant->created_at?->format('d/m/Y') }}
                                             </td>
@@ -357,7 +364,7 @@
                                         </tr>
                                     @empty
                                         <tr>
-                                            <td colspan="5" class="text-center text-muted py-4">
+                                            <td colspan="6" class="text-center text-muted py-4">
                                                 Nenhum tenant encontrado.
                                             </td>
                                         </tr>

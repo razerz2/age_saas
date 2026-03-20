@@ -5,22 +5,21 @@ namespace App\Http\Controllers\Platform;
 use App\Models\Platform\Estado;
 use App\Models\Platform\Cidade;
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 
 class LocationController extends Controller
 {
-    public function getEstados($paisId)
+    private const BRAZIL_COUNTRY_ID = 31;
+
+    public function getEstados()
     {
-        $estados = Estado::where('pais_id', $paisId)
-            ->join('paises', 'estados.pais_id', '=', 'paises.id_pais')
+        $estados = Estado::where('pais_id', self::BRAZIL_COUNTRY_ID)
             ->select(
-                'estados.id_estado',
-                'estados.nome_estado',
-                'estados.uf',
-                'paises.id_pais as pais_id',
-                'paises.nome as pais_nome'
+                'id_estado',
+                'nome_estado',
+                'uf',
+                'ibge_id'
             )
-            ->orderBy('estados.nome_estado')
+            ->orderBy('nome_estado')
             ->get();
 
         return response()->json($estados);
@@ -34,7 +33,10 @@ class LocationController extends Controller
                 'cidades.id_cidade',
                 'cidades.nome_cidade',
                 'cidades.uf',
-                'estados.nome_estado'
+                'cidades.ibge_id',
+                'estados.id_estado as estado_id',
+                'estados.nome_estado',
+                'estados.ibge_id as estado_ibge_id'
             )
             ->orderBy('cidades.nome_cidade')
             ->get();

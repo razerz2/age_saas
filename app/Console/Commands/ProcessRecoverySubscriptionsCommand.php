@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Models\Platform\Invoices;
+use App\Models\Platform\Plan;
 use App\Models\Platform\Subscription;
 use App\Services\AsaasService;
 use App\Services\Platform\WhatsAppOfficialMessageService;
@@ -38,8 +39,15 @@ class ProcessRecoverySubscriptionsCommand extends Command
 
         $subscriptions = Subscription::whereIn('payment_method', ['CREDIT_CARD', 'DEBIT_CARD'])
             ->whereIn('status', ['past_due', 'active'])
+            ->where(function ($query) {
+                $query->whereNull('is_trial')
+                    ->orWhere('is_trial', false);
+            })
             ->whereNotNull('asaas_subscription_id')
             ->whereNull('recovery_started_at')
+            ->whereHas('plan', function ($query) {
+                $query->where('plan_type', Plan::TYPE_REAL);
+            })
             ->whereHas('tenant', function ($query) use ($recoveryDays) {
                 $query->where('status', 'suspended')
                     ->whereNotNull('suspended_at')
@@ -54,8 +62,20 @@ class ProcessRecoverySubscriptionsCommand extends Command
                 $tenant = $subscription->tenant;
                 $plan = $subscription->plan;
 
-                if (!$tenant || !$plan) {
+                if (! $tenant || ! $plan) {
                     Log::warning("Subscription {$subscription->id} sem tenant/plan associados");
+                    $skipped++;
+                    continue;
+                }
+
+                if ($subscription->is_trial) {
+                    Log::info("Subscription {$subscription->id} ignorada: trial comercial nao participa de recovery.");
+                    $skipped++;
+                    continue;
+                }
+
+                if ($plan->isTest()) {
+                    Log::info("Subscription {$subscription->id} ignorada: plano de teste nao participa de recovery.");
                     $skipped++;
                     continue;
                 }
@@ -143,7 +163,7 @@ class ProcessRecoverySubscriptionsCommand extends Command
                 ]);
 
                 if ($tenant->phone) {
-                    $sent = $this->officialWhatsApp->sendByKey(
+                    $this->officialWhatsApp->sendByKey(
                         'subscription.recovery_started',
                         $tenant->phone,
                         [
@@ -161,12 +181,6 @@ class ProcessRecoverySubscriptionsCommand extends Command
                             'invoice_id' => (string) $recoveryInvoice->id,
                         ]
                     );
-
-                    if ($sent) {
-                        Log::info("Link de recovery enviado via template oficial para tenant {$tenant->trade_name}");
-                    } else {
-                        Log::warning("Falha ao enviar link de recovery via template oficial para tenant {$tenant->trade_name}");
-                    }
                 }
 
                 $recoveryStarted++;
@@ -186,6 +200,9 @@ class ProcessRecoverySubscriptionsCommand extends Command
         $expiredRecoveries = Subscription::where('status', 'recovery_pending')
             ->whereNotNull('recovery_started_at')
             ->where('recovery_started_at', '<=', Carbon::now()->subDays($recoveryDays))
+            ->whereHas('plan', function ($query) {
+                $query->where('plan_type', Plan::TYPE_REAL);
+            })
             ->with('tenant')
             ->get();
 
@@ -193,7 +210,7 @@ class ProcessRecoverySubscriptionsCommand extends Command
             try {
                 $tenant = $expiredSub->tenant;
 
-                if (!$tenant) {
+                if (! $tenant) {
                     $skipped++;
                     continue;
                 }

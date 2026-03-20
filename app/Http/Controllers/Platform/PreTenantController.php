@@ -18,7 +18,7 @@ class PreTenantController extends Controller
      */
     public function index(Request $request)
     {
-        $query = PreTenant::with(['plan', 'pais', 'estado', 'cidade'])
+        $query = PreTenant::with(['plan', 'estado', 'cidade'])
             ->orderBy('created_at', 'desc');
 
         // Filtro por status
@@ -41,7 +41,7 @@ class PreTenantController extends Controller
      */
     public function show(PreTenant $preTenant)
     {
-        $preTenant->load(['plan', 'pais', 'estado', 'cidade', 'logs']);
+        $preTenant->load(['plan', 'estado', 'cidade', 'logs']);
 
         return view('platform.pre_tenants.show', compact('preTenant'));
     }

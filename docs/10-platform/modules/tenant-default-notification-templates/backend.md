@@ -4,7 +4,6 @@ Componentes principais:
 
 - controller: `app/Http/Controllers/Platform/TenantDefaultNotificationTemplateController.php`
 - requests:
-  - `StoreTenantDefaultNotificationTemplateRequest`
   - `UpdateTenantDefaultNotificationTemplateRequest`
 - policy: `app/Policies/Platform/TenantDefaultNotificationTemplatePolicy.php`
 - model: `app/Models/Platform/TenantDefaultNotificationTemplate.php`
@@ -31,6 +30,11 @@ Backfill administrativo:
 - tenant especifico: `--tenant=<slug|uuid>`
 - atualizar existentes: `--overwrite`
 - seeding idempotente via `upsert` por `(channel, key)`.
+
+Restricao intencional:
+
+- catalogo controlado: sem criacao manual via UI (sem rotas `create/store` e policy `create=false`);
+- operacoes expostas: list/edit/update.
 
 Runtime nao oficial conectado nesta etapa:
 

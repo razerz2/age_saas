@@ -293,11 +293,11 @@ Os helpers já estão disponíveis globalmente através de `app/Helpers/helpers.
 
 3. **Assinatura Ativa**: O sistema verifica apenas assinaturas com status `active` e que não expiraram (`ends_at` é null ou futuro).
 
-4. **Tenants de Rede (Acesso Contratual)**: Para tenants vinculados a uma rede de clínicas com plano da categoria `contractual`, o sistema libera o acesso diretamente através do `plan_id` do tenant, sem exigir uma assinatura na tabela `subscriptions`. O `FeatureAccessService` gera uma assinatura virtual interna para permitir as verificações de feature.
+4. **Tenants de Rede**: A origem comercial continua sendo a assinatura ativa da tenant. O uso de `tenants.plan_id` deve ser tratado apenas como legado/compatibilidade e nao como fonte de acesso.
 
 5. **Inativação de Rede**: Se um tenant pertence a uma rede e esta rede está inativa, o acesso a todas as funcionalidades é bloqueado automaticamente, mesmo que haja uma assinatura ativa ou plano contratual vinculado.
 
-6. **Fallback**: Se o tenant não tiver assinatura ativa (ou plano contratual de rede ativa), todas as verificações retornam `false`.
+6. **Fallback**: Se o tenant nao tiver assinatura ativa com plano valido, todas as verificacoes retornam `false`.
 
 ## 🎯 Exemplo Completo
 
@@ -369,4 +369,3 @@ Route::middleware(['tenant.auth', 'feature.any:google_calendar,apple_calendar'])
     @endif
 </div>
 ```
-

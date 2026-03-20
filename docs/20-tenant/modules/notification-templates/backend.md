@@ -89,6 +89,8 @@ Arquivo:
 Fluxo:
 
 1. Carrega template efetivo (default/override) por canal/key.
+   - para `whatsapp`, o dispatcher tenta primeiro resolver no domínio Não Oficial via `WhatsAppUnofficialTemplateResolutionService` (tenant-first; fallback Platform apenas com opt-in);
+   - se não houver match no resolver, cai no catálogo default/override via `NotificationTemplateService` (config + tabela `notification_templates`).
 2. Monta contexto (appointment/waitlist).
 3. Renderiza subject/content.
 4. Normaliza texto por canal (preserva `\n`).
@@ -116,4 +118,3 @@ Ambos:
 - Logam eventos estruturados (`whatsapp_real_send`, `email_real_send`).
 - Registram auditoria persistente em `notification_deliveries` (success/error).
 - Não devem montar texto manualmente: recebem o texto já renderizado do dispatcher.
-

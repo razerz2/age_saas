@@ -55,6 +55,12 @@
                             </div>
                         @endif
 
+                        <div class="alert alert-info border-start border-info border-4">
+                            <i class="fas fa-info-circle me-2"></i>
+                            O cadastro tecnico pode ser concluido sem plano e assinatura.
+                            Nestes casos, a tenant sera criada, mas ficara com acesso bloqueado ate regularizacao comercial.
+                        </div>
+
                         <form method="POST" action="{{ route('Platform.tenants.store') }}">
                             @csrf
 
@@ -93,27 +99,19 @@
                                     <input type="text" name="subdomain" class="form-control" required>
                                 </div>
 
-                                <div class="col-md-6">
-                                    <label class="form-label">Rede de Clínicas (opcional)</label>
-                                    <select name="network_id" id="network_id" class="form-select">
-                                        <option value="">Nenhuma rede</option>
-                                        @foreach($networks as $network)
-                                            <option value="{{ $network->id }}">{{ $network->name }} ({{ $network->slug }})</option>
-                                        @endforeach
-                                    </select>
-                                </div>
 
                                 <div class="col-md-6">
-                                    <label class="form-label">Plano *</label>
-                                    <select name="plan_id" id="plan_id" class="form-select" required>
-                                        <option value="">Selecione um plano...</option>
+                                    <label class="form-label">Plano (opcional)</label>
+                                    <select name="plan_id" id="plan_id" class="form-select">
+                                        <option value="">Sem plano no momento (ficara bloqueada)</option>
                                         @foreach($plans as $plan)
-                                            <option value="{{ $plan->id }}" data-category="{{ $plan->category }}">
+                                            <option value="{{ $plan->id }}" data-category="{{ $plan->category }}"
+                                                @selected(old('plan_id') == $plan->id)>
                                                 {{ $plan->name }} ({{ $plan->category }})
                                             </option>
                                         @endforeach
                                     </select>
-                                    <small class="text-muted" id="plan_help">Selecione uma rede para ver planos contratuais.</small>
+                                    <small class="text-muted" id="plan_help">Opcional: selecione um plano para criar assinatura automaticamente quando aplicavel.</small>
                                 </div>
 
                                 <div class="col-md-6">
@@ -146,8 +144,6 @@
                                         <i class="fas fa-map-marker-alt me-2"></i> Localização da Empresa
                                     </h5>
                                 </div>
-
-                                <input type="hidden" id="pais" name="pais_id" value="{{ $defaultCountryId ?? 31 }}">
 
                                 <div class="col-md-6">
                                     <label class="form-label">Estado</label>
@@ -206,26 +202,12 @@
     @push('scripts')
         <script>
             // -----------------------------
-            //  🌎 País / Estado / Cidade
+            //  Estado / Cidade (Brasil fixo)
             // -----------------------------
-            const pais = document.getElementById('pais');
             const estado = document.getElementById('estado');
             const cidade = document.getElementById('cidade');
 
-            if (pais && estado && cidade) {
-                pais.addEventListener('change', function() {
-                    const urlEstados = "{{ route('Platform.api.estados', ['pais' => '__ID__']) }}".replace('__ID__',
-                        this.value);
-                    fetch(urlEstados)
-                        .then(r => r.json())
-                        .then(data => {
-                            estado.innerHTML = '<option value="">Selecione...</option>';
-                            data.forEach(e => estado.innerHTML +=
-                                `<option value="${e.id_estado}">${e.nome_estado}</option>`);
-                            cidade.innerHTML = '<option value="">Selecione o estado primeiro</option>';
-                        });
-                });
-
+            if (estado && cidade) {
                 estado.addEventListener('change', function() {
                     const urlCidades = "{{ route('Platform.api.cidades', ['estado' => '__ID__']) }}".replace('__ID__',
                         this.value);
@@ -240,10 +222,9 @@
             }
 
             document.addEventListener('DOMContentLoaded', function() {
-                // Se houver país selecionado ao carregar a página, dispara a mudança automaticamente
-                if (pais && pais.value) {
-                    const urlEstados = "{{ route('Platform.api.estados', ['pais' => '__ID__']) }}".replace('__ID__',
-                        pais.value);
+                // Carrega estados brasileiros ao abrir a tela.
+                if (estado) {
+                    const urlEstados = "{{ route('Platform.api.estados') }}";
                     fetch(urlEstados)
                         .then(r => r.json())
                         .then(data => {
@@ -308,39 +289,6 @@
                     // ... (keep existing code)
                 });
 
-                // -----------------------------
-                // 💎 Planos vs Rede
-                // -----------------------------
-                const $networkSelect = $('#network_id');
-                const $planSelect = $('#plan_id');
-                const $planOptions = $planSelect.find('option');
-
-                function filterPlans() {
-                    const hasNetwork = $networkSelect.val() !== "";
-                    const targetCategory = hasNetwork ? 'contractual' : ['commercial', 'sandbox'];
-                    
-                    $planSelect.val(""); // Reset selection
-                    
-                    $planOptions.each(function() {
-                        const category = $(this).data('category');
-                        if (!category) return; // Skip "Select..." option
-
-                        const isMatch = Array.isArray(targetCategory) 
-                            ? targetCategory.includes(category) 
-                            : category === targetCategory;
-
-                        $(this).toggle(isMatch);
-                    });
-
-                    if (hasNetwork) {
-                        $('#plan_help').text('Listando apenas planos contratuais para rede.');
-                    } else {
-                        $('#plan_help').text('Listando planos comerciais e sandbox.');
-                    }
-                }
-
-                $networkSelect.on('change', filterPlans);
-                filterPlans(); // Initial filter
             });
         </script>
     @endpush

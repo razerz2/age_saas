@@ -34,7 +34,7 @@
 <div class="container-fluid">
     <div class="card shadow-sm border-0">
         <div class="card-body">
-            <h4 class="card-title mb-4">Informações do Plano</h4>
+            <h4 class="card-title mb-4">Informacoes do Plano</h4>
 
             <div class="row mb-3">
                 <div class="col-md-4">
@@ -44,21 +44,55 @@
 
                 <div class="col-md-4">
                     <label class="fw-bold">Periodicidade</label>
-                    <p>
-                        {{ $plan->periodicity === 'monthly' ? 'Mensal' : 'Anual' }}
-                    </p>
+                    <p>{{ $plan->periodicity === 'monthly' ? 'Mensal' : 'Anual' }}</p>
                 </div>
 
                 <div class="col-md-4">
-                    <label class="fw-bold">Duração</label>
-                    <p>{{ $plan->period_months }} {{ $plan->period_months == 1 ? 'mês' : 'meses' }}</p>
+                    <label class="fw-bold">Duracao</label>
+                    <p>{{ $plan->period_months }} {{ $plan->period_months == 1 ? 'mes' : 'meses' }}</p>
                 </div>
             </div>
 
             <div class="row mb-3">
                 <div class="col-md-4">
-                    <label class="fw-bold">Preço</label>
+                    <label class="fw-bold">Preco</label>
                     <p>{{ $plan->formatted_price }}</p>
+                </div>
+
+                <div class="col-md-4">
+                    <label class="fw-bold">Categoria</label>
+                    <p>
+                        <span class="badge {{ $plan->categoryBadgeClass() }}">{{ $plan->categoryLabel() }}</span>
+                    </p>
+                </div>
+
+                <div class="col-md-4">
+                    <label class="fw-bold">Tipo</label>
+                    <p>
+                        <span class="badge {{ $plan->planTypeBadgeClass() }}">{{ $plan->planTypeLabel() }}</span>
+                    </p>
+                </div>
+            </div>
+
+            <div class="row mb-3">
+                <div class="col-md-4">
+                    <label class="fw-bold">Landing</label>
+                    <p>
+                        <span class="badge {{ $plan->landingVisibilityBadgeClass() }}">
+                            {{ $plan->landingVisibilityLabel() }}
+                        </span>
+                    </p>
+                </div>
+
+                <div class="col-md-4">
+                    <label class="fw-bold">Trial Comercial</label>
+                    <p>
+                        @if($plan->hasCommercialTrial())
+                            <span class="badge bg-info">Habilitado ({{ $plan->trialDaysLabel() }})</span>
+                        @else
+                            <span class="badge bg-secondary">Desabilitado</span>
+                        @endif
+                    </p>
                 </div>
 
                 <div class="col-md-4">
@@ -71,7 +105,9 @@
                         @endif
                     </p>
                 </div>
+            </div>
 
+            <div class="row mb-3">
                 <div class="col-md-4">
                     <label class="fw-bold">Criado em</label>
                     <p>{{ $plan->created_at->format('d/m/Y H:i') }}</p>
@@ -98,4 +134,3 @@
 </div>
 @include('layouts.freedash.footer')
 @endsection
-
