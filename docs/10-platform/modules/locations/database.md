@@ -9,6 +9,7 @@
 - Migration incremental:
   - `estados.ibge_id` (nullable + indice)
   - `cidades.ibge_id` (nullable + indice)
+  - arquivo: `database/migrations/2026_03_19_100000_add_ibge_ids_to_estados_e_cidades_tables.php`
 
 ## Por que `ibge_id` ainda e nullable
 - Existem bases legadas com registros historicos sem correspondencia oficial imediata.
@@ -32,3 +33,18 @@
 ## Seed oficial local
 - Arquivo fonte: `database/data/ibge_localidades.json`
 - Seeder: `OfficialIbgeLocationsSeeder`
+
+## Contagem oficial esperada (Brasil)
+- `estados`: `27`
+- `cidades`: `5570`
+
+## Validacao rapida de integridade
+- Conferir contagens:
+  - `SELECT COUNT(*) FROM estados;`
+  - `SELECT COUNT(*) FROM cidades;`
+- Conferir pendencias de codigo oficial:
+  - `SELECT COUNT(*) FROM estados WHERE ibge_id IS NULL;`
+  - `SELECT COUNT(*) FROM cidades WHERE ibge_id IS NULL;`
+- Conferir duplicidades de `ibge_id`:
+  - `SELECT ibge_id, COUNT(*) FROM estados WHERE ibge_id IS NOT NULL GROUP BY ibge_id HAVING COUNT(*) > 1;`
+  - `SELECT ibge_id, COUNT(*) FROM cidades WHERE ibge_id IS NOT NULL GROUP BY ibge_id HAVING COUNT(*) > 1;`

@@ -188,7 +188,7 @@
 
                                 <div class="col-md-6">
                                     <label class="form-label">Endereço</label>
-                                    <input type="text" name="endereco" class="form-control"
+                                    <input type="text" id="tenant_endereco" name="endereco" class="form-control"
                                         value="{{ old('endereco', $loc->endereco ?? '') }}">
                                 </div>
 
@@ -206,14 +206,15 @@
 
                                 <div class="col-md-6">
                                     <label class="form-label">Bairro</label>
-                                    <input type="text" name="bairro" class="form-control"
+                                    <input type="text" id="tenant_bairro" name="bairro" class="form-control"
                                         value="{{ old('bairro', $loc->bairro ?? '') }}">
                                 </div>
 
                                 <div class="col-md-3">
                                     <label class="form-label">CEP</label>
-                                    <input type="text" name="cep" class="form-control"
+                                    <input type="text" id="tenant_cep" name="cep" class="form-control"
                                         value="{{ old('cep', $loc->cep ?? '') }}">
+                                    <small id="tenantCepFeedback" class="form-text text-muted d-block mt-1"></small>
                                 </div>
 
                             </div>
@@ -232,23 +233,20 @@
     </div>
 
     @push('scripts')
+        @include('platform.tenants.partials.address-lookup-script')
         <script>
-            const estado = document.getElementById('estado');
-            const cidade = document.getElementById('cidade');
-
-            if (estado && cidade) {
-                estado.addEventListener('change', function() {
-                    const urlCidades = "{{ route('Platform.api.cidades', ['estado' => '__ID__']) }}".replace('__ID__',
-                        this.value);
-                    fetch(urlCidades)
-                        .then(r => r.json())
-                        .then(data => {
-                            cidade.innerHTML = '<option value="">Selecione...</option>';
-                            data.forEach(c => cidade.innerHTML +=
-                                `<option value="${c.id_cidade}">${c.nome_cidade}</option>`);
-                        });
-                });
-            }
+            initTenantAddressLookup({
+                stateSelector: '#estado',
+                citySelector: '#cidade',
+                addressSelector: '#tenant_endereco',
+                neighborhoodSelector: '#tenant_bairro',
+                cepSelector: '#tenant_cep',
+                feedbackSelector: '#tenantCepFeedback',
+                statesUrl: "{{ route('Platform.api.estados') }}",
+                citiesUrlTemplate: "{{ route('Platform.api.cidades', ['estado' => '__ID__']) }}",
+                zipcodeUrlTemplate: "{{ route('api.zipcode', ['zipcode' => '__CEP__']) }}",
+                loadStatesOnInit: false
+            });
         </script>
     @endpush
 

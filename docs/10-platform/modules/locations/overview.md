@@ -5,6 +5,7 @@ O dominio de localidades e exclusivo do Brasil.
 ## Mudanca principal
 - A base manual legada foi substituida por base oficial do IBGE.
 - A sincronizacao e incremental para preservar IDs internos e relacoes existentes.
+- O dominio funcional de localidades e somente Brasil.
 
 ## Decisoes arquiteturais
 - `estados.ibge_id` e `cidades.ibge_id` armazenam identificadores oficiais.
@@ -12,3 +13,8 @@ O dominio de localidades e exclusivo do Brasil.
 - ViaCEP nao e fonte mestra de localidade, somente helper de input.
 - Nao ha fluxo funcional de gestao de paises na UI administrativa.
 - Colunas/tabela de pais permanecem apenas por compatibilidade com FKs legadas.
+
+## Referencia de consistencia
+- Base oficial esperada apos sincronizacao completa:
+  - `27` estados
+  - `5570` cidades
