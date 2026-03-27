@@ -402,6 +402,7 @@ class PublicAppointmentController extends Controller
         $tenantModel->makeCurrent();
 
         $calendars = Calendar::where('doctor_id', $doctorId)
+            ->where('is_active', true)
             ->orderBy('name')
             ->get()
             ->map(function($calendar) {
@@ -515,7 +516,9 @@ class PublicAppointmentController extends Controller
             ]);
         }
 
-        $calendars = Calendar::where('doctor_id', $doctorId)->pluck('id');
+        $calendars = Calendar::where('doctor_id', $doctorId)
+            ->where('is_active', true)
+            ->pluck('id');
 
         $existingAppointments = Appointment::whereIn('calendar_id', $calendars)
             ->whereDate('starts_at', $date->format('Y-m-d'))

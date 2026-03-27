@@ -25,38 +25,35 @@ class DoctorSettingsController extends Controller
     public function index()
     {
         $user = Auth::guard('tenant')->user();
-        
-        // Determinar qual médico será exibido
-        $doctor = null;
-        
+        $doctorId = null;
+
         if ($user->role === 'doctor' && $user->doctor) {
-            // Médico logado vê suas próprias informações
-            $doctor = $user->doctor;
+            $doctorId = $user->doctor->id;
         } elseif ($user->role === 'user') {
-            // Usuário comum vê informações do médico relacionado
-            $allowedDoctors = $user->allowedDoctors()->get();
-            if ($allowedDoctors->count() === 1) {
-                $doctor = $allowedDoctors->first();
-            } else {
-                // Se tem mais de 1 médico, redireciona para as páginas separadas
-                return redirect()->route('tenant.calendars.index', ['slug' => tenant()->subdomain]);
+            $allowedDoctorIds = $user->allowedDoctors()->pluck('doctors.id');
+            if ($allowedDoctorIds->count() === 1) {
+                $doctorId = $allowedDoctorIds->first();
             }
-        } else {
-            // Admin ou outros casos não devem acessar esta página
-            return redirect()->route('tenant.calendars.index', ['slug' => tenant()->subdomain]);
         }
-        
-        if (!$doctor) {
-            return redirect()->route('tenant.dashboard', ['slug' => tenant()->subdomain])
-                ->with('error', 'Nenhum médico encontrado.');
+
+        if ($doctorId) {
+            $calendar = Calendar::where('doctor_id', $doctorId)->first();
+            if ($calendar) {
+                return redirect()->route('tenant.agenda-settings.edit', [
+                    'slug' => tenant()->subdomain,
+                    'id' => $calendar->id,
+                ]);
+            }
+
+            return redirect()->route('tenant.agenda-settings.create', [
+                'slug' => tenant()->subdomain,
+                'doctor_id' => $doctorId,
+            ]);
         }
-        
-        // Carregar dados do médico
-        $calendar = $doctor->calendars()->first();
-        $businessHours = $doctor->businessHours()->orderBy('weekday')->orderBy('start_time')->get();
-        $appointmentTypes = $doctor->appointmentTypes()->orderBy('name')->get();
-        
-        return view('tenant.doctor-settings.index', compact('doctor', 'calendar', 'businessHours', 'appointmentTypes'));
+
+        return redirect()->route('tenant.agenda-settings.index', [
+            'slug' => tenant()->subdomain,
+        ]);
     }
     
     /**
@@ -350,4 +347,3 @@ class DoctorSettingsController extends Controller
             ->with('success', 'Tipo de atendimento removido com sucesso.');
     }
 }
-

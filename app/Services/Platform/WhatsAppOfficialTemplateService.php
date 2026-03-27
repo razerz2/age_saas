@@ -23,7 +23,7 @@ class WhatsAppOfficialTemplateService
      */
     public function createTemplate(array $data, ?string $actorId = null): WhatsAppOfficialTemplate
     {
-        $this->assertOfficialProviderActive();
+        $this->assertOfficialProviderActive(isset($data['provider']) ? (string) $data['provider'] : null);
         $actorId = $this->normalizeActorId($actorId);
 
         $provider = WhatsAppOfficialTemplate::PROVIDER;
@@ -49,7 +49,7 @@ class WhatsAppOfficialTemplateService
      */
     public function updateTemplate(WhatsAppOfficialTemplate $template, array $data, ?string $actorId = null): WhatsAppOfficialTemplate
     {
-        $this->assertOfficialProviderActive();
+        $this->assertOfficialProviderActive((string) $template->provider);
         $actorId = $this->normalizeActorId($actorId);
 
         if ($template->isDirectlyEditable()) {
@@ -85,11 +85,12 @@ class WhatsAppOfficialTemplateService
         ?string $actorId = null,
         array $overrides = []
     ): WhatsAppOfficialTemplate {
-        $this->assertOfficialProviderActive();
+        $this->assertOfficialProviderActive((string) $template->provider);
         $actorId = $this->normalizeActorId($actorId);
 
         $nextVersion = $this->nextVersion($template->provider, $template->key);
         $data = [
+            'tenant_id' => $template->tenant_id,
             'key' => $template->key,
             'meta_template_name' => $template->meta_template_name,
             'provider' => $template->provider,
@@ -128,7 +129,7 @@ class WhatsAppOfficialTemplateService
 
     public function archiveTemplate(WhatsAppOfficialTemplate $template, ?string $actorId = null): WhatsAppOfficialTemplate
     {
-        $this->assertOfficialProviderActive();
+        $this->assertOfficialProviderActive((string) $template->provider);
         $actorId = $this->normalizeActorId($actorId);
 
         $template->status = WhatsAppOfficialTemplate::STATUS_ARCHIVED;
@@ -145,7 +146,7 @@ class WhatsAppOfficialTemplateService
      */
     public function submitToMeta(WhatsAppOfficialTemplate $template, ?string $actorId = null): WhatsAppOfficialTemplate
     {
-        $this->assertOfficialProviderActive();
+        $this->assertOfficialProviderActive((string) $template->provider);
         $actorId = $this->normalizeActorId($actorId);
         if ($template->status === WhatsAppOfficialTemplate::STATUS_ARCHIVED) {
             throw new DomainException('Template arquivado não pode ser enviado para a Meta.');
@@ -181,7 +182,7 @@ class WhatsAppOfficialTemplateService
      */
     public function republishAsNewTemplate(WhatsAppOfficialTemplate $template, ?string $actorId = null): WhatsAppOfficialTemplate
     {
-        $this->assertOfficialProviderActive();
+        $this->assertOfficialProviderActive((string) $template->provider);
         $actorId = $this->normalizeActorId($actorId);
 
         if ($template->status === WhatsAppOfficialTemplate::STATUS_ARCHIVED) {
@@ -229,7 +230,7 @@ class WhatsAppOfficialTemplateService
      */
     public function syncStatus(WhatsAppOfficialTemplate $template, ?string $actorId = null): WhatsAppOfficialTemplate
     {
-        $this->assertOfficialProviderActive();
+        $this->assertOfficialProviderActive((string) $template->provider);
         $actorId = $this->normalizeActorId($actorId);
 
         $response = $this->metaApiService->fetchTemplateByNameAndLanguage(
@@ -268,28 +269,46 @@ class WhatsAppOfficialTemplateService
     {
         return WhatsAppOfficialTemplate::query()
             ->officialProvider()
+            ->forPlatformBaseline()
             ->byKey($key)
             ->approved()
             ->orderByDesc('version')
             ->first();
     }
 
-    private function assertOfficialProviderActive(): void
+    private function assertOfficialProviderActive(?string $providerFallback = null): void
     {
-        $provider = function_exists('sysconfig')
-            ? (string) sysconfig('WHATSAPP_PROVIDER', config('services.whatsapp.provider', 'whatsapp_business'))
-            : (string) config('services.whatsapp.provider', 'whatsapp_business');
-
-        $provider = strtolower(trim($provider));
-        if ($provider === '') {
-            $provider = 'whatsapp_business';
-        }
+        $provider = $this->resolveActiveProvider($providerFallback);
 
         if (!in_array($provider, ['whatsapp_business', 'business'], true)) {
             throw new DomainException(
                 'Provider ativo incompatível para módulo de templates oficiais. Configure WHATSAPP_PROVIDER=whatsapp_business.'
             );
         }
+    }
+
+    private function resolveActiveProvider(?string $providerFallback = null): string
+    {
+        $runtimeProvider = strtolower(trim((string) config('services.whatsapp.runtime_provider', '')));
+        $forceRuntimeProvider = (bool) config('services.whatsapp.force_runtime_provider', false);
+        if ($forceRuntimeProvider && $runtimeProvider !== '') {
+            return $runtimeProvider;
+        }
+
+        $provider = function_exists('sysconfig')
+            ? strtolower(trim((string) sysconfig('WHATSAPP_PROVIDER', '')))
+            : '';
+        if ($provider !== '') {
+            return $provider;
+        }
+
+        $fallback = strtolower(trim((string) $providerFallback));
+        if ($fallback !== '') {
+            return $fallback;
+        }
+
+        $configured = strtolower(trim((string) config('services.whatsapp.provider', 'whatsapp_business')));
+        return $configured !== '' ? $configured : 'whatsapp_business';
     }
 
     private function nextVersion(string $provider, string $key): int
@@ -551,6 +570,7 @@ class WhatsAppOfficialTemplateService
     private function context(WhatsAppOfficialTemplate $template): array
     {
         return [
+            'tenant_id' => $template->tenant_id ? (string) $template->tenant_id : null,
             'provider' => $template->provider,
             'key' => $template->key,
             'meta_template_name' => $template->meta_template_name,

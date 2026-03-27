@@ -137,6 +137,7 @@ class Kernel extends HttpKernel
          */
         'campaign.module.enabled' => \App\Http\Middleware\Tenant\EnsureCampaignModuleEnabled::class,
         'tenant.commercial.eligibility' => \App\Http\Middleware\EnsureTenantCommercialEligibility::class,
+        'tenant.whatsapp.official.provider' => \App\Http\Middleware\Tenant\EnsureTenantOwnWhatsAppOfficialProvider::class,
 
         
     ];

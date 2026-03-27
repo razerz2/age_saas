@@ -439,9 +439,19 @@ class MetaCloudTemplateApiService
 
     private function resolveProvider(): string
     {
+        $runtimeProvider = strtolower(trim((string) config('services.whatsapp.runtime_provider', '')));
+        $forceRuntimeProvider = (bool) config('services.whatsapp.force_runtime_provider', false);
+        if ($forceRuntimeProvider && $runtimeProvider !== '') {
+            return $runtimeProvider;
+        }
+
         $provider = function_exists('sysconfig')
-            ? (string) sysconfig('WHATSAPP_PROVIDER', config('services.whatsapp.provider', 'whatsapp_business'))
-            : (string) config('services.whatsapp.provider', 'whatsapp_business');
+            ? (string) sysconfig('WHATSAPP_PROVIDER', '')
+            : '';
+
+        if (trim($provider) === '') {
+            $provider = (string) config('services.whatsapp.provider', 'whatsapp_business');
+        }
 
         $provider = strtolower(trim($provider));
         return $provider === '' ? 'whatsapp_business' : $provider;

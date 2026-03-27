@@ -29,6 +29,7 @@ use App\Http\Controllers\Tenant\PatientController;
 use App\Http\Controllers\Tenant\CalendarController;
 use App\Http\Controllers\Tenant\BusinessHourController;
 use App\Http\Controllers\Tenant\AppointmentTypeController;
+use App\Http\Controllers\Tenant\AgendaSettingsController;
 use App\Http\Controllers\Tenant\AppointmentController;
 use App\Http\Controllers\Tenant\AppointmentWaitlistController;
 use App\Http\Controllers\Tenant\DoctorSettingsController;
@@ -58,7 +59,9 @@ use App\Http\Controllers\Tenant\CampaignRecipientController;
 
 // Settings
 use App\Http\Controllers\Tenant\SettingsController;
+use App\Http\Controllers\Tenant\WhatsAppBotWebhookController;
 use App\Http\Controllers\Tenant\WhatsAppSettingsTestController;
+use App\Http\Controllers\Tenant\WhatsAppOfficialTenantTemplateController;
 
 // Recurring Appointments
 use App\Http\Controllers\Tenant\RecurringAppointmentController;
@@ -136,6 +139,10 @@ Route::prefix('customer/{slug}')
     ->as('tenant.')
     ->middleware(['tenant-web'])
     ->group(function () {
+        Route::post('/webhooks/whatsapp/bot/{provider}', [WhatsAppBotWebhookController::class, 'handle'])
+            ->where('provider', 'whatsapp_business|meta|zapi|waha')
+            ->middleware(['feature:' . \App\Services\Tenant\WhatsAppBotConfigService::FEATURE_NAME])
+            ->name('whatsapp-bot.webhook');
 
         Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
         Route::post('/login', [LoginController::class, 'login'])->name('login.submit');
@@ -308,7 +315,32 @@ Route::prefix('workspace/{slug}')
 
 
         // =====================================================================
-        // DOCTOR SETTINGS (Página única para médico ou usuário com 1 médico)
+        // AGENDA SETTINGS (CRUD unificado)
+        // =====================================================================
+        Route::get('agenda-settings', [AgendaSettingsController::class, 'index'])
+            ->name('agenda-settings.index');
+        Route::get('agenda-settings/create', [AgendaSettingsController::class, 'create'])
+            ->name('agenda-settings.create');
+        Route::post('agenda-settings', [AgendaSettingsController::class, 'store'])
+            ->name('agenda-settings.store');
+        Route::get('agenda-settings/{id}', [AgendaSettingsController::class, 'show'])
+            ->where('id', '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}')
+            ->name('agenda-settings.show');
+        Route::get('agenda-settings/{id}/edit', [AgendaSettingsController::class, 'edit'])
+            ->where('id', '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}')
+            ->name('agenda-settings.edit');
+        Route::put('agenda-settings/{id}', [AgendaSettingsController::class, 'update'])
+            ->where('id', '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}')
+            ->name('agenda-settings.update');
+        Route::patch('agenda-settings/{id}/toggle-status', [AgendaSettingsController::class, 'toggleStatus'])
+            ->where('id', '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}')
+            ->name('agenda-settings.toggle-status');
+        Route::delete('agenda-settings/{id}', [AgendaSettingsController::class, 'destroy'])
+            ->where('id', '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}')
+            ->name('agenda-settings.destroy');
+
+        // =====================================================================
+        // DOCTOR SETTINGS (Página única legada)
         // =====================================================================
         Route::get('doctor-settings', [DoctorSettingsController::class, 'index'])
             ->name('doctor-settings.index');
@@ -828,6 +860,9 @@ Route::prefix('workspace/{slug}')
             Route::post('settings/appointments', [SettingsController::class, 'updateAppointments'])->name('settings.update.appointments');
             Route::post('settings/calendar', [SettingsController::class, 'updateCalendar'])->name('settings.update.calendar');
             Route::post('settings/notifications', [SettingsController::class, 'updateNotifications'])->name('settings.update.notifications');
+            Route::post('settings/whatsapp-bot', [SettingsController::class, 'updateWhatsAppBot'])
+                ->middleware(['feature:' . \App\Services\Tenant\WhatsAppBotConfigService::FEATURE_NAME])
+                ->name('settings.update.whatsapp-bot');
             Route::post('settings/editor/preview', [SettingsController::class, 'previewNotificationTemplate'])->name('settings.editor.preview');
             Route::post('settings/editor/save', [SettingsController::class, 'updateNotificationTemplate'])->name('settings.editor.save');
             Route::post('settings/editor/restore', [SettingsController::class, 'restoreNotificationTemplate'])->name('settings.editor.restore');
@@ -840,6 +875,28 @@ Route::prefix('workspace/{slug}')
                 ->name('settings.whatsapp.test.zapi.send');
             Route::post('settings/whatsapp/test/waha/send', [WhatsAppSettingsTestController::class, 'testWahaSend'])
                 ->name('settings.whatsapp.test.waha.send');
+            Route::prefix('settings/whatsapp-official-templates')
+                ->middleware(['tenant.whatsapp.official.provider'])
+                ->name('settings.whatsapp-official-tenant-templates.')
+                ->group(function () {
+                    Route::get('/', [WhatsAppOfficialTenantTemplateController::class, 'index'])->name('index');
+                    Route::get('/create', [WhatsAppOfficialTenantTemplateController::class, 'create'])->name('create');
+                    Route::post('/', [WhatsAppOfficialTenantTemplateController::class, 'store'])->name('store');
+                    Route::get('/{whatsappOfficialTemplate}', [WhatsAppOfficialTenantTemplateController::class, 'show'])
+                        ->name('show');
+                    Route::get('/{whatsappOfficialTemplate}/edit', [WhatsAppOfficialTenantTemplateController::class, 'edit'])
+                        ->name('edit');
+                    Route::put('/{whatsappOfficialTemplate}', [WhatsAppOfficialTenantTemplateController::class, 'update'])
+                        ->name('update');
+                    Route::post('/{whatsappOfficialTemplate}/submit', [WhatsAppOfficialTenantTemplateController::class, 'submitToMeta'])
+                        ->name('submit');
+                    Route::post('/{whatsappOfficialTemplate}/republish', [WhatsAppOfficialTenantTemplateController::class, 'republishToMeta'])
+                        ->name('republish');
+                    Route::post('/{whatsappOfficialTemplate}/sync', [WhatsAppOfficialTenantTemplateController::class, 'syncStatus'])
+                        ->name('sync');
+                    Route::post('/{whatsappOfficialTemplate}/test-send', [WhatsAppOfficialTenantTemplateController::class, 'testSend'])
+                        ->name('test-send');
+                });
             Route::post('settings/integrations', [SettingsController::class, 'updateIntegrations'])->name('settings.update.integrations');
             Route::post('settings/user-defaults', [SettingsController::class, 'updateUserDefaults'])->name('settings.update.user-defaults');
             Route::post('settings/professionals', [SettingsController::class, 'updateProfessionals'])->name('settings.update.professionals');

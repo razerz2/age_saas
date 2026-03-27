@@ -2,27 +2,21 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\Platform\Tenant;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Spatie\Multitenancy\Models\Tenant;
 
 class EnsureCorrectGuard
 {
     public function handle(Request $request, Closure $next)
     {
-        $segment1 = $request->segment(1);
+        $segment1 = strtolower((string) $request->segment(1));
         $isCustomerLogin = $segment1 === 'customer';
-        $isWorkspaceArea  = $segment1 === 'workspace';
+        $isWorkspaceArea = $segment1 === 'workspace';
         $isPatientPortal = $segment1 === 'paciente';
 
-        /**
-         * LOGIN TENANT (ÁREA PÚBLICA)
-         * /customer/{slug}/login
-         */
         if ($isCustomerLogin) {
-
-            // Impede conflito com guard web
             if (Auth::guard('web')->check()) {
                 Auth::guard('web')->logout();
             }
@@ -32,13 +26,7 @@ class EnsureCorrectGuard
             return $next($request);
         }
 
-        /**
-         * PORTAL DO PACIENTE
-         * /workspace/{slug}/paciente/... ou /paciente/...
-         */
         if ($isPatientPortal || ($isWorkspaceArea && $request->segment(2) === 'paciente')) {
-
-            // Impede conflito com outros guards
             if (Auth::guard('web')->check()) {
                 Auth::guard('web')->logout();
             }
@@ -51,14 +39,30 @@ class EnsureCorrectGuard
             return $next($request);
         }
 
-        /**
-         * ÁREA AUTENTICADA
-         * /workspace/{slug}/...
-         */
         if ($isWorkspaceArea) {
+            $currentTenant = Tenant::current();
 
-            if (!Tenant::current()) {
-                return redirect('/')->withErrors(['tenant' => 'Tenant não carregado.']);
+            if (! $currentTenant) {
+                $slug = $request->route('slug');
+                if (! is_string($slug) || $slug === '') {
+                    $slug = $request->segment(2);
+                }
+
+                if (is_string($slug) && $slug !== '') {
+                    $tenantFromSlug = Tenant::where('subdomain', $slug)->first();
+                    if ($tenantFromSlug) {
+                        $tenantFromSlug->makeCurrent();
+                        $currentTenant = $tenantFromSlug;
+
+                        if ($request->hasSession()) {
+                            $request->session()->put('tenant_slug', $tenantFromSlug->subdomain);
+                        }
+                    }
+                }
+            }
+
+            if (! $currentTenant) {
+                return redirect('/')->withErrors(['tenant' => 'Tenant nao carregado.']);
             }
 
             Auth::shouldUse('tenant');
@@ -66,9 +70,6 @@ class EnsureCorrectGuard
             return $next($request);
         }
 
-        /**
-         * ROTAS DA PLATAFORMA
-         */
         Auth::shouldUse('web');
 
         return $next($request);

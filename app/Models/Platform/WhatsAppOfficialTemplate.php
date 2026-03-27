@@ -28,6 +28,7 @@ class WhatsAppOfficialTemplate extends Model
     protected $keyType = 'string';
 
     protected $fillable = [
+        'tenant_id',
         'key',
         'meta_template_name',
         'provider',
@@ -83,6 +84,16 @@ class WhatsAppOfficialTemplate extends Model
     public function scopeApproved(Builder $query): Builder
     {
         return $query->where('status', self::STATUS_APPROVED);
+    }
+
+    public function scopeForTenant(Builder $query, string $tenantId): Builder
+    {
+        return $query->where('tenant_id', $tenantId);
+    }
+
+    public function scopeForPlatformBaseline(Builder $query): Builder
+    {
+        return $query->whereNull('tenant_id');
     }
 
     public function isDirectlyEditable(): bool

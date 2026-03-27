@@ -289,6 +289,10 @@ class WhatsAppSender
             ['WHATSAPP_META_PHONE_NUMBER_ID', 'WHATSAPP_BUSINESS_PHONE_ID', 'META_PHONE_NUMBER_ID', 'BOT_META_PHONE_NUMBER_ID', 'bot_meta_phone_number_id'],
             (string) config('services.whatsapp.business.phone_id', config('services.whatsapp.phone_id', ''))
         );
+        $globalMetaWabaId = $this->resolveGlobalWhatsAppMetaValue(
+            ['WHATSAPP_META_WABA_ID', 'WHATSAPP_BUSINESS_ACCOUNT_ID', 'META_WABA_ID', 'BOT_META_WABA_ID', 'bot_meta_waba_id'],
+            (string) config('services.whatsapp.business.waba_id', '')
+        );
 
         config([
             'services.whatsapp.provider' => $driver === 'global'
@@ -303,6 +307,9 @@ class WhatsAppSender
             'services.whatsapp.business.phone_id' => $driver === 'global'
                 ? $globalMetaPhoneId
                 : ($providerSettings['meta_phone_number_id'] ?? ''),
+            'services.whatsapp.business.waba_id' => $driver === 'global'
+                ? $globalMetaWabaId
+                : ($providerSettings['meta_waba_id'] ?? ''),
             'services.whatsapp.zapi.api_url' => $driver === 'global'
                 ? config('services.whatsapp.zapi.api_url', 'https://api.z-api.io')
                 : ($providerSettings['zapi_api_url'] ?? 'https://api.z-api.io'),

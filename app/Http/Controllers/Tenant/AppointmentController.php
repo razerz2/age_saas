@@ -203,9 +203,7 @@ class AppointmentController extends Controller
             $message .= '<strong>O que fazer:</strong><br>';
             $message .= '1. Acesse <a href="' . route('tenant.doctors.index') . '" class="alert-link">MÃ©dicos</a> para verificar os mÃ©dicos cadastrados<br>';
             $message .= '2. Para cada mÃ©dico, configure:<br>';
-            $message .= '&nbsp;&nbsp;&nbsp;- <a href="' . route('tenant.calendars.index') . '" class="alert-link">CalendÃ¡rio</a><br>';
-            $message .= '&nbsp;&nbsp;&nbsp;- <a href="' . route('tenant.business-hours.index') . '" class="alert-link">HorÃ¡rios Comerciais</a><br>';
-            $message .= '&nbsp;&nbsp;&nbsp;- <a href="' . route('tenant.appointment-types.index') . '" class="alert-link">Tipos de Atendimento</a>';
+            $message .= '&nbsp;&nbsp;&nbsp;- <a href="' . route('tenant.agenda-settings.index', ['slug' => tenant()->subdomain]) . '" class="alert-link">Agenda do Profissional</a>';
             $message .= '</div>';
             
             return redirect()->route('tenant.appointments.index', ['slug' => tenant()->subdomain])
@@ -861,6 +859,7 @@ class AppointmentController extends Controller
         }
 
         $calendars = Calendar::where('doctor_id', $doctorId)
+            ->where('is_active', true)
             ->orderBy('name')
             ->get()
             ->map(function($calendar) {
@@ -993,7 +992,9 @@ class AppointmentController extends Controller
             ]);
         }
 
-        $calendars = Calendar::where('doctor_id', $doctorId)->pluck('id');
+        $calendars = Calendar::where('doctor_id', $doctorId)
+            ->where('is_active', true)
+            ->pluck('id');
 
         $existingAppointments = Appointment::whereIn('calendar_id', $calendars)
             ->whereDate('starts_at', $date->format('Y-m-d'))

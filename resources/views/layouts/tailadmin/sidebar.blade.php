@@ -16,19 +16,18 @@
     $financeEnabled = tenant_setting('finance.enabled') === 'true';
     $hasFinanceAccess = $financeEnabled && (($user && $user->role === 'admin') || in_array('finance', $userModules));
     $hasSettingsAccess = ($user && $user->role === 'admin') || in_array('settings', $userModules);
-
-    $showUnifiedPage = false;
-    if ($user) {
-        if ($user->role === 'doctor' && $user->doctor) {
-            $showUnifiedPage = true;
-        } elseif ($user->role === 'user') {
-            $allowedDoctorsCount = $user->allowedDoctors()->count();
-            if ($allowedDoctorsCount === 1) {
-                $showUnifiedPage = true;
-            }
-        }
-    }
-    $canCreateCalendar = $user && ($user->is_doctor || !$user->is_doctor);
+    $settingsMenuActive = request()->routeIs('tenant.settings.*') || request()->routeIs('tenant.integrations.*');
+    $agendaMenuActive =
+        request()->routeIs('tenant.agenda-settings.*') ||
+        request()->routeIs('tenant.doctor-settings.*') ||
+        (
+            request()->routeIs('tenant.calendars.*') &&
+            !request()->routeIs('tenant.calendars.view') &&
+            !request()->routeIs('tenant.calendars.events.*') &&
+            !request()->routeIs('tenant.calendars.events.redirect')
+        ) ||
+        request()->routeIs('tenant.business-hours.*') ||
+        request()->routeIs('tenant.appointment-types.*');
     
     // Obter labels seguros com fallback garantido
     $professionalLabelPlural = professional_label_plural();
@@ -103,12 +102,6 @@
     <div class="no-scrollbar flex flex-col overflow-y-auto duration-300 ease-linear">
         <nav>
             <div>
-                <h3 class="mb-4 text-xs leading-[20px] text-gray-400 uppercase">
-                    <span class="menu-group-title" :class="sidebarToggle ? 'xl:hidden' : ''">
-                        Menu Principal
-                    </span>
-                </h3>
-
                 <ul class="mb-6 flex flex-col gap-1">
                     <li>
                         <a
@@ -116,12 +109,19 @@
                             class="menu-item group {{ request()->routeIs('tenant.dashboard') ? 'menu-item-active' : 'menu-item-inactive' }}"
                         >
                             <i class="mdi mdi-view-dashboard {{ request()->routeIs('tenant.dashboard') ? 'menu-item-icon-active' : 'menu-item-icon-inactive' }}"></i>
-
                             <span class="menu-item-text truncate min-w-0" :class="sidebarToggle ? 'xl:hidden' : ''">Dashboard</span>
                         </a>
                     </li>
+                </ul>
+            </div>
 
-                     @if(has_module('medical_appointments'))
+            <div>
+                <h3 class="mb-4 text-xs leading-[20px] text-gray-400 uppercase">
+                    <span class="menu-group-title" :class="sidebarToggle ? 'xl:hidden' : ''">Atendimento</span>
+                </h3>
+
+                <ul class="mb-6 flex flex-col gap-1">
+                    @if(has_module('medical_appointments'))
                         <li>
                             <a
                                 href="{{ workspace_route('tenant.medical-appointments.index') }}"
@@ -129,18 +129,6 @@
                             >
                                 <i class="mdi mdi-account-heart {{ request()->routeIs('tenant.medical-appointments.*') ? 'menu-item-icon-active' : 'menu-item-icon-inactive' }}"></i>
                                 <span class="menu-item-text truncate min-w-0" :class="sidebarToggle ? 'xl:hidden' : ''">Atendimento</span>
-                            </a>
-                        </li>
-                    @endif
-
-                    @if ($user && $user->role === 'doctor')
-                        <li>
-                            <a
-                                href="{{ workspace_route('tenant.calendars.events.redirect') }}"
-                                class="menu-item group {{ request()->routeIs('tenant.calendars.events.*') || request()->routeIs('tenant.calendars.view') ? 'menu-item-active' : 'menu-item-inactive' }}"
-                            >
-                                <i class="mdi mdi-calendar-check {{ request()->routeIs('tenant.calendars.events.*') || request()->routeIs('tenant.calendars.view') ? 'menu-item-icon-active' : 'menu-item-icon-inactive' }}"></i>
-                                <span class="menu-item-text truncate min-w-0" :class="sidebarToggle ? 'xl:hidden' : ''">Agenda</span>
                             </a>
                         </li>
                     @endif
@@ -165,18 +153,6 @@
                         </a>
                     </li>
 
-                    @if($hasCampaignsAccess)
-                        <li>
-                            <a
-                                href="{{ workspace_route('tenant.campaigns.index') }}"
-                                class="menu-item group {{ request()->routeIs('tenant.campaigns.*') ? 'menu-item-active' : 'menu-item-inactive' }}"
-                            >
-                                <i class="mdi mdi-bullhorn-outline text-sm {{ request()->routeIs('tenant.campaigns.*') ? 'menu-item-icon-active' : 'menu-item-icon-inactive' }}"></i>
-                                <span class="menu-item-text truncate min-w-0" :class="sidebarToggle ? 'xl:hidden' : ''">Campanhas</span>
-                            </a>
-                        </li>
-                    @endif
-
                     @if($hasOnlineAccess && $defaultMode !== 'presencial')
                         <li>
                             <a
@@ -189,6 +165,29 @@
                         </li>
                     @endif
 
+                    @if($hasCampaignsAccess)
+                        <li>
+                            <a
+                                href="{{ workspace_route('tenant.campaigns.index') }}"
+                                class="menu-item group {{ request()->routeIs('tenant.campaigns.*') ? 'menu-item-active' : 'menu-item-inactive' }}"
+                            >
+                                <i class="mdi mdi-bullhorn-outline text-sm {{ request()->routeIs('tenant.campaigns.*') ? 'menu-item-icon-active' : 'menu-item-icon-inactive' }}"></i>
+                                <span class="menu-item-text truncate min-w-0" :class="sidebarToggle ? 'xl:hidden' : ''">Campanhas</span>
+                            </a>
+                        </li>
+                    @endif
+
+                    @if ($user && $user->role === 'doctor')
+                        <li>
+                            <a
+                                href="{{ workspace_route('tenant.calendars.events.redirect') }}"
+                                class="menu-item group {{ request()->routeIs('tenant.calendars.events.*') || request()->routeIs('tenant.calendars.view') ? 'menu-item-active' : 'menu-item-inactive' }}"
+                            >
+                                <i class="mdi mdi-calendar-check {{ request()->routeIs('tenant.calendars.events.*') || request()->routeIs('tenant.calendars.view') ? 'menu-item-icon-active' : 'menu-item-icon-inactive' }}"></i>
+                                <span class="menu-item-text truncate min-w-0" :class="sidebarToggle ? 'xl:hidden' : ''">Agenda</span>
+                            </a>
+                        </li>
+                    @endif
                 </ul>
             </div>
 
@@ -266,82 +265,18 @@
 
             <div>
                 <h3 class="mb-4 text-xs leading-[20px] text-gray-400 uppercase">
-                    <span class="menu-group-title" :class="sidebarToggle ? 'xl:hidden' : ''">Config. de Calendários</span>
+                    <span class="menu-group-title" :class="sidebarToggle ? 'xl:hidden' : ''">Configuração de Atendimento</span>
                 </h3>
                 <ul class="mb-6 flex flex-col gap-1">
-                    @if($showUnifiedPage)
-                        <li>
-                            <a
-                                href="{{ workspace_route('tenant.doctor-settings.index') }}"
-                                class="menu-item group {{ request()->routeIs('tenant.doctor-settings.*') ? 'menu-item-active' : 'menu-item-inactive' }}"
-                            >
-                                <i class="mdi mdi-calendar-month {{ request()->routeIs('tenant.doctor-settings.*') ? 'menu-item-icon-active' : 'menu-item-icon-inactive' }}"></i>
-                                <span class="menu-item-text truncate min-w-0" :class="sidebarToggle ? 'xl:hidden' : ''">Calendário</span>
-                            </a>
-                        </li>
-                    @else
-                        <li x-data="{ open: {{ request()->routeIs('tenant.calendars.*') ? 'true' : 'false' }} }">
-                            <a href="#" @click.prevent="open = !open" class="menu-item group {{ request()->routeIs('tenant.calendars.*') ? 'menu-item-active' : 'menu-item-inactive' }}">
-                                <i class="mdi mdi-calendar-month {{ request()->routeIs('tenant.calendars.*') ? 'menu-item-icon-active' : 'menu-item-icon-inactive' }}"></i>
-                                <span class="menu-item-text truncate min-w-0" :class="sidebarToggle ? 'xl:hidden' : ''">Calendários</span>
-                                <svg class="menu-item-arrow" :class="[open ? 'menu-item-arrow-active' : 'menu-item-arrow-inactive', sidebarToggle ? 'xl:hidden' : '' ]" width="20" height="20" viewBox="0 0 20 20" fill="none">
-                                    <path d="M4.79175 7.39584L10.0001 12.6042L15.2084 7.39585" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                                </svg>
-                            </a>
-                            <div class="translate transform overflow-hidden" x-show="open">
-                                <ul :class="sidebarToggle ? 'xl:hidden' : 'flex'" class="menu-dropdown mt-2 flex flex-col gap-1 pl-9">
-                                    <li>
-                                        <a href="{{ workspace_route('tenant.calendars.index') }}" class="menu-dropdown-item group flex items-center gap-2 {{ request()->routeIs('tenant.calendars.index') ? 'menu-dropdown-item-active' : 'menu-dropdown-item-inactive' }}"><i class="mdi mdi-view-list text-[14px] text-gray-500 dark:text-gray-400"></i>Todos os Calendários</a>
-                                    </li>
-                                    @if ($canCreateCalendar)
-                                        <li>
-                                            <a href="{{ workspace_route('tenant.calendars.create') }}" class="menu-dropdown-item group flex items-center gap-2 {{ request()->routeIs('tenant.calendars.create') ? 'menu-dropdown-item-active' : 'menu-dropdown-item-inactive' }}"><i class="mdi mdi-plus text-[14px] text-gray-500 dark:text-gray-400"></i>Novo Calendário</a>
-                                        </li>
-                                    @endif
-                                </ul>
-                            </div>
-                        </li>
-
-                        <li x-data="{ open: {{ request()->routeIs('tenant.business-hours.*') ? 'true' : 'false' }} }">
-                            <a href="#" @click.prevent="open = !open" class="menu-item group {{ request()->routeIs('tenant.business-hours.*') ? 'menu-item-active' : 'menu-item-inactive' }}">
-                                <i class="mdi mdi-clock-outline {{ request()->routeIs('tenant.business-hours.*') ? 'menu-item-icon-active' : 'menu-item-icon-inactive' }}"></i>
-                                <span class="menu-item-text truncate min-w-0" :class="sidebarToggle ? 'xl:hidden' : ''">Horários</span>
-                                <svg class="menu-item-arrow" :class="[open ? 'menu-item-arrow-active' : 'menu-item-arrow-inactive', sidebarToggle ? 'xl:hidden' : '' ]" width="20" height="20" viewBox="0 0 20 20" fill="none">
-                                    <path d="M4.79175 7.39584L10.0001 12.6042L15.2084 7.39585" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                                </svg>
-                            </a>
-                            <div class="translate transform overflow-hidden" x-show="open">
-                                <ul :class="sidebarToggle ? 'xl:hidden' : 'flex'" class="menu-dropdown mt-2 flex flex-col gap-1 pl-9">
-                                    <li>
-                                        <a href="{{ workspace_route('tenant.business-hours.index') }}" class="menu-dropdown-item group flex items-center gap-2 {{ request()->routeIs('tenant.business-hours.index') ? 'menu-dropdown-item-active' : 'menu-dropdown-item-inactive' }}"><i class="mdi mdi-view-list text-[14px] text-gray-500 dark:text-gray-400"></i>Todos os Horários</a>
-                                    </li>
-                                    <li>
-                                        <a href="{{ workspace_route('tenant.business-hours.create') }}" class="menu-dropdown-item group flex items-center gap-2 {{ request()->routeIs('tenant.business-hours.create') ? 'menu-dropdown-item-active' : 'menu-dropdown-item-inactive' }}"><i class="mdi mdi-plus text-[14px] text-gray-500 dark:text-gray-400"></i>Novo Horário</a>
-                                    </li>
-                                </ul>
-                            </div>
-                        </li>
-
-                        <li x-data="{ open: {{ request()->routeIs('tenant.appointment-types.*') ? 'true' : 'false' }} }">
-                            <a href="#" @click.prevent="open = !open" class="menu-item group {{ request()->routeIs('tenant.appointment-types.*') ? 'menu-item-active' : 'menu-item-inactive' }}">
-                                <i class="mdi mdi-clipboard-pulse {{ request()->routeIs('tenant.appointment-types.*') ? 'menu-item-icon-active' : 'menu-item-icon-inactive' }}"></i>
-                                <span class="menu-item-text truncate min-w-0" :class="sidebarToggle ? 'xl:hidden' : ''">Tipos</span>
-                                <svg class="menu-item-arrow" :class="[open ? 'menu-item-arrow-active' : 'menu-item-arrow-inactive', sidebarToggle ? 'xl:hidden' : '' ]" width="20" height="20" viewBox="0 0 20 20" fill="none">
-                                    <path d="M4.79175 7.39584L10.0001 12.6042L15.2084 7.39585" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                                </svg>
-                            </a>
-                            <div class="translate transform overflow-hidden" x-show="open">
-                                <ul :class="sidebarToggle ? 'xl:hidden' : 'flex'" class="menu-dropdown mt-2 flex flex-col gap-1 pl-9">
-                                    <li>
-                                        <a href="{{ workspace_route('tenant.appointment-types.index') }}" class="menu-dropdown-item group flex items-center gap-2 {{ request()->routeIs('tenant.appointment-types.index') ? 'menu-dropdown-item-active' : 'menu-dropdown-item-inactive' }}"><i class="mdi mdi-view-list text-[14px] text-gray-500 dark:text-gray-400"></i>Todos os Tipos</a>
-                                    </li>
-                                    <li>
-                                        <a href="{{ workspace_route('tenant.appointment-types.create') }}" class="menu-dropdown-item group flex items-center gap-2 {{ request()->routeIs('tenant.appointment-types.create') ? 'menu-dropdown-item-active' : 'menu-dropdown-item-inactive' }}"><i class="mdi mdi-plus text-[14px] text-gray-500 dark:text-gray-400"></i>Novo Tipo</a>
-                                    </li>
-                                </ul>
-                            </div>
-                        </li>
-                    @endif
+                    <li>
+                        <a
+                            href="{{ workspace_route('tenant.agenda-settings.index') }}"
+                            class="menu-item group {{ $agendaMenuActive ? 'menu-item-active' : 'menu-item-inactive' }}"
+                        >
+                            <i class="mdi mdi-calendar-month {{ $agendaMenuActive ? 'menu-item-icon-active' : 'menu-item-icon-inactive' }}"></i>
+                            <span class="menu-item-text truncate min-w-0" :class="sidebarToggle ? 'xl:hidden' : ''">Agenda do Profissional</span>
+                        </a>
+                    </li>
                 </ul>
             </div>
 
@@ -423,52 +358,6 @@
                 </div>
             @endif
 
-            @if($hasSettingsAccess)
-                <div>
-                    <h3 class="mb-4 text-xs leading-[20px] text-gray-400 uppercase">
-                        <span class="menu-group-title" :class="sidebarToggle ? 'xl:hidden' : ''">Sistema</span>
-                    </h3>
-                    <ul class="mb-6 flex flex-col gap-1">
-                        <li>
-                            <a
-                                href="{{ workspace_route('tenant.settings.index') }}"
-                                class="menu-item group {{ request()->routeIs('tenant.settings.*') ? 'menu-item-active' : 'menu-item-inactive' }}"
-                            >
-                                <i class="mdi mdi-settings {{ request()->routeIs('tenant.settings.*') ? 'menu-item-icon-active' : 'menu-item-icon-inactive' }}"></i>
-                                <span class="menu-item-text truncate min-w-0" :class="sidebarToggle ? 'xl:hidden' : ''">Configurações</span>
-                            </a>
-                        </li>
-                    </ul>
-                </div>
-            @endif
-
-            <div>
-                <h3 class="mb-4 text-xs leading-[20px] text-gray-400 uppercase">
-                    <span class="menu-group-title" :class="sidebarToggle ? 'xl:hidden' : ''">Integrações</span>
-                </h3>
-                <ul class="mb-6 flex flex-col gap-1">
-                    <li x-data="{ open: {{ request()->routeIs('tenant.integrations.*') || request()->routeIs('tenant.integrations.google.*') || request()->routeIs('tenant.integrations.apple.*') ? 'true' : 'false' }} }">
-                        <a href="#" @click.prevent="open = !open" class="menu-item group {{ request()->routeIs('tenant.integrations.*') || request()->routeIs('tenant.integrations.google.*') || request()->routeIs('tenant.integrations.apple.*') ? 'menu-item-active' : 'menu-item-inactive' }}">
-                            <i class="mdi mdi-puzzle {{ request()->routeIs('tenant.integrations.*') || request()->routeIs('tenant.integrations.google.*') || request()->routeIs('tenant.integrations.apple.*') ? 'menu-item-icon-active' : 'menu-item-icon-inactive' }}"></i>
-                            <span class="menu-item-text truncate min-w-0" :class="sidebarToggle ? 'xl:hidden' : ''">Integrações</span>
-                            <svg class="menu-item-arrow" :class="[open ? 'menu-item-arrow-active' : 'menu-item-arrow-inactive', sidebarToggle ? 'xl:hidden' : '' ]" width="20" height="20" viewBox="0 0 20 20" fill="none">
-                                <path d="M4.79175 7.39584L10.0001 12.6042L15.2084 7.39585" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                            </svg>
-                        </a>
-                        <div class="translate transform overflow-hidden" x-show="open">
-                            <ul :class="sidebarToggle ? 'xl:hidden' : 'flex'" class="menu-dropdown mt-2 flex flex-col gap-1 pl-9">
-                                <li>
-                                    <a href="{{ workspace_route('tenant.integrations.google.index') }}" class="menu-dropdown-item group {{ request()->routeIs('tenant.integrations.google.*') ? 'menu-dropdown-item-active' : 'menu-dropdown-item-inactive' }}">Google Calendar</a>
-                                </li>
-                                <li>
-                                    <a href="{{ workspace_route('tenant.integrations.apple.index') }}" class="menu-dropdown-item group {{ request()->routeIs('tenant.integrations.apple.*') ? 'menu-dropdown-item-active' : 'menu-dropdown-item-inactive' }}">Apple Calendar</a>
-                                </li>
-                            </ul>
-                        </div>
-                    </li>
-                </ul>
-            </div>
-
             <div>
                 <h3 class="mb-4 text-xs leading-[20px] text-gray-400 uppercase">
                     <span class="menu-group-title" :class="sidebarToggle ? 'xl:hidden' : ''">Relatórios</span>
@@ -496,6 +385,25 @@
                     </li>
                 </ul>
             </div>
+
+            @if($hasSettingsAccess)
+                <div>
+                    <h3 class="mb-4 text-xs leading-[20px] text-gray-400 uppercase">
+                        <span class="menu-group-title" :class="sidebarToggle ? 'xl:hidden' : ''">Sistema</span>
+                    </h3>
+                    <ul class="mb-6 flex flex-col gap-1">
+                        <li>
+                            <a
+                                href="{{ workspace_route('tenant.settings.index') }}"
+                                class="menu-item group {{ $settingsMenuActive ? 'menu-item-active' : 'menu-item-inactive' }}"
+                            >
+                                <i class="mdi mdi-settings {{ $settingsMenuActive ? 'menu-item-icon-active' : 'menu-item-icon-inactive' }}"></i>
+                                <span class="menu-item-text truncate min-w-0" :class="sidebarToggle ? 'xl:hidden' : ''">Configurações</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            @endif
         </nav>
     </div>
 </aside>

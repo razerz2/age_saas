@@ -103,6 +103,7 @@ class WhatsAppOfficialTemplateBindingController extends Controller
 
         $templates = WhatsAppOfficialTemplate::query()
             ->officialProvider()
+            ->forPlatformBaseline()
             ->where('status', WhatsAppOfficialTemplate::STATUS_APPROVED)
             ->whereIn('key', $eventKeyCandidates)
             ->orderBy('key')
@@ -169,6 +170,10 @@ class WhatsAppOfficialTemplateBindingController extends Controller
 
         if ((string) $template->provider !== WhatsAppOfficialTemplate::PROVIDER) {
             return back()->withErrors(['template' => 'Apenas templates oficiais (provider whatsapp_business) podem ser vinculados.']);
+        }
+
+        if ($template->tenant_id !== null) {
+            return back()->withErrors(['template' => 'Template tenant-aware nao pode ser vinculado no baseline global da Platform.']);
         }
 
         if ((string) $template->status !== WhatsAppOfficialTemplate::STATUS_APPROVED) {

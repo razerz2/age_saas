@@ -89,6 +89,11 @@ class SubscriptionFeaturesSeeder extends Seeder
                 'is_default' => false,
             ],
             [
+                'name' => 'whatsapp_bot',
+                'label' => 'Bot de WhatsApp',
+                'is_default' => false,
+            ],
+            [
                 'name' => 'email_notifications',
                 'label' => 'Notificação por Email',
                 'is_default' => false,

@@ -50,7 +50,7 @@ class Doctor extends Model
      */
     public function getPrimaryCalendar()
     {
-        return $this->calendars()->first();
+        return $this->calendars()->where('is_active', true)->first();
     }
 
     public function businessHours()
@@ -129,7 +129,7 @@ class Doctor extends Model
     public function hasCompleteCalendarConfiguration(): bool
     {
         // Verifica se tem calendário
-        $hasCalendar = $this->calendars()->exists();
+        $hasCalendar = $this->calendars()->where('is_active', true)->exists();
         
         // Verifica se tem horários comerciais configurados
         $hasBusinessHours = $this->businessHours()->exists();
@@ -151,8 +151,8 @@ class Doctor extends Model
     {
         $missing = [];
         
-        if (!$this->calendars()->exists()) {
-            $missing[] = 'calendário';
+        if (!$this->calendars()->where('is_active', true)->exists()) {
+            $missing[] = 'agenda ativa';
         }
         
         if (!$this->businessHours()->exists()) {

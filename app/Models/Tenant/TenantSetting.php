@@ -125,6 +125,7 @@ class TenantSetting extends Model
             'provider' => $settings['whatsapp.provider'] ?? 'whatsapp_business',
             'meta_access_token' => $settings['whatsapp.meta.access_token'] ?? null,
             'meta_phone_number_id' => $settings['whatsapp.meta.phone_number_id'] ?? null,
+            'meta_waba_id' => $settings['whatsapp.meta.waba_id'] ?? null,
             'zapi_api_url' => $settings['whatsapp.zapi.api_url'] ?? null,
             'zapi_token' => $settings['whatsapp.zapi.token'] ?? null,
             'zapi_client_token' => $settings['whatsapp.zapi.client_token'] ?? null,
@@ -136,5 +137,44 @@ class TenantSetting extends Model
             'api_token' => $settings['whatsapp.api_token'] ?? null,
             'sender' => $settings['whatsapp.sender'] ?? null,
         ];
+    }
+
+    /**
+     * Obtem as configuracoes do bot de WhatsApp.
+     */
+    public static function whatsappBotProvider(): array
+    {
+        $settings = self::getAll();
+
+        return [
+            'enabled' => ($settings['whatsapp_bot.enabled'] ?? 'false') === 'true',
+            'provider_mode' => $settings['whatsapp_bot.provider_mode'] ?? 'shared_with_notifications',
+            'provider' => $settings['whatsapp_bot.provider'] ?? 'whatsapp_business',
+            'welcome_message' => $settings['whatsapp_bot.welcome_message'] ?? '',
+            'disabled_message' => $settings['whatsapp_bot.disabled_message'] ?? '',
+            'allow_schedule' => ($settings['whatsapp_bot.allow_schedule'] ?? 'false') === 'true',
+            'allow_view_appointments' => ($settings['whatsapp_bot.allow_view_appointments'] ?? 'false') === 'true',
+            'allow_cancel_appointments' => ($settings['whatsapp_bot.allow_cancel_appointments'] ?? 'false') === 'true',
+            'meta_access_token' => $settings['whatsapp_bot.meta.access_token'] ?? null,
+            'meta_phone_number_id' => $settings['whatsapp_bot.meta.phone_number_id'] ?? null,
+            'meta_waba_id' => $settings['whatsapp_bot.meta.waba_id'] ?? null,
+            'zapi_api_url' => $settings['whatsapp_bot.zapi.api_url'] ?? 'https://api.z-api.io',
+            'zapi_token' => $settings['whatsapp_bot.zapi.token'] ?? null,
+            'zapi_client_token' => $settings['whatsapp_bot.zapi.client_token'] ?? null,
+            'zapi_instance_id' => $settings['whatsapp_bot.zapi.instance_id'] ?? null,
+            'waha_base_url' => $settings['whatsapp_bot.waha.base_url'] ?? null,
+            'waha_api_key' => $settings['whatsapp_bot.waha.api_key'] ?? null,
+            'waha_session' => $settings['whatsapp_bot.waha.session'] ?? 'default',
+        ];
+    }
+
+    /**
+     * Alias para compatibilidade com fluxos que esperam getWhatsAppConfig().
+     *
+     * @return array<string, mixed>
+     */
+    public static function getWhatsAppConfig(): array
+    {
+        return self::whatsappProvider();
     }
 }

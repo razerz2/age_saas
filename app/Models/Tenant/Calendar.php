@@ -15,7 +15,11 @@ class Calendar extends Model
     public $incrementing = false;
     protected $keyType = 'uuid';
 
-    protected $fillable = ['id', 'doctor_id', 'name', 'external_id'];
+    protected $fillable = ['id', 'doctor_id', 'name', 'external_id', 'is_active'];
+
+    protected $casts = [
+        'is_active' => 'boolean',
+    ];
 
     public $timestamps = true;
 

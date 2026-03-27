@@ -26,6 +26,7 @@ class WhatsappTenantService
                         'services.whatsapp.business.api_url' => config('services.whatsapp.business.api_url', 'https://graph.facebook.com/v22.0'),
                         'services.whatsapp.business.token' => $provider['meta_access_token'] ?? '',
                         'services.whatsapp.business.phone_id' => $provider['meta_phone_number_id'] ?? '',
+                        'services.whatsapp.business.waba_id' => $provider['meta_waba_id'] ?? '',
                         'services.whatsapp.zapi.api_url' => $provider['zapi_api_url'] ?? 'https://api.z-api.io',
                         'services.whatsapp.zapi.token' => $provider['zapi_token'] ?? '',
                         'services.whatsapp.zapi.client_token' => $provider['zapi_client_token'] ?? '',
@@ -71,12 +72,17 @@ class WhatsappTenantService
                 ['WHATSAPP_META_PHONE_NUMBER_ID', 'WHATSAPP_BUSINESS_PHONE_ID', 'META_PHONE_NUMBER_ID', 'BOT_META_PHONE_NUMBER_ID', 'bot_meta_phone_number_id'],
                 (string) config('services.whatsapp.business.phone_id', config('services.whatsapp.phone_id', ''))
             );
+            $globalMetaWabaId = self::resolveGlobalWhatsAppMetaValue(
+                ['WHATSAPP_META_WABA_ID', 'WHATSAPP_BUSINESS_ACCOUNT_ID', 'META_WABA_ID', 'BOT_META_WABA_ID', 'bot_meta_waba_id'],
+                (string) config('services.whatsapp.business.waba_id', '')
+            );
 
             config([
                 'services.whatsapp.provider' => $globalProvider,
                 'services.whatsapp.business.api_url' => $globalMetaApiUrl,
                 'services.whatsapp.business.token' => $globalMetaToken,
                 'services.whatsapp.business.phone_id' => $globalMetaPhoneId,
+                'services.whatsapp.business.waba_id' => $globalMetaWabaId,
             ]);
             $resolver->applyWahaConfig($resolver->resolveWahaConfig());
 

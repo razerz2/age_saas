@@ -2,78 +2,95 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\Platform\Tenant;
 use Closure;
 use Illuminate\Http\Request;
-use App\Models\Platform\Tenant;
-use Illuminate\Support\Facades\Config;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 
 class PersistTenantInSession
 {
     public function handle(Request $request, Closure $next)
     {
-        Log::info("📌 PersistTenantInSession iniciado", [
-            'session_slug' => session('tenant_slug'),
-            'current_tenant' => Tenant::current()?->id
-        ]);
+        $tenant = $this->resolveTenant($request);
 
-        // Verifica se o tenant já está ativo
-        if (Tenant::current()) {
-            Log::info("➡️ Tenant já ativo, seguindo.");
-            return $next($request);
-        }
-
-        // Obtém o slug do tenant da sessão
-        $slug = session('tenant_slug');
-
-        // Valida o slug
-        if (!is_string($slug) || empty($slug)) {
-            Log::warning("⚠️ Session tenant_slug inválido. Removendo.", [
-                'slug' => $slug
-            ]);
-            session()->forget('tenant_slug');
-            return $next($request);
-        }
-
-        // Busca o tenant pelo slug
-        $tenant = Tenant::where('subdomain', $slug)->first();
-
-        // Se encontrar o tenant, ativa e configura o banco de dados
         if ($tenant) {
-            Log::info("🔁 Reativando tenant a partir da sessão", [
-                'uuid' => $tenant->id,
-                'slug' => $tenant->subdomain
-            ]);
-            $tenant->makeCurrent();
+            $currentTenant = Tenant::current();
 
-            // Configura a conexão com o banco de dados do tenant
-            $this->configureTenantDatabaseConnection($tenant);
-        } else {
-            Log::warning("⚠️ slug salvo na sessão não existe mais", ['slug' => $slug]);
-            session()->forget('tenant_slug');
+            if (! $currentTenant || (string) $currentTenant->id !== (string) $tenant->id) {
+                $tenant->makeCurrent();
+            }
+
+            $this->setSessionSlug($request, $tenant->subdomain);
         }
 
         return $next($request);
     }
 
-    // Método responsável por configurar a conexão com o banco do tenant
-    protected function configureTenantDatabaseConnection(Tenant $tenant)
+    protected function resolveTenant(Request $request): ?Tenant
     {
-        Log::info("🔧 Conexão de banco de dados do tenant configurada", [
-            'host' => $tenant->db_host,
-            'database' => $tenant->db_name,
-            'username' => $tenant->db_username
-        ]);
+        $routeSlug = $this->extractSlugFromRequest($request);
+        if ($routeSlug !== null) {
+            $tenantFromRoute = Tenant::where('subdomain', $routeSlug)->first();
+            if ($tenantFromRoute) {
+                return $tenantFromRoute;
+            }
+        }
 
-        // Configura dinamicamente os detalhes do banco de dados
-        Config::set('database.connections.tenant.host', $tenant->db_host);
-        Config::set('database.connections.tenant.database', $tenant->db_name);
-        Config::set('database.connections.tenant.username', $tenant->db_username);
-        Config::set('database.connections.tenant.password', $tenant->db_password); // Adiciona a senha do banco
+        $currentTenant = Tenant::current();
+        if ($currentTenant instanceof Tenant) {
+            return $currentTenant;
+        }
 
-        // Recarrega a conexão do banco de dados com as novas configurações
-        DB::purge('tenant');  // Limpa a conexão existente
-        DB::reconnect('tenant'); // Reconnecta com as novas configurações
+        $sessionSlug = $this->getSessionSlug($request);
+        if ($sessionSlug !== null) {
+            $tenantFromSession = Tenant::where('subdomain', $sessionSlug)->first();
+            if ($tenantFromSession) {
+                return $tenantFromSession;
+            }
+
+            if ($request->hasSession()) {
+                $request->session()->forget('tenant_slug');
+            }
+        }
+
+        return null;
+    }
+
+    protected function extractSlugFromRequest(Request $request): ?string
+    {
+        $slug = $request->route('slug');
+        if (is_string($slug) && $slug !== '') {
+            return $slug;
+        }
+
+        $segment1 = strtolower((string) $request->segment(1));
+        if (! in_array($segment1, ['workspace', 'customer', 't'], true)) {
+            return null;
+        }
+
+        $segment2 = $request->segment(2);
+
+        return is_string($segment2) && $segment2 !== '' ? $segment2 : null;
+    }
+
+    protected function getSessionSlug(Request $request): ?string
+    {
+        if (! $request->hasSession()) {
+            return null;
+        }
+
+        $slug = $request->session()->get('tenant_slug');
+
+        return is_string($slug) && $slug !== '' ? $slug : null;
+    }
+
+    protected function setSessionSlug(Request $request, string $slug): void
+    {
+        if (! $request->hasSession()) {
+            return;
+        }
+
+        if ($request->session()->get('tenant_slug') !== $slug) {
+            $request->session()->put('tenant_slug', $slug);
+        }
     }
 }

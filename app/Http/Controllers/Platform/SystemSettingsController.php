@@ -156,9 +156,8 @@ class SystemSettingsController extends Controller
                 set_sysconfig($field, $request->$field);
             }
         }
-
-        // Atualiza o .env
-        updateEnv($request->only($fields));
+        // Persistencia administrativa fica no banco (SystemSetting).
+        // Evita restart do servidor local por escrita no .env durante uso do painel.
 
         return back()->with('success', 'IntegraÃ§Ãµes e configuraÃ§Ãµes de e-mail atualizadas com sucesso.');
     }
@@ -766,7 +765,7 @@ class SystemSettingsController extends Controller
     {
         $serviceKey = $this->normalizeService($service);
         if ($serviceKey === 'waha') {
-            $this->applyPlatformWahaConfig();
+            $this->applyPlatformWahaConfig($request);
             $provider = new WahaProvider();
             $result = $provider->testSession();
 
@@ -887,7 +886,7 @@ class SystemSettingsController extends Controller
             ]);
         }
 
-        $this->applyPlatformWahaConfig();
+        $this->applyPlatformWahaConfig($request);
         $provider = new WahaProvider();
         $sessionCheck = $provider->testSession();
         if (($sessionCheck['status'] ?? 'ERROR') !== 'OK') {
@@ -932,11 +931,61 @@ class SystemSettingsController extends Controller
             ]);
         }
     }
-
-    private function applyPlatformWahaConfig(): void
+    private function applyPlatformWahaConfig(?Request $request = null): void
     {
         $resolver = new ProviderConfigResolver();
-        $resolver->applyWahaConfig($resolver->resolveWahaConfig());
+        $resolvedConfig = $resolver->resolveWahaConfig();
+        $overrides = $this->extractWahaRuntimeOverrides($request);
+
+        $runtimeConfig = array_merge($resolvedConfig, $overrides);
+        $resolver->applyWahaConfig($runtimeConfig);
+
+        Log::info('WAHA runtime config applied for platform test', [
+            'source' => empty($overrides)
+                ? ($resolvedConfig['source'] ?? 'global')
+                : 'request_overrides',
+            'base_url' => $runtimeConfig['base_url'] ?? null,
+            'session' => $runtimeConfig['session'] ?? null,
+            'api_key_hint' => WahaClient::maskApiKey((string) ($runtimeConfig['api_key'] ?? '')),
+        ]);
+    }
+
+    private function extractWahaRuntimeOverrides(?Request $request = null): array
+    {
+        if (!$request) {
+            return [];
+        }
+
+        $baseUrl = $this->extractWahaValue($request, ['WAHA_BASE_URL', 'waha_base_url', 'base_url']);
+        $apiKey = $this->extractWahaValue($request, ['WAHA_API_KEY', 'waha_api_key', 'api_key']);
+        $session = $this->extractWahaValue($request, ['WAHA_SESSION', 'waha_session', 'session']);
+
+        $overrides = [];
+        if ($baseUrl !== '') {
+            $overrides['base_url'] = rtrim($baseUrl, '/');
+        }
+
+        if ($apiKey !== '') {
+            $overrides['api_key'] = $apiKey;
+        }
+
+        if ($session !== '') {
+            $overrides['session'] = $session;
+        }
+
+        return $overrides;
+    }
+
+    private function extractWahaValue(Request $request, array $keys): string
+    {
+        foreach ($keys as $key) {
+            $value = trim((string) $request->input($key, ''));
+            if ($value !== '') {
+                return $value;
+            }
+        }
+
+        return '';
     }
 
     private function normalizeService(string $service): string
@@ -957,3 +1006,4 @@ class SystemSettingsController extends Controller
         return $aliases[$normalized] ?? $normalized;
     }
 }
+

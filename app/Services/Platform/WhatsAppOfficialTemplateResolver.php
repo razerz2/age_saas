@@ -35,6 +35,7 @@ class WhatsAppOfficialTemplateResolver
                     $template
                     && (string) $template->provider === WhatsAppOfficialTemplate::PROVIDER
                     && (string) $template->status === WhatsAppOfficialTemplate::STATUS_APPROVED
+                    && $template->tenant_id === null
                     && $this->keysAreEquivalent((string) $template->key, $canonicalKey)
                 ) {
                     return $template;
@@ -49,6 +50,7 @@ class WhatsAppOfficialTemplateResolver
 
         return WhatsAppOfficialTemplate::query()
             ->officialProvider()
+            ->forPlatformBaseline()
             ->whereIn('key', $keyCandidates)
             ->approved()
             ->orderByDesc('version')
@@ -139,4 +141,3 @@ class WhatsAppOfficialTemplateResolver
         return trim($normalized, '_');
     }
 }
-

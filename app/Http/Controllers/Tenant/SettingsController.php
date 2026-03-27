@@ -9,20 +9,23 @@ use App\Models\Tenant\Appointment;
 use App\Models\Platform\Tenant;
 use App\Models\Platform\Estado;
 use App\Models\Platform\Cidade;
+use App\Services\FeatureAccessService;
 use App\Services\Tenant\NotificationContextBuilder;
 use App\Services\Tenant\NotificationTemplateService;
 use App\Services\Tenant\TemplateRenderer;
+use App\Services\Tenant\WhatsAppBotConfigService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 
 class SettingsController extends Controller
 {
     private const BRAZIL_COUNTRY_ID = 31;
 
     /**
-     * Exibe a página de configurações
+     * Exibe a pÃ¡gina de configuraÃ§Ãµes
      */
     public function index(Request $request)
     {
@@ -54,17 +57,17 @@ class SettingsController extends Controller
             'appointments.waitlist.allow_when_confirmed' => tenant_setting_bool('appointments.waitlist.allow_when_confirmed', true),
             'appointments.waitlist.max_per_slot' => tenant_setting_nullable_int('appointments.waitlist.max_per_slot', null),
             
-            // Calendário
+            // CalendÃ¡rio
             'calendar.default_start_time' => TenantSetting::get('calendar.default_start_time', '08:00'),
             'calendar.default_end_time' => TenantSetting::get('calendar.default_end_time', '18:00'),
             'calendar.default_weekdays' => TenantSetting::get('calendar.default_weekdays', '1,2,3,4,5'), // Segunda a Sexta
             'calendar.show_weekends' => TenantSetting::isEnabled('calendar.show_weekends'),
             
-            // Notificações
-            // Verifica explicitamente se o valor é 'true' para garantir que desabilitados retornem false
+            // NotificaÃ§Ãµes
+            // Verifica explicitamente se o valor Ã© 'true' para garantir que desabilitados retornem false
             'notifications.appointments.enabled' => TenantSetting::get('notifications.appointments.enabled') === 'true',
             'notifications.form_responses.enabled' => TenantSetting::get('notifications.form_responses.enabled') === 'true',
-            // Para notificações aos pacientes, verifica explicitamente se é 'true' (opt-in)
+            // Para notificaÃ§Ãµes aos pacientes, verifica explicitamente se Ã© 'true' (opt-in)
             'notifications.send_email_to_patients' => TenantSetting::get('notifications.send_email_to_patients') === 'true',
             'notifications.send_whatsapp_to_patients' => TenantSetting::get('notifications.send_whatsapp_to_patients') === 'true',
             
@@ -82,6 +85,7 @@ class SettingsController extends Controller
             'WHATSAPP_PROVIDER' => TenantSetting::get('whatsapp.provider', 'whatsapp_business'),
             'META_ACCESS_TOKEN' => TenantSetting::get('whatsapp.meta.access_token', ''),
             'META_PHONE_NUMBER_ID' => TenantSetting::get('whatsapp.meta.phone_number_id', ''),
+            'META_WABA_ID' => TenantSetting::get('whatsapp.meta.waba_id', ''),
             'ZAPI_API_URL' => TenantSetting::get('whatsapp.zapi.api_url', 'https://api.z-api.io'),
             'ZAPI_TOKEN' => TenantSetting::get('whatsapp.zapi.token', ''),
             'ZAPI_CLIENT_TOKEN' => TenantSetting::get('whatsapp.zapi.client_token', ''),
@@ -89,8 +93,28 @@ class SettingsController extends Controller
             'WAHA_BASE_URL' => TenantSetting::get('whatsapp.waha.base_url', ''),
             'WAHA_API_KEY' => TenantSetting::get('whatsapp.waha.api_key', ''),
             'WAHA_SESSION' => TenantSetting::get('whatsapp.waha.session', 'default'),
+
+            // Bot de WhatsApp
+            'whatsapp_bot.enabled' => TenantSetting::get('whatsapp_bot.enabled', 'false') === 'true',
+            'whatsapp_bot.provider_mode' => TenantSetting::get('whatsapp_bot.provider_mode', WhatsAppBotConfigService::MODE_SHARED_WITH_NOTIFICATIONS),
+            'whatsapp_bot.provider' => TenantSetting::get('whatsapp_bot.provider', 'whatsapp_business'),
+            'whatsapp_bot.welcome_message' => TenantSetting::get('whatsapp_bot.welcome_message', ''),
+            'whatsapp_bot.disabled_message' => TenantSetting::get('whatsapp_bot.disabled_message', ''),
+            'whatsapp_bot.allow_schedule' => TenantSetting::get('whatsapp_bot.allow_schedule', 'false') === 'true',
+            'whatsapp_bot.allow_view_appointments' => TenantSetting::get('whatsapp_bot.allow_view_appointments', 'false') === 'true',
+            'whatsapp_bot.allow_cancel_appointments' => TenantSetting::get('whatsapp_bot.allow_cancel_appointments', 'false') === 'true',
+            'whatsapp_bot.META_ACCESS_TOKEN' => TenantSetting::get('whatsapp_bot.meta.access_token', ''),
+            'whatsapp_bot.META_PHONE_NUMBER_ID' => TenantSetting::get('whatsapp_bot.meta.phone_number_id', ''),
+            'whatsapp_bot.META_WABA_ID' => TenantSetting::get('whatsapp_bot.meta.waba_id', ''),
+            'whatsapp_bot.ZAPI_API_URL' => TenantSetting::get('whatsapp_bot.zapi.api_url', 'https://api.z-api.io'),
+            'whatsapp_bot.ZAPI_TOKEN' => TenantSetting::get('whatsapp_bot.zapi.token', ''),
+            'whatsapp_bot.ZAPI_CLIENT_TOKEN' => TenantSetting::get('whatsapp_bot.zapi.client_token', ''),
+            'whatsapp_bot.ZAPI_INSTANCE_ID' => TenantSetting::get('whatsapp_bot.zapi.instance_id', ''),
+            'whatsapp_bot.WAHA_BASE_URL' => TenantSetting::get('whatsapp_bot.waha.base_url', ''),
+            'whatsapp_bot.WAHA_API_KEY' => TenantSetting::get('whatsapp_bot.waha.api_key', ''),
+            'whatsapp_bot.WAHA_SESSION' => TenantSetting::get('whatsapp_bot.waha.session', 'default'),
             
-            // Integrações
+            // IntegraÃ§Ãµes
             'integrations.google_calendar.enabled' => TenantSetting::isEnabled('integrations.google_calendar.enabled'),
             'integrations.google_calendar.auto_sync' => TenantSetting::isEnabled('integrations.google_calendar.auto_sync'),
             'integrations.apple_calendar.enabled' => TenantSetting::isEnabled('integrations.apple_calendar.enabled'),
@@ -102,7 +126,7 @@ class SettingsController extends Controller
             'professional.label_plural' => TenantSetting::get('professional.label_plural', ''),
             'professional.registration_label' => TenantSetting::get('professional.registration_label', ''),
             
-            // Aparência
+            // AparÃªncia
             'appearance.logo' => $appearanceLogoLight,
             'appearance.logo_mini' => $appearanceLogoMiniLight,
             'appearance.logo_light' => $appearanceLogoLight,
@@ -112,14 +136,14 @@ class SettingsController extends Controller
             'appearance.favicon' => $appearanceFavicon,
         ];
 
-        // Buscar integrações ativas
+        // Buscar integraÃ§Ãµes ativas
         $integrations = Integrations::where('is_enabled', true)->get();
         
-        // Verificar se Google Calendar está cadastrado e configurado
+        // Verificar se Google Calendar estÃ¡ cadastrado e configurado
         $googleCalendarIntegration = Integrations::where('key', 'google_calendar')->first();
         $appleCalendarIntegration = Integrations::where('key', 'apple_calendar')->first();
         
-        // Considera válida se existe, está habilitada e tem config não vazio
+        // Considera vÃ¡lida se existe, estÃ¡ habilitada e tem config nÃ£o vazio
         $hasGoogleCalendarIntegration = false;
         
         if ($googleCalendarIntegration) {
@@ -138,7 +162,7 @@ class SettingsController extends Controller
             $hasGoogleCalendarIntegration = $googleCalendarIntegration->is_enabled && $hasConfig;
         }
 
-        // Considera válida se existe, está habilitada e tem config não vazio
+        // Considera vÃ¡lida se existe, estÃ¡ habilitada e tem config nÃ£o vazio
         $hasAppleCalendarIntegration = false;
 
         if ($appleCalendarIntegration) {
@@ -157,7 +181,7 @@ class SettingsController extends Controller
             $hasAppleCalendarIntegration = $appleCalendarIntegration->is_enabled && $hasConfig;
         }
 
-        // Obter tenant atual para gerar o link de agendamento público
+        // Obter tenant atual para gerar o link de agendamento pÃºblico
         $currentTenant = Tenant::current();
         $publicBookingUrl = null;
         
@@ -165,8 +189,17 @@ class SettingsController extends Controller
             $publicBookingUrl = url('/customer/' . $currentTenant->subdomain . '/agendamento/identificar');
         }
 
+        $botConfigService = app(WhatsAppBotConfigService::class);
         $editor = $this->buildEditorViewData($currentTenant, $request);
         $localizacao = $currentTenant ? $currentTenant->localizacao : null;
+        $showOfficialTemplatesTab = $this->tenantUsesOwnOfficialWhatsApp($settings);
+        $showWhatsAppBotTab = $this->hasWhatsAppBotFeature($currentTenant);
+        $whatsAppBotEffectiveProvider = $botConfigService->resolveEffectiveProviderConfig();
+
+        $initialTab = (string) $request->get('tab', 'clinica');
+        if ($initialTab === 'bot-whatsapp' && !$showWhatsAppBotTab) {
+            $initialTab = 'clinica';
+        }
 
         return view('tenant.settings.index', compact(
             'settings', 
@@ -178,7 +211,11 @@ class SettingsController extends Controller
             'publicBookingUrl',
             'currentTenant',
             'localizacao',
-            'editor'
+            'editor',
+            'showOfficialTemplatesTab',
+            'showWhatsAppBotTab',
+            'whatsAppBotEffectiveProvider',
+            'initialTab'
         ));
     }
 
@@ -275,7 +312,7 @@ class SettingsController extends Controller
         $templateService->restoreDefault((string) $tenant->id, $validated['channel'], $validated['key']);
 
         return redirect()->to($this->buildEditorSettingsUrl($validated['channel'], $validated['key']))
-            ->with('success', 'Template restaurado para o padrão.');
+            ->with('success', 'Template restaurado para o padrÃ£o.');
     }
 
     /**
@@ -351,7 +388,7 @@ class SettingsController extends Controller
     }
 
     /**
-     * Atualiza as informações de cadastro do tenant
+     * Atualiza as informaÃ§Ãµes de cadastro do tenant
      */
     public function updateRegistration(Request $request)
     {
@@ -390,16 +427,16 @@ class SettingsController extends Controller
         ]);
 
         return redirect()->to(route('tenant.settings.index', ['slug' => tenant()->subdomain]) . '#registration')
-            ->with('success', 'Informações de cadastro atualizadas com sucesso.');
+            ->with('success', 'InformaÃ§Ãµes de cadastro atualizadas com sucesso.');
     }
 
     /**
-     * Exibe a página dedicada do link de agendamento público
-     * Esta página não requer acesso ao módulo de configurações
+     * Exibe a pÃ¡gina dedicada do link de agendamento pÃºblico
+     * Esta pÃ¡gina nÃ£o requer acesso ao mÃ³dulo de configuraÃ§Ãµes
      */
     public function publicBookingLink()
     {
-        // Obter tenant atual para gerar o link de agendamento público
+        // Obter tenant atual para gerar o link de agendamento pÃºblico
         $currentTenant = Tenant::current();
         $publicBookingUrl = null;
         
@@ -411,7 +448,7 @@ class SettingsController extends Controller
     }
 
     /**
-     * Atualiza as configurações gerais
+     * Atualiza as configuraÃ§Ãµes gerais
      */
     public function updateGeneral(Request $request)
     {
@@ -428,11 +465,11 @@ class SettingsController extends Controller
         TenantSetting::set('language', $request->language);
 
         return redirect()->route('tenant.settings.index', ['slug' => tenant()->subdomain])
-            ->with('success', 'Configurações gerais atualizadas com sucesso.');
+            ->with('success', 'ConfiguraÃ§Ãµes gerais atualizadas com sucesso.');
     }
 
     /**
-     * Atualiza as configurações de agendamentos
+     * Atualiza as configuraÃ§Ãµes de agendamentos
      */
     public function updateAppointments(Request $request)
     {
@@ -498,11 +535,11 @@ class SettingsController extends Controller
         );
 
         return redirect()->route('tenant.settings.index', ['slug' => tenant()->subdomain])
-            ->with('success', 'Configurações de agendamentos atualizadas com sucesso.');
+            ->with('success', 'ConfiguraÃ§Ãµes de agendamentos atualizadas com sucesso.');
     }
 
     /**
-     * Atualiza as configurações de calendário
+     * Atualiza as configuraÃ§Ãµes de calendÃ¡rio
      */
     public function updateCalendar(Request $request)
     {
@@ -513,10 +550,10 @@ class SettingsController extends Controller
             'calendar_show_weekends' => 'boolean',
         ]);
 
-        // Valida se o horário de término é depois do início
+        // Valida se o horÃ¡rio de tÃ©rmino Ã© depois do inÃ­cio
         if (strtotime($request->calendar_default_end_time) <= strtotime($request->calendar_default_start_time)) {
             return redirect()->route('tenant.settings.index', ['slug' => tenant()->subdomain])
-                ->with('error', 'O horário de término deve ser posterior ao horário de início.');
+                ->with('error', 'O horÃ¡rio de tÃ©rmino deve ser posterior ao horÃ¡rio de inÃ­cio.');
         }
 
         TenantSetting::set('calendar.default_start_time', $request->calendar_default_start_time);
@@ -530,11 +567,11 @@ class SettingsController extends Controller
         }
 
         return redirect()->route('tenant.settings.index', ['slug' => tenant()->subdomain])
-            ->with('success', 'Configurações de calendário atualizadas com sucesso.');
+            ->with('success', 'ConfiguraÃ§Ãµes de calendÃ¡rio atualizadas com sucesso.');
     }
 
     /**
-     * Atualiza as configurações de notificações
+     * Atualiza as configuraÃ§Ãµes de notificaÃ§Ãµes
      */
     public function updateNotifications(Request $request)
     {
@@ -556,6 +593,7 @@ class SettingsController extends Controller
             'whatsapp_provider' => 'nullable|in:whatsapp_business,zapi,waha',
             'META_ACCESS_TOKEN' => 'nullable|string',
             'META_PHONE_NUMBER_ID' => 'nullable|string',
+            'META_WABA_ID' => 'nullable|string',
             'ZAPI_API_URL' => 'nullable|url',
             'ZAPI_TOKEN' => 'nullable|string',
             'ZAPI_CLIENT_TOKEN' => 'nullable|string',
@@ -582,6 +620,9 @@ class SettingsController extends Controller
                 }
                 if (!$request->filled('META_PHONE_NUMBER_ID')) {
                     $validator->errors()->add('META_PHONE_NUMBER_ID', 'O Phone Number ID e obrigatorio para o provedor Meta.');
+                }
+                if (!$request->filled('META_WABA_ID')) {
+                    $validator->errors()->add('META_WABA_ID', 'O WABA ID e obrigatorio para o provedor Meta.');
                 }
             }
 
@@ -643,6 +684,7 @@ class SettingsController extends Controller
             TenantSetting::set('whatsapp.provider', $provider);
             TenantSetting::set('whatsapp.meta.access_token', $validated['META_ACCESS_TOKEN'] ?? '');
             TenantSetting::set('whatsapp.meta.phone_number_id', $validated['META_PHONE_NUMBER_ID'] ?? '');
+            TenantSetting::set('whatsapp.meta.waba_id', $validated['META_WABA_ID'] ?? '');
             TenantSetting::set('whatsapp.zapi.api_url', $validated['ZAPI_API_URL'] ?? '');
             TenantSetting::set('whatsapp.zapi.token', $validated['ZAPI_TOKEN'] ?? '');
             TenantSetting::set('whatsapp.zapi.client_token', $validated['ZAPI_CLIENT_TOKEN'] ?? '');
@@ -654,6 +696,7 @@ class SettingsController extends Controller
             TenantSetting::set('whatsapp.provider', '');
             TenantSetting::set('whatsapp.meta.access_token', '');
             TenantSetting::set('whatsapp.meta.phone_number_id', '');
+            TenantSetting::set('whatsapp.meta.waba_id', '');
             TenantSetting::set('whatsapp.zapi.api_url', '');
             TenantSetting::set('whatsapp.zapi.token', '');
             TenantSetting::set('whatsapp.zapi.client_token', '');
@@ -664,11 +707,145 @@ class SettingsController extends Controller
         }
 
         return redirect()->route('tenant.settings.index', ['slug' => tenant()->subdomain])
-            ->with('success', 'Configurações de notificações atualizadas com sucesso.');
+            ->with('success', 'ConfiguraÃ§Ãµes de notificaÃ§Ãµes atualizadas com sucesso.');
     }
 
     /**
-     * Atualiza as configurações de integrações
+     * Atualiza as configuracoes iniciais do Bot de WhatsApp.
+     */
+    public function updateWhatsAppBot(Request $request)
+    {
+        $tenant = Tenant::current();
+        if (!$this->hasWhatsAppBotFeature($tenant)) {
+            abort(403, "A funcionalidade 'Bot de WhatsApp' nao esta disponivel no seu plano.");
+        }
+
+        $validator = Validator::make($request->all(), [
+            'whatsapp_bot_enabled' => 'nullable|boolean',
+            'whatsapp_bot_provider_mode' => ['required', 'string', Rule::in([
+                WhatsAppBotConfigService::MODE_SHARED_WITH_NOTIFICATIONS,
+                WhatsAppBotConfigService::MODE_DEDICATED,
+            ])],
+            'whatsapp_bot_provider' => ['nullable', 'string', Rule::in(WhatsAppBotConfigService::SUPPORTED_PROVIDERS)],
+            'whatsapp_bot_welcome_message' => 'nullable|string|max:2000',
+            'whatsapp_bot_disabled_message' => 'nullable|string|max:500',
+            'whatsapp_bot_allow_schedule' => 'nullable|boolean',
+            'whatsapp_bot_allow_view_appointments' => 'nullable|boolean',
+            'whatsapp_bot_allow_cancel_appointments' => 'nullable|boolean',
+            'bot_meta_access_token' => 'nullable|string',
+            'bot_meta_phone_number_id' => 'nullable|string',
+            'bot_meta_waba_id' => 'nullable|string',
+            'bot_zapi_api_url' => 'nullable|url',
+            'bot_zapi_token' => 'nullable|string',
+            'bot_zapi_client_token' => 'nullable|string',
+            'bot_zapi_instance_id' => 'nullable|string',
+            'bot_waha_base_url' => 'nullable|url',
+            'bot_waha_api_key' => 'nullable|string',
+            'bot_waha_session' => 'nullable|string',
+        ]);
+
+        $validator->after(function ($validator) use ($request) {
+            $botEnabled = $request->has('whatsapp_bot_enabled');
+            if ($botEnabled && !$request->filled('whatsapp_bot_welcome_message')) {
+                $validator->errors()->add(
+                    'whatsapp_bot_welcome_message',
+                    'A mensagem inicial e obrigatoria quando o bot estiver habilitado.'
+                );
+            }
+
+            $providerMode = (string) $request->input('whatsapp_bot_provider_mode');
+            if ($providerMode !== WhatsAppBotConfigService::MODE_DEDICATED) {
+                return;
+            }
+
+            $provider = (string) $request->input('whatsapp_bot_provider');
+            if (!in_array($provider, WhatsAppBotConfigService::SUPPORTED_PROVIDERS, true)) {
+                $validator->errors()->add('whatsapp_bot_provider', 'Selecione um provedor de WhatsApp valido para o bot.');
+                return;
+            }
+
+            if ($provider === 'whatsapp_business') {
+                if (!$request->filled('bot_meta_access_token')) {
+                    $validator->errors()->add('bot_meta_access_token', 'O Access Token e obrigatorio para o provedor Meta.');
+                }
+                if (!$request->filled('bot_meta_phone_number_id')) {
+                    $validator->errors()->add('bot_meta_phone_number_id', 'O Phone Number ID e obrigatorio para o provedor Meta.');
+                }
+                if (!$request->filled('bot_meta_waba_id')) {
+                    $validator->errors()->add('bot_meta_waba_id', 'O WABA ID e obrigatorio para o provedor Meta.');
+                }
+            }
+
+            if ($provider === 'zapi') {
+                if (!$request->filled('bot_zapi_api_url')) {
+                    $validator->errors()->add('bot_zapi_api_url', 'A API URL e obrigatoria para o provedor Z-API.');
+                }
+                if (!$request->filled('bot_zapi_token')) {
+                    $validator->errors()->add('bot_zapi_token', 'O Token e obrigatorio para o provedor Z-API.');
+                }
+                if (!$request->filled('bot_zapi_client_token')) {
+                    $validator->errors()->add('bot_zapi_client_token', 'O Client Token e obrigatorio para o provedor Z-API.');
+                }
+                if (!$request->filled('bot_zapi_instance_id')) {
+                    $validator->errors()->add('bot_zapi_instance_id', 'O Instance ID e obrigatorio para o provedor Z-API.');
+                }
+            }
+
+            if ($provider === 'waha') {
+                if (!$request->filled('bot_waha_base_url')) {
+                    $validator->errors()->add('bot_waha_base_url', 'A Base URL e obrigatoria para o provedor WAHA.');
+                }
+                if (!$request->filled('bot_waha_api_key')) {
+                    $validator->errors()->add('bot_waha_api_key', 'A API Key e obrigatoria para o provedor WAHA.');
+                }
+                if (!$request->filled('bot_waha_session')) {
+                    $validator->errors()->add('bot_waha_session', 'O nome da sessao e obrigatorio para o provedor WAHA.');
+                }
+            }
+        });
+
+        $validated = $validator->validate();
+
+        TenantSetting::set('whatsapp_bot.enabled', $request->has('whatsapp_bot_enabled') ? 'true' : 'false');
+        TenantSetting::set('whatsapp_bot.provider_mode', $validated['whatsapp_bot_provider_mode']);
+        TenantSetting::set('whatsapp_bot.welcome_message', (string) ($validated['whatsapp_bot_welcome_message'] ?? ''));
+        TenantSetting::set('whatsapp_bot.disabled_message', (string) ($validated['whatsapp_bot_disabled_message'] ?? ''));
+        TenantSetting::set('whatsapp_bot.allow_schedule', $request->has('whatsapp_bot_allow_schedule') ? 'true' : 'false');
+        TenantSetting::set('whatsapp_bot.allow_view_appointments', $request->has('whatsapp_bot_allow_view_appointments') ? 'true' : 'false');
+        TenantSetting::set('whatsapp_bot.allow_cancel_appointments', $request->has('whatsapp_bot_allow_cancel_appointments') ? 'true' : 'false');
+
+        if ($validated['whatsapp_bot_provider_mode'] === WhatsAppBotConfigService::MODE_DEDICATED) {
+            $provider = (string) $validated['whatsapp_bot_provider'];
+            TenantSetting::set('whatsapp_bot.provider', $provider);
+
+            if ($provider === 'whatsapp_business') {
+                TenantSetting::set('whatsapp_bot.meta.access_token', (string) ($validated['bot_meta_access_token'] ?? ''));
+                TenantSetting::set('whatsapp_bot.meta.phone_number_id', (string) ($validated['bot_meta_phone_number_id'] ?? ''));
+                TenantSetting::set('whatsapp_bot.meta.waba_id', (string) ($validated['bot_meta_waba_id'] ?? ''));
+            }
+
+            if ($provider === 'zapi') {
+                TenantSetting::set('whatsapp_bot.zapi.api_url', (string) ($validated['bot_zapi_api_url'] ?? ''));
+                TenantSetting::set('whatsapp_bot.zapi.token', (string) ($validated['bot_zapi_token'] ?? ''));
+                TenantSetting::set('whatsapp_bot.zapi.client_token', (string) ($validated['bot_zapi_client_token'] ?? ''));
+                TenantSetting::set('whatsapp_bot.zapi.instance_id', (string) ($validated['bot_zapi_instance_id'] ?? ''));
+            }
+
+            if ($provider === 'waha') {
+                TenantSetting::set('whatsapp_bot.waha.base_url', (string) ($validated['bot_waha_base_url'] ?? ''));
+                TenantSetting::set('whatsapp_bot.waha.api_key', (string) ($validated['bot_waha_api_key'] ?? ''));
+                TenantSetting::set('whatsapp_bot.waha.session', (string) ($validated['bot_waha_session'] ?? 'default'));
+            }
+        }
+
+        return redirect()->route('tenant.settings.index', [
+            'slug' => tenant()->subdomain,
+            'tab' => 'bot-whatsapp',
+        ])->with('success', 'Configuracoes do Bot de WhatsApp atualizadas com sucesso.');
+    }
+
+    /**
+     * Atualiza as configuracoes de integracoes
      */
     public function updateIntegrations(Request $request)
     {
@@ -679,14 +856,14 @@ class SettingsController extends Controller
             'integrations_apple_calendar_auto_sync' => 'boolean',
         ]);
 
-        // Verificar se Google Calendar está cadastrado antes de permitir habilitar
+        // Verificar se Google Calendar estÃ¡ cadastrado antes de permitir habilitar
         $googleCalendarIntegration = Integrations::where('key', 'google_calendar')->first();
         $appleCalendarIntegration = Integrations::where('key', 'apple_calendar')->first();
 
         if ($request->has('integrations_google_calendar_enabled')) {
             if (!$googleCalendarIntegration || !$googleCalendarIntegration->is_enabled || empty($googleCalendarIntegration->config)) {
                 return redirect()->route('tenant.settings.index', ['slug' => tenant()->subdomain])
-                    ->with('error', 'Não é possível habilitar o Google Calendar. Cadastre primeiro a integração em Integrações com a chave "google_calendar" e configure a API.');
+                    ->with('error', 'NÃ£o Ã© possÃ­vel habilitar o Google Calendar. Cadastre primeiro a integraÃ§Ã£o em IntegraÃ§Ãµes com a chave "google_calendar" e configure a API.');
             }
 
             TenantSetting::enable('integrations.google_calendar.enabled');
@@ -704,7 +881,7 @@ class SettingsController extends Controller
         if ($request->has('integrations_apple_calendar_enabled')) {
             if (!$appleCalendarIntegration || !$appleCalendarIntegration->is_enabled || empty($appleCalendarIntegration->config)) {
                 return redirect()->route('tenant.settings.index', ['slug' => tenant()->subdomain])
-                    ->with('error', 'Não é possível habilitar o Apple Calendar. Cadastre primeiro a integração em Integrações com a chave "apple_calendar" e configure a API.');
+                    ->with('error', 'NÃ£o Ã© possÃ­vel habilitar o Apple Calendar. Cadastre primeiro a integraÃ§Ã£o em IntegraÃ§Ãµes com a chave "apple_calendar" e configure a API.');
             }
 
             TenantSetting::enable('integrations.apple_calendar.enabled');
@@ -720,11 +897,11 @@ class SettingsController extends Controller
         }
 
         return redirect()->route('tenant.settings.index', ['slug' => tenant()->subdomain])
-            ->with('success', 'Configurações de integrações atualizadas com sucesso.');
+            ->with('success', 'ConfiguraÃ§Ãµes de integraÃ§Ãµes atualizadas com sucesso.');
     }
 
     /**
-     * Atualiza as configurações de módulos padrão por perfil de usuário
+     * Atualiza as configuraÃ§Ãµes de mÃ³dulos padrÃ£o por perfil de usuÃ¡rio
      */
     public function updateUserDefaults(Request $request)
     {
@@ -736,29 +913,29 @@ class SettingsController extends Controller
             'user_defaults.modules_doctor.*' => 'string',
         ]);
 
-        // Salvar módulos padrão para usuário comum
-        // O formulário envia como user_defaults[modules_common_user][], então acessamos via dot notation
+        // Salvar mÃ³dulos padrÃ£o para usuÃ¡rio comum
+        // O formulÃ¡rio envia como user_defaults[modules_common_user][], entÃ£o acessamos via dot notation
         $commonUserModules = $request->input('user_defaults.modules_common_user', []);
-        // Se não vier nada, garantir que seja array vazio
+        // Se nÃ£o vier nada, garantir que seja array vazio
         if (empty($commonUserModules)) {
             $commonUserModules = [];
         }
         TenantSetting::set('user_defaults.modules_common_user', json_encode($commonUserModules));
 
-        // Salvar módulos padrão para médico
+        // Salvar mÃ³dulos padrÃ£o para mÃ©dico
         $doctorModules = $request->input('user_defaults.modules_doctor', []);
-        // Se não vier nada, garantir que seja array vazio
+        // Se nÃ£o vier nada, garantir que seja array vazio
         if (empty($doctorModules)) {
             $doctorModules = [];
         }
         TenantSetting::set('user_defaults.modules_doctor', json_encode($doctorModules));
 
         return redirect()->route('tenant.settings.index', ['slug' => tenant()->subdomain])
-            ->with('success', 'Configurações de usuários e permissões atualizadas com sucesso.');
+            ->with('success', 'ConfiguraÃ§Ãµes de usuÃ¡rios e permissÃµes atualizadas com sucesso.');
     }
 
     /**
-     * Atualiza as configurações de profissionais
+     * Atualiza as configuraÃ§Ãµes de profissionais
      */
     public function updateProfessionals(Request $request)
     {
@@ -769,30 +946,30 @@ class SettingsController extends Controller
             'professional_registration_label' => 'nullable|string|max:50',
         ]);
 
-        // Habilitar/desabilitar personalização
-        // Checkbox não marcado não é enviado no request, então verificamos explicitamente
+        // Habilitar/desabilitar personalizaÃ§Ã£o
+        // Checkbox nÃ£o marcado nÃ£o Ã© enviado no request, entÃ£o verificamos explicitamente
         if ($request->filled('professional_customization_enabled') || $request->has('professional_customization_enabled')) {
             TenantSetting::enable('professional.customization_enabled');
             
-            // Salvar rótulos globais quando personalização está habilitada
+            // Salvar rÃ³tulos globais quando personalizaÃ§Ã£o estÃ¡ habilitada
             TenantSetting::set('professional.label_singular', $request->professional_label_singular ?? '');
             TenantSetting::set('professional.label_plural', $request->professional_label_plural ?? '');
             TenantSetting::set('professional.registration_label', $request->professional_registration_label ?? '');
         } else {
             TenantSetting::disable('professional.customization_enabled');
             
-            // Limpar rótulos quando desabilitado
+            // Limpar rÃ³tulos quando desabilitado
             TenantSetting::set('professional.label_singular', '');
             TenantSetting::set('professional.label_plural', '');
             TenantSetting::set('professional.registration_label', '');
         }
 
         return redirect()->route('tenant.settings.index', ['slug' => tenant()->subdomain])
-            ->with('success', 'Configurações de profissionais atualizadas com sucesso.');
+            ->with('success', 'ConfiguraÃ§Ãµes de profissionais atualizadas com sucesso.');
     }
 
     /**
-     * Atualiza as configurações de aparência (logo e favicon)
+     * Atualiza as configuraÃ§Ãµes de aparÃªncia (logo e favicon)
      */
     public function updateAppearance(Request $request)
     {
@@ -809,12 +986,12 @@ class SettingsController extends Controller
             'remove_favicon' => 'nullable|boolean',
         ]);
 
-        // Obter tenant atual para criar diretório específico
+        // Obter tenant atual para criar diretÃ³rio especÃ­fico
         $currentTenant = Tenant::current();
         $tenantId = $currentTenant ? $currentTenant->id : 'default';
         $storagePath = 'tenant/' . $tenantId . '/branding';
         
-        // Garantir que o diretório existe
+        // Garantir que o diretÃ³rio existe
         if (!Storage::disk('public')->exists($storagePath)) {
             Storage::disk('public')->makeDirectory($storagePath, 0755, true);
         }
@@ -857,10 +1034,10 @@ class SettingsController extends Controller
         TenantSetting::set('appearance.logo', $logoLight ?: $logoDark ?: '');
         TenantSetting::set('appearance.logo_mini', $logoMiniLight ?: $logoMiniDark ?: '');
 
-        // Redirecionar para a página de configurações mantendo o hash na URL
+        // Redirecionar para a pÃ¡gina de configuraÃ§Ãµes mantendo o hash na URL
         $redirectUrl = route('tenant.settings.index', ['slug' => tenant()->subdomain]) . '#appearance';
         return redirect($redirectUrl)
-            ->with('success', 'Configurações de aparência atualizadas com sucesso.');
+            ->with('success', 'ConfiguraÃ§Ãµes de aparÃªncia atualizadas com sucesso.');
     }
 
     private function renderNotificationPreview(
@@ -1146,11 +1323,11 @@ class SettingsController extends Controller
     {
         return [
             'CLINIC' => [
-                ['key' => '{{clinic.name}}', 'description' => 'Nome da clínica'],
-                ['key' => '{{clinic.phone}}', 'description' => 'Telefone da clínica'],
-                ['key' => '{{clinic.email}}', 'description' => 'E-mail da clínica'],
-                ['key' => '{{clinic.address}}', 'description' => 'Endereço da clínica'],
-                ['key' => '{{clinic.slug}}', 'description' => 'Identificador da clínica'],
+                ['key' => '{{clinic.name}}', 'description' => 'Nome da clÃ­nica'],
+                ['key' => '{{clinic.phone}}', 'description' => 'Telefone da clÃ­nica'],
+                ['key' => '{{clinic.email}}', 'description' => 'E-mail da clÃ­nica'],
+                ['key' => '{{clinic.address}}', 'description' => 'EndereÃ§o da clÃ­nica'],
+                ['key' => '{{clinic.slug}}', 'description' => 'Identificador da clÃ­nica'],
             ],
             'PATIENT' => [
                 ['key' => '{{patient.name}}', 'description' => 'Nome do paciente'],
@@ -1158,8 +1335,8 @@ class SettingsController extends Controller
                 ['key' => '{{patient.email}}', 'description' => 'E-mail do paciente'],
             ],
             'DOCTOR / PROFESSIONAL' => [
-                ['key' => '{{doctor.name}}', 'description' => 'Nome do médico'],
-                ['key' => '{{doctor.specialty}}', 'description' => 'Especialidade do médico'],
+                ['key' => '{{doctor.name}}', 'description' => 'Nome do mÃ©dico'],
+                ['key' => '{{doctor.specialty}}', 'description' => 'Especialidade do mÃ©dico'],
                 ['key' => '{{professional.name}}', 'description' => 'Nome do profissional'],
                 ['key' => '{{professional.specialty}}', 'description' => 'Especialidade do profissional'],
             ],
@@ -1167,12 +1344,12 @@ class SettingsController extends Controller
                 ['key' => '{{appointment.date}}', 'description' => 'Data da consulta'],
                 ['key' => '{{appointment.time}}', 'description' => 'Hora da consulta'],
                 ['key' => '{{appointment.datetime}}', 'description' => 'Data e hora da consulta'],
-                ['key' => '{{appointment.starts_at}}', 'description' => 'Início da consulta'],
+                ['key' => '{{appointment.starts_at}}', 'description' => 'InÃ­cio da consulta'],
                 ['key' => '{{appointment.ends_at}}', 'description' => 'Fim da consulta'],
                 ['key' => '{{appointment.type}}', 'description' => 'Tipo de consulta'],
                 ['key' => '{{appointment.mode}}', 'description' => 'Modalidade da consulta'],
                 ['key' => '{{appointment.status}}', 'description' => 'Status da consulta'],
-                ['key' => '{{appointment.confirmation_expires_at}}', 'description' => 'Prazo de confirmação da consulta'],
+                ['key' => '{{appointment.confirmation_expires_at}}', 'description' => 'Prazo de confirmaÃ§Ã£o da consulta'],
             ],
             'LINKS' => [
                 ['key' => '{{links.appointment_confirm}}', 'description' => 'Link para confirmar consulta'],
@@ -1186,5 +1363,23 @@ class SettingsController extends Controller
             ],
         ];
     }
+
+    private function hasWhatsAppBotFeature(?Tenant $tenant = null): bool
+    {
+        return app(FeatureAccessService::class)
+            ->hasFeature(WhatsAppBotConfigService::FEATURE_NAME, $tenant ?? Tenant::current());
+    }
+
+    /**
+     * @param array<string, mixed> $settings
+     */
+    private function tenantUsesOwnOfficialWhatsApp(array $settings): bool
+    {
+        $driver = strtolower(trim((string) ($settings['whatsapp.driver'] ?? 'global')));
+        $provider = strtolower(trim((string) ($settings['WHATSAPP_PROVIDER'] ?? '')));
+
+        return $driver === 'tenancy' && in_array($provider, ['whatsapp_business', 'business'], true);
+    }
 }
+
 

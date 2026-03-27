@@ -61,6 +61,11 @@ class WahaClient
         return $this->session;
     }
 
+    public function getApiKeyHint(): string
+    {
+        return self::maskApiKey($this->apiKey);
+    }
+
     public function getSessionStatus(): array
     {
         if (!$this->isConfigured()) {
@@ -84,6 +89,10 @@ class WahaClient
             if (!$response->successful()) {
                 Log::warning('❌ WAHA session status request failed', [
                     'endpoint' => $endpoint,
+                    'base_url' => $this->baseUrl,
+                    'session' => $this->session,
+                    'auth_header' => 'X-Api-Key',
+                    'api_key_hint' => $this->getApiKeyHint(),
                     'status_code' => $response->status(),
                     'body' => self::summarizeBody($body),
                 ]);
@@ -98,6 +107,8 @@ class WahaClient
             Log::warning('⚠️ Falha ao consultar sessao WAHA', [
                 'base_url' => $this->baseUrl,
                 'session' => $this->session,
+                'auth_header' => 'X-Api-Key',
+                'api_key_hint' => $this->getApiKeyHint(),
                 'error' => $e->getMessage(),
             ]);
 
@@ -136,6 +147,10 @@ class WahaClient
             if (!$response->successful()) {
                 Log::warning('❌ WAHA sendText request failed', [
                     'endpoint' => $endpoint,
+                    'base_url' => $this->baseUrl,
+                    'session' => $this->session,
+                    'auth_header' => 'X-Api-Key',
+                    'api_key_hint' => $this->getApiKeyHint(),
                     'status_code' => $response->status(),
                     'body' => self::summarizeBody($body),
                 ]);
@@ -144,6 +159,10 @@ class WahaClient
             if (is_array($body) && isset($body['error'])) {
                 Log::warning('❌ WAHA sendText error response', [
                     'endpoint' => $endpoint,
+                    'base_url' => $this->baseUrl,
+                    'session' => $this->session,
+                    'auth_header' => 'X-Api-Key',
+                    'api_key_hint' => $this->getApiKeyHint(),
                     'status_code' => $response->status(),
                     'body' => self::summarizeBody($body),
                 ]);
@@ -158,6 +177,8 @@ class WahaClient
             Log::warning('⚠️ Falha ao enviar mensagem WAHA', [
                 'base_url' => $this->baseUrl,
                 'session' => $this->session,
+                'auth_header' => 'X-Api-Key',
+                'api_key_hint' => $this->getApiKeyHint(),
                 'error' => $e->getMessage(),
             ]);
 
@@ -203,6 +224,10 @@ class WahaClient
             if (!$response->successful()) {
                 Log::warning('❌ WAHA sendFile request failed', [
                     'endpoint' => $endpoint,
+                    'base_url' => $this->baseUrl,
+                    'session' => $this->session,
+                    'auth_header' => 'X-Api-Key',
+                    'api_key_hint' => $this->getApiKeyHint(),
                     'status_code' => $response->status(),
                     'body' => self::summarizeBody($body),
                 ]);
@@ -211,6 +236,10 @@ class WahaClient
             if (is_array($body) && isset($body['error'])) {
                 Log::warning('❌ WAHA sendFile error response', [
                     'endpoint' => $endpoint,
+                    'base_url' => $this->baseUrl,
+                    'session' => $this->session,
+                    'auth_header' => 'X-Api-Key',
+                    'api_key_hint' => $this->getApiKeyHint(),
                     'status_code' => $response->status(),
                     'body' => self::summarizeBody($body),
                 ]);
@@ -225,6 +254,8 @@ class WahaClient
             Log::warning('⚠️ Falha ao enviar arquivo WAHA', [
                 'base_url' => $this->baseUrl,
                 'session' => $this->session,
+                'auth_header' => 'X-Api-Key',
+                'api_key_hint' => $this->getApiKeyHint(),
                 'error' => $e->getMessage(),
             ]);
 
@@ -244,6 +275,20 @@ class WahaClient
                 'X-Api-Key' => $this->apiKey,
                 'Accept' => 'application/json',
             ]);
+    }
+
+    public static function maskApiKey(?string $apiKey): string
+    {
+        $value = trim((string) $apiKey);
+        if ($value === '') {
+            return '[empty]';
+        }
+
+        if (strlen($value) <= 8) {
+            return str_repeat('*', strlen($value));
+        }
+
+        return substr($value, 0, 4) . '...' . substr($value, -4);
     }
 
     private static function summarizeBody(mixed $body, int $limit = 800): string

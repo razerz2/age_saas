@@ -1378,6 +1378,34 @@
                 return input ? input.value : '';
             }
 
+            function getWahaRuntimeConfig() {
+                var baseUrlInput = document.querySelector('input[name="WAHA_BASE_URL"]');
+                var apiKeyInput = document.querySelector('input[name="WAHA_API_KEY"]');
+                var sessionInput = document.querySelector('input[name="WAHA_SESSION"]');
+
+                return {
+                    WAHA_BASE_URL: baseUrlInput ? baseUrlInput.value.trim() : '',
+                    WAHA_API_KEY: apiKeyInput ? apiKeyInput.value.trim() : '',
+                    WAHA_SESSION: sessionInput ? sessionInput.value.trim() : ''
+                };
+            }
+
+            function appendWahaRuntimeConfigToUrl(url) {
+                var runtimeConfig = getWahaRuntimeConfig();
+                var params = new URLSearchParams();
+
+                Object.keys(runtimeConfig).forEach(function (key) {
+                    if (runtimeConfig[key]) {
+                        params.append(key, runtimeConfig[key]);
+                    }
+                });
+
+                if (!params.toString()) {
+                    return url;
+                }
+
+                return url + (url.indexOf('?') >= 0 ? '&' : '?') + params.toString();
+            }
             function setupTestButton(buttonId, badgeId, messageId) {
                 var button = document.getElementById(buttonId);
                 if (!button) return;
@@ -1387,6 +1415,10 @@
 
                     var url = button.getAttribute('data-test-url');
                     if (!url) return;
+
+                    if (buttonId === 'btn-test-waha') {
+                        url = appendWahaRuntimeConfigToUrl(url);
+                    }
 
                     var badge = document.getElementById(badgeId);
                     var message = document.getElementById(messageId);
@@ -1611,6 +1643,7 @@
                         }
 
                         var csrfToken = getCsrfToken();
+                        var runtimeConfig = getWahaRuntimeConfig();
 
                         fetch(url, {
                             method: 'POST',
@@ -1623,7 +1656,10 @@
                             credentials: 'same-origin',
                             body: JSON.stringify({
                                 number: number,
-                                message: text
+                                message: text,
+                                WAHA_BASE_URL: runtimeConfig.WAHA_BASE_URL,
+                                WAHA_API_KEY: runtimeConfig.WAHA_API_KEY,
+                                WAHA_SESSION: runtimeConfig.WAHA_SESSION
                             })
                         })
                             .then(function (response) {

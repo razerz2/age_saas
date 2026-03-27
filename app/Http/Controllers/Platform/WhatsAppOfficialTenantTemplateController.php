@@ -38,6 +38,7 @@ class WhatsAppOfficialTenantTemplateController extends Controller
 
         $query = WhatsAppOfficialTemplate::query()
             ->officialProvider()
+            ->forPlatformBaseline()
             ->whereIn('key', $this->tenantEventKeys())
             ->orderBy('key')
             ->orderByDesc('version');
@@ -120,6 +121,7 @@ class WhatsAppOfficialTenantTemplateController extends Controller
 
         $versions = WhatsAppOfficialTemplate::query()
             ->officialProvider()
+            ->forPlatformBaseline()
             ->where('key', $whatsappOfficialTemplate->key)
             ->orderByDesc('version')
             ->get();
@@ -686,6 +688,7 @@ class WhatsAppOfficialTenantTemplateController extends Controller
         if (
             (string) $template->provider !== WhatsAppOfficialTemplate::PROVIDER
             || !in_array((string) $template->key, $this->tenantEventKeys(), true)
+            || $template->tenant_id !== null
         ) {
             abort(404);
         }
@@ -730,6 +733,7 @@ class WhatsAppOfficialTenantTemplateController extends Controller
     {
         return WhatsAppOfficialTemplate::query()
             ->officialProvider()
+            ->forPlatformBaseline()
             ->whereIn('key', $this->tenantEventKeys())
             ->select('language')
             ->distinct()
