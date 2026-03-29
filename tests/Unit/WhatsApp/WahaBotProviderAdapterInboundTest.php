@@ -27,6 +27,49 @@ it('normalizes waha canonical inbound payload', function () {
         ->and($inbound?->externalMessageId)->toBe('wamid.ABC123');
 });
 
+it('ignores internal senderAlt identifiers and keeps real contact phone from chatId', function () {
+    $adapter = app(WahaBotProviderAdapter::class);
+
+    $payload = [
+        'event' => 'message',
+        'payload' => [
+            'chatId' => '556793087866@c.us',
+            'from' => '556793087866@c.us',
+            'senderAlt' => '215084110503978:16@s.whatsapp.net',
+            'sender' => '215084110503978:16@s.whatsapp.net',
+            'body' => 'teste inbound',
+            'type' => 'chat',
+            'id' => 'wamid.real.1',
+        ],
+    ];
+
+    $inbound = $adapter->normalizeInbound($payload);
+
+    expect($inbound)->not->toBeNull()
+        ->and($inbound?->contactPhone)->toBe('556793087866')
+        ->and($inbound?->text)->toBe('teste inbound');
+});
+
+it('falls back to payload.from when chatId contains internal lid identifier', function () {
+    $adapter = app(WahaBotProviderAdapter::class);
+
+    $payload = [
+        'payload' => [
+            'chatId' => '123456789012345@lid',
+            'from' => '556793087866@c.us',
+            'body' => 'teste fallback',
+            'type' => 'chat',
+            'id' => 'wamid.real.2',
+        ],
+    ];
+
+    $inbound = $adapter->normalizeInbound($payload);
+
+    expect($inbound)->not->toBeNull()
+        ->and($inbound?->contactPhone)->toBe('556793087866')
+        ->and($inbound?->text)->toBe('teste fallback');
+});
+
 it('normalizes waha inbound payload with nested data.message fields', function () {
     $adapter = app(WahaBotProviderAdapter::class);
 
@@ -110,4 +153,3 @@ it('keeps processing waha payload without text when contact is present', functio
         ->and($inbound?->text)->toBeNull()
         ->and($inbound?->messageType)->toBe('image');
 });
-

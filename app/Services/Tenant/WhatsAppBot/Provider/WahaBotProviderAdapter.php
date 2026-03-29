@@ -16,24 +16,46 @@ class WahaBotProviderAdapter extends AbstractWhatsAppBotProviderAdapter
 
     public function normalizeInbound(array $payload): ?InboundMessage
     {
-        $rawContact = $this->firstNonEmptyString([
-            data_get($payload, 'payload.from'),
-            data_get($payload, 'payload.participant'),
-            data_get($payload, 'payload.sender'),
-            data_get($payload, 'payload.chatId'),
-            data_get($payload, 'payload.key.remoteJid'),
-            data_get($payload, 'message.from'),
-            data_get($payload, 'message.participant'),
-            data_get($payload, 'from'),
-            data_get($payload, 'participant'),
-            data_get($payload, 'sender'),
-            data_get($payload, 'chatId'),
-            data_get($payload, 'data.from'),
-            data_get($payload, 'data.participant'),
-            data_get($payload, 'data.sender'),
-            data_get($payload, 'data.chatId'),
-            data_get($payload, 'data.key.remoteJid'),
+        $phoneCandidates = [
+            'payload_chatId' => data_get($payload, 'payload.chatId'),
+            'payload_from' => data_get($payload, 'payload.from'),
+            'payload_key_remoteJid' => data_get($payload, 'payload.key.remoteJid'),
+            'chatId' => data_get($payload, 'chatId'),
+            'from' => data_get($payload, 'from'),
+            'data_chatId' => data_get($payload, 'data.chatId'),
+            'data_from' => data_get($payload, 'data.from'),
+        ];
+
+        Log::info('whatsapp_bot.inbound.phone_candidates', [
+            'payload_from' => data_get($payload, 'payload.from'),
+            'payload_chatId' => data_get($payload, 'payload.chatId'),
+            'payload_key_remoteJid' => data_get($payload, 'payload.key.remoteJid'),
+            'payload_sender' => data_get($payload, 'payload.sender'),
+            'payload_senderAlt' => data_get($payload, 'payload.senderAlt'),
+            'payload_me_id' => data_get($payload, 'payload.me.id'),
+            'raw_payload' => $payload,
         ]);
+
+        $rawContact = null;
+        foreach ($phoneCandidates as $source => $candidate) {
+            $normalizedCandidate = trim((string) $candidate);
+            if ($normalizedCandidate === '') {
+                continue;
+            }
+
+            if ($this->isInternalLidOrJid($normalizedCandidate)) {
+                Log::info('whatsapp_bot.inbound.phone_candidate_ignored', [
+                    'provider' => $this->providerKey(),
+                    'reason' => 'internal_lid_or_jid',
+                    'source' => $source,
+                    'candidate' => $normalizedCandidate,
+                ]);
+                continue;
+            }
+
+            $rawContact = $normalizedCandidate;
+            break;
+        }
 
         $fromMe = $this->resolveBoolean([
             data_get($payload, 'payload.fromMe'),
@@ -160,6 +182,20 @@ class WahaBotProviderAdapter extends AbstractWhatsAppBotProviderAdapter
         return str_contains($normalized, '@g.us')
             || str_contains($normalized, '@broadcast')
             || str_contains($normalized, 'status@broadcast');
+    }
+
+    private function isInternalLidOrJid(string $value): bool
+    {
+        $normalized = strtolower(trim($value));
+        if ($normalized === '') {
+            return true;
+        }
+
+        if (str_contains($normalized, '@lid')) {
+            return true;
+        }
+
+        return preg_match('/:\d+@s\.whatsapp\.net$/', $normalized) === 1;
     }
 
     /**
