@@ -459,6 +459,7 @@ Route::middleware(['auth'])->prefix('Platform')->name('Platform.')->group(functi
         Route::post('settings/test/meta/send', [SystemSettingsController::class, 'testMetaSend'])->name('settings.test.meta.send');
         Route::post('settings/test/zapi/send', [SystemSettingsController::class, 'testZapiSend'])->name('settings.test.zapi.send');
         Route::post('settings/test/waha/send', [SystemSettingsController::class, 'testWahaSend'])->name('settings.test.waha.send');
+        Route::post('settings/test/evolution/send', [SystemSettingsController::class, 'testEvolutionSend'])->name('settings.test.evolution.send');
     });
 
     // 🔸 Módulo: Z-API (acessível a todos os usuários autenticados)

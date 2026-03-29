@@ -65,7 +65,14 @@ return [
             'session' => env('WAHA_SESSION', 'default'),
         ],
 
-        // Configurações legadas (mantidas para compatibilidade)
+        // Evolution API
+        'evolution' => [
+            'base_url' => env('EVOLUTION_BASE_URL', env('EVOLUTION_API_URL')),
+            'api_key' => env('EVOLUTION_API_KEY', env('EVOLUTION_KEY')),
+            'instance' => env('EVOLUTION_INSTANCE', env('EVOLUTION_INSTANCE_NAME', 'default')),
+        ],
+
+        // Configuracoes legadas (mantidas para compatibilidade)
         'api_url' => env('WHATSAPP_API_URL'),
         'token' => env('WHATSAPP_TOKEN'),
         'phone_id' => env('WHATSAPP_PHONE_ID'),
@@ -77,3 +84,4 @@ return [
     ],
 
 ];
+

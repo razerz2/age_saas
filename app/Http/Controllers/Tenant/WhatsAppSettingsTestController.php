@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Tenant\TestWhatsAppSendRequest;
 use App\Models\Tenant\TenantSetting;
 use App\Services\Providers\ProviderConfigResolver;
+use App\Services\WhatsApp\TenantGlobalProviderCatalogService;
 use App\Services\WhatsApp\WhatsAppBusinessProvider;
 use App\Services\WhatsApp\WahaClient;
 use App\Services\WhatsApp\WahaProvider;
@@ -164,7 +165,11 @@ class WhatsAppSettingsTestController extends Controller
         $resolver = new ProviderConfigResolver();
 
         $driver = $providerSettings['driver'] ?? 'global';
-        $globalProvider = sysconfig('WHATSAPP_PROVIDER', config('services.whatsapp.provider', 'whatsapp_business'));
+        $tenantGlobalProviderCatalog = app(TenantGlobalProviderCatalogService::class);
+        $globalProvider = $tenantGlobalProviderCatalog->resolveTenantGlobalProvider(
+            (string) ($providerSettings['global_provider'] ?? '')
+        );
+        $effectiveGlobalProvider = $globalProvider ?? '__invalid_tenant_global_provider__';
         $globalMetaApiUrl = $this->resolveGlobalWhatsAppMetaValue(
             ['WHATSAPP_META_BASE_URL', 'WHATSAPP_BUSINESS_API_URL', 'WHATSAPP_API_URL'],
             (string) config('services.whatsapp.business.api_url', 'https://graph.facebook.com/v22.0')
@@ -183,8 +188,12 @@ class WhatsAppSettingsTestController extends Controller
         );
 
         config([
+            'services.whatsapp.force_runtime_provider' => true,
+            'services.whatsapp.runtime_provider' => $driver === 'global'
+                ? strtolower(trim($effectiveGlobalProvider))
+                : (strtolower(trim((string) ($providerSettings['provider'] ?? 'whatsapp_business'))) ?: 'whatsapp_business'),
             'services.whatsapp.provider' => $driver === 'global'
-                ? $globalProvider
+                ? $effectiveGlobalProvider
                 : ($providerSettings['provider'] ?? 'whatsapp_business'),
             'services.whatsapp.business.api_url' => $driver === 'global'
                 ? $globalMetaApiUrl
@@ -212,7 +221,7 @@ class WhatsAppSettingsTestController extends Controller
                 : ($providerSettings['zapi_instance_id'] ?? ''),
         ]);
 
-        $resolver->applyWahaConfig($resolver->resolveWahaConfig($providerSettings));
+        $resolver->applyUnofficialRuntimeConfigs($providerSettings);
     }
 
     private function testMetaConnection(): JsonResponse

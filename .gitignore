@@ -6,6 +6,8 @@
 /storage/*.key
 /vendor
 .env
+.env.dusk*
+!.env.dusk.local.example
 .env.testing
 .env.backup
 .env.production

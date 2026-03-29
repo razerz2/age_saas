@@ -3,6 +3,8 @@
 namespace App\Services\Tenant;
 
 use App\Models\Tenant\TenantSetting;
+use App\Services\Providers\ProviderConfigResolver;
+use App\Services\WhatsApp\TenantGlobalProviderCatalogService;
 
 class WhatsAppBotConfigService
 {
@@ -13,7 +15,7 @@ class WhatsAppBotConfigService
     /**
      * @var array<int, string>
      */
-    public const SUPPORTED_PROVIDERS = ['whatsapp_business', 'zapi', 'waha'];
+    public const SUPPORTED_PROVIDERS = ['whatsapp_business', 'zapi', 'waha', 'evolution'];
 
     /**
      * @return array<string, mixed>
@@ -51,6 +53,9 @@ class WhatsAppBotConfigService
             'waha_base_url' => (string) ($botSettings['waha_base_url'] ?? ''),
             'waha_api_key' => (string) ($botSettings['waha_api_key'] ?? ''),
             'waha_session' => (string) ($botSettings['waha_session'] ?? 'default'),
+            'evolution_base_url' => (string) ($botSettings['evolution_base_url'] ?? ''),
+            'evolution_api_key' => (string) ($botSettings['evolution_api_key'] ?? ''),
+            'evolution_instance' => (string) ($botSettings['evolution_instance'] ?? 'default'),
         ];
     }
 
@@ -75,6 +80,7 @@ class WhatsAppBotConfigService
         return match ($this->normalizeProvider($provider)) {
             'zapi' => 'Z-API',
             'waha' => 'WAHA',
+            'evolution' => 'Evolution API',
             default => 'WhatsApp Business (Meta)',
         };
     }
@@ -105,14 +111,20 @@ class WhatsAppBotConfigService
             ];
         }
 
-        $globalProvider = function_exists('sysconfig')
-            ? (string) sysconfig('WHATSAPP_PROVIDER', config('services.whatsapp.provider', 'whatsapp_business'))
-            : (string) config('services.whatsapp.provider', 'whatsapp_business');
+        $tenantGlobalProviderCatalog = app(TenantGlobalProviderCatalogService::class);
+        $globalProvider = $tenantGlobalProviderCatalog->resolveTenantGlobalProvider(
+            (string) ($notificationConfig['global_provider'] ?? '')
+        );
+
+        $resolvedWahaConfig = app(ProviderConfigResolver::class)->resolveWahaConfig($notificationConfig);
+        $resolvedEvolutionConfig = app(ProviderConfigResolver::class)->resolveEvolutionConfig($notificationConfig);
 
         return [
             'mode' => self::MODE_SHARED_WITH_NOTIFICATIONS,
             'source' => 'notifications',
-            'provider' => $this->normalizeProvider($globalProvider),
+            'provider' => $globalProvider !== null
+                ? $this->normalizeProvider($globalProvider)
+                : 'whatsapp_business',
             'meta_access_token' => $this->resolveGlobalValue(
                 ['WHATSAPP_META_TOKEN', 'WHATSAPP_BUSINESS_TOKEN', 'META_ACCESS_TOKEN', 'BOT_META_ACCESS_TOKEN', 'bot_meta_access_token'],
                 (string) config('services.whatsapp.business.token', config('services.whatsapp.token', ''))
@@ -129,15 +141,12 @@ class WhatsAppBotConfigService
             'zapi_token' => (string) config('services.whatsapp.zapi.token', ''),
             'zapi_client_token' => (string) config('services.whatsapp.zapi.client_token', ''),
             'zapi_instance_id' => (string) config('services.whatsapp.zapi.instance_id', ''),
-            'waha_base_url' => function_exists('sysconfig')
-                ? (string) sysconfig('WAHA_BASE_URL', config('services.whatsapp.waha.base_url', ''))
-                : (string) config('services.whatsapp.waha.base_url', ''),
-            'waha_api_key' => function_exists('sysconfig')
-                ? (string) sysconfig('WAHA_API_KEY', config('services.whatsapp.waha.api_key', ''))
-                : (string) config('services.whatsapp.waha.api_key', ''),
-            'waha_session' => function_exists('sysconfig')
-                ? (string) sysconfig('WAHA_SESSION', config('services.whatsapp.waha.session', 'default'))
-                : (string) config('services.whatsapp.waha.session', 'default'),
+            'waha_base_url' => (string) ($resolvedWahaConfig['base_url'] ?? ''),
+            'waha_api_key' => (string) ($resolvedWahaConfig['api_key'] ?? ''),
+            'waha_session' => (string) ($resolvedWahaConfig['session'] ?? 'default'),
+            'evolution_base_url' => (string) ($resolvedEvolutionConfig['base_url'] ?? ''),
+            'evolution_api_key' => (string) ($resolvedEvolutionConfig['api_key'] ?? ''),
+            'evolution_instance' => (string) ($resolvedEvolutionConfig['instance'] ?? 'default'),
         ];
     }
 
@@ -157,4 +166,3 @@ class WhatsAppBotConfigService
         return trim($fallback);
     }
 }
-

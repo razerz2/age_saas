@@ -102,6 +102,7 @@
             x-transition:leave-end="opacity-0 translate-y-1 scale-95"
             role="dialog"
             aria-modal="true"
+            dusk="global-confirm-dialog"
             class="shadow-xl shadow-theme-lg dark:bg-gray-900 dark:bg-gray-dark relative z-10 w-full max-w-lg rounded-2xl border border-gray-200 bg-white p-6 dark:border-gray-800"
             @click.stop
         >
@@ -131,8 +132,8 @@
                 </div>
 
                 <div class="min-w-0 flex-1">
-                    <h3 class="text-lg font-semibold text-gray-800 dark:text-white/90" x-text="title"></h3>
-                    <p class="mt-2 text-sm text-gray-600 dark:text-gray-300" x-text="message"></p>
+                    <h3 dusk="global-confirm-dialog-title" class="text-lg font-semibold text-gray-800 dark:text-white/90" x-text="title"></h3>
+                    <p dusk="global-confirm-dialog-message" class="mt-2 text-sm text-gray-600 dark:text-gray-300" x-text="message"></p>
                 </div>
 
                 <button
@@ -152,6 +153,7 @@
                 <button
                     x-show="variant === 'confirm'"
                     type="button"
+                    dusk="global-confirm-dialog-cancel-button"
                     class="inline-flex w-full items-center justify-center rounded-lg border border-gray-200 bg-white px-5 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-600/30 focus:ring-brand-500/30 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-200 dark:hover:bg-white/5 sm:w-auto"
                     @click="cancel('cancel')"
                     x-text="cancelText"
@@ -159,6 +161,7 @@
 
                 <button
                     type="button"
+                    dusk="global-confirm-dialog-confirm-button"
                     class="inline-flex w-full items-center justify-center rounded-lg bg-primary px-5 py-2.5 text-sm font-medium text-white hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary/40 sm:w-auto"
                     @click="accept()"
                     x-ref="confirmBtn"
@@ -168,4 +171,3 @@
         </div>
     </div>
 </div>
-

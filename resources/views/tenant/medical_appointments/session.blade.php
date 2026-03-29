@@ -60,7 +60,7 @@
         </div>
 
         @if (session('success'))
-            <div class="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg dark:bg-green-900/20 dark:border-green-800">
+            <div dusk="medical-session-success-alert" class="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg dark:bg-green-900/20 dark:border-green-800">
                 <div class="flex items-start">
                     <x-icon name="check-circle-outline" size="text-lg" class="text-green-600 dark:text-green-400" />
                     <p class="ml-3 text-sm text-green-800 dark:text-green-200">{{ session('success') }}</p>
@@ -69,7 +69,7 @@
         @endif
 
         @if (session('info'))
-            <div class="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg dark:bg-blue-900/20 dark:border-blue-800">
+            <div dusk="medical-session-info-alert" class="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg dark:bg-blue-900/20 dark:border-blue-800">
                 <div class="flex items-start">
                     <x-icon name="information-outline" size="text-lg" class="text-blue-600 dark:text-blue-400" />
                     <p class="ml-3 text-sm text-blue-800 dark:text-blue-200">{{ session('info') }}</p>
@@ -119,7 +119,7 @@
                     </div>
 
                     <div data-queue-scroll="1" class="queue-scroll flex-1 min-h-0 overflow-y-auto pr-1 max-h-[45vh] sm:max-h-[520px] lg:max-h-[600px]">
-                        <div id="appointments-list" data-queue-list="1" class="manual-mode pb-2">
+                        <div id="appointments-list" dusk="medical-appointments-list" data-queue-list="1" class="manual-mode pb-2">
                             @forelse($appointments as $appointment)
                                 @php
                                     $isLate = $appointment->starts_at < now() && $appointment->status !== 'completed';
@@ -157,6 +157,7 @@
                                         'bg-emerald-50/60 border border-emerald-100 hover:bg-emerald-100/60 hover:border-emerald-200 dark:bg-emerald-900/20 dark:border-emerald-800/40 dark:hover:bg-emerald-900/30 dark:hover:border-emerald-700/50' => !$isSelected && !$isLate,
                                         'border-b border-gray-100 dark:border-gray-700' => $isSelected || $isLate,
                                     ])
+                                     dusk="medical-queue-item-{{ $appointment->id }}"
                                      data-queue-item="1"
                                      data-appointment-id="{{ $appointment->id }}"
                                      data-start-at="{{ $appointment->starts_at?->toIso8601String() }}"
@@ -166,7 +167,7 @@
                                      data-tipo="{{ mb_strtolower((string) $typeName) }}"
                                      data-queue-position="{{ $appointment->queue_position ?? '' }}">
                                     <div class="flex items-start gap-2">
-                                        <button type="button"
+                                        <button dusk="medical-open-details-{{ $appointment->id }}" type="button"
                                                 class="min-w-0 flex-1 text-left"
                                                 data-open-details="1"
                                                 data-appointment-id="{{ $appointment->id }}">
@@ -220,7 +221,7 @@
                         <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Dados clinicos e acoes do agendamento.</p>
                     </div>
 
-                    <div id="appointment-details" class="flex-1 overflow-y-auto max-h-[65vh] p-5">
+                    <div id="appointment-details" dusk="medical-appointment-details" class="flex-1 overflow-y-auto max-h-[65vh] p-5">
                         <div class="h-full min-h-[220px] flex items-center justify-center text-center text-gray-500 dark:text-gray-400">
                             <div>
                                 <x-icon name="information-outline" size="text-4xl" class="mx-auto text-gray-400 dark:text-gray-500" />
@@ -235,6 +236,7 @@
 
     <div
         id="medical-status-modal"
+        dusk="medical-status-modal"
         class="fixed inset-0 z-[999999] hidden items-center justify-center p-2 sm:p-4"
         role="dialog"
         aria-modal="true"
@@ -254,7 +256,7 @@
                 <x-icon name="close" size="text-base" />
             </button>
 
-            <form id="medical-status-form" novalidate>
+            <form id="medical-status-form" dusk="medical-status-form" novalidate>
                 <input type="hidden" id="medical-status-appointment-id" value="" />
 
                 <div class="shrink-0 border-b border-gray-200 p-5 dark:border-gray-800">
@@ -269,7 +271,7 @@
                 <div class="p-5 space-y-4">
                     <div>
                         <label for="medical-status-select" class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-200">Novo status</label>
-                        <select id="medical-status-select" class="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 focus:border-brand-500 focus:outline-none dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200" required>
+                        <select id="medical-status-select" dusk="medical-status-select" class="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 focus:border-brand-500 focus:outline-none dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200" required>
                             <option value="" disabled selected>Selecione o status</option>
                             <option value="CHEGOU">Chegou</option>
                             <option value="EM_ATENDIMENTO">Em atendimento</option>
@@ -282,12 +284,12 @@
 
                     <div id="medical-status-note-wrapper" class="hidden">
                         <label for="medical-status-note" class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-200">Observacao / Motivo</label>
-                        <textarea id="medical-status-note" rows="3" class="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 focus:border-brand-500 focus:outline-none dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200" placeholder="Descreva o motivo"></textarea>
+                        <textarea id="medical-status-note" dusk="medical-status-note" rows="3" class="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 focus:border-brand-500 focus:outline-none dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200" placeholder="Descreva o motivo"></textarea>
                     </div>
 
                     <div id="medical-status-reschedule-wrapper" class="hidden">
                         <label for="medical-status-reschedule-at" class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-200">Nova data e hora</label>
-                        <input type="datetime-local" id="medical-status-reschedule-at" class="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 focus:border-brand-500 focus:outline-none dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200" />
+                        <input type="datetime-local" id="medical-status-reschedule-at" dusk="medical-status-reschedule-at" class="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 focus:border-brand-500 focus:outline-none dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200" />
                     </div>
 
                     <div id="medical-status-error" class="hidden rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700 dark:border-red-800 dark:bg-red-900/20 dark:text-red-300"></div>
@@ -298,7 +300,7 @@
                         <x-tailadmin-button type="button" variant="secondary" size="sm" data-medical-status-close>
                             Cancelar
                         </x-tailadmin-button>
-                        <x-tailadmin-button type="submit" variant="primary" size="sm" id="medical-status-submit">
+                        <x-tailadmin-button dusk="medical-status-submit" type="submit" variant="primary" size="sm" id="medical-status-submit">
                             Salvar Status
                         </x-tailadmin-button>
                     </div>

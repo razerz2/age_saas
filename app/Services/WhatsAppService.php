@@ -6,6 +6,8 @@ use App\Services\WhatsApp\WhatsAppProviderInterface;
 use App\Services\WhatsApp\WhatsAppBusinessProvider;
 use App\Services\WhatsApp\ZApiProvider;
 use App\Services\WhatsApp\WahaProvider;
+use App\Services\WhatsApp\EvolutionProvider;
+use App\Services\WhatsApp\UnsupportedProvider;
 use Illuminate\Support\Facades\Log;
 
 class WhatsAppService
@@ -24,9 +26,16 @@ class WhatsAppService
      */
     protected function resolveProvider(): WhatsAppProviderInterface
     {
-        $provider = function_exists('sysconfig')
-            ? (string) sysconfig('WHATSAPP_PROVIDER', config('services.whatsapp.provider', 'whatsapp_business'))
-            : (string) config('services.whatsapp.provider', 'whatsapp_business');
+        $forceRuntimeProvider = (bool) config('services.whatsapp.force_runtime_provider', false);
+        $runtimeProvider = strtolower(trim((string) config('services.whatsapp.runtime_provider', '')));
+
+        if ($forceRuntimeProvider) {
+            $provider = $runtimeProvider !== '' ? $runtimeProvider : '__invalid_runtime_provider__';
+        } else {
+            $provider = function_exists('sysconfig')
+                ? (string) sysconfig('WHATSAPP_PROVIDER', config('services.whatsapp.provider', 'whatsapp_business'))
+                : (string) config('services.whatsapp.provider', 'whatsapp_business');
+        }
 
         $provider = strtolower(trim($provider));
         if ($provider === '') {
@@ -36,9 +45,21 @@ class WhatsAppService
         return match ($provider) {
             'zapi', 'z-api' => new ZApiProvider(),
             'waha' => new WahaProvider(),
-            'whatsapp_business', 'business' => new WhatsAppBusinessProvider(),
-            default => new WhatsAppBusinessProvider(), // Fallback para WhatsApp Business
+            'evolution', 'evolution_api', 'evolution-api', 'evo_api', 'evo-api', 'whatsapp_evolution', 'whatsapp-evolution' => new EvolutionProvider(),
+            'whatsapp_business', 'business', 'meta' => new WhatsAppBusinessProvider(),
+            default => $forceRuntimeProvider
+                ? $this->unsupportedRuntimeProvider($provider)
+                : new WhatsAppBusinessProvider(), // Fallback para WhatsApp Business em escopo nao-forcado
         };
+    }
+
+    protected function unsupportedRuntimeProvider(string $provider): WhatsAppProviderInterface
+    {
+        Log::warning('WhatsApp runtime provider forced with unsupported key', [
+            'provider' => $provider,
+        ]);
+
+        return new UnsupportedProvider($provider);
     }
 
     /**

@@ -40,7 +40,7 @@
                 </h4>
             </div>
             <div class="p-6">
-                <form action="{{ workspace_route('tenant.medical-appointments.start') }}" method="POST">
+                <form dusk="medical-start-form" action="{{ workspace_route('tenant.medical-appointments.start') }}" method="POST">
                     @csrf
 
                     @php
@@ -54,7 +54,7 @@
                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                 @foreach($doctors as $doctor)
                                     <label for="doctor_{{ $doctor->id }}" class="flex items-center gap-2 p-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/40">
-                                        <input class="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 @error('doctor_ids') border-red-500 @enderror"
+                                        <input dusk="medical-start-doctor-{{ $doctor->id }}" class="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 @error('doctor_ids') border-red-500 @enderror"
                                                type="checkbox"
                                                name="doctor_ids[]"
                                                id="doctor_{{ $doctor->id }}"
@@ -76,7 +76,7 @@
 
                     <div class="mb-6">
                         <label for="date" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Data do Atendimento</label>
-                        <input type="date"
+                        <input dusk="medical-start-date" type="date"
                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white @error('date') border-red-500 @enderror"
                                id="date"
                                name="date"
@@ -88,7 +88,7 @@
                     </div>
 
                     <div class="flex justify-end">
-                        <button type="submit" class="btn btn-primary">
+                        <button dusk="medical-start-submit-button" type="submit" class="btn btn-primary">
                             <x-icon name="play" class="w-5 h-5 mr-2" />
                             Iniciar Atendimento
                         </button>
@@ -100,4 +100,3 @@
 </div>
 
 @endsection
-

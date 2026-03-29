@@ -54,7 +54,7 @@
         </div>
 
         <div class="p-6">
-            <form class="space-y-8"
+            <form dusk="appointment-form" class="space-y-8"
                 action="{{ workspace_route('tenant.appointments.update', $appointment->id) }}"
                 method="POST"
                 data-appointment-edit="true"
@@ -87,9 +87,9 @@
                                             $selectedDoctorName = $selectedDoctor ? ($selectedDoctor->user->name_full ?? $selectedDoctor->user->name) : '';
                                         @endphp
                                         <div class="flex items-center gap-2">
-                                            <input type="hidden" name="doctor_id" id="doctor_id" value="{{ $selectedDoctorId }}" data-selected-name="{{ $selectedDoctorName }}" required>
-                                            <input type="text" id="doctor_name" class="form-control @error('doctor_id') is-invalid @enderror" value="{{ $selectedDoctorName }}" placeholder="Selecione um mÃ©dico" readonly>
-                                            <x-tailadmin-button type="button" variant="secondary" size="sm" class="js-open-entity-search" data-entity-type="doctors" data-search-url="{{ workspace_route('tenant.appointments.api.search-doctors') }}" data-hidden-input-id="doctor_id" data-display-input-id="doctor_name" data-modal-title="Buscar mÃ©dico">
+                                            <input dusk="appointment-doctor-id" type="hidden" name="doctor_id" id="doctor_id" value="{{ $selectedDoctorId }}" data-selected-name="{{ $selectedDoctorName }}" required>
+                                            <input dusk="appointment-doctor-name" type="text" id="doctor_name" class="form-control @error('doctor_id') is-invalid @enderror" value="{{ $selectedDoctorName }}" placeholder="Selecione um mÃ©dico" readonly>
+                                            <x-tailadmin-button dusk="appointment-search-doctor-button" type="button" variant="secondary" size="sm" class="js-open-entity-search" data-entity-type="doctors" data-search-url="{{ workspace_route('tenant.appointments.api.search-doctors') }}" data-hidden-input-id="doctor_id" data-display-input-id="doctor_name" data-modal-title="Buscar mÃ©dico">
                                                 Buscar
                                             </x-tailadmin-button>
                                         </div>
@@ -110,9 +110,9 @@
                                             $selectedPatient = $patients->firstWhere('id', $selectedPatientId);
                                         @endphp
                                         <div class="flex items-center gap-2">
-                                            <input type="hidden" name="patient_id" id="patient_id" value="{{ $selectedPatientId }}" required>
-                                            <input type="text" id="patient_name" class="form-control @error('patient_id') is-invalid @enderror" value="{{ $selectedPatient?->full_name ?? '' }}" placeholder="Selecione um paciente" readonly>
-                                            <x-tailadmin-button type="button" variant="secondary" size="sm" class="js-open-entity-search" data-entity-type="patients" data-search-url="{{ workspace_route('tenant.appointments.api.search-patients') }}" data-hidden-input-id="patient_id" data-display-input-id="patient_name" data-modal-title="Buscar paciente">
+                                            <input dusk="appointment-patient-id" type="hidden" name="patient_id" id="patient_id" value="{{ $selectedPatientId }}" required>
+                                            <input dusk="appointment-patient-name" type="text" id="patient_name" class="form-control @error('patient_id') is-invalid @enderror" value="{{ $selectedPatient?->full_name ?? '' }}" placeholder="Selecione um paciente" readonly>
+                                            <x-tailadmin-button dusk="appointment-search-patient-button" type="button" variant="secondary" size="sm" class="js-open-entity-search" data-entity-type="patients" data-search-url="{{ workspace_route('tenant.appointments.api.search-patients') }}" data-hidden-input-id="patient_id" data-display-input-id="patient_name" data-modal-title="Buscar paciente">
                                                 Buscar
                                             </x-tailadmin-button>
                                         </div>
@@ -169,7 +169,7 @@
                                             Data <span class="text-danger">*</span>
                                         </label>
                                             <div class="flex gap-2 appointment-date-field-group">
-                                                <input type="date" id="appointment_date" class="form-control @error('appointment_date') is-invalid @enderror @error('starts_at') is-invalid @enderror" 
+                                                <input dusk="appointment-date" type="date" id="appointment_date" class="form-control @error('appointment_date') is-invalid @enderror @error('starts_at') is-invalid @enderror" 
                                                        name="appointment_date" value="{{ old('appointment_date', $appointment->starts_at ? $appointment->starts_at->format('Y-m-d') : '') }}" 
                                                        min="{{ \Carbon\Carbon::now('America/Campo_Grande')->toDateString() }}" required>
                                                 <x-tailadmin-button
@@ -203,7 +203,7 @@
                                             <i class="mdi mdi-clock-outline me-1"></i>
                                             Horário Disponível <span class="text-danger">*</span>
                                         </label>
-                                        <select name="appointment_time" id="appointment_time" class="form-control @error('appointment_time') is-invalid @enderror" required>
+                                        <select dusk="appointment-time" name="appointment_time" id="appointment_time" class="form-control @error('appointment_time') is-invalid @enderror" required>
                                             <option value="">Carregando horários...</option>
                                         </select>
                                         @error('appointment_time')
@@ -263,7 +263,7 @@
                                             <i class="mdi mdi-note-text me-1"></i>
                                             Observações
                                         </label>
-                                        <textarea class="form-control @error('notes') is-invalid @enderror" 
+                                        <textarea dusk="appointment-notes" class="form-control @error('notes') is-invalid @enderror" 
                                                   name="notes" rows="4" 
                                                   placeholder="Digite observações sobre o agendamento (opcional)">{{ old('notes', $appointment->notes) }}</textarea>
                                         @error('notes')
@@ -281,7 +281,7 @@
                                 <i class="mdi mdi-arrow-left"></i>
                                 Cancelar
                             </x-tailadmin-button>
-                            <x-tailadmin-button type="submit" variant="primary" size="lg">
+                            <x-tailadmin-button dusk="appointment-submit-button" type="submit" variant="primary" size="lg">
                                 <i class="mdi mdi-content-save"></i>
                                 Atualizar Agendamento
                             </x-tailadmin-button>
@@ -293,7 +293,7 @@
         </div>
     </div>
 
-    <div id="entitySearchModal" class="entity-search-modal hidden" data-entity-search-modal>
+    <div id="entitySearchModal" dusk="entity-search-modal" class="entity-search-modal hidden" data-entity-search-modal>
         <div class="entity-search-modal__backdrop" data-entity-search-backdrop></div>
         <div class="entity-search-modal__dialog" role="dialog" aria-modal="true" aria-labelledby="entity-search-modal-title">
             <div class="entity-search-modal__header">
@@ -303,7 +303,7 @@
                 </button>
             </div>
             <div class="entity-search-modal__body">
-                <input type="text" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white" placeholder="Digite para buscar..." data-entity-search-input>
+                <input dusk="entity-search-input" type="text" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white" placeholder="Digite para buscar..." data-entity-search-input>
                 <div class="entity-search-modal__results-wrap border border-gray-200 dark:border-gray-700 rounded-md mt-3">
                     <div class="p-3 text-sm text-gray-500 dark:text-gray-400" data-entity-search-empty>Digite para buscar.</div>
                     <div class="hidden p-3 text-sm text-gray-500 dark:text-gray-400" data-entity-search-loading>Buscando...</div>
@@ -312,7 +312,7 @@
             </div>
             <div class="entity-search-modal__footer">
                 <button type="button" class="btn btn-outline js-cancel-entity-search">Cancelar</button>
-                <button type="button" class="btn btn-primary js-confirm-entity-search" data-entity-search-confirm disabled>Selecionar</button>
+                <button dusk="entity-search-confirm-button" type="button" class="btn btn-primary js-confirm-entity-search" data-entity-search-confirm disabled>Selecionar</button>
             </div>
         </div>
     </div>
@@ -361,3 +361,4 @@
     </div>
 
 @endsection
+

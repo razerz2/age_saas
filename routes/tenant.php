@@ -62,6 +62,8 @@ use App\Http\Controllers\Tenant\SettingsController;
 use App\Http\Controllers\Tenant\WhatsAppBotWebhookController;
 use App\Http\Controllers\Tenant\WhatsAppSettingsTestController;
 use App\Http\Controllers\Tenant\WhatsAppOfficialTenantTemplateController;
+use App\Http\Controllers\Tenant\EvolutionGlobalInstanceController;
+use App\Http\Controllers\Tenant\WahaGlobalInstanceController;
 
 // Recurring Appointments
 use App\Http\Controllers\Tenant\RecurringAppointmentController;
@@ -140,7 +142,7 @@ Route::prefix('customer/{slug}')
     ->middleware(['tenant-web'])
     ->group(function () {
         Route::post('/webhooks/whatsapp/bot/{provider}', [WhatsAppBotWebhookController::class, 'handle'])
-            ->where('provider', 'whatsapp_business|meta|zapi|waha')
+            ->where('provider', 'whatsapp_business|meta|zapi|waha|evolution')
             ->middleware(['feature:' . \App\Services\Tenant\WhatsAppBotConfigService::FEATURE_NAME])
             ->name('whatsapp-bot.webhook');
 
@@ -875,6 +877,27 @@ Route::prefix('workspace/{slug}')
                 ->name('settings.whatsapp.test.zapi.send');
             Route::post('settings/whatsapp/test/waha/send', [WhatsAppSettingsTestController::class, 'testWahaSend'])
                 ->name('settings.whatsapp.test.waha.send');
+            Route::prefix('settings/waha')
+                ->name('settings.waha.')
+                ->group(function () {
+                    Route::get('status', [WahaGlobalInstanceController::class, 'status'])->name('status');
+                    Route::get('qr-code', [WahaGlobalInstanceController::class, 'qrCode'])->name('qr-code');
+                    Route::post('webhook/bind', [WahaGlobalInstanceController::class, 'bindWebhook'])->name('webhook.bind');
+                    Route::post('start', [WahaGlobalInstanceController::class, 'start'])->name('start');
+                    Route::post('restart', [WahaGlobalInstanceController::class, 'restart'])->name('restart');
+                    Route::post('stop', [WahaGlobalInstanceController::class, 'stop'])->name('stop');
+                    Route::post('logout', [WahaGlobalInstanceController::class, 'logout'])->name('logout');
+                });
+            Route::prefix('settings/evolution')
+                ->name('settings.evolution.')
+                ->group(function () {
+                    Route::get('status', [EvolutionGlobalInstanceController::class, 'status'])->name('status');
+                    Route::get('qr-code', [EvolutionGlobalInstanceController::class, 'qrCode'])->name('qr-code');
+                    Route::post('webhook/bind', [EvolutionGlobalInstanceController::class, 'bindWebhook'])->name('webhook.bind');
+                    Route::post('start', [EvolutionGlobalInstanceController::class, 'start'])->name('start');
+                    Route::post('restart', [EvolutionGlobalInstanceController::class, 'restart'])->name('restart');
+                    Route::post('logout', [EvolutionGlobalInstanceController::class, 'logout'])->name('logout');
+                });
             Route::prefix('settings/whatsapp-official-templates')
                 ->middleware(['tenant.whatsapp.official.provider'])
                 ->name('settings.whatsapp-official-tenant-templates.')

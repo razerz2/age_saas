@@ -137,6 +137,7 @@ export function initEntitySearchModal(config = {}) {
 			const li = document.createElement('li');
 			const resultButton = document.createElement('button');
 			resultButton.type = 'button';
+			resultButton.setAttribute('dusk', 'entity-search-result-button');
 			resultButton.className = 'entity-search-modal__result w-full text-left px-3 py-2';
 			resultButton.setAttribute('aria-selected', 'false');
 			resultButton.innerHTML = `<span class="block text-sm font-medium text-gray-900 dark:text-white">${item.name || ''}</span><span class="block text-xs text-gray-500 dark:text-gray-400">${item.secondary || ''}</span>`;

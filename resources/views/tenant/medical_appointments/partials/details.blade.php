@@ -54,7 +54,7 @@
                         ];
                         $statusClass = $statusClasses[$appointment->status] ?? 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200';
                     @endphp
-                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium {{ $statusClass }}" data-role="detail-status-badge">{{ $appointment->status_translated }}</span>
+                    <span dusk="medical-detail-status-badge" class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium {{ $statusClass }}" data-role="detail-status-badge">{{ $appointment->status_translated }}</span>
                 </p>
             </div>
         </section>
@@ -104,6 +104,7 @@
             <div class="flex flex-wrap gap-2">
                 @if(!in_array($appointment->status, ['completed', 'cancelled', 'canceled', 'no_show']))
                     <x-tailadmin-button
+                        dusk="medical-open-status-modal-{{ $appointment->id }}"
                         type="button"
                         variant="secondary"
                         size="md"
@@ -120,7 +121,7 @@
                 @endif
 
                 @if($appointment->status === 'in_service')
-                    <x-tailadmin-button type="button" variant="primary" size="md"
+                    <x-tailadmin-button dusk="medical-complete-appointment-{{ $appointment->id }}" type="button" variant="primary" size="md"
                         data-medical-action="complete-appointment" data-appointment-id="{{ $appointment->id }}">
                         Finalizar Atendimento
                     </x-tailadmin-button>

@@ -1,5 +1,10 @@
 <?php
 
+uses(
+    Tests\Browser\DuskTestCase::class,
+    Tests\Browser\Concerns\LogsIntoTenant::class,
+)->in('Browser');
+
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 

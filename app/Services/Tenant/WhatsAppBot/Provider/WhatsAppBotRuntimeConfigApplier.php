@@ -29,7 +29,9 @@ class WhatsAppBotRuntimeConfigApplier
             'services.whatsapp.waha.base_url' => (string) ($effectiveConfig['waha_base_url'] ?? ''),
             'services.whatsapp.waha.api_key' => (string) ($effectiveConfig['waha_api_key'] ?? ''),
             'services.whatsapp.waha.session' => (string) ($effectiveConfig['waha_session'] ?? 'default'),
+            'services.whatsapp.evolution.base_url' => (string) ($effectiveConfig['evolution_base_url'] ?? ''),
+            'services.whatsapp.evolution.api_key' => (string) ($effectiveConfig['evolution_api_key'] ?? ''),
+            'services.whatsapp.evolution.instance' => (string) ($effectiveConfig['evolution_instance'] ?? 'default'),
         ]);
     }
 }
-

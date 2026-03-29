@@ -26,7 +26,7 @@
                     </ol>
                 </nav>
             </div>
-            <a href="{{ workspace_route('tenant.appointments.create') }}" class="btn btn-primary">
+            <a href="{{ workspace_route('tenant.appointments.create') }}" dusk="appointments-new-button" class="btn btn-primary">
                 <x-icon name="plus" class="w-4 h-4 mr-2" />
                 Novo Agendamento
             </a>
@@ -35,7 +35,7 @@
 
     <!-- Alertas -->
     @if (session('error'))
-        <div class="bg-red-50 border border-red-200 rounded-md p-4 mb-6">
+        <div dusk="appointments-error-alert" class="bg-red-50 border border-red-200 rounded-md p-4 mb-6">
             <div class="flex">
                 <div class="flex-shrink-0">
                     <x-icon name="alert-outline" class="h-5 w-5 text-red-400" />
@@ -49,7 +49,7 @@
     @endif
 
     @if (session('success'))
-        <div class="bg-green-50 border border-green-200 rounded-md p-4 mb-6">
+        <div dusk="appointments-success-alert" class="bg-green-50 border border-green-200 rounded-md p-4 mb-6">
             <div class="flex">
                 <div class="flex-shrink-0">
                     <x-icon name="check-bold" class="h-5 w-5 text-green-400" />
@@ -69,6 +69,7 @@
 
         <div class="p-6">
             <div
+                dusk="appointments-grid-wrapper"
                 id="appointments-grid-wrapper"
                 data-show-url-template="{{ workspace_route('tenant.appointments.show', '__APPOINTMENT_ID__') }}"
                 data-row-click-link-selector='a[title="Ver"]'

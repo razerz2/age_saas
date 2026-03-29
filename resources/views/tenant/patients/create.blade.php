@@ -45,7 +45,7 @@
                 <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">Preencha os dados abaixo para cadastrar um novo paciente</p>
             </div>
 
-            <form action="{{ workspace_route('tenant.patients.store') }}" method="POST" class="p-6 space-y-8">
+            <form action="{{ workspace_route('tenant.patients.store') }}" method="POST" dusk="patient-form" class="p-6 space-y-8">
                 @csrf
 
                 <div>
@@ -55,7 +55,7 @@
                             <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
                                 Nome Completo <span class="text-red-500">*</span>
                             </label>
-                            <input type="text" class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white @error('full_name') border-red-500 @enderror"
+                            <input type="text" dusk="patient-full-name" class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white @error('full_name') border-red-500 @enderror"
                                    name="full_name" value="{{ old('full_name') }}"
                                    placeholder="Digite o nome completo do paciente" required>
                             @error('full_name')
@@ -66,7 +66,7 @@
                             <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
                                 CPF <span class="text-red-500">*</span>
                             </label>
-                            <input type="text" class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white @error('cpf') border-red-500 @enderror"
+                            <input type="text" dusk="patient-cpf" class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white @error('cpf') border-red-500 @enderror"
                                    name="cpf" value="{{ old('cpf') }}"
                                    maxlength="14" placeholder="000.000.000-00" required>
                             @error('cpf')
@@ -139,7 +139,7 @@
                             <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
                                 Logradouro <span class="text-red-500">*</span>
                             </label>
-                            <input type="text" class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white @error('street') border-red-500 @enderror"
+                            <input type="text" dusk="patient-street" class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white @error('street') border-red-500 @enderror"
                                    id="address" name="street" value="{{ old('street') }}"
                                    placeholder="Rua, Avenida, etc." required>
                             @error('street')
@@ -150,7 +150,7 @@
                             <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
                                 NÃºmero <span class="text-red-500">*</span>
                             </label>
-                            <input type="text" class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white @error('number') border-red-500 @enderror"
+                            <input type="text" dusk="patient-number" class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white @error('number') border-red-500 @enderror"
                                    name="number" value="{{ old('number') }}"
                                    maxlength="20" placeholder="123" required>
                             @error('number')
@@ -172,7 +172,7 @@
                             <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
                                 Bairro <span class="text-red-500">*</span>
                             </label>
-                            <input type="text" class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white @error('neighborhood') border-red-500 @enderror"
+                            <input type="text" dusk="patient-neighborhood" class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white @error('neighborhood') border-red-500 @enderror"
                                    id="neighborhood" name="neighborhood" value="{{ old('neighborhood') }}"
                                    placeholder="Nome do bairro" required>
                             @error('neighborhood')
@@ -186,7 +186,7 @@
                             <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
                                 CEP <span class="text-red-500">*</span>
                             </label>
-                            <input type="text" class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white @error('postal_code') border-red-500 @enderror"
+                            <input type="text" dusk="patient-postal-code" class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white @error('postal_code') border-red-500 @enderror"
                                    id="zipcode" name="postal_code" value="{{ old('postal_code') }}"
                                    maxlength="10" placeholder="00000-000" required>
                             @error('postal_code')
@@ -197,7 +197,7 @@
                             <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
                                 Estado <span class="text-red-500">*</span>
                             </label>
-                            <select id="state_id" name="estado_id" class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white @error('estado_id') border-red-500 @enderror" required>
+                            <select id="state_id" dusk="patient-state" name="estado_id" class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white @error('estado_id') border-red-500 @enderror" required>
                                 <option value="">Carregando...</option>
                             </select>
                             <input type="hidden" name="state" id="state_abbr">
@@ -209,7 +209,7 @@
                             <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
                                 Cidade <span class="text-red-500">*</span>
                             </label>
-                            <select id="city_id" name="cidade_id" class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white @error('cidade_id') border-red-500 @enderror" required>
+                            <select id="city_id" dusk="patient-city" name="cidade_id" class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white @error('cidade_id') border-red-500 @enderror" required>
                                 <option value="">Selecione o estado</option>
                             </select>
                             <input type="hidden" name="city" id="city_name">
@@ -226,7 +226,7 @@
                         <x-icon name="arrow-left" size="text-sm" class="mr-2" />
                         Voltar
                     </a>
-                    <button type="submit" class="btn btn-primary inline-flex items-center">
+                    <button type="submit" dusk="patient-submit-button" class="btn btn-primary inline-flex items-center">
                         <x-icon name="content-save-outline" size="text-sm" class="mr-2" />
                         Salvar Paciente
                     </button>

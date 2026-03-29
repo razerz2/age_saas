@@ -5,6 +5,7 @@
     $effectiveProviderLabel = match ($effectiveProvider) {
         'zapi' => 'Z-API',
         'waha' => 'WAHA',
+        'evolution' => 'Evolution API',
         default => 'WhatsApp Business (Meta)',
     };
 @endphp
@@ -140,6 +141,7 @@
                         <option value="whatsapp_business">WhatsApp Business (Meta)</option>
                         <option value="zapi">Z-API</option>
                         <option value="waha">WAHA</option>
+                        <option value="evolution">Evolution API</option>
                     </select>
                     @error('whatsapp_bot_provider')
                         <p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p>
@@ -222,6 +224,30 @@
                         <input type="text"
                                name="bot_waha_session"
                                value="{{ old('bot_waha_session', $settings['whatsapp_bot.WAHA_SESSION'] ?? 'default') }}"
+                               class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white">
+                    </div>
+                </div>
+
+                <div x-show="botProvider === 'evolution'" x-cloak class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Base URL</label>
+                        <input type="text"
+                               name="bot_evolution_base_url"
+                               value="{{ old('bot_evolution_base_url', $settings['whatsapp_bot.EVOLUTION_BASE_URL'] ?? '') }}"
+                               class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">API Key</label>
+                        <input type="text"
+                               name="bot_evolution_api_key"
+                               value="{{ old('bot_evolution_api_key', $settings['whatsapp_bot.EVOLUTION_API_KEY'] ?? '') }}"
+                               class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Instancia</label>
+                        <input type="text"
+                               name="bot_evolution_instance"
+                               value="{{ old('bot_evolution_instance', $settings['whatsapp_bot.EVOLUTION_INSTANCE'] ?? 'default') }}"
                                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white">
                     </div>
                 </div>

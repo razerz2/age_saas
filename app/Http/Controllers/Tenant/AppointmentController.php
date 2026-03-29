@@ -221,6 +221,7 @@ class AppointmentController extends Controller
     public function store(StoreAppointmentRequest $request)
     {
         $data = $request->validated();
+        $routeSlug = (string) ($request->route('slug') ?? tenant()?->subdomain);
 
         $intentWaitlist = (string) $request->input('intent_waitlist', '0') === '1';
         if ($intentWaitlist) {
@@ -244,7 +245,7 @@ class AppointmentController extends Controller
                 ? 'VocÃª entrou na fila de espera desse horÃ¡rio. Avisaremos quando a vaga estiver disponÃ­vel.'
                 : 'VocÃª jÃ¡ estÃ¡ na fila de espera desse horÃ¡rio. Avisaremos quando a vaga estiver disponÃ­vel.';
 
-            return redirect()->route('tenant.appointments.index', ['slug' => tenant()->subdomain])
+            return redirect()->route('tenant.appointments.index', ['slug' => $routeSlug])
                 ->with('success', $message);
         }
 
@@ -380,7 +381,7 @@ class AppointmentController extends Controller
             }
         }
 
-        return redirect()->route('tenant.appointments.index', ['slug' => tenant()->subdomain])
+        return redirect()->route('tenant.appointments.index', ['slug' => $routeSlug])
             ->with('success', 'Agendamento criado com sucesso.');
     }
 

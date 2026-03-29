@@ -27,7 +27,7 @@
                     </ol>
                 </nav>
             </div>
-            <a href="{{ workspace_route('tenant.patients.create') }}" class="btn btn-primary inline-flex items-center">
+            <a href="{{ workspace_route('tenant.patients.create') }}" dusk="patients-new-button" class="btn btn-primary inline-flex items-center">
                 <x-icon name="plus" size="text-sm" class="mr-2" />
                 Novo Paciente
             </a>
@@ -36,7 +36,7 @@
 
     <!-- Alerts -->
     @if (session('success'))
-        <div class="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg dark:bg-green-900/20 dark:border-green-800">
+        <div dusk="patients-success-alert" class="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg dark:bg-green-900/20 dark:border-green-800">
             <div class="flex">
                 <x-icon name="check-circle-outline" size="text-lg" class="text-green-400" />
                 <div class="ml-3">
@@ -69,6 +69,7 @@
         
         <div class="p-6">
             <div
+                dusk="patients-grid-wrapper"
                 id="patients-grid-wrapper"
                 data-show-url-template="{{ workspace_route('tenant.patients.show', '__PATIENT_ID__') }}"
                 data-row-click-link-selector='a[title="Ver"]'

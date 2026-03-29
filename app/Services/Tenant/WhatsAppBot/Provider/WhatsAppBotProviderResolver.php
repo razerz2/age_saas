@@ -78,6 +78,11 @@ class WhatsAppBotProviderResolver
 
         if ($provider === 'waha') {
             $this->assertRequired($effectiveConfig, ['waha_base_url', 'waha_api_key', 'waha_session'], $provider);
+            return;
+        }
+
+        if ($provider === 'evolution') {
+            $this->assertRequired($effectiveConfig, ['evolution_base_url', 'evolution_api_key', 'evolution_instance'], $provider);
         }
     }
 

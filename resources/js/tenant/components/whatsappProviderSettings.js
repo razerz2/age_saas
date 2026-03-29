@@ -1,6 +1,7 @@
 export function initTenantWhatsAppSettings() {
     const driverSelect = document.getElementById('whatsapp_driver');
     const tenancyConfig = document.getElementById('whatsapp_tenancy_config');
+    const globalConfig = document.getElementById('whatsapp_global_config');
 
     if (!driverSelect || !tenancyConfig) {
         return;
@@ -14,6 +15,7 @@ export function initTenantWhatsAppSettings() {
 
     const updateDriverVisibility = () => {
         showElement(tenancyConfig, driverSelect.value === 'tenancy');
+        showElement(globalConfig, driverSelect.value === 'global');
     };
 
     const updateProviderVisibility = () => {

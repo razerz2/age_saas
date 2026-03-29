@@ -86,3 +86,41 @@ it('sends the same rendered text through Z-API provider', function () {
             && ($payload['phone'] ?? null) === '5567999998888';
     });
 });
+
+it('sends the same rendered text through Evolution provider', function () {
+    forceUnofficialProvider('evolution');
+
+    config([
+        'services.whatsapp.provider' => 'evolution',
+        'services.whatsapp.evolution.base_url' => 'https://evolution.test',
+        'services.whatsapp.evolution.api_key' => 'evolution-token',
+        'services.whatsapp.evolution.instance' => 'clinica-teste',
+    ]);
+
+    Http::fake([
+        'https://evolution.test/instance/connectionState/clinica-teste' => Http::response([
+            'instance' => ['state' => 'open'],
+        ], 200),
+        'https://evolution.test/message/sendText/clinica-teste' => Http::response([
+            'key' => 'msg-1',
+        ], 201),
+    ]);
+
+    $message = "Mensagem final renderizada\nLinha 2";
+    $service = new WhatsAppService();
+    $sent = $service->sendMessage('67999998888', $message);
+
+    expect($sent)->toBeTrue();
+
+    Http::assertSent(function ($request) use ($message) {
+        if ($request->url() !== 'https://evolution.test/message/sendText/clinica-teste') {
+            return false;
+        }
+
+        $payload = $request->data();
+
+        return ($payload['number'] ?? null) === '5567999998888'
+            && ($payload['text'] ?? null) === $message
+            && $request->hasHeader('apikey', 'evolution-token');
+    });
+});

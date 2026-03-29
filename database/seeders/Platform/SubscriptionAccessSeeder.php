@@ -48,6 +48,7 @@ class SubscriptionAccessSeeder extends Seeder
                 ['name' => 'notifications', 'label' => 'Notificações', 'is_default' => false],
                 ['name' => 'reports', 'label' => 'Relatórios', 'is_default' => false],
                 ['name' => 'whatsapp', 'label' => 'WhatsApp', 'is_default' => false],
+                ['name' => 'whatsapp_bot', 'label' => 'Bot de WhatsApp', 'is_default' => false],
             ];
 
             $createdFeatures = [];

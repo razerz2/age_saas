@@ -14,6 +14,7 @@ class WhatsAppBotProviderAdapterFactory
         return match ($normalized) {
             'meta', 'business' => 'whatsapp_business',
             'z-api', 'z_api' => 'zapi',
+            'evolution-api', 'evolution_api' => 'evolution',
             default => $normalized,
         };
     }
@@ -22,7 +23,7 @@ class WhatsAppBotProviderAdapterFactory
     {
         return in_array(
             $this->normalizeProvider($provider),
-            ['whatsapp_business', 'zapi', 'waha'],
+            ['whatsapp_business', 'zapi', 'waha', 'evolution'],
             true
         );
     }
@@ -33,8 +34,8 @@ class WhatsAppBotProviderAdapterFactory
             'whatsapp_business' => app(WhatsAppBusinessBotProviderAdapter::class),
             'zapi' => app(ZApiBotProviderAdapter::class),
             'waha' => app(WahaBotProviderAdapter::class),
+            'evolution' => app(EvolutionBotProviderAdapter::class),
             default => throw new WhatsAppBotConfigurationException('Bot WhatsApp provider not supported: ' . $provider),
         };
     }
 }
-

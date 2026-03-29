@@ -190,6 +190,36 @@
                     <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Escolha entre usar o serviço global ou configurar sua própria API de WhatsApp</p>
                 </div>
 
+                <div id="whatsapp_global_config" style="display: {{ ($settings['whatsapp.driver'] ?? 'global') == 'global' ? 'block' : 'none' }};">
+                    <label for="whatsapp_global_provider" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Provider global de WhatsApp
+                    </label>
+                    <select name="whatsapp_global_provider"
+                            id="whatsapp_global_provider"
+                            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                            {{ empty($whatsappGlobalProviderOptions ?? []) ? 'disabled' : '' }}>
+                        <option value="">Selecione...</option>
+                        @foreach(($whatsappGlobalProviderOptions ?? []) as $globalProviderKey => $globalProviderLabel)
+                            <option value="{{ $globalProviderKey }}"
+                                {{ old('whatsapp_global_provider', $settings['whatsapp.global_provider'] ?? '') === $globalProviderKey ? 'selected' : '' }}>
+                                {{ $globalProviderLabel }}
+                            </option>
+                        @endforeach
+                    </select>
+                    @if(empty($whatsappGlobalProviderOptions ?? []))
+                        <p class="text-xs text-red-500 mt-1">
+                            Nenhum provider global de WhatsApp esta habilitado pela Platform.
+                        </p>
+                    @else
+                        <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                            Apenas providers globais habilitados pela Platform aparecem aqui.
+                        </p>
+                    @endif
+                    @error('whatsapp_global_provider')
+                        <p class="text-xs text-red-500 mt-1">{{ $message }}</p>
+                    @enderror
+                </div>
+
                 <div id="whatsapp_tenancy_config" style="display: {{ ($settings['whatsapp.driver'] ?? 'global') == 'tenancy' ? 'block' : 'none' }};">
                     @include('shared.whatsapp.providers-settings', [
                         'settings' => $settings,

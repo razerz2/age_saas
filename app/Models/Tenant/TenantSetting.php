@@ -122,6 +122,7 @@ class TenantSetting extends Model
 
         return [
             'driver' => $settings['whatsapp.driver'] ?? 'global',
+            'global_provider' => $settings['whatsapp.global_provider'] ?? null,
             'provider' => $settings['whatsapp.provider'] ?? 'whatsapp_business',
             'meta_access_token' => $settings['whatsapp.meta.access_token'] ?? null,
             'meta_phone_number_id' => $settings['whatsapp.meta.phone_number_id'] ?? null,

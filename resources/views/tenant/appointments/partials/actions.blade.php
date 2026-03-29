@@ -13,6 +13,7 @@
 
     <a
         href="{{ workspace_route('tenant.appointments.edit', $appointment->id) }}"
+        dusk="appointments-edit-action-{{ $appointment->id }}"
         title="Editar"
         onclick="event.stopPropagation()"
         class="inline-flex items-center justify-center rounded-xl border border-amber-100 bg-amber-50 px-2.5 py-1.5 text-xs font-medium text-amber-700 hover:bg-amber-100 dark:border-amber-900/40 dark:bg-amber-900/20 dark:text-amber-300 table-action-btn tenant-action-edit"
@@ -35,6 +36,7 @@
 
             <button
                 type="button"
+                dusk="appointments-delete-action-{{ $appointment->id }}"
                 title="Excluir"
                 data-delete-trigger="1"
                 data-delete-form="#appointments-delete-form-{{ $appointment->id }}"

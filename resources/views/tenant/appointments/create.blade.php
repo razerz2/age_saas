@@ -94,7 +94,7 @@
                 </div>
             @endif
 
-                    <form class="space-y-8" action="{{ workspace_route('tenant.appointments.store') }}" method="POST">
+                    <form dusk="appointment-form" class="space-y-8" action="{{ workspace_route('tenant.appointments.store') }}" method="POST">
                 @csrf
 
                 <!-- Seção: Informações Básicas -->
@@ -113,9 +113,9 @@
                                 $selectedPatient = $selectedPatientId ? $patients->firstWhere('id', $selectedPatientId) : null;
                             @endphp
                             <div class="flex items-center gap-2">
-                                <input type="hidden" name="patient_id" id="patient_id" value="{{ $selectedPatientId }}" required>
-                                <input type="text" id="patient_name" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-gray-50 dark:bg-gray-700 dark:text-white @error('patient_id') border-red-500 @enderror" value="{{ $selectedPatient?->full_name ?? '' }}" placeholder="Selecione um paciente" readonly>
-                                <button type="button" class="btn btn-outline js-open-entity-search" data-entity-type="patients" data-search-url="{{ workspace_route('tenant.appointments.api.search-patients') }}" data-hidden-input-id="patient_id" data-display-input-id="patient_name" data-modal-title="Buscar paciente">
+                                <input dusk="appointment-patient-id" type="hidden" name="patient_id" id="patient_id" value="{{ $selectedPatientId }}" required>
+                                <input dusk="appointment-patient-name" type="text" id="patient_name" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-gray-50 dark:bg-gray-700 dark:text-white @error('patient_id') border-red-500 @enderror" value="{{ $selectedPatient?->full_name ?? '' }}" placeholder="Selecione um paciente" readonly>
+                                <button dusk="appointment-search-patient-button" type="button" class="btn btn-outline js-open-entity-search" data-entity-type="patients" data-search-url="{{ workspace_route('tenant.appointments.api.search-patients') }}" data-hidden-input-id="patient_id" data-display-input-id="patient_name" data-modal-title="Buscar paciente">
                                     Buscar
                                 </button>
                             </div>
@@ -134,9 +134,9 @@
                                 $selectedDoctorName = $selectedDoctor ? ($selectedDoctor->user->name_full ?? $selectedDoctor->user->name) : '';
                             @endphp
                             <div class="flex items-center gap-2">
-                                <input type="hidden" name="doctor_id" id="doctor_id" data-initial-value="{{ $selectedDoctorId }}" value="{{ $selectedDoctorId }}" data-selected-name="{{ $selectedDoctorName }}" required>
-                                <input type="text" id="doctor_name" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-gray-50 dark:bg-gray-700 dark:text-white @error('doctor_id') border-red-500 @enderror" value="{{ $selectedDoctorName }}" placeholder="Selecione um médico" readonly>
-                                <button type="button" class="btn btn-outline js-open-entity-search" data-entity-type="doctors" data-search-url="{{ workspace_route('tenant.appointments.api.search-doctors') }}" data-hidden-input-id="doctor_id" data-display-input-id="doctor_name" data-modal-title="Buscar médico">
+                                <input dusk="appointment-doctor-id" type="hidden" name="doctor_id" id="doctor_id" data-initial-value="{{ $selectedDoctorId }}" value="{{ $selectedDoctorId }}" data-selected-name="{{ $selectedDoctorName }}" required>
+                                <input dusk="appointment-doctor-name" type="text" id="doctor_name" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-gray-50 dark:bg-gray-700 dark:text-white @error('doctor_id') border-red-500 @enderror" value="{{ $selectedDoctorName }}" placeholder="Selecione um médico" readonly>
+                                <button dusk="appointment-search-doctor-button" type="button" class="btn btn-outline js-open-entity-search" data-entity-type="doctors" data-search-url="{{ workspace_route('tenant.appointments.api.search-doctors') }}" data-hidden-input-id="doctor_id" data-display-input-id="doctor_name" data-modal-title="Buscar médico">
                                     Buscar
                                 </button>
                             </div>
@@ -195,7 +195,7 @@
                                 <x-icon name="calendar-outline" class="w-4 h-4 inline mr-1" />                                Data <span class="text-red-500">*</span>
                             </label>
                             <div class="flex gap-2 appointment-date-field-group">
-                                <input type="date" id="appointment_date" class="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white @error('appointment_date') border-red-500 @enderror @error('starts_at') border-red-500 @enderror" 
+                                <input dusk="appointment-date" type="date" id="appointment_date" class="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white @error('appointment_date') border-red-500 @enderror @error('starts_at') border-red-500 @enderror" 
                                        name="appointment_date" value="{{ old('appointment_date') }}" 
                                        min="{{ \Carbon\Carbon::now('America/Campo_Grande')->toDateString() }}" required disabled>
                                 <button
@@ -223,7 +223,7 @@
                                 <x-icon name="clock-outline" class="w-4 h-4 inline mr-1" />
                                 Horário Disponível <span class="text-red-500">*</span>
                             </label>
-                            <select name="appointment_time" id="appointment_time" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white @error('appointment_time') border-red-500 @enderror" required disabled>
+                            <select dusk="appointment-time" name="appointment_time" id="appointment_time" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white @error('appointment_time') border-red-500 @enderror" required disabled>
                                 <option value="">Primeiro selecione médico</option>
                             </select>
                             @error('appointment_time')
@@ -258,7 +258,7 @@
                             <x-icon name="note-text-outline" class="w-4 h-4 inline mr-1" />
                             Observações
                         </label>
-                        <textarea class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white @error('notes') border-red-500 @enderror" 
+                        <textarea dusk="appointment-notes" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white @error('notes') border-red-500 @enderror" 
                                   name="notes" rows="4" 
                                   placeholder="Digite observações sobre o agendamento (opcional)">{{ old('notes') }}</textarea>
                         @error('notes')
@@ -272,7 +272,7 @@
                     <a href="{{ workspace_route('tenant.appointments.index') }}" class="btn btn-outline">
                         <x-icon name="arrow-left" class="w-4 h-4 mr-2" />                        Cancelar
                     </a>
-                    <button type="submit" class="btn btn-primary">
+                    <button dusk="appointment-submit-button" type="submit" class="btn btn-primary">
                         <x-icon name="content-save-outline" class="w-5 h-5 mr-2" />                        Salvar Agendamento
                     </button>
                 </div>
@@ -281,7 +281,7 @@
                 </div>
     </div>
 
-    <div id="entitySearchModal" class="entity-search-modal hidden" data-entity-search-modal>
+    <div id="entitySearchModal" dusk="entity-search-modal" class="entity-search-modal hidden" data-entity-search-modal>
         <div class="entity-search-modal__backdrop" data-entity-search-backdrop></div>
         <div class="entity-search-modal__dialog" role="dialog" aria-modal="true" aria-labelledby="entity-search-modal-title">
             <div class="entity-search-modal__header">
@@ -291,7 +291,7 @@
                 </button>
             </div>
             <div class="entity-search-modal__body">
-                <input type="text" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white" placeholder="Digite para buscar..." data-entity-search-input>
+                <input dusk="entity-search-input" type="text" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white" placeholder="Digite para buscar..." data-entity-search-input>
                 <div class="entity-search-modal__results-wrap border border-gray-200 dark:border-gray-700 rounded-md mt-3">
                     <div class="p-3 text-sm text-gray-500 dark:text-gray-400" data-entity-search-empty>Digite para buscar.</div>
                     <div class="hidden p-3 text-sm text-gray-500 dark:text-gray-400" data-entity-search-loading>Buscando...</div>
@@ -300,7 +300,7 @@
             </div>
             <div class="entity-search-modal__footer">
                 <button type="button" class="btn btn-outline js-cancel-entity-search">Cancelar</button>
-                <button type="button" class="btn btn-primary js-confirm-entity-search" data-entity-search-confirm disabled>Selecionar</button>
+                <button dusk="entity-search-confirm-button" type="button" class="btn btn-primary js-confirm-entity-search" data-entity-search-confirm disabled>Selecionar</button>
             </div>
         </div>
     </div>
@@ -352,3 +352,4 @@
         </div>
     </div>
 @endsection
+

@@ -1,4 +1,6 @@
 import { initTenantWhatsAppSettings } from '../components/whatsappProviderSettings';
+import { initTenantEvolutionGlobalSettings } from '../components/evolutionGlobalSettings';
+import { initTenantWahaGlobalSettings } from '../components/wahaGlobalSettings';
 import { initTemplateVariablesUi } from '../shared/templateVariables';
 
 export function init() {
@@ -11,6 +13,8 @@ export function init() {
     bindFinanceConfig();
     bindAppearancePreviews();
     initTenantWhatsAppSettings();
+    initTenantWahaGlobalSettings();
+    initTenantEvolutionGlobalSettings();
 }
 
 function ensureAlpine() {

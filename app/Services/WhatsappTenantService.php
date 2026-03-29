@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Services\Providers\ProviderConfigResolver;
 use App\Models\Tenant\TenantSetting;
+use App\Services\WhatsApp\TenantGlobalProviderCatalogService;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use App\Services\WhatsApp\PhoneNormalizer;
@@ -21,8 +22,15 @@ class WhatsappTenantService
 
             if (($provider['driver'] ?? 'global') === 'tenancy') {
                 if (!empty($provider['provider'])) {
+                    $tenantProvider = strtolower(trim((string) $provider['provider']));
+                    if ($tenantProvider === '') {
+                        $tenantProvider = 'whatsapp_business';
+                    }
+
                     config([
-                        'services.whatsapp.provider' => $provider['provider'],
+                        'services.whatsapp.force_runtime_provider' => true,
+                        'services.whatsapp.runtime_provider' => $tenantProvider,
+                        'services.whatsapp.provider' => $tenantProvider,
                         'services.whatsapp.business.api_url' => config('services.whatsapp.business.api_url', 'https://graph.facebook.com/v22.0'),
                         'services.whatsapp.business.token' => $provider['meta_access_token'] ?? '',
                         'services.whatsapp.business.phone_id' => $provider['meta_phone_number_id'] ?? '',
@@ -33,7 +41,7 @@ class WhatsappTenantService
                         'services.whatsapp.zapi.instance_id' => $provider['zapi_instance_id'] ?? '',
                     ]);
 
-                    $resolver->applyWahaConfig($resolver->resolveWahaConfig($provider));
+                    $resolver->applyUnofficialRuntimeConfigs($provider);
 
                     $whatsappService = new WhatsAppService();
                     return $whatsappService->sendMessage($phone, $message);
@@ -59,7 +67,17 @@ class WhatsappTenantService
                 }
             }
 
-            $globalProvider = sysconfig('WHATSAPP_PROVIDER', config('services.whatsapp.provider', 'whatsapp_business'));
+            $globalProvider = self::resolveTenantGlobalProvider($provider);
+            if ($globalProvider === null) {
+                Log::warning('Tenant global WhatsApp provider is invalid or disabled; send blocked', [
+                    'tenant_id' => \App\Models\Platform\Tenant::current()?->id,
+                    'driver' => $provider['driver'] ?? null,
+                    'global_provider' => $provider['global_provider'] ?? null,
+                ]);
+
+                return false;
+            }
+
             $globalMetaApiUrl = self::resolveGlobalWhatsAppMetaValue(
                 ['WHATSAPP_META_BASE_URL', 'WHATSAPP_BUSINESS_API_URL', 'WHATSAPP_API_URL'],
                 (string) config('services.whatsapp.business.api_url', 'https://graph.facebook.com/v22.0')
@@ -78,13 +96,15 @@ class WhatsappTenantService
             );
 
             config([
+                'services.whatsapp.force_runtime_provider' => true,
+                'services.whatsapp.runtime_provider' => $globalProvider,
                 'services.whatsapp.provider' => $globalProvider,
                 'services.whatsapp.business.api_url' => $globalMetaApiUrl,
                 'services.whatsapp.business.token' => $globalMetaToken,
                 'services.whatsapp.business.phone_id' => $globalMetaPhoneId,
                 'services.whatsapp.business.waba_id' => $globalMetaWabaId,
             ]);
-            $resolver->applyWahaConfig($resolver->resolveWahaConfig());
+            $resolver->applyUnofficialRuntimeConfigs($provider);
 
             // GLOBAL PROVIDER - usa WhatsAppService padrao
             $whatsappService = new WhatsAppService();
@@ -96,6 +116,17 @@ class WhatsappTenantService
             ]);
             return false;
         }
+    }
+
+    /**
+     * @param array<string, mixed> $tenantProvider
+     */
+    private static function resolveTenantGlobalProvider(array $tenantProvider): ?string
+    {
+        $catalog = app(TenantGlobalProviderCatalogService::class);
+        return $catalog->resolveTenantGlobalProvider(
+            (string) ($tenantProvider['global_provider'] ?? '')
+        );
     }
 
     private static function resolveGlobalWhatsAppMetaValue(array $keys, string $fallback = ''): string

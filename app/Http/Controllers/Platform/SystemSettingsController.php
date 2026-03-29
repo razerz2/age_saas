@@ -5,16 +5,21 @@ namespace App\Http\Controllers\Platform;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Services\Providers\ProviderConfigResolver;
+use App\Services\WhatsApp\TenantGlobalProviderCatalogService;
 use App\Services\WhatsApp\WhatsAppBusinessProvider;
 use App\Services\WhatsApp\WahaClient;
 use App\Services\WhatsApp\WahaProvider;
+use App\Services\WhatsApp\EvolutionClient;
+use App\Services\WhatsApp\EvolutionProvider;
 use App\Services\WhatsApp\ZApiProvider;
 use App\Services\WhatsApp\PhoneNormalizer;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 
 class SystemSettingsController extends Controller
 {
@@ -24,6 +29,8 @@ class SystemSettingsController extends Controller
      */
     public function index()
     {
+        $tenantGlobalProviderCatalog = app(TenantGlobalProviderCatalogService::class);
+
         $settings = [
             'timezone' => sysconfig('timezone', 'America/Sao_Paulo'),
             'language' => sysconfig('language', 'pt_BR'),
@@ -42,6 +49,10 @@ class SystemSettingsController extends Controller
             'WAHA_BASE_URL' => sysconfig('WAHA_BASE_URL', env('WAHA_BASE_URL')),
             'WAHA_API_KEY' => sysconfig('WAHA_API_KEY', env('WAHA_API_KEY')),
             'WAHA_SESSION' => sysconfig('WAHA_SESSION', env('WAHA_SESSION', 'default')),
+            'EVOLUTION_BASE_URL' => sysconfig('EVOLUTION_BASE_URL', env('EVOLUTION_BASE_URL', env('EVOLUTION_API_URL'))),
+            'EVOLUTION_API_KEY' => sysconfig('EVOLUTION_API_KEY', env('EVOLUTION_API_KEY', env('EVOLUTION_KEY'))),
+            'EVOLUTION_INSTANCE' => sysconfig('EVOLUTION_INSTANCE', env('EVOLUTION_INSTANCE', env('EVOLUTION_INSTANCE_NAME', 'default'))),
+            'WHATSAPP_GLOBAL_ENABLED_PROVIDERS' => $tenantGlobalProviderCatalog->enabledProviders(),
             'MAIL_HOST' => sysconfig('MAIL_HOST', env('MAIL_HOST')),
             'MAIL_PORT' => sysconfig('MAIL_PORT', env('MAIL_PORT')),
             'MAIL_USERNAME' => sysconfig('MAIL_USERNAME', env('MAIL_USERNAME')),
@@ -79,8 +90,15 @@ class SystemSettingsController extends Controller
 
         // Comandos agendados
         $scheduledCommands = $this->getScheduledCommands();
+        $tenantGlobalWhatsAppProviderOptions = $tenantGlobalProviderCatalog->supportedProviderOptions();
+        $tenantGlobalWhatsAppEnabledProviders = $tenantGlobalProviderCatalog->enabledProviders();
 
-        return view('platform.settings.index', compact('settings', 'scheduledCommands'));
+        return view('platform.settings.index', compact(
+            'settings',
+            'scheduledCommands',
+            'tenantGlobalWhatsAppProviderOptions',
+            'tenantGlobalWhatsAppEnabledProviders'
+        ));
     }
 
     /**
@@ -105,13 +123,16 @@ class SystemSettingsController extends Controller
      */
     public function updateIntegrations(Request $request)
     {
-        $request->validate([
+        $tenantGlobalProviderCatalog = app(TenantGlobalProviderCatalogService::class);
+
+        $rules = [
+            'tab' => 'nullable|string|in:integracoes,whatsapp,email',
             'ASAAS_API_KEY' => 'nullable|string',
             'ASAAS_ENV' => 'nullable|string',
             'META_ACCESS_TOKEN' => 'nullable|string',
             'META_PHONE_NUMBER_ID' => 'nullable|string',
             'META_WABA_ID' => 'nullable|string',
-            'WHATSAPP_PROVIDER' => 'nullable|string|in:whatsapp_business,zapi,waha',
+            'WHATSAPP_PROVIDER' => 'nullable|string|in:whatsapp_business,zapi,waha,evolution',
             'ZAPI_API_URL' => 'nullable|string|url',
             'ZAPI_TOKEN' => 'nullable|string',
             'ZAPI_CLIENT_TOKEN' => 'nullable|string',
@@ -119,13 +140,31 @@ class SystemSettingsController extends Controller
             'WAHA_BASE_URL' => 'nullable|string|url',
             'WAHA_API_KEY' => 'nullable|string',
             'WAHA_SESSION' => 'nullable|string',
+            'EVOLUTION_BASE_URL' => 'nullable|string|url',
+            'EVOLUTION_API_KEY' => 'nullable|string',
+            'EVOLUTION_INSTANCE' => 'nullable|string|max:120',
+            'WHATSAPP_GLOBAL_ENABLED_PROVIDERS' => 'nullable|array',
+            'WHATSAPP_GLOBAL_ENABLED_PROVIDERS.*' => [
+                'string',
+                Rule::in($tenantGlobalProviderCatalog->supportedProviders()),
+            ],
             'MAIL_HOST' => 'nullable|string',
             'MAIL_PORT' => 'nullable|string',
             'MAIL_USERNAME' => 'nullable|string',
             'MAIL_PASSWORD' => 'nullable|string',
             'MAIL_FROM_ADDRESS' => 'nullable|string',
             'MAIL_FROM_NAME' => 'nullable|string',
-        ]);
+        ];
+
+        $validator = Validator::make($request->all(), $rules);
+        if ($validator->fails()) {
+            $tab = $this->resolveSettingsTab($request->input('tab'));
+
+            return redirect()
+                ->route('Platform.settings.index', ['tab' => $tab])
+                ->withErrors($validator)
+                ->withInput();
+        }
 
         // Lista de campos que serÃ£o atualizados
         $fields = [
@@ -142,6 +181,9 @@ class SystemSettingsController extends Controller
             'WAHA_BASE_URL',
             'WAHA_API_KEY',
             'WAHA_SESSION',
+            'EVOLUTION_BASE_URL',
+            'EVOLUTION_API_KEY',
+            'EVOLUTION_INSTANCE',
             'MAIL_HOST',
             'MAIL_PORT',
             'MAIL_USERNAME',
@@ -152,14 +194,33 @@ class SystemSettingsController extends Controller
 
         // Atualiza configuraÃ§Ãµes no banco
         foreach ($fields as $field) {
-            if ($request->filled($field)) {
-                set_sysconfig($field, $request->$field);
+            if ($request->exists($field)) {
+                set_sysconfig($field, $request->input($field));
             }
+        }
+
+        $tab = $this->resolveSettingsTab($request->input('tab'));
+        if ($tab === 'whatsapp') {
+            set_sysconfig(
+                TenantGlobalProviderCatalogService::SYS_CONFIG_KEY,
+                $tenantGlobalProviderCatalog->encodeProviders(
+                    (array) $request->input('WHATSAPP_GLOBAL_ENABLED_PROVIDERS', [])
+                )
+            );
         }
         // Persistencia administrativa fica no banco (SystemSetting).
         // Evita restart do servidor local por escrita no .env durante uso do painel.
 
-        return back()->with('success', 'IntegraÃ§Ãµes e configuraÃ§Ãµes de e-mail atualizadas com sucesso.');
+        return redirect()
+            ->route('Platform.settings.index', ['tab' => $tab])
+            ->with('success', 'IntegraÃ§Ãµes e configuraÃ§Ãµes de e-mail atualizadas com sucesso.');
+    }
+
+    private function resolveSettingsTab(?string $tab): string
+    {
+        $allowedTabs = ['integracoes', 'whatsapp', 'email'];
+
+        return in_array($tab, $allowedTabs, true) ? $tab : 'integracoes';
     }
 
     /**
@@ -776,6 +837,35 @@ class SystemSettingsController extends Controller
                 'http_status' => $result['http_status'] ?? null,
             ]);
         }
+        if ($serviceKey === 'evolution') {
+            $this->applyPlatformEvolutionConfig($request);
+            $client = EvolutionClient::fromConfig();
+
+            if (!$client->isConfigured()) {
+                return response()->json([
+                    'status' => 'ERROR',
+                    'message' => 'Evolution API nao esta configurada corretamente. Defina EVOLUTION_BASE_URL e EVOLUTION_API_KEY.',
+                ]);
+            }
+
+            $result = $client->testConnection();
+
+            if (!empty($result['ok'])) {
+                return response()->json([
+                    'status' => 'OK',
+                    'message' => 'Conexao Evolution API OK! Endpoint de saude respondeu com sucesso.',
+                    'data' => $result['body'] ?? [],
+                    'http_status' => $result['status'] ?? null,
+                ]);
+            }
+
+            return response()->json([
+                'status' => 'ERROR',
+                'message' => $this->extractEvolutionErrorMessage($result['body'] ?? null),
+                'data' => $result['body'] ?? [],
+                'http_status' => $result['status'] ?? null,
+            ]);
+        }
 
         $result = testConnection($serviceKey);
 
@@ -931,6 +1021,42 @@ class SystemSettingsController extends Controller
             ]);
         }
     }
+
+    /**
+     * Envia mensagem de teste via Evolution API (apenas diagnostico na Platform)
+     */
+    public function testEvolutionSend(Request $request)
+    {
+        $validated = $request->validate([
+            'number' => 'required|string',
+            'message' => 'required|string|max:1000',
+        ]);
+
+        $this->applyPlatformEvolutionConfig($request);
+
+        try {
+            $provider = new EvolutionProvider();
+            $ok = $provider->sendMessage($validated['number'], $validated['message']);
+
+            if ($ok) {
+                return response()->json([
+                    'status' => 'OK',
+                    'message' => 'Mensagem de teste Evolution enviada com sucesso.',
+                ]);
+            }
+
+            return response()->json([
+                'status' => 'ERROR',
+                'message' => 'Falha ao enviar mensagem Evolution. Verifique configuracao e estado da instancia.',
+            ]);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'status' => 'ERROR',
+                'message' => 'Erro ao enviar mensagem Evolution: ' . $e->getMessage(),
+            ]);
+        }
+    }
+
     private function applyPlatformWahaConfig(?Request $request = null): void
     {
         $resolver = new ProviderConfigResolver();
@@ -947,6 +1073,24 @@ class SystemSettingsController extends Controller
             'base_url' => $runtimeConfig['base_url'] ?? null,
             'session' => $runtimeConfig['session'] ?? null,
             'api_key_hint' => WahaClient::maskApiKey((string) ($runtimeConfig['api_key'] ?? '')),
+        ]);
+    }
+
+    private function applyPlatformEvolutionConfig(?Request $request = null): void
+    {
+        $resolver = new ProviderConfigResolver();
+        $resolvedConfig = $resolver->resolveEvolutionConfig();
+        $overrides = $this->extractEvolutionRuntimeOverrides($request);
+        $runtimeConfig = array_merge($resolvedConfig, $overrides);
+        $resolver->applyEvolutionConfig($runtimeConfig);
+
+        Log::info('Evolution runtime config applied for platform test', [
+            'source' => empty($overrides)
+                ? ($resolvedConfig['source'] ?? 'global')
+                : 'request_overrides',
+            'base_url' => $runtimeConfig['base_url'] ?? null,
+            'instance' => $runtimeConfig['instance'] ?? null,
+            'api_key_hint' => EvolutionClient::maskApiKey((string) ($runtimeConfig['api_key'] ?? '')),
         ]);
     }
 
@@ -976,6 +1120,32 @@ class SystemSettingsController extends Controller
         return $overrides;
     }
 
+    private function extractEvolutionRuntimeOverrides(?Request $request = null): array
+    {
+        if (!$request) {
+            return [];
+        }
+
+        $baseUrl = $this->extractEvolutionValue($request, ['EVOLUTION_BASE_URL', 'evolution_base_url', 'base_url']);
+        $apiKey = $this->extractEvolutionValue($request, ['EVOLUTION_API_KEY', 'EVOLUTION_KEY', 'evolution_api_key', 'api_key']);
+        $instance = $this->extractEvolutionValue($request, ['EVOLUTION_INSTANCE', 'evolution_instance', 'instance']);
+
+        $overrides = [];
+        if ($baseUrl !== '') {
+            $overrides['base_url'] = rtrim($baseUrl, '/');
+        }
+
+        if ($apiKey !== '') {
+            $overrides['api_key'] = $apiKey;
+        }
+
+        if ($instance !== '') {
+            $overrides['instance'] = $instance;
+        }
+
+        return $overrides;
+    }
+
     private function extractWahaValue(Request $request, array $keys): string
     {
         foreach ($keys as $key) {
@@ -986,6 +1156,39 @@ class SystemSettingsController extends Controller
         }
 
         return '';
+    }
+
+    private function extractEvolutionValue(Request $request, array $keys): string
+    {
+        foreach ($keys as $key) {
+            $value = trim((string) $request->input($key, ''));
+            if ($value !== '') {
+                return $value;
+            }
+        }
+
+        return '';
+    }
+
+    private function extractEvolutionErrorMessage(mixed $body): string
+    {
+        if (!is_array($body)) {
+            return 'Falha ao testar conexao Evolution API.';
+        }
+
+        $message = trim((string) (
+            $body['message']
+            ?? $body['error']
+            ?? data_get($body, 'response.message')
+            ?? data_get($body, 'response.error')
+            ?? ''
+        ));
+
+        if ($message !== '') {
+            return $message;
+        }
+
+        return 'Falha ao testar conexao Evolution API.';
     }
 
     private function normalizeService(string $service): string
@@ -1001,6 +1204,12 @@ class SystemSettingsController extends Controller
             'waha-core' => 'waha',
             'whatsapp_waha' => 'waha',
             'whatsapp-waha' => 'waha',
+            'evolution_api' => 'evolution',
+            'evolution-api' => 'evolution',
+            'evo_api' => 'evolution',
+            'evo-api' => 'evolution',
+            'whatsapp_evolution' => 'evolution',
+            'whatsapp-evolution' => 'evolution',
         ];
 
         return $aliases[$normalized] ?? $normalized;

@@ -31,6 +31,8 @@
             </li>
             <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#integracoes" role="tab">Integrações</a>
             </li>
+            <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#whatsapp" role="tab">WhatsApp</a>
+            </li>
             <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#logos" role="tab">Logos e Favicons</a></li>
             <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#email" role="tab">E-mail</a></li>
             <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#pagamentos" role="tab">Pagamentos</a></li>
@@ -73,38 +75,89 @@
             <div class="tab-pane fade" id="integracoes" role="tabpanel">
                 <form method="POST" action="{{ route('Platform.settings.update.integrations') }}">
                     @csrf
+                    <input type="hidden" name="tab" value="integracoes">
                     <h5 class="mt-2">🔑 Asaas</h5>
                     <div class="mb-3">
                         <label>API URL</label>
-                        <input type="text" class="form-control" name="ASAAS_API_URL" value="{{ env('ASAAS_API_URL') }}">
+                        <input type="text" class="form-control" name="ASAAS_API_URL"
+                            value="{{ old('ASAAS_API_URL', env('ASAAS_API_URL')) }}">
                     </div>
                     <div class="mb-3">
                         <label>API Key</label>
                         <input type="text" class="form-control" name="ASAAS_API_KEY"
-                            value="{{ $settings['ASAAS_API_KEY'] }}">
+                            value="{{ old('ASAAS_API_KEY', $settings['ASAAS_API_KEY']) }}">
                     </div>
 
                     <a href="{{ route('Platform.settings.test', 'asaas') }}" class="btn btn-secondary mb-4">
                         <i class="fas fa-plug me-1"></i> Testar Conexão ASAAS</a>
 
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-1"></i> Salvar Integrações
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            {{-- Aba WhatsApp --}}
+            <div class="tab-pane fade" id="whatsapp" role="tabpanel">
+                <form method="POST" action="{{ route('Platform.settings.update.integrations') }}">
+                    @csrf
+                    <input type="hidden" name="tab" value="whatsapp">
                     <h5>WhatsApp</h5>
                     @include('shared.whatsapp.providers-settings', [
                         'settings' => $settings,
                         'providerFieldName' => 'WHATSAPP_PROVIDER',
-                        'providerValue' => $settings['WHATSAPP_PROVIDER'] ?? 'whatsapp_business',
+                        'providerValue' => old('WHATSAPP_PROVIDER', $settings['WHATSAPP_PROVIDER'] ?? 'whatsapp_business'),
+                        'includeEvolutionProvider' => true,
                         'metaTestUrl' => route('Platform.settings.test', 'meta'),
                         'metaSendUrl' => route('Platform.settings.test.meta.send'),
                         'zapiTestUrl' => route('Platform.settings.test', 'zapi'),
                         'zapiSendUrl' => route('Platform.settings.test.zapi.send'),
                         'wahaTestUrl' => route('Platform.settings.test', 'waha'),
                         'wahaSendUrl' => route('Platform.settings.test.waha.send'),
+                        'evolutionTestUrl' => route('Platform.settings.test', 'evolution'),
+                        'evolutionSendUrl' => route('Platform.settings.test.evolution.send'),
                     ])
 
+                    <div class="card mb-3 border border-gray-200 dark:border-gray-700">
+                        <div class="card-body">
+                            <h6 class="mb-2 text-sm font-semibold text-gray-900 dark:text-white">Providers globais para tenants</h6>
+                            <p class="text-xs text-gray-500 dark:text-gray-400 mb-3">
+                                Defina quais providers nao oficiais podem ser usados quando o tenant selecionar "Usar servico global do sistema".
+                            </p>
 
+                            @php
+                                $selectedTenantGlobalProviders = old(
+                                    'WHATSAPP_GLOBAL_ENABLED_PROVIDERS',
+                                    $tenantGlobalWhatsAppEnabledProviders ?? ($settings['WHATSAPP_GLOBAL_ENABLED_PROVIDERS'] ?? [])
+                                );
+                                if (!is_array($selectedTenantGlobalProviders)) {
+                                    $selectedTenantGlobalProviders = [];
+                                }
+                            @endphp
+
+                            @forelse(($tenantGlobalWhatsAppProviderOptions ?? []) as $providerKey => $providerLabel)
+                                <label class="inline-flex items-center gap-2 mr-4 mb-2">
+                                    <input
+                                        type="checkbox"
+                                        name="WHATSAPP_GLOBAL_ENABLED_PROVIDERS[]"
+                                        value="{{ $providerKey }}"
+                                        {{ in_array($providerKey, $selectedTenantGlobalProviders, true) ? 'checked' : '' }}
+                                    >
+                                    <span class="text-sm text-gray-700 dark:text-gray-300">{{ $providerLabel }}</span>
+                                </label>
+                            @empty
+                                <p class="text-sm text-gray-500 dark:text-gray-400 mb-0">
+                                    Nenhum provider nao oficial disponivel para catalogo global no momento.
+                                </p>
+                            @endforelse
+                        </div>
+                    </div>
 
                     <div class="d-flex gap-2">
                         <button type="submit" class="btn btn-primary">
-                            <i class="fas fa-save me-1"></i> Salvar Integrações
+                            <i class="fas fa-save me-1"></i> Salvar WhatsApp
                         </button>
                     </div>
                 </form>
@@ -451,13 +504,14 @@
             <div class="tab-pane fade" id="email" role="tabpanel">
                 <form method="POST" action="{{ route('Platform.settings.update.integrations') }}">
                     @csrf
+                    <input type="hidden" name="tab" value="email">
                     <h5>📧 Configuração de E-mail</h5>
                     <div class="mb-3"><label>Host</label><input type="text" name="MAIL_HOST" class="form-control"
-                            value="{{ $settings['MAIL_HOST'] }}"></div>
+                            value="{{ old('MAIL_HOST', $settings['MAIL_HOST']) }}"></div>
                     <div class="mb-3"><label>Porta</label><input type="text" name="MAIL_PORT" class="form-control"
-                            value="{{ $settings['MAIL_PORT'] }}"></div>
+                            value="{{ old('MAIL_PORT', $settings['MAIL_PORT']) }}"></div>
                     <div class="mb-3"><label>Usuário</label><input type="text" name="MAIL_USERNAME"
-                            class="form-control" value="{{ $settings['MAIL_USERNAME'] }}"></div>
+                            class="form-control" value="{{ old('MAIL_USERNAME', $settings['MAIL_USERNAME']) }}"></div>
                     <div class="mb-3">
                         <label>Senha</label>
                         <input type="password" name="MAIL_PASSWORD" class="form-control" placeholder="••••••••"
@@ -465,9 +519,9 @@
                         <small class="text-muted">A senha não é exibida por segurança. Reinsira se desejar alterar.</small>
                     </div>
                     <div class="mb-3"><label>Remetente</label><input type="email" name="MAIL_FROM_ADDRESS"
-                            class="form-control" value="{{ $settings['MAIL_FROM_ADDRESS'] }}"></div>
+                            class="form-control" value="{{ old('MAIL_FROM_ADDRESS', $settings['MAIL_FROM_ADDRESS']) }}"></div>
                     <div class="mb-3"><label>Nome do Remetente</label><input type="text" name="MAIL_FROM_NAME"
-                            class="form-control" value="{{ $settings['MAIL_FROM_NAME'] }}"></div>
+                            class="form-control" value="{{ old('MAIL_FROM_NAME', $settings['MAIL_FROM_NAME']) }}"></div>
                     <div class="d-flex gap-2 mt-3">
                         <a href="{{ route('Platform.settings.test', 'email') }}" class="btn btn-outline-secondary">
                             <i class="fas fa-paper-plane me-1"></i> Testar Envio
@@ -907,15 +961,14 @@
                                     </td>
                                     <td>
                                         @if(isset($command['is_custom']) && $command['is_custom'])
-                                            <form method="POST" action="{{ route('Platform.settings.commands.remove', $command['key']) }}" 
-                                                  onsubmit="return confirm('Tem certeza que deseja remover este comando? Esta ação não pode ser desfeita.');" 
-                                                  style="display: inline;">
-                                                @csrf
-                                                @method('DELETE')
-                                                <button type="submit" class="btn btn-sm btn-danger" title="Remover comando">
-                                                    <i class="fas fa-trash"></i>
-                                                </button>
-                                            </form>
+                                            <button type="button"
+                                                class="btn btn-sm btn-danger js-submit-platform-action"
+                                                title="Remover comando"
+                                                data-action="{{ route('Platform.settings.commands.remove', $command['key']) }}"
+                                                data-method="DELETE"
+                                                data-confirm="Tem certeza que deseja remover este comando? Esta ação não pode ser desfeita.">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
                                         @else
                                             <span class="text-muted" title="Comando padrão do sistema não pode ser removido">-</span>
                                         @endif
@@ -933,14 +986,13 @@
                         <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addCommandModal">
                             <i class="fas fa-plus me-1"></i> Adicionar Novo Comando
                         </button>
-                        <form method="POST" action="{{ route('Platform.settings.commands.remove-duplicates') }}" 
-                              onsubmit="return confirm('Tem certeza que deseja remover todos os comandos duplicados? Esta ação não pode ser desfeita.');" 
-                              style="display: inline;">
-                            @csrf
-                            <button type="submit" class="btn btn-warning">
-                                <i class="fas fa-trash-alt me-1"></i> Remover Duplicados
-                            </button>
-                        </form>
+                        <button type="button"
+                            class="btn btn-warning js-submit-platform-action"
+                            data-action="{{ route('Platform.settings.commands.remove-duplicates') }}"
+                            data-method="POST"
+                            data-confirm="Tem certeza que deseja remover todos os comandos duplicados? Esta ação não pode ser desfeita.">
+                            <i class="fas fa-trash-alt me-1"></i> Remover Duplicados
+                        </button>
                         <a href="{{ route('Platform.settings.index') }}" class="btn btn-secondary">
                             <i class="fas fa-times me-1"></i> Cancelar
                         </a>
@@ -1378,6 +1430,30 @@
                 return input ? input.value : '';
             }
 
+            function submitPlatformActionForm(action, method) {
+                var form = document.createElement('form');
+                form.method = 'POST';
+                form.action = action;
+
+                var tokenInput = document.createElement('input');
+                tokenInput.type = 'hidden';
+                tokenInput.name = '_token';
+                tokenInput.value = getCsrfToken();
+                form.appendChild(tokenInput);
+
+                var normalizedMethod = (method || 'POST').toUpperCase();
+                if (normalizedMethod !== 'POST') {
+                    var methodInput = document.createElement('input');
+                    methodInput.type = 'hidden';
+                    methodInput.name = '_method';
+                    methodInput.value = normalizedMethod;
+                    form.appendChild(methodInput);
+                }
+
+                document.body.appendChild(form);
+                form.submit();
+            }
+
             function getWahaRuntimeConfig() {
                 var baseUrlInput = document.querySelector('input[name="WAHA_BASE_URL"]');
                 var apiKeyInput = document.querySelector('input[name="WAHA_API_KEY"]');
@@ -1390,8 +1466,37 @@
                 };
             }
 
+            function getEvolutionRuntimeConfig() {
+                var baseUrlInput = document.querySelector('input[name="EVOLUTION_BASE_URL"]');
+                var apiKeyInput = document.querySelector('input[name="EVOLUTION_API_KEY"]');
+                var instanceInput = document.querySelector('input[name="EVOLUTION_INSTANCE"]');
+
+                return {
+                    EVOLUTION_BASE_URL: baseUrlInput ? baseUrlInput.value.trim() : '',
+                    EVOLUTION_API_KEY: apiKeyInput ? apiKeyInput.value.trim() : '',
+                    EVOLUTION_INSTANCE: instanceInput ? instanceInput.value.trim() : ''
+                };
+            }
+
             function appendWahaRuntimeConfigToUrl(url) {
                 var runtimeConfig = getWahaRuntimeConfig();
+                var params = new URLSearchParams();
+
+                Object.keys(runtimeConfig).forEach(function (key) {
+                    if (runtimeConfig[key]) {
+                        params.append(key, runtimeConfig[key]);
+                    }
+                });
+
+                if (!params.toString()) {
+                    return url;
+                }
+
+                return url + (url.indexOf('?') >= 0 ? '&' : '?') + params.toString();
+            }
+
+            function appendEvolutionRuntimeConfigToUrl(url) {
+                var runtimeConfig = getEvolutionRuntimeConfig();
                 var params = new URLSearchParams();
 
                 Object.keys(runtimeConfig).forEach(function (key) {
@@ -1418,6 +1523,8 @@
 
                     if (buttonId === 'btn-test-waha') {
                         url = appendWahaRuntimeConfigToUrl(url);
+                    } else if (buttonId === 'btn-test-evolution') {
+                        url = appendEvolutionRuntimeConfigToUrl(url);
                     }
 
                     var badge = document.getElementById(badgeId);
@@ -1478,11 +1585,42 @@
                 });
             }
 
+            function activateSettingsTabFromQuery() {
+                var activeTab = new URLSearchParams(window.location.search).get('tab');
+                if (!activeTab) return;
+
+                var trigger = document.querySelector('#settingsTabs a[href="#' + activeTab + '"]');
+                if (!trigger) return;
+
+                if (window.bootstrap && bootstrap.Tab) {
+                    bootstrap.Tab.getOrCreateInstance(trigger).show();
+                    return;
+                }
+
+                trigger.click();
+            }
             document.addEventListener('DOMContentLoaded', function () {
+                activateSettingsTabFromQuery();
                 setupProviderToggle();
                 setupTestButton('btn-test-meta', 'meta-test-badge', 'meta-test-message');
                 setupTestButton('btn-test-zapi', 'zapi-test-badge', 'zapi-test-message');
                 setupTestButton('btn-test-waha', 'waha-test-badge', 'waha-test-message');
+                setupTestButton('btn-test-evolution', 'evolution-test-badge', 'evolution-test-message');
+
+                document.querySelectorAll('.js-submit-platform-action').forEach(function (button) {
+                    button.addEventListener('click', function () {
+                        var confirmMessage = button.getAttribute('data-confirm');
+                        if (confirmMessage && !window.confirm(confirmMessage)) {
+                            return;
+                        }
+
+                        var action = button.getAttribute('data-action');
+                        var method = button.getAttribute('data-method') || 'POST';
+                        if (!action) return;
+
+                        submitPlatformActionForm(action, method);
+                    });
+                });
 
                 // Toggle formulário de envio Meta
                 var toggleMetaSendBtn = document.getElementById('btn-toggle-meta-send');
@@ -1696,8 +1834,108 @@
                             });
                     });
                 }
+
+                // Toggle formulario de envio Evolution
+                var toggleEvolutionSendBtn = document.getElementById('btn-toggle-evolution-send');
+                var evolutionSendForm = document.getElementById('evolution-send-form');
+                if (toggleEvolutionSendBtn && evolutionSendForm) {
+                    toggleEvolutionSendBtn.addEventListener('click', function () {
+                        if (evolutionSendForm.classList.contains('d-none')) {
+                            evolutionSendForm.classList.remove('d-none');
+                        } else {
+                            evolutionSendForm.classList.add('d-none');
+                        }
+                    });
+                }
+
+                // Envio de mensagem de teste Evolution
+                var evolutionSendBtn = document.getElementById('btn-send-evolution-test');
+                if (evolutionSendBtn) {
+                    evolutionSendBtn.addEventListener('click', function (e) {
+                        e.preventDefault();
+
+                        var url = evolutionSendBtn.getAttribute('data-send-url');
+                        if (!url) return;
+
+                        var numberInput = document.getElementById('evolution-test-number');
+                        var messageInput = document.getElementById('evolution-test-message-input');
+                        var badge = document.getElementById('evolution-send-badge');
+                        var message = document.getElementById('evolution-send-message');
+
+                        var number = numberInput ? numberInput.value.trim() : '';
+                        var text = messageInput ? messageInput.value.trim() : '';
+
+                        if (!number || !text) {
+                            if (message) {
+                                message.textContent = 'Preencha o numero de destino e a mensagem para enviar o teste.';
+                            }
+                            return;
+                        }
+
+                        if (badge) {
+                            badge.classList.remove('bg-success', 'bg-danger', 'd-none');
+                            badge.classList.add('bg-secondary');
+                            badge.textContent = 'Enviando...';
+                        }
+                        if (message) {
+                            message.textContent = '';
+                        }
+
+                        var csrfToken = getCsrfToken();
+                        var runtimeConfig = getEvolutionRuntimeConfig();
+
+                        fetch(url, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Accept': 'application/json',
+                                'X-Requested-With': 'XMLHttpRequest',
+                                'X-CSRF-TOKEN': csrfToken
+                            },
+                            credentials: 'same-origin',
+                            body: JSON.stringify({
+                                number: number,
+                                message: text,
+                                EVOLUTION_BASE_URL: runtimeConfig.EVOLUTION_BASE_URL,
+                                EVOLUTION_API_KEY: runtimeConfig.EVOLUTION_API_KEY,
+                                EVOLUTION_INSTANCE: runtimeConfig.EVOLUTION_INSTANCE
+                            })
+                        })
+                            .then(function (response) {
+                                return response.json().catch(function () {
+                                    return { status: 'ERROR', message: 'Resposta invalida do servidor.' };
+                                });
+                            })
+                            .then(function (data) {
+                                var status = (data && data.status) ? String(data.status).toUpperCase() : 'ERROR';
+                                var ok = (status === 'OK' || status === 'WORKING' || status === 'SUCCESS');
+
+                                if (badge) {
+                                    badge.classList.remove('bg-secondary', 'bg-success', 'bg-danger', 'd-none');
+                                    badge.classList.add(ok ? 'bg-success' : 'bg-danger');
+                                    badge.textContent = ok ? 'Enviado' : 'Erro';
+                                }
+
+                                if (message) {
+                                    var friendly = data && data.message ? data.message : (ok
+                                        ? 'Mensagem enviada com sucesso.'
+                                        : 'Falha ao enviar mensagem de teste. Verifique as configuracoes.');
+                                    message.textContent = friendly;
+                                }
+                            })
+                            .catch(function () {
+                                if (badge) {
+                                    badge.classList.remove('bg-secondary', 'bg-success');
+                                    badge.classList.add('bg-danger');
+                                    badge.textContent = 'Erro';
+                                }
+                                if (message) {
+                                    message.textContent = 'Erro ao comunicar com o servidor. Tente novamente.';
+                                }
+                            });
+                    });
+                }
             });
         })();
     </script>
 @endpush
-

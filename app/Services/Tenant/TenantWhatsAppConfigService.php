@@ -4,11 +4,13 @@ namespace App\Services\Tenant;
 
 use App\Models\Tenant\TenantSetting;
 use App\Services\Providers\ProviderConfigResolver;
+use App\Services\WhatsApp\TenantGlobalProviderCatalogService;
 
 class TenantWhatsAppConfigService
 {
     public function __construct(
-        private readonly ProviderConfigResolver $providerConfigResolver
+        private readonly ProviderConfigResolver $providerConfigResolver,
+        private readonly TenantGlobalProviderCatalogService $tenantGlobalProviderCatalog
     ) {
     }
 
@@ -58,18 +60,19 @@ class TenantWhatsAppConfigService
                 'services.whatsapp.zapi.instance_id' => (string) ($config['zapi_instance_id'] ?? ''),
             ]);
 
-            $this->providerConfigResolver->applyWahaConfig($this->providerConfigResolver->resolveWahaConfig($config));
+            $this->providerConfigResolver->applyUnofficialRuntimeConfigs($config);
             return;
         }
 
-        $globalProvider = function_exists('sysconfig')
-            ? (string) sysconfig('WHATSAPP_PROVIDER', config('services.whatsapp.provider', 'whatsapp_business'))
-            : (string) config('services.whatsapp.provider', 'whatsapp_business');
+        $globalProvider = $this->tenantGlobalProviderCatalog->resolveTenantGlobalProvider(
+            (string) ($config['global_provider'] ?? '')
+        );
+        $effectiveGlobalProvider = $globalProvider ?? '__invalid_tenant_global_provider__';
 
         config([
             'services.whatsapp.force_runtime_provider' => true,
-            'services.whatsapp.runtime_provider' => strtolower(trim($globalProvider)) ?: 'whatsapp_business',
-            'services.whatsapp.provider' => $globalProvider,
+            'services.whatsapp.runtime_provider' => strtolower(trim($effectiveGlobalProvider)),
+            'services.whatsapp.provider' => $effectiveGlobalProvider,
             'services.whatsapp.business.api_url' => $this->resolveGlobalMetaValue(
                 ['WHATSAPP_META_BASE_URL', 'WHATSAPP_BUSINESS_API_URL', 'WHATSAPP_API_URL'],
                 (string) config('services.whatsapp.business.api_url', 'https://graph.facebook.com/v22.0')
@@ -88,7 +91,7 @@ class TenantWhatsAppConfigService
             ),
         ]);
 
-        $this->providerConfigResolver->applyWahaConfig($this->providerConfigResolver->resolveWahaConfig());
+        $this->providerConfigResolver->applyUnofficialRuntimeConfigs($config);
     }
 
     private function resolveGlobalMetaValue(array $keys, string $fallback = ''): string
@@ -107,4 +110,3 @@ class TenantWhatsAppConfigService
         return trim($fallback);
     }
 }
-
