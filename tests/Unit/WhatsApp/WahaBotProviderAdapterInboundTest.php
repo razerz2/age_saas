@@ -70,6 +70,35 @@ it('falls back to payload.from when chatId contains internal lid identifier', fu
         ->and($inbound?->text)->toBe('teste fallback');
 });
 
+it('extracts phone from payload _data info senderAlt when from identifiers are internal lid', function () {
+    $adapter = app(WahaBotProviderAdapter::class);
+
+    $payload = [
+        'event' => 'message',
+        'payload' => [
+            'from' => '215084110503978@lid',
+            'body' => 'mensagem real',
+            'type' => 'chat',
+            'id' => 'wamid.real.3',
+            '_data' => [
+                'Info' => [
+                    'Chat' => '215084110503978@lid',
+                    'Sender' => '215084110503978:3@lid',
+                    'SenderAlt' => '556793087866:3@s.whatsapp.net',
+                ],
+            ],
+        ],
+    ];
+
+    $inbound = $adapter->normalizeInbound($payload);
+
+    expect($inbound)->not->toBeNull()
+        ->and($inbound?->contactPhone)->toBe('556793087866')
+        ->and($inbound?->text)->toBe('mensagem real')
+        ->and($inbound?->messageType)->toBe('chat')
+        ->and($inbound?->externalMessageId)->toBe('wamid.real.3');
+});
+
 it('normalizes waha inbound payload with nested data.message fields', function () {
     $adapter = app(WahaBotProviderAdapter::class);
 

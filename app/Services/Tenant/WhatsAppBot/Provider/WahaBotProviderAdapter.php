@@ -20,6 +20,10 @@ class WahaBotProviderAdapter extends AbstractWhatsAppBotProviderAdapter
             'payload_chatId' => data_get($payload, 'payload.chatId'),
             'payload_from' => data_get($payload, 'payload.from'),
             'payload_key_remoteJid' => data_get($payload, 'payload.key.remoteJid'),
+            'payload_info_sender_alt' => data_get($payload, 'payload._data.Info.SenderAlt'),
+            'payload_info_recipient_alt' => data_get($payload, 'payload._data.Info.RecipientAlt'),
+            'payload_info_sender' => data_get($payload, 'payload._data.Info.Sender'),
+            'payload_info_chat' => data_get($payload, 'payload._data.Info.Chat'),
             'chatId' => data_get($payload, 'chatId'),
             'from' => data_get($payload, 'from'),
             'data_chatId' => data_get($payload, 'data.chatId'),
@@ -32,6 +36,10 @@ class WahaBotProviderAdapter extends AbstractWhatsAppBotProviderAdapter
             'payload_key_remoteJid' => data_get($payload, 'payload.key.remoteJid'),
             'payload_sender' => data_get($payload, 'payload.sender'),
             'payload_senderAlt' => data_get($payload, 'payload.senderAlt'),
+            'payload_info_sender' => data_get($payload, 'payload._data.Info.Sender'),
+            'payload_info_senderAlt' => data_get($payload, 'payload._data.Info.SenderAlt'),
+            'payload_info_recipientAlt' => data_get($payload, 'payload._data.Info.RecipientAlt'),
+            'payload_info_chat' => data_get($payload, 'payload._data.Info.Chat'),
             'payload_me_id' => data_get($payload, 'payload.me.id'),
             'raw_payload' => $payload,
         ]);
@@ -53,7 +61,12 @@ class WahaBotProviderAdapter extends AbstractWhatsAppBotProviderAdapter
                 continue;
             }
 
-            $rawContact = $normalizedCandidate;
+            $normalizedForPhone = $this->normalizeWahaContactCandidate($normalizedCandidate);
+            if ($normalizedForPhone === '') {
+                continue;
+            }
+
+            $rawContact = $normalizedForPhone;
             break;
         }
 
@@ -195,7 +208,29 @@ class WahaBotProviderAdapter extends AbstractWhatsAppBotProviderAdapter
             return true;
         }
 
-        return preg_match('/:\d+@s\.whatsapp\.net$/', $normalized) === 1;
+        $localPart = (string) strtok($normalized, '@');
+        if ($localPart === '') {
+            return true;
+        }
+
+        $baseIdentifier = preg_replace('/:.*/', '', $localPart) ?? $localPart;
+        $digits = preg_replace('/\D+/', '', $baseIdentifier) ?? '';
+
+        return $digits === '';
+    }
+
+    private function normalizeWahaContactCandidate(string $value): string
+    {
+        $normalized = trim($value);
+        if ($normalized === '') {
+            return '';
+        }
+
+        // WAHA/GOWS may append a device suffix before the JID domain, e.g. 556793087866:3@s.whatsapp.net.
+        $normalized = preg_replace('/:[^@]+(?=@)/', '', $normalized) ?? $normalized;
+        $normalized = preg_replace('/:\d+$/', '', $normalized) ?? $normalized;
+
+        return trim($normalized);
     }
 
     /**
