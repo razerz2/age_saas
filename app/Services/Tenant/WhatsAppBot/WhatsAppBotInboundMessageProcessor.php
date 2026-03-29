@@ -75,6 +75,7 @@ class WhatsAppBotInboundMessageProcessor
                     'action' => 'provider.check',
                     'result' => 'ignored',
                     'reason' => 'provider_mismatch',
+                    'payload_snapshot' => $this->summarizePayload($payload),
                     'processing_ms' => $this->processingMs($startedAt),
                 ]);
 
@@ -95,6 +96,7 @@ class WhatsAppBotInboundMessageProcessor
                     'action' => 'inbound.normalize',
                     'result' => 'ignored',
                     'reason' => 'payload_not_supported',
+                    'payload_snapshot' => $this->summarizePayload($payload),
                     'processing_ms' => $this->processingMs($startedAt),
                 ]);
 
@@ -253,5 +255,23 @@ class WhatsAppBotInboundMessageProcessor
     private function processingMs(float $startedAt): int
     {
         return (int) round((microtime(true) - $startedAt) * 1000);
+    }
+
+    /**
+     * @param array<string, mixed> $payload
+     * @return array<string, mixed>
+     */
+    private function summarizePayload(array $payload): array
+    {
+        return [
+            'root_keys' => array_slice(array_keys($payload), 0, 20),
+            'event' => (string) (data_get($payload, 'event') ?? ''),
+            'event_type' => (string) (data_get($payload, 'eventType') ?? ''),
+            'type' => (string) (data_get($payload, 'type') ?? ''),
+            'has_payload_node' => is_array(data_get($payload, 'payload')),
+            'has_data_node' => is_array(data_get($payload, 'data')),
+            'has_messages_node' => is_array(data_get($payload, 'data.messages')),
+            'has_message_node' => is_array(data_get($payload, 'data.message')),
+        ];
     }
 }

@@ -134,6 +134,9 @@ class TenantSetting extends Model
             'waha_base_url' => $settings['whatsapp.waha.base_url'] ?? null,
             'waha_api_key' => $settings['whatsapp.waha.api_key'] ?? null,
             'waha_session' => $settings['whatsapp.waha.session'] ?? 'default',
+            'evolution_base_url' => $settings['whatsapp.evolution.base_url'] ?? null,
+            'evolution_api_key' => $settings['whatsapp.evolution.api_key'] ?? null,
+            'evolution_instance' => $settings['whatsapp.evolution.instance'] ?? 'default',
             'api_url' => $settings['whatsapp.api_url'] ?? null,
             'api_token' => $settings['whatsapp.api_token'] ?? null,
             'sender' => $settings['whatsapp.sender'] ?? null,
@@ -166,6 +169,9 @@ class TenantSetting extends Model
             'waha_base_url' => $settings['whatsapp_bot.waha.base_url'] ?? null,
             'waha_api_key' => $settings['whatsapp_bot.waha.api_key'] ?? null,
             'waha_session' => $settings['whatsapp_bot.waha.session'] ?? 'default',
+            'evolution_base_url' => $settings['whatsapp_bot.evolution.base_url'] ?? null,
+            'evolution_api_key' => $settings['whatsapp_bot.evolution.api_key'] ?? null,
+            'evolution_instance' => $settings['whatsapp_bot.evolution.instance'] ?? 'default',
         ];
     }
 
