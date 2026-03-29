@@ -47,11 +47,25 @@ class WhatsAppBotIntentRouter
         return (int) $matches[1];
     }
 
-    public function isResetCommand(string $text): bool
+    /**
+     * @param array<int, string>|null $keywords
+     */
+    public function isResetCommand(string $text, ?array $keywords = null): bool
     {
         $normalized = $this->normalizeText($text);
+        $resetKeywords = $keywords ?? ['menu', 'inicio', 'start', 'reiniciar', 'voltar', '0'];
 
-        return in_array($normalized, ['menu', 'inicio', 'start', 'reiniciar', 'voltar', '0'], true);
+        if ($normalized === '') {
+            return false;
+        }
+
+        foreach ($resetKeywords as $keyword) {
+            if ($this->normalizeForComparison((string) $keyword) === $normalized) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     public function isAffirmative(string $text): bool
@@ -66,6 +80,44 @@ class WhatsAppBotIntentRouter
         $normalized = $this->normalizeText($text);
 
         return in_array($normalized, ['2', 'nao', 'cancelar', 'voltar'], true);
+    }
+
+    public function isGreeting(string $text): bool
+    {
+        $normalized = $this->normalizeForComparison($text);
+        if ($normalized === '') {
+            return false;
+        }
+
+        if (in_array($normalized, ['oi', 'ola', 'bom dia', 'boa tarde', 'boa noite'], true)) {
+            return true;
+        }
+
+        return $this->containsAny($normalized, ['oi ', 'ola ', 'quero comecar', 'iniciar']);
+    }
+
+    /**
+     * @param array<int, string> $keywords
+     */
+    public function matchesAnyKeyword(string $text, array $keywords): bool
+    {
+        $normalizedText = $this->normalizeForComparison($text);
+        if ($normalizedText === '') {
+            return false;
+        }
+
+        foreach ($keywords as $keyword) {
+            if ($this->normalizeForComparison((string) $keyword) === $normalizedText) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    public function normalizeForComparison(string $value): string
+    {
+        return $this->normalizeText($value);
     }
 
     /**

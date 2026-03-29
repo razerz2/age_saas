@@ -172,6 +172,8 @@ class TenantSetting extends Model
             'evolution_base_url' => $settings['whatsapp_bot.evolution.base_url'] ?? null,
             'evolution_api_key' => $settings['whatsapp_bot.evolution.api_key'] ?? null,
             'evolution_instance' => $settings['whatsapp_bot.evolution.instance'] ?? 'default',
+            'entry_keywords' => self::parseStringListSetting($settings['whatsapp_bot.entry_keywords'] ?? null),
+            'exit_keywords' => self::parseStringListSetting($settings['whatsapp_bot.exit_keywords'] ?? null),
         ];
     }
 
@@ -183,5 +185,29 @@ class TenantSetting extends Model
     public static function getWhatsAppConfig(): array
     {
         return self::whatsappProvider();
+    }
+
+    /**
+     * @param mixed $value
+     * @return array<int, string>
+     */
+    private static function parseStringListSetting(mixed $value): array
+    {
+        if (is_array($value)) {
+            return array_values(array_filter(array_map(static fn ($item): string => trim((string) $item), $value), static fn (string $item): bool => $item !== ''));
+        }
+
+        if (!is_string($value) || trim($value) === '') {
+            return [];
+        }
+
+        $decoded = json_decode($value, true);
+        if (is_array($decoded)) {
+            return array_values(array_filter(array_map(static fn ($item): string => trim((string) $item), $decoded), static fn (string $item): bool => $item !== ''));
+        }
+
+        $lines = preg_split('/\R/u', $value) ?: [];
+
+        return array_values(array_filter(array_map(static fn ($item): string => trim((string) $item), $lines), static fn (string $item): bool => $item !== ''));
     }
 }

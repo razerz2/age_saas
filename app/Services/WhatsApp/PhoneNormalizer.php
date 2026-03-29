@@ -2,6 +2,7 @@
 
 namespace App\Services\WhatsApp;
 
+use Illuminate\Container\Container;
 use Illuminate\Support\Facades\Log;
 
 class PhoneNormalizer
@@ -44,8 +45,8 @@ class PhoneNormalizer
             throw new \InvalidArgumentException('Telefone inválido para WAHA');
         }
 
-        if (config('app.debug')) {
-            Log::debug('🔎 WAHA phone normalized', [
+        if (self::shouldLogDebug()) {
+            Log::debug('WAHA phone normalized', [
                 'before' => self::maskPhone($raw),
                 'after' => self::maskPhone($digits),
             ]);
@@ -98,4 +99,21 @@ class PhoneNormalizer
 
         return $prefix . $masked . $suffix;
     }
+
+    private static function shouldLogDebug(): bool
+    {
+        try {
+            $container = Container::getInstance();
+            if (!$container || !$container->bound('config')) {
+                return false;
+            }
+
+            $config = $container->make('config');
+
+            return (bool) $config->get('app.debug', false);
+        } catch (\Throwable) {
+            return false;
+        }
+    }
 }
+

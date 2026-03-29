@@ -22,6 +22,14 @@ class WhatsAppBotConversationOrchestrator
     private const FLOW_CANCEL = 'cancel';
 
     private const STEP_MENU_AWAITING_OPTION = 'menu.awaiting_option';
+    private const STEP_IDENTIFY_AWAITING_CPF = 'identify.awaiting_cpf';
+    private const STEP_REGISTER_AWAITING_FIELD = 'register.awaiting_field';
+    private const STATE_PENDING_INTENT = 'pending_intent';
+    private const STATE_REGISTRATION = 'registration';
+
+    /**
+     * Legacy step kept only to recover sessions created before CPF-gated identification.
+     */
     private const STEP_IDENTIFY_AWAITING_NAME = 'identify.awaiting_name';
     private const STEP_SCHEDULE_AWAITING_SPECIALTY = 'schedule.awaiting_specialty';
     private const STEP_SCHEDULE_AWAITING_DOCTOR = 'schedule.awaiting_doctor';
@@ -31,7 +39,10 @@ class WhatsAppBotConversationOrchestrator
     private const STEP_CANCEL_AWAITING_APPOINTMENT = 'cancel.awaiting_appointment';
     private const STEP_CANCEL_AWAITING_CONFIRMATION = 'cancel.awaiting_confirmation';
 
-    private const INVALID_ATTEMPTS_THRESHOLD = 3;
+    /**
+     * @var array<string, mixed>
+     */
+    private array $runtimeSettings = [];
 
     public function __construct(
         private readonly WhatsAppBotConfigService $configService,
@@ -46,50 +57,184 @@ class WhatsAppBotConversationOrchestrator
     {
         $state = is_array($session->state) ? $session->state : [];
         $text = trim((string) ($message->text ?? ''));
+        $runtime = $this->initializeRuntimeSettings();
+        $settings = $runtime['settings'];
+        $entryKeywords = $runtime['entry_keywords'];
+        $exitKeywords = $runtime['exit_keywords'];
+        $resetKeywords = $runtime['reset_keywords'];
 
         $flow = (string) ($session->current_flow ?? self::FLOW_MENU);
         $step = (string) ($session->current_step ?? self::STEP_MENU_AWAITING_OPTION);
 
         $this->logStep($message, $flow, $step, 'incoming', 'success');
 
-        if ($this->shouldResetSessionContext($flow, $step)) {
-            return $this->menuResult($message, $this->resetConversationState($state), 'Sessao reiniciada por seguranca.');
+        $globalCommandResult = $this->handleGlobalConversationCommands(
+            $session,
+            $message,
+            $state,
+            $text,
+            $flow,
+            $step,
+            $settings,
+            $entryKeywords,
+            $exitKeywords,
+            $resetKeywords
+        );
+        if ($globalCommandResult instanceof ConversationResult) {
+            return $globalCommandResult;
         }
 
-        if ($this->intentRouter->isResetCommand($text)) {
-            return $this->menuResult($message, $this->resetConversationState($state), 'Fluxo reiniciado.');
+        if ($step === self::STEP_IDENTIFY_AWAITING_CPF) {
+            return $this->handleIdentifyByCpfStep($message, $state, $text, $settings);
         }
 
-        $patient = $this->patientService->findByNormalizedPhone($message->contactPhone);
-        if (!$patient) {
-            return $this->handleMissingPatient($session, $message, $state, $text);
+        if ($step === self::STEP_REGISTER_AWAITING_FIELD) {
+            return $this->handleRegistrationStep($message, $state, $text, $settings);
         }
-
-        $state['patient_id'] = (string) $patient->id;
-        $state['patient_name'] = (string) $patient->full_name;
 
         if ($step === self::STEP_IDENTIFY_AWAITING_NAME) {
-            return $this->menuResult($message, $state);
+            return $this->menuResult(
+                $message,
+                $this->resetConversationState($state),
+                'Fluxo de identificacao atualizado. Escolha uma opcao para continuar.'
+            );
+        }
+
+        $patient = $this->resolveAuthenticatedPatient($state);
+        if ($patient instanceof Patient) {
+            $state['patient_id'] = (string) $patient->id;
+            $state['patient_name'] = (string) $patient->full_name;
+        } else {
+            unset($state['patient_id'], $state['patient_name']);
         }
 
         if ($flow === self::FLOW_SCHEDULE) {
+            if (!$patient) {
+                if ($this->requiresIdentificationForIntent(WhatsAppBotIntentRouter::INTENT_SCHEDULE, $settings)) {
+                    return $this->startPatientIdentification($message, $state, WhatsAppBotIntentRouter::INTENT_SCHEDULE);
+                }
+
+                $patient = $this->resolvePatientByLookupOrder(
+                    null,
+                    $message->contactPhone,
+                    (array) data_get($settings, 'identification.lookup_order', WhatsAppBotConfigService::DEFAULT_IDENTIFICATION_LOOKUP_ORDER)
+                );
+            }
+
+            if (!$patient) {
+                return $this->menuResult($message, $this->resetConversationState($state), $this->message('patient_not_found'));
+            }
+
             return $this->handleScheduleFlow($message, $state, $patient, $step, $text);
         }
 
         if ($flow === self::FLOW_CANCEL) {
+            if (!$patient) {
+                if ($this->requiresIdentificationForIntent(WhatsAppBotIntentRouter::INTENT_CANCEL_APPOINTMENTS, $settings)) {
+                    return $this->startPatientIdentification($message, $state, WhatsAppBotIntentRouter::INTENT_CANCEL_APPOINTMENTS);
+                }
+
+                $patient = $this->resolvePatientByLookupOrder(
+                    null,
+                    $message->contactPhone,
+                    (array) data_get($settings, 'identification.lookup_order', WhatsAppBotConfigService::DEFAULT_IDENTIFICATION_LOOKUP_ORDER)
+                );
+            }
+
+            if (!$patient) {
+                return $this->menuResult($message, $this->clearCancelState($state), $this->message('patient_not_found'));
+            }
+
             return $this->handleCancelFlow($message, $state, $patient, $step, $text);
         }
 
-        return $this->handleMenu($message, $state, $patient, $text);
+        return $this->handleMenu($message, $state, $patient, $text, $settings);
     }
 
-    private function handleMenu(InboundMessage $message, array $state, Patient $patient, string $text): ConversationResult
+    /**
+     * @return array{
+     *   settings: array<string, mixed>,
+     *   entry_keywords: array<int, string>,
+     *   exit_keywords: array<int, string>,
+     *   reset_keywords: array<int, string>
+     * }
+     */
+    private function initializeRuntimeSettings(): array
+    {
+        $settings = $this->configService->getSettings();
+        $this->runtimeSettings = $settings;
+
+        return [
+            'settings' => $settings,
+            'entry_keywords' => (array) ($settings['entry_keywords'] ?? []),
+            'exit_keywords' => (array) ($settings['exit_keywords'] ?? []),
+            'reset_keywords' => (array) data_get($settings, 'session.reset_keywords', WhatsAppBotConfigService::DEFAULT_SESSION_RESET_KEYWORDS),
+        ];
+    }
+
+    /**
+     * @param array<string, mixed> $state
+     * @param array<string, mixed> $settings
+     * @param array<int, string> $entryKeywords
+     * @param array<int, string> $exitKeywords
+     * @param array<int, string> $resetKeywords
+     */
+    private function handleGlobalConversationCommands(
+        WhatsAppBotSession $session,
+        InboundMessage $message,
+        array $state,
+        string $text,
+        string $flow,
+        string $step,
+        array $settings,
+        array $entryKeywords,
+        array $exitKeywords,
+        array $resetKeywords
+    ): ?ConversationResult {
+        if ($this->hasSessionTimedOut($session, $settings)) {
+            $timedOutState = $this->applySessionTimeoutState($state, $settings);
+
+            return $this->menuResult(
+                $message,
+                $timedOutState,
+                $this->message('inactivity_exit'),
+                true
+            );
+        }
+
+        if ($this->shouldResetSessionContext($flow, $step)) {
+            return $this->menuResult($message, $this->resetConversationState($state), 'Sessao reiniciada por seguranca.');
+        }
+
+        if ($this->intentRouter->isResetCommand($text, $resetKeywords)) {
+            return $this->menuResult($message, $this->resetConversationState($state), 'Fluxo reiniciado.');
+        }
+
+        if ($text !== '' && $this->intentRouter->matchesAnyKeyword($text, $exitKeywords)) {
+            return $this->menuResult(
+                $message,
+                $this->resetConversationState($state),
+                WhatsAppBotConfigService::DEFAULT_EXIT_MESSAGE
+            );
+        }
+
+        if ($text !== '' && $this->intentRouter->matchesAnyKeyword($text, $entryKeywords)) {
+            return $this->menuResult($message, $this->resetConversationState($state));
+        }
+
+        return null;
+    }
+
+    /**
+     * @param array<string, mixed> $settings
+     */
+    private function handleMenu(InboundMessage $message, array $state, ?Patient $patient, string $text, array $settings): ConversationResult
     {
         if ($text === '') {
             return $this->menuResult($message, $state);
         }
 
-        $intent = $this->intentRouter->resolve($message);
+        $intent = $this->resolveIntentFromMessage($message, $settings);
         $state['last_intent'] = $intent;
 
         Log::info('whatsapp_bot.intent.routed', [
@@ -104,20 +249,67 @@ class WhatsAppBotConversationOrchestrator
         ]);
 
         if ($intent === WhatsAppBotIntentRouter::INTENT_UNKNOWN) {
-            return $this->fallbackMenuResult($message, $state);
+            if ($this->intentRouter->isGreeting($text)) {
+                return $this->menuResult($message, $state);
+            }
+
+            return $this->fallbackMenuResult($message, $state, $settings);
         }
 
-        if (!$this->domainService->isIntentEnabled($intent)) {
+        if (!$this->domainService->isIntentEnabled($intent) || !$this->isIntentEnabledInMenu($intent, $settings)) {
             return $this->menuResult($message, $state, $this->domainService->unavailableIntentMessage($intent));
         }
 
+        $patientForIntent = $patient;
+        if (!(bool) data_get($settings, 'identification.reuse_identified_patient', true)) {
+            $patientForIntent = null;
+        }
+
         if ($intent === WhatsAppBotIntentRouter::INTENT_SCHEDULE) {
+            if (!$patientForIntent && $this->requiresIdentificationForIntent($intent, $settings)) {
+                return $this->startPatientIdentification($message, $state, $intent);
+            }
+
+            if (!$patientForIntent) {
+                $patientForIntent = $this->resolvePatientByLookupOrder(
+                    null,
+                    $message->contactPhone,
+                    (array) data_get($settings, 'identification.lookup_order', WhatsAppBotConfigService::DEFAULT_IDENTIFICATION_LOOKUP_ORDER)
+                );
+            }
+
+            if (!$patientForIntent) {
+                return $this->menuResult($message, $state, $this->message('patient_not_found'));
+            }
+
+            $state['patient_id'] = (string) $patientForIntent->id;
+            $state['patient_name'] = (string) $patientForIntent->full_name;
+
             return $this->startScheduleFlow($message, $state);
         }
 
         if ($intent === WhatsAppBotIntentRouter::INTENT_VIEW_APPOINTMENTS) {
+            if (!$patientForIntent && $this->requiresIdentificationForIntent($intent, $settings)) {
+                return $this->startPatientIdentification($message, $state, $intent);
+            }
+
+            if (!$patientForIntent) {
+                $patientForIntent = $this->resolvePatientByLookupOrder(
+                    null,
+                    $message->contactPhone,
+                    (array) data_get($settings, 'identification.lookup_order', WhatsAppBotConfigService::DEFAULT_IDENTIFICATION_LOOKUP_ORDER)
+                );
+            }
+
+            if (!$patientForIntent) {
+                return $this->menuResult($message, $state, $this->message('patient_not_found'));
+            }
+
+            $state['patient_id'] = (string) $patientForIntent->id;
+            $state['patient_name'] = (string) $patientForIntent->full_name;
+
             try {
-                $appointments = $this->appointmentService->listUpcomingAppointments($patient);
+                $appointments = $this->appointmentService->listUpcomingAppointments($patientForIntent);
             } catch (\Throwable $exception) {
                 $this->logStep($message, self::FLOW_MENU, self::STEP_MENU_AWAITING_OPTION, 'error:view_appointments_failed', 'error', [
                     'error' => $exception->getMessage(),
@@ -140,10 +332,29 @@ class WhatsAppBotConversationOrchestrator
         }
 
         if ($intent === WhatsAppBotIntentRouter::INTENT_CANCEL_APPOINTMENTS) {
-            return $this->startCancelFlow($message, $state, $patient);
+            if (!$patientForIntent && $this->requiresIdentificationForIntent($intent, $settings)) {
+                return $this->startPatientIdentification($message, $state, $intent);
+            }
+
+            if (!$patientForIntent) {
+                $patientForIntent = $this->resolvePatientByLookupOrder(
+                    null,
+                    $message->contactPhone,
+                    (array) data_get($settings, 'identification.lookup_order', WhatsAppBotConfigService::DEFAULT_IDENTIFICATION_LOOKUP_ORDER)
+                );
+            }
+
+            if (!$patientForIntent) {
+                return $this->menuResult($message, $state, $this->message('patient_not_found'));
+            }
+
+            $state['patient_id'] = (string) $patientForIntent->id;
+            $state['patient_name'] = (string) $patientForIntent->full_name;
+
+            return $this->startCancelFlow($message, $state, $patientForIntent);
         }
 
-        return $this->fallbackMenuResult($message, $state);
+        return $this->fallbackMenuResult($message, $state, $settings);
     }
 
     private function startScheduleFlow(InboundMessage $message, array $state): ConversationResult
@@ -270,7 +481,8 @@ class WhatsAppBotConversationOrchestrator
             $state['schedule']['slots_doctor_id'] = $doctorId;
 
             if ($slots === []) {
-                return $this->invalidStepResult($message, $state, self::FLOW_SCHEDULE, self::STEP_SCHEDULE_AWAITING_DATE, 'Nao encontrei horarios disponiveis nessa data. Informe outra data.', 'schedule_no_slots');
+                $noSlotsText = $this->message('no_slots_available') . "\nInforme outra data.";
+                return $this->invalidStepResult($message, $state, self::FLOW_SCHEDULE, self::STEP_SCHEDULE_AWAITING_DATE, $noSlotsText, 'schedule_no_slots');
             }
 
             $state['schedule']['slots'] = $slots;
@@ -348,7 +560,10 @@ class WhatsAppBotConversationOrchestrator
             }
 
             $startsAt = $appointment->starts_at ? $appointment->starts_at->copy()->timezone($this->timezone()) : null;
-            $success = $startsAt ? 'Agendamento confirmado para ' . $startsAt->format('d/m') . ' as ' . $startsAt->format('H:i') . '.' : 'Agendamento confirmado com sucesso.';
+            $baseSuccess = $this->message('appointment_created');
+            $success = $startsAt
+                ? trim($baseSuccess . ' ' . 'Para ' . $startsAt->format('d/m') . ' as ' . $startsAt->format('H:i') . '.')
+                : $baseSuccess;
 
             return $this->menuResult($message, $this->clearScheduleState($state), $success);
         }
@@ -451,48 +666,324 @@ class WhatsAppBotConversationOrchestrator
                 return $this->menuResult($message, $this->clearCancelState($state), 'Esse agendamento ja estava cancelado.');
             }
 
-            return $this->menuResult($message, $this->clearCancelState($state), 'Agendamento cancelado com sucesso.');
+            return $this->menuResult($message, $this->clearCancelState($state), $this->message('appointment_canceled'));
         }
 
         return $this->menuResult($message, $this->clearCancelState($state), 'Reiniciando fluxo de cancelamento.');
     }
 
-    private function handleMissingPatient(WhatsAppBotSession $session, InboundMessage $message, array $state, string $text): ConversationResult
+    private function resolveAuthenticatedPatient(array $state): ?Patient
     {
-        $step = (string) ($session->current_step ?? '');
-        if ($step === self::STEP_IDENTIFY_AWAITING_NAME && $text !== '') {
-            if (strlen(trim($text)) < 3) {
-                return $this->invalidStepResult($message, $state, self::FLOW_MENU, self::STEP_IDENTIFY_AWAITING_NAME, 'Nome invalido. Informe seu nome completo para continuar.', 'patient_name_invalid');
-            }
-
-            try {
-                $patient = $this->patientService->createFromPhoneAndName($message->contactPhone, $text);
-            } catch (\Throwable $exception) {
-                $this->logStep($message, self::FLOW_MENU, self::STEP_IDENTIFY_AWAITING_NAME, 'error:patient_create_failed', 'error', ['error' => $exception->getMessage()]);
-                return $this->invalidStepResult($message, $state, self::FLOW_MENU, self::STEP_IDENTIFY_AWAITING_NAME, 'Nao consegui criar seu cadastro agora. Envie seu nome novamente.', 'patient_create_error');
-            }
-
-            $state['patient_id'] = (string) $patient->id;
-            $state['patient_name'] = (string) $patient->full_name;
-
-            return $this->menuResult($message, $state, 'Cadastro criado com sucesso, ' . $patient->full_name . '.');
+        $patientId = trim((string) ($state['patient_id'] ?? ''));
+        if ($patientId === '') {
+            return null;
         }
+
+        return $this->patientService->findById($patientId);
+    }
+
+    private function startPatientIdentification(InboundMessage $message, array $state, string $intent): ConversationResult
+    {
+        $state[self::STATE_PENDING_INTENT] = $intent;
+        unset($state[self::STATE_REGISTRATION]);
+        $state = $this->clearInvalidAttempts($state);
 
         return new ConversationResult(
             processed: true,
             reason: null,
-            outboundMessages: [OutboundMessage::text($message->contactPhone, 'Nao localizei seu cadastro. Para continuar, informe seu nome completo.', ['kind' => 'patient_identification'])],
+            outboundMessages: [OutboundMessage::text($message->contactPhone, 'Para continuar, informe seu CPF.', ['kind' => 'patient_identification_cpf'])],
             flow: self::FLOW_MENU,
-            step: self::STEP_IDENTIFY_AWAITING_NAME,
-            stateUpdates: $this->clearInvalidAttempts($state)
+            step: self::STEP_IDENTIFY_AWAITING_CPF,
+            stateUpdates: $state
         );
     }
 
-    private function menuResult(InboundMessage $message, array $state, ?string $prefix = null): ConversationResult
+    /**
+     * @param array<string, mixed> $settings
+     */
+    private function handleIdentifyByCpfStep(InboundMessage $message, array $state, string $text, array $settings): ConversationResult
     {
-        $settings = $this->configService->getSettings();
-        $welcome = trim((string) ($settings['welcome_message'] ?? ''));
+        $maxAttempts = max(1, (int) data_get($settings, 'identification.max_attempts', 3));
+        $requireValidCpf = (bool) data_get($settings, 'identification.require_valid_cpf', true);
+
+        if ($text === '') {
+            $result = $this->invalidStepResult(
+                $message,
+                $state,
+                self::FLOW_MENU,
+                self::STEP_IDENTIFY_AWAITING_CPF,
+                $this->message('invalid_cpf'),
+                'patient_cpf_required'
+            );
+
+            return $this->resolveMaxIdentificationAttempts($message, $result, $maxAttempts);
+        }
+
+        $cpf = $this->patientService->normalizeCpf($text);
+        if ($requireValidCpf && !$this->patientService->isValidCpf($cpf)) {
+            $result = $this->invalidStepResult(
+                $message,
+                $state,
+                self::FLOW_MENU,
+                self::STEP_IDENTIFY_AWAITING_CPF,
+                $this->message('invalid_cpf'),
+                'patient_cpf_invalid'
+            );
+
+            return $this->resolveMaxIdentificationAttempts($message, $result, $maxAttempts);
+        }
+
+        if ($cpf === '') {
+            $result = $this->invalidStepResult(
+                $message,
+                $state,
+                self::FLOW_MENU,
+                self::STEP_IDENTIFY_AWAITING_CPF,
+                $this->message('invalid_cpf'),
+                'patient_cpf_invalid'
+            );
+
+            return $this->resolveMaxIdentificationAttempts($message, $result, $maxAttempts);
+        }
+
+        $lookupOrder = (array) data_get($settings, 'identification.lookup_order', WhatsAppBotConfigService::DEFAULT_IDENTIFICATION_LOOKUP_ORDER);
+        $patient = $this->resolvePatientByLookupOrder($cpf, $message->contactPhone, $lookupOrder);
+        if ($patient instanceof Patient) {
+            if (!$patient->is_active) {
+                return $this->menuResult(
+                    $message,
+                    $this->resetConversationState($state),
+                    'Seu cadastro foi localizado, mas esta inativo. Procure a clinica para regularizar.'
+                );
+            }
+
+            $state = $this->clearPatientRegistrationState($state);
+            $state['patient_id'] = (string) $patient->id;
+            $state['patient_name'] = (string) $patient->full_name;
+
+            return $this->continueIntentWithPatient($message, $state, $patient, null);
+        }
+
+        $fields = $this->patientService->registrationFieldDefinitions();
+        $registrationState = [
+            'fields' => $fields,
+            'index' => 0,
+            'data' => [],
+            'identified_cpf' => $cpf,
+            'pending_intent' => (string) ($state[self::STATE_PENDING_INTENT] ?? ''),
+        ];
+
+        $state[self::STATE_REGISTRATION] = $registrationState;
+        $state = $this->clearInvalidAttempts($state);
+
+        $introParts = [
+            $this->message('patient_not_found'),
+            $this->message('registration_start'),
+            (string) data_get($fields, '0.prompt', 'Informe seu nome completo.'),
+        ];
+        $intro = implode("\n", array_values(array_filter(array_map(static fn ($part): string => trim((string) $part), $introParts), static fn (string $part): bool => $part !== '')));
+
+        return new ConversationResult(
+            processed: true,
+            reason: null,
+            outboundMessages: [OutboundMessage::text($message->contactPhone, $intro, ['kind' => 'patient_registration_start'])],
+            flow: self::FLOW_MENU,
+            step: self::STEP_REGISTER_AWAITING_FIELD,
+            stateUpdates: $state
+        );
+    }
+
+    /**
+     * @param array<string, mixed> $settings
+     */
+    private function handleRegistrationStep(InboundMessage $message, array $state, string $text, array $settings): ConversationResult
+    {
+        unset($settings);
+        $registration = is_array($state[self::STATE_REGISTRATION] ?? null) ? $state[self::STATE_REGISTRATION] : [];
+        $fields = array_values((array) ($registration['fields'] ?? []));
+        $index = (int) ($registration['index'] ?? 0);
+
+        if (!isset($fields[$index])) {
+            return $this->menuResult($message, $this->resetConversationState($state), 'Reiniciando cadastro. Escolha uma opcao para continuar.');
+        }
+
+        $field = (array) $fields[$index];
+        $fieldKey = (string) ($field['key'] ?? '');
+        if ($fieldKey === '') {
+            return $this->menuResult($message, $this->resetConversationState($state), 'Reiniciando cadastro. Escolha uma opcao para continuar.');
+        }
+
+        $draft = is_array($registration['data'] ?? null) ? $registration['data'] : [];
+        $validation = $this->patientService->validateRegistrationField($fieldKey, $text, $draft);
+
+        if (!($validation['valid'] ?? false)) {
+            $errorText = trim((string) ($validation['error'] ?? 'Valor invalido.')) ?: 'Valor invalido.';
+            $prompt = (string) ($field['prompt'] ?? '');
+            $messageText = $prompt !== '' ? $errorText . "\n" . $prompt : $errorText;
+
+            return $this->invalidStepResult(
+                $message,
+                $state,
+                self::FLOW_MENU,
+                self::STEP_REGISTER_AWAITING_FIELD,
+                $messageText,
+                'patient_registration_invalid'
+            );
+        }
+
+        $normalizedValue = (string) ($validation['value'] ?? '');
+        $draft[$fieldKey] = $normalizedValue;
+
+        if ($fieldKey === 'cpf') {
+            $existing = $this->patientService->findByCpf($normalizedValue, false);
+            if ($existing instanceof Patient) {
+                if (!$existing->is_active) {
+                    return $this->menuResult(
+                        $message,
+                        $this->resetConversationState($state),
+                        'Seu cadastro foi localizado, mas esta inativo. Procure a clinica para regularizar.'
+                    );
+                }
+
+                $state = $this->clearPatientRegistrationState($state);
+                $state['patient_id'] = (string) $existing->id;
+                $state['patient_name'] = (string) $existing->full_name;
+
+                return $this->continueIntentWithPatient($message, $state, $existing, 'Cadastro localizado pelo CPF informado.');
+            }
+        }
+
+        $nextIndex = $index + 1;
+        if (!isset($fields[$nextIndex])) {
+            try {
+                $patient = $this->patientService->createFromRegistration($draft, $message->contactPhone);
+            } catch (ValidationException $validationException) {
+                $errorMessage = collect($validationException->errors())->flatten()->first() ?? 'Nao foi possivel concluir o cadastro.';
+                return $this->invalidStepResult(
+                    $message,
+                    $state,
+                    self::FLOW_MENU,
+                    self::STEP_REGISTER_AWAITING_FIELD,
+                    (string) $errorMessage,
+                    'patient_registration_create_invalid'
+                );
+            } catch (\Throwable $exception) {
+                $this->logStep($message, self::FLOW_MENU, self::STEP_REGISTER_AWAITING_FIELD, 'error:patient_registration_create_failed', 'error', [
+                    'error' => $exception->getMessage(),
+                ]);
+
+                return $this->menuResult($message, $this->resetConversationState($state), $this->friendlyTechnicalErrorMessage());
+            }
+
+            $state = $this->clearPatientRegistrationState($state);
+            $state['patient_id'] = (string) $patient->id;
+            $state['patient_name'] = (string) $patient->full_name;
+
+            return $this->continueIntentWithPatient($message, $state, $patient, $this->message('registration_completed'));
+        }
+
+        $registration['data'] = $draft;
+        $registration['index'] = $nextIndex;
+        $state[self::STATE_REGISTRATION] = $registration;
+        $state = $this->clearInvalidAttempts($state);
+
+        $nextPrompt = (string) data_get($fields[$nextIndex], 'prompt', 'Informe o proximo campo.');
+
+        return new ConversationResult(
+            processed: true,
+            reason: null,
+            outboundMessages: [OutboundMessage::text($message->contactPhone, $nextPrompt, ['kind' => 'patient_registration_field'])],
+            flow: self::FLOW_MENU,
+            step: self::STEP_REGISTER_AWAITING_FIELD,
+            stateUpdates: $state
+        );
+    }
+
+    private function continueIntentWithPatient(
+        InboundMessage $message,
+        array $state,
+        Patient $patient,
+        ?string $prefix
+    ): ConversationResult {
+        $intent = trim((string) ($state[self::STATE_PENDING_INTENT] ?? ''));
+        unset($state[self::STATE_PENDING_INTENT]);
+
+        if ($intent === WhatsAppBotIntentRouter::INTENT_SCHEDULE) {
+            $result = $this->startScheduleFlow($message, $state);
+            if ($prefix === null || trim($prefix) === '' || $result->outboundMessages === []) {
+                return $result;
+            }
+
+            $outbound = $result->outboundMessages;
+            $first = $outbound[0];
+            $outbound[0] = OutboundMessage::text(
+                $message->contactPhone,
+                trim($prefix) . "\n\n" . $first->text,
+                $first->meta
+            );
+
+            return new ConversationResult(
+                processed: $result->processed,
+                reason: $result->reason,
+                outboundMessages: $outbound,
+                flow: $result->flow,
+                step: $result->step,
+                stateUpdates: $result->stateUpdates
+            );
+        }
+
+        if ($intent === WhatsAppBotIntentRouter::INTENT_VIEW_APPOINTMENTS) {
+            try {
+                $appointments = $this->appointmentService->listUpcomingAppointments($patient);
+            } catch (\Throwable $exception) {
+                $this->logStep($message, self::FLOW_MENU, self::STEP_MENU_AWAITING_OPTION, 'error:view_appointments_failed', 'error', [
+                    'error' => $exception->getMessage(),
+                ]);
+
+                return $this->menuResult($message, $state, $this->friendlyTechnicalErrorMessage());
+            }
+
+            $prefixParts = [];
+            if ($prefix !== null && trim($prefix) !== '') {
+                $prefixParts[] = trim($prefix);
+            }
+
+            if ($appointments->isEmpty()) {
+                $prefixParts[] = 'Voce nao possui agendamentos futuros.';
+                return $this->menuResult($message, $state, implode("\n", $prefixParts));
+            }
+
+            $lines = ['Seus proximos agendamentos:'];
+            foreach ($appointments as $index => $appointment) {
+                $doctorName = trim((string) ($appointment->doctor?->user?->name_full ?? $appointment->doctor?->user?->name ?? 'Profissional'));
+                $startsAt = $appointment->starts_at ? $appointment->starts_at->copy()->timezone($this->timezone()) : null;
+                $lines[] = sprintf('%d. %s - %s', $index + 1, $doctorName, $startsAt ? $startsAt->format('d/m H:i') : '-');
+            }
+
+            $prefixParts[] = implode("\n", $lines);
+            return $this->menuResult($message, $state, implode("\n\n", array_filter($prefixParts)));
+        }
+
+        if ($prefix !== null && trim($prefix) !== '') {
+            return $this->menuResult($message, $state, trim($prefix));
+        }
+
+        return $this->menuResult($message, $state);
+    }
+
+    private function clearPatientRegistrationState(array $state): array
+    {
+        unset($state[self::STATE_REGISTRATION]);
+
+        return $state;
+    }
+
+    private function menuResult(InboundMessage $message, array $state, ?string $prefix = null, ?bool $forceShowMenu = null): ConversationResult
+    {
+        $settings = $this->runtimeSettings !== [] ? $this->runtimeSettings : $this->configService->getSettings();
+        $welcome = trim((string) data_get($settings, 'messages.welcome', data_get($settings, 'welcome_message', '')));
         $showConfiguredWelcome = !($state['welcome_sent'] ?? false) && $welcome !== '';
+        $showMenuAgainAfterAction = (bool) data_get($settings, 'menu.show_again_after_action', true);
 
         $state['welcome_sent'] = true;
         $state['schedule'] = $state['schedule'] ?? [];
@@ -506,7 +997,14 @@ class WhatsAppBotConversationOrchestrator
         if ($prefix !== null && trim($prefix) !== '') {
             $parts[] = trim($prefix);
         }
-        $parts[] = $this->menuText();
+        $shouldShowMenu = $forceShowMenu ?? true;
+        if ($forceShowMenu === null && $prefix !== null && trim($prefix) !== '') {
+            $shouldShowMenu = $showMenuAgainAfterAction;
+        }
+
+        if ($shouldShowMenu || $parts === []) {
+            $parts[] = $this->menuText($settings);
+        }
 
         return new ConversationResult(
             processed: true,
@@ -518,9 +1016,19 @@ class WhatsAppBotConversationOrchestrator
         );
     }
 
-    private function fallbackMenuResult(InboundMessage $message, array $state): ConversationResult
+    /**
+     * @param array<string, mixed> $settings
+     */
+    private function fallbackMenuResult(InboundMessage $message, array $state, array $settings): ConversationResult
     {
-        return $this->invalidStepResult($message, $state, self::FLOW_MENU, self::STEP_MENU_AWAITING_OPTION, "Nao entendi. Escolha uma opcao:\n1. Agendar\n2. Ver agendamentos\n3. Cancelar", 'fallback');
+        $fallback = $this->message('fallback');
+        $returnAfterFallback = (bool) data_get($settings, 'menu.return_after_fallback', true);
+
+        if ($returnAfterFallback) {
+            return $this->menuResult($message, $state, $fallback, true);
+        }
+
+        return $this->invalidStepResult($message, $state, self::FLOW_MENU, self::STEP_MENU_AWAITING_OPTION, $fallback, 'fallback');
     }
 
     private function promptDoctorSelection(InboundMessage $message, array $state): ConversationResult
@@ -534,7 +1042,7 @@ class WhatsAppBotConversationOrchestrator
         }
 
         if ($doctors === []) {
-            return $this->menuResult($message, $this->clearScheduleState($state), 'Nao ha profissionais disponiveis para essa selecao.');
+            return $this->menuResult($message, $this->clearScheduleState($state), $this->message('no_slots_available'));
         }
 
         $state['schedule']['doctors'] = $doctors;
@@ -606,12 +1114,25 @@ class WhatsAppBotConversationOrchestrator
         return $state;
     }
 
-    private function menuText(): string
+    /**
+     * @param array<string, mixed> $settings
+     */
+    private function menuText(array $settings): string
     {
         $tenant = tenant();
         $clinicName = trim((string) ($tenant?->trade_name ?: $tenant?->legal_name ?: 'Clinica'));
+        $options = $this->limitedEnabledMenuOptions($settings);
 
-        return "Ola, sou o assistente da Clinica {$clinicName}.\nEscolha uma opcao:\n1. Agendar consulta\n2. Ver meus agendamentos\n3. Cancelar agendamento";
+        if ($options === []) {
+            $options = WhatsAppBotConfigService::DEFAULT_MENU_OPTIONS;
+        }
+
+        $lines = ["Ola, sou o assistente da Clinica {$clinicName}.", 'Escolha uma opcao:'];
+        foreach ($options as $index => $option) {
+            $lines[] = sprintf('%d. %s', $index + 1, (string) ($option['label'] ?? 'Opcao'));
+        }
+
+        return implode("\n", $lines);
     }
 
     private function parseDateInput(string $value): ?Carbon
@@ -693,6 +1214,8 @@ class WhatsAppBotConversationOrchestrator
         $allowedFlows = [self::FLOW_MENU, self::FLOW_SCHEDULE, self::FLOW_CANCEL, 'root'];
         $allowedSteps = [
             self::STEP_MENU_AWAITING_OPTION,
+            self::STEP_IDENTIFY_AWAITING_CPF,
+            self::STEP_REGISTER_AWAITING_FIELD,
             self::STEP_IDENTIFY_AWAITING_NAME,
             self::STEP_SCHEDULE_AWAITING_SPECIALTY,
             self::STEP_SCHEDULE_AWAITING_DOCTOR,
@@ -715,6 +1238,7 @@ class WhatsAppBotConversationOrchestrator
     {
         $state['schedule'] = [];
         $state['cancel'] = [];
+        unset($state[self::STATE_REGISTRATION], $state[self::STATE_PENDING_INTENT], $state['patient_id'], $state['patient_name']);
 
         return $this->clearInvalidAttempts($state);
     }
@@ -723,9 +1247,10 @@ class WhatsAppBotConversationOrchestrator
     {
         $state = $this->registerInvalidAttempt($state, $flow, $step);
         $attempts = (int) data_get($state, '_meta.invalid_attempts', 0);
+        $maxAttempts = max(1, (int) data_get($this->runtimeSettings, 'identification.max_attempts', 3));
 
-        if ($attempts >= self::INVALID_ATTEMPTS_THRESHOLD) {
-            $text .= "\n\nDigite 0 para voltar ao menu principal.";
+        if ($attempts >= $maxAttempts) {
+            $text .= "\n\n" . $this->message('back_to_menu');
         }
 
         $this->logStep($message, $flow, $step, 'invalid_input:' . $kind, 'warning', [
@@ -767,6 +1292,299 @@ class WhatsAppBotConversationOrchestrator
 
     private function friendlyTechnicalErrorMessage(): string
     {
-        return 'Ocorreu um problema ao processar sua solicitacao. Tente novamente ou digite 0 para voltar ao menu.';
+        return $this->message('internal_error');
+    }
+
+    private function resolveMaxIdentificationAttempts(
+        InboundMessage $message,
+        ConversationResult $result,
+        int $maxAttempts
+    ): ConversationResult {
+        $attempts = (int) data_get($result->stateUpdates, '_meta.invalid_attempts', 0);
+        if ($attempts < max(1, $maxAttempts)) {
+            return $result;
+        }
+
+        return $this->menuResult(
+            $message,
+            $this->resetConversationState($result->stateUpdates),
+            $this->message('back_to_menu'),
+            true
+        );
+    }
+
+    /**
+     * @param array<string, mixed> $settings
+     */
+    private function hasSessionTimedOut(WhatsAppBotSession $session, array $settings): bool
+    {
+        $now = now();
+        $absoluteTimeoutMinutes = max(1, (int) data_get($settings, 'session.absolute_timeout_minutes', 240));
+        $idleTimeoutMinutes = max(1, (int) data_get($settings, 'session.idle_timeout_minutes', 30));
+        $endOnInactivity = (bool) data_get($settings, 'session.end_on_inactivity', true);
+
+        $createdAt = $session->created_at;
+        if ($createdAt instanceof Carbon && $createdAt->lt($now->copy()->subMinutes($absoluteTimeoutMinutes))) {
+            return true;
+        }
+
+        if (!$endOnInactivity) {
+            return false;
+        }
+
+        $lastInboundAt = $session->last_inbound_message_at;
+        if (!($lastInboundAt instanceof Carbon)) {
+            return false;
+        }
+
+        return $lastInboundAt->lt($now->copy()->subMinutes($idleTimeoutMinutes));
+    }
+
+    /**
+     * @param array<string, mixed> $state
+     * @param array<string, mixed> $settings
+     * @return array<string, mixed>
+     */
+    private function applySessionTimeoutState(array $state, array $settings): array
+    {
+        $clearContextOnEnd = (bool) data_get($settings, 'session.clear_context_on_end', true);
+        $allowResumePrevious = (bool) data_get($settings, 'session.allow_resume_previous', false);
+
+        if ($clearContextOnEnd || !$allowResumePrevious) {
+            $state = $this->resetConversationState($state);
+        } else {
+            $state = $this->clearInvalidAttempts($state);
+        }
+
+        $meta = is_array($state['_meta'] ?? null) ? $state['_meta'] : [];
+        $meta['last_end_reason'] = 'inactivity_timeout';
+        $meta['last_end_at'] = now()->toDateTimeString();
+        $state['_meta'] = $meta;
+
+        return $state;
+    }
+
+    /**
+     * @param array<string, mixed> $settings
+     */
+    private function resolveIntentFromMessage(InboundMessage $message, array $settings): string
+    {
+        $selection = $this->intentRouter->parseSelectionNumber((string) $message->text);
+        if ($selection !== null) {
+            $options = $this->limitedEnabledMenuOptions($settings);
+            $selectedOption = $options[$selection - 1] ?? null;
+
+            if (is_array($selectedOption)) {
+                $intent = $this->intentFromMenuOptionId((string) ($selectedOption['id'] ?? ''));
+                if ($intent !== null) {
+                    return $intent;
+                }
+            }
+
+            return WhatsAppBotIntentRouter::INTENT_UNKNOWN;
+        }
+
+        return $this->intentRouter->resolve($message);
+    }
+
+    /**
+     * @param array<string, mixed> $settings
+     * @return array<int, array{id:string,label:string,enabled:bool,order:int,requires_identification:bool}>
+     */
+    private function limitedEnabledMenuOptions(array $settings): array
+    {
+        $options = $this->enabledMenuOptions($settings);
+        $maxOptions = max(1, (int) data_get($settings, 'menu.max_options', 6));
+
+        return array_slice($options, 0, $maxOptions);
+    }
+
+    /**
+     * @param array<string, mixed> $settings
+     */
+    private function isIntentEnabledInMenu(string $intent, array $settings): bool
+    {
+        $options = (array) data_get($settings, 'menu.options', []);
+        $targetId = $this->menuOptionIdFromIntent($intent);
+        if ($targetId === null) {
+            return true;
+        }
+
+        foreach ($options as $option) {
+            if (!is_array($option)) {
+                continue;
+            }
+
+            $optionId = $this->normalizeMenuOptionId((string) ($option['id'] ?? ''));
+            if ($optionId !== $targetId) {
+                continue;
+            }
+
+            return (bool) ($option['enabled'] ?? false);
+        }
+
+        return true;
+    }
+
+    /**
+     * @param array<string, mixed> $settings
+     */
+    private function requiresIdentificationForIntent(string $intent, array $settings): bool
+    {
+        $targetId = $this->menuOptionIdFromIntent($intent);
+        $options = (array) data_get($settings, 'menu.options', []);
+
+        foreach ($options as $option) {
+            if (!is_array($option)) {
+                continue;
+            }
+
+            $optionId = $this->normalizeMenuOptionId((string) ($option['id'] ?? ''));
+            if ($targetId !== null && $optionId === $targetId && array_key_exists('requires_identification', $option)) {
+                return (bool) $option['requires_identification'];
+            }
+        }
+
+        $requiredIntents = array_values(array_map(
+            static fn ($item): string => trim(strtolower((string) $item)),
+            (array) data_get($settings, 'identification.require_cpf_for_intents', WhatsAppBotConfigService::DEFAULT_REQUIRE_CPF_FOR_INTENTS)
+        ));
+
+        return in_array(trim(strtolower($intent)), $requiredIntents, true);
+    }
+
+    /**
+     * @param array<int, string> $lookupOrder
+     */
+    private function resolvePatientByLookupOrder(?string $cpf, string $normalizedPhone, array $lookupOrder): ?Patient
+    {
+        foreach ($lookupOrder as $lookupType) {
+            $normalizedLookup = trim(strtolower((string) $lookupType));
+            if ($normalizedLookup === 'cpf' && $cpf !== null && trim($cpf) !== '') {
+                $patient = $this->patientService->findByCpf($cpf, false);
+                if ($patient instanceof Patient) {
+                    return $patient;
+                }
+            }
+
+            if ($normalizedLookup === 'phone') {
+                $patient = $this->patientService->findByNormalizedPhone($normalizedPhone);
+                if ($patient instanceof Patient) {
+                    return $patient;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * @param array<string, mixed> $settings
+     * @return array<int, array{id:string,label:string,enabled:bool,order:int,requires_identification:bool}>
+     */
+    private function enabledMenuOptions(array $settings): array
+    {
+        $rawOptions = (array) data_get($settings, 'menu.options', []);
+        $normalized = [];
+
+        foreach ($rawOptions as $option) {
+            if (!is_array($option)) {
+                continue;
+            }
+
+            $id = $this->normalizeMenuOptionId((string) ($option['id'] ?? ''));
+            if ($id === '') {
+                continue;
+            }
+
+            $normalized[] = [
+                'id' => $id,
+                'label' => trim((string) ($option['label'] ?? '')) ?: $this->defaultMenuLabelById($id),
+                'enabled' => (bool) ($option['enabled'] ?? false),
+                'order' => max(1, (int) ($option['order'] ?? 99)),
+                'requires_identification' => (bool) ($option['requires_identification'] ?? true),
+            ];
+        }
+
+        if ($normalized === []) {
+            $normalized = WhatsAppBotConfigService::DEFAULT_MENU_OPTIONS;
+        }
+
+        usort($normalized, static function (array $left, array $right): int {
+            $orderCompare = ((int) ($left['order'] ?? 0)) <=> ((int) ($right['order'] ?? 0));
+            if ($orderCompare !== 0) {
+                return $orderCompare;
+            }
+
+            return strcmp((string) ($left['id'] ?? ''), (string) ($right['id'] ?? ''));
+        });
+
+        return array_values(array_filter($normalized, static fn (array $option): bool => (bool) ($option['enabled'] ?? false)));
+    }
+
+    private function intentFromMenuOptionId(string $id): ?string
+    {
+        return match ($this->normalizeMenuOptionId($id)) {
+            'schedule' => WhatsAppBotIntentRouter::INTENT_SCHEDULE,
+            'view_appointments' => WhatsAppBotIntentRouter::INTENT_VIEW_APPOINTMENTS,
+            'cancel_appointments' => WhatsAppBotIntentRouter::INTENT_CANCEL_APPOINTMENTS,
+            default => null,
+        };
+    }
+
+    private function menuOptionIdFromIntent(string $intent): ?string
+    {
+        return match ($intent) {
+            WhatsAppBotIntentRouter::INTENT_SCHEDULE => 'schedule',
+            WhatsAppBotIntentRouter::INTENT_VIEW_APPOINTMENTS => 'view_appointments',
+            WhatsAppBotIntentRouter::INTENT_CANCEL_APPOINTMENTS => 'cancel_appointments',
+            default => null,
+        };
+    }
+
+    private function normalizeMenuOptionId(string $id): string
+    {
+        $normalized = trim(strtolower($id));
+
+        return match ($normalized) {
+            'schedule' => 'schedule',
+            'view_appointments' => 'view_appointments',
+            'cancel_appointments', 'cancel_appointment' => 'cancel_appointments',
+            default => '',
+        };
+    }
+
+    private function defaultMenuLabelById(string $id): string
+    {
+        return match ($id) {
+            'schedule' => 'Agendar consulta',
+            'view_appointments' => 'Ver meus agendamentos',
+            'cancel_appointments' => 'Cancelar agendamento',
+            default => 'Opcao',
+        };
+    }
+
+    private function message(string $key): string
+    {
+        $messages = (array) data_get($this->runtimeSettings, 'messages', []);
+        $value = trim((string) ($messages[$key] ?? ''));
+        if ($value !== '') {
+            return $value;
+        }
+
+        return match ($key) {
+            'fallback' => WhatsAppBotConfigService::DEFAULT_FALLBACK_MESSAGE,
+            'invalid_cpf' => WhatsAppBotConfigService::DEFAULT_INVALID_CPF_MESSAGE,
+            'patient_not_found' => WhatsAppBotConfigService::DEFAULT_PATIENT_NOT_FOUND_MESSAGE,
+            'registration_start' => WhatsAppBotConfigService::DEFAULT_REGISTRATION_START_MESSAGE,
+            'registration_completed' => WhatsAppBotConfigService::DEFAULT_REGISTRATION_COMPLETED_MESSAGE,
+            'internal_error' => WhatsAppBotConfigService::DEFAULT_INTERNAL_ERROR_MESSAGE,
+            'no_slots_available' => WhatsAppBotConfigService::DEFAULT_NO_SLOTS_MESSAGE,
+            'appointment_created' => WhatsAppBotConfigService::DEFAULT_APPOINTMENT_CREATED_MESSAGE,
+            'appointment_canceled' => WhatsAppBotConfigService::DEFAULT_APPOINTMENT_CANCELED_MESSAGE,
+            'back_to_menu' => WhatsAppBotConfigService::DEFAULT_BACK_TO_MENU_MESSAGE,
+            'inactivity_exit' => WhatsAppBotConfigService::DEFAULT_INACTIVITY_EXIT_MESSAGE,
+            default => '',
+        };
     }
 }

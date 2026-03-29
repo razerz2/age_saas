@@ -35,6 +35,8 @@ class SettingsController extends Controller
     public function index(Request $request)
     {
         $tenantGlobalProviderCatalog = app(TenantGlobalProviderCatalogService::class);
+        $botConfigService = app(WhatsAppBotConfigService::class);
+        $botSettings = $botConfigService->getSettings();
         $appearanceLogoLight = TenantSetting::get('appearance.logo_light', TenantSetting::get('appearance.logo', ''));
         $appearanceLogoDark = TenantSetting::get('appearance.logo_dark', '');
         $appearanceLogoMiniLight = TenantSetting::get('appearance.logo_mini_light', TenantSetting::get('appearance.logo_mini', ''));
@@ -102,27 +104,56 @@ class SettingsController extends Controller
             'WAHA_SESSION' => TenantSetting::get('whatsapp.waha.session', 'default'),
 
             // Bot de WhatsApp
-            'whatsapp_bot.enabled' => TenantSetting::get('whatsapp_bot.enabled', 'false') === 'true',
-            'whatsapp_bot.provider_mode' => TenantSetting::get('whatsapp_bot.provider_mode', WhatsAppBotConfigService::MODE_SHARED_WITH_NOTIFICATIONS),
-            'whatsapp_bot.provider' => TenantSetting::get('whatsapp_bot.provider', 'whatsapp_business'),
-            'whatsapp_bot.welcome_message' => TenantSetting::get('whatsapp_bot.welcome_message', ''),
-            'whatsapp_bot.disabled_message' => TenantSetting::get('whatsapp_bot.disabled_message', ''),
-            'whatsapp_bot.allow_schedule' => TenantSetting::get('whatsapp_bot.allow_schedule', 'false') === 'true',
-            'whatsapp_bot.allow_view_appointments' => TenantSetting::get('whatsapp_bot.allow_view_appointments', 'false') === 'true',
-            'whatsapp_bot.allow_cancel_appointments' => TenantSetting::get('whatsapp_bot.allow_cancel_appointments', 'false') === 'true',
-            'whatsapp_bot.META_ACCESS_TOKEN' => TenantSetting::get('whatsapp_bot.meta.access_token', ''),
-            'whatsapp_bot.META_PHONE_NUMBER_ID' => TenantSetting::get('whatsapp_bot.meta.phone_number_id', ''),
-            'whatsapp_bot.META_WABA_ID' => TenantSetting::get('whatsapp_bot.meta.waba_id', ''),
-            'whatsapp_bot.ZAPI_API_URL' => TenantSetting::get('whatsapp_bot.zapi.api_url', 'https://api.z-api.io'),
-            'whatsapp_bot.ZAPI_TOKEN' => TenantSetting::get('whatsapp_bot.zapi.token', ''),
-            'whatsapp_bot.ZAPI_CLIENT_TOKEN' => TenantSetting::get('whatsapp_bot.zapi.client_token', ''),
-            'whatsapp_bot.ZAPI_INSTANCE_ID' => TenantSetting::get('whatsapp_bot.zapi.instance_id', ''),
-            'whatsapp_bot.WAHA_BASE_URL' => TenantSetting::get('whatsapp_bot.waha.base_url', ''),
-            'whatsapp_bot.WAHA_API_KEY' => TenantSetting::get('whatsapp_bot.waha.api_key', ''),
-            'whatsapp_bot.WAHA_SESSION' => TenantSetting::get('whatsapp_bot.waha.session', 'default'),
-            'whatsapp_bot.EVOLUTION_BASE_URL' => TenantSetting::get('whatsapp_bot.evolution.base_url', ''),
-            'whatsapp_bot.EVOLUTION_API_KEY' => TenantSetting::get('whatsapp_bot.evolution.api_key', ''),
-            'whatsapp_bot.EVOLUTION_INSTANCE' => TenantSetting::get('whatsapp_bot.evolution.instance', 'default'),
+            'whatsapp_bot.enabled' => (bool) ($botSettings['enabled'] ?? false),
+            'whatsapp_bot.provider_mode' => (string) ($botSettings['provider_mode'] ?? WhatsAppBotConfigService::MODE_SHARED_WITH_NOTIFICATIONS),
+            'whatsapp_bot.provider' => (string) ($botSettings['provider'] ?? 'whatsapp_business'),
+            'whatsapp_bot.welcome_message' => (string) ($botSettings['welcome_message'] ?? ''),
+            'whatsapp_bot.disabled_message' => (string) ($botSettings['disabled_message'] ?? ''),
+            'whatsapp_bot.allow_schedule' => (bool) ($botSettings['allow_schedule'] ?? false),
+            'whatsapp_bot.allow_view_appointments' => (bool) ($botSettings['allow_view_appointments'] ?? false),
+            'whatsapp_bot.allow_cancel_appointments' => (bool) ($botSettings['allow_cancel_appointments'] ?? false),
+            'whatsapp_bot.META_ACCESS_TOKEN' => (string) ($botSettings['meta_access_token'] ?? ''),
+            'whatsapp_bot.META_PHONE_NUMBER_ID' => (string) ($botSettings['meta_phone_number_id'] ?? ''),
+            'whatsapp_bot.META_WABA_ID' => (string) ($botSettings['meta_waba_id'] ?? ''),
+            'whatsapp_bot.ZAPI_API_URL' => (string) ($botSettings['zapi_api_url'] ?? 'https://api.z-api.io'),
+            'whatsapp_bot.ZAPI_TOKEN' => (string) ($botSettings['zapi_token'] ?? ''),
+            'whatsapp_bot.ZAPI_CLIENT_TOKEN' => (string) ($botSettings['zapi_client_token'] ?? ''),
+            'whatsapp_bot.ZAPI_INSTANCE_ID' => (string) ($botSettings['zapi_instance_id'] ?? ''),
+            'whatsapp_bot.WAHA_BASE_URL' => (string) ($botSettings['waha_base_url'] ?? ''),
+            'whatsapp_bot.WAHA_API_KEY' => (string) ($botSettings['waha_api_key'] ?? ''),
+            'whatsapp_bot.WAHA_SESSION' => (string) ($botSettings['waha_session'] ?? 'default'),
+            'whatsapp_bot.EVOLUTION_BASE_URL' => (string) ($botSettings['evolution_base_url'] ?? ''),
+            'whatsapp_bot.EVOLUTION_API_KEY' => (string) ($botSettings['evolution_api_key'] ?? ''),
+            'whatsapp_bot.EVOLUTION_INSTANCE' => (string) ($botSettings['evolution_instance'] ?? 'default'),
+            'whatsapp_bot.entry_keywords_text' => implode("\n", (array) ($botSettings['entry_keywords'] ?? [])),
+            'whatsapp_bot.exit_keywords_text' => implode("\n", (array) ($botSettings['exit_keywords'] ?? [])),
+            'whatsapp_bot.messages.welcome' => (string) data_get($botSettings, 'messages.welcome', ''),
+            'whatsapp_bot.messages.fallback' => (string) data_get($botSettings, 'messages.fallback', ''),
+            'whatsapp_bot.messages.invalid_cpf' => (string) data_get($botSettings, 'messages.invalid_cpf', ''),
+            'whatsapp_bot.messages.patient_not_found' => (string) data_get($botSettings, 'messages.patient_not_found', ''),
+            'whatsapp_bot.messages.registration_start' => (string) data_get($botSettings, 'messages.registration_start', ''),
+            'whatsapp_bot.messages.registration_completed' => (string) data_get($botSettings, 'messages.registration_completed', ''),
+            'whatsapp_bot.messages.internal_error' => (string) data_get($botSettings, 'messages.internal_error', ''),
+            'whatsapp_bot.messages.no_slots_available' => (string) data_get($botSettings, 'messages.no_slots_available', ''),
+            'whatsapp_bot.messages.appointment_created' => (string) data_get($botSettings, 'messages.appointment_created', ''),
+            'whatsapp_bot.messages.appointment_canceled' => (string) data_get($botSettings, 'messages.appointment_canceled', ''),
+            'whatsapp_bot.messages.back_to_menu' => (string) data_get($botSettings, 'messages.back_to_menu', ''),
+            'whatsapp_bot.messages.inactivity_exit' => (string) data_get($botSettings, 'messages.inactivity_exit', ''),
+            'whatsapp_bot.session.idle_timeout_minutes' => (int) data_get($botSettings, 'session.idle_timeout_minutes', 30),
+            'whatsapp_bot.session.absolute_timeout_minutes' => (int) data_get($botSettings, 'session.absolute_timeout_minutes', 240),
+            'whatsapp_bot.session.end_on_inactivity' => (bool) data_get($botSettings, 'session.end_on_inactivity', true),
+            'whatsapp_bot.session.clear_context_on_end' => (bool) data_get($botSettings, 'session.clear_context_on_end', true),
+            'whatsapp_bot.session.allow_resume_previous' => (bool) data_get($botSettings, 'session.allow_resume_previous', false),
+            'whatsapp_bot.session.reset_keywords_text' => implode("\n", (array) data_get($botSettings, 'session.reset_keywords', WhatsAppBotConfigService::DEFAULT_SESSION_RESET_KEYWORDS)),
+            'whatsapp_bot.identification.require_cpf_for_intents_text' => implode("\n", (array) data_get($botSettings, 'identification.require_cpf_for_intents', WhatsAppBotConfigService::DEFAULT_REQUIRE_CPF_FOR_INTENTS)),
+            'whatsapp_bot.identification.require_valid_cpf' => (bool) data_get($botSettings, 'identification.require_valid_cpf', true),
+            'whatsapp_bot.identification.max_attempts' => (int) data_get($botSettings, 'identification.max_attempts', 3),
+            'whatsapp_bot.identification.reuse_identified_patient' => (bool) data_get($botSettings, 'identification.reuse_identified_patient', true),
+            'whatsapp_bot.identification.lookup_order_text' => implode("\n", (array) data_get($botSettings, 'identification.lookup_order', WhatsAppBotConfigService::DEFAULT_IDENTIFICATION_LOOKUP_ORDER)),
+            'whatsapp_bot.menu.max_options' => (int) data_get($botSettings, 'menu.max_options', 6),
+            'whatsapp_bot.menu.show_again_after_action' => (bool) data_get($botSettings, 'menu.show_again_after_action', true),
+            'whatsapp_bot.menu.return_after_fallback' => (bool) data_get($botSettings, 'menu.return_after_fallback', true),
+            'whatsapp_bot.menu.options_json' => json_encode((array) data_get($botSettings, 'menu.options', WhatsAppBotConfigService::DEFAULT_MENU_OPTIONS), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE),
             
             // Integrações
             'integrations.google_calendar.enabled' => TenantSetting::isEnabled('integrations.google_calendar.enabled'),
@@ -203,7 +234,6 @@ class SettingsController extends Controller
             $publicBookingUrl = url('/customer/' . $currentTenant->subdomain . '/agendamento/identificar');
         }
 
-        $botConfigService = app(WhatsAppBotConfigService::class);
         $editor = $this->buildEditorViewData($currentTenant, $request);
         $localizacao = $currentTenant ? $currentTenant->localizacao : null;
         $showOfficialTemplatesTab = $this->tenantUsesOwnOfficialWhatsApp($settings);
@@ -843,6 +873,34 @@ class SettingsController extends Controller
             'whatsapp_bot_provider' => ['nullable', 'string', Rule::in(WhatsAppBotConfigService::SUPPORTED_PROVIDERS)],
             'whatsapp_bot_welcome_message' => 'nullable|string|max:2000',
             'whatsapp_bot_disabled_message' => 'nullable|string|max:500',
+            'whatsapp_bot_entry_keywords' => 'nullable|string|max:8000',
+            'whatsapp_bot_exit_keywords' => 'nullable|string|max:8000',
+            'whatsapp_bot_message_fallback' => 'nullable|string|max:2000',
+            'whatsapp_bot_message_invalid_cpf' => 'nullable|string|max:2000',
+            'whatsapp_bot_message_patient_not_found' => 'nullable|string|max:2000',
+            'whatsapp_bot_message_registration_start' => 'nullable|string|max:2000',
+            'whatsapp_bot_message_registration_completed' => 'nullable|string|max:2000',
+            'whatsapp_bot_message_internal_error' => 'nullable|string|max:2000',
+            'whatsapp_bot_message_no_slots_available' => 'nullable|string|max:2000',
+            'whatsapp_bot_message_appointment_created' => 'nullable|string|max:2000',
+            'whatsapp_bot_message_appointment_canceled' => 'nullable|string|max:2000',
+            'whatsapp_bot_message_back_to_menu' => 'nullable|string|max:2000',
+            'whatsapp_bot_message_inactivity_exit' => 'nullable|string|max:2000',
+            'whatsapp_bot_session_idle_timeout_minutes' => 'nullable|integer|min:1|max:1440',
+            'whatsapp_bot_session_absolute_timeout_minutes' => 'nullable|integer|min:1|max:10080',
+            'whatsapp_bot_session_end_on_inactivity' => 'nullable|boolean',
+            'whatsapp_bot_session_clear_context_on_end' => 'nullable|boolean',
+            'whatsapp_bot_session_allow_resume_previous' => 'nullable|boolean',
+            'whatsapp_bot_session_reset_keywords' => 'nullable|string|max:8000',
+            'whatsapp_bot_identification_require_cpf_for_intents' => 'nullable|string|max:4000',
+            'whatsapp_bot_identification_require_valid_cpf' => 'nullable|boolean',
+            'whatsapp_bot_identification_max_attempts' => 'nullable|integer|min:1|max:20',
+            'whatsapp_bot_identification_reuse_identified_patient' => 'nullable|boolean',
+            'whatsapp_bot_identification_lookup_order' => 'nullable|string|max:4000',
+            'whatsapp_bot_menu_max_options' => 'nullable|integer|min:1|max:20',
+            'whatsapp_bot_menu_show_again_after_action' => 'nullable|boolean',
+            'whatsapp_bot_menu_return_after_fallback' => 'nullable|boolean',
+            'whatsapp_bot_menu_options' => 'nullable|string|max:20000',
             'whatsapp_bot_allow_schedule' => 'nullable|boolean',
             'whatsapp_bot_allow_view_appointments' => 'nullable|boolean',
             'whatsapp_bot_allow_cancel_appointments' => 'nullable|boolean',
@@ -862,12 +920,22 @@ class SettingsController extends Controller
         ]);
 
         $validator->after(function ($validator) use ($request) {
-            $botEnabled = $request->has('whatsapp_bot_enabled');
-            if ($botEnabled && !$request->filled('whatsapp_bot_welcome_message')) {
+            $idleTimeout = (int) $request->input('whatsapp_bot_session_idle_timeout_minutes', 30);
+            $absoluteTimeout = (int) $request->input('whatsapp_bot_session_absolute_timeout_minutes', 240);
+            if ($absoluteTimeout < $idleTimeout) {
                 $validator->errors()->add(
-                    'whatsapp_bot_welcome_message',
-                    'A mensagem inicial e obrigatoria quando o bot estiver habilitado.'
+                    'whatsapp_bot_session_absolute_timeout_minutes',
+                    'O timeout absoluto deve ser maior ou igual ao timeout de inatividade.'
                 );
+            }
+
+            $menuOptionsRaw = (string) $request->input('whatsapp_bot_menu_options', '');
+            if (trim($menuOptionsRaw) !== '') {
+                try {
+                    $this->parseMenuOptionsJsonTextarea($menuOptionsRaw);
+                } catch (\InvalidArgumentException $exception) {
+                    $validator->errors()->add('whatsapp_bot_menu_options', $exception->getMessage());
+                }
             }
 
             $providerMode = (string) $request->input('whatsapp_bot_provider_mode');
@@ -938,7 +1006,52 @@ class SettingsController extends Controller
         TenantSetting::set('whatsapp_bot.enabled', $request->has('whatsapp_bot_enabled') ? 'true' : 'false');
         TenantSetting::set('whatsapp_bot.provider_mode', $validated['whatsapp_bot_provider_mode']);
         TenantSetting::set('whatsapp_bot.welcome_message', (string) ($validated['whatsapp_bot_welcome_message'] ?? ''));
+        TenantSetting::set('whatsapp_bot.messages.welcome', (string) ($validated['whatsapp_bot_welcome_message'] ?? ''));
         TenantSetting::set('whatsapp_bot.disabled_message', (string) ($validated['whatsapp_bot_disabled_message'] ?? ''));
+        TenantSetting::set('whatsapp_bot.messages.fallback', (string) ($validated['whatsapp_bot_message_fallback'] ?? ''));
+        TenantSetting::set('whatsapp_bot.messages.invalid_cpf', (string) ($validated['whatsapp_bot_message_invalid_cpf'] ?? ''));
+        TenantSetting::set('whatsapp_bot.messages.patient_not_found', (string) ($validated['whatsapp_bot_message_patient_not_found'] ?? ''));
+        TenantSetting::set('whatsapp_bot.messages.registration_start', (string) ($validated['whatsapp_bot_message_registration_start'] ?? ''));
+        TenantSetting::set('whatsapp_bot.messages.registration_completed', (string) ($validated['whatsapp_bot_message_registration_completed'] ?? ''));
+        TenantSetting::set('whatsapp_bot.messages.internal_error', (string) ($validated['whatsapp_bot_message_internal_error'] ?? ''));
+        TenantSetting::set('whatsapp_bot.messages.no_slots_available', (string) ($validated['whatsapp_bot_message_no_slots_available'] ?? ''));
+        TenantSetting::set('whatsapp_bot.messages.appointment_created', (string) ($validated['whatsapp_bot_message_appointment_created'] ?? ''));
+        TenantSetting::set('whatsapp_bot.messages.appointment_canceled', (string) ($validated['whatsapp_bot_message_appointment_canceled'] ?? ''));
+        TenantSetting::set('whatsapp_bot.messages.back_to_menu', (string) ($validated['whatsapp_bot_message_back_to_menu'] ?? ''));
+        TenantSetting::set('whatsapp_bot.messages.inactivity_exit', (string) ($validated['whatsapp_bot_message_inactivity_exit'] ?? ''));
+        TenantSetting::set(
+            'whatsapp_bot.entry_keywords',
+            json_encode($this->parseKeywordListTextarea((string) ($validated['whatsapp_bot_entry_keywords'] ?? '')), JSON_UNESCAPED_UNICODE)
+        );
+        TenantSetting::set(
+            'whatsapp_bot.exit_keywords',
+            json_encode($this->parseKeywordListTextarea((string) ($validated['whatsapp_bot_exit_keywords'] ?? '')), JSON_UNESCAPED_UNICODE)
+        );
+        TenantSetting::set('whatsapp_bot.session.idle_timeout_minutes', (string) ((int) ($validated['whatsapp_bot_session_idle_timeout_minutes'] ?? 30)));
+        TenantSetting::set('whatsapp_bot.session.absolute_timeout_minutes', (string) ((int) ($validated['whatsapp_bot_session_absolute_timeout_minutes'] ?? 240)));
+        TenantSetting::set('whatsapp_bot.session.end_on_inactivity', $request->has('whatsapp_bot_session_end_on_inactivity') ? 'true' : 'false');
+        TenantSetting::set('whatsapp_bot.session.clear_context_on_end', $request->has('whatsapp_bot_session_clear_context_on_end') ? 'true' : 'false');
+        TenantSetting::set('whatsapp_bot.session.allow_resume_previous', $request->has('whatsapp_bot_session_allow_resume_previous') ? 'true' : 'false');
+        TenantSetting::set(
+            'whatsapp_bot.session.reset_keywords',
+            json_encode($this->parseKeywordListTextarea((string) ($validated['whatsapp_bot_session_reset_keywords'] ?? '')), JSON_UNESCAPED_UNICODE)
+        );
+        TenantSetting::set(
+            'whatsapp_bot.identification.require_cpf_for_intents',
+            json_encode($this->parseKeywordListTextarea((string) ($validated['whatsapp_bot_identification_require_cpf_for_intents'] ?? '')), JSON_UNESCAPED_UNICODE)
+        );
+        TenantSetting::set('whatsapp_bot.identification.require_valid_cpf', $request->has('whatsapp_bot_identification_require_valid_cpf') ? 'true' : 'false');
+        TenantSetting::set('whatsapp_bot.identification.max_attempts', (string) ((int) ($validated['whatsapp_bot_identification_max_attempts'] ?? 3)));
+        TenantSetting::set('whatsapp_bot.identification.reuse_identified_patient', $request->has('whatsapp_bot_identification_reuse_identified_patient') ? 'true' : 'false');
+        TenantSetting::set(
+            'whatsapp_bot.identification.lookup_order',
+            json_encode($this->parseKeywordListTextarea((string) ($validated['whatsapp_bot_identification_lookup_order'] ?? '')), JSON_UNESCAPED_UNICODE)
+        );
+        $menuOptions = $this->parseMenuOptionsJsonTextarea((string) ($validated['whatsapp_bot_menu_options'] ?? ''));
+        TenantSetting::set('whatsapp_bot.menu.max_options', (string) ((int) ($validated['whatsapp_bot_menu_max_options'] ?? 6)));
+        TenantSetting::set('whatsapp_bot.menu.show_again_after_action', $request->has('whatsapp_bot_menu_show_again_after_action') ? 'true' : 'false');
+        TenantSetting::set('whatsapp_bot.menu.return_after_fallback', $request->has('whatsapp_bot_menu_return_after_fallback') ? 'true' : 'false');
+        TenantSetting::set('whatsapp_bot.menu.options', json_encode($menuOptions, JSON_UNESCAPED_UNICODE));
         TenantSetting::set('whatsapp_bot.allow_schedule', $request->has('whatsapp_bot_allow_schedule') ? 'true' : 'false');
         TenantSetting::set('whatsapp_bot.allow_view_appointments', $request->has('whatsapp_bot_allow_view_appointments') ? 'true' : 'false');
         TenantSetting::set('whatsapp_bot.allow_cancel_appointments', $request->has('whatsapp_bot_allow_cancel_appointments') ? 'true' : 'false');
@@ -1452,6 +1565,105 @@ class SettingsController extends Controller
         }
 
         return null;
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    private function parseKeywordListTextarea(string $value): array
+    {
+        $lines = preg_split('/\R/u', $value) ?: [];
+        $keywords = [];
+
+        foreach ($lines as $line) {
+            $keyword = trim((string) $line);
+            if ($keyword === '') {
+                continue;
+            }
+
+            if (!in_array($keyword, $keywords, true)) {
+                $keywords[] = $keyword;
+            }
+        }
+
+        return $keywords;
+    }
+
+    /**
+     * @return array<int, array{id:string,label:string,enabled:bool,order:int,requires_identification:bool}>
+     */
+    private function parseMenuOptionsJsonTextarea(string $value): array
+    {
+        $trimmed = trim($value);
+        if ($trimmed === '') {
+            return WhatsAppBotConfigService::DEFAULT_MENU_OPTIONS;
+        }
+
+        $decoded = json_decode($trimmed, true);
+        if (!is_array($decoded)) {
+            throw new \InvalidArgumentException('As opcoes do menu devem estar em JSON valido.');
+        }
+
+        $normalized = [];
+        foreach ($decoded as $item) {
+            if (!is_array($item)) {
+                continue;
+            }
+
+            $id = $this->normalizeBotMenuOptionId((string) ($item['id'] ?? ''));
+            if ($id === '') {
+                continue;
+            }
+
+            $label = trim((string) ($item['label'] ?? ''));
+            if ($label === '') {
+                $label = match ($id) {
+                    'schedule' => 'Agendar consulta',
+                    'view_appointments' => 'Ver meus agendamentos',
+                    'cancel_appointments' => 'Cancelar agendamento',
+                    default => 'Opcao',
+                };
+            }
+
+            $enabled = filter_var($item['enabled'] ?? true, FILTER_VALIDATE_BOOL, FILTER_NULL_ON_FAILURE);
+            $requiresIdentification = filter_var($item['requires_identification'] ?? true, FILTER_VALIDATE_BOOL, FILTER_NULL_ON_FAILURE);
+
+            $normalized[$id] = [
+                'id' => $id,
+                'label' => $label,
+                'enabled' => $enabled ?? true,
+                'order' => max(1, (int) ($item['order'] ?? 99)),
+                'requires_identification' => $requiresIdentification ?? true,
+            ];
+        }
+
+        if ($normalized === []) {
+            throw new \InvalidArgumentException('As opcoes do menu nao possuem itens validos.');
+        }
+
+        $normalizedList = array_values($normalized);
+        usort($normalizedList, static function (array $left, array $right): int {
+            $orderCompare = ((int) ($left['order'] ?? 0)) <=> ((int) ($right['order'] ?? 0));
+            if ($orderCompare !== 0) {
+                return $orderCompare;
+            }
+
+            return strcmp((string) ($left['id'] ?? ''), (string) ($right['id'] ?? ''));
+        });
+
+        return $normalizedList;
+    }
+
+    private function normalizeBotMenuOptionId(string $id): string
+    {
+        $normalized = strtolower(trim($id));
+
+        return match ($normalized) {
+            'schedule' => 'schedule',
+            'view_appointments' => 'view_appointments',
+            'cancel_appointments', 'cancel_appointment' => 'cancel_appointments',
+            default => '',
+        };
     }
 
     private function notificationTemplateVariables(): array

@@ -45,7 +45,6 @@ class WhatsAppBotSessionService
         $session->provider = $provider;
         $session->contact_identifier = $message->contactIdentifier ?? $session->contact_identifier;
         $session->last_inbound_message_type = $message->messageType;
-        $session->last_inbound_message_at = now();
         $session->last_payload = $message->payload;
         $session->status = 'active';
 
@@ -53,6 +52,7 @@ class WhatsAppBotSessionService
         $meta['last_provider_message_id'] = $message->externalMessageId;
         $meta['last_normalized_phone'] = $normalizedPhone;
         $meta['last_inbound_provider'] = $provider;
+        $meta['inbound_processing_started_at'] = now()->toDateTimeString();
         $session->meta = $meta;
 
         if ($this->isCorruptedSession($session)) {
@@ -88,6 +88,12 @@ class WhatsAppBotSessionService
             is_array($session->state) ? $session->state : [],
             $result->stateUpdates
         );
+        $session->last_inbound_message_at = now();
+
+        $meta = is_array($session->meta) ? $session->meta : [];
+        $meta['last_inbound_processed_at'] = now()->toDateTimeString();
+        unset($meta['inbound_processing_started_at']);
+        $session->meta = $meta;
 
         $session->save();
     }
