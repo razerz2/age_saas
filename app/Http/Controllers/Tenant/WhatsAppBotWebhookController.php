@@ -12,9 +12,9 @@ class WhatsAppBotWebhookController extends Controller
 {
     public function handle(
         Request $request,
-        string $provider,
         WhatsAppBotInboundMessageProcessor $processor
     ): JsonResponse {
+        $provider = strtolower(trim((string) $request->route('provider', '')));
         $result = $processor->process($provider, (array) $request->all());
 
         $statusCode = match ($result->status) {
@@ -26,4 +26,3 @@ class WhatsAppBotWebhookController extends Controller
         return response()->json($result->toArray(), $statusCode);
     }
 }
-
