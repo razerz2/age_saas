@@ -271,9 +271,9 @@ class AppointmentController extends Controller
         
         // Identificar origem: se usuÃ¡rio autenticado Ã© paciente, Ã© portal; senÃ£o, Ã© interno
         if (Auth::guard('patient')->check()) {
-            $data['origin'] = 'portal';
+            $data['origin'] = Appointment::ORIGIN_PORTAL;
         } else {
-            $data['origin'] = 'internal';
+            $data['origin'] = Appointment::ORIGIN_INTERNAL;
         }
 
         // Aplicar lÃ³gica de appointment_mode baseado na configuraÃ§Ã£o
@@ -351,7 +351,7 @@ class AppointmentController extends Controller
                 'appointment.pending_confirmation',
                 [
                     'event' => 'appointment_created_pending_confirmation',
-                    'origin' => 'internal',
+                    'origin' => Appointment::ORIGIN_INTERNAL,
                 ]
             );
         }

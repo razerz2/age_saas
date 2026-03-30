@@ -36,18 +36,25 @@ class FinanceRedirectService
         }
 
         // Regra 4: Verificar se a origem permite cobrança
-        $origin = $appointment->origin ?? 'internal';
+        $origin = (string) ($appointment->origin ?? Appointment::ORIGIN_INTERNAL);
+        $isPortalLikeOrigin = in_array($origin, [Appointment::ORIGIN_PORTAL, Appointment::ORIGIN_WHATSAPP_BOT], true);
 
-        if ($origin === 'public') {
+        if ($origin === Appointment::ORIGIN_PUBLIC) {
             if (tenant_setting('finance.charge_on_public_appointment') !== 'true') {
                 return false;
             }
-        } elseif ($origin === 'portal') {
+        } elseif ($isPortalLikeOrigin) {
             if (tenant_setting('finance.charge_on_patient_portal') !== 'true') {
                 return false;
             }
-        } elseif ($origin === 'internal') {
+        } elseif ($origin === Appointment::ORIGIN_INTERNAL) {
             // Agendamentos internos NUNCA redirecionam
+            return false;
+        } else {
+            Log::warning('Origem de agendamento desconhecida para redirecionamento financeiro', [
+                'appointment_id' => $appointment->id,
+                'origin' => $origin,
+            ]);
             return false;
         }
 
@@ -101,4 +108,3 @@ class FinanceRedirectService
         return true;
     }
 }
-

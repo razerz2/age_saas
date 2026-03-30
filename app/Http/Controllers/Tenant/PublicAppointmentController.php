@@ -146,7 +146,7 @@ class PublicAppointmentController extends Controller
         $data['patient_id'] = $patientId; // Usa o paciente da sessão
         $data['doctor_id'] = $calendar->doctor_id; // Garantir que doctor_id está definido
         $data['status'] = 'scheduled'; // Status padrão para agendamentos públicos
-        $data['origin'] = 'public'; // Identificar origem como público
+        $data['origin'] = Appointment::ORIGIN_PUBLIC; // Identificar origem como público
 
         // Aplicar lógica de appointment_mode baseado na configuração
         $data['confirmation_token'] = $this->generateUniqueConfirmationToken();
@@ -183,7 +183,7 @@ class PublicAppointmentController extends Controller
                 'appointment.pending_confirmation',
                 [
                     'event' => 'appointment_created_pending_confirmation',
-                    'origin' => 'public',
+                    'origin' => Appointment::ORIGIN_PUBLIC,
                 ]
             );
         }

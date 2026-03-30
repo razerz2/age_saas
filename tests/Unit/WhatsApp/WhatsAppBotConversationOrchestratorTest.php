@@ -996,8 +996,11 @@ it('maps selected doctor option to doctor and specialty in schedule state', func
         ->and($result->step)->toBe('schedule.awaiting_date')
         ->and($result->outboundMessages[0]->text)->toContain('Informe a data desejada')
         ->and((string) data_get($result->stateUpdates, 'schedule.selected_doctor.id'))->toBe('doctor-ana')
+        ->and((string) data_get($result->stateUpdates, 'schedule.selected_doctor_id'))->toBe('doctor-ana')
+        ->and((string) data_get($result->stateUpdates, 'schedule.selected_doctor_name'))->toBe('Dra. Ana Paula Costa Lima')
         ->and((string) data_get($result->stateUpdates, 'schedule.selected_specialty_id'))->toBe('specialty-clinica')
-        ->and((string) data_get($result->stateUpdates, 'schedule.selected_specialty_name'))->toBe('Clinica Geral');
+        ->and((string) data_get($result->stateUpdates, 'schedule.selected_specialty_name'))->toBe('Clinica Geral')
+        ->and((string) data_get($result->stateUpdates, 'schedule.selected_doctor_option.label'))->toBe('Dra. Ana Paula Costa Lima - Clinica Geral');
 });
 
 it('uses human readable specialty and doctor values in schedule confirmation summary', function () {
@@ -1096,6 +1099,83 @@ it('returns appointment creation confirmation and menu in separate messages', fu
     expect($result->flow)->toBe('menu')
         ->and($result->step)->toBe('menu.awaiting_option')
         ->and($result->outboundMessages[0]->text)->toContain('Profissional: Dr. Joao Silva');
+
+    expectActionAndMenuAsSeparatedMessages($result, 'Agendamento realizado com sucesso!');
+});
+
+it('uses explicit schedule ids on confirmation even when selected_doctor shape changes', function () {
+    $configService = Mockery::mock(WhatsAppBotConfigService::class);
+    $configService->shouldReceive('getSettings')->andReturn([
+        'timezone' => 'America/Campo_Grande',
+        'messages' => [
+            'welcome' => '',
+        ],
+    ]);
+
+    $domainService = Mockery::mock(WhatsAppBotDomainService::class);
+    $domainService->shouldReceive('isIntentEnabled')
+        ->once()
+        ->with(WhatsAppBotIntentRouter::INTENT_SCHEDULE)
+        ->andReturn(true);
+
+    $patient = new Patient(['id' => 'patient-1', 'full_name' => 'Maria Silva', 'is_active' => true]);
+    $patientService = Mockery::mock(WhatsAppBotPatientService::class);
+    $patientService->shouldReceive('findById')->once()->with('patient-1')->andReturn($patient);
+
+    $appointmentStartsAt = now()->addDays(4)->setTime(10, 0, 0);
+    $createdAppointment = new Appointment();
+    $createdAppointment->starts_at = $appointmentStartsAt;
+
+    $appointmentService = Mockery::mock(WhatsAppBotAppointmentService::class);
+    $appointmentService->shouldReceive('createAppointment')
+        ->once()
+        ->withArgs(function (
+            Patient $argPatient,
+            string $doctorId,
+            string $calendarId,
+            ?string $specialtyId,
+            ?string $appointmentTypeId,
+            string $startsAt,
+            string $endsAt
+        ) use ($patient, $appointmentStartsAt): bool {
+            return $argPatient === $patient
+                && $doctorId === 'doctor-explicit'
+                && $calendarId === 'calendar-explicit'
+                && $specialtyId === 'specialty-explicit'
+                && $appointmentTypeId === 'type-explicit'
+                && $startsAt === $appointmentStartsAt->format('Y-m-d H:i:s')
+                && $endsAt === $appointmentStartsAt->copy()->addMinutes(30)->format('Y-m-d H:i:s');
+        })
+        ->andReturn($createdAppointment);
+
+    $orchestrator = makeOrchestrator($configService, $domainService, $patientService, $appointmentService);
+    $session = botSession('schedule', 'schedule.awaiting_confirmation', [
+        'patient_id' => 'patient-1',
+        'schedule' => [
+            'selected_doctor_id' => 'doctor-explicit',
+            'selected_doctor_name' => 'Dra. Ana Paula Costa Lima',
+            'selected_specialty_id' => 'specialty-explicit',
+            'selected_specialty_name' => 'Clinica Geral',
+            'selected_calendar_id' => 'calendar-explicit',
+            'selected_appointment_type_id' => 'type-explicit',
+            'selected_doctor_option' => [
+                'index' => 2,
+                'label' => 'Dra. Ana Paula Costa Lima - Clinica Geral',
+            ],
+            'selected_doctor' => [
+                'name' => 'Dra. Ana Paula Costa Lima',
+            ],
+            'selected_slot' => [
+                'starts_at' => $appointmentStartsAt->format('Y-m-d H:i:s'),
+                'ends_at' => $appointmentStartsAt->copy()->addMinutes(30)->format('Y-m-d H:i:s'),
+            ],
+        ],
+    ]);
+
+    $result = $orchestrator->handle($session, botInbound('1'));
+
+    expect($result->flow)->toBe('menu')
+        ->and($result->step)->toBe('menu.awaiting_option');
 
     expectActionAndMenuAsSeparatedMessages($result, 'Agendamento realizado com sucesso!');
 });

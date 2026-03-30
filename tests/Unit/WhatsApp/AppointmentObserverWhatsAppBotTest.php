@@ -28,7 +28,7 @@ it('adds whatsapp suppression metadata for created appointments from whatsapp bo
 
     $appointment = Mockery::mock(Appointment::class)->makePartial();
     $appointment->id = 'appointment-1';
-    $appointment->origin = 'whatsapp_bot';
+    $appointment->origin = Appointment::ORIGIN_WHATSAPP_BOT;
     $appointment->appointment_mode = 'presencial';
     $appointment->recurring_appointment_id = 'recurring-1';
     $appointment->shouldReceive('load')->once()->andReturnSelf();
@@ -42,7 +42,7 @@ it('adds whatsapp suppression metadata for created appointments from whatsapp bo
         $metadata = (array) $metadataProperty->getValue($job);
 
         return in_array('whatsapp', (array) ($metadata['suppress_patient_channels'] ?? []), true)
-            && (string) ($metadata['origin'] ?? '') === 'whatsapp_bot';
+            && (string) ($metadata['origin'] ?? '') === Appointment::ORIGIN_WHATSAPP_BOT;
     });
 });
 

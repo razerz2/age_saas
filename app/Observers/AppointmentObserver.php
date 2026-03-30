@@ -320,6 +320,6 @@ class AppointmentObserver
 
     private function isWhatsAppBotOrigin(Appointment $appointment): bool
     {
-        return trim(strtolower((string) ($appointment->origin ?? ''))) === 'whatsapp_bot';
+        return trim(strtolower((string) ($appointment->origin ?? ''))) === Appointment::ORIGIN_WHATSAPP_BOT;
     }
 }

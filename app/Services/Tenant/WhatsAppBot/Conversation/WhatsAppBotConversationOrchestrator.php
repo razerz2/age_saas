@@ -431,12 +431,26 @@ class WhatsAppBotConversationOrchestrator
             }
 
             $selectedDoctor = (array) $doctors[$index - 1];
+            $selectedDoctorId = trim((string) ($selectedDoctor['id'] ?? ''));
+            $selectedDoctorName = trim((string) ($selectedDoctor['name'] ?? ''));
             $selectedSpecialtyId = trim((string) ($selectedDoctor['specialty_id'] ?? ''));
             $selectedSpecialtyName = trim((string) ($selectedDoctor['specialty_name'] ?? ''));
+            $selectedCalendarId = trim((string) ($selectedDoctor['calendar_id'] ?? ''));
+            $selectedAppointmentTypeId = trim((string) ($selectedDoctor['appointment_type_id'] ?? ''));
+            $selectedDurationMin = max(1, (int) ($selectedDoctor['duration_min'] ?? 30));
 
             $state['schedule']['selected_doctor'] = $selectedDoctor;
+            $state['schedule']['selected_doctor_id'] = $selectedDoctorId !== '' ? $selectedDoctorId : null;
+            $state['schedule']['selected_doctor_name'] = $selectedDoctorName !== '' ? $selectedDoctorName : null;
             $state['schedule']['selected_specialty_id'] = $selectedSpecialtyId !== '' ? $selectedSpecialtyId : null;
             $state['schedule']['selected_specialty_name'] = $selectedSpecialtyName !== '' ? $selectedSpecialtyName : null;
+            $state['schedule']['selected_calendar_id'] = $selectedCalendarId !== '' ? $selectedCalendarId : null;
+            $state['schedule']['selected_appointment_type_id'] = $selectedAppointmentTypeId !== '' ? $selectedAppointmentTypeId : null;
+            $state['schedule']['selected_duration_min'] = $selectedDurationMin;
+            $state['schedule']['selected_doctor_option'] = [
+                'index' => $index,
+                'label' => $this->formatDoctorOptionLabel($selectedDoctor),
+            ];
             $state = $this->clearInvalidAttempts($state);
 
             return new ConversationResult(
@@ -490,8 +504,15 @@ class WhatsAppBotConversationOrchestrator
             }
 
             $doctor = (array) data_get($state, 'schedule.selected_doctor', []);
-            $duration = (int) ($doctor['duration_min'] ?? 30);
-            $doctorId = (string) ($doctor['id'] ?? '');
+            $duration = max(1, (int) data_get($state, 'schedule.selected_duration_min', ($doctor['duration_min'] ?? 30)));
+            $doctorId = trim((string) data_get($state, 'schedule.selected_doctor_id', ($doctor['id'] ?? '')));
+            if ($doctorId === '') {
+                $this->logStep($message, self::FLOW_SCHEDULE, self::STEP_SCHEDULE_AWAITING_DATE, 'invalid:selected_doctor_missing_id', 'warning', [
+                    'state' => $state,
+                ]);
+
+                return $this->menuResult($message, $this->clearScheduleState($state), $this->friendlyTechnicalErrorMessage());
+            }
             $dateKey = $date->format('Y-m-d');
             $cachedDate = (string) data_get($state, 'schedule.selected_date', '');
             $cachedDoctor = (string) data_get($state, 'schedule.slots_doctor_id', '');
@@ -558,6 +579,7 @@ class WhatsAppBotConversationOrchestrator
             $state = $this->clearInvalidAttempts($state);
 
             $doctorName = $this->resolveDisplayValue([
+                (string) data_get($state, 'schedule.selected_doctor_name', ''),
                 (string) data_get($state, 'schedule.selected_doctor.name', ''),
             ]);
             $specialtyName = $this->resolveDisplayValue([
@@ -608,14 +630,39 @@ class WhatsAppBotConversationOrchestrator
 
             $doctor = (array) data_get($state, 'schedule.selected_doctor', []);
             $slot = (array) data_get($state, 'schedule.selected_slot', []);
+            $doctorId = trim((string) data_get($state, 'schedule.selected_doctor_id', ($doctor['id'] ?? '')));
+            $calendarId = trim((string) data_get($state, 'schedule.selected_calendar_id', ($doctor['calendar_id'] ?? '')));
+            $specialtyIdRaw = trim((string) data_get($state, 'schedule.selected_specialty_id', ''));
+            $specialtyId = $specialtyIdRaw !== '' ? $specialtyIdRaw : null;
+            $appointmentTypeIdRaw = trim((string) data_get($state, 'schedule.selected_appointment_type_id', ($doctor['appointment_type_id'] ?? '')));
+            $appointmentTypeId = $appointmentTypeIdRaw !== '' ? $appointmentTypeIdRaw : null;
+
+            $this->logStep($message, self::FLOW_SCHEDULE, self::STEP_SCHEDULE_AWAITING_CONFIRMATION, 'debug:create_appointment_input', 'info', [
+                'state' => $state,
+                'doctor_id' => $doctorId,
+                'specialty_id' => $specialtyId,
+                'selected_option' => data_get($state, 'schedule.selected_doctor_option'),
+            ]);
+
+            if ($doctorId === '' || $calendarId === '') {
+                $this->logStep($message, self::FLOW_SCHEDULE, self::STEP_SCHEDULE_AWAITING_CONFIRMATION, 'invalid:missing_required_schedule_data', 'warning', [
+                    'state' => $state,
+                    'doctor_id' => $doctorId,
+                    'calendar_id' => $calendarId,
+                    'specialty_id' => $specialtyId,
+                    'selected_option' => data_get($state, 'schedule.selected_doctor_option'),
+                ]);
+
+                return $this->menuResult($message, $this->clearScheduleState($state), $this->friendlyTechnicalErrorMessage());
+            }
 
             try {
                 $appointment = $this->appointmentService->createAppointment(
                     patient: $patient,
-                    doctorId: (string) ($doctor['id'] ?? ''),
-                    calendarId: (string) ($doctor['calendar_id'] ?? ''),
-                    specialtyId: data_get($state, 'schedule.selected_specialty_id'),
-                    appointmentTypeId: (string) ($doctor['appointment_type_id'] ?? ''),
+                    doctorId: $doctorId,
+                    calendarId: $calendarId,
+                    specialtyId: $specialtyId,
+                    appointmentTypeId: $appointmentTypeId,
                     startsAt: (string) ($slot['starts_at'] ?? ''),
                     endsAt: (string) ($slot['ends_at'] ?? '')
                 );
@@ -623,7 +670,13 @@ class WhatsAppBotConversationOrchestrator
                 $errorMessage = collect($validationException->errors())->flatten()->first() ?? $this->friendlyTechnicalErrorMessage();
                 return $this->menuResult($message, $this->clearScheduleState($state), (string) $errorMessage);
             } catch (\Throwable $exception) {
-                $this->logStep($message, self::FLOW_SCHEDULE, self::STEP_SCHEDULE_AWAITING_CONFIRMATION, 'error:create_failed', 'error', ['error' => $exception->getMessage()]);
+                $this->logStep($message, self::FLOW_SCHEDULE, self::STEP_SCHEDULE_AWAITING_CONFIRMATION, 'error:create_failed', 'error', [
+                    'error' => $exception->getMessage(),
+                    'state' => $state,
+                    'doctor_id' => $doctorId,
+                    'specialty_id' => $specialtyId,
+                    'selected_option' => data_get($state, 'schedule.selected_doctor_option'),
+                ]);
                 return $this->menuResult($message, $this->clearScheduleState($state), $this->friendlyTechnicalErrorMessage());
             }
 

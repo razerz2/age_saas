@@ -9,6 +9,11 @@ class Appointment extends Model
 {
     use HasFactory;
 
+    public const ORIGIN_PUBLIC = 'public';
+    public const ORIGIN_PORTAL = 'portal';
+    public const ORIGIN_INTERNAL = 'internal';
+    public const ORIGIN_WHATSAPP_BOT = 'whatsapp_bot';
+
     protected $connection = 'tenant';
     protected $table = 'appointments';
 
@@ -152,6 +157,21 @@ class Appointment extends Model
             'completed',
             'canceled',
             'cancelled',
+        ];
+    }
+
+    /**
+     * Retorna origens disponiveis para agendamentos.
+     *
+     * @return array<int, string>
+     */
+    public static function origins(): array
+    {
+        return [
+            self::ORIGIN_PUBLIC,
+            self::ORIGIN_PORTAL,
+            self::ORIGIN_INTERNAL,
+            self::ORIGIN_WHATSAPP_BOT,
         ];
     }
 

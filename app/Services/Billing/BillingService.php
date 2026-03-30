@@ -88,19 +88,31 @@ class BillingService
         }
 
         // Verificar origem do agendamento
-        $origin = $appointment->origin ?? 'internal';
-        
-        if ($origin === 'public' && tenant_setting('finance.billing.charge_on_public_appointment') !== 'true') {
+        $origin = (string) ($appointment->origin ?? Appointment::ORIGIN_INTERNAL);
+        $isPortalLikeOrigin = in_array($origin, [Appointment::ORIGIN_PORTAL, Appointment::ORIGIN_WHATSAPP_BOT], true);
+
+        if ($origin === Appointment::ORIGIN_PUBLIC && tenant_setting('finance.billing.charge_on_public_appointment') !== 'true') {
             return null;
         }
 
-        if ($origin === 'portal' && tenant_setting('finance.billing.charge_on_patient_portal') !== 'true') {
+        if ($isPortalLikeOrigin && tenant_setting('finance.billing.charge_on_patient_portal') !== 'true') {
             return null;
         }
 
-        if ($origin === 'internal' && tenant_setting('finance.billing.charge_on_internal_appointment') !== 'true') {
+        if ($origin === Appointment::ORIGIN_INTERNAL && tenant_setting('finance.billing.charge_on_internal_appointment') !== 'true') {
             return null;
         }
+
+        if (!in_array($origin, Appointment::origins(), true)) {
+            Log::warning('Origem de agendamento desconhecida para billing', [
+                'appointment_id' => $appointment->id,
+                'origin' => $origin,
+            ]);
+            return null;
+        }
+
+        // O modelo de FinancialCharge aceita apenas public/portal/internal.
+        $chargeOrigin = $isPortalLikeOrigin ? Appointment::ORIGIN_PORTAL : $origin;
 
         // Determinar valor da cobrança
         $amount = $this->calculateChargeAmount($appointment);
@@ -115,7 +127,7 @@ class BillingService
         $billingType = $this->determineBillingType($appointment);
 
         try {
-            return DB::transaction(function () use ($appointment, $amount, $billingType, $origin) {
+            return DB::transaction(function () use ($appointment, $amount, $billingType, $origin, $chargeOrigin) {
                 // Criar registro de cobrança
                 $charge = FinancialCharge::create([
                     'appointment_id' => $appointment->id,
@@ -124,7 +136,7 @@ class BillingService
                     'billing_type' => $billingType,
                     'status' => 'pending',
                     'due_date' => $appointment->starts_at->copy()->subDays(1),
-                    'origin' => $origin,
+                    'origin' => $chargeOrigin,
                 ]);
 
                 // Criar cobrança no provider
@@ -169,7 +181,7 @@ class BillingService
                 Event::dispatch(new \App\Events\Finance\ChargeCreated($charge));
 
                 // Enviar link de pagamento se configurado
-                if ($origin === 'internal' && tenant_setting('finance.billing.auto_send_payment_link') === 'true' && $charge->payment_link) {
+                if ($chargeOrigin === Appointment::ORIGIN_INTERNAL && tenant_setting('finance.billing.auto_send_payment_link') === 'true' && $charge->payment_link) {
                     \App\Services\TenantNotificationService::sendPaymentLink($charge);
                 }
 
@@ -177,7 +189,8 @@ class BillingService
                     'appointment_id' => $appointment->id,
                     'charge_id' => $charge->id,
                     'amount' => $amount,
-                    'origin' => $origin,
+                    'appointment_origin' => $origin,
+                    'charge_origin' => $chargeOrigin,
                 ]);
 
                 return $charge;
@@ -316,4 +329,3 @@ class BillingService
         };
     }
 }
-

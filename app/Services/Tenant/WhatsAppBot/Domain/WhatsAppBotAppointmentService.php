@@ -230,7 +230,7 @@ class WhatsAppBotAppointmentService
 
         $payload['id'] = (string) Str::uuid();
         $payload['confirmation_token'] = $this->generateUniqueConfirmationToken();
-        $payload['origin'] = 'whatsapp_bot';
+        $payload['origin'] = Appointment::ORIGIN_WHATSAPP_BOT;
 
         $confirmationEnabled = tenant_setting_bool('appointments.confirmation.enabled', false);
         $confirmationTtlMinutes = max(1, tenant_setting_int('appointments.confirmation.ttl_minutes', 30));
@@ -252,6 +252,15 @@ class WhatsAppBotAppointmentService
         $mode = (string) \App\Models\Tenant\TenantSetting::get('appointments.default_appointment_mode', 'user_choice');
         $payload['appointment_mode'] = in_array($mode, ['presencial', 'online'], true) ? $mode : 'presencial';
 
+        Log::info('whatsapp_bot.appointment.creating', [
+            'tenant_id' => (string) (tenant()?->id ?? ''),
+            'origin' => (string) ($payload['origin'] ?? ''),
+            'doctor_id' => (string) ($payload['doctor_id'] ?? ''),
+            'specialty_id' => $payload['specialty_id'] ?? null,
+            'appointment_type_id' => $payload['appointment_type'] ?? null,
+            'calendar_id' => (string) ($payload['calendar_id'] ?? ''),
+        ]);
+
         $appointment = Appointment::query()->create($payload);
 
         if ($appointment->isHold()) {
@@ -260,7 +269,7 @@ class WhatsAppBotAppointmentService
                 'appointment.pending_confirmation',
                 [
                     'event' => 'appointment_created_pending_confirmation',
-                    'origin' => 'whatsapp_bot',
+                    'origin' => Appointment::ORIGIN_WHATSAPP_BOT,
                     'suppress_channels' => ['whatsapp'],
                 ]
             );
@@ -345,7 +354,7 @@ class WhatsAppBotAppointmentService
             'appointment.canceled',
             [
                 'event' => 'appointment_canceled_whatsapp_bot',
-                'origin' => 'whatsapp_bot',
+                'origin' => Appointment::ORIGIN_WHATSAPP_BOT,
                 'suppress_channels' => ['whatsapp'],
             ]
         );
