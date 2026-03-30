@@ -14,7 +14,7 @@
     <div class="mb-8">
         <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-2">Bot de WhatsApp</h2>
         <p class="text-sm text-gray-600 dark:text-gray-400">
-            Configure a base do bot, escolha como o provedor sera resolvido e defina os comportamentos iniciais.
+            Configure a base do bot, escolha como o provedor será resolvido e defina os comportamentos iniciais.
         </p>
     </div>
 
@@ -23,7 +23,7 @@
 
         @if($errors->any())
             <div class="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800 dark:border-red-800 dark:bg-red-900/20 dark:text-red-300">
-                Revise os campos destacados para salvar as configuracoes do bot.
+                Revise os campos destacados para salvar as configurações do bot.
             </div>
         @endif
 
@@ -43,7 +43,7 @@
                         <div class="ml-3">
                             <span class="block text-sm font-medium text-gray-900 dark:text-white">Habilitar Bot de WhatsApp</span>
                             <span class="block text-xs text-gray-500 dark:text-gray-400 mt-1">
-                                Ativa o modulo do bot para os proximos passos do fluxo.
+                                Ativa o módulo do bot para os próximos passos do fluxo.
                             </span>
                         </div>
                     </label>
@@ -57,7 +57,7 @@
                               name="whatsapp_bot_welcome_message"
                               rows="4"
                               class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
-                              placeholder="Ex.: Ola! Sou o bot da clinica e posso ajudar com seu agendamento.">{{ old('whatsapp_bot_welcome_message', $settings['whatsapp_bot.welcome_message'] ?? '') }}</textarea>
+                              placeholder="Ex.: Olá! Sou o bot da clínica e posso ajudar com seu agendamento.">{{ old('whatsapp_bot_welcome_message', $settings['whatsapp_bot.welcome_message'] ?? '') }}</textarea>
                     @error('whatsapp_bot_welcome_message')
                         <p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p>
                     @enderror
@@ -71,9 +71,9 @@
                               name="whatsapp_bot_disabled_message"
                               rows="2"
                               class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
-                              placeholder="Ex.: Nosso atendimento automatico esta indisponivel no momento.">{{ old('whatsapp_bot_disabled_message', $settings['whatsapp_bot.disabled_message'] ?? '') }}</textarea>
+                              placeholder="Ex.: Nosso atendimento automático está indisponível no momento.">{{ old('whatsapp_bot_disabled_message', $settings['whatsapp_bot.disabled_message'] ?? '') }}</textarea>
                     <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                        Opcional. Se preenchida, sera enviada quando o bot estiver desabilitado.
+                        Opcional. Se preenchida, será enviada quando o bot estiver desabilitado.
                     </p>
                     @error('whatsapp_bot_disabled_message')
                         <p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p>
@@ -91,7 +91,7 @@
                                   class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
                                   placeholder="Um item por linha">{{ old('whatsapp_bot_entry_keywords', $settings['whatsapp_bot.entry_keywords_text'] ?? '') }}</textarea>
                         <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                            Quando o usuario enviar uma dessas mensagens, o bot inicia/reativa e volta ao menu.
+                            Quando o usuário enviar uma dessas mensagens, o bot inicia/reativa e volta ao menu.
                         </p>
                         @error('whatsapp_bot_entry_keywords')
                             <p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p>
@@ -100,7 +100,7 @@
 
                     <div>
                         <label for="whatsapp_bot_exit_keywords" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                            Palavras/frases de saida
+                            Palavras/frases de saída
                         </label>
                         <textarea id="whatsapp_bot_exit_keywords"
                                   name="whatsapp_bot_exit_keywords"
@@ -108,7 +108,7 @@
                                   class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
                                   placeholder="Um item por linha">{{ old('whatsapp_bot_exit_keywords', $settings['whatsapp_bot.exit_keywords_text'] ?? '') }}</textarea>
                         <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                            Quando o usuario enviar uma dessas mensagens, o bot encerra o atendimento.
+                            Quando o usuário enviar uma dessas mensagens, o bot encerra o atendimento.
                         </p>
                         @error('whatsapp_bot_exit_keywords')
                             <p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p>
@@ -120,7 +120,7 @@
 
         <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
             <div class="border-b border-gray-200 dark:border-gray-700 pb-4 mb-4">
-                <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Catalogo de Mensagens</h3>
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Catálogo de Mensagens</h3>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -136,7 +136,7 @@
 
                 <div>
                     <label for="whatsapp_bot_message_invalid_cpf" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        CPF invalido
+                        CPF inválido
                     </label>
                     <textarea id="whatsapp_bot_message_invalid_cpf"
                               name="whatsapp_bot_message_invalid_cpf"
@@ -146,7 +146,7 @@
 
                 <div>
                     <label for="whatsapp_bot_message_patient_not_found" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        Paciente nao encontrado
+                        Paciente não encontrado
                     </label>
                     <textarea id="whatsapp_bot_message_patient_not_found"
                               name="whatsapp_bot_message_patient_not_found"
@@ -156,7 +156,7 @@
 
                 <div>
                     <label for="whatsapp_bot_message_registration_start" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        Inicio do cadastro
+                        Início do cadastro
                     </label>
                     <textarea id="whatsapp_bot_message_registration_start"
                               name="whatsapp_bot_message_registration_start"
@@ -166,7 +166,7 @@
 
                 <div>
                     <label for="whatsapp_bot_message_registration_completed" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        Cadastro concluido
+                        Cadastro concluído
                     </label>
                     <textarea id="whatsapp_bot_message_registration_completed"
                               name="whatsapp_bot_message_registration_completed"
@@ -186,7 +186,7 @@
 
                 <div>
                     <label for="whatsapp_bot_message_no_slots_available" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        Sem horarios disponiveis
+                        Sem horários disponíveis
                     </label>
                     <textarea id="whatsapp_bot_message_no_slots_available"
                               name="whatsapp_bot_message_no_slots_available"
@@ -196,7 +196,7 @@
 
                 <div>
                     <label for="whatsapp_bot_message_appointment_created" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        Agendamento concluido
+                        Agendamento concluído
                     </label>
                     <textarea id="whatsapp_bot_message_appointment_created"
                               name="whatsapp_bot_message_appointment_created"
@@ -206,7 +206,7 @@
 
                 <div>
                     <label for="whatsapp_bot_message_appointment_canceled" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        Cancelamento concluido
+                        Cancelamento concluído
                     </label>
                     <textarea id="whatsapp_bot_message_appointment_canceled"
                               name="whatsapp_bot_message_appointment_canceled"
@@ -228,7 +228,7 @@
 
         <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
             <div class="border-b border-gray-200 dark:border-gray-700 pb-4 mb-4">
-                <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Sessao e Encerramento</h3>
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Sessão e Encerramento</h3>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
@@ -311,13 +311,13 @@
 
         <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
             <div class="border-b border-gray-200 dark:border-gray-700 pb-4 mb-4">
-                <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Politica de Identificacao</h3>
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Política de Identificação</h3>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                 <div>
                     <label for="whatsapp_bot_identification_max_attempts" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        Maximo de tentativas de CPF
+                        Máximo de tentativas de CPF
                     </label>
                     <input id="whatsapp_bot_identification_max_attempts"
                            type="number"
@@ -346,7 +346,7 @@
                            value="1"
                            class="mt-1 w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                            {{ old('whatsapp_bot_identification_require_valid_cpf', ($settings['whatsapp_bot.identification.require_valid_cpf'] ?? true) ? '1' : '0') === '1' ? 'checked' : '' }}>
-                    <span class="text-sm text-gray-700 dark:text-gray-300">Exigir CPF valido</span>
+                    <span class="text-sm text-gray-700 dark:text-gray-300">Exigir CPF válido</span>
                 </label>
                 <label class="flex items-start gap-3 cursor-pointer">
                     <input type="checkbox"
@@ -354,7 +354,7 @@
                            value="1"
                            class="mt-1 w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                            {{ old('whatsapp_bot_identification_reuse_identified_patient', ($settings['whatsapp_bot.identification.reuse_identified_patient'] ?? true) ? '1' : '0') === '1' ? 'checked' : '' }}>
-                    <span class="text-sm text-gray-700 dark:text-gray-300">Reaproveitar paciente identificado na sessao</span>
+                    <span class="text-sm text-gray-700 dark:text-gray-300">Reaproveitar paciente identificado na sessão</span>
                 </label>
             </div>
 
@@ -372,60 +372,6 @@
 
         <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
             <div class="border-b border-gray-200 dark:border-gray-700 pb-4 mb-4">
-                <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Menu Configuravel</h3>
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                <div>
-                    <label for="whatsapp_bot_menu_max_options" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        Maximo de opcoes exibidas
-                    </label>
-                    <input id="whatsapp_bot_menu_max_options"
-                           type="number"
-                           min="1"
-                           max="20"
-                           name="whatsapp_bot_menu_max_options"
-                           value="{{ old('whatsapp_bot_menu_max_options', $settings['whatsapp_bot.menu.max_options'] ?? 6) }}"
-                           class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white">
-                </div>
-            </div>
-
-            <div class="space-y-3 mb-4">
-                <label class="flex items-start gap-3 cursor-pointer">
-                    <input type="checkbox"
-                           name="whatsapp_bot_menu_show_again_after_action"
-                           value="1"
-                           class="mt-1 w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                           {{ old('whatsapp_bot_menu_show_again_after_action', ($settings['whatsapp_bot.menu.show_again_after_action'] ?? true) ? '1' : '0') === '1' ? 'checked' : '' }}>
-                    <span class="text-sm text-gray-700 dark:text-gray-300">Mostrar menu novamente ao concluir acao</span>
-                </label>
-                <label class="flex items-start gap-3 cursor-pointer">
-                    <input type="checkbox"
-                           name="whatsapp_bot_menu_return_after_fallback"
-                           value="1"
-                           class="mt-1 w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                           {{ old('whatsapp_bot_menu_return_after_fallback', ($settings['whatsapp_bot.menu.return_after_fallback'] ?? true) ? '1' : '0') === '1' ? 'checked' : '' }}>
-                    <span class="text-sm text-gray-700 dark:text-gray-300">Voltar ao menu apos fallback</span>
-                </label>
-            </div>
-
-            <div>
-                <label for="whatsapp_bot_menu_options" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Opcoes do menu (JSON)
-                </label>
-                <textarea id="whatsapp_bot_menu_options"
-                          name="whatsapp_bot_menu_options"
-                          rows="12"
-                          class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white font-mono text-xs">{{ old('whatsapp_bot_menu_options', $settings['whatsapp_bot.menu.options_json'] ?? '') }}</textarea>
-                <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Use id: schedule, view_appointments, cancel_appointments.</p>
-                @error('whatsapp_bot_menu_options')
-                    <p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p>
-                @enderror
-            </div>
-        </div>
-
-        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-            <div class="border-b border-gray-200 dark:border-gray-700 pb-4 mb-4">
                 <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Modo do Provedor do Bot</h3>
             </div>
 
@@ -438,9 +384,9 @@
                            class="mt-1 w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
                            {{ $botProviderMode === 'shared_with_notifications' ? 'checked' : '' }}>
                     <div>
-                        <span class="block text-sm font-medium text-gray-900 dark:text-white">Usar o mesmo provedor das notificacoes</span>
+                        <span class="block text-sm font-medium text-gray-900 dark:text-white">Usar o mesmo provedor das notificações</span>
                         <span class="block text-xs text-gray-500 dark:text-gray-400 mt-1">
-                            O bot herda a configuracao efetiva ja usada pelo modulo de notificacoes.
+                            O bot herda a configuração efetiva já usada pelo módulo de notificações.
                         </span>
                     </div>
                 </label>
@@ -453,21 +399,21 @@
                            class="mt-1 w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
                            {{ $botProviderMode === 'dedicated' ? 'checked' : '' }}>
                     <div>
-                        <span class="block text-sm font-medium text-gray-900 dark:text-white">Usar provedor proprio para o bot</span>
+                        <span class="block text-sm font-medium text-gray-900 dark:text-white">Usar provedor próprio para o bot</span>
                         <span class="block text-xs text-gray-500 dark:text-gray-400 mt-1">
-                            Permite configurar o provider do bot de forma independente das notificacoes.
+                            Permite configurar o provider do bot de forma independente das notificações.
                         </span>
                     </div>
                 </label>
             </div>
 
             <div x-show="botProviderMode === 'shared_with_notifications'" x-cloak class="mt-4 p-4 border border-blue-200 dark:border-blue-900/30 rounded-lg bg-blue-50/70 dark:bg-blue-900/10">
-                <p class="text-sm font-medium text-blue-900 dark:text-blue-200">Configuracao herdada das notificacoes</p>
+                <p class="text-sm font-medium text-blue-900 dark:text-blue-200">Configuração herdada das notificações</p>
                 <p class="text-xs text-blue-800 dark:text-blue-300 mt-1">
                     Provider efetivo atual: <strong>{{ $effectiveProviderLabel }}</strong>.
                 </p>
                 <p class="text-xs text-blue-700 dark:text-blue-300/90 mt-1">
-                    Se a configuracao de notificacoes mudar, o bot tambem herdara a nova configuracao.
+                    Se a configuração de notificações mudar, o bot também herdará a nova configuração.
                 </p>
             </div>
 
@@ -562,7 +508,7 @@
                                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white">
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Sessao</label>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Sessão</label>
                         <input type="text"
                                name="bot_waha_session"
                                value="{{ old('bot_waha_session', $settings['whatsapp_bot.WAHA_SESSION'] ?? 'default') }}"
@@ -586,7 +532,7 @@
                                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white">
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Instancia</label>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Instância</label>
                         <input type="text"
                                name="bot_evolution_instance"
                                value="{{ old('bot_evolution_instance', $settings['whatsapp_bot.EVOLUTION_INSTANCE'] ?? 'default') }}"
@@ -598,7 +544,7 @@
 
         <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
             <div class="border-b border-gray-200 dark:border-gray-700 pb-4 mb-4">
-                <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Permissoes Iniciais do Bot</h3>
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Permissões Iniciais do Bot</h3>
             </div>
 
             <div class="space-y-3">

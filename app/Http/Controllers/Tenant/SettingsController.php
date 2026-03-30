@@ -897,10 +897,6 @@ class SettingsController extends Controller
             'whatsapp_bot_identification_max_attempts' => 'nullable|integer|min:1|max:20',
             'whatsapp_bot_identification_reuse_identified_patient' => 'nullable|boolean',
             'whatsapp_bot_identification_lookup_order' => 'nullable|string|max:4000',
-            'whatsapp_bot_menu_max_options' => 'nullable|integer|min:1|max:20',
-            'whatsapp_bot_menu_show_again_after_action' => 'nullable|boolean',
-            'whatsapp_bot_menu_return_after_fallback' => 'nullable|boolean',
-            'whatsapp_bot_menu_options' => 'nullable|string|max:20000',
             'whatsapp_bot_allow_schedule' => 'nullable|boolean',
             'whatsapp_bot_allow_view_appointments' => 'nullable|boolean',
             'whatsapp_bot_allow_cancel_appointments' => 'nullable|boolean',
@@ -927,15 +923,6 @@ class SettingsController extends Controller
                     'whatsapp_bot_session_absolute_timeout_minutes',
                     'O timeout absoluto deve ser maior ou igual ao timeout de inatividade.'
                 );
-            }
-
-            $menuOptionsRaw = (string) $request->input('whatsapp_bot_menu_options', '');
-            if (trim($menuOptionsRaw) !== '') {
-                try {
-                    $this->parseMenuOptionsJsonTextarea($menuOptionsRaw);
-                } catch (\InvalidArgumentException $exception) {
-                    $validator->errors()->add('whatsapp_bot_menu_options', $exception->getMessage());
-                }
             }
 
             $providerMode = (string) $request->input('whatsapp_bot_provider_mode');
@@ -1047,11 +1034,6 @@ class SettingsController extends Controller
             'whatsapp_bot.identification.lookup_order',
             json_encode($this->parseKeywordListTextarea((string) ($validated['whatsapp_bot_identification_lookup_order'] ?? '')), JSON_UNESCAPED_UNICODE)
         );
-        $menuOptions = $this->parseMenuOptionsJsonTextarea((string) ($validated['whatsapp_bot_menu_options'] ?? ''));
-        TenantSetting::set('whatsapp_bot.menu.max_options', (string) ((int) ($validated['whatsapp_bot_menu_max_options'] ?? 6)));
-        TenantSetting::set('whatsapp_bot.menu.show_again_after_action', $request->has('whatsapp_bot_menu_show_again_after_action') ? 'true' : 'false');
-        TenantSetting::set('whatsapp_bot.menu.return_after_fallback', $request->has('whatsapp_bot_menu_return_after_fallback') ? 'true' : 'false');
-        TenantSetting::set('whatsapp_bot.menu.options', json_encode($menuOptions, JSON_UNESCAPED_UNICODE));
         TenantSetting::set('whatsapp_bot.allow_schedule', $request->has('whatsapp_bot_allow_schedule') ? 'true' : 'false');
         TenantSetting::set('whatsapp_bot.allow_view_appointments', $request->has('whatsapp_bot_allow_view_appointments') ? 'true' : 'false');
         TenantSetting::set('whatsapp_bot.allow_cancel_appointments', $request->has('whatsapp_bot_allow_cancel_appointments') ? 'true' : 'false');
@@ -1601,7 +1583,7 @@ class SettingsController extends Controller
 
         $decoded = json_decode($trimmed, true);
         if (!is_array($decoded)) {
-            throw new \InvalidArgumentException('As opcoes do menu devem estar em JSON valido.');
+            throw new \InvalidArgumentException('As opções do menu devem estar em JSON válido.');
         }
 
         $normalized = [];
@@ -1621,7 +1603,7 @@ class SettingsController extends Controller
                     'schedule' => 'Agendar consulta',
                     'view_appointments' => 'Ver meus agendamentos',
                     'cancel_appointments' => 'Cancelar agendamento',
-                    default => 'Opcao',
+                    default => 'Opção',
                 };
             }
 
@@ -1638,7 +1620,7 @@ class SettingsController extends Controller
         }
 
         if ($normalized === []) {
-            throw new \InvalidArgumentException('As opcoes do menu nao possuem itens validos.');
+            throw new \InvalidArgumentException('As opções do menu não possuem itens válidos.');
         }
 
         $normalizedList = array_values($normalized);

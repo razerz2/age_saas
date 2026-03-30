@@ -48,6 +48,7 @@ class WhatsAppBotConversationOrchestrator
         private readonly WhatsAppBotConfigService $configService,
         private readonly WhatsAppBotDomainService $domainService,
         private readonly WhatsAppBotIntentRouter $intentRouter,
+        private readonly WhatsAppBotMessageFormatter $messageFormatter,
         private readonly WhatsAppBotPatientService $patientService,
         private readonly WhatsAppBotAppointmentService $appointmentService
     ) {
@@ -96,7 +97,7 @@ class WhatsAppBotConversationOrchestrator
             return $this->menuResult(
                 $message,
                 $this->resetConversationState($state),
-                'Fluxo de identificacao atualizado. Escolha uma opcao para continuar.'
+                'Fluxo de identificação atualizado.'
             );
         }
 
@@ -191,23 +192,18 @@ class WhatsAppBotConversationOrchestrator
         array $exitKeywords,
         array $resetKeywords
     ): ?ConversationResult {
-        if ($this->hasSessionTimedOut($session, $settings)) {
+        if ($this->hasSessionTimedOut($session, $state, $settings)) {
             $timedOutState = $this->applySessionTimeoutState($state, $settings);
 
-            return $this->menuResult(
-                $message,
-                $timedOutState,
-                $this->message('inactivity_exit'),
-                true
-            );
+            return $this->passiveInactivityTimeoutResult($session, $message, $timedOutState);
         }
 
         if ($this->shouldResetSessionContext($flow, $step)) {
-            return $this->menuResult($message, $this->resetConversationState($state), 'Sessao reiniciada por seguranca.');
+            return $this->menuResult($message, $this->resetConversationState($state), 'Sessão reiniciada por segurança.');
         }
 
         if ($this->intentRouter->isResetCommand($text, $resetKeywords)) {
-            return $this->menuResult($message, $this->resetConversationState($state), 'Fluxo reiniciado.');
+            return $this->menuResult($message, $this->resetConversationState($state), 'Fluxo reiniciado com sucesso.');
         }
 
         if ($text !== '' && $this->intentRouter->matchesAnyKeyword($text, $exitKeywords)) {
@@ -226,6 +222,35 @@ class WhatsAppBotConversationOrchestrator
     }
 
     /**
+     * @param array<string, mixed> $state
+     */
+    private function passiveInactivityTimeoutResult(
+        WhatsAppBotSession $session,
+        InboundMessage $message,
+        array $state
+    ): ConversationResult {
+        Log::info('whatsapp_bot.inactivity.passive_timeout_triggered', [
+            'tenant_id' => $this->currentTenantId(),
+            'session_id' => (string) ($session->id ?? ''),
+            'phone' => (string) ($message->contactPhone ?? ''),
+            'source' => 'inbound_passive',
+        ]);
+
+        return new ConversationResult(
+            processed: true,
+            reason: null,
+            outboundMessages: [OutboundMessage::text(
+                $message->contactPhone,
+                $this->message('inactivity_exit'),
+                ['kind' => 'inactivity_timeout_passive', 'source' => 'inbound_passive']
+            )],
+            flow: self::FLOW_MENU,
+            step: self::STEP_MENU_AWAITING_OPTION,
+            stateUpdates: $state
+        );
+    }
+
+    /**
      * @param array<string, mixed> $settings
      */
     private function handleMenu(InboundMessage $message, array $state, ?Patient $patient, string $text, array $settings): ConversationResult
@@ -238,7 +263,7 @@ class WhatsAppBotConversationOrchestrator
         $state['last_intent'] = $intent;
 
         Log::info('whatsapp_bot.intent.routed', [
-            'tenant_id' => (string) (tenant()?->id ?? ''),
+            'tenant_id' => $this->currentTenantId(),
             'provider' => $message->provider,
             'phone' => $message->contactPhone,
             'flow' => self::FLOW_MENU,
@@ -318,17 +343,24 @@ class WhatsAppBotConversationOrchestrator
             }
 
             if ($appointments->isEmpty()) {
-                return $this->menuResult($message, $state, 'Voce nao possui agendamentos futuros.');
+                return $this->menuResult($message, $state, 'Você não possui agendamentos futuros.');
             }
 
-            $lines = ['Seus proximos agendamentos:'];
-            foreach ($appointments as $index => $appointment) {
-                $doctorName = trim((string) ($appointment->doctor?->user?->name_full ?? $appointment->doctor?->user?->name ?? 'Profissional'));
+            $appointmentLabels = [];
+            foreach ($appointments as $appointment) {
+                $doctorName = $this->messageFormatter->sanitizeDisplayName(
+                    (string) ($appointment->doctor?->user?->name_full ?? $appointment->doctor?->user?->name ?? ''),
+                    'Profissional'
+                );
                 $startsAt = $appointment->starts_at ? $appointment->starts_at->copy()->timezone($this->timezone()) : null;
-                $lines[] = sprintf('%d. %s - %s', $index + 1, $doctorName, $startsAt ? $startsAt->format('d/m H:i') : '-');
+                $appointmentLabels[] = sprintf('%s - %s', $doctorName, $startsAt ? $startsAt->format('d/m H:i') : '-');
             }
 
-            return $this->menuResult($message, $state, implode("\n", $lines));
+            return $this->menuResult(
+                $message,
+                $state,
+                $this->messageFormatter->promptWithOptions('Seus próximos agendamentos:', $appointmentLabels)
+            );
         }
 
         if ($intent === WhatsAppBotIntentRouter::INTENT_CANCEL_APPOINTMENTS) {
@@ -372,15 +404,22 @@ class WhatsAppBotConversationOrchestrator
 
         if (count($specialties) > 1) {
             $state = $this->clearInvalidAttempts($state);
-            $lines = ['Escolha a especialidade:'];
-            foreach ($specialties as $index => $specialty) {
-                $lines[] = sprintf('%d. %s', $index + 1, (string) ($specialty['name'] ?? 'Especialidade'));
-            }
+            $options = array_map(
+                fn (array $specialty): string => $this->messageFormatter->sanitizeDisplayName(
+                    (string) ($specialty['name'] ?? ''),
+                    'Especialidade disponível'
+                ),
+                $specialties
+            );
 
             return new ConversationResult(
                 processed: true,
                 reason: null,
-                outboundMessages: [OutboundMessage::text($message->contactPhone, implode("\n", $lines), ['kind' => 'schedule_specialty'])],
+                outboundMessages: [OutboundMessage::text(
+                    $message->contactPhone,
+                    $this->messageFormatter->promptWithOptions('Escolha a especialidade desejada:', $options),
+                    ['kind' => 'schedule_specialty']
+                )],
                 flow: self::FLOW_SCHEDULE,
                 step: self::STEP_SCHEDULE_AWAITING_SPECIALTY,
                 stateUpdates: $state
@@ -437,7 +476,11 @@ class WhatsAppBotConversationOrchestrator
             return new ConversationResult(
                 processed: true,
                 reason: null,
-                outboundMessages: [OutboundMessage::text($message->contactPhone, 'Informe a data desejada (DD/MM ou AAAA-MM-DD). Exemplo: 25/03', ['kind' => 'schedule_date'])],
+                outboundMessages: [OutboundMessage::text(
+                    $message->contactPhone,
+                    'Informe a data desejada (DD/MM ou AAAA-MM-DD). Exemplo: 25/03',
+                    ['kind' => 'schedule_date']
+                )],
                 flow: self::FLOW_SCHEDULE,
                 step: self::STEP_SCHEDULE_AWAITING_DATE,
                 stateUpdates: $state
@@ -445,13 +488,39 @@ class WhatsAppBotConversationOrchestrator
         }
 
         if ($step === self::STEP_SCHEDULE_AWAITING_DATE) {
+            if ($text === '') {
+                $this->logStep(
+                    $message,
+                    self::FLOW_SCHEDULE,
+                    self::STEP_SCHEDULE_AWAITING_DATE,
+                    'ignored:empty_date_input',
+                    'warning'
+                );
+
+                return ConversationResult::ignored('schedule_date_empty_input');
+            }
+
             $date = $this->parseDateInput($text);
             if (!$date) {
-                return $this->invalidStepResult($message, $state, self::FLOW_SCHEDULE, self::STEP_SCHEDULE_AWAITING_DATE, 'Data invalida. Informe no formato DD/MM ou AAAA-MM-DD.', 'schedule_date_invalid');
+                return $this->invalidStepResult(
+                    $message,
+                    $state,
+                    self::FLOW_SCHEDULE,
+                    self::STEP_SCHEDULE_AWAITING_DATE,
+                    'Data inválida. Informe no formato DD/MM ou AAAA-MM-DD.',
+                    'schedule_date_invalid'
+                );
             }
 
             if ($date->lt(Carbon::now($this->timezone())->startOfDay())) {
-                return $this->invalidStepResult($message, $state, self::FLOW_SCHEDULE, self::STEP_SCHEDULE_AWAITING_DATE, 'Nao e possivel agendar em data passada. Informe uma data de hoje em diante.', 'schedule_date_past');
+                return $this->invalidStepResult(
+                    $message,
+                    $state,
+                    self::FLOW_SCHEDULE,
+                    self::STEP_SCHEDULE_AWAITING_DATE,
+                    'Não é possível agendar em data passada. Informe uma data de hoje em diante.',
+                    'schedule_date_past'
+                );
             }
 
             $doctor = (array) data_get($state, 'schedule.selected_doctor', []);
@@ -481,22 +550,29 @@ class WhatsAppBotConversationOrchestrator
             $state['schedule']['slots_doctor_id'] = $doctorId;
 
             if ($slots === []) {
-                $noSlotsText = $this->message('no_slots_available') . "\nInforme outra data.";
+                $noSlotsText = $this->messageFormatter->compose([
+                    $this->message('no_slots_available'),
+                    'Informe outra data para tentarmos novamente.',
+                ]);
                 return $this->invalidStepResult($message, $state, self::FLOW_SCHEDULE, self::STEP_SCHEDULE_AWAITING_DATE, $noSlotsText, 'schedule_no_slots');
             }
 
             $state['schedule']['slots'] = $slots;
             $state = $this->clearInvalidAttempts($state);
 
-            $lines = ['Escolha o horario disponivel:'];
-            foreach ($slots as $slotIndex => $slot) {
-                $lines[] = sprintf('%d. %s', $slotIndex + 1, (string) ($slot['label'] ?? '-'));
-            }
+            $options = array_map(
+                static fn (array $slot): string => trim((string) ($slot['label'] ?? 'Horário disponível')),
+                $slots
+            );
 
             return new ConversationResult(
                 processed: true,
                 reason: null,
-                outboundMessages: [OutboundMessage::text($message->contactPhone, implode("\n", $lines), ['kind' => 'schedule_slot'])],
+                outboundMessages: [OutboundMessage::text(
+                    $message->contactPhone,
+                    $this->messageFormatter->promptWithOptions('Escolha o horário disponível:', $options),
+                    ['kind' => 'schedule_slot']
+                )],
                 flow: self::FLOW_SCHEDULE,
                 step: self::STEP_SCHEDULE_AWAITING_SLOT,
                 stateUpdates: $state
@@ -515,9 +591,28 @@ class WhatsAppBotConversationOrchestrator
             $state['schedule']['selected_slot'] = $selectedSlot;
             $state = $this->clearInvalidAttempts($state);
 
-            $doctorName = (string) data_get($state, 'schedule.selected_doctor.name', 'Profissional');
+            $doctorName = $this->resolveDisplayValue([
+                (string) data_get($state, 'schedule.selected_doctor.name', ''),
+            ]);
+            $specialtyName = $this->resolveDisplayValue([
+                (string) data_get($state, 'schedule.selected_specialty_name', ''),
+            ]);
             $startsAt = Carbon::parse((string) ($selectedSlot['starts_at'] ?? now()), $this->timezone());
-            $confirmationText = sprintf("Confirmar agendamento com %s em %s as %s?\n1. Confirmar\n2. Cancelar", $doctorName, $startsAt->format('d/m'), $startsAt->format('H:i'));
+            $detailLines = [];
+            if ($specialtyName !== '') {
+                $detailLines[] = 'Especialidade: ' . $specialtyName;
+            }
+            if ($doctorName !== '') {
+                $detailLines[] = 'Profissional: ' . $doctorName;
+            }
+            $detailLines[] = 'Data: ' . $startsAt->format('d/m/Y');
+            $detailLines[] = 'Horário: ' . $startsAt->format('H:i');
+
+            $confirmationText = $this->messageFormatter->confirmation(
+                'Confirma o agendamento abaixo?',
+                $detailLines,
+                ['Confirmar', 'Cancelar']
+            );
 
             return new ConversationResult(
                 processed: true,
@@ -535,7 +630,14 @@ class WhatsAppBotConversationOrchestrator
             }
 
             if (!$this->intentRouter->isAffirmative($text)) {
-                return $this->invalidStepResult($message, $state, self::FLOW_SCHEDULE, self::STEP_SCHEDULE_AWAITING_CONFIRMATION, "Resposta invalida.\n1. Confirmar\n2. Cancelar", 'schedule_confirmation_invalid');
+                return $this->invalidStepResult(
+                    $message,
+                    $state,
+                    self::FLOW_SCHEDULE,
+                    self::STEP_SCHEDULE_AWAITING_CONFIRMATION,
+                    $this->messageFormatter->promptWithOptions('Resposta inválida. Escolha uma opção:', ['Confirmar', 'Cancelar']),
+                    'schedule_confirmation_invalid'
+                );
             }
 
             $doctor = (array) data_get($state, 'schedule.selected_doctor', []);
@@ -561,8 +663,20 @@ class WhatsAppBotConversationOrchestrator
 
             $startsAt = $appointment->starts_at ? $appointment->starts_at->copy()->timezone($this->timezone()) : null;
             $baseSuccess = $this->message('appointment_created');
+            $doctorName = $this->resolveDisplayValue([
+                (string) ($appointment->doctor?->user?->name_full ?? ''),
+                (string) ($appointment->doctor?->user?->name ?? ''),
+                (string) data_get($doctor, 'name', ''),
+            ]);
             $success = $startsAt
-                ? trim($baseSuccess . ' ' . 'Para ' . $startsAt->format('d/m') . ' as ' . $startsAt->format('H:i') . '.')
+                ? $this->messageFormatter->compose([
+                    $baseSuccess,
+                    implode("\n", array_values(array_filter([
+                        'Data: ' . $startsAt->format('d/m/Y'),
+                        'Horário: ' . $startsAt->format('H:i'),
+                        $doctorName !== '' ? 'Profissional: ' . $doctorName : null,
+                    ], static fn (?string $line): bool => $line !== null))),
+                ])
                 : $baseSuccess;
 
             return $this->menuResult($message, $this->clearScheduleState($state), $success);
@@ -581,17 +695,20 @@ class WhatsAppBotConversationOrchestrator
         }
 
         if ($appointments->isEmpty()) {
-            return $this->menuResult($message, $state, 'Nao ha agendamentos disponiveis para cancelamento.');
+            return $this->menuResult($message, $state, 'Não há agendamentos disponíveis para cancelamento.');
         }
 
         $items = [];
-        $lines = ['Escolha o agendamento que deseja cancelar:'];
-        foreach ($appointments as $index => $appointment) {
+        $options = [];
+        foreach ($appointments as $appointment) {
             $startsAt = $appointment->starts_at ? $appointment->starts_at->copy()->timezone($this->timezone()) : null;
-            $doctorName = trim((string) ($appointment->doctor?->user?->name_full ?? $appointment->doctor?->user?->name ?? 'Profissional'));
+            $doctorName = $this->messageFormatter->sanitizeDisplayName(
+                (string) ($appointment->doctor?->user?->name_full ?? $appointment->doctor?->user?->name ?? ''),
+                'Profissional'
+            );
             $label = $doctorName . ' - ' . ($startsAt ? $startsAt->format('d/m H:i') : '-');
             $items[] = ['id' => (string) $appointment->id, 'label' => $label];
-            $lines[] = sprintf('%d. %s', $index + 1, $label);
+            $options[] = $label;
         }
 
         $state['cancel'] = ['appointments' => $items];
@@ -600,7 +717,11 @@ class WhatsAppBotConversationOrchestrator
         return new ConversationResult(
             processed: true,
             reason: null,
-            outboundMessages: [OutboundMessage::text($message->contactPhone, implode("\n", $lines), ['kind' => 'cancel_list'])],
+            outboundMessages: [OutboundMessage::text(
+                $message->contactPhone,
+                $this->messageFormatter->promptWithOptions('Escolha o agendamento que deseja cancelar:', $options),
+                ['kind' => 'cancel_list']
+            )],
             flow: self::FLOW_CANCEL,
             step: self::STEP_CANCEL_AWAITING_APPOINTMENT,
             stateUpdates: $state
@@ -623,7 +744,11 @@ class WhatsAppBotConversationOrchestrator
             $state['cancel']['selected'] = $items[$index - 1];
             $state = $this->clearInvalidAttempts($state);
 
-            $textMessage = "Confirmar cancelamento do agendamento:\n" . (string) ($items[$index - 1]['label'] ?? 'Agendamento') . "\n1. Sim\n2. Nao";
+            $textMessage = $this->messageFormatter->confirmation(
+                'Confirma o cancelamento abaixo?',
+                ['Agendamento: ' . (string) ($items[$index - 1]['label'] ?? 'Agendamento selecionado')],
+                ['Confirmar cancelamento', 'Voltar']
+            );
             return new ConversationResult(
                 processed: true,
                 reason: null,
@@ -635,18 +760,25 @@ class WhatsAppBotConversationOrchestrator
         }
         if ($step === self::STEP_CANCEL_AWAITING_CONFIRMATION) {
             if ($this->intentRouter->isNegative($text)) {
-                return $this->menuResult($message, $this->clearCancelState($state), 'Cancelamento abortado.');
+                return $this->menuResult($message, $this->clearCancelState($state), 'Cancelamento cancelado.');
             }
 
             if (!$this->intentRouter->isAffirmative($text)) {
-                return $this->invalidStepResult($message, $state, self::FLOW_CANCEL, self::STEP_CANCEL_AWAITING_CONFIRMATION, "Resposta invalida.\n1. Sim\n2. Nao", 'cancel_confirmation_invalid');
+                return $this->invalidStepResult(
+                    $message,
+                    $state,
+                    self::FLOW_CANCEL,
+                    self::STEP_CANCEL_AWAITING_CONFIRMATION,
+                    $this->messageFormatter->promptWithOptions('Resposta inválida. Escolha uma opção:', ['Confirmar cancelamento', 'Voltar']),
+                    'cancel_confirmation_invalid'
+                );
             }
 
             $appointmentId = (string) data_get($state, 'cancel.selected.id', '');
             $appointment = $this->appointmentService->listCancelableAppointments($patient, 50)->firstWhere('id', $appointmentId);
 
             if (!$appointment) {
-                return $this->menuResult($message, $this->clearCancelState($state), 'Nao foi possivel localizar o agendamento para cancelamento.');
+                return $this->menuResult($message, $this->clearCancelState($state), 'Não foi possível localizar o agendamento para cancelamento.');
             }
 
             try {
@@ -663,7 +795,7 @@ class WhatsAppBotConversationOrchestrator
             }
 
             if (!$cancelled) {
-                return $this->menuResult($message, $this->clearCancelState($state), 'Esse agendamento ja estava cancelado.');
+                return $this->menuResult($message, $this->clearCancelState($state), 'Esse agendamento já estava cancelado.');
             }
 
             return $this->menuResult($message, $this->clearCancelState($state), $this->message('appointment_canceled'));
@@ -720,7 +852,8 @@ class WhatsAppBotConversationOrchestrator
         }
 
         $cpf = $this->patientService->normalizeCpf($text);
-        if ($requireValidCpf && !$this->patientService->isValidCpf($cpf)) {
+        $isCpfValid = $this->patientService->isValidCpf($cpf);
+        if ($requireValidCpf && !$isCpfValid) {
             $result = $this->invalidStepResult(
                 $message,
                 $state,
@@ -753,7 +886,7 @@ class WhatsAppBotConversationOrchestrator
                 return $this->menuResult(
                     $message,
                     $this->resetConversationState($state),
-                    'Seu cadastro foi localizado, mas esta inativo. Procure a clinica para regularizar.'
+                    'Seu cadastro foi localizado, mas está inativo. Procure a clínica para regularizar.'
                 );
             }
 
@@ -765,10 +898,18 @@ class WhatsAppBotConversationOrchestrator
         }
 
         $fields = $this->patientService->registrationFieldDefinitions();
+        $registrationDraft = [];
+        if ($isCpfValid) {
+            $registrationDraft['cpf'] = $cpf;
+        }
+        $initialIndex = $this->nextRegistrationFieldIndex($fields, $registrationDraft, 0);
+        if (!isset($fields[$initialIndex])) {
+            $initialIndex = 0;
+        }
         $registrationState = [
             'fields' => $fields,
-            'index' => 0,
-            'data' => [],
+            'index' => $initialIndex,
+            'data' => $registrationDraft,
             'identified_cpf' => $cpf,
             'pending_intent' => (string) ($state[self::STATE_PENDING_INTENT] ?? ''),
         ];
@@ -779,9 +920,12 @@ class WhatsAppBotConversationOrchestrator
         $introParts = [
             $this->message('patient_not_found'),
             $this->message('registration_start'),
-            (string) data_get($fields, '0.prompt', 'Informe seu nome completo.'),
+            (string) data_get($fields, $initialIndex . '.prompt', 'Informe seu nome completo.'),
         ];
-        $intro = implode("\n", array_values(array_filter(array_map(static fn ($part): string => trim((string) $part), $introParts), static fn (string $part): bool => $part !== '')));
+        $intro = $this->messageFormatter->compose(array_values(array_filter(
+            array_map(static fn ($part): string => trim((string) $part), $introParts),
+            static fn (string $part): bool => $part !== ''
+        )));
 
         return new ConversationResult(
             processed: true,
@@ -804,22 +948,24 @@ class WhatsAppBotConversationOrchestrator
         $index = (int) ($registration['index'] ?? 0);
 
         if (!isset($fields[$index])) {
-            return $this->menuResult($message, $this->resetConversationState($state), 'Reiniciando cadastro. Escolha uma opcao para continuar.');
+            return $this->menuResult($message, $this->resetConversationState($state), 'Reiniciando cadastro.');
         }
 
         $field = (array) $fields[$index];
         $fieldKey = (string) ($field['key'] ?? '');
         if ($fieldKey === '') {
-            return $this->menuResult($message, $this->resetConversationState($state), 'Reiniciando cadastro. Escolha uma opcao para continuar.');
+            return $this->menuResult($message, $this->resetConversationState($state), 'Reiniciando cadastro.');
         }
 
         $draft = is_array($registration['data'] ?? null) ? $registration['data'] : [];
         $validation = $this->patientService->validateRegistrationField($fieldKey, $text, $draft);
 
         if (!($validation['valid'] ?? false)) {
-            $errorText = trim((string) ($validation['error'] ?? 'Valor invalido.')) ?: 'Valor invalido.';
+            $errorText = trim((string) ($validation['error'] ?? 'Valor inválido.')) ?: 'Valor inválido.';
             $prompt = (string) ($field['prompt'] ?? '');
-            $messageText = $prompt !== '' ? $errorText . "\n" . $prompt : $errorText;
+            $messageText = $prompt !== ''
+                ? $this->messageFormatter->compose([$errorText, $prompt])
+                : $errorText;
 
             return $this->invalidStepResult(
                 $message,
@@ -841,7 +987,7 @@ class WhatsAppBotConversationOrchestrator
                     return $this->menuResult(
                         $message,
                         $this->resetConversationState($state),
-                        'Seu cadastro foi localizado, mas esta inativo. Procure a clinica para regularizar.'
+                        'Seu cadastro foi localizado, mas está inativo. Procure a clínica para regularizar.'
                     );
                 }
 
@@ -853,12 +999,12 @@ class WhatsAppBotConversationOrchestrator
             }
         }
 
-        $nextIndex = $index + 1;
+        $nextIndex = $this->nextRegistrationFieldIndex($fields, $draft, $index + 1);
         if (!isset($fields[$nextIndex])) {
             try {
                 $patient = $this->patientService->createFromRegistration($draft, $message->contactPhone);
             } catch (ValidationException $validationException) {
-                $errorMessage = collect($validationException->errors())->flatten()->first() ?? 'Nao foi possivel concluir o cadastro.';
+                $errorMessage = collect($validationException->errors())->flatten()->first() ?? 'Não foi possível concluir o cadastro.';
                 return $this->invalidStepResult(
                     $message,
                     $state,
@@ -887,7 +1033,7 @@ class WhatsAppBotConversationOrchestrator
         $state[self::STATE_REGISTRATION] = $registration;
         $state = $this->clearInvalidAttempts($state);
 
-        $nextPrompt = (string) data_get($fields[$nextIndex], 'prompt', 'Informe o proximo campo.');
+        $nextPrompt = (string) data_get($fields[$nextIndex], 'prompt', 'Informe o próximo campo.');
 
         return new ConversationResult(
             processed: true,
@@ -897,6 +1043,31 @@ class WhatsAppBotConversationOrchestrator
             step: self::STEP_REGISTER_AWAITING_FIELD,
             stateUpdates: $state
         );
+    }
+
+    /**
+     * @param array<int, array<string, mixed>> $fields
+     * @param array<string, mixed> $draft
+     */
+    private function nextRegistrationFieldIndex(array $fields, array $draft, int $startIndex): int
+    {
+        $index = max(0, $startIndex);
+
+        while (isset($fields[$index])) {
+            $fieldKey = trim((string) data_get($fields[$index], 'key', ''));
+            if ($fieldKey === '') {
+                break;
+            }
+
+            $hasValue = array_key_exists($fieldKey, $draft) && trim((string) ($draft[$fieldKey] ?? '')) !== '';
+            if (!$hasValue) {
+                break;
+            }
+
+            $index++;
+        }
+
+        return $index;
     }
 
     private function continueIntentWithPatient(
@@ -918,7 +1089,7 @@ class WhatsAppBotConversationOrchestrator
             $first = $outbound[0];
             $outbound[0] = OutboundMessage::text(
                 $message->contactPhone,
-                trim($prefix) . "\n\n" . $first->text,
+                $this->messageFormatter->compose([trim($prefix), $first->text]),
                 $first->meta
             );
 
@@ -949,19 +1120,22 @@ class WhatsAppBotConversationOrchestrator
             }
 
             if ($appointments->isEmpty()) {
-                $prefixParts[] = 'Voce nao possui agendamentos futuros.';
-                return $this->menuResult($message, $state, implode("\n", $prefixParts));
+                $prefixParts[] = 'Você não possui agendamentos futuros.';
+                return $this->menuResult($message, $state, $this->messageFormatter->compose($prefixParts));
             }
 
-            $lines = ['Seus proximos agendamentos:'];
-            foreach ($appointments as $index => $appointment) {
-                $doctorName = trim((string) ($appointment->doctor?->user?->name_full ?? $appointment->doctor?->user?->name ?? 'Profissional'));
+            $appointmentLabels = [];
+            foreach ($appointments as $appointment) {
+                $doctorName = $this->messageFormatter->sanitizeDisplayName(
+                    (string) ($appointment->doctor?->user?->name_full ?? $appointment->doctor?->user?->name ?? ''),
+                    'Profissional'
+                );
                 $startsAt = $appointment->starts_at ? $appointment->starts_at->copy()->timezone($this->timezone()) : null;
-                $lines[] = sprintf('%d. %s - %s', $index + 1, $doctorName, $startsAt ? $startsAt->format('d/m H:i') : '-');
+                $appointmentLabels[] = sprintf('%s - %s', $doctorName, $startsAt ? $startsAt->format('d/m H:i') : '-');
             }
 
-            $prefixParts[] = implode("\n", $lines);
-            return $this->menuResult($message, $state, implode("\n\n", array_filter($prefixParts)));
+            $prefixParts[] = $this->messageFormatter->promptWithOptions('Seus próximos agendamentos:', $appointmentLabels);
+            return $this->menuResult($message, $state, $this->messageFormatter->compose(array_values(array_filter($prefixParts))));
         }
 
         if ($prefix !== null && trim($prefix) !== '') {
@@ -984,32 +1158,53 @@ class WhatsAppBotConversationOrchestrator
         $welcome = trim((string) data_get($settings, 'messages.welcome', data_get($settings, 'welcome_message', '')));
         $showConfiguredWelcome = !($state['welcome_sent'] ?? false) && $welcome !== '';
         $showMenuAgainAfterAction = (bool) data_get($settings, 'menu.show_again_after_action', true);
+        $prefixText = trim((string) $prefix);
 
         $state['welcome_sent'] = true;
         $state['schedule'] = $state['schedule'] ?? [];
         $state['cancel'] = $state['cancel'] ?? [];
         $state = $this->clearInvalidAttempts($state);
 
-        $parts = [];
-        if ($showConfiguredWelcome) {
-            $parts[] = $welcome;
-        }
-        if ($prefix !== null && trim($prefix) !== '') {
-            $parts[] = trim($prefix);
-        }
+        $outbound = [];
         $shouldShowMenu = $forceShowMenu ?? true;
-        if ($forceShowMenu === null && $prefix !== null && trim($prefix) !== '') {
+        if ($forceShowMenu === null && $prefixText !== '') {
             $shouldShowMenu = $showMenuAgainAfterAction;
         }
 
-        if ($shouldShowMenu || $parts === []) {
-            $parts[] = $this->menuText($settings);
+        if ($prefixText !== '') {
+            $outbound[] = OutboundMessage::text(
+                $message->contactPhone,
+                $prefixText,
+                ['kind' => 'action_result']
+            );
+        }
+
+        if ($shouldShowMenu || $prefixText === '') {
+            $menuParts = [];
+            if ($showConfiguredWelcome) {
+                $menuParts[] = $welcome;
+            }
+            $menuParts[] = $this->menuText($settings);
+
+            $outbound[] = OutboundMessage::text(
+                $message->contactPhone,
+                $this->messageFormatter->compose($menuParts),
+                ['kind' => 'menu']
+            );
+        }
+
+        if ($outbound === []) {
+            $outbound[] = OutboundMessage::text(
+                $message->contactPhone,
+                $this->menuText($settings),
+                ['kind' => 'menu']
+            );
         }
 
         return new ConversationResult(
             processed: true,
             reason: null,
-            outboundMessages: [OutboundMessage::text($message->contactPhone, implode("\n\n", $parts), ['kind' => 'menu'])],
+            outboundMessages: $outbound,
             flow: self::FLOW_MENU,
             step: self::STEP_MENU_AWAITING_OPTION,
             stateUpdates: $state
@@ -1048,15 +1243,22 @@ class WhatsAppBotConversationOrchestrator
         $state['schedule']['doctors'] = $doctors;
         $state = $this->clearInvalidAttempts($state);
 
-        $lines = ['Escolha o profissional:'];
-        foreach ($doctors as $index => $doctor) {
-            $lines[] = sprintf('%d. %s', $index + 1, (string) ($doctor['name'] ?? 'Profissional'));
-        }
+        $options = array_map(
+            fn (array $doctor): string => $this->messageFormatter->sanitizeDisplayName(
+                (string) ($doctor['name'] ?? ''),
+                'Profissional disponível'
+            ),
+            $doctors
+        );
 
         return new ConversationResult(
             processed: true,
             reason: null,
-            outboundMessages: [OutboundMessage::text($message->contactPhone, implode("\n", $lines), ['kind' => 'schedule_doctor'])],
+            outboundMessages: [OutboundMessage::text(
+                $message->contactPhone,
+                $this->messageFormatter->promptWithOptions('Escolha o profissional:', $options),
+                ['kind' => 'schedule_doctor']
+            )],
             flow: self::FLOW_SCHEDULE,
             step: self::STEP_SCHEDULE_AWAITING_DOCTOR,
             stateUpdates: $state
@@ -1065,42 +1267,76 @@ class WhatsAppBotConversationOrchestrator
 
     private function repeatScheduleSpecialty(InboundMessage $message, array $state): ConversationResult
     {
-        $lines = ['Opcao invalida. Escolha a especialidade pelo numero:'];
-        foreach ((array) data_get($state, 'schedule.specialties', []) as $index => $specialty) {
-            $lines[] = sprintf('%d. %s', $index + 1, (string) ($specialty['name'] ?? 'Especialidade'));
-        }
+        $options = array_map(
+            fn (array $specialty): string => $this->messageFormatter->sanitizeDisplayName(
+                (string) ($specialty['name'] ?? ''),
+                'Especialidade disponível'
+            ),
+            (array) data_get($state, 'schedule.specialties', [])
+        );
 
-        return $this->invalidStepResult($message, $state, self::FLOW_SCHEDULE, self::STEP_SCHEDULE_AWAITING_SPECIALTY, implode("\n", $lines), 'schedule_specialty_retry');
+        return $this->invalidStepResult(
+            $message,
+            $state,
+            self::FLOW_SCHEDULE,
+            self::STEP_SCHEDULE_AWAITING_SPECIALTY,
+            $this->messageFormatter->promptWithOptions('Opção inválida. Escolha a especialidade pelo número:', $options),
+            'schedule_specialty_retry'
+        );
     }
 
     private function repeatScheduleDoctors(InboundMessage $message, array $state): ConversationResult
     {
-        $lines = ['Opcao invalida. Escolha o profissional pelo numero:'];
-        foreach ((array) data_get($state, 'schedule.doctors', []) as $index => $doctor) {
-            $lines[] = sprintf('%d. %s', $index + 1, (string) ($doctor['name'] ?? 'Profissional'));
-        }
+        $options = array_map(
+            fn (array $doctor): string => $this->messageFormatter->sanitizeDisplayName(
+                (string) ($doctor['name'] ?? ''),
+                'Profissional disponível'
+            ),
+            (array) data_get($state, 'schedule.doctors', [])
+        );
 
-        return $this->invalidStepResult($message, $state, self::FLOW_SCHEDULE, self::STEP_SCHEDULE_AWAITING_DOCTOR, implode("\n", $lines), 'schedule_doctor_retry');
+        return $this->invalidStepResult(
+            $message,
+            $state,
+            self::FLOW_SCHEDULE,
+            self::STEP_SCHEDULE_AWAITING_DOCTOR,
+            $this->messageFormatter->promptWithOptions('Opção inválida. Escolha o profissional pelo número:', $options),
+            'schedule_doctor_retry'
+        );
     }
 
     private function repeatScheduleSlots(InboundMessage $message, array $state): ConversationResult
     {
-        $lines = ['Opcao invalida. Escolha o horario pelo numero:'];
-        foreach ((array) data_get($state, 'schedule.slots', []) as $index => $slot) {
-            $lines[] = sprintf('%d. %s', $index + 1, (string) ($slot['label'] ?? '-'));
-        }
+        $options = array_map(
+            static fn (array $slot): string => trim((string) ($slot['label'] ?? 'Horário disponível')),
+            (array) data_get($state, 'schedule.slots', [])
+        );
 
-        return $this->invalidStepResult($message, $state, self::FLOW_SCHEDULE, self::STEP_SCHEDULE_AWAITING_SLOT, implode("\n", $lines), 'schedule_slot_retry');
+        return $this->invalidStepResult(
+            $message,
+            $state,
+            self::FLOW_SCHEDULE,
+            self::STEP_SCHEDULE_AWAITING_SLOT,
+            $this->messageFormatter->promptWithOptions('Opção inválida. Escolha o horário pelo número:', $options),
+            'schedule_slot_retry'
+        );
     }
 
     private function repeatCancelList(InboundMessage $message, array $state): ConversationResult
     {
-        $lines = ['Opcao invalida. Escolha qual agendamento deseja cancelar:'];
-        foreach ((array) data_get($state, 'cancel.appointments', []) as $index => $item) {
-            $lines[] = sprintf('%d. %s', $index + 1, (string) ($item['label'] ?? 'Agendamento'));
-        }
+        $options = array_map(
+            static fn (array $item): string => (string) ($item['label'] ?? 'Agendamento disponível'),
+            (array) data_get($state, 'cancel.appointments', [])
+        );
 
-        return $this->invalidStepResult($message, $state, self::FLOW_CANCEL, self::STEP_CANCEL_AWAITING_APPOINTMENT, implode("\n", $lines), 'cancel_retry');
+        return $this->invalidStepResult(
+            $message,
+            $state,
+            self::FLOW_CANCEL,
+            self::STEP_CANCEL_AWAITING_APPOINTMENT,
+            $this->messageFormatter->promptWithOptions('Opção inválida. Escolha qual agendamento deseja cancelar:', $options),
+            'cancel_retry'
+        );
     }
     private function clearScheduleState(array $state): array
     {
@@ -1119,25 +1355,30 @@ class WhatsAppBotConversationOrchestrator
      */
     private function menuText(array $settings): string
     {
-        $tenant = tenant();
-        $clinicName = trim((string) ($tenant?->trade_name ?: $tenant?->legal_name ?: 'Clinica'));
+        $clinicName = $this->currentClinicName();
         $options = $this->limitedEnabledMenuOptions($settings);
 
         if ($options === []) {
             $options = WhatsAppBotConfigService::DEFAULT_MENU_OPTIONS;
         }
 
-        $lines = ["Ola, sou o assistente da Clinica {$clinicName}.", 'Escolha uma opcao:'];
-        foreach ($options as $index => $option) {
-            $lines[] = sprintf('%d. %s', $index + 1, (string) ($option['label'] ?? 'Opcao'));
-        }
+        $optionLabels = array_map(
+            fn (array $option): string => $this->messageFormatter->sanitizeDisplayName((string) ($option['label'] ?? ''), 'Opção'),
+            $options
+        );
 
-        return implode("\n", $lines);
+        return $this->messageFormatter->compose([
+            "Olá! Sou o assistente da Clínica {$clinicName}.",
+            'Como posso ajudar?',
+            $this->messageFormatter->numberedOptions($optionLabels),
+        ]);
     }
 
     private function parseDateInput(string $value): ?Carbon
     {
         $text = trim(strtolower($value));
+        $text = preg_replace('/[\x{200B}-\x{200F}\x{202A}-\x{202E}\x{2060}\x{FEFF}]/u', '', $text) ?? $text;
+        $text = trim($text);
         if ($text === '') {
             return null;
         }
@@ -1148,31 +1389,50 @@ class WhatsAppBotConversationOrchestrator
         $aliases = [
             'hoje' => 0,
             'amanha' => 1,
+            'amanhã' => 1,
         ];
 
         if (array_key_exists($text, $aliases)) {
             return $today->copy()->addDays($aliases[$text]);
         }
 
-        if (preg_match('/^(\d{2})\/(\d{2})\/(\d{4})$/', $text, $matches) === 1) {
+        if (preg_match('/^(\d{4})[-\/](\d{1,2})[-\/](\d{1,2})$/', $text, $matches) === 1) {
+            $year = (int) $matches[1];
+            $month = (int) $matches[2];
+            $day = (int) $matches[3];
+
+            if (!checkdate($month, $day, $year)) {
+                return null;
+            }
+
             try {
-                return Carbon::createFromFormat('d/m/Y', sprintf('%s/%s/%s', $matches[1], $matches[2], $matches[3]), $timezone)->startOfDay();
+                return Carbon::createFromFormat(
+                    '!Y-m-d',
+                    sprintf('%04d-%02d-%02d', $year, $month, $day),
+                    $timezone
+                )->startOfDay();
             } catch (\Throwable) {
                 return null;
             }
         }
 
-        if (preg_match('/^(\d{2})\/(\d{2})$/', $text, $matches) === 1) {
-            try {
-                return Carbon::createFromFormat('d/m/Y', sprintf('%s/%s/%s', $matches[1], $matches[2], $today->year), $timezone)->startOfDay();
-            } catch (\Throwable) {
+        if (preg_match('/^(\d{1,2})[-\/](\d{1,2})(?:[-\/](\d{4}))?$/', $text, $matches) === 1) {
+            $day = (int) $matches[1];
+            $month = (int) $matches[2];
+            $year = isset($matches[3]) && trim((string) $matches[3]) !== ''
+                ? (int) $matches[3]
+                : (int) $today->year;
+
+            if (!checkdate($month, $day, $year)) {
                 return null;
             }
-        }
 
-        if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $text) === 1) {
             try {
-                return Carbon::createFromFormat('Y-m-d', $text, $timezone)->startOfDay();
+                return Carbon::createFromFormat(
+                    '!d/m/Y',
+                    sprintf('%02d/%02d/%04d', $day, $month, $year),
+                    $timezone
+                )->startOfDay();
             } catch (\Throwable) {
                 return null;
             }
@@ -1183,7 +1443,22 @@ class WhatsAppBotConversationOrchestrator
 
     private function timezone(): string
     {
-        return (string) tenant_setting('timezone', config('app.timezone', 'America/Campo_Grande'));
+        return (string) data_get($this->runtimeSettings, 'timezone', config('app.timezone', 'America/Campo_Grande'));
+    }
+
+    /**
+     * @param array<int, string> $candidates
+     */
+    private function resolveDisplayValue(array $candidates): string
+    {
+        foreach ($candidates as $candidate) {
+            $resolved = $this->messageFormatter->sanitizeDisplayName((string) $candidate, '');
+            if ($resolved !== '') {
+                return $resolved;
+            }
+        }
+
+        return '';
     }
 
     /**
@@ -1198,7 +1473,7 @@ class WhatsAppBotConversationOrchestrator
         };
 
         Log::log($level, 'whatsapp_bot.flow.step', array_merge([
-            'tenant_id' => (string) (tenant()?->id ?? ''),
+            'tenant_id' => $this->currentTenantId(),
             'provider' => $message->provider,
             'phone' => $message->contactPhone,
             'flow' => $flow,
@@ -1239,6 +1514,10 @@ class WhatsAppBotConversationOrchestrator
         $state['schedule'] = [];
         $state['cancel'] = [];
         unset($state[self::STATE_REGISTRATION], $state[self::STATE_PENDING_INTENT], $state['patient_id'], $state['patient_name']);
+
+        $meta = is_array($state['_meta'] ?? null) ? $state['_meta'] : [];
+        $meta['session_started_at'] = now()->toDateTimeString();
+        $state['_meta'] = $meta;
 
         return $this->clearInvalidAttempts($state);
     }
@@ -1290,6 +1569,44 @@ class WhatsAppBotConversationOrchestrator
         return $state;
     }
 
+    private function currentTenantId(): string
+    {
+        $tenant = $this->resolveCurrentTenant();
+        $tenantId = (string) ($tenant->id ?? '');
+
+        return trim($tenantId);
+    }
+
+    private function currentClinicName(): string
+    {
+        $tenant = $this->resolveCurrentTenant();
+
+        $tradeName = trim((string) ($tenant->trade_name ?? ''));
+        if ($tradeName !== '') {
+            return $tradeName;
+        }
+
+        $legalName = trim((string) ($tenant->legal_name ?? ''));
+        if ($legalName !== '') {
+            return $legalName;
+        }
+
+        return 'Clínica';
+    }
+
+    private function resolveCurrentTenant(): mixed
+    {
+        if (!function_exists('tenant')) {
+            return null;
+        }
+
+        try {
+            return tenant();
+        } catch (\Throwable) {
+            return null;
+        }
+    }
+
     private function friendlyTechnicalErrorMessage(): string
     {
         return $this->message('internal_error');
@@ -1314,17 +1631,29 @@ class WhatsAppBotConversationOrchestrator
     }
 
     /**
+     * @param array<string, mixed> $state
      * @param array<string, mixed> $settings
      */
-    private function hasSessionTimedOut(WhatsAppBotSession $session, array $settings): bool
+    private function hasSessionTimedOut(WhatsAppBotSession $session, array $state, array $settings): bool
     {
+        if ($this->wasAlreadyClosedByActiveInactivity($session)) {
+            Log::info('whatsapp_bot.inactivity.passive_timeout_skipped', [
+                'tenant_id' => $this->currentTenantId(),
+                'session_id' => (string) ($session->id ?? ''),
+                'reason' => 'already_notified_by_active_timeout',
+                'source' => 'inbound_passive',
+            ]);
+
+            return false;
+        }
+
         $now = now();
         $absoluteTimeoutMinutes = max(1, (int) data_get($settings, 'session.absolute_timeout_minutes', 240));
         $idleTimeoutMinutes = max(1, (int) data_get($settings, 'session.idle_timeout_minutes', 30));
         $endOnInactivity = (bool) data_get($settings, 'session.end_on_inactivity', true);
 
-        $createdAt = $session->created_at;
-        if ($createdAt instanceof Carbon && $createdAt->lt($now->copy()->subMinutes($absoluteTimeoutMinutes))) {
+        $sessionStartedAt = $this->resolveSessionStartReference($session, $state);
+        if ($sessionStartedAt instanceof Carbon && $sessionStartedAt->lt($now->copy()->subMinutes($absoluteTimeoutMinutes))) {
             return true;
         }
 
@@ -1338,6 +1667,55 @@ class WhatsAppBotConversationOrchestrator
         }
 
         return $lastInboundAt->lt($now->copy()->subMinutes($idleTimeoutMinutes));
+    }
+
+    private function wasAlreadyClosedByActiveInactivity(WhatsAppBotSession $session): bool
+    {
+        $meta = is_array($session->meta) ? $session->meta : [];
+        $inactivityMeta = is_array($meta['inactivity_timeout'] ?? null)
+            ? $meta['inactivity_timeout']
+            : [];
+
+        $sentAtRaw = trim((string) ($inactivityMeta['sent_at'] ?? $inactivityMeta['closed_at'] ?? ''));
+        if ($sentAtRaw === '') {
+            return false;
+        }
+
+        try {
+            $sentAt = Carbon::parse($sentAtRaw);
+        } catch (\Throwable) {
+            return false;
+        }
+
+        $lastInboundAt = $session->last_inbound_message_at;
+        if ($lastInboundAt instanceof Carbon && $lastInboundAt->greaterThan($sentAt)) {
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * @param array<string, mixed> $state
+     */
+    private function resolveSessionStartReference(WhatsAppBotSession $session, array $state): ?Carbon
+    {
+        $meta = is_array($state['_meta'] ?? null) ? $state['_meta'] : [];
+        $startedAtRaw = trim((string) ($meta['session_started_at'] ?? ''));
+
+        if ($startedAtRaw !== '') {
+            try {
+                return Carbon::parse($startedAtRaw);
+            } catch (\Throwable) {
+                // Ignore malformed values and fallback to model timestamps.
+            }
+        }
+
+        if ($session->last_inbound_message_at instanceof Carbon) {
+            return $session->last_inbound_message_at;
+        }
+
+        return $session->created_at instanceof Carbon ? $session->created_at : null;
     }
 
     /**
@@ -1359,6 +1737,7 @@ class WhatsAppBotConversationOrchestrator
         $meta = is_array($state['_meta'] ?? null) ? $state['_meta'] : [];
         $meta['last_end_reason'] = 'inactivity_timeout';
         $meta['last_end_at'] = now()->toDateTimeString();
+        $meta['session_started_at'] = now()->toDateTimeString();
         $state['_meta'] = $meta;
 
         return $state;
@@ -1560,7 +1939,7 @@ class WhatsAppBotConversationOrchestrator
             'schedule' => 'Agendar consulta',
             'view_appointments' => 'Ver meus agendamentos',
             'cancel_appointments' => 'Cancelar agendamento',
-            default => 'Opcao',
+            default => 'Opção',
         };
     }
 

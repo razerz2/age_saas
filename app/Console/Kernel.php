@@ -17,6 +17,7 @@ class Kernel extends ConsoleKernel
         $schedule->command('appointments:expire-waitlist-offers')->everyFiveMinutes();
         $schedule->command('appointments:mark-overdue')->everyFiveMinutes()->withoutOverlapping();
         $schedule->command('campaigns:run-automated')->everyMinute()->withoutOverlapping();
+        $schedule->command('whatsapp-bot:expire-inactive-sessions')->everyMinute()->withoutOverlapping();
         $this->scheduleCommands($schedule);
     }
 

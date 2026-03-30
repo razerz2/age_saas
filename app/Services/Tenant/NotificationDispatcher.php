@@ -116,8 +116,18 @@ class NotificationDispatcher
     private function dispatchWithContext(string $tenantId, string $key, array $context, array $meta = []): void
     {
         $baseMeta = $this->sanitizeMeta($meta);
+        $suppressedChannels = $this->normalizeSuppressedChannels($baseMeta['suppress_channels'] ?? null);
 
         foreach (self::CHANNELS as $channel) {
+            if (in_array($channel, $suppressedChannels, true)) {
+                Log::info('notification_channel_suppressed', array_merge($baseMeta, [
+                    'tenant_id' => $tenantId,
+                    'channel' => $channel,
+                    'key' => $key,
+                ]));
+                continue;
+            }
+
             try {
                 $payload = $this->buildChannelPayload($tenantId, $channel, $key, $context, $baseMeta);
                 $renderLogPayload = array_merge($baseMeta, [
@@ -315,6 +325,7 @@ class NotificationDispatcher
             'used_platform_fallback',
             'template_fallback_reason',
             'run_id',
+            'suppress_channels',
         ];
 
         $sanitized = [];
@@ -324,12 +335,35 @@ class NotificationDispatcher
             }
 
             $value = $meta[$allowedKey];
+            if ($allowedKey === 'suppress_channels' && is_array($value)) {
+                $sanitized[$allowedKey] = $this->normalizeSuppressedChannels($value);
+                continue;
+            }
+
             if ($value === null || is_scalar($value)) {
                 $sanitized[$allowedKey] = $value;
             }
         }
 
         return $sanitized;
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    private function normalizeSuppressedChannels(mixed $value): array
+    {
+        $items = is_array($value) ? $value : [];
+        $normalized = [];
+
+        foreach ($items as $item) {
+            $channel = strtolower(trim((string) $item));
+            if (in_array($channel, self::CHANNELS, true) && !in_array($channel, $normalized, true)) {
+                $normalized[] = $channel;
+            }
+        }
+
+        return $normalized;
     }
 
     /**

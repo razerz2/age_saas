@@ -51,7 +51,16 @@ class AppointmentObserver
             }
         }
         
-        $this->dispatchAppointmentNotificationJob('created', $appointment);
+        $metadata = [
+            'origin' => (string) ($appointment->origin ?? ''),
+        ];
+
+        if ($this->isWhatsAppBotOrigin($appointment)) {
+            $metadata['suppress_patient_channels'] = ['whatsapp'];
+            $metadata['notification_context'] = 'whatsapp_bot_inline_confirmation';
+        }
+
+        $this->dispatchAppointmentNotificationJob('created', $appointment, $metadata);
 
         // Enviar link do formulário se existir formulário ativo
         $form = Form::getFormForAppointment($appointment);
@@ -308,5 +317,9 @@ class AppointmentObserver
             ]);
         }
     }
-}
 
+    private function isWhatsAppBotOrigin(Appointment $appointment): bool
+    {
+        return trim(strtolower((string) ($appointment->origin ?? ''))) === 'whatsapp_bot';
+    }
+}

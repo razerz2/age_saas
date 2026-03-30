@@ -47,6 +47,15 @@ class TenantNotificationService
         $internalNotificationsEnabled = TenantSetting::isEnabled('notifications.appointments.enabled');
         $emailEnabled = self::isPatientEmailEnabled();
         $whatsappEnabled = self::isPatientWhatsappEnabled();
+        $suppressedPatientChannels = self::normalizeSuppressedPatientChannels($metadata['suppress_patient_channels'] ?? null);
+
+        if (in_array('email', $suppressedPatientChannels, true)) {
+            $emailEnabled = false;
+        }
+
+        if (in_array('whatsapp', $suppressedPatientChannels, true)) {
+            $whatsappEnabled = false;
+        }
 
         $tenant = \App\Models\Platform\Tenant::current();
         $emailProvider = TenantSetting::emailProvider();
@@ -59,6 +68,7 @@ class TenantNotificationService
             'internal_notifications_enabled' => $internalNotificationsEnabled,
             'email_enabled' => $emailEnabled,
             'whatsapp_enabled' => $whatsappEnabled,
+            'suppressed_patient_channels' => $suppressedPatientChannels,
             'email_driver' => $emailProvider['driver'] ?? null,
             'email_host_set' => !empty($emailProvider['host'] ?? null),
             'email_from_address' => $emailProvider['from_address'] ?? null,
@@ -207,8 +217,9 @@ class TenantNotificationService
                 'new_status' => $metadata['new_status'] ?? null,
             ]);
 
-            $emailEnabled = self::isPatientEmailEnabled();
-            $whatsappEnabled = self::isPatientWhatsappEnabled();
+            $suppressedPatientChannels = self::normalizeSuppressedPatientChannels($metadata['suppress_patient_channels'] ?? null);
+            $emailEnabled = self::isPatientEmailEnabled() && !in_array('email', $suppressedPatientChannels, true);
+            $whatsappEnabled = self::isPatientWhatsappEnabled() && !in_array('whatsapp', $suppressedPatientChannels, true);
 
             // Enviar por email
             if ($patient->email && $emailEnabled) {
@@ -386,6 +397,30 @@ class TenantNotificationService
     {
         $enabled = TenantSetting::get('notifications.send_whatsapp_to_patients');
         return $enabled === 'true' || $enabled === true;
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    private static function normalizeSuppressedPatientChannels(mixed $channels): array
+    {
+        if (!is_array($channels)) {
+            return [];
+        }
+
+        $normalized = [];
+        foreach ($channels as $channel) {
+            $value = strtolower(trim((string) $channel));
+            if (!in_array($value, ['email', 'whatsapp'], true)) {
+                continue;
+            }
+
+            if (!in_array($value, $normalized, true)) {
+                $normalized[] = $value;
+            }
+        }
+
+        return $normalized;
     }
 
     private static function resolveTemplateKeyForAction(string $action, $appointment): ?string

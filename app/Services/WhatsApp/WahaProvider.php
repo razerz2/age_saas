@@ -29,6 +29,7 @@ class WahaProvider implements WhatsAppProviderInterface
     public function sendMessage(string $phone, string $message): bool
     {
         try {
+            $startedAt = microtime(true);
             $client = WahaClient::fromConfig();
             try {
                 $chatId = WahaClient::formatChatIdFromPhone($phone);
@@ -58,7 +59,9 @@ class WahaProvider implements WhatsAppProviderInterface
             }
 
             // 1) Valida sessão
+            $sessionCheckStartedAt = microtime(true);
             $sessionResult = $client->getSessionStatus();
+            $sessionCheckMs = (int) round((microtime(true) - $sessionCheckStartedAt) * 1000);
             $sessionBody = is_array($sessionResult['body'] ?? null) ? $sessionResult['body'] : [];
             $sessionState = strtoupper((string) ($sessionBody['status'] ?? $sessionBody['state'] ?? ''));
             $workingStates = ['WORKING', 'CONNECTED', 'READY', 'ONLINE'];
@@ -68,6 +71,7 @@ class WahaProvider implements WhatsAppProviderInterface
                 'session' => $client->getSession(),
                 'status_code' => $sessionResult['status'] ?? null,
                 'status' => $sessionState,
+                'session_check_ms' => $sessionCheckMs,
             ]);
 
             if (empty($sessionResult['ok']) || !in_array($sessionState, $workingStates, true)) {
@@ -81,7 +85,9 @@ class WahaProvider implements WhatsAppProviderInterface
             }
 
             // 2) Envia mensagem
+            $sendStartedAt = microtime(true);
             $sendResult = $client->sendText($chatId, $message);
+            $sendTextMs = (int) round((microtime(true) - $sendStartedAt) * 1000);
             $sendBody = $sendResult['body'] ?? null;
 
             Log::info('📤 WAHA resposta recebida', [
@@ -89,6 +95,8 @@ class WahaProvider implements WhatsAppProviderInterface
                 'base_url' => $client->getBaseUrl(),
                 'to' => $chatId,
                 'status_code' => $sendResult['status'] ?? null,
+                'send_text_ms' => $sendTextMs,
+                'provider_total_ms' => (int) round((microtime(true) - $startedAt) * 1000),
             ]);
 
             if (empty($sendResult['ok'])) {

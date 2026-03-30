@@ -11,24 +11,24 @@ class WhatsAppBotConfigService
     public const FEATURE_NAME = 'whatsapp_bot';
     public const MODE_SHARED_WITH_NOTIFICATIONS = 'shared_with_notifications';
     public const MODE_DEDICATED = 'dedicated';
-    public const DEFAULT_EXIT_MESSAGE = 'Atendimento encerrado. Quando quiser, envie uma mensagem para comecar novamente.';
-    public const DEFAULT_WELCOME_MESSAGE = 'Ola! Posso ajudar com seu atendimento.';
-    public const DEFAULT_INTERNAL_ERROR_MESSAGE = 'Ocorreu um problema ao processar sua solicitacao. Tente novamente ou digite 0 para voltar ao menu.';
-    public const DEFAULT_NO_SLOTS_MESSAGE = 'Nao ha horarios disponiveis no momento.';
-    public const DEFAULT_APPOINTMENT_CREATED_MESSAGE = 'Agendamento realizado com sucesso.';
-    public const DEFAULT_APPOINTMENT_CANCELED_MESSAGE = 'Agendamento cancelado com sucesso.';
+    public const DEFAULT_EXIT_MESSAGE = 'Atendimento encerrado. Quando quiser, envie uma mensagem para começar novamente.';
+    public const DEFAULT_WELCOME_MESSAGE = 'Olá! Posso ajudar com seu atendimento.';
+    public const DEFAULT_INTERNAL_ERROR_MESSAGE = 'Ocorreu um problema ao processar sua solicitação. Tente novamente ou digite 0 para voltar ao menu.';
+    public const DEFAULT_NO_SLOTS_MESSAGE = 'Não há horários disponíveis no momento.';
+    public const DEFAULT_APPOINTMENT_CREATED_MESSAGE = 'Agendamento realizado com sucesso!';
+    public const DEFAULT_APPOINTMENT_CANCELED_MESSAGE = 'Agendamento cancelado com sucesso!';
     public const DEFAULT_BACK_TO_MENU_MESSAGE = 'Voltando ao menu principal.';
-    public const DEFAULT_PATIENT_NOT_FOUND_MESSAGE = 'Nao localizei cadastro para este CPF.';
-    public const DEFAULT_REGISTRATION_START_MESSAGE = 'Vamos criar seu cadastro.';
-    public const DEFAULT_REGISTRATION_COMPLETED_MESSAGE = 'Cadastro criado com sucesso.';
-    public const DEFAULT_INVALID_CPF_MESSAGE = 'CPF invalido. Envie no formato 000.000.000-00 ou apenas numeros.';
-    public const DEFAULT_FALLBACK_MESSAGE = 'Nao entendi. Escolha uma opcao:';
-    public const DEFAULT_INACTIVITY_EXIT_MESSAGE = 'Sessao encerrada por inatividade. Quando quiser, envie uma mensagem para comecar novamente.';
+    public const DEFAULT_PATIENT_NOT_FOUND_MESSAGE = 'Não localizamos cadastro para este CPF.';
+    public const DEFAULT_REGISTRATION_START_MESSAGE = 'Vamos iniciar seu cadastro.';
+    public const DEFAULT_REGISTRATION_COMPLETED_MESSAGE = 'Cadastro concluído com sucesso!';
+    public const DEFAULT_INVALID_CPF_MESSAGE = 'CPF inválido. Envie no formato 000.000.000-00 ou apenas números.';
+    public const DEFAULT_FALLBACK_MESSAGE = 'Não entendi sua mensagem. Escolha uma opção abaixo.';
+    public const DEFAULT_INACTIVITY_EXIT_MESSAGE = 'Sessão encerrada por inatividade. Quando quiser, envie uma mensagem para começar novamente.';
 
     /**
      * @var array<int, string>
      */
-    public const DEFAULT_SESSION_RESET_KEYWORDS = ['menu', 'inicio', 'reiniciar', '0'];
+    public const DEFAULT_SESSION_RESET_KEYWORDS = ['menu', 'início', 'inicio', 'reiniciar', '0'];
 
     /**
      * @var array<int, string>
@@ -73,6 +73,7 @@ class WhatsAppBotConfigService
     public const DEFAULT_ENTRY_KEYWORDS = [
         'Oi',
         'oi',
+        'Olá',
         'Ola',
         'ola',
         'Boa tarde',
@@ -83,7 +84,9 @@ class WhatsAppBotConfigService
         'boa noite',
         'menu',
         'iniciar',
+        'início',
         'inicio',
+        'começar',
         'comecar',
     ];
 
@@ -101,6 +104,7 @@ class WhatsAppBotConfigService
         'Tchau',
         'obrigado',
         'obrigada',
+        'até mais',
         'ate mais',
         'fim',
         'parar',
@@ -117,6 +121,7 @@ class WhatsAppBotConfigService
     public function getSettings(): array
     {
         $settings = TenantSetting::whatsappBotProvider();
+        $settings['timezone'] = (string) tenant_setting('timezone', config('app.timezone', 'America/Campo_Grande'));
         $settings['entry_keywords'] = $this->resolveEntryKeywords($settings);
         $settings['exit_keywords'] = $this->resolveExitKeywords($settings);
         $settings['messages'] = $this->resolveMessages($settings);
@@ -237,19 +242,11 @@ class WhatsAppBotConfigService
      */
     public function resolveMenuSettings(): array
     {
-        $maxOptions = max(1, $this->resolveIntSetting('whatsapp_bot.menu.max_options', 6));
-        $menuOptionsRaw = tenant_setting('whatsapp_bot.menu.options', []);
-        $menuOptions = $this->normalizeMenuOptions($menuOptionsRaw);
-
-        if ($menuOptions === []) {
-            $menuOptions = self::DEFAULT_MENU_OPTIONS;
-        }
-
         return [
-            'max_options' => $maxOptions,
-            'options' => $menuOptions,
-            'show_again_after_action' => tenant_setting_bool('whatsapp_bot.menu.show_again_after_action', true),
-            'return_after_fallback' => tenant_setting_bool('whatsapp_bot.menu.return_after_fallback', true),
+            'max_options' => 6,
+            'options' => self::DEFAULT_MENU_OPTIONS,
+            'show_again_after_action' => true,
+            'return_after_fallback' => true,
         ];
     }
 

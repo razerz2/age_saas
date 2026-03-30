@@ -92,7 +92,7 @@ class WhatsAppBotAppointmentService
                 return null;
             }
 
-            $name = trim((string) ($doctor->user?->name_full ?? $doctor->user?->name ?? 'Profissional'));
+            $name = $this->resolveDoctorDisplayName($doctor);
 
             return [
                 'id' => (string) $doctor->id,
@@ -180,7 +180,7 @@ class WhatsAppBotAppointmentService
 
         $payload['id'] = (string) Str::uuid();
         $payload['confirmation_token'] = $this->generateUniqueConfirmationToken();
-        $payload['origin'] = 'portal';
+        $payload['origin'] = 'whatsapp_bot';
 
         $confirmationEnabled = tenant_setting_bool('appointments.confirmation.enabled', false);
         $confirmationTtlMinutes = max(1, tenant_setting_int('appointments.confirmation.ttl_minutes', 30));
@@ -211,6 +211,7 @@ class WhatsAppBotAppointmentService
                 [
                     'event' => 'appointment_created_pending_confirmation',
                     'origin' => 'whatsapp_bot',
+                    'suppress_channels' => ['whatsapp'],
                 ]
             );
         }
@@ -292,7 +293,11 @@ class WhatsAppBotAppointmentService
         $this->notificationDispatcher->dispatchAppointment(
             $appointment,
             'appointment.canceled',
-            ['event' => 'appointment_canceled_whatsapp_bot']
+            [
+                'event' => 'appointment_canceled_whatsapp_bot',
+                'origin' => 'whatsapp_bot',
+                'suppress_channels' => ['whatsapp'],
+            ]
         );
 
         $this->waitlistService->onSlotReleased(
@@ -364,6 +369,48 @@ class WhatsAppBotAppointmentService
     private function timezone(): string
     {
         return (string) tenant_setting('timezone', config('app.timezone', 'America/Campo_Grande'));
+    }
+
+    private function resolveDoctorDisplayName(Doctor $doctor): string
+    {
+        $candidates = [
+            trim((string) ($doctor->user?->name_full ?? '')),
+            trim((string) ($doctor->user?->name ?? '')),
+            trim((string) ($doctor->crm_number ?? '')),
+        ];
+
+        foreach ($candidates as $candidate) {
+            if ($candidate === '') {
+                continue;
+            }
+
+            if ($this->looksTechnicalLabel($candidate)) {
+                continue;
+            }
+
+            return $candidate;
+        }
+
+        foreach ($candidates as $candidate) {
+            if ($candidate !== '') {
+                return $candidate;
+            }
+        }
+
+        return 'Profissional';
+    }
+
+    private function looksTechnicalLabel(string $value): bool
+    {
+        $normalized = trim(preg_replace('/\s+/', ' ', strtolower($value)) ?? '');
+        if ($normalized === '') {
+            return true;
+        }
+
+        $hasTechnicalToken = preg_match('/\b(dusk|teste?|test|seed)\b/i', $normalized) === 1;
+        $hasLongNumericSuffix = preg_match('/\d{5,}/', $normalized) === 1;
+
+        return $hasTechnicalToken && $hasLongNumericSuffix;
     }
 
     /**

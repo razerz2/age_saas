@@ -31,6 +31,7 @@ class WhatsAppBotInboundMessageProcessor
     public function process(string $providerHint, array $payload): InboundProcessingResult
     {
         $startedAt = microtime(true);
+        $timings = [];
         $tenant = tenant();
         if (!$tenant) {
             return InboundProcessingResult::failed('tenant_not_resolved');
@@ -54,7 +55,9 @@ class WhatsAppBotInboundMessageProcessor
         }
 
         try {
+            $resolveStartedAt = microtime(true);
             $resolved = $this->providerResolver->resolveForCurrentTenant(requireEnabled: false);
+            $timings['resolve_provider_ms'] = $this->processingMs($resolveStartedAt);
             $configuredProvider = (string) ($resolved['provider'] ?? '');
 
             Log::info('whatsapp_bot.inbound.received', [
@@ -87,7 +90,9 @@ class WhatsAppBotInboundMessageProcessor
 
             $this->providerResolver->applyRuntimeConfig($resolved);
             $adapter = $this->adapterFactory->make($configuredProvider);
+            $normalizeStartedAt = microtime(true);
             $inbound = $adapter->normalizeInbound($payload);
+            $timings['normalize_inbound_ms'] = $this->processingMs($normalizeStartedAt);
 
             if ($inbound === null) {
                 Log::info('whatsapp_bot.inbound.ignored', [
@@ -97,6 +102,7 @@ class WhatsAppBotInboundMessageProcessor
                     'result' => 'ignored',
                     'reason' => 'payload_not_supported',
                     'payload_snapshot' => $this->summarizePayload($payload),
+                    'timings' => $timings,
                     'processing_ms' => $this->processingMs($startedAt),
                 ]);
 
@@ -110,21 +116,30 @@ class WhatsAppBotInboundMessageProcessor
                 return $this->handleDisabledBot($configuredProvider, $adapter, $inbound->contactPhone, $inbound->messageType, $resolved, $tenantId, $startedAt);
             }
 
+            $sessionOpenStartedAt = microtime(true);
             $session = $this->sessionService->openOrCreate($inbound, $configuredProvider);
+            $timings['open_session_ms'] = $this->processingMs($sessionOpenStartedAt);
             $previousFlow = (string) ($session->current_flow ?? '');
             $previousStep = (string) ($session->current_step ?? '');
 
+            $orchestratorStartedAt = microtime(true);
             $conversationResult = $this->conversationOrchestrator->handle($session, $inbound);
+            $timings['orchestrator_ms'] = $this->processingMs($orchestratorStartedAt);
+
+            $sessionApplyStartedAt = microtime(true);
             $this->sessionService->applyConversationResult($session, $conversationResult);
+            $timings['apply_session_ms'] = $this->processingMs($sessionApplyStartedAt);
 
             $outboundSent = 0;
             $outboundFailed = 0;
+            $outboundStartedAt = microtime(true);
 
             foreach ($conversationResult->outboundMessages as $outboundMessage) {
                 $sent = $adapter->sendOutbound($outboundMessage);
                 $this->sessionService->registerOutboundAttempt($session, $outboundMessage, $sent);
                 $sent ? $outboundSent++ : $outboundFailed++;
             }
+            $timings['outbound_send_ms'] = $this->processingMs($outboundStartedAt);
 
             Log::info('whatsapp_bot.flow.transition', [
                 'tenant_id' => $tenantId,
@@ -153,6 +168,9 @@ class WhatsAppBotInboundMessageProcessor
                 'session_id' => (string) $session->id,
                 'outbound_sent' => $outboundSent,
                 'outbound_failed' => $outboundFailed,
+                'orchestrator_processed' => $conversationResult->processed,
+                'orchestrator_reason' => $conversationResult->reason,
+                'timings' => $timings,
                 'processing_ms' => $this->processingMs($startedAt),
             ]);
 
@@ -173,6 +191,7 @@ class WhatsAppBotInboundMessageProcessor
                 'result' => 'error',
                 'reason' => 'invalid_configuration',
                 'error' => $exception->getMessage(),
+                'timings' => $timings,
                 'processing_ms' => $this->processingMs($startedAt),
             ]);
 
@@ -186,6 +205,7 @@ class WhatsAppBotInboundMessageProcessor
                 'result' => 'error',
                 'reason' => 'processing_error',
                 'error' => $exception->getMessage(),
+                'timings' => $timings,
                 'processing_ms' => $this->processingMs($startedAt),
             ]);
 
