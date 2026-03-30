@@ -251,9 +251,6 @@
                                         <a href="{{ workspace_route('tenant.users.index') }}" class="menu-dropdown-item group flex items-center gap-2 {{ request()->routeIs('tenant.users.index') ? 'menu-dropdown-item-active' : 'menu-dropdown-item-inactive' }}"><i class="mdi mdi-view-list text-[14px] text-gray-500 dark:text-gray-400"></i>Todos os Usuários</a>
                                     </li>
                                     <li>
-                                        <a href="{{ workspace_route('tenant.users.doctors.index') }}" class="menu-dropdown-item group flex items-center gap-2 {{ request()->routeIs('tenant.users.doctors.index') ? 'menu-dropdown-item-active' : 'menu-dropdown-item-inactive' }}"><i class="mdi mdi-stethoscope text-[14px] text-gray-500 dark:text-gray-400"></i>Todos os Médicos</a>
-                                    </li>
-                                    <li>
                                         <a href="{{ workspace_route('tenant.users.create') }}" class="menu-dropdown-item group flex items-center gap-2 {{ request()->routeIs('tenant.users.create') ? 'menu-dropdown-item-active' : 'menu-dropdown-item-inactive' }}"><i class="mdi mdi-plus text-[14px] text-gray-500 dark:text-gray-400"></i>Novo Usuário</a>
                                     </li>
                                 </ul>

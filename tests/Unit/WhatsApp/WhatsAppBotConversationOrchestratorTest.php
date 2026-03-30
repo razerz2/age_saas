@@ -854,6 +854,152 @@ it('keeps schedule on date step and does not advance when date is invalid', func
         ->and($result->outboundMessages[0]->text)->not->toContain('Escolha o horário disponível:');
 });
 
+it('lists professionals as doctor and specialty combinations in schedule step', function () {
+    $configService = Mockery::mock(WhatsAppBotConfigService::class);
+    $configService->shouldReceive('getSettings')->andReturn([
+        'entry_keywords' => [],
+        'exit_keywords' => [],
+        'identification' => [
+            'lookup_order' => ['phone'],
+            'reuse_identified_patient' => true,
+            'require_cpf_for_intents' => [],
+        ],
+        'menu' => [
+            'max_options' => 6,
+            'show_again_after_action' => true,
+            'return_after_fallback' => true,
+            'options' => [
+                ['id' => 'schedule', 'label' => 'Agendar consulta', 'enabled' => true, 'order' => 1, 'requires_identification' => false],
+                ['id' => 'view_appointments', 'label' => 'Ver meus agendamentos', 'enabled' => true, 'order' => 2, 'requires_identification' => true],
+                ['id' => 'cancel_appointments', 'label' => 'Cancelar agendamento', 'enabled' => true, 'order' => 3, 'requires_identification' => true],
+            ],
+        ],
+        'messages' => [
+            'welcome' => '',
+        ],
+    ]);
+
+    $domainService = Mockery::mock(WhatsAppBotDomainService::class);
+    $domainService->shouldReceive('isIntentEnabled')
+        ->once()
+        ->with(WhatsAppBotIntentRouter::INTENT_SCHEDULE)
+        ->andReturn(true);
+
+    $patient = new Patient(['id' => 'patient-1', 'full_name' => 'Maria Silva', 'is_active' => true]);
+    $patientService = Mockery::mock(WhatsAppBotPatientService::class);
+    $patientService->shouldReceive('findByNormalizedPhone')->once()->with('5567999998888')->andReturn($patient);
+
+    $appointmentService = Mockery::mock(WhatsAppBotAppointmentService::class);
+    $appointmentService->shouldReceive('listDoctors')
+        ->once()
+        ->with(null)
+        ->andReturn(collect([
+            [
+                'id' => 'doctor-ana',
+                'name' => 'Dra. Ana Paula Costa Lima',
+                'calendar_id' => 'calendar-ana',
+                'appointment_type_id' => 'type-ana',
+                'duration_min' => 30,
+                'specialty_id' => 'specialty-cardio',
+                'specialty_name' => 'Cardiologia',
+            ],
+            [
+                'id' => 'doctor-ana',
+                'name' => 'Dra. Ana Paula Costa Lima',
+                'calendar_id' => 'calendar-ana',
+                'appointment_type_id' => 'type-ana',
+                'duration_min' => 30,
+                'specialty_id' => 'specialty-clinica',
+                'specialty_name' => 'Clinica Geral',
+            ],
+            [
+                'id' => 'doctor-joao',
+                'name' => 'Dr. Joao Gomes Silva',
+                'calendar_id' => 'calendar-joao',
+                'appointment_type_id' => 'type-joao',
+                'duration_min' => 30,
+                'specialty_id' => 'specialty-orto',
+                'specialty_name' => 'Ortopedia',
+            ],
+            [
+                'id' => 'doctor-sem-especialidade',
+                'name' => 'Dra. Carla Ribeiro',
+                'calendar_id' => 'calendar-carla',
+                'appointment_type_id' => 'type-carla',
+                'duration_min' => 30,
+                'specialty_id' => null,
+                'specialty_name' => null,
+            ],
+        ]));
+
+    $orchestrator = makeOrchestrator($configService, $domainService, $patientService, $appointmentService);
+    $result = $orchestrator->handle(botSession(), botInbound('1'));
+
+    expect($result->flow)->toBe('schedule')
+        ->and($result->step)->toBe('schedule.awaiting_doctor')
+        ->and($result->outboundMessages[0]->text)->toContain('Escolha o profissional:')
+        ->and($result->outboundMessages[0]->text)->toContain('1) Dra. Ana Paula Costa Lima - Cardiologia')
+        ->and($result->outboundMessages[0]->text)->toContain('2) Dra. Ana Paula Costa Lima - Clinica Geral')
+        ->and($result->outboundMessages[0]->text)->toContain('3) Dr. Joao Gomes Silva - Ortopedia')
+        ->and($result->outboundMessages[0]->text)->toContain('4) Dra. Carla Ribeiro - Sem especialidade')
+        ->and(count((array) data_get($result->stateUpdates, 'schedule.doctors', [])))->toBe(4);
+});
+
+it('maps selected doctor option to doctor and specialty in schedule state', function () {
+    $configService = Mockery::mock(WhatsAppBotConfigService::class);
+    $configService->shouldReceive('getSettings')->andReturn(['timezone' => 'America/Campo_Grande']);
+
+    $domainService = Mockery::mock(WhatsAppBotDomainService::class);
+    $domainService->shouldReceive('isIntentEnabled')
+        ->once()
+        ->with(WhatsAppBotIntentRouter::INTENT_SCHEDULE)
+        ->andReturn(true);
+
+    $patient = new Patient(['id' => 'patient-1', 'full_name' => 'Maria Silva', 'is_active' => true]);
+    $patientService = Mockery::mock(WhatsAppBotPatientService::class);
+    $patientService->shouldReceive('findById')->once()->with('patient-1')->andReturn($patient);
+
+    $appointmentService = Mockery::mock(WhatsAppBotAppointmentService::class);
+
+    $orchestrator = makeOrchestrator($configService, $domainService, $patientService, $appointmentService);
+    $session = botSession('schedule', 'schedule.awaiting_doctor', [
+        'patient_id' => 'patient-1',
+        'schedule' => [
+            'selected_specialty_id' => 'old-specialty',
+            'selected_specialty_name' => 'Valor antigo',
+            'doctors' => [
+                [
+                    'id' => 'doctor-ana',
+                    'name' => 'Dra. Ana Paula Costa Lima',
+                    'calendar_id' => 'calendar-ana',
+                    'appointment_type_id' => 'type-ana',
+                    'duration_min' => 30,
+                    'specialty_id' => 'specialty-cardio',
+                    'specialty_name' => 'Cardiologia',
+                ],
+                [
+                    'id' => 'doctor-ana',
+                    'name' => 'Dra. Ana Paula Costa Lima',
+                    'calendar_id' => 'calendar-ana',
+                    'appointment_type_id' => 'type-ana',
+                    'duration_min' => 30,
+                    'specialty_id' => 'specialty-clinica',
+                    'specialty_name' => 'Clinica Geral',
+                ],
+            ],
+        ],
+    ]);
+
+    $result = $orchestrator->handle($session, botInbound('2'));
+
+    expect($result->flow)->toBe('schedule')
+        ->and($result->step)->toBe('schedule.awaiting_date')
+        ->and($result->outboundMessages[0]->text)->toContain('Informe a data desejada')
+        ->and((string) data_get($result->stateUpdates, 'schedule.selected_doctor.id'))->toBe('doctor-ana')
+        ->and((string) data_get($result->stateUpdates, 'schedule.selected_specialty_id'))->toBe('specialty-clinica')
+        ->and((string) data_get($result->stateUpdates, 'schedule.selected_specialty_name'))->toBe('Clinica Geral');
+});
+
 it('uses human readable specialty and doctor values in schedule confirmation summary', function () {
     $configService = Mockery::mock(WhatsAppBotConfigService::class);
     $configService->shouldReceive('getSettings')->andReturn(['timezone' => 'America/Campo_Grande']);

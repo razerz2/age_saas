@@ -24,9 +24,20 @@ class WhatsAppBotAppointmentService
     private ?Collection $specialtiesCache = null;
 
     /**
-     * @var array<string, Collection<int, array{id:string,name:string,calendar_id:string,appointment_type_id:?string,duration_min:int}>>
+     * @var array<string, Collection<int, array{
+     *   id:string,
+     *   name:string,
+     *   calendar_id:string,
+     *   appointment_type_id:?string,
+     *   duration_min:int,
+     *   specialty_id:?string,
+     *   specialty_name:?string
+     * }>>
      */
     private array $doctorsCache = [];
+
+    private bool $globalDefaultAppointmentTypeResolved = false;
+    private ?AppointmentType $globalDefaultAppointmentType = null;
 
     public function __construct(
         private readonly DoctorSlotFinder $slotFinder,
@@ -60,7 +71,15 @@ class WhatsAppBotAppointmentService
     }
 
     /**
-     * @return Collection<int, array{id:string,name:string,calendar_id:string,appointment_type_id:?string,duration_min:int}>
+     * @return Collection<int, array{
+     *   id:string,
+     *   name:string,
+     *   calendar_id:string,
+     *   appointment_type_id:?string,
+     *   duration_min:int,
+     *   specialty_id:?string,
+     *   specialty_name:?string
+     * }>
      */
     public function listDoctors(?string $specialtyId = null): Collection
     {
@@ -70,7 +89,12 @@ class WhatsAppBotAppointmentService
         }
 
         $query = Doctor::query()
-            ->with(['user:id,name,name_full,status', 'appointmentTypes'])
+            ->with([
+                'user:id,name,name_full,status',
+                'appointmentTypes:id,doctor_id,duration_min,is_active',
+                'calendars:id,doctor_id,is_active',
+                'specialties:id,name',
+            ])
             ->orderBy('id');
 
         $this->applySchedulableDoctorFilters($query);
@@ -81,26 +105,52 @@ class WhatsAppBotAppointmentService
             });
         }
 
-        $this->doctorsCache[$cacheKey] = $query->get()->map(function (Doctor $doctor): ?array {
-            $calendar = $doctor->getPrimaryCalendar();
+        $this->doctorsCache[$cacheKey] = $query->get()->flatMap(function (Doctor $doctor) use ($specialtyId): array {
+            $calendar = $doctor->calendars
+                ->firstWhere('is_active', true)
+                ?? $doctor->calendars->first();
+
             if (!$calendar) {
-                return null;
+                return [];
             }
 
             $appointmentType = $this->resolveDefaultAppointmentType($doctor);
             if (!$appointmentType) {
-                return null;
+                return [];
             }
 
-            $name = $this->resolveDoctorDisplayName($doctor);
+            $doctorName = $this->resolveDoctorDisplayName($doctor);
+            $specialties = $doctor->specialties;
 
-            return [
-                'id' => (string) $doctor->id,
-                'name' => $name,
-                'calendar_id' => (string) $calendar->id,
-                'appointment_type_id' => (string) $appointmentType->id,
-                'duration_min' => (int) ($appointmentType->duration_min ?? 30),
-            ];
+            if ($specialtyId !== null && trim($specialtyId) !== '') {
+                $specialties = $specialties
+                    ->where('id', $specialtyId)
+                    ->values();
+            }
+
+            if ($specialties->isEmpty()) {
+                return [[
+                    'id' => (string) $doctor->id,
+                    'name' => $doctorName,
+                    'calendar_id' => (string) $calendar->id,
+                    'appointment_type_id' => (string) $appointmentType->id,
+                    'duration_min' => (int) ($appointmentType->duration_min ?? 30),
+                    'specialty_id' => null,
+                    'specialty_name' => null,
+                ]];
+            }
+
+            return $specialties->map(static function (MedicalSpecialty $specialty) use ($doctor, $doctorName, $calendar, $appointmentType): array {
+                return [
+                    'id' => (string) $doctor->id,
+                    'name' => $doctorName,
+                    'calendar_id' => (string) $calendar->id,
+                    'appointment_type_id' => (string) $appointmentType->id,
+                    'duration_min' => (int) ($appointmentType->duration_min ?? 30),
+                    'specialty_id' => (string) $specialty->id,
+                    'specialty_name' => (string) $specialty->name,
+                ];
+            })->all();
         })->filter()->values();
 
         return $this->doctorsCache[$cacheKey];
@@ -338,11 +388,23 @@ class WhatsAppBotAppointmentService
             return $fromDoctor;
         }
 
-        return AppointmentType::query()
+        return $this->resolveGlobalDefaultAppointmentType();
+    }
+
+    private function resolveGlobalDefaultAppointmentType(): ?AppointmentType
+    {
+        if ($this->globalDefaultAppointmentTypeResolved) {
+            return $this->globalDefaultAppointmentType;
+        }
+
+        $this->globalDefaultAppointmentType = AppointmentType::query()
             ->whereNull('doctor_id')
             ->where('is_active', true)
             ->orderBy('duration_min')
             ->first();
+        $this->globalDefaultAppointmentTypeResolved = true;
+
+        return $this->globalDefaultAppointmentType;
     }
 
     private function generateUniqueConfirmationToken(): string

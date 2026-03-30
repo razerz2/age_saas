@@ -254,7 +254,7 @@ class UserController extends Controller
      */
     public function edit($slug, $id)
     {
-        $user = User::findOrFail($id);  // Utilizando o ID passado na rota
+        $user = User::with(['doctor.specialties'])->findOrFail($id);  // Utilizando o ID passado na rota
 
         return view('tenant.users.edit', compact('user'));
     }
@@ -265,54 +265,44 @@ class UserController extends Controller
      */
     public function update(UpdateUserRequest $request, $slug, $id)
     {
-        $user = User::findOrFail($id);
+        $user = User::with('doctor.specialties')->findOrFail($id);
 
-        // Valida os dados da requisição
+        // Valida os dados da requisicao
         $data = $request->validated();
+        $doctorData = is_array($data['doctor'] ?? null) ? $data['doctor'] : [];
+        unset($data['doctor']);
 
-        // Verifica o role do usuário logado
+        // Verifica o role do usuario logado
         $loggedUser = Auth::guard('tenant')->user();
 
-        // Garante que role tenha um valor padrão
+        // Garante que role tenha um valor padrao
         if (!isset($data['role'])) {
             $data['role'] = $user->role ?? 'user';
         }
 
-        // Processar módulos: se foram selecionados manualmente, usar esses
-        // Caso contrário, aplicar módulos padrão baseado no role
-        // O model User tem cast 'array' para modules, então passamos arrays diretamente
+        $oldRole = $user->role;
+        $newRole = $data['role'];
+
+        // Processar modulos: se foram selecionados manualmente, usar esses
+        // Caso contrario, aplicar modulos padrao baseado no role
         if ($request->has('modules_present') && !isset($data['modules'])) {
             $data['modules'] = [];
         }
 
         if (array_key_exists('modules', $data) && is_array($data['modules'])) {
-            // Se módulos foram selecionados manualmente (mesmo que vazio), usar esses
-            // O cast do model converte automaticamente para JSON
             $data['modules'] = $data['modules'];
         } else {
-            // Se não foram selecionados, aplicar padrões baseado no role (apenas se role mudou)
-            $newRole = $data['role'];
-            $oldRole = $user->role;
-            
-            // Se o role mudou, aplicar módulos padrão do novo role
             if ($newRole !== $oldRole) {
                 if ($newRole === 'admin') {
-                    // Admin não precisa de módulos (tem acesso total)
                     unset($data['modules']);
                 } elseif ($newRole === 'doctor') {
-                    // Aplicar módulos padrão para médico
-                    $defaultDoctorModules = json_decode(TenantSetting::get('user_defaults.modules_doctor', '[]'), true) ?? [];
-                    $data['modules'] = $defaultDoctorModules;
+                    $data['modules'] = json_decode(TenantSetting::get('user_defaults.modules_doctor', '[]'), true) ?? [];
                 } elseif ($newRole === 'user') {
-                    // Aplicar módulos padrão para usuário comum
-                    $defaultCommonModules = json_decode(TenantSetting::get('user_defaults.modules_common_user', '[]'), true) ?? [];
-                    $data['modules'] = $defaultCommonModules;
+                    $data['modules'] = json_decode(TenantSetting::get('user_defaults.modules_common_user', '[]'), true) ?? [];
                 }
             }
-            // Se o role não mudou e não foram selecionados módulos, manter os existentes
         }
 
-        // Upload do novo avatar se fornecido
         if ($data['role'] === 'admin') {
             $data['modules'] = [];
         } elseif (array_key_exists('modules', $data)) {
@@ -320,54 +310,63 @@ class UserController extends Controller
         }
 
         if ($request->hasFile('avatar')) {
-            // Remove avatar antigo se existir
             if ($user->avatar && Storage::disk('public')->exists($user->avatar)) {
                 Storage::disk('public')->delete($user->avatar);
             }
-            
+
             $avatar = $request->file('avatar');
             $avatarName = 'avatars/' . time() . '_' . Str::random(10) . '.' . $avatar->getClientOriginalExtension();
             $avatar->storeAs('public', $avatarName);
             $data['avatar'] = $avatarName;
         }
 
-        // Extrair doctor_ids e doctor_id antes de atualizar o usuário
-        // Se o usuário logado é médico ou admin, ignora doctor_ids
         $doctorIds = [];
         if ($loggedUser && $loggedUser->role !== 'doctor' && $loggedUser->role !== 'admin') {
             $doctorIds = $request->input('doctor_ids', []);
         }
-        $doctorId = $request->input('doctor_id');
-        unset($data['doctor_ids'], $data['doctor_id']);
 
-        // Atualiza os dados do usuário (sem a senha)
-        $user->update($data);
+        unset($data['doctor_ids'], $data['doctor_id'], $data['password'], $data['password_confirmation']);
 
-        // Atualizar permissões de médicos se for role 'user'
-        if ($user->role === 'user') {
-            // Remove todas as permissões existentes
-            $user->doctorPermissions()->delete();
-            // Adiciona as novas permissões
-            if (!empty($doctorIds)) {
-                foreach ($doctorIds as $docId) {
-                    \App\Models\Tenant\UserDoctorPermission::create([
-                        'user_id' => $user->id,
-                        'doctor_id' => $docId,
-                    ]);
-                }
+        // Mantem consistencia entre role e flag is_doctor
+        $data['is_doctor'] = $newRole === 'doctor';
+
+        if ($newRole !== 'doctor' && $user->doctor) {
+            $doctorBlockingDependencies = $this->getDoctorBlockingDependencies($user->doctor);
+            if (!empty($doctorBlockingDependencies)) {
+                return redirect()
+                    ->back()
+                    ->withInput()
+                    ->with('error', $this->buildBlockingMessage('converter este medico para outro perfil', $doctorBlockingDependencies));
             }
         }
 
-        // Se for role 'doctor', vincular ao médico selecionado
-        if ($user->role === 'doctor' && $doctorId) {
-            $doctor = \App\Models\Tenant\Doctor::find($doctorId);
-            if ($doctor) {
-                $doctor->update(['user_id' => $user->id]);
-            }
+        try {
+            DB::transaction(function () use ($user, $data, $doctorData, $doctorIds) {
+                $user->update($data);
+
+                if ($user->role === 'user') {
+                    $this->syncDoctorPermissions($user, $doctorIds);
+                } else {
+                    $user->doctorPermissions()->delete();
+                }
+
+                if ($user->role === 'doctor') {
+                    $this->upsertDoctorForUser($user, $doctorData);
+                } else {
+                    $this->removeDoctorRecord($user->doctor);
+                }
+            });
+        } catch (\Throwable $e) {
+            report($e);
+
+            return redirect()
+                ->back()
+                ->withInput()
+                ->with('error', 'Nao foi possivel atualizar o usuario. Verifique as dependencias e tente novamente.');
         }
 
         return redirect()->route('tenant.users.index', ['slug' => tenant()->subdomain])
-            ->with('success', 'Usuário atualizado com sucesso!');
+            ->with('success', 'Usuario atualizado com sucesso!');
     }
 
 
@@ -378,101 +377,207 @@ class UserController extends Controller
      */
     public function destroy($slug, $id)
     {
-        $user = User::findOrFail($id);
+        $user = User::with('doctor')->findOrFail($id);
 
-        // Verifica se há registros vinculados ao usuário
-        $relatedRecords = $this->checkRelatedRecords($user);
+        $blockingDependencies = $this->getUserDeletionBlockingDependencies($user);
+        if (!empty($blockingDependencies)) {
+            return redirect()
+                ->route('tenant.users.index', ['slug' => tenant()->subdomain])
+                ->with('error', $this->buildBlockingMessage('excluir este usuario', $blockingDependencies));
+        }
 
-        if (!empty($relatedRecords)) {
-            $message = "Não é possível excluir o usuário porque existem registros vinculados:<br><br>";
-            $message .= implode("<br>", $relatedRecords);
-            $message .= "<br><br>Remova ou transfira esses registros antes de excluir o usuário.";
+        try {
+            DB::transaction(function () use ($user) {
+                $this->removeDoctorRecord($user->doctor);
+                $user->doctorPermissions()->delete();
+
+                if ($this->hasTenantTable('two_factor_codes')) {
+                    \App\Models\Tenant\TwoFactorCode::query()
+                        ->where('user_id', $user->id)
+                        ->delete();
+                }
+
+                $user->delete();
+            });
+        } catch (\Throwable $e) {
+            report($e);
 
             return redirect()
                 ->route('tenant.users.index', ['slug' => tenant()->subdomain])
-                ->with('error', $message);
+                ->with('error', 'Nao foi possivel excluir o usuario. Verifique vinculos existentes e tente novamente.');
         }
-
-        $user->delete();
 
         return redirect()
             ->route('tenant.users.index', ['slug' => tenant()->subdomain])
-            ->with('success', 'Usuário removido com sucesso.');
+            ->with('success', 'Usuario removido com sucesso.');
     }
 
     /**
-     * Verifica se o usuário possui registros vinculados
-     *
-     * @param User $user
-     * @return array Array com mensagens sobre registros vinculados encontrados
+     * Sincroniza permissoes de medicos para usuarios comuns.
      */
-    protected function checkRelatedRecords(User $user): array
+    protected function syncDoctorPermissions(User $user, array $doctorIds): void
     {
-        $relatedRecords = [];
+        $normalizedDoctorIds = collect($doctorIds)
+            ->filter(fn ($id) => is_string($id) && $id !== '')
+            ->unique()
+            ->values()
+            ->all();
 
-        // Verifica se é médico e tem registros vinculados
-        if ($user->role === 'doctor' || $user->is_doctor) {
-            $doctor = $user->doctor;
+        $user->doctorPermissions()->delete();
 
-            if ($doctor) {
-                // Verifica se tem calendários
-                $calendarsCount = $doctor->calendars()->count();
-                if ($calendarsCount > 0) {
-                    $relatedRecords[] = "• {$calendarsCount} calendário(s) vinculado(s)";
-                }
+        foreach ($normalizedDoctorIds as $doctorId) {
+            \App\Models\Tenant\UserDoctorPermission::create([
+                'user_id' => $user->id,
+                'doctor_id' => $doctorId,
+            ]);
+        }
+    }
 
-                // Verifica se tem agendamentos
-                $appointmentsCount = $doctor->appointments()->count();
-                if ($appointmentsCount > 0) {
-                    $relatedRecords[] = "• {$appointmentsCount} agendamento(s) vinculado(s)";
-                }
+    /**
+     * Cria ou atualiza o registro de medico para o usuario.
+     */
+    protected function upsertDoctorForUser(User $user, array $doctorData): Doctor
+    {
+        $doctor = $user->doctor;
 
-                // Verifica se tem horários comerciais
-                $businessHoursCount = $doctor->businessHours()->count();
-                if ($businessHoursCount > 0) {
-                    $relatedRecords[] = "• {$businessHoursCount} horário(s) comercial(is) vinculado(s)";
-                }
+        if (!$doctor) {
+            $doctor = Doctor::create([
+                'id' => (string) Str::uuid(),
+                'user_id' => $user->id,
+            ]);
+        }
 
-                // Verifica se tem tipos de atendimento
-                $appointmentTypesCount = $doctor->appointmentTypes()->count();
-                if ($appointmentTypesCount > 0) {
-                    $relatedRecords[] = "• {$appointmentTypesCount} tipo(s) de atendimento vinculado(s)";
-                }
+        $doctor->fill([
+            'crm_number' => $doctorData['crm_number'] ?? null,
+            'crm_state' => $doctorData['crm_state'] ?? null,
+            'signature' => $doctorData['signature'] ?? null,
+            'label_singular' => $doctorData['label_singular'] ?? null,
+            'label_plural' => $doctorData['label_plural'] ?? null,
+            'registration_label' => $doctorData['registration_label'] ?? null,
+            'registration_value' => $doctorData['registration_value'] ?? null,
+        ])->save();
 
-                // Verifica se tem formulários
-                $formsCount = $doctor->forms()->count();
-                if ($formsCount > 0) {
-                    $relatedRecords[] = "• {$formsCount} formulário(s) vinculado(s)";
-                }
+        $doctor->specialties()->sync($this->normalizeDoctorSpecialties($doctorData));
 
-                // Verifica se tem transações financeiras
-                $transactionsCount = \App\Models\Tenant\FinancialTransaction::where('doctor_id', $doctor->id)->count();
-                if ($transactionsCount > 0) {
-                    $relatedRecords[] = "• {$transactionsCount} transação(ões) financeira(s) vinculada(s)";
-                }
+        return $doctor;
+    }
+
+    /**
+     * Remove o registro de medico e vinculos auxiliares nao impeditivos.
+     */
+    protected function removeDoctorRecord(?Doctor $doctor): void
+    {
+        if (!$doctor) {
+            return;
+        }
+
+        $doctor->specialties()->detach();
+        $doctor->permissions()->delete();
+        $doctor->delete();
+    }
+
+    /**
+     * Dependencias que impedem converter/remover medico.
+     */
+    protected function getDoctorBlockingDependencies(Doctor $doctor): array
+    {
+        $dependencies = [];
+
+        $appointmentsCount = $doctor->appointments()->count();
+        if ($appointmentsCount > 0) {
+            $dependencies[] = "- {$appointmentsCount} agendamento(s) vinculado(s) ao medico";
+        }
+
+        if ($this->hasTenantTable('recurring_appointments')) {
+            $recurringCount = \App\Models\Tenant\RecurringAppointment::query()
+                ->where('doctor_id', $doctor->id)
+                ->count();
+            if ($recurringCount > 0) {
+                $dependencies[] = "- {$recurringCount} recorrencia(s) de agendamento vinculada(s) ao medico";
             }
         }
 
-        // Verifica transações financeiras criadas pelo usuário
-        $createdTransactionsCount = \App\Models\Tenant\FinancialTransaction::where('created_by', $user->id)->count();
-        if ($createdTransactionsCount > 0) {
-            $relatedRecords[] = "• {$createdTransactionsCount} transação(ões) financeira(s) criada(s) por este usuário";
+        if ($this->hasTenantTable('forms')) {
+            $formsCount = \App\Models\Tenant\Form::query()
+                ->where('doctor_id', $doctor->id)
+                ->count();
+            if ($formsCount > 0) {
+                $dependencies[] = "- {$formsCount} formulario(s) vinculado(s) ao medico";
+            }
         }
 
-        // Verifica contas OAuth vinculadas
-        $oauthAccountsCount = \App\Models\Tenant\OauthAccount::where('user_id', $user->id)->count();
-        if ($oauthAccountsCount > 0) {
-            $relatedRecords[] = "• {$oauthAccountsCount} conta(s) OAuth vinculada(s)";
+        if ($this->hasTenantTable('appointment_waitlist_entries')) {
+            $waitlistCount = \App\Models\Tenant\AppointmentWaitlistEntry::query()
+                ->where('doctor_id', $doctor->id)
+                ->count();
+            if ($waitlistCount > 0) {
+                $dependencies[] = "- {$waitlistCount} entrada(s) de fila de espera vinculada(s) ao medico";
+            }
         }
 
-        // Verifica códigos de autenticação de dois fatores
-        $twoFactorCodesCount = \App\Models\Tenant\TwoFactorCode::where('user_id', $user->id)->count();
-        if ($twoFactorCodesCount > 0) {
-            // Códigos 2FA podem ser excluídos, mas vamos informar
-            // Na verdade, esses podem ser excluídos automaticamente, então não vamos bloquear
+        if ($this->hasTenantTable('financial_transactions')) {
+            $transactionsCount = \App\Models\Tenant\FinancialTransaction::query()
+                ->where('doctor_id', $doctor->id)
+                ->count();
+            if ($transactionsCount > 0) {
+                $dependencies[] = "- {$transactionsCount} transacao(oes) financeira(s) vinculada(s) ao medico";
+            }
         }
 
-        return $relatedRecords;
+        if ($this->hasTenantTable('doctor_commissions')) {
+            $commissionsCount = \App\Models\Tenant\DoctorCommission::query()
+                ->where('doctor_id', $doctor->id)
+                ->count();
+            if ($commissionsCount > 0) {
+                $dependencies[] = "- {$commissionsCount} comissao(oes) vinculada(s) ao medico";
+            }
+        }
+
+        return $dependencies;
+    }
+
+    /**
+     * Dependencias que impedem excluir o usuario.
+     */
+    protected function getUserDeletionBlockingDependencies(User $user): array
+    {
+        $dependencies = [];
+
+        if ($user->doctor) {
+            $dependencies = array_merge($dependencies, $this->getDoctorBlockingDependencies($user->doctor));
+        }
+
+        if ($this->hasTenantTable('financial_transactions')) {
+            $createdTransactionsCount = \App\Models\Tenant\FinancialTransaction::query()
+                ->where('created_by', $user->id)
+                ->count();
+            if ($createdTransactionsCount > 0) {
+                $dependencies[] = "- {$createdTransactionsCount} transacao(oes) financeira(s) criada(s) por este usuario";
+            }
+        }
+
+        return $dependencies;
+    }
+
+    protected function normalizeDoctorSpecialties(array $doctorData): array
+    {
+        return collect($doctorData['specialties'] ?? [])
+            ->filter(fn ($id) => is_string($id) && $id !== '')
+            ->unique()
+            ->values()
+            ->all();
+    }
+
+    protected function buildBlockingMessage(string $actionDescription, array $dependencies): string
+    {
+        return "Nao foi possivel {$actionDescription} porque existem vinculos operacionais ativos:<br><br>"
+            . implode('<br>', $dependencies)
+            . '<br><br>Remova, transfira ou encerre esses vinculos e tente novamente.';
+    }
+
+    protected function hasTenantTable(string $table): bool
+    {
+        return Schema::connection((new User())->getConnectionName())->hasTable($table);
     }
 
     public function showChangePasswordForm($slug, $id)

@@ -391,51 +391,11 @@ class WhatsAppBotConversationOrchestrator
 
     private function startScheduleFlow(InboundMessage $message, array $state): ConversationResult
     {
-        try {
-            $specialties = $this->appointmentService->listSpecialties()->values()->all();
-        } catch (\Throwable $exception) {
-            $this->logStep($message, self::FLOW_MENU, self::STEP_MENU_AWAITING_OPTION, 'error:list_specialties_failed', 'error', [
-                'error' => $exception->getMessage(),
-            ]);
-            return $this->menuResult($message, $state, $this->friendlyTechnicalErrorMessage());
-        }
-
-        $state['schedule'] = ['specialties' => $specialties];
-
-        if (count($specialties) > 1) {
-            $state = $this->clearInvalidAttempts($state);
-            $options = array_map(
-                fn (array $specialty): string => $this->messageFormatter->sanitizeDisplayName(
-                    (string) ($specialty['name'] ?? ''),
-                    'Especialidade disponível'
-                ),
-                $specialties
-            );
-
-            return new ConversationResult(
-                processed: true,
-                reason: null,
-                outboundMessages: [OutboundMessage::text(
-                    $message->contactPhone,
-                    $this->messageFormatter->promptWithOptions('Escolha a especialidade desejada:', $options),
-                    ['kind' => 'schedule_specialty']
-                )],
-                flow: self::FLOW_SCHEDULE,
-                step: self::STEP_SCHEDULE_AWAITING_SPECIALTY,
-                stateUpdates: $state
-            );
-        }
-
-        if (count($specialties) === 1) {
-            $state['schedule']['selected_specialty_id'] = (string) $specialties[0]['id'];
-            $state['schedule']['selected_specialty_name'] = (string) $specialties[0]['name'];
-        } else {
-            $state['schedule']['selected_specialty_id'] = null;
-            $state['schedule']['selected_specialty_name'] = null;
-        }
+        $state['schedule'] = [];
 
         return $this->promptDoctorSelection($message, $state);
     }
+
     private function handleScheduleFlow(
         InboundMessage $message,
         array $state,
@@ -470,7 +430,13 @@ class WhatsAppBotConversationOrchestrator
                 return $this->repeatScheduleDoctors($message, $state);
             }
 
-            $state['schedule']['selected_doctor'] = $doctors[$index - 1];
+            $selectedDoctor = (array) $doctors[$index - 1];
+            $selectedSpecialtyId = trim((string) ($selectedDoctor['specialty_id'] ?? ''));
+            $selectedSpecialtyName = trim((string) ($selectedDoctor['specialty_name'] ?? ''));
+
+            $state['schedule']['selected_doctor'] = $selectedDoctor;
+            $state['schedule']['selected_specialty_id'] = $selectedSpecialtyId !== '' ? $selectedSpecialtyId : null;
+            $state['schedule']['selected_specialty_name'] = $selectedSpecialtyName !== '' ? $selectedSpecialtyName : null;
             $state = $this->clearInvalidAttempts($state);
 
             return new ConversationResult(
@@ -1244,10 +1210,7 @@ class WhatsAppBotConversationOrchestrator
         $state = $this->clearInvalidAttempts($state);
 
         $options = array_map(
-            fn (array $doctor): string => $this->messageFormatter->sanitizeDisplayName(
-                (string) ($doctor['name'] ?? ''),
-                'Profissional disponível'
-            ),
+            fn (array $doctor): string => $this->formatDoctorOptionLabel($doctor),
             $doctors
         );
 
@@ -1288,10 +1251,7 @@ class WhatsAppBotConversationOrchestrator
     private function repeatScheduleDoctors(InboundMessage $message, array $state): ConversationResult
     {
         $options = array_map(
-            fn (array $doctor): string => $this->messageFormatter->sanitizeDisplayName(
-                (string) ($doctor['name'] ?? ''),
-                'Profissional disponível'
-            ),
+            fn (array $doctor): string => $this->formatDoctorOptionLabel($doctor),
             (array) data_get($state, 'schedule.doctors', [])
         );
 
@@ -1303,6 +1263,20 @@ class WhatsAppBotConversationOrchestrator
             $this->messageFormatter->promptWithOptions('Opção inválida. Escolha o profissional pelo número:', $options),
             'schedule_doctor_retry'
         );
+    }
+
+    private function formatDoctorOptionLabel(array $doctor): string
+    {
+        $doctorName = $this->messageFormatter->sanitizeDisplayName(
+            (string) ($doctor['name'] ?? ''),
+            'Profissional disponível'
+        );
+        $specialtyName = $this->messageFormatter->sanitizeDisplayName(
+            (string) ($doctor['specialty_name'] ?? ''),
+            'Sem especialidade'
+        );
+
+        return sprintf('%s - %s', $doctorName, $specialtyName);
     }
 
     private function repeatScheduleSlots(InboundMessage $message, array $state): ConversationResult
