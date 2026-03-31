@@ -8,6 +8,7 @@ use App\Http\Controllers\Tenant\Concerns\HasDoctorFilter;
 use App\Models\Tenant\Appointment;
 use App\Models\Tenant\OnlineAppointmentInstruction;
 use App\Models\Tenant\TenantSetting;
+use App\Services\Tenant\NotificationDispatcher;
 use App\Services\MailTenantService;
 use App\Services\WhatsappTenantService;
 use App\Mail\FormToFillMail;
@@ -20,6 +21,10 @@ class OnlineAppointmentController extends Controller
 {
     use HasDoctorFilter;
     use HandlesGridRequests;
+
+    public function __construct(private readonly NotificationDispatcher $notificationDispatcher)
+    {
+    }
     /**
      * Lista apenas agendamentos online
      */
@@ -45,7 +50,7 @@ class OnlineAppointmentController extends Controller
     /**
      * Exibe formulário para configurar instruções
      */
-    public function show($slug, $id)
+    public function show($slug, Appointment $appointment)
     {
         // Verificar se o modo permite acesso ao módulo
         $mode = TenantSetting::get('appointments.default_appointment_mode', 'user_choice');
@@ -53,8 +58,7 @@ class OnlineAppointmentController extends Controller
             abort(404);
         }
 
-        $appointment = Appointment::with(['patient', 'calendar.doctor.user', 'type', 'specialty', 'onlineInstructions'])
-            ->findOrFail($id);
+        $appointment->load(['patient', 'calendar.doctor.user', 'type', 'specialty', 'onlineInstructions']);
 
         // Verificar se é agendamento online
         if ($appointment->appointment_mode !== 'online') {
@@ -84,15 +88,13 @@ class OnlineAppointmentController extends Controller
     /**
      * Salva as instruções
      */
-    public function save(Request $request, $slug, $id)
+    public function save(Request $request, $slug, Appointment $appointment)
     {
         // Verificar se o modo permite acesso ao módulo
         $mode = TenantSetting::get('appointments.default_appointment_mode', 'user_choice');
         if ($mode === 'presencial') {
             abort(404);
         }
-
-        $appointment = Appointment::findOrFail($id);
 
         if ($appointment->appointment_mode !== 'online') {
             abort(403, 'Esta consulta não é online.');
@@ -121,17 +123,27 @@ class OnlineAppointmentController extends Controller
             'patient_instructions' => $request->patient_instructions,
         ]);
 
-        return redirect()->route('tenant.online-appointments.show', ['slug' => $slug, 'appointment' => $id])
+        if ($instructions->wasChanged(['meeting_link', 'meeting_app', 'general_instructions', 'patient_instructions'])) {
+            $this->notificationDispatcher->dispatchAppointment(
+                $appointment,
+                'online_appointment.updated.doctor',
+                [
+                    'event' => 'online_appointment_updated',
+                    'origin' => 'online_appointments_save',
+                ]
+            );
+        }
+
+        return redirect()->route('tenant.online-appointments.show', ['slug' => $slug, 'appointment' => $appointment->id])
             ->with('success', 'Instruções salvas com sucesso.');
     }
 
     /**
      * Envia instruções por email
      */
-    public function sendEmail(Request $request, $slug, $id)
+    public function sendEmail(Request $request, $slug, Appointment $appointment)
     {
-        $appointment = Appointment::with(['patient', 'onlineInstructions'])
-            ->findOrFail($id);
+        $appointment->load(['patient', 'onlineInstructions']);
 
         if ($appointment->appointment_mode !== 'online') {
             abort(403, 'Esta consulta não é online.');
@@ -182,11 +194,20 @@ class OnlineAppointmentController extends Controller
                 'sent_by_email_at' => now(),
             ]);
 
-            return redirect()->route('tenant.online-appointments.show', ['slug' => $slug, 'appointment' => $id])
+            $this->notificationDispatcher->dispatchAppointment(
+                $appointment,
+                'online_appointment.instructions_sent.doctor',
+                [
+                    'event' => 'online_appointment_instructions_sent',
+                    'origin' => 'online_appointments_send_email',
+                ]
+            );
+
+            return redirect()->route('tenant.online-appointments.show', ['slug' => $slug, 'appointment' => $appointment->id])
                 ->with('success', 'Instruções enviadas por email com sucesso.');
         } catch (\Exception $e) {
             Log::error('Erro ao enviar instruções por email', [
-                'appointment_id' => $id,
+                'appointment_id' => $appointment->id,
                 'error' => $e->getMessage(),
             ]);
 
@@ -198,7 +219,7 @@ class OnlineAppointmentController extends Controller
     /**
      * Envia instruções por WhatsApp
      */
-    public function sendWhatsapp(Request $request, $slug, $id)
+    public function sendWhatsapp(Request $request, $slug, Appointment $appointment)
     {
         // Verificar se o modo permite acesso ao módulo
         $mode = TenantSetting::get('appointments.default_appointment_mode', 'user_choice');
@@ -206,8 +227,7 @@ class OnlineAppointmentController extends Controller
             abort(404);
         }
 
-        $appointment = Appointment::with(['patient', 'onlineInstructions'])
-            ->findOrFail($id);
+        $appointment->load(['patient', 'onlineInstructions']);
 
         if ($appointment->appointment_mode !== 'online') {
             abort(403, 'Esta consulta não é online.');
@@ -264,7 +284,16 @@ class OnlineAppointmentController extends Controller
                     'sent_by_whatsapp_at' => now(),
                 ]);
 
-                return redirect()->route('tenant.online-appointments.show', ['slug' => $slug, 'appointment' => $id])
+                $this->notificationDispatcher->dispatchAppointment(
+                    $appointment,
+                    'online_appointment.instructions_sent.doctor',
+                    [
+                        'event' => 'online_appointment_instructions_sent',
+                        'origin' => 'online_appointments_send_whatsapp',
+                    ]
+                );
+
+                return redirect()->route('tenant.online-appointments.show', ['slug' => $slug, 'appointment' => $appointment->id])
                     ->with('success', 'Instruções enviadas por WhatsApp com sucesso.');
             } else {
                 return redirect()->back()
@@ -272,7 +301,7 @@ class OnlineAppointmentController extends Controller
             }
         } catch (\Exception $e) {
             Log::error('Erro ao enviar instruções por WhatsApp', [
-                'appointment_id' => $id,
+                'appointment_id' => $appointment->id,
                 'error' => $e->getMessage(),
             ]);
 
@@ -333,13 +362,16 @@ class OnlineAppointmentController extends Controller
         $paginator = $query->paginate($perPage, ['*'], 'page', $page);
 
         $data = $paginator->getCollection()->map(function (Appointment $appointment) {
+            $sentByEmail = (bool) optional($appointment->onlineInstructions)->sent_by_email_at;
+            $sentByWhatsapp = (bool) optional($appointment->onlineInstructions)->sent_by_whatsapp_at;
+            $instructionsStatus = ($sentByEmail || $sentByWhatsapp) ? 'Enviadas' : 'Pendente';
 
             return [
                 'patient'        => e($appointment->patient->full_name ?? 'N/A'),
                 'doctor'         => e(optional(optional($appointment->calendar)->doctor)->user->name_full ?? 'N/A'),
                 'datetime'       => optional($appointment->starts_at)->format('d/m/Y H:i'),
                 'status_badge'   => view('tenant.online_appointments.partials.status', compact('appointment'))->render(),
-                'instructions'   => view('tenant.online_appointments.partials.instructions', compact('appointment'))->render(),
+                'instructions'   => $instructionsStatus,
                 'actions'        => view('tenant.online_appointments.partials.actions', compact('appointment'))->render(),
             ];
         })->all();
@@ -350,3 +382,4 @@ class OnlineAppointmentController extends Controller
         ]);
     }
 }
+

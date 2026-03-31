@@ -1,20 +1,8 @@
-@php
-    $botProviderMode = old('whatsapp_bot_provider_mode', $settings['whatsapp_bot.provider_mode'] ?? 'shared_with_notifications');
-    $botProvider = old('whatsapp_bot_provider', $settings['whatsapp_bot.provider'] ?? 'whatsapp_business');
-    $effectiveProvider = strtolower((string) ($whatsAppBotEffectiveProvider['provider'] ?? 'whatsapp_business'));
-    $effectiveProviderLabel = match ($effectiveProvider) {
-        'zapi' => 'Z-API',
-        'waha' => 'WAHA',
-        'evolution' => 'Evolution API',
-        default => 'WhatsApp Business (Meta)',
-    };
-@endphp
-
-<div class="space-y-8" x-data="{ botProviderMode: '{{ $botProviderMode }}', botProvider: '{{ $botProvider }}' }">
+<div class="space-y-8">
     <div class="mb-8">
         <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-2">Bot de WhatsApp</h2>
         <p class="text-sm text-gray-600 dark:text-gray-400">
-            Configure a base do bot, escolha como o provedor será resolvido e defina os comportamentos iniciais.
+            Configure a base do bot e defina os comportamentos de atendimento.
         </p>
     </div>
 
@@ -372,178 +360,6 @@
 
         <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
             <div class="border-b border-gray-200 dark:border-gray-700 pb-4 mb-4">
-                <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Modo do Provedor do Bot</h3>
-            </div>
-
-            <div class="space-y-4">
-                <label class="p-4 border border-gray-200 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 flex items-start gap-3 cursor-pointer">
-                    <input type="radio"
-                           name="whatsapp_bot_provider_mode"
-                           value="shared_with_notifications"
-                           x-model="botProviderMode"
-                           class="mt-1 w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
-                           {{ $botProviderMode === 'shared_with_notifications' ? 'checked' : '' }}>
-                    <div>
-                        <span class="block text-sm font-medium text-gray-900 dark:text-white">Usar o mesmo provedor das notificações</span>
-                        <span class="block text-xs text-gray-500 dark:text-gray-400 mt-1">
-                            O bot herda a configuração efetiva já usada pelo módulo de notificações.
-                        </span>
-                    </div>
-                </label>
-
-                <label class="p-4 border border-gray-200 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 flex items-start gap-3 cursor-pointer">
-                    <input type="radio"
-                           name="whatsapp_bot_provider_mode"
-                           value="dedicated"
-                           x-model="botProviderMode"
-                           class="mt-1 w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
-                           {{ $botProviderMode === 'dedicated' ? 'checked' : '' }}>
-                    <div>
-                        <span class="block text-sm font-medium text-gray-900 dark:text-white">Usar provedor próprio para o bot</span>
-                        <span class="block text-xs text-gray-500 dark:text-gray-400 mt-1">
-                            Permite configurar o provider do bot de forma independente das notificações.
-                        </span>
-                    </div>
-                </label>
-            </div>
-
-            <div x-show="botProviderMode === 'shared_with_notifications'" x-cloak class="mt-4 p-4 border border-blue-200 dark:border-blue-900/30 rounded-lg bg-blue-50/70 dark:bg-blue-900/10">
-                <p class="text-sm font-medium text-blue-900 dark:text-blue-200">Configuração herdada das notificações</p>
-                <p class="text-xs text-blue-800 dark:text-blue-300 mt-1">
-                    Provider efetivo atual: <strong>{{ $effectiveProviderLabel }}</strong>.
-                </p>
-                <p class="text-xs text-blue-700 dark:text-blue-300/90 mt-1">
-                    Se a configuração de notificações mudar, o bot também herdará a nova configuração.
-                </p>
-            </div>
-
-            <div x-show="botProviderMode === 'dedicated'" x-cloak class="mt-4 space-y-4">
-                <div>
-                    <label for="whatsapp_bot_provider" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        Provedor dedicado do bot
-                    </label>
-                    <select id="whatsapp_bot_provider"
-                            name="whatsapp_bot_provider"
-                            x-model="botProvider"
-                            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white">
-                        <option value="whatsapp_business">WhatsApp Business (Meta)</option>
-                        <option value="zapi">Z-API</option>
-                        <option value="waha">WAHA</option>
-                        <option value="evolution">Evolution API</option>
-                    </select>
-                    @error('whatsapp_bot_provider')
-                        <p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p>
-                    @enderror
-                </div>
-
-                <div x-show="botProvider === 'whatsapp_business'" x-cloak class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Access Token</label>
-                        <input type="text"
-                               name="bot_meta_access_token"
-                               value="{{ old('bot_meta_access_token', $settings['whatsapp_bot.META_ACCESS_TOKEN'] ?? '') }}"
-                               class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Phone Number ID</label>
-                        <input type="text"
-                               name="bot_meta_phone_number_id"
-                               value="{{ old('bot_meta_phone_number_id', $settings['whatsapp_bot.META_PHONE_NUMBER_ID'] ?? '') }}"
-                               class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">WABA ID</label>
-                        <input type="text"
-                               name="bot_meta_waba_id"
-                               value="{{ old('bot_meta_waba_id', $settings['whatsapp_bot.META_WABA_ID'] ?? '') }}"
-                               class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white">
-                    </div>
-                </div>
-
-                <div x-show="botProvider === 'zapi'" x-cloak class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">API URL</label>
-                        <input type="text"
-                               name="bot_zapi_api_url"
-                               value="{{ old('bot_zapi_api_url', $settings['whatsapp_bot.ZAPI_API_URL'] ?? 'https://api.z-api.io') }}"
-                               placeholder="https://api.z-api.io"
-                               class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Token</label>
-                        <input type="text"
-                               name="bot_zapi_token"
-                               value="{{ old('bot_zapi_token', $settings['whatsapp_bot.ZAPI_TOKEN'] ?? '') }}"
-                               class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Client Token</label>
-                        <input type="text"
-                               name="bot_zapi_client_token"
-                               value="{{ old('bot_zapi_client_token', $settings['whatsapp_bot.ZAPI_CLIENT_TOKEN'] ?? '') }}"
-                               class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Instance ID</label>
-                        <input type="text"
-                               name="bot_zapi_instance_id"
-                               value="{{ old('bot_zapi_instance_id', $settings['whatsapp_bot.ZAPI_INSTANCE_ID'] ?? '') }}"
-                               class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white">
-                    </div>
-                </div>
-
-                <div x-show="botProvider === 'waha'" x-cloak class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Base URL</label>
-                        <input type="text"
-                               name="bot_waha_base_url"
-                               value="{{ old('bot_waha_base_url', $settings['whatsapp_bot.WAHA_BASE_URL'] ?? '') }}"
-                               class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">API Key</label>
-                        <input type="text"
-                               name="bot_waha_api_key"
-                               value="{{ old('bot_waha_api_key', $settings['whatsapp_bot.WAHA_API_KEY'] ?? '') }}"
-                               class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Sessão</label>
-                        <input type="text"
-                               name="bot_waha_session"
-                               value="{{ old('bot_waha_session', $settings['whatsapp_bot.WAHA_SESSION'] ?? 'default') }}"
-                               class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white">
-                    </div>
-                </div>
-
-                <div x-show="botProvider === 'evolution'" x-cloak class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Base URL</label>
-                        <input type="text"
-                               name="bot_evolution_base_url"
-                               value="{{ old('bot_evolution_base_url', $settings['whatsapp_bot.EVOLUTION_BASE_URL'] ?? '') }}"
-                               class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">API Key</label>
-                        <input type="text"
-                               name="bot_evolution_api_key"
-                               value="{{ old('bot_evolution_api_key', $settings['whatsapp_bot.EVOLUTION_API_KEY'] ?? '') }}"
-                               class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Instância</label>
-                        <input type="text"
-                               name="bot_evolution_instance"
-                               value="{{ old('bot_evolution_instance', $settings['whatsapp_bot.EVOLUTION_INSTANCE'] ?? 'default') }}"
-                               class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white">
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-            <div class="border-b border-gray-200 dark:border-gray-700 pb-4 mb-4">
                 <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Permissões Iniciais do Bot</h3>
             </div>
 
@@ -576,6 +392,22 @@
                 </label>
             </div>
         </div>
+
+        <input type="hidden" name="whatsapp_bot_provider_mode" value="{{ old('whatsapp_bot_provider_mode', $settings['whatsapp_bot.provider_mode'] ?? 'shared_with_notifications') }}">
+        <input type="hidden" name="whatsapp_bot_provider" value="{{ old('whatsapp_bot_provider', $settings['whatsapp_bot.provider'] ?? 'whatsapp_business') }}">
+        <input type="hidden" name="bot_meta_access_token" value="{{ old('bot_meta_access_token', $settings['whatsapp_bot.META_ACCESS_TOKEN'] ?? '') }}">
+        <input type="hidden" name="bot_meta_phone_number_id" value="{{ old('bot_meta_phone_number_id', $settings['whatsapp_bot.META_PHONE_NUMBER_ID'] ?? '') }}">
+        <input type="hidden" name="bot_meta_waba_id" value="{{ old('bot_meta_waba_id', $settings['whatsapp_bot.META_WABA_ID'] ?? '') }}">
+        <input type="hidden" name="bot_zapi_api_url" value="{{ old('bot_zapi_api_url', $settings['whatsapp_bot.ZAPI_API_URL'] ?? 'https://api.z-api.io') }}">
+        <input type="hidden" name="bot_zapi_token" value="{{ old('bot_zapi_token', $settings['whatsapp_bot.ZAPI_TOKEN'] ?? '') }}">
+        <input type="hidden" name="bot_zapi_client_token" value="{{ old('bot_zapi_client_token', $settings['whatsapp_bot.ZAPI_CLIENT_TOKEN'] ?? '') }}">
+        <input type="hidden" name="bot_zapi_instance_id" value="{{ old('bot_zapi_instance_id', $settings['whatsapp_bot.ZAPI_INSTANCE_ID'] ?? '') }}">
+        <input type="hidden" name="bot_waha_base_url" value="{{ old('bot_waha_base_url', $settings['whatsapp_bot.WAHA_BASE_URL'] ?? '') }}">
+        <input type="hidden" name="bot_waha_api_key" value="{{ old('bot_waha_api_key', $settings['whatsapp_bot.WAHA_API_KEY'] ?? '') }}">
+        <input type="hidden" name="bot_waha_session" value="{{ old('bot_waha_session', $settings['whatsapp_bot.WAHA_SESSION'] ?? 'default') }}">
+        <input type="hidden" name="bot_evolution_base_url" value="{{ old('bot_evolution_base_url', $settings['whatsapp_bot.EVOLUTION_BASE_URL'] ?? '') }}">
+        <input type="hidden" name="bot_evolution_api_key" value="{{ old('bot_evolution_api_key', $settings['whatsapp_bot.EVOLUTION_API_KEY'] ?? '') }}">
+        <input type="hidden" name="bot_evolution_instance" value="{{ old('bot_evolution_instance', $settings['whatsapp_bot.EVOLUTION_INSTANCE'] ?? 'default') }}">
 
         @include('tenant.settings.partials.form-actions')
     </form>

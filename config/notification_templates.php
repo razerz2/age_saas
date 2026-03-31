@@ -20,7 +20,14 @@
 | - {{links.appointment_cancel}}
 | - {{links.appointment_details}}
 | - {{links.waitlist_offer}}
+| - {{links.form_response}}
+| - {{links.online_appointment_details}}
 | - {{waitlist.offer_expires_at}}
+| - {{form.name}}
+| - {{response.submitted_at}}
+| - {{online.meeting_link}}
+| - {{online.meeting_app}}
+| - {{online.instructions_sent}}
 |
 */
 
@@ -94,6 +101,116 @@ return [
             ],
             'whatsapp' => [
                 'content' => "🎉 Vaga disponível — {{clinic.name}}\n\nOlá {{patient.name}}!\nUma vaga foi liberada para:\n\n📅 Data: {{appointment.date}}\n🕐 Horário: {{appointment.time}}\n👨‍⚕️ Profissional: {{professional.name}}\n\n⏳ Confirme até: {{waitlist.offer_expires_at}}\n✅ Confirmar vaga: {{links.waitlist_offer}}\n\nAtenciosamente,\n{{clinic.name}}",
+            ],
+        ],
+
+        'appointment.created.doctor' => [
+            'label' => 'Novo agendamento para médico',
+            'email' => [
+                'subject' => '🩺 Novo agendamento na agenda — {{clinic.name}}',
+                'content' => "🩺 Novo agendamento na agenda\n\nOlá {{doctor.name}},\n\nPaciente: {{patient.name}}\nData: {{appointment.date}}\nHorário: {{appointment.time}}\nEspecialidade: {{doctor.specialty}}\nModalidade: {{appointment.mode}}\nStatus: {{appointment.status}}\n\nDetalhes: {{links.appointment_details}}\n\n{{clinic.name}}",
+            ],
+            'whatsapp' => [
+                'content' => "🩺 Novo agendamento na agenda\n\nPaciente: {{patient.name}}\nData: {{appointment.date}}\nHorário: {{appointment.time}}\nEspecialidade: {{doctor.specialty}}\nModalidade: {{appointment.mode}}\nStatus: {{appointment.status}}\n\nDetalhes: {{links.appointment_details}}",
+            ],
+        ],
+
+        'appointment.confirmed.doctor' => [
+            'label' => 'Agendamento confirmado para médico',
+            'email' => [
+                'subject' => '✅ Agendamento confirmado na agenda',
+                'content' => "✅ Agendamento confirmado\n\nOlá {{doctor.name}},\n\nPaciente: {{patient.name}}\nData: {{appointment.date}}\nHorário: {{appointment.time}}\nEspecialidade: {{doctor.specialty}}\nModalidade: {{appointment.mode}}\n\nDetalhes: {{links.appointment_details}}\n\n{{clinic.name}}",
+            ],
+            'whatsapp' => [
+                'content' => "✅ Agendamento confirmado\n\nPaciente: {{patient.name}}\nData: {{appointment.date}}\nHorário: {{appointment.time}}\nEspecialidade: {{doctor.specialty}}\nModalidade: {{appointment.mode}}\n\nDetalhes: {{links.appointment_details}}",
+            ],
+        ],
+
+        'appointment.canceled.doctor' => [
+            'label' => 'Agendamento cancelado para médico',
+            'email' => [
+                'subject' => '❌ Agendamento cancelado na agenda',
+                'content' => "❌ Agendamento cancelado\n\nOlá {{doctor.name}},\n\nPaciente: {{patient.name}}\nData: {{appointment.date}}\nHorário: {{appointment.time}}\nEspecialidade: {{doctor.specialty}}\n\nStatus atual: {{appointment.status}}\n\n{{clinic.name}}",
+            ],
+            'whatsapp' => [
+                'content' => "❌ Agendamento cancelado\n\nPaciente: {{patient.name}}\nData: {{appointment.date}}\nHorário: {{appointment.time}}\nEspecialidade: {{doctor.specialty}}\n\nStatus atual: {{appointment.status}}",
+            ],
+        ],
+
+        'appointment.rescheduled.doctor' => [
+            'label' => 'Agendamento remarcado para médico',
+            'email' => [
+                'subject' => '🔄 Agendamento remarcado na agenda',
+                'content' => "🔄 Agendamento remarcado\n\nOlá {{doctor.name}},\n\nPaciente: {{patient.name}}\nNova data: {{appointment.date}}\nNovo horário: {{appointment.time}}\nEspecialidade: {{doctor.specialty}}\nModalidade: {{appointment.mode}}\n\nDetalhes: {{links.appointment_details}}\n\n{{clinic.name}}",
+            ],
+            'whatsapp' => [
+                'content' => "🔄 Agendamento remarcado\n\nPaciente: {{patient.name}}\nNova data: {{appointment.date}}\nNovo horário: {{appointment.time}}\nEspecialidade: {{doctor.specialty}}\nModalidade: {{appointment.mode}}\n\nDetalhes: {{links.appointment_details}}",
+            ],
+        ],
+
+        'form.response_submitted.doctor' => [
+            'label' => 'Resposta de formulário para médico',
+            'email' => [
+                'subject' => '📝 Nova resposta de formulário recebida',
+                'content' => "📝 Nova resposta de formulário\n\nOlá {{doctor.name}},\n\nPaciente: {{patient.name}}\nFormulário: {{form.name}}\nEnviado em: {{response.submitted_at}}\n\nAbrir resposta: {{links.form_response}}\n\n{{clinic.name}}",
+            ],
+            'whatsapp' => [
+                'content' => "📝 Nova resposta de formulário\n\nPaciente: {{patient.name}}\nFormulário: {{form.name}}\nEnviado em: {{response.submitted_at}}\n\nAbrir resposta: {{links.form_response}}",
+            ],
+        ],
+
+        'waitlist.offered.doctor' => [
+            'label' => 'Oferta de waitlist para médico',
+            'email' => [
+                'subject' => '📣 Vaga ofertada para paciente da sua agenda',
+                'content' => "📣 Oferta de vaga enviada\n\nOlá {{doctor.name}},\n\nPaciente: {{patient.name}}\nData: {{appointment.date}}\nHorário: {{appointment.time}}\nEspecialidade: {{doctor.specialty}}\nValidade da oferta: {{waitlist.offer_expires_at}}\n\nLink enviado ao paciente: {{links.waitlist_offer}}\n\n{{clinic.name}}",
+            ],
+            'whatsapp' => [
+                'content' => "📣 Oferta de vaga enviada\n\nPaciente: {{patient.name}}\nData: {{appointment.date}}\nHorário: {{appointment.time}}\nEspecialidade: {{doctor.specialty}}\nValidade da oferta: {{waitlist.offer_expires_at}}\n\nLink enviado ao paciente: {{links.waitlist_offer}}",
+            ],
+        ],
+
+        'waitlist.accepted.doctor' => [
+            'label' => 'Oferta de waitlist aceita pelo paciente',
+            'email' => [
+                'subject' => '✅ Paciente aceitou oferta da fila de espera',
+                'content' => "✅ Oferta aceita na fila de espera\n\nOlá {{doctor.name}},\n\nPaciente: {{patient.name}}\nData: {{appointment.date}}\nHorário: {{appointment.time}}\nEspecialidade: {{doctor.specialty}}\n\nStatus do agendamento: {{appointment.status}}\n\n{{clinic.name}}",
+            ],
+            'whatsapp' => [
+                'content' => "✅ Oferta aceita na fila de espera\n\nPaciente: {{patient.name}}\nData: {{appointment.date}}\nHorário: {{appointment.time}}\nEspecialidade: {{doctor.specialty}}\n\nStatus do agendamento: {{appointment.status}}",
+            ],
+        ],
+
+        'online_appointment.updated.doctor' => [
+            'label' => 'Consulta online atualizada para médico',
+            'email' => [
+                'subject' => '🧩 Atualização na consulta online',
+                'content' => "🧩 Consulta online atualizada\n\nOlá {{doctor.name}},\n\nPaciente: {{patient.name}}\nData: {{appointment.date}}\nHorário: {{appointment.time}}\nModalidade: {{appointment.mode}}\nAplicativo: {{online.meeting_app}}\nLink da reunião: {{online.meeting_link}}\n\nDetalhes: {{links.online_appointment_details}}\n\n{{clinic.name}}",
+            ],
+            'whatsapp' => [
+                'content' => "🧩 Consulta online atualizada\n\nPaciente: {{patient.name}}\nData: {{appointment.date}}\nHorário: {{appointment.time}}\nModalidade: {{appointment.mode}}\nAplicativo: {{online.meeting_app}}\nLink da reunião: {{online.meeting_link}}\n\nDetalhes: {{links.online_appointment_details}}",
+            ],
+        ],
+
+        'online_appointment.instructions_sent.doctor' => [
+            'label' => 'Instruções da consulta online enviadas',
+            'email' => [
+                'subject' => '📨 Instruções da consulta online enviadas',
+                'content' => "📨 Instruções enviadas ao paciente\n\nOlá {{doctor.name}},\n\nPaciente: {{patient.name}}\nData: {{appointment.date}}\nHorário: {{appointment.time}}\nModalidade: {{appointment.mode}}\n\nStatus das instruções: {{online.instructions_sent}}\nÚltimo envio por e-mail: {{online.instructions_sent_email_at}}\nÚltimo envio por WhatsApp: {{online.instructions_sent_whatsapp_at}}\n\nDetalhes: {{links.online_appointment_details}}\n\n{{clinic.name}}",
+            ],
+            'whatsapp' => [
+                'content' => "📨 Instruções enviadas ao paciente\n\nPaciente: {{patient.name}}\nData: {{appointment.date}}\nHorário: {{appointment.time}}\nModalidade: {{appointment.mode}}\n\nStatus das instruções: {{online.instructions_sent}}\nÚltimo envio por e-mail: {{online.instructions_sent_email_at}}\nÚltimo envio por WhatsApp: {{online.instructions_sent_whatsapp_at}}\n\nDetalhes: {{links.online_appointment_details}}",
+            ],
+        ],
+
+        'online_appointment.form_response_submitted.doctor' => [
+            'label' => 'Resposta de formulário da consulta online',
+            'email' => [
+                'subject' => '📝 Resposta de formulário da consulta online',
+                'content' => "📝 Nova resposta de formulário da consulta online\n\nOlá {{doctor.name}},\n\nPaciente: {{patient.name}}\nFormulário: {{form.name}}\nData/Hora da consulta: {{appointment.datetime}}\nEnviado em: {{response.submitted_at}}\n\nAbrir resposta: {{links.form_response}}\nDetalhes da consulta online: {{links.online_appointment_details}}\n\n{{clinic.name}}",
+            ],
+            'whatsapp' => [
+                'content' => "📝 Nova resposta de formulário da consulta online\n\nPaciente: {{patient.name}}\nFormulário: {{form.name}}\nData/Hora da consulta: {{appointment.datetime}}\nEnviado em: {{response.submitted_at}}\n\nAbrir resposta: {{links.form_response}}\nDetalhes da consulta online: {{links.online_appointment_details}}",
             ],
         ],
     ],

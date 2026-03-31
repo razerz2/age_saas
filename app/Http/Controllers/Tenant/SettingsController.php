@@ -34,6 +34,8 @@ class SettingsController extends Controller
      */
     public function index(Request $request)
     {
+        $brazilTimezones = $this->getBrazilTimezones();
+
         $tenantGlobalProviderCatalog = app(TenantGlobalProviderCatalogService::class);
         $botConfigService = app(WhatsAppBotConfigService::class);
         $botSettings = $botConfigService->getSettings();
@@ -78,6 +80,16 @@ class SettingsController extends Controller
             // Para notificações aos pacientes, verifica explicitamente se é 'true' (opt-in)
             'notifications.send_email_to_patients' => TenantSetting::get('notifications.send_email_to_patients') === 'true',
             'notifications.send_whatsapp_to_patients' => TenantSetting::get('notifications.send_whatsapp_to_patients') === 'true',
+            'notifications.send_email_to_doctors' => TenantSetting::get('notifications.send_email_to_doctors') === 'true',
+            'notifications.send_whatsapp_to_doctors' => TenantSetting::get('notifications.send_whatsapp_to_doctors') === 'true',
+            'notifications.whatsapp.provider_mode' => TenantSetting::get(
+                'notifications.whatsapp.provider_mode',
+                TenantSetting::get('whatsapp.driver', 'global')
+            ),
+            'notifications.whatsapp.provider' => TenantSetting::get(
+                'notifications.whatsapp.provider',
+                TenantSetting::get('whatsapp.provider', TenantSetting::get('whatsapp.global_provider', ''))
+            ),
             
             // Email
             'email.driver' => TenantSetting::get('email.driver', 'global'),
@@ -102,6 +114,9 @@ class SettingsController extends Controller
             'WAHA_BASE_URL' => TenantSetting::get('whatsapp.waha.base_url', ''),
             'WAHA_API_KEY' => TenantSetting::get('whatsapp.waha.api_key', ''),
             'WAHA_SESSION' => TenantSetting::get('whatsapp.waha.session', 'default'),
+            'EVOLUTION_BASE_URL' => TenantSetting::get('whatsapp.evolution.base_url', ''),
+            'EVOLUTION_API_KEY' => TenantSetting::get('whatsapp.evolution.api_key', ''),
+            'EVOLUTION_INSTANCE' => TenantSetting::get('whatsapp.evolution.instance', 'default'),
 
             // Bot de WhatsApp
             'whatsapp_bot.enabled' => (bool) ($botSettings['enabled'] ?? false),
@@ -283,7 +298,8 @@ class SettingsController extends Controller
             'wahaGlobalStatus',
             'showEvolutionGlobalTab',
             'evolutionGlobalStatus',
-            'initialTab'
+            'initialTab',
+            'brazilTimezones'
         ));
     }
 
@@ -298,6 +314,7 @@ class SettingsController extends Controller
     )
     {
         $validated = $request->validate([
+            'audience' => 'nullable|string|in:patient,doctor',
             'channel' => 'required|string|in:email,whatsapp',
             'key' => 'required|string|max:255',
             'subject' => 'nullable|string|max:255',
@@ -350,7 +367,11 @@ class SettingsController extends Controller
             $validated['content']
         );
 
-        $redirect = redirect()->to($this->buildEditorSettingsUrl($validated['channel'], $validated['key']))
+        $redirect = redirect()->to($this->buildEditorSettingsUrl(
+            $validated['channel'],
+            $validated['key'],
+            (string) ($validated['audience'] ?? 'patient')
+        ))
             ->with('success', 'Template salvo.');
 
         if (is_array($unknownPlaceholders) && $unknownPlaceholders !== []) {
@@ -366,6 +387,7 @@ class SettingsController extends Controller
     public function restoreNotificationTemplate(Request $request, NotificationTemplateService $templateService)
     {
         $validated = $request->validate([
+            'audience' => 'nullable|string|in:patient,doctor',
             'channel' => 'required|string|in:email,whatsapp',
             'key' => 'required|string|max:255',
         ]);
@@ -379,7 +401,11 @@ class SettingsController extends Controller
 
         $templateService->restoreDefault((string) $tenant->id, $validated['channel'], $validated['key']);
 
-        return redirect()->to($this->buildEditorSettingsUrl($validated['channel'], $validated['key']))
+        return redirect()->to($this->buildEditorSettingsUrl(
+            $validated['channel'],
+            $validated['key'],
+            (string) ($validated['audience'] ?? 'patient')
+        ))
             ->with('success', 'Template restaurado para o padrão.');
     }
 
@@ -393,6 +419,7 @@ class SettingsController extends Controller
         TemplateRenderer $renderer
     ) {
         $validated = $request->validate([
+            'audience' => 'nullable|string|in:patient,doctor',
             'channel' => 'required|string|in:email,whatsapp',
             'key' => 'required|string|max:255',
             'subject' => 'nullable|string|max:255',
@@ -447,6 +474,7 @@ class SettingsController extends Controller
 
         $request->merge([
             'tab' => 'editor',
+            'audience' => (string) ($validated['audience'] ?? 'patient'),
             'channel' => $validated['channel'],
             'key' => $validated['key'],
         ]);
@@ -520,11 +548,15 @@ class SettingsController extends Controller
      */
     public function updateGeneral(Request $request)
     {
+        $brazilTimezones = $this->getBrazilTimezones();
+
         $request->validate([
-            'timezone' => 'required|string',
+            'timezone' => ['required', 'string', Rule::in($brazilTimezones)],
             'date_format' => 'required|string|in:d/m/Y,Y-m-d,m/d/Y',
             'time_format' => 'required|string|in:H:i,h:i A',
             'language' => 'required|string|in:pt_BR,en_US,es_ES',
+        ], [
+            'timezone.in' => 'Selecione um fuso horário válido do Brasil.',
         ]);
 
         TenantSetting::set('timezone', $request->timezone);
@@ -650,6 +682,8 @@ class SettingsController extends Controller
             'notifications_form_responses_enabled' => 'nullable|boolean',
             'notifications_send_email_to_patients' => 'nullable|boolean',
             'notifications_send_whatsapp_to_patients' => 'nullable|boolean',
+            'notifications_send_email_to_doctors' => 'nullable|boolean',
+            'notifications_send_whatsapp_to_doctors' => 'nullable|boolean',
 
             'email_driver' => 'required|in:global,tenancy',
             'email_host' => 'required_if:email_driver,tenancy',
@@ -660,7 +694,7 @@ class SettingsController extends Controller
             'email_from_address' => 'nullable|email',
 
             'whatsapp_driver' => 'required|in:global,tenancy',
-            'whatsapp_provider' => 'nullable|in:whatsapp_business,zapi,waha',
+            'whatsapp_provider' => 'nullable|in:whatsapp_business,zapi,waha,evolution',
             'whatsapp_global_provider' => 'nullable|string',
             'META_ACCESS_TOKEN' => 'nullable|string',
             'META_PHONE_NUMBER_ID' => 'nullable|string',
@@ -672,6 +706,28 @@ class SettingsController extends Controller
             'WAHA_BASE_URL' => 'nullable|url',
             'WAHA_API_KEY' => 'nullable|string',
             'WAHA_SESSION' => 'nullable|string',
+            'EVOLUTION_BASE_URL' => 'nullable|url',
+            'EVOLUTION_API_KEY' => 'nullable|string',
+            'EVOLUTION_INSTANCE' => 'nullable|string',
+
+            'whatsapp_bot_provider_mode' => ['required', 'string', Rule::in([
+                WhatsAppBotConfigService::MODE_SHARED_WITH_NOTIFICATIONS,
+                WhatsAppBotConfigService::MODE_DEDICATED,
+            ])],
+            'whatsapp_bot_provider' => ['nullable', 'string', Rule::in(WhatsAppBotConfigService::SUPPORTED_PROVIDERS)],
+            'bot_meta_access_token' => 'nullable|string',
+            'bot_meta_phone_number_id' => 'nullable|string',
+            'bot_meta_waba_id' => 'nullable|string',
+            'bot_zapi_api_url' => 'nullable|url',
+            'bot_zapi_token' => 'nullable|string',
+            'bot_zapi_client_token' => 'nullable|string',
+            'bot_zapi_instance_id' => 'nullable|string',
+            'bot_waha_base_url' => 'nullable|url',
+            'bot_waha_api_key' => 'nullable|string',
+            'bot_waha_session' => 'nullable|string',
+            'bot_evolution_base_url' => 'nullable|url',
+            'bot_evolution_api_key' => 'nullable|string',
+            'bot_evolution_instance' => 'nullable|string',
         ]);
 
         $validator->after(function ($validator) use ($request, $tenantGlobalProviderCatalog) {
@@ -712,7 +768,7 @@ class SettingsController extends Controller
             }
 
             $provider = $request->input('whatsapp_provider');
-            if (!in_array($provider, ['whatsapp_business', 'zapi', 'waha'], true)) {
+            if (!in_array($provider, ['whatsapp_business', 'zapi', 'waha', 'evolution'], true)) {
                 $validator->errors()->add('whatsapp_provider', 'Selecione um provedor de WhatsApp valido.');
                 return;
             }
@@ -755,6 +811,80 @@ class SettingsController extends Controller
                     $validator->errors()->add('WAHA_SESSION', 'O nome da sessao e obrigatorio para o provedor WAHA.');
                 }
             }
+
+            if ($provider === 'evolution') {
+                if (!$request->filled('EVOLUTION_BASE_URL')) {
+                    $validator->errors()->add('EVOLUTION_BASE_URL', 'A Base URL e obrigatoria para o provedor Evolution.');
+                }
+                if (!$request->filled('EVOLUTION_API_KEY')) {
+                    $validator->errors()->add('EVOLUTION_API_KEY', 'A API Key e obrigatoria para o provedor Evolution.');
+                }
+                if (!$request->filled('EVOLUTION_INSTANCE')) {
+                    $validator->errors()->add('EVOLUTION_INSTANCE', 'O nome da instancia e obrigatorio para o provedor Evolution.');
+                }
+            }
+
+            $botProviderMode = (string) $request->input('whatsapp_bot_provider_mode');
+            if ($botProviderMode !== WhatsAppBotConfigService::MODE_DEDICATED) {
+                return;
+            }
+
+            $botProvider = (string) $request->input('whatsapp_bot_provider');
+            if (!in_array($botProvider, WhatsAppBotConfigService::SUPPORTED_PROVIDERS, true)) {
+                $validator->errors()->add('whatsapp_bot_provider', 'Selecione um provedor de WhatsApp valido para o bot.');
+                return;
+            }
+
+            if ($botProvider === 'whatsapp_business') {
+                if (!$request->filled('bot_meta_access_token')) {
+                    $validator->errors()->add('bot_meta_access_token', 'O Access Token e obrigatorio para o provedor Meta.');
+                }
+                if (!$request->filled('bot_meta_phone_number_id')) {
+                    $validator->errors()->add('bot_meta_phone_number_id', 'O Phone Number ID e obrigatorio para o provedor Meta.');
+                }
+                if (!$request->filled('bot_meta_waba_id')) {
+                    $validator->errors()->add('bot_meta_waba_id', 'O WABA ID e obrigatorio para o provedor Meta.');
+                }
+            }
+
+            if ($botProvider === 'zapi') {
+                if (!$request->filled('bot_zapi_api_url')) {
+                    $validator->errors()->add('bot_zapi_api_url', 'A API URL e obrigatoria para o provedor Z-API.');
+                }
+                if (!$request->filled('bot_zapi_token')) {
+                    $validator->errors()->add('bot_zapi_token', 'O Token e obrigatorio para o provedor Z-API.');
+                }
+                if (!$request->filled('bot_zapi_client_token')) {
+                    $validator->errors()->add('bot_zapi_client_token', 'O Client Token e obrigatorio para o provedor Z-API.');
+                }
+                if (!$request->filled('bot_zapi_instance_id')) {
+                    $validator->errors()->add('bot_zapi_instance_id', 'O Instance ID e obrigatorio para o provedor Z-API.');
+                }
+            }
+
+            if ($botProvider === 'waha') {
+                if (!$request->filled('bot_waha_base_url')) {
+                    $validator->errors()->add('bot_waha_base_url', 'A Base URL e obrigatoria para o provedor WAHA.');
+                }
+                if (!$request->filled('bot_waha_api_key')) {
+                    $validator->errors()->add('bot_waha_api_key', 'A API Key e obrigatoria para o provedor WAHA.');
+                }
+                if (!$request->filled('bot_waha_session')) {
+                    $validator->errors()->add('bot_waha_session', 'O nome da sessao e obrigatorio para o provedor WAHA.');
+                }
+            }
+
+            if ($botProvider === 'evolution') {
+                if (!$request->filled('bot_evolution_base_url')) {
+                    $validator->errors()->add('bot_evolution_base_url', 'A Base URL e obrigatoria para o provedor Evolution.');
+                }
+                if (!$request->filled('bot_evolution_api_key')) {
+                    $validator->errors()->add('bot_evolution_api_key', 'A API Key e obrigatoria para o provedor Evolution.');
+                }
+                if (!$request->filled('bot_evolution_instance')) {
+                    $validator->errors()->add('bot_evolution_instance', 'O nome da instancia e obrigatorio para o provedor Evolution.');
+                }
+            }
         });
 
         $validated = $validator->validate();
@@ -795,6 +925,8 @@ class SettingsController extends Controller
 
         TenantSetting::set('notifications.send_email_to_patients', $request->has('notifications_send_email_to_patients') ? 'true' : 'false');
         TenantSetting::set('notifications.send_whatsapp_to_patients', $request->has('notifications_send_whatsapp_to_patients') ? 'true' : 'false');
+        TenantSetting::set('notifications.send_email_to_doctors', $request->has('notifications_send_email_to_doctors') ? 'true' : 'false');
+        TenantSetting::set('notifications.send_whatsapp_to_doctors', $request->has('notifications_send_whatsapp_to_doctors') ? 'true' : 'false');
 
         TenantSetting::set('email.driver', $validated['email_driver']);
         if ($validated['email_driver'] === 'tenancy') {
@@ -826,6 +958,9 @@ class SettingsController extends Controller
             TenantSetting::set('whatsapp.waha.base_url', $validated['WAHA_BASE_URL'] ?? '');
             TenantSetting::set('whatsapp.waha.api_key', $validated['WAHA_API_KEY'] ?? '');
             TenantSetting::set('whatsapp.waha.session', $validated['WAHA_SESSION'] ?? 'default');
+            TenantSetting::set('whatsapp.evolution.base_url', $validated['EVOLUTION_BASE_URL'] ?? '');
+            TenantSetting::set('whatsapp.evolution.api_key', $validated['EVOLUTION_API_KEY'] ?? '');
+            TenantSetting::set('whatsapp.evolution.instance', $validated['EVOLUTION_INSTANCE'] ?? 'default');
             if (trim((string) TenantSetting::get('whatsapp.global_provider', '')) === '') {
                 $fallbackGlobalProvider = $tenantGlobalProviderCatalog->resolveTenantGlobalProvider(null);
                 if ($fallbackGlobalProvider !== null) {
@@ -848,6 +983,46 @@ class SettingsController extends Controller
             TenantSetting::set('whatsapp.waha.base_url', '');
             TenantSetting::set('whatsapp.waha.api_key', '');
             TenantSetting::set('whatsapp.waha.session', '');
+            TenantSetting::set('whatsapp.evolution.base_url', '');
+            TenantSetting::set('whatsapp.evolution.api_key', '');
+            TenantSetting::set('whatsapp.evolution.instance', '');
+        }
+
+        TenantSetting::set('notifications.whatsapp.provider_mode', $validated['whatsapp_driver']);
+        $notificationsProvider = $validated['whatsapp_driver'] === 'tenancy'
+            ? (string) ($validated['whatsapp_provider'] ?? '')
+            : (string) ($selectedGlobalProvider ?? '');
+        TenantSetting::set('notifications.whatsapp.provider', $notificationsProvider);
+
+        TenantSetting::set('whatsapp_bot.provider_mode', (string) $validated['whatsapp_bot_provider_mode']);
+        if ((string) $validated['whatsapp_bot_provider_mode'] === WhatsAppBotConfigService::MODE_DEDICATED) {
+            $botProvider = (string) ($validated['whatsapp_bot_provider'] ?? 'whatsapp_business');
+            TenantSetting::set('whatsapp_bot.provider', $botProvider);
+
+            if ($botProvider === 'whatsapp_business') {
+                TenantSetting::set('whatsapp_bot.meta.access_token', (string) ($validated['bot_meta_access_token'] ?? ''));
+                TenantSetting::set('whatsapp_bot.meta.phone_number_id', (string) ($validated['bot_meta_phone_number_id'] ?? ''));
+                TenantSetting::set('whatsapp_bot.meta.waba_id', (string) ($validated['bot_meta_waba_id'] ?? ''));
+            }
+
+            if ($botProvider === 'zapi') {
+                TenantSetting::set('whatsapp_bot.zapi.api_url', (string) ($validated['bot_zapi_api_url'] ?? ''));
+                TenantSetting::set('whatsapp_bot.zapi.token', (string) ($validated['bot_zapi_token'] ?? ''));
+                TenantSetting::set('whatsapp_bot.zapi.client_token', (string) ($validated['bot_zapi_client_token'] ?? ''));
+                TenantSetting::set('whatsapp_bot.zapi.instance_id', (string) ($validated['bot_zapi_instance_id'] ?? ''));
+            }
+
+            if ($botProvider === 'waha') {
+                TenantSetting::set('whatsapp_bot.waha.base_url', (string) ($validated['bot_waha_base_url'] ?? ''));
+                TenantSetting::set('whatsapp_bot.waha.api_key', (string) ($validated['bot_waha_api_key'] ?? ''));
+                TenantSetting::set('whatsapp_bot.waha.session', (string) ($validated['bot_waha_session'] ?? 'default'));
+            }
+
+            if ($botProvider === 'evolution') {
+                TenantSetting::set('whatsapp_bot.evolution.base_url', (string) ($validated['bot_evolution_base_url'] ?? ''));
+                TenantSetting::set('whatsapp_bot.evolution.api_key', (string) ($validated['bot_evolution_api_key'] ?? ''));
+                TenantSetting::set('whatsapp_bot.evolution.instance', (string) ($validated['bot_evolution_instance'] ?? 'default'));
+            }
         }
 
         return redirect()->route('tenant.settings.index', ['slug' => tenant()->subdomain])
@@ -1279,7 +1454,7 @@ class SettingsController extends Controller
         NotificationContextBuilder $contextBuilder,
         TemplateRenderer $renderer
     ): array {
-        $latestAppointment = Appointment::query()
+        $appointmentQuery = Appointment::query()
             ->with([
                 'patient',
                 'doctor.user',
@@ -1287,10 +1462,16 @@ class SettingsController extends Controller
                 'calendar.doctor.user',
                 'specialty',
                 'type',
+                'onlineInstructions',
             ])
             ->orderByDesc('starts_at')
-            ->orderByDesc('created_at')
-            ->first();
+            ->orderByDesc('created_at');
+
+        if (str_starts_with($key, 'online_appointment.')) {
+            $appointmentQuery->where('appointment_mode', 'online');
+        }
+
+        $latestAppointment = $appointmentQuery->first();
 
         $contextWarning = null;
         if ($latestAppointment) {
@@ -1310,6 +1491,12 @@ class SettingsController extends Controller
 
         if (str_starts_with($key, 'waitlist.')) {
             $context = $this->applyWaitlistPreviewFallback($context, $tenant);
+        }
+        if (str_starts_with($key, 'form.')) {
+            $context = $this->applyFormResponsePreviewFallback($context, $tenant);
+        }
+        if (str_starts_with($key, 'online_appointment.')) {
+            $context = $this->applyOnlineAppointmentPreviewFallback($context, $tenant);
         }
 
         $unknownPlaceholders = $this->detectUnknownPlaceholders(
@@ -1384,15 +1571,35 @@ class SettingsController extends Controller
                 'status' => '',
                 'confirmation_expires_at' => '',
             ],
+            'online' => [
+                'is_online' => false,
+                'meeting_link' => '',
+                'meeting_app' => '',
+                'general_instructions' => '',
+                'patient_instructions' => '',
+                'instructions_sent' => false,
+                'instructions_sent_email_at' => '',
+                'instructions_sent_whatsapp_at' => '',
+            ],
             'links' => [
                 'appointment_confirm' => '',
                 'appointment_cancel' => '',
                 'appointment_details' => '',
+                'online_appointment_details' => '',
                 'waitlist_offer' => '',
+                'form_response' => '',
             ],
             'waitlist' => [
                 'offer_expires_at' => '',
                 'status' => '',
+            ],
+            'form' => [
+                'id' => '',
+                'name' => '',
+            ],
+            'response' => [
+                'id' => '',
+                'submitted_at' => '',
             ],
         ];
     }
@@ -1417,6 +1624,70 @@ class SettingsController extends Controller
             $slug = (string) ($tenant->subdomain ?? '');
             $fallbackUrl = $slug !== '' ? url('/customer/' . $slug . '/agendamento/oferta/preview') : '#';
             data_set($context, 'links.waitlist_offer', $fallbackUrl);
+        }
+
+        return $context;
+    }
+
+    private function applyFormResponsePreviewFallback(array $context, Tenant $tenant): array
+    {
+        $formName = data_get($context, 'form.name');
+        if (!is_string($formName) || trim($formName) === '') {
+            data_set($context, 'form.name', 'Anamnese Inicial');
+        }
+
+        $submittedAt = data_get($context, 'response.submitted_at');
+        if (!is_string($submittedAt) || trim($submittedAt) === '') {
+            data_set($context, 'response.submitted_at', now()->format('d/m/Y H:i'));
+        }
+
+        $responseLink = data_get($context, 'links.form_response');
+        if (!is_string($responseLink) || trim($responseLink) === '') {
+            $slug = (string) ($tenant->subdomain ?? '');
+            $fallbackUrl = $slug !== '' ? url('/customer/' . $slug . '/responses/preview') : '#';
+            data_set($context, 'links.form_response', $fallbackUrl);
+        }
+
+        return $context;
+    }
+
+    private function applyOnlineAppointmentPreviewFallback(array $context, Tenant $tenant): array
+    {
+        $isOnline = data_get($context, 'online.is_online');
+        if (!is_bool($isOnline)) {
+            data_set($context, 'online.is_online', true);
+        }
+
+        $meetingApp = data_get($context, 'online.meeting_app');
+        if (!is_string($meetingApp) || trim($meetingApp) === '') {
+            data_set($context, 'online.meeting_app', 'Google Meet');
+        }
+
+        $meetingLink = data_get($context, 'online.meeting_link');
+        if (!is_string($meetingLink) || trim($meetingLink) === '') {
+            data_set($context, 'online.meeting_link', 'https://meet.google.com/preview-sala-online');
+        }
+
+        $instructionsSent = data_get($context, 'online.instructions_sent');
+        if (!is_bool($instructionsSent)) {
+            data_set($context, 'online.instructions_sent', true);
+        }
+
+        $emailSentAt = data_get($context, 'online.instructions_sent_email_at');
+        if (!is_string($emailSentAt) || trim($emailSentAt) === '') {
+            data_set($context, 'online.instructions_sent_email_at', now()->subMinutes(30)->format('d/m/Y H:i'));
+        }
+
+        $whatsappSentAt = data_get($context, 'online.instructions_sent_whatsapp_at');
+        if (!is_string($whatsappSentAt) || trim($whatsappSentAt) === '') {
+            data_set($context, 'online.instructions_sent_whatsapp_at', now()->subMinutes(25)->format('d/m/Y H:i'));
+        }
+
+        $onlineDetails = data_get($context, 'links.online_appointment_details');
+        if (!is_string($onlineDetails) || trim($onlineDetails) === '') {
+            $slug = (string) ($tenant->subdomain ?? '');
+            $fallbackUrl = $slug !== '' ? url('/customer/' . $slug . '/consultas-online/preview') : '#';
+            data_set($context, 'links.online_appointment_details', $fallbackUrl);
         }
 
         return $context;
@@ -1453,11 +1724,14 @@ class SettingsController extends Controller
         return array_values(array_unique($unknown));
     }
 
-    private function buildEditorSettingsUrl(string $channel, string $key): string
+    private function buildEditorSettingsUrl(string $channel, string $key, string $audience = 'patient'): string
     {
+        $audience = in_array($audience, ['patient', 'doctor'], true) ? $audience : 'patient';
+
         return route('tenant.settings.index', [
             'slug' => tenant()->subdomain,
             'tab' => 'editor',
+            'audience' => $audience,
             'channel' => $channel,
             'key' => $key,
         ]);
@@ -1475,7 +1749,23 @@ class SettingsController extends Controller
             $channels = ['email', 'whatsapp'];
         }
 
-        $keys = $service->listKeys();
+        $allKeys = $service->listKeys();
+        $audiences = ['patient', 'doctor'];
+        $requestedAudience = strtolower((string) $request->input('audience', $request->query('audience', 'patient')));
+        $audience = in_array($requestedAudience, $audiences, true) ? $requestedAudience : 'patient';
+        $keys = array_values(array_filter(
+            $allKeys,
+            static fn (array $item): bool => (string) ($item['audience'] ?? 'patient') === $audience
+        ));
+
+        if ($keys === [] && $audience !== 'patient') {
+            $audience = 'patient';
+            $keys = array_values(array_filter(
+                $allKeys,
+                static fn (array $item): bool => (string) ($item['audience'] ?? 'patient') === 'patient'
+            ));
+        }
+
         $requestedChannel = strtolower((string) $request->input('channel', $request->query('channel', 'email')));
         $channel = in_array($requestedChannel, $channels, true) ? $requestedChannel : $channels[0];
         $requestedKey = (string) $request->input('key', $request->query('key', ''));
@@ -1515,6 +1805,8 @@ class SettingsController extends Controller
         }
 
         return [
+            'audiences' => $audiences,
+            'current_audience' => $audience,
             'channels' => $channels,
             'keys' => $keys,
             'current_channel' => $channel,
@@ -1524,7 +1816,7 @@ class SettingsController extends Controller
             'is_custom' => $isCustom,
             'subject_required' => $subjectRequired,
             'preview' => $preview,
-            'variables' => $this->notificationTemplateVariables(),
+            'variables' => $this->notificationTemplateVariables($audience),
         ];
     }
 
@@ -1648,9 +1940,22 @@ class SettingsController extends Controller
         };
     }
 
-    private function notificationTemplateVariables(): array
+    /**
+     * @return array<int, string>
+     */
+    private function getBrazilTimezones(): array
     {
-        return [
+        $timezones = array_values(array_filter(
+            (array) config('timezones.brazil', []),
+            static fn ($value): bool => is_string($value) && $value !== ''
+        ));
+
+        return $timezones !== [] ? $timezones : ['America/Sao_Paulo'];
+    }
+
+    private function notificationTemplateVariables(string $audience = 'patient'): array
+    {
+        $groups = [
             'CLINIC' => [
                 ['key' => '{{clinic.name}}', 'description' => 'Nome da clínica'],
                 ['key' => '{{clinic.phone}}', 'description' => 'Telefone da clínica'],
@@ -1666,8 +1971,12 @@ class SettingsController extends Controller
             'DOCTOR / PROFESSIONAL' => [
                 ['key' => '{{doctor.name}}', 'description' => 'Nome do médico'],
                 ['key' => '{{doctor.specialty}}', 'description' => 'Especialidade do médico'],
+                ['key' => '{{doctor.phone}}', 'description' => 'Telefone do médico'],
+                ['key' => '{{doctor.email}}', 'description' => 'E-mail do médico'],
                 ['key' => '{{professional.name}}', 'description' => 'Nome do profissional'],
                 ['key' => '{{professional.specialty}}', 'description' => 'Especialidade do profissional'],
+                ['key' => '{{professional.phone}}', 'description' => 'Telefone do profissional'],
+                ['key' => '{{professional.email}}', 'description' => 'E-mail do profissional'],
             ],
             'APPOINTMENT' => [
                 ['key' => '{{appointment.date}}', 'description' => 'Data da consulta'],
@@ -1684,13 +1993,46 @@ class SettingsController extends Controller
                 ['key' => '{{links.appointment_confirm}}', 'description' => 'Link para confirmar consulta'],
                 ['key' => '{{links.appointment_cancel}}', 'description' => 'Link para cancelar consulta'],
                 ['key' => '{{links.appointment_details}}', 'description' => 'Link com detalhes da consulta'],
+                ['key' => '{{links.online_appointment_details}}', 'description' => 'Link interno dos detalhes da consulta online'],
                 ['key' => '{{links.waitlist_offer}}', 'description' => 'Link da oferta da lista de espera'],
+                ['key' => '{{links.form_response}}', 'description' => 'Link interno para resposta de formulário'],
+            ],
+            'ONLINE APPOINTMENT' => [
+                ['key' => '{{online.is_online}}', 'description' => 'Indica se a consulta é online (true/false)'],
+                ['key' => '{{online.meeting_link}}', 'description' => 'Link da reunião online'],
+                ['key' => '{{online.meeting_app}}', 'description' => 'Aplicativo da reunião online'],
+                ['key' => '{{online.general_instructions}}', 'description' => 'Instruções gerais da consulta online'],
+                ['key' => '{{online.patient_instructions}}', 'description' => 'Observações ao paciente da consulta online'],
+                ['key' => '{{online.instructions_sent}}', 'description' => 'Indica se instruções já foram enviadas'],
+                ['key' => '{{online.instructions_sent_email_at}}', 'description' => 'Data/hora do último envio por e-mail'],
+                ['key' => '{{online.instructions_sent_whatsapp_at}}', 'description' => 'Data/hora do último envio por WhatsApp'],
             ],
             'WAITLIST' => [
                 ['key' => '{{waitlist.offer_expires_at}}', 'description' => 'Validade da oferta da lista de espera'],
                 ['key' => '{{waitlist.status}}', 'description' => 'Status da lista de espera'],
             ],
+            'FORM / RESPONSE' => [
+                ['key' => '{{form.id}}', 'description' => 'ID do formulário'],
+                ['key' => '{{form.name}}', 'description' => 'Nome do formulário'],
+                ['key' => '{{response.id}}', 'description' => 'ID da resposta'],
+                ['key' => '{{response.submitted_at}}', 'description' => 'Data/hora de envio da resposta'],
+            ],
         ];
+
+        if ($audience === 'doctor') {
+            return [
+                'CLINIC' => $groups['CLINIC'],
+                'DOCTOR / PROFESSIONAL' => $groups['DOCTOR / PROFESSIONAL'],
+                'PATIENT' => $groups['PATIENT'],
+                'APPOINTMENT' => $groups['APPOINTMENT'],
+                'LINKS' => $groups['LINKS'],
+                'ONLINE APPOINTMENT' => $groups['ONLINE APPOINTMENT'],
+                'WAITLIST' => $groups['WAITLIST'],
+                'FORM / RESPONSE' => $groups['FORM / RESPONSE'],
+            ];
+        }
+
+        return $groups;
     }
 
     private function hasWhatsAppBotFeature(?Tenant $tenant = null): bool

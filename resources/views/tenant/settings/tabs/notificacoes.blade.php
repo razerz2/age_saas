@@ -1,31 +1,56 @@
+@php
+    $botProviderMode = old('whatsapp_bot_provider_mode', $settings['whatsapp_bot.provider_mode'] ?? 'shared_with_notifications');
+    $botProvider = old('whatsapp_bot_provider', $settings['whatsapp_bot.provider'] ?? 'whatsapp_business');
+    $normalizeBotProvider = static function (?string $provider): string {
+        $value = strtolower(trim((string) $provider));
+        return match ($value) {
+            'meta' => 'whatsapp_business',
+            default => $value !== '' ? $value : 'whatsapp_business',
+        };
+    };
+    $botProviderLabel = static function (string $provider): string {
+        return match ($provider) {
+            'zapi' => 'Z-API',
+            'waha' => 'WAHA',
+            'evolution' => 'Evolution API',
+            default => 'WhatsApp Business (Meta)',
+        };
+    };
+
+    $effectiveProvider = $normalizeBotProvider((string) ($whatsAppBotEffectiveProvider['provider'] ?? 'whatsapp_business'));
+    $effectiveProviderLabel = $botProviderLabel($effectiveProvider);
+    $selectedBotProvider = $normalizeBotProvider($botProvider);
+    $initialBotWebhookProvider = $botProviderMode === 'dedicated' ? $selectedBotProvider : $effectiveProvider;
+    $botWebhookTemplate = route('tenant.whatsapp-bot.webhook', [
+        'slug' => tenant()->subdomain,
+        'provider' => '__provider__',
+    ]);
+    $initialBotWebhookUrl = str_replace('__provider__', $initialBotWebhookProvider, $botWebhookTemplate);
+    $initialBotWebhookProviderLabel = $botProviderLabel($initialBotWebhookProvider);
+@endphp
+
 <!-- Aba Notificações -->
-<div class="space-y-8">
+<div class="space-y-8" x-data="{ botProviderMode: '{{ $botProviderMode }}', botProvider: '{{ $botProvider }}' }">
     <div class="mb-8">
         <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-2">Configurações de Notificações</h2>
         <p class="text-sm text-gray-600 dark:text-gray-400">
-            Configure quais tipos de notificações você deseja receber no sistema e como enviar notificações aos pacientes.
+            Configure eventos internos, canais por público (pacientes e médicos) e o provider de WhatsApp usado pelo módulo de notificações.
         </p>
     </div>
 
     <form method="POST" action="{{ workspace_route('tenant.settings.update.notifications') }}">
         @csrf
-        
-        <!-- Notificações Internas -->
+
         <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 mb-6">
             <div class="border-b border-gray-200 dark:border-gray-700 pb-4 mb-4">
-                <h3 class="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-                    <svg class="w-5 h-5 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path>
-                    </svg>
-                    Notificações Internas
-                </h3>
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Eventos Internos</h3>
             </div>
 
             <div class="space-y-4">
                 <div class="p-4 border border-gray-200 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700">
                     <label class="flex items-start cursor-pointer">
-                        <input class="mt-1 w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500" 
-                               type="checkbox" 
+                        <input class="mt-1 w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                               type="checkbox"
                                id="notifications_appointments_enabled"
                                name="notifications_appointments_enabled"
                                value="1"
@@ -33,8 +58,7 @@
                         <div class="ml-3">
                             <span class="block text-sm font-medium text-gray-900 dark:text-white">Notificações de Agendamentos</span>
                             <span class="block text-xs text-gray-500 dark:text-gray-400 mt-1">
-                                Receba notificações quando agendamentos forem criados, atualizados, 
-                                cancelados, reagendados ou quando o status mudar.
+                                Criação, atualização, cancelamento, confirmação, expiração e variações de waitlist.
                             </span>
                         </div>
                     </label>
@@ -42,8 +66,8 @@
 
                 <div class="p-4 border border-gray-200 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700">
                     <label class="flex items-start cursor-pointer">
-                        <input class="mt-1 w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500" 
-                               type="checkbox" 
+                        <input class="mt-1 w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                               type="checkbox"
                                id="notifications_form_responses_enabled"
                                name="notifications_form_responses_enabled"
                                value="1"
@@ -51,7 +75,7 @@
                         <div class="ml-3">
                             <span class="block text-sm font-medium text-gray-900 dark:text-white">Notificações de Respostas de Formulários</span>
                             <span class="block text-xs text-gray-500 dark:text-gray-400 mt-1">
-                                Receba notificações quando pacientes responderem aos formulários.
+                                Receba notificações quando pacientes responderem formulários.
                             </span>
                         </div>
                     </label>
@@ -59,88 +83,129 @@
             </div>
         </div>
 
-        <!-- Configurações de Email -->
         <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 mb-6">
             <div class="border-b border-gray-200 dark:border-gray-700 pb-4 mb-4">
-                <h3 class="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-                    <svg class="w-5 h-5 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
-                    </svg>
-                    Configurações de Email
-                </h3>
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Canais por Público</h3>
             </div>
 
-            <div class="space-y-4">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <div class="p-4 border border-gray-200 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700">
-                    <label class="flex items-start cursor-pointer">
-                        <input class="mt-1 w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500" 
-                               type="checkbox" 
+                    <h4 class="text-sm font-semibold text-gray-900 dark:text-white mb-3">Notificações para Pacientes</h4>
+
+                    <label class="flex items-start cursor-pointer mb-3">
+                        <input class="mt-1 w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                               type="checkbox"
                                id="notifications_send_email_to_patients"
                                name="notifications_send_email_to_patients"
                                value="1"
                                {{ ($settings['notifications.send_email_to_patients'] ?? false) ? 'checked' : '' }}>
                         <div class="ml-3">
-                            <span class="block text-sm font-medium text-gray-900 dark:text-white">Enviar e-mails aos pacientes</span>
-                            <span class="block text-xs text-gray-500 dark:text-gray-400 mt-1">
-                                Quando habilitado, os pacientes receberão notificações por email sobre agendamentos, formulários, etc.
-                            </span>
+                            <span class="block text-sm font-medium text-gray-900 dark:text-white">Enviar e-mail para pacientes</span>
+                        </div>
+                    </label>
+
+                    <label class="flex items-start cursor-pointer">
+                        <input class="mt-1 w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                               type="checkbox"
+                               id="notifications_send_whatsapp_to_patients"
+                               name="notifications_send_whatsapp_to_patients"
+                               value="1"
+                               {{ ($settings['notifications.send_whatsapp_to_patients'] ?? false) ? 'checked' : '' }}>
+                        <div class="ml-3">
+                            <span class="block text-sm font-medium text-gray-900 dark:text-white">Enviar WhatsApp para pacientes</span>
                         </div>
                     </label>
                 </div>
 
+                <div class="p-4 border border-gray-200 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700">
+                    <h4 class="text-sm font-semibold text-gray-900 dark:text-white mb-3">Notificações para Médicos</h4>
+
+                    <label class="flex items-start cursor-pointer mb-3">
+                        <input class="mt-1 w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                               type="checkbox"
+                               id="notifications_send_email_to_doctors"
+                               name="notifications_send_email_to_doctors"
+                               value="1"
+                               {{ ($settings['notifications.send_email_to_doctors'] ?? false) ? 'checked' : '' }}>
+                        <div class="ml-3">
+                            <span class="block text-sm font-medium text-gray-900 dark:text-white">Enviar e-mail para médicos</span>
+                        </div>
+                    </label>
+
+                    <label class="flex items-start cursor-pointer">
+                        <input class="mt-1 w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                               type="checkbox"
+                               id="notifications_send_whatsapp_to_doctors"
+                               name="notifications_send_whatsapp_to_doctors"
+                               value="1"
+                               {{ ($settings['notifications.send_whatsapp_to_doctors'] ?? false) ? 'checked' : '' }}>
+                        <div class="ml-3">
+                            <span class="block text-sm font-medium text-gray-900 dark:text-white">Enviar WhatsApp para médicos</span>
+                        </div>
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 mb-6">
+            <div class="border-b border-gray-200 dark:border-gray-700 pb-4 mb-4">
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Configurações de E-mail</h3>
+            </div>
+
+            <div class="space-y-4">
                 <div>
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        Driver de Email
+                        Driver de E-mail
                     </label>
                     <select name="email_driver" id="email_driver" required
                             class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white">
                         <option value="global" {{ ($settings['email.driver'] ?? 'global') == 'global' ? 'selected' : '' }}>Usar serviço global do sistema</option>
                         <option value="tenancy" {{ ($settings['email.driver'] ?? 'global') == 'tenancy' ? 'selected' : '' }}>Usar SMTP próprio</option>
                     </select>
-                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Escolha entre usar o serviço global ou configurar seu próprio SMTP</p>
+                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Este envio atende os canais de e-mail habilitados acima.</p>
                 </div>
 
                 <div id="email_tenancy_config" style="display: {{ ($settings['email.driver'] ?? 'global') == 'tenancy' ? 'block' : 'none' }};">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Host SMTP</label>
-                            <input type="text" name="email_host" 
-                                   value="{{ $settings['email.host'] ?? '' }}" 
+                            <input type="text" name="email_host"
+                                   value="{{ $settings['email.host'] ?? '' }}"
                                    placeholder="smtp.exemplo.com"
                                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white">
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Porta</label>
-                            <input type="number" name="email_port" 
-                                   value="{{ $settings['email.port'] ?? '' }}" 
+                            <input type="number" name="email_port"
+                                   value="{{ $settings['email.port'] ?? '' }}"
                                    placeholder="587"
                                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white">
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Usuário</label>
-                            <input type="text" name="email_username" 
-                                   value="{{ $settings['email.username'] ?? '' }}" 
+                            <input type="text" name="email_username"
+                                   value="{{ $settings['email.username'] ?? '' }}"
                                    placeholder="usuario@exemplo.com"
                                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white">
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Senha</label>
-                            <input type="password" name="email_password" 
-                                   value="{{ $settings['email.password'] ?? '' }}" 
-                                   placeholder="••••••••"
+                            <input type="password" name="email_password"
+                                   value="{{ $settings['email.password'] ?? '' }}"
+                                   placeholder="********"
                                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white">
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Nome do Remetente</label>
-                            <input type="text" name="email_from_name" 
-                                   value="{{ $settings['email.from_name'] ?? '' }}" 
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Nome do remetente</label>
+                            <input type="text" name="email_from_name"
+                                   value="{{ $settings['email.from_name'] ?? '' }}"
                                    placeholder="Nome da Clínica"
                                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white">
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Email do Remetente</label>
-                            <input type="email" name="email_from_address" 
-                                   value="{{ $settings['email.from_address'] ?? '' }}" 
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">E-mail do remetente</label>
+                            <input type="email" name="email_from_address"
+                                   value="{{ $settings['email.from_address'] ?? '' }}"
                                    placeholder="noreply@exemplo.com"
                                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white">
                         </div>
@@ -149,45 +214,24 @@
             </div>
         </div>
 
-        <!-- Configurações de WhatsApp -->
         <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 mb-6">
             <div class="border-b border-gray-200 dark:border-gray-700 pb-4 mb-4">
-                <h3 class="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-                    <svg class="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.149-.67.149-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414-.074-.123-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/>
-                    </svg>
-                    Configurações de WhatsApp
-                </h3>
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Provedor de WhatsApp para Notificações</h3>
+                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                    Esta configuração vale para notificações. Se necessário, você pode definir um provider diferente para o bot no bloco abaixo.
+                </p>
             </div>
 
             <div class="space-y-4">
-                <div class="p-4 border border-gray-200 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700">
-                    <label class="flex items-start cursor-pointer">
-                        <input class="mt-1 w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500" 
-                               type="checkbox" 
-                               id="notifications_send_whatsapp_to_patients"
-                               name="notifications_send_whatsapp_to_patients"
-                               value="1"
-                               {{ ($settings['notifications.send_whatsapp_to_patients'] ?? false) ? 'checked' : '' }}>
-                        <div class="ml-3">
-                            <span class="block text-sm font-medium text-gray-900 dark:text-white">Enviar WhatsApp aos pacientes</span>
-                            <span class="block text-xs text-gray-500 dark:text-gray-400 mt-1">
-                                Quando habilitado, os pacientes receberão notificações por WhatsApp sobre agendamentos, formulários, etc.
-                            </span>
-                        </div>
-                    </label>
-                </div>
-
                 <div>
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        Driver de WhatsApp
+                        Origem do provider
                     </label>
                     <select name="whatsapp_driver" id="whatsapp_driver" required
                             class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white">
-                        <option value="global" {{ ($settings['whatsapp.driver'] ?? 'global') == 'global' ? 'selected' : '' }}>Usar serviço global do sistema</option>
-                        <option value="tenancy" {{ ($settings['whatsapp.driver'] ?? 'global') == 'tenancy' ? 'selected' : '' }}>Usar API própria</option>
+                        <option value="global" {{ ($settings['whatsapp.driver'] ?? 'global') == 'global' ? 'selected' : '' }}>Usar provider global do sistema</option>
+                        <option value="tenancy" {{ ($settings['whatsapp.driver'] ?? 'global') == 'tenancy' ? 'selected' : '' }}>Usar provider próprio do tenant</option>
                     </select>
-                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Escolha entre usar o serviço global ou configurar sua própria API de WhatsApp</p>
                 </div>
 
                 <div id="whatsapp_global_config" style="display: {{ ($settings['whatsapp.driver'] ?? 'global') == 'global' ? 'block' : 'none' }};">
@@ -208,7 +252,7 @@
                     </select>
                     @if(empty($whatsappGlobalProviderOptions ?? []))
                         <p class="text-xs text-red-500 mt-1">
-                            Nenhum provider global de WhatsApp esta habilitado pela Platform.
+                            Nenhum provider global de WhatsApp está habilitado pela Platform.
                         </p>
                     @else
                         <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
@@ -225,13 +269,336 @@
                         'settings' => $settings,
                         'providerFieldName' => 'whatsapp_provider',
                         'providerValue' => $settings['WHATSAPP_PROVIDER'] ?? 'whatsapp_business',
+                        'includeEvolutionProvider' => true,
                         'metaTestUrl' => workspace_route('tenant.settings.whatsapp.test.connection', ['service' => 'meta']),
                         'metaSendUrl' => workspace_route('tenant.settings.whatsapp.test.meta.send'),
                         'zapiTestUrl' => workspace_route('tenant.settings.whatsapp.test.connection', ['service' => 'zapi']),
                         'zapiSendUrl' => workspace_route('tenant.settings.whatsapp.test.zapi.send'),
                         'wahaTestUrl' => workspace_route('tenant.settings.whatsapp.test.connection', ['service' => 'waha']),
                         'wahaSendUrl' => workspace_route('tenant.settings.whatsapp.test.waha.send'),
+                        'evolutionTestUrl' => workspace_route('tenant.settings.whatsapp.test.connection', ['service' => 'evolution']),
+                        'evolutionSendUrl' => workspace_route('tenant.settings.whatsapp.test.evolution.send'),
                     ])
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 mb-6">
+            <div class="border-b border-gray-200 dark:border-gray-700 pb-4 mb-4">
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Provider utilizado pelo Bot</h3>
+            </div>
+
+            <div class="space-y-4">
+                <label class="p-4 border border-gray-200 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 flex items-start gap-3 cursor-pointer">
+                    <input type="radio"
+                           name="whatsapp_bot_provider_mode"
+                           value="shared_with_notifications"
+                           x-model="botProviderMode"
+                           class="mt-1 w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
+                           {{ $botProviderMode === 'shared_with_notifications' ? 'checked' : '' }}>
+                    <div>
+                        <span class="block text-sm font-medium text-gray-900 dark:text-white">Usar o mesmo provider das notificações</span>
+                        <span class="block text-xs text-gray-500 dark:text-gray-400 mt-1">
+                            O bot herdará automaticamente a configuração definida acima.
+                        </span>
+                    </div>
+                </label>
+
+                <label class="p-4 border border-gray-200 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 flex items-start gap-3 cursor-pointer">
+                    <input type="radio"
+                           name="whatsapp_bot_provider_mode"
+                           value="dedicated"
+                           x-model="botProviderMode"
+                           class="mt-1 w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
+                           {{ $botProviderMode === 'dedicated' ? 'checked' : '' }}>
+                    <div>
+                        <span class="block text-sm font-medium text-gray-900 dark:text-white">Usar provider próprio para o bot</span>
+                        <span class="block text-xs text-gray-500 dark:text-gray-400 mt-1">
+                            Permite configurar um provider diferente apenas para o bot.
+                        </span>
+                    </div>
+                </label>
+            </div>
+
+            <div x-show="botProviderMode === 'shared_with_notifications'" x-cloak class="mt-4 p-4 border border-blue-200 dark:border-blue-900/30 rounded-lg bg-blue-50/70 dark:bg-blue-900/10">
+                <p class="text-sm font-medium text-blue-900 dark:text-blue-200">Configuração herdada das notificações</p>
+                <p class="text-xs text-blue-800 dark:text-blue-300 mt-1">
+                    Provider efetivo do bot: <strong>{{ $effectiveProviderLabel }}</strong>.
+                </p>
+            </div>
+
+            <div id="bot_webhook_preview"
+                 class="mt-4 p-4 border border-gray-200 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700/40"
+                 data-webhook-template="{{ $botWebhookTemplate }}"
+                 data-default-provider="{{ $effectiveProvider }}">
+                <div class="flex flex-col gap-1">
+                    <p class="text-sm font-medium text-gray-900 dark:text-white">Webhook do Bot</p>
+                    <p class="text-xs text-gray-600 dark:text-gray-400">
+                        Provider efetivo para este webhook:
+                        <strong id="bot_webhook_provider_label">{{ $initialBotWebhookProviderLabel }}</strong>
+                    </p>
+                </div>
+
+                <div class="mt-3 flex flex-col sm:flex-row gap-2">
+                    <input id="bot_webhook_url"
+                           type="text"
+                           readonly
+                           value="{{ $initialBotWebhookUrl }}"
+                           data-copy-source="bot-webhook-url"
+                           class="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white">
+                    <button type="button"
+                            data-copy-link="bot-webhook-url"
+                            class="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors duration-200 flex items-center justify-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                        </svg>
+                        Copiar
+                    </button>
+                </div>
+
+                <p class="text-xs text-gray-500 dark:text-gray-400 mt-2">
+                    Cadastre esta URL no webhook/event callback do seu provider de bot.
+                </p>
+            </div>
+
+            <div x-show="botProviderMode === 'dedicated'" x-cloak class="mt-4 space-y-4">
+                <div>
+                    <label for="whatsapp_bot_provider" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Provider do bot
+                    </label>
+                    <select id="whatsapp_bot_provider"
+                            name="whatsapp_bot_provider"
+                            x-model="botProvider"
+                            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white">
+                        <option value="whatsapp_business">WhatsApp Business (Meta)</option>
+                        <option value="zapi">Z-API</option>
+                        <option value="waha">WAHA</option>
+                        <option value="evolution">Evolution API</option>
+                    </select>
+                    @error('whatsapp_bot_provider')
+                        <p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p>
+                    @enderror
+                </div>
+
+                <div x-show="botProvider === 'whatsapp_business'" x-cloak class="space-y-3 border border-gray-200 dark:border-gray-600 rounded-lg p-4">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Access Token</label>
+                            <input type="text" name="bot_meta_access_token"
+                                   value="{{ old('bot_meta_access_token', $settings['whatsapp_bot.META_ACCESS_TOKEN'] ?? '') }}"
+                                   class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white">
+                            @error('bot_meta_access_token')
+                                <p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p>
+                            @enderror
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Phone Number ID</label>
+                            <input type="text" name="bot_meta_phone_number_id"
+                                   value="{{ old('bot_meta_phone_number_id', $settings['whatsapp_bot.META_PHONE_NUMBER_ID'] ?? '') }}"
+                                   class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white">
+                            @error('bot_meta_phone_number_id')
+                                <p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p>
+                            @enderror
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">WABA ID</label>
+                            <input type="text" name="bot_meta_waba_id"
+                                   value="{{ old('bot_meta_waba_id', $settings['whatsapp_bot.META_WABA_ID'] ?? '') }}"
+                                   class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white">
+                            @error('bot_meta_waba_id')
+                                <p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p>
+                            @enderror
+                        </div>
+                    </div>
+                    <div class="flex flex-wrap gap-2">
+                        <button type="button" id="btn-test-bot-meta" data-test-url="{{ workspace_route('tenant.settings.whatsapp.test.connection', ['service' => 'meta']) }}?scope=bot" class="px-3 py-2 border border-gray-300 rounded-lg text-sm">Testar conexão</button>
+                        <button type="button" id="btn-toggle-bot-meta-send" class="px-3 py-2 border border-blue-500 text-blue-600 rounded-lg text-sm">Testar envio</button>
+                        <span id="bot-meta-test-badge" class="badge bg-secondary d-none">Aguardando teste</span>
+                    </div>
+                    <small id="bot-meta-test-message" class="text-xs text-gray-500 dark:text-gray-400 d-block"></small>
+                    <div id="bot-meta-send-form" class="border rounded p-3 bg-light dark:bg-gray-700 d-none">
+                        <div class="mb-2">
+                            <label for="bot-meta-test-number" class="form-label">Número de destino</label>
+                            <input type="text" id="bot-meta-test-number" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white" placeholder="Ex: 5511999999999">
+                        </div>
+                        <div class="mb-2">
+                            <label for="bot-meta-test-message-input" class="form-label">Mensagem</label>
+                            <textarea id="bot-meta-test-message-input" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white" rows="3">Teste de envio Bot Meta</textarea>
+                        </div>
+                        <div class="flex flex-wrap gap-2 items-center">
+                            <button type="button" id="btn-send-bot-meta-test" data-send-url="{{ workspace_route('tenant.settings.whatsapp.test.meta.send') }}?scope=bot" class="px-3 py-2 bg-green-600 text-white rounded-lg text-sm">Enviar teste</button>
+                            <span id="bot-meta-send-badge" class="badge bg-secondary d-none">Aguardando envio</span>
+                        </div>
+                        <small id="bot-meta-send-message" class="text-xs text-gray-500 dark:text-gray-400 d-block mt-2"></small>
+                    </div>
+                </div>
+
+                <div x-show="botProvider === 'zapi'" x-cloak class="space-y-3 border border-gray-200 dark:border-gray-600 rounded-lg p-4">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">API URL</label>
+                            <input type="text" name="bot_zapi_api_url"
+                                   value="{{ old('bot_zapi_api_url', $settings['whatsapp_bot.ZAPI_API_URL'] ?? 'https://api.z-api.io') }}"
+                                   class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white">
+                            @error('bot_zapi_api_url')
+                                <p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p>
+                            @enderror
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Token</label>
+                            <input type="text" name="bot_zapi_token"
+                                   value="{{ old('bot_zapi_token', $settings['whatsapp_bot.ZAPI_TOKEN'] ?? '') }}"
+                                   class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white">
+                            @error('bot_zapi_token')
+                                <p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p>
+                            @enderror
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Client Token</label>
+                            <input type="text" name="bot_zapi_client_token"
+                                   value="{{ old('bot_zapi_client_token', $settings['whatsapp_bot.ZAPI_CLIENT_TOKEN'] ?? '') }}"
+                                   class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white">
+                            @error('bot_zapi_client_token')
+                                <p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p>
+                            @enderror
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Instance ID</label>
+                            <input type="text" name="bot_zapi_instance_id"
+                                   value="{{ old('bot_zapi_instance_id', $settings['whatsapp_bot.ZAPI_INSTANCE_ID'] ?? '') }}"
+                                   class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white">
+                            @error('bot_zapi_instance_id')
+                                <p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p>
+                            @enderror
+                        </div>
+                    </div>
+                    <div class="flex flex-wrap gap-2">
+                        <button type="button" id="btn-test-bot-zapi" data-test-url="{{ workspace_route('tenant.settings.whatsapp.test.connection', ['service' => 'zapi']) }}?scope=bot" class="px-3 py-2 border border-gray-300 rounded-lg text-sm">Testar conexão</button>
+                        <button type="button" id="btn-toggle-bot-zapi-send" class="px-3 py-2 border border-blue-500 text-blue-600 rounded-lg text-sm">Testar envio</button>
+                        <span id="bot-zapi-test-badge" class="badge bg-secondary d-none">Aguardando teste</span>
+                    </div>
+                    <small id="bot-zapi-test-message" class="text-xs text-gray-500 dark:text-gray-400 d-block"></small>
+                    <div id="bot-zapi-send-form" class="border rounded p-3 bg-light dark:bg-gray-700 d-none">
+                        <div class="mb-2">
+                            <label for="bot-zapi-test-number" class="form-label">Número de destino</label>
+                            <input type="text" id="bot-zapi-test-number" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white" placeholder="Ex: 5511999999999">
+                        </div>
+                        <div class="mb-2">
+                            <label for="bot-zapi-test-message-input" class="form-label">Mensagem</label>
+                            <textarea id="bot-zapi-test-message-input" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white" rows="3">Teste de envio Bot Z-API</textarea>
+                        </div>
+                        <div class="flex flex-wrap gap-2 items-center">
+                            <button type="button" id="btn-send-bot-zapi-test" data-send-url="{{ workspace_route('tenant.settings.whatsapp.test.zapi.send') }}?scope=bot" class="px-3 py-2 bg-green-600 text-white rounded-lg text-sm">Enviar teste</button>
+                            <span id="bot-zapi-send-badge" class="badge bg-secondary d-none">Aguardando envio</span>
+                        </div>
+                        <small id="bot-zapi-send-message" class="text-xs text-gray-500 dark:text-gray-400 d-block mt-2"></small>
+                    </div>
+                </div>
+
+                <div x-show="botProvider === 'waha'" x-cloak class="space-y-3 border border-gray-200 dark:border-gray-600 rounded-lg p-4">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Base URL</label>
+                            <input type="text" name="bot_waha_base_url"
+                                   value="{{ old('bot_waha_base_url', $settings['whatsapp_bot.WAHA_BASE_URL'] ?? '') }}"
+                                   class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white">
+                            @error('bot_waha_base_url')
+                                <p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p>
+                            @enderror
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">API Key</label>
+                            <input type="text" name="bot_waha_api_key"
+                                   value="{{ old('bot_waha_api_key', $settings['whatsapp_bot.WAHA_API_KEY'] ?? '') }}"
+                                   class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white">
+                            @error('bot_waha_api_key')
+                                <p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p>
+                            @enderror
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Sessão</label>
+                            <input type="text" name="bot_waha_session"
+                                   value="{{ old('bot_waha_session', $settings['whatsapp_bot.WAHA_SESSION'] ?? 'default') }}"
+                                   class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white">
+                            @error('bot_waha_session')
+                                <p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p>
+                            @enderror
+                        </div>
+                    </div>
+                    <div class="flex flex-wrap gap-2">
+                        <button type="button" id="btn-test-bot-waha" data-test-url="{{ workspace_route('tenant.settings.whatsapp.test.connection', ['service' => 'waha']) }}?scope=bot" class="px-3 py-2 border border-gray-300 rounded-lg text-sm">Testar conexão</button>
+                        <button type="button" id="btn-toggle-bot-waha-send" class="px-3 py-2 border border-blue-500 text-blue-600 rounded-lg text-sm">Testar envio</button>
+                        <span id="bot-waha-test-badge" class="badge bg-secondary d-none">Aguardando teste</span>
+                    </div>
+                    <small id="bot-waha-test-message" class="text-xs text-gray-500 dark:text-gray-400 d-block"></small>
+                    <div id="bot-waha-send-form" class="border rounded p-3 bg-light dark:bg-gray-700 d-none">
+                        <div class="mb-2">
+                            <label for="bot-waha-test-number" class="form-label">Número de destino</label>
+                            <input type="text" id="bot-waha-test-number" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white" placeholder="Ex: 5511999999999">
+                        </div>
+                        <div class="mb-2">
+                            <label for="bot-waha-test-message-input" class="form-label">Mensagem</label>
+                            <textarea id="bot-waha-test-message-input" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white" rows="3">Teste de envio Bot WAHA</textarea>
+                        </div>
+                        <div class="flex flex-wrap gap-2 items-center">
+                            <button type="button" id="btn-send-bot-waha-test" data-send-url="{{ workspace_route('tenant.settings.whatsapp.test.waha.send') }}?scope=bot" class="px-3 py-2 bg-green-600 text-white rounded-lg text-sm">Enviar teste</button>
+                            <span id="bot-waha-send-badge" class="badge bg-secondary d-none">Aguardando envio</span>
+                        </div>
+                        <small id="bot-waha-send-message" class="text-xs text-gray-500 dark:text-gray-400 d-block mt-2"></small>
+                    </div>
+                </div>
+
+                <div x-show="botProvider === 'evolution'" x-cloak class="space-y-3 border border-gray-200 dark:border-gray-600 rounded-lg p-4">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Base URL</label>
+                            <input type="text" name="bot_evolution_base_url"
+                                   value="{{ old('bot_evolution_base_url', $settings['whatsapp_bot.EVOLUTION_BASE_URL'] ?? '') }}"
+                                   class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white">
+                            @error('bot_evolution_base_url')
+                                <p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p>
+                            @enderror
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">API Key</label>
+                            <input type="text" name="bot_evolution_api_key"
+                                   value="{{ old('bot_evolution_api_key', $settings['whatsapp_bot.EVOLUTION_API_KEY'] ?? '') }}"
+                                   class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white">
+                            @error('bot_evolution_api_key')
+                                <p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p>
+                            @enderror
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Instância</label>
+                            <input type="text" name="bot_evolution_instance"
+                                   value="{{ old('bot_evolution_instance', $settings['whatsapp_bot.EVOLUTION_INSTANCE'] ?? 'default') }}"
+                                   class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white">
+                            @error('bot_evolution_instance')
+                                <p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p>
+                            @enderror
+                        </div>
+                    </div>
+                    <div class="flex flex-wrap gap-2">
+                        <button type="button" id="btn-test-bot-evolution" data-test-url="{{ workspace_route('tenant.settings.whatsapp.test.connection', ['service' => 'evolution']) }}?scope=bot" class="px-3 py-2 border border-gray-300 rounded-lg text-sm">Testar conexão</button>
+                        <button type="button" id="btn-toggle-bot-evolution-send" class="px-3 py-2 border border-blue-500 text-blue-600 rounded-lg text-sm">Testar envio</button>
+                        <span id="bot-evolution-test-badge" class="badge bg-secondary d-none">Aguardando teste</span>
+                    </div>
+                    <small id="bot-evolution-test-message" class="text-xs text-gray-500 dark:text-gray-400 d-block"></small>
+                    <div id="bot-evolution-send-form" class="border rounded p-3 bg-light dark:bg-gray-700 d-none">
+                        <div class="mb-2">
+                            <label for="bot-evolution-test-number" class="form-label">Número de destino</label>
+                            <input type="text" id="bot-evolution-test-number" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white" placeholder="Ex: 5511999999999">
+                        </div>
+                        <div class="mb-2">
+                            <label for="bot-evolution-test-message-input" class="form-label">Mensagem</label>
+                            <textarea id="bot-evolution-test-message-input" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white" rows="3">Teste de envio Bot Evolution</textarea>
+                        </div>
+                        <div class="flex flex-wrap gap-2 items-center">
+                            <button type="button" id="btn-send-bot-evolution-test" data-send-url="{{ workspace_route('tenant.settings.whatsapp.test.evolution.send') }}?scope=bot" class="px-3 py-2 bg-green-600 text-white rounded-lg text-sm">Enviar teste</button>
+                            <span id="bot-evolution-send-badge" class="badge bg-secondary d-none">Aguardando envio</span>
+                        </div>
+                        <small id="bot-evolution-send-message" class="text-xs text-gray-500 dark:text-gray-400 d-block mt-2"></small>
+                    </div>
                 </div>
             </div>
         </div>

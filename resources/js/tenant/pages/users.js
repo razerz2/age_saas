@@ -244,8 +244,8 @@ function bindAvatarPreview() {
         } else {
             showAlert({
                 type: 'warning',
-                title: 'AtenÃƒÂ§ÃƒÂ£o',
-                message: 'Por favor, selecione um arquivo de imagem vÃƒÂ¡lido.',
+                title: 'Atenção',
+                message: 'Por favor, selecione um arquivo de imagem válido.',
             });
             if (avatarInput) {
                 avatarInput.value = '';
@@ -260,8 +260,8 @@ function bindAvatarPreview() {
                 if (file.size > 2048 * 1024) {
                     showAlert({
                         type: 'warning',
-                        title: 'AtenÃƒÂ§ÃƒÂ£o',
-                        message: 'O arquivo ÃƒÂ© muito grande. Por favor, selecione uma imagem com no mÃƒÂ¡ximo 2MB.',
+                        title: 'Atenção',
+                        message: 'O arquivo é muito grande. Por favor, selecione uma imagem com no máximo 2MB.',
                     });
                     avatarInput.value = '';
                     if (avatarPreviewContainer) {
@@ -286,7 +286,7 @@ function bindAvatarPreview() {
                 avatarPreview.src = originalAvatar;
             }
             if (avatarFilename) {
-                avatarFilename.textContent = hasOriginalAvatar ? 'Imagem atual do usuÃƒÂ¡rio' : 'Nenhuma imagem selecionada';
+                avatarFilename.textContent = hasOriginalAvatar ? 'Imagem atual do usuário' : 'Nenhuma imagem selecionada';
             }
             if (avatarPreviewContainer && !hasOriginalAvatar) {
                 avatarPreviewContainer.classList.add('hidden');
@@ -512,7 +512,7 @@ function bindDoctorSpecialtiesSection() {
 
     const showWarning = (message) => {
         if (typeof showAlert === 'function') {
-            showAlert({ type: 'warning', title: 'Atenção', message });
+            showAlert({ type: 'warning', title: 'AtenÃ§Ã£o', message });
         }
     };
 
@@ -526,7 +526,7 @@ function bindDoctorSpecialtiesSection() {
 
         const normalizedId = String(specialtyId);
         if (selectedSpecialties.includes(normalizedId)) {
-            showWarning('Esta especialidade já foi adicionada.');
+            showWarning('Esta especialidade jÃ¡ foi adicionada.');
             specialtySelect.focus();
             return;
         }
@@ -574,7 +574,7 @@ function bindDoctorSpecialtiesSection() {
         }
 
         event.preventDefault();
-        showWarning('Por favor, selecione pelo menos uma especialidade médica.');
+        showWarning('Por favor, selecione pelo menos uma especialidade mÃ©dica.');
         specialtySelect.focus();
     });
 
@@ -635,10 +635,10 @@ function bindRoleModules() {
         }
         if (role === 'doctor') {
             modulesInfoText.innerHTML =
-                `<strong>Nota:</strong> Os mÃ³dulos foram prÃ©-selecionados conforme as configuraÃ§Ãµes padrÃ£o para mÃ©dicos em <a href="${settingsUrl}" target="_blank" class="text-blue-600 underline hover:text-blue-800">ConfiguraÃ§Ãµes â†’ UsuÃ¡rios & PermissÃµes</a>. VocÃª pode ajustar manualmente se necessÃ¡rio.`;
+                `<strong>Nota:</strong> Os módulos foram pré-selecionados conforme as configurações padrão para médicos em <a href="${settingsUrl}" target="_blank" class="text-blue-600 underline hover:text-blue-800">Configurações → Usuários & Permissões</a>. Você pode ajustar manualmente se necessário.`;
         } else {
             modulesInfoText.innerHTML =
-                `<strong>Nota:</strong> Os mÃ³dulos foram prÃ©-selecionados conforme as configuraÃ§Ãµes padrÃ£o para usuÃ¡rios comuns em <a href="${settingsUrl}" target="_blank" class="text-blue-600 underline hover:text-blue-800">ConfiguraÃ§Ãµes â†’ UsuÃ¡rios & PermissÃµes</a>. VocÃª pode ajustar manualmente se necessÃ¡rio.`;
+                `<strong>Nota:</strong> Os módulos foram pré-selecionados conforme as configurações padrão para usuários comuns em <a href="${settingsUrl}" target="_blank" class="text-blue-600 underline hover:text-blue-800">Configurações → Usuários & Permissões</a>. Você pode ajustar manualmente se necessário.`;
         }
     };
 

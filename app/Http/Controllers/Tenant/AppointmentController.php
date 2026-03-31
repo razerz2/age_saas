@@ -354,6 +354,15 @@ class AppointmentController extends Controller
                     'origin' => Appointment::ORIGIN_INTERNAL,
                 ]
             );
+        } else {
+            $this->notificationDispatcher->dispatchAppointment(
+                $appointment,
+                'appointment.created.doctor',
+                [
+                    'event' => 'appointment_created_doctor',
+                    'origin' => Appointment::ORIGIN_INTERNAL,
+                ]
+            );
         }
 
         // Sincronizar com Google Calendar se o mÃ©dico tiver token

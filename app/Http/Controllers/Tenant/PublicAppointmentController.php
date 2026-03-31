@@ -186,6 +186,15 @@ class PublicAppointmentController extends Controller
                     'origin' => Appointment::ORIGIN_PUBLIC,
                 ]
             );
+        } else {
+            $this->notificationDispatcher->dispatchAppointment(
+                $appointment,
+                'appointment.created.doctor',
+                [
+                    'event' => 'appointment_created_doctor',
+                    'origin' => Appointment::ORIGIN_PUBLIC,
+                ]
+            );
         }
 
         // Salva o ID do agendamento na sessão para permitir visualização

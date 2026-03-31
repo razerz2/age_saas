@@ -270,7 +270,16 @@ class WhatsAppBotAppointmentService
                 [
                     'event' => 'appointment_created_pending_confirmation',
                     'origin' => Appointment::ORIGIN_WHATSAPP_BOT,
-                    'suppress_channels' => ['whatsapp'],
+                    'suppress_patient_channels' => ['whatsapp'],
+                ]
+            );
+        } else {
+            $this->notificationDispatcher->dispatchAppointment(
+                $appointment,
+                'appointment.created.doctor',
+                [
+                    'event' => 'appointment_created_doctor',
+                    'origin' => Appointment::ORIGIN_WHATSAPP_BOT,
                 ]
             );
         }
@@ -355,7 +364,7 @@ class WhatsAppBotAppointmentService
             [
                 'event' => 'appointment_canceled_whatsapp_bot',
                 'origin' => Appointment::ORIGIN_WHATSAPP_BOT,
-                'suppress_channels' => ['whatsapp'],
+                'suppress_patient_channels' => ['whatsapp'],
             ]
         );
 

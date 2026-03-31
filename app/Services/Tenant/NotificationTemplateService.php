@@ -35,6 +35,7 @@ class NotificationTemplateService
                 'key' => (string) $key,
                 'label' => (string) ($templateConfig['label'] ?? $key),
                 'channels' => $channels,
+                'audience' => $this->resolveAudienceByKey((string) $key, $templateConfig),
             ];
         }
 
@@ -260,5 +261,18 @@ class NotificationTemplateService
     private function catalogTemplates(): array
     {
         return (array) config('notification_templates.templates', []);
+    }
+
+    /**
+     * @param  array<string, mixed>  $templateConfig
+     */
+    private function resolveAudienceByKey(string $key, array $templateConfig): string
+    {
+        $configured = strtolower(trim((string) ($templateConfig['audience'] ?? '')));
+        if (in_array($configured, ['patient', 'doctor'], true)) {
+            return $configured;
+        }
+
+        return str_ends_with($key, '.doctor') ? 'doctor' : 'patient';
     }
 }

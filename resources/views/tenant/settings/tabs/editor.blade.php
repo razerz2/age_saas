@@ -11,6 +11,20 @@
         <div class="xl:col-span-8 space-y-6">
             <form method="GET" action="{{ workspace_route('tenant.settings.index') }}" id="notification-template-filter-form" class="grid grid-cols-1 gap-4">
                 <input type="hidden" name="tab" value="editor">
+                @php $selectedAudience = $editor['current_audience'] ?? 'patient'; @endphp
+
+                <div>
+                    <label for="editor_audience" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Destinatário</label>
+                    <select id="editor_audience" name="audience"
+                            onchange="document.getElementById('notification-template-filter-form').submit();"
+                            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white">
+                        @foreach(($editor['audiences'] ?? ['patient', 'doctor']) as $audience)
+                            <option value="{{ $audience }}" {{ $selectedAudience === $audience ? 'selected' : '' }}>
+                                {{ $audience === 'doctor' ? 'Médico' : 'Paciente' }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
 
                 <div>
                     <label for="editor_channel" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Canal</label>
@@ -44,7 +58,7 @@
 
             @if(empty($editor['current_key']))
                 <div class="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:border-amber-700 dark:bg-amber-900/20 dark:text-amber-300">
-                    Nenhum template disponível para o canal selecionado.
+                    Nenhum template disponível para o destinatário/canal selecionado.
                 </div>
             @else
                 <div class="space-y-6">
@@ -52,6 +66,9 @@
                         <div>
                             <p class="text-sm text-gray-500 dark:text-gray-400">Template selecionado</p>
                             <h3 class="text-base font-semibold text-gray-900 dark:text-white">{{ $editor['current_key'] }}</h3>
+                            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                Destinatário: {{ ($editor['current_audience'] ?? 'patient') === 'doctor' ? 'Médico' : 'Paciente' }}
+                            </p>
                         </div>
                         @if(($editor['is_custom'] ?? false) === true)
                             <span class="inline-flex items-center rounded-full bg-blue-100 px-3 py-1 text-xs font-medium text-blue-700 dark:bg-blue-900/30 dark:text-blue-300">
@@ -81,6 +98,7 @@
                     <form method="POST" action="{{ workspace_route('tenant.settings.editor.save') }}" class="space-y-4">
                         @csrf
                         <input type="hidden" name="tab" value="editor">
+                        <input type="hidden" name="audience" value="{{ $editor['current_audience'] ?? 'patient' }}">
                         <input type="hidden" name="channel" value="{{ $editor['current_channel'] }}">
                         <input type="hidden" name="key" value="{{ $editor['current_key'] }}">
 

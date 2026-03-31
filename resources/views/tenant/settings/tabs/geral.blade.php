@@ -23,7 +23,7 @@
                         </label>
                         <select name="timezone" required
                                 class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white">
-                            @foreach (DateTimeZone::listIdentifiers(DateTimeZone::AMERICA) as $tz)
+                            @foreach (($brazilTimezones ?? config('timezones.brazil', ['America/Sao_Paulo'])) as $tz)
                                 <option value="{{ $tz }}" {{ ($settings['timezone'] ?? 'America/Sao_Paulo') == $tz ? 'selected' : '' }}>
                                     {{ $tz }}
                                 </option>

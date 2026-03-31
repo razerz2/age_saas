@@ -335,7 +335,25 @@ class WaitlistService
                     'origin' => $origin,
                 ]
             );
+        } else {
+            $this->notificationDispatcher->dispatchAppointment(
+                $result['appointment'],
+                'appointment.created.doctor',
+                [
+                    'event' => 'waitlist_offer_accepted_created_doctor',
+                    'origin' => $origin,
+                ]
+            );
         }
+
+        $this->notificationDispatcher->dispatchWaitlist(
+            $result['entry'],
+            'waitlist.accepted.doctor',
+            [
+                'event' => 'waitlist_offer_accepted_doctor',
+                'origin' => $origin,
+            ]
+        );
 
         return $result;
     }

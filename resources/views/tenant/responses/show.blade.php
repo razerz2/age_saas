@@ -94,53 +94,52 @@
                     Respostas
                 </h3>
 
-                @if($response->answers && $response->answers->count() > 0)
-                    @if($response->form->sections && $response->form->sections->count() > 0)
-                        @foreach($response->form->sections->sortBy('position') as $section)
-                            <div class="bg-gray-50 dark:bg-gray-900/40 rounded-lg p-4 border border-gray-200/60 dark:border-gray-700/60 mb-4">
-                                <h4 class="text-sm font-semibold text-gray-900 dark:text-white mb-3">
-                                    {{ $section->title ?? 'Seção sem título' }}
-                                </h4>
+                @php
+                    $generalQuestions = $response->form->questions->where('section_id', null)->sortBy('position');
+                    $sections = $response->form->sections->sortBy('position');
+                    $answersByQuestionId = $response->answers->keyBy('question_id');
+                    $hasQuestions = $generalQuestions->isNotEmpty() || $sections->isNotEmpty();
+                @endphp
 
-                                @foreach($section->questions->sortBy('position') as $question)
-                                    @php
-                                        $answer = $response->answers->firstWhere('question_id', $question->id);
-                                    @endphp
-                                    <div class="py-3 border-b border-gray-200 dark:border-gray-700 last:border-b-0">
-                                        <label class="text-sm text-gray-600 dark:text-gray-300 block mb-1">
-                                            <strong>{{ $question->label }}</strong>
-                                        </label>
-                                        @if($answer)
-                                            <p class="text-sm text-gray-900 dark:text-white">{{ \App\Support\FormAnswerFormatter::format($question->type, $answer->value) }}</p>
-                                        @else
-                                            <p class="text-sm text-gray-500 dark:text-gray-400">Não respondido</p>
-                                        @endif
-                                    </div>
-                                @endforeach
+                @if(!$hasQuestions)
+                    <div class="p-4 bg-blue-50 border border-blue-200 rounded-lg dark:bg-blue-900/20 dark:border-blue-800">
+                        <p class="text-sm text-blue-800 dark:text-blue-200">Nenhuma pergunta encontrada neste formulário.</p>
+                    </div>
+                @else
+                    <div class="space-y-6 mb-6">
+                        @if($generalQuestions->isNotEmpty())
+                            <div class="rounded-xl border border-gray-200 dark:border-gray-700">
+                                <div class="px-4 py-3 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/40">
+                                    <h3 class="text-sm font-semibold text-gray-900 dark:text-white">Perguntas Gerais</h3>
+                                </div>
+                                <div class="p-4 space-y-4">
+                                    @foreach($generalQuestions as $question)
+                                        @include('tenant.responses.partials.answer-field', [
+                                            'question' => $question,
+                                            'answer' => $answersByQuestionId->get($question->id),
+                                        ])
+                                    @endforeach
+                                </div>
+                            </div>
+                        @endif
+
+                        @foreach($sections as $section)
+                            <div class="rounded-xl border border-gray-200 dark:border-gray-700">
+                                <div class="px-4 py-3 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/40">
+                                    <h3 class="text-sm font-semibold text-gray-900 dark:text-white">{{ $section->title ?: 'Seção sem título' }}</h3>
+                                </div>
+                                <div class="p-4 space-y-4">
+                                    @forelse($section->questions->sortBy('position') as $question)
+                                        @include('tenant.responses.partials.answer-field', [
+                                            'question' => $question,
+                                            'answer' => $answersByQuestionId->get($question->id),
+                                        ])
+                                    @empty
+                                        <p class="text-sm text-gray-500 dark:text-gray-400">Nenhuma pergunta nesta seção.</p>
+                                    @endforelse
+                                </div>
                             </div>
                         @endforeach
-                    @else
-                        <div class="bg-gray-50 dark:bg-gray-900/40 rounded-lg p-4 border border-gray-200/60 dark:border-gray-700/60">
-                            @foreach($response->form->questions->sortBy('position') as $question)
-                                @php
-                                    $answer = $response->answers->firstWhere('question_id', $question->id);
-                                @endphp
-                                <div class="py-3 border-b border-gray-200 dark:border-gray-700 last:border-b-0">
-                                    <label class="text-sm text-gray-600 dark:text-gray-300 block mb-1">
-                                        <strong>{{ $question->label }}</strong>
-                                    </label>
-                                    @if($answer)
-                                        <p class="text-sm text-gray-900 dark:text-white">{{ \App\Support\FormAnswerFormatter::format($question->type, $answer->value) }}</p>
-                                    @else
-                                        <p class="text-sm text-gray-500 dark:text-gray-400">Não respondido</p>
-                                    @endif
-                                </div>
-                            @endforeach
-                        </div>
-                    @endif
-                @else
-                    <div class="p-4 bg-blue-50 border border-blue-200 rounded-lg dark:bg-blue-900/20 dark:border-blue-800">
-                        <p class="text-sm text-blue-800 dark:text-blue-200">Nenhuma resposta encontrada.</p>
                     </div>
                 @endif
 

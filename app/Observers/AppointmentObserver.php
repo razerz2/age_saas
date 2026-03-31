@@ -9,6 +9,7 @@ use App\Models\Tenant\OnlineAppointmentInstruction;
 use App\Models\Platform\Tenant;
 use App\Jobs\Tenant\SendAppointmentNotificationsJob;
 use App\Services\NotificationService;
+use App\Services\Tenant\NotificationDispatcher;
 use App\Services\Tenant\GoogleCalendarService;
 use App\Services\Tenant\AppleCalendarService;
 use Illuminate\Support\Facades\Log;
@@ -19,13 +20,16 @@ class AppointmentObserver
 {
     protected GoogleCalendarService $googleCalendarService;
     protected AppleCalendarService $appleCalendarService;
+    protected NotificationDispatcher $notificationDispatcher;
 
     public function __construct(
         GoogleCalendarService $googleCalendarService,
-        AppleCalendarService $appleCalendarService
+        AppleCalendarService $appleCalendarService,
+        NotificationDispatcher $notificationDispatcher
     ) {
         $this->googleCalendarService = $googleCalendarService;
         $this->appleCalendarService = $appleCalendarService;
+        $this->notificationDispatcher = $notificationDispatcher;
     }
 
     /**
@@ -164,6 +168,17 @@ class AppointmentObserver
                     $appointment,
                     ['old_status' => $oldStatus, 'new_status' => $newStatus]
                 );
+
+                if ($newStatus === 'rescheduled') {
+                    $this->notificationDispatcher->dispatchAppointment(
+                        $appointment,
+                        'appointment.rescheduled.doctor',
+                        [
+                            'event' => 'appointment_rescheduled_doctor',
+                            'origin' => (string) ($appointment->origin ?? ''),
+                        ]
+                    );
+                }
             }
         } else {
             // Se não mudou o status, notifica apenas como atualizado

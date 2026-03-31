@@ -869,7 +869,7 @@ Route::prefix('workspace/{slug}')
             Route::post('settings/editor/save', [SettingsController::class, 'updateNotificationTemplate'])->name('settings.editor.save');
             Route::post('settings/editor/restore', [SettingsController::class, 'restoreNotificationTemplate'])->name('settings.editor.restore');
             Route::get('settings/whatsapp/test/{service}', [WhatsAppSettingsTestController::class, 'testConnection'])
-                ->where('service', 'meta|zapi|waha')
+                ->where('service', 'meta|zapi|waha|evolution')
                 ->name('settings.whatsapp.test.connection');
             Route::post('settings/whatsapp/test/meta/send', [WhatsAppSettingsTestController::class, 'testMetaSend'])
                 ->name('settings.whatsapp.test.meta.send');
@@ -877,6 +877,8 @@ Route::prefix('workspace/{slug}')
                 ->name('settings.whatsapp.test.zapi.send');
             Route::post('settings/whatsapp/test/waha/send', [WhatsAppSettingsTestController::class, 'testWahaSend'])
                 ->name('settings.whatsapp.test.waha.send');
+            Route::post('settings/whatsapp/test/evolution/send', [WhatsAppSettingsTestController::class, 'testEvolutionSend'])
+                ->name('settings.whatsapp.test.evolution.send');
             Route::prefix('settings/waha')
                 ->name('settings.waha.')
                 ->group(function () {

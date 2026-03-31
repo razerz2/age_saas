@@ -5,6 +5,7 @@ namespace App\Services\Tenant;
 use App\Models\Platform\Tenant as PlatformTenant;
 use App\Models\Tenant\Appointment;
 use App\Models\Tenant\AppointmentWaitlistEntry;
+use App\Models\Tenant\FormResponse;
 use App\Models\Tenant\TenantSetting;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Route;
@@ -27,6 +28,7 @@ class NotificationContextBuilder
             'calendar.doctor.user',
             'specialty',
             'type',
+            'onlineInstructions',
         ]);
 
         $tenant = $this->resolveCurrentTenant();
@@ -35,6 +37,8 @@ class NotificationContextBuilder
 
         $doctor = $appointment->doctor ?? $appointment->calendar?->doctor;
         $doctorName = $this->normalizeString($doctor?->user?->name_full ?? $doctor?->user?->name);
+        $doctorPhone = $this->normalizeString($doctor?->user?->telefone ?? $doctor?->user?->phone);
+        $doctorEmail = $this->normalizeString($doctor?->user?->email);
         $doctorSpecialty = $this->normalizeString(
             $appointment->specialty?->name ?? $doctor?->specialties?->first()?->name
         );
@@ -44,6 +48,10 @@ class NotificationContextBuilder
         $confirmationExpiresAt = $this->toCarbon($appointment->confirmation_expires_at, $timezone);
 
         $confirmToken = $this->normalizeString($appointment->confirmation_token);
+        $onlineInstructions = $appointment->onlineInstructions;
+        $sentByEmailAt = $this->toCarbon($onlineInstructions?->sent_by_email_at, $timezone);
+        $sentByWhatsappAt = $this->toCarbon($onlineInstructions?->sent_by_whatsapp_at, $timezone);
+        $isOnlineAppointment = $this->normalizeString($appointment->appointment_mode) === 'online';
 
         return [
             'clinic' => $this->buildClinicContext($tenant, $slug),
@@ -55,11 +63,15 @@ class NotificationContextBuilder
             'doctor' => [
                 'name' => $doctorName,
                 'specialty' => $doctorSpecialty,
+                'phone' => $doctorPhone,
+                'email' => $doctorEmail,
             ],
             // Alias kept for compatibility with existing placeholders in defaults.
             'professional' => [
                 'name' => $doctorName,
                 'specialty' => $doctorSpecialty,
+                'phone' => $doctorPhone,
+                'email' => $doctorEmail,
             ],
             'appointment' => [
                 'date' => $this->formatDate($startsAt),
@@ -72,6 +84,16 @@ class NotificationContextBuilder
                 'status' => $this->normalizeString($appointment->status),
                 'confirmation_expires_at' => $this->formatDateTime($confirmationExpiresAt),
             ],
+            'online' => [
+                'is_online' => $isOnlineAppointment,
+                'meeting_link' => $this->normalizeString($onlineInstructions?->meeting_link),
+                'meeting_app' => $this->normalizeString($onlineInstructions?->meeting_app),
+                'general_instructions' => $this->normalizeString($onlineInstructions?->general_instructions),
+                'patient_instructions' => $this->normalizeString($onlineInstructions?->patient_instructions),
+                'instructions_sent' => $sentByEmailAt !== null || $sentByWhatsappAt !== null,
+                'instructions_sent_email_at' => $this->formatDateTime($sentByEmailAt),
+                'instructions_sent_whatsapp_at' => $this->formatDateTime($sentByWhatsappAt),
+            ],
             'links' => [
                 'appointment_confirm' => $confirmToken
                     ? $this->buildPublicRoute('public.appointment.confirm', $slug, ['token' => $confirmToken])
@@ -82,6 +104,9 @@ class NotificationContextBuilder
                 'appointment_details' => $this->buildPublicRoute('public.appointment.show', $slug, [
                     'appointment_id' => $appointment->id,
                 ]),
+                'online_appointment_details' => $isOnlineAppointment
+                    ? $this->buildTenantRoute('tenant.online-appointments.show', $slug, ['appointment' => $appointment->id])
+                    : null,
                 'waitlist_offer' => null,
             ],
             'waitlist' => [
@@ -104,6 +129,8 @@ class NotificationContextBuilder
         $timezone = $this->resolveTimezone();
 
         $doctorName = $this->normalizeString($entry->doctor?->user?->name_full ?? $entry->doctor?->user?->name);
+        $doctorPhone = $this->normalizeString($entry->doctor?->user?->telefone ?? $entry->doctor?->user?->phone);
+        $doctorEmail = $this->normalizeString($entry->doctor?->user?->email);
         $doctorSpecialty = $this->normalizeString($entry->doctor?->specialties?->first()?->name);
 
         $startsAt = $this->toCarbon($entry->starts_at, $timezone);
@@ -122,11 +149,15 @@ class NotificationContextBuilder
             'doctor' => [
                 'name' => $doctorName,
                 'specialty' => $doctorSpecialty,
+                'phone' => $doctorPhone,
+                'email' => $doctorEmail,
             ],
             // Alias kept for compatibility with existing placeholders in defaults.
             'professional' => [
                 'name' => $doctorName,
                 'specialty' => $doctorSpecialty,
+                'phone' => $doctorPhone,
+                'email' => $doctorEmail,
             ],
             'appointment' => [
                 'date' => $this->formatDate($startsAt),
@@ -139,10 +170,21 @@ class NotificationContextBuilder
                 'status' => null,
                 'confirmation_expires_at' => null,
             ],
+            'online' => [
+                'is_online' => false,
+                'meeting_link' => null,
+                'meeting_app' => null,
+                'general_instructions' => null,
+                'patient_instructions' => null,
+                'instructions_sent' => false,
+                'instructions_sent_email_at' => null,
+                'instructions_sent_whatsapp_at' => null,
+            ],
             'links' => [
                 'appointment_confirm' => null,
                 'appointment_cancel' => null,
                 'appointment_details' => null,
+                'online_appointment_details' => null,
                 'waitlist_offer' => $offerToken
                     ? $this->buildPublicRoute('public.waitlist.offer.show', $slug, ['token' => $offerToken])
                     : null,
@@ -152,6 +194,94 @@ class NotificationContextBuilder
                 'status' => $this->normalizeString($entry->status),
             ],
         ];
+    }
+
+    public function buildForFormResponse(FormResponse $formResponse): array
+    {
+        $formResponse->loadMissing([
+            'form',
+            'patient',
+            'appointment.patient',
+            'appointment.doctor.user',
+            'appointment.doctor.specialties',
+            'appointment.calendar.doctor.user',
+            'appointment.specialty',
+            'appointment.type',
+        ]);
+
+        $tenant = $this->resolveCurrentTenant();
+        $slug = $this->resolveTenantSlug($tenant);
+        $timezone = $this->resolveTimezone();
+        $submittedAt = $this->toCarbon($formResponse->submitted_at, $timezone);
+
+        $context = $formResponse->appointment
+            ? $this->buildForAppointment($formResponse->appointment)
+            : [
+                'clinic' => $this->buildClinicContext($tenant, $slug),
+                'patient' => [
+                    'name' => $this->normalizeString($formResponse->patient?->full_name),
+                    'phone' => $this->normalizeString($formResponse->patient?->phone),
+                    'email' => $this->normalizeString($formResponse->patient?->email),
+                ],
+                'doctor' => [
+                    'name' => null,
+                    'specialty' => null,
+                    'phone' => null,
+                    'email' => null,
+                ],
+                'professional' => [
+                    'name' => null,
+                    'specialty' => null,
+                    'phone' => null,
+                    'email' => null,
+                ],
+                'appointment' => [
+                    'date' => null,
+                    'time' => null,
+                    'datetime' => null,
+                    'starts_at' => null,
+                    'ends_at' => null,
+                    'type' => null,
+                    'mode' => null,
+                    'status' => null,
+                    'confirmation_expires_at' => null,
+                ],
+                'online' => [
+                    'is_online' => false,
+                    'meeting_link' => null,
+                    'meeting_app' => null,
+                    'general_instructions' => null,
+                    'patient_instructions' => null,
+                    'instructions_sent' => false,
+                    'instructions_sent_email_at' => null,
+                    'instructions_sent_whatsapp_at' => null,
+                ],
+                'links' => [
+                    'appointment_confirm' => null,
+                    'appointment_cancel' => null,
+                    'appointment_details' => null,
+                    'online_appointment_details' => null,
+                    'waitlist_offer' => null,
+                ],
+                'waitlist' => [
+                    'offer_expires_at' => null,
+                    'status' => null,
+                ],
+            ];
+
+        $context['form'] = [
+            'id' => $formResponse->form_id ? (string) $formResponse->form_id : null,
+            'name' => $this->normalizeString($formResponse->form?->name),
+        ];
+        $context['response'] = [
+            'id' => (string) $formResponse->id,
+            'submitted_at' => $this->formatDateTime($submittedAt),
+        ];
+        $context['links']['form_response'] = $this->buildTenantRoute('tenant.responses.show', $slug, [
+            'id' => $formResponse->id,
+        ]);
+
+        return $context;
     }
 
     private function buildClinicContext(?PlatformTenant $tenant, ?string $slug): array
@@ -192,6 +322,19 @@ class NotificationContextBuilder
     }
 
     private function buildPublicRoute(string $routeName, ?string $slug, array $parameters = []): ?string
+    {
+        if (!$slug || !Route::has($routeName)) {
+            return null;
+        }
+
+        try {
+            return route($routeName, array_merge(['slug' => $slug], $parameters));
+        } catch (Throwable) {
+            return null;
+        }
+    }
+
+    private function buildTenantRoute(string $routeName, ?string $slug, array $parameters = []): ?string
     {
         if (!$slug || !Route::has($routeName)) {
             return null;
@@ -300,4 +443,3 @@ class NotificationContextBuilder
         return implode(' - ', $parts);
     }
 }
-

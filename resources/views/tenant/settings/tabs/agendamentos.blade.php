@@ -119,7 +119,7 @@
             <div class="md:col-span-2">
                 <div class="p-4 border border-gray-200 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700">
                     <h3 class="text-sm font-semibold text-gray-900 dark:text-white mb-3">
-                        ConfirmaÁ„o com Prazo (Hold)
+                        Confirma√ß√£o com Prazo (Hold)
                     </h3>
                     <div class="space-y-4">
                         <label class="flex items-start cursor-pointer">
@@ -130,7 +130,7 @@
                                    {{ ($settings['appointments.confirmation.enabled'] ?? false) ? 'checked' : '' }}
                                    class="mt-1 w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
                             <div class="ml-3">
-                                <span class="block text-sm font-medium text-gray-900 dark:text-white">Habilitar confirmaÁ„o com prazo</span>
+                                <span class="block text-sm font-medium text-gray-900 dark:text-white">Habilitar confirma√ß√£o com prazo</span>
                                 <span class="block text-xs text-gray-500 dark:text-gray-400 mt-1">
                                     Se desabilitado, o comportamento atual permanece inalterado.
                                 </span>
@@ -139,14 +139,14 @@
 
                         <div>
                             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                Prazo de confirmaÁ„o (minutos)
+                                Prazo de confirma√ß√£o (minutos)
                             </label>
                             <input type="number" name="appointments_confirmation_ttl_minutes"
                                    value="{{ $settings['appointments.confirmation.ttl_minutes'] ?? '30' }}"
                                    min="1" max="1440" step="1"
                                    class="w-full md:w-72 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white">
                             <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                                Valor padr„o: 30 minutos.
+                                Valor padr√£o: 30 minutos.
                             </p>
                         </div>
                     </div>
@@ -169,7 +169,7 @@
                             <div class="ml-3">
                                 <span class="block text-sm font-medium text-gray-900 dark:text-white">Habilitar waitlist</span>
                                 <span class="block text-xs text-gray-500 dark:text-gray-400 mt-1">
-                                    Se desabilitado, n„o altera o fluxo atual de agendamento.
+                                    Se desabilitado, n√£o altera o fluxo atual de agendamento.
                                 </span>
                             </div>
                         </label>
@@ -183,12 +183,12 @@
                                        value="{{ $settings['appointments.waitlist.offer_ttl_minutes'] ?? '15' }}"
                                        min="1" max="1440" step="1"
                                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white">
-                                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Valor padr„o: 15.</p>
+                                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Valor padr√£o: 15.</p>
                             </div>
 
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                    M·ximo por slot
+                                    M√°ximo por slot
                                 </label>
                                 <input type="number" name="appointments_waitlist_max_per_slot"
                                        value="{{ $settings['appointments.waitlist.max_per_slot'] ?? '' }}"

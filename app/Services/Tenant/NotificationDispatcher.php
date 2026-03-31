@@ -5,6 +5,7 @@ namespace App\Services\Tenant;
 use App\Models\Tenant\TenantSetting;
 use App\Models\Tenant\Appointment;
 use App\Models\Tenant\AppointmentWaitlistEntry;
+use App\Models\Tenant\FormResponse;
 use Illuminate\Support\Facades\Log;
 use RuntimeException;
 use Throwable;
@@ -12,6 +13,19 @@ use Throwable;
 class NotificationDispatcher
 {
     public const CHANNELS = ['email', 'whatsapp'];
+    private const AUDIENCES = ['patient', 'doctor'];
+    private const DOCTOR_TEMPLATE_KEY_MAP = [
+        'appointment.pending_confirmation' => 'appointment.created.doctor',
+        'appointment.confirmed' => 'appointment.confirmed.doctor',
+        'appointment.canceled' => 'appointment.canceled.doctor',
+        'appointment.rescheduled' => 'appointment.rescheduled.doctor',
+        'waitlist.offered' => 'waitlist.offered.doctor',
+        'waitlist.accepted' => 'waitlist.accepted.doctor',
+        'form.response_submitted' => 'form.response_submitted.doctor',
+        'online_appointment.updated' => 'online_appointment.updated.doctor',
+        'online_appointment.instructions_sent' => 'online_appointment.instructions_sent.doctor',
+        'online_appointment.form_response_submitted' => 'online_appointment.form_response_submitted.doctor',
+    ];
 
     public function __construct(
         private readonly WhatsAppUnofficialTemplateResolutionService $whatsAppUnofficialTemplateResolutionService,
@@ -79,6 +93,34 @@ class NotificationDispatcher
         ]));
     }
 
+    public function dispatchFormResponse(FormResponse $formResponse, string $key, array $meta = []): void
+    {
+        $tenantId = $this->resolveTenantId();
+        if ($tenantId === null) {
+            Log::warning('Nao foi possivel despachar notificacao de resposta de formulario: tenant ausente.', [
+                'key' => $key,
+                'form_response_id' => (string) $formResponse->id,
+            ]);
+            return;
+        }
+
+        try {
+            $context = $this->contextBuilder->buildForFormResponse($formResponse);
+        } catch (Throwable $e) {
+            Log::warning('Falha ao montar contexto de notificacao de resposta de formulario.', [
+                'tenant_id' => $tenantId,
+                'key' => $key,
+                'form_response_id' => (string) $formResponse->id,
+                'error' => $e->getMessage(),
+            ]);
+            return;
+        }
+
+        $this->dispatchWithContext($tenantId, $key, $context, array_merge($meta, [
+            'form_response_id' => (string) $formResponse->id,
+        ]));
+    }
+
     /**
      * @return array<string, array{
      *     channel:string,
@@ -117,6 +159,10 @@ class NotificationDispatcher
     {
         $baseMeta = $this->sanitizeMeta($meta);
         $suppressedChannels = $this->normalizeSuppressedChannels($baseMeta['suppress_channels'] ?? null);
+        $suppressedChannelsByAudience = [
+            'patient' => $this->normalizeSuppressedChannels($baseMeta['suppress_patient_channels'] ?? null),
+            'doctor' => $this->normalizeSuppressedChannels($baseMeta['suppress_doctor_channels'] ?? null),
+        ];
 
         foreach (self::CHANNELS as $channel) {
             if (in_array($channel, $suppressedChannels, true)) {
@@ -124,41 +170,90 @@ class NotificationDispatcher
                     'tenant_id' => $tenantId,
                     'channel' => $channel,
                     'key' => $key,
+                    'scope' => 'global',
                 ]));
                 continue;
             }
 
-            try {
-                $payload = $this->buildChannelPayload($tenantId, $channel, $key, $context, $baseMeta);
-                $renderLogPayload = array_merge($baseMeta, [
-                    'tenant_id' => $tenantId,
-                    'channel' => $channel,
-                    'key' => $key,
-                    'template_source' => $payload['template_source'],
-                    'template_resolution_scope' => $payload['template_resolution_scope'],
-                    'used_platform_fallback' => $payload['used_platform_fallback'],
-                    'template_fallback_reason' => $payload['template_fallback_reason'],
-                    'subject_sha256' => $payload['subject'] !== null ? hash('sha256', $payload['subject']) : null,
-                    'subject_length' => $payload['subject'] !== null ? strlen($payload['subject']) : 0,
-                    'message_sha256' => hash('sha256', $payload['message']),
-                    'message_length' => strlen($payload['message']),
-                ]);
-
-                if ($this->shouldLogBody()) {
-                    $renderLogPayload['subject'] = $payload['subject'];
-                    $renderLogPayload['message'] = $payload['message'];
+            foreach (self::AUDIENCES as $audience) {
+                if (in_array($channel, $suppressedChannelsByAudience[$audience], true)) {
+                    Log::info('notification_channel_suppressed', array_merge($baseMeta, [
+                        'tenant_id' => $tenantId,
+                        'channel' => $channel,
+                        'audience' => $audience,
+                        'key' => $key,
+                        'scope' => 'audience',
+                    ]));
+                    continue;
                 }
 
-                Log::info('Notificacao renderizada por template.', $renderLogPayload);
+                if (!$this->isChannelEnabled($channel, $audience)) {
+                    Log::info('notification_channel_disabled', array_merge($baseMeta, [
+                        'tenant_id' => $tenantId,
+                        'channel' => $channel,
+                        'audience' => $audience,
+                        'key' => $key,
+                    ]));
+                    continue;
+                }
 
-                $this->deliverChannel($tenantId, $payload, $context, $baseMeta);
-            } catch (Throwable $e) {
-                Log::warning('Falha ao renderizar notificacao por template.', array_merge($baseMeta, [
-                    'tenant_id' => $tenantId,
-                    'channel' => $channel,
-                    'key' => $key,
-                    'error' => $e->getMessage(),
-                ]));
+                $resolvedKey = $this->resolveAudienceTemplateKey($key, $audience);
+                if ($resolvedKey === null) {
+                    continue;
+                }
+
+                $recipientPath = $this->resolveRecipientPath($channel, $audience);
+                if ($recipientPath === null) {
+                    continue;
+                }
+
+                $to = $this->normalizeRecipient(data_get($context, $recipientPath));
+                if ($to === null) {
+                    Log::warning('notification_missing_recipient', array_merge($baseMeta, [
+                        'tenant_id' => $tenantId,
+                        'channel' => $channel,
+                        'audience' => $audience,
+                        'key' => $resolvedKey,
+                    ]));
+                    continue;
+                }
+
+                try {
+                    $payload = $this->buildChannelPayload($tenantId, $channel, $resolvedKey, $context, $baseMeta);
+                    $renderLogPayload = array_merge($baseMeta, [
+                        'tenant_id' => $tenantId,
+                        'channel' => $channel,
+                        'audience' => $audience,
+                        'requested_key' => $key,
+                        'key' => $payload['key'],
+                        'template_source' => $payload['template_source'],
+                        'template_resolution_scope' => $payload['template_resolution_scope'],
+                        'used_platform_fallback' => $payload['used_platform_fallback'],
+                        'template_fallback_reason' => $payload['template_fallback_reason'],
+                        'subject_sha256' => $payload['subject'] !== null ? hash('sha256', $payload['subject']) : null,
+                        'subject_length' => $payload['subject'] !== null ? strlen($payload['subject']) : 0,
+                        'message_sha256' => hash('sha256', $payload['message']),
+                        'message_length' => strlen($payload['message']),
+                    ]);
+
+                    if ($this->shouldLogBody()) {
+                        $renderLogPayload['subject'] = $payload['subject'];
+                        $renderLogPayload['message'] = $payload['message'];
+                    }
+
+                    Log::info('Notificacao renderizada por template.', $renderLogPayload);
+
+                    $this->deliverToRecipient($tenantId, $to, $audience, $payload, $baseMeta);
+                } catch (Throwable $e) {
+                    Log::warning('Falha ao renderizar notificacao por template.', array_merge($baseMeta, [
+                        'tenant_id' => $tenantId,
+                        'channel' => $channel,
+                        'audience' => $audience,
+                        'requested_key' => $key,
+                        'key' => $resolvedKey,
+                        'error' => $e->getMessage(),
+                    ]));
+                }
             }
         }
     }
@@ -316,6 +411,7 @@ class NotificationDispatcher
         $allowedKeys = [
             'appointment_id',
             'waitlist_entry_id',
+            'form_response_id',
             'origin',
             'event',
             'key',
@@ -326,6 +422,8 @@ class NotificationDispatcher
             'template_fallback_reason',
             'run_id',
             'suppress_channels',
+            'suppress_patient_channels',
+            'suppress_doctor_channels',
         ];
 
         $sanitized = [];
@@ -335,7 +433,7 @@ class NotificationDispatcher
             }
 
             $value = $meta[$allowedKey];
-            if ($allowedKey === 'suppress_channels' && is_array($value)) {
+            if (in_array($allowedKey, ['suppress_channels', 'suppress_patient_channels', 'suppress_doctor_channels'], true) && is_array($value)) {
                 $sanitized[$allowedKey] = $this->normalizeSuppressedChannels($value);
                 continue;
             }
@@ -391,6 +489,34 @@ class NotificationDispatcher
         return array_values(array_unique($normalized));
     }
 
+    private function resolveAudienceTemplateKey(string $key, string $audience): ?string
+    {
+        if ($audience === 'patient') {
+            return str_ends_with($key, '.doctor') ? null : $key;
+        }
+
+        if ($audience === 'doctor') {
+            if (str_ends_with($key, '.doctor')) {
+                return $key;
+            }
+
+            return self::DOCTOR_TEMPLATE_KEY_MAP[$key] ?? null;
+        }
+
+        return null;
+    }
+
+    private function resolveRecipientPath(string $channel, string $audience): ?string
+    {
+        return match ($channel . ':' . $audience) {
+            'whatsapp:patient' => 'patient.phone',
+            'whatsapp:doctor' => 'doctor.phone',
+            'email:patient' => 'patient.email',
+            'email:doctor' => 'doctor.email',
+            default => null,
+        };
+    }
+
     /**
      * @param  array{
      *     channel:string,
@@ -405,30 +531,12 @@ class NotificationDispatcher
      *     template_fallback_reason:?string
      * }  $payload
      */
-    private function deliverChannel(string $tenantId, array $payload, array $context, array $baseMeta): void
+    private function deliverToRecipient(string $tenantId, string $to, string $audience, array $payload, array $baseMeta): void
     {
         $channel = $payload['channel'];
-        if (!$this->isChannelEnabled($channel)) {
-            Log::info('notification_channel_disabled', array_merge($baseMeta, [
-                'tenant_id' => $tenantId,
-                'channel' => $channel,
-                'key' => $payload['key'],
-            ]));
-            return;
-        }
-
         if ($channel === 'whatsapp') {
-            $to = $this->normalizeRecipient(data_get($context, 'patient.phone'));
-            if ($to === null) {
-                Log::warning('notification_missing_recipient', array_merge($baseMeta, [
-                    'tenant_id' => $tenantId,
-                    'channel' => $channel,
-                    'key' => $payload['key'],
-                ]));
-                return;
-            }
-
             $this->whatsAppSender->send($tenantId, $to, $payload['message'], array_merge($baseMeta, [
+                'audience' => $audience,
                 'key' => $payload['key'],
                 'template_source' => $payload['template_source'],
                 'is_override' => $payload['is_override'],
@@ -437,27 +545,17 @@ class NotificationDispatcher
                 'used_platform_fallback' => $payload['used_platform_fallback'],
                 'template_fallback_reason' => $payload['template_fallback_reason'],
             ]));
-
             return;
         }
 
         if ($channel === 'email') {
-            $to = $this->normalizeRecipient(data_get($context, 'patient.email'));
-            if ($to === null) {
-                Log::warning('notification_missing_recipient', array_merge($baseMeta, [
-                    'tenant_id' => $tenantId,
-                    'channel' => $channel,
-                    'key' => $payload['key'],
-                ]));
-                return;
-            }
-
             $this->emailSender->send(
                 $tenantId,
                 $to,
                 (string) ($payload['subject'] ?? ''),
                 $payload['message'],
                 array_merge($baseMeta, [
+                    'audience' => $audience,
                     'key' => $payload['key'],
                     'template_source' => $payload['template_source'],
                     'is_override' => $payload['is_override'],
@@ -467,11 +565,13 @@ class NotificationDispatcher
         }
     }
 
-    private function isChannelEnabled(string $channel): bool
+    private function isChannelEnabled(string $channel, string $audience = 'patient'): bool
     {
-        $settingKey = match ($channel) {
-            'email' => 'notifications.send_email_to_patients',
-            'whatsapp' => 'notifications.send_whatsapp_to_patients',
+        $settingKey = match ($channel . ':' . $audience) {
+            'email:patient' => 'notifications.send_email_to_patients',
+            'whatsapp:patient' => 'notifications.send_whatsapp_to_patients',
+            'email:doctor' => 'notifications.send_email_to_doctors',
+            'whatsapp:doctor' => 'notifications.send_whatsapp_to_doctors',
             default => null,
         };
 

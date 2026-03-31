@@ -11,7 +11,10 @@ use App\Services\WhatsApp\WhatsAppBusinessProvider;
 use App\Services\WhatsApp\WahaClient;
 use App\Services\WhatsApp\WahaProvider;
 use App\Services\WhatsApp\ZApiProvider;
+use App\Services\WhatsApp\EvolutionClient;
+use App\Services\WhatsApp\EvolutionProvider;
 use App\Services\WhatsApp\PhoneNormalizer;
+use App\Services\Tenant\WhatsAppBotConfigService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
@@ -21,7 +24,7 @@ class WhatsAppSettingsTestController extends Controller
 {
     public function testConnection(Request $request, string $service): JsonResponse
     {
-        $this->applyTenantWhatsAppConfig();
+        $this->applyTenantWhatsAppConfig($this->resolveConfigScope($request));
 
         $providerSettings = TenantSetting::whatsappProvider();
         $providerParam = (string) $request->input('provider', $request->input('service', ''));
@@ -42,6 +45,7 @@ class WhatsAppSettingsTestController extends Controller
             'meta' => $this->testMetaConnection(),
             'zapi' => $this->testZapiConnection(),
             'waha' => $this->testWahaConnection(),
+            'evolution' => $this->testEvolutionConnection(),
             default => response()->json([
                 'status' => 'ERROR',
                 'message' => 'Servico nao suportado.',
@@ -51,7 +55,7 @@ class WhatsAppSettingsTestController extends Controller
 
     public function testMetaSend(TestWhatsAppSendRequest $request): JsonResponse
     {
-        $this->applyTenantWhatsAppConfig();
+        $this->applyTenantWhatsAppConfig($this->resolveConfigScope($request));
 
         try {
             $provider = new WhatsAppBusinessProvider();
@@ -73,7 +77,7 @@ class WhatsAppSettingsTestController extends Controller
 
     public function testZapiSend(TestWhatsAppSendRequest $request): JsonResponse
     {
-        $this->applyTenantWhatsAppConfig();
+        $this->applyTenantWhatsAppConfig($this->resolveConfigScope($request));
 
         try {
             $provider = new ZApiProvider();
@@ -109,7 +113,7 @@ class WhatsAppSettingsTestController extends Controller
             ]);
         }
 
-        $this->applyTenantWhatsAppConfig();
+        $this->applyTenantWhatsAppConfig($this->resolveConfigScope($request));
 
         $provider = new WahaProvider();
         $sessionCheck = $provider->testSession();
@@ -159,8 +163,60 @@ class WhatsAppSettingsTestController extends Controller
         }
     }
 
-    private function applyTenantWhatsAppConfig(): void
+    public function testEvolutionSend(TestWhatsAppSendRequest $request): JsonResponse
     {
+        $this->applyTenantWhatsAppConfig($this->resolveConfigScope($request));
+
+        try {
+            $provider = new EvolutionProvider();
+            $ok = $provider->sendMessage($request->input('number'), $request->input('message'));
+
+            return response()->json([
+                'status' => $ok ? 'OK' : 'ERROR',
+                'message' => $ok
+                    ? 'Mensagem enviada com sucesso.'
+                    : 'Falha ao enviar mensagem de teste Evolution. Verifique as configuracoes.',
+            ]);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'status' => 'ERROR',
+                'message' => $e->getMessage() ?: 'Erro ao enviar mensagem de teste Evolution.',
+            ]);
+        }
+    }
+
+    private function applyTenantWhatsAppConfig(string $scope = 'notifications'): void
+    {
+        if ($scope === 'bot') {
+            $effectiveConfig = app(WhatsAppBotConfigService::class)->resolveEffectiveProviderConfig();
+            $provider = strtolower(trim((string) ($effectiveConfig['provider'] ?? 'whatsapp_business')));
+            if ($provider === '') {
+                $provider = 'whatsapp_business';
+            }
+
+            config([
+                'services.whatsapp.force_runtime_provider' => true,
+                'services.whatsapp.runtime_provider' => $provider,
+                'services.whatsapp.provider' => $provider,
+                'services.whatsapp.business.api_url' => (string) config('services.whatsapp.business.api_url', 'https://graph.facebook.com/v22.0'),
+                'services.whatsapp.business.token' => (string) ($effectiveConfig['meta_access_token'] ?? ''),
+                'services.whatsapp.business.phone_id' => (string) ($effectiveConfig['meta_phone_number_id'] ?? ''),
+                'services.whatsapp.business.waba_id' => (string) ($effectiveConfig['meta_waba_id'] ?? ''),
+                'services.whatsapp.zapi.api_url' => (string) ($effectiveConfig['zapi_api_url'] ?? 'https://api.z-api.io'),
+                'services.whatsapp.zapi.token' => (string) ($effectiveConfig['zapi_token'] ?? ''),
+                'services.whatsapp.zapi.client_token' => (string) ($effectiveConfig['zapi_client_token'] ?? ''),
+                'services.whatsapp.zapi.instance_id' => (string) ($effectiveConfig['zapi_instance_id'] ?? ''),
+                'services.whatsapp.waha.base_url' => (string) ($effectiveConfig['waha_base_url'] ?? ''),
+                'services.whatsapp.waha.api_key' => (string) ($effectiveConfig['waha_api_key'] ?? ''),
+                'services.whatsapp.waha.session' => (string) ($effectiveConfig['waha_session'] ?? 'default'),
+                'services.whatsapp.evolution.base_url' => (string) ($effectiveConfig['evolution_base_url'] ?? ''),
+                'services.whatsapp.evolution.api_key' => (string) ($effectiveConfig['evolution_api_key'] ?? ''),
+                'services.whatsapp.evolution.instance' => (string) ($effectiveConfig['evolution_instance'] ?? 'default'),
+            ]);
+
+            return;
+        }
+
         $providerSettings = TenantSetting::whatsappProvider();
         $resolver = new ProviderConfigResolver();
 
@@ -222,6 +278,12 @@ class WhatsAppSettingsTestController extends Controller
         ]);
 
         $resolver->applyUnofficialRuntimeConfigs($providerSettings);
+    }
+
+    private function resolveConfigScope(Request $request): string
+    {
+        $scope = strtolower(trim((string) $request->input('scope', 'notifications')));
+        return $scope === 'bot' ? 'bot' : 'notifications';
     }
 
     private function testMetaConnection(): JsonResponse
@@ -298,6 +360,41 @@ class WhatsAppSettingsTestController extends Controller
         return response()->json($payload);
     }
 
+    private function testEvolutionConnection(): JsonResponse
+    {
+        $client = EvolutionClient::fromConfig();
+        $connection = $client->testConnection();
+        $state = $client->getConnectionState();
+
+        $stateValue = strtoupper(trim((string) ($state['state'] ?? '')));
+        $readyStates = ['OPEN', 'CONNECTED', 'ONLINE', 'WORKING', 'READY'];
+        $isReady = $stateValue !== '' && in_array($stateValue, $readyStates, true);
+
+        if (!empty($connection['ok']) && !empty($state['ok']) && $isReady) {
+            return response()->json([
+                'status' => 'OK',
+                'message' => 'Conexao Evolution API OK! Instancia conectada.',
+                'data' => [
+                    'state' => $stateValue,
+                ],
+            ]);
+        }
+
+        $fallbackMessage = !empty($connection['ok'])
+            ? 'Conexao Evolution estabelecida, mas a instancia nao esta conectada.'
+            : 'Falha ao validar Evolution API.';
+
+        return response()->json([
+            'status' => 'ERROR',
+            'message' => $fallbackMessage,
+            'data' => [
+                'state' => $stateValue !== '' ? $stateValue : null,
+                'connection_status' => $connection['status'] ?? null,
+                'state_status' => $state['status'] ?? null,
+            ],
+        ]);
+    }
+
     private function resolveGlobalWhatsAppMetaValue(array $keys, string $fallback = ''): string
     {
         foreach ($keys as $key) {
@@ -331,6 +428,12 @@ class WhatsAppSettingsTestController extends Controller
             'waha-core' => 'waha',
             'whatsapp_waha' => 'waha',
             'whatsapp-waha' => 'waha',
+            'evolution_api' => 'evolution',
+            'evolution-api' => 'evolution',
+            'evo_api' => 'evolution',
+            'evo-api' => 'evolution',
+            'whatsapp_evolution' => 'evolution',
+            'whatsapp-evolution' => 'evolution',
         ];
 
         return $aliases[$normalized] ?? $normalized;
@@ -346,7 +449,7 @@ class WhatsAppSettingsTestController extends Controller
 
         foreach ($candidates as $candidate) {
             $normalized = $this->normalizeService((string) $candidate);
-            if (in_array($normalized, ['meta', 'zapi', 'waha'], true)) {
+            if (in_array($normalized, ['meta', 'zapi', 'waha', 'evolution'], true)) {
                 return $normalized;
             }
         }
