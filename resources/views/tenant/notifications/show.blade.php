@@ -69,7 +69,17 @@
                                 <dt class="text-xs text-gray-500 dark:text-gray-400">{{ ucfirst(str_replace('_', ' ', $key)) }}</dt>
                             </div>
                             <div class="md:col-span-2">
-                                <dd class="text-sm text-gray-900 dark:text-gray-100">{{ $value }}</dd>
+                                <dd class="text-sm text-gray-900 dark:text-gray-100">
+                                    @if(is_array($value) || is_object($value))
+                                        <pre class="text-xs whitespace-pre-wrap break-words bg-gray-50 dark:bg-gray-900/40 rounded p-2">{{ json_encode($value, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT) }}</pre>
+                                    @elseif(is_bool($value))
+                                        {{ $value ? 'Sim' : 'Nao' }}
+                                    @elseif(is_null($value))
+                                        -
+                                    @else
+                                        {{ $value }}
+                                    @endif
+                                </dd>
                             </div>
                         @endforeach
                     </dl>
