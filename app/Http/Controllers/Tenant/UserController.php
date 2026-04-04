@@ -77,7 +77,7 @@ class UserController extends Controller
                 // Conta quantos usuários já existem com este role
                 $usersQuery = User::where('role', $role);
 
-                // Tenants antigos podem ainda nÃ£o ter a coluna `is_system` aplicada.
+                // Tenants antigos podem ainda não ter a coluna `is_system` aplicada.
                 if (Schema::connection((new User())->getConnectionName())->hasColumn('users', 'is_system')) {
                     $usersQuery->where(function ($query) {
                         $query->whereNull('is_system')->orWhere('is_system', false);

@@ -114,7 +114,7 @@
                             </button>
                         </div>
                         <p id="manual-order-help" class="mt-2 text-xs text-gray-500 dark:text-gray-400">
-                            Modo manual ativo: arraste pelos Ã­cones para reordenar a fila.
+                            Modo manual ativo: arraste pelos ícones para reordenar a fila.
                         </p>
                     </div>
 

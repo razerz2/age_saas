@@ -821,7 +821,7 @@ class MedicalAppointmentController extends Controller
             if (!empty($doctorIds)) {
                 $invalidDoctorIds = array_diff($doctorIds, $allowedDoctorIds);
                 if (!empty($invalidDoctorIds)) {
-                    abort(403, 'VocÃª nÃ£o tem permissÃ£o para acessar um ou mais mÃ©dicos selecionados.');
+                    abort(403, 'Você não tem permissão para acessar um ou mais médicos selecionados.');
                 }
 
                 $query->whereHas('calendar', function ($calendarQuery) use ($doctorIds) {
@@ -837,7 +837,7 @@ class MedicalAppointmentController extends Controller
             return;
         }
 
-        abort(403, 'VocÃª nÃ£o tem permissÃ£o para acessar atendimentos.');
+        abort(403, 'Você não tem permissão para acessar atendimentos.');
     }
 
     /**
@@ -856,7 +856,7 @@ class MedicalAppointmentController extends Controller
             'starts_at_display' => $appointment->starts_at?->format('d/m/Y H:i'),
             'patient_name' => (string) ($appointment->patient->full_name ?? 'N/A'),
             'doctor_name' => (string) ($doctorUser->name_full ?? $doctorUser->name ?? 'N/A'),
-            'type_name' => (string) ($appointment->type->name ?? 'Tipo nÃ£o informado'),
+            'type_name' => (string) ($appointment->type->name ?? 'Tipo não informado'),
             'queue_position' => $appointment->queue_position,
         ];
     }

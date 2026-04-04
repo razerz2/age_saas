@@ -4,12 +4,14 @@ namespace App\Http\Controllers\Tenant\Integrations;
 
 use App\Http\Controllers\Controller;
 use App\Models\Platform\Tenant as PlatformTenant;
+use App\Models\Tenant\Calendar;
 use App\Models\Tenant\Doctor;
 use App\Models\Tenant\GoogleCalendarToken;
 use App\Services\Tenant\GoogleCalendarService;
 use Carbon\Carbon;
 use Google_Client;
 use Illuminate\Http\Request;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
@@ -52,13 +54,15 @@ class GoogleCalendarController extends Controller
     public function connect(string $slug, string $doctor, Request $request)
     {
         $doctorId = (string) $doctor;
+        $requestedCalendarId = (string) $request->query('calendar_id', '');
 
         try {
             $doctor = Doctor::findOrFail($doctorId);
             $this->ensureDoctorCanInitiateAuth($doctor);
+            $returnCalendarId = $this->resolveReturnCalendarId($doctor, $requestedCalendarId);
 
             if (!$this->hasGoogleOAuthCredentials()) {
-                return redirect()->route('tenant.integrations.google.index', ['slug' => $slug])
+                return $this->redirectToCalendarSync($slug, $doctor->id, $returnCalendarId)
                     ->with('error', 'Credenciais globais do Google nao configuradas na Platform (com fallback para ambiente).');
             }
 
@@ -76,6 +80,7 @@ class GoogleCalendarController extends Controller
             Cache::put($this->stateCacheKey($stateNonce), [
                 'slug' => $tenant->subdomain,
                 'doctor' => (string) $doctor->id,
+                'return_calendar_id' => $returnCalendarId,
                 'initiator_user_id' => (string) (Auth::guard('tenant')->id() ?? ''),
             ], now()->addMinutes(15));
 
@@ -113,7 +118,7 @@ class GoogleCalendarController extends Controller
                 'error' => $e->getMessage(),
             ]);
 
-            return redirect()->route('tenant.integrations.google.index', ['slug' => $slug])
+            return $this->redirectToCalendarSync($slug, $doctorId, $requestedCalendarId)
                 ->with('error', 'Erro ao conectar com Google Calendar. Tente novamente.');
         }
     }
@@ -123,6 +128,8 @@ class GoogleCalendarController extends Controller
         $stateRaw = (string) $request->get('state', '');
         $state = $this->decodeState($stateRaw);
         $tenantSlug = $state['slug'] ?? null;
+        $doctorId = (string) ($state['doctor'] ?? '');
+        $returnCalendarId = null;
 
         try {
             if ($tenantSlug) {
@@ -137,23 +144,27 @@ class GoogleCalendarController extends Controller
                     ->with('error', 'Estado OAuth invalido. Conecte novamente.');
             }
 
+            $stateNonce = $state['nonce'] ?? null;
+            $stateData = $this->consumeValidStateNonce($stateNonce, $tenantSlug, $doctorId);
+            if ($stateData) {
+                $returnCalendarId = (string) ($stateData['return_calendar_id'] ?? '');
+            }
+
             $error = $request->get('error');
             if ($error) {
-                return redirect()->route('tenant.integrations.google.index', ['slug' => $tenantSlug])
+                return $this->redirectToCalendarSync($tenantSlug, $doctorId, $returnCalendarId)
                     ->with('error', 'Erro ao autorizar acesso ao Google Calendar: ' . $error);
             }
 
-            $code = $request->get('code');
-            $doctorId = $state['doctor'] ?? null;
-            $stateNonce = $state['nonce'] ?? null;
-
-            if (!$this->isValidStateNonce($stateNonce, $tenantSlug, $doctorId)) {
-                return redirect()->route('tenant.integrations.google.index', ['slug' => $tenantSlug])
+            if (!$stateData) {
+                return $this->redirectToCalendarSync($tenantSlug, $doctorId, $returnCalendarId)
                     ->with('error', 'Fluxo de autorizacao invalido ou expirado. Inicie novamente a conexao.');
             }
 
+            $code = $request->get('code');
+
             if (!$code || !$doctorId) {
-                return redirect()->route('tenant.integrations.google.index', ['slug' => $tenantSlug])
+                return $this->redirectToCalendarSync($tenantSlug, $doctorId, $returnCalendarId)
                     ->with('error', 'Dados de autorizacao incompletos. Conecte novamente.');
             }
 
@@ -161,9 +172,10 @@ class GoogleCalendarController extends Controller
             $tenant->makeCurrent();
 
             $doctor = Doctor::findOrFail($doctorId);
+            $returnCalendarId = $this->resolveReturnCalendarId($doctor, $returnCalendarId);
 
             if (!$this->hasGoogleOAuthCredentials()) {
-                return redirect()->route('tenant.integrations.google.index', ['slug' => $tenantSlug])
+                return $this->redirectToCalendarSync($tenantSlug, $doctorId, $returnCalendarId)
                     ->with('error', 'Credenciais globais do Google nao configuradas na Platform (com fallback para ambiente).');
             }
 
@@ -183,7 +195,7 @@ class GoogleCalendarController extends Controller
                     'error' => $reason,
                 ]);
 
-                return redirect()->route('tenant.integrations.google.index', ['slug' => $tenantSlug])
+                return $this->redirectToCalendarSync($tenantSlug, $doctorId, $returnCalendarId)
                     ->with('error', 'Erro ao obter token de acesso do Google.');
             }
 
@@ -202,8 +214,8 @@ class GoogleCalendarController extends Controller
                 ]
             );
 
-            return redirect()->route('tenant.integrations.google.index', ['slug' => $tenantSlug])
-                ->with('success', 'Integracao com Google Calendar realizada com sucesso.');
+            return $this->redirectToCalendarSync($tenantSlug, $doctorId, $returnCalendarId)
+                ->with('success', 'Sincronização com Google Calendar conectada com sucesso.');
         } catch (\Throwable $e) {
             Log::error('Erro no callback do Google Calendar', [
                 'tenant_slug' => $tenantSlug,
@@ -212,7 +224,7 @@ class GoogleCalendarController extends Controller
             ]);
 
             if ($tenantSlug) {
-                return redirect()->route('tenant.integrations.google.index', ['slug' => $tenantSlug])
+                return $this->redirectToCalendarSync($tenantSlug, $doctorId, $returnCalendarId)
                     ->with('error', 'Erro ao processar autorizacao. Tente novamente.');
             }
 
@@ -221,13 +233,16 @@ class GoogleCalendarController extends Controller
         }
     }
 
-    public function disconnect(string $slug, string $doctor)
+    public function disconnect(string $slug, string $doctor, Request $request)
     {
         $doctorId = (string) $doctor;
+        $requestedCalendarId = (string) $request->input('calendar_id', '');
+        $returnContext = (string) $request->input('return_context', '');
 
         try {
             $doctor = Doctor::findOrFail($doctorId);
             $this->ensureDoctorCanManage($doctor);
+            $returnCalendarId = $this->resolveReturnCalendarId($doctor, $requestedCalendarId);
 
             $token = $doctor->googleCalendarToken;
 
@@ -239,12 +254,12 @@ class GoogleCalendarController extends Controller
                     'tenant_slug' => $slug,
                 ]);
 
-                return redirect()->route('tenant.integrations.google.index', ['slug' => $slug])
-                    ->with('success', 'Integracao com Google Calendar removida com sucesso.');
+                return $this->redirectToCalendarSync($slug, $doctor->id, $returnCalendarId, $returnContext)
+                    ->with('success', 'Sincronização com Google Calendar desconectada com sucesso.');
             }
 
-            return redirect()->route('tenant.integrations.google.index', ['slug' => $slug])
-                ->with('info', 'Nenhuma integracao encontrada para este medico.');
+            return $this->redirectToCalendarSync($slug, $doctor->id, $returnCalendarId, $returnContext)
+                ->with('info', 'Nenhuma sincronização encontrada para este profissional.');
         } catch (\Throwable $e) {
             Log::error('Erro ao desconectar Google Calendar', [
                 'doctor_id' => $doctorId,
@@ -252,8 +267,8 @@ class GoogleCalendarController extends Controller
                 'error' => $e->getMessage(),
             ]);
 
-            return redirect()->route('tenant.integrations.google.index', ['slug' => $slug])
-                ->with('error', 'Erro ao remover integracao. Tente novamente.');
+            return $this->redirectToCalendarSync($slug, $doctorId, $requestedCalendarId, $returnContext)
+                ->with('error', 'Erro ao remover sincronização. Tente novamente.');
         }
     }
 
@@ -341,10 +356,10 @@ class GoogleCalendarController extends Controller
         return 'google_oauth_state:' . $nonce;
     }
 
-    private function isValidStateNonce(?string $nonce, ?string $slug, ?string $doctorId): bool
+    private function consumeValidStateNonce(?string $nonce, ?string $slug, ?string $doctorId): ?array
     {
         if (!$nonce || !$slug || !$doctorId) {
-            return false;
+            return null;
         }
 
         $cacheKey = $this->stateCacheKey($nonce);
@@ -352,11 +367,86 @@ class GoogleCalendarController extends Controller
         Cache::forget($cacheKey);
 
         if (!is_array($stateData)) {
-            return false;
+            return null;
         }
 
-        return (string) ($stateData['slug'] ?? '') === (string) $slug
+        $isValid = (string) ($stateData['slug'] ?? '') === (string) $slug
             && (string) ($stateData['doctor'] ?? '') === (string) $doctorId;
+
+        return $isValid ? $stateData : null;
+    }
+
+    private function resolveReturnCalendarId(Doctor $doctor, ?string $calendarId): ?string
+    {
+        $calendarId = trim((string) $calendarId);
+
+        if ($calendarId !== '') {
+            $calendar = Calendar::query()
+                ->where('id', $calendarId)
+                ->where('doctor_id', $doctor->id)
+                ->first();
+
+            if ($calendar) {
+                return (string) $calendar->id;
+            }
+        }
+
+        $calendar = Calendar::query()
+            ->where('doctor_id', $doctor->id)
+            ->orderByDesc('is_active')
+            ->orderByDesc('created_at')
+            ->first();
+
+        return $calendar ? (string) $calendar->id : null;
+    }
+
+    private function redirectToCalendarSync(
+        string $slug,
+        ?string $doctorId = null,
+        ?string $calendarId = null,
+        ?string $returnContext = null
+    ): RedirectResponse
+    {
+        $returnContext = trim((string) $returnContext);
+        if ($returnContext === 'settings') {
+            return redirect()->to(route('tenant.settings.index', ['slug' => $slug]) . '#integracoes');
+        }
+
+        $resolvedCalendarId = null;
+        $doctorId = trim((string) $doctorId);
+        $calendarId = trim((string) $calendarId);
+
+        if ($calendarId !== '') {
+            $calendarQuery = Calendar::query()->where('id', $calendarId);
+            if ($doctorId !== '') {
+                $calendarQuery->where('doctor_id', $doctorId);
+            }
+            $calendar = $calendarQuery->first();
+            if ($calendar) {
+                $resolvedCalendarId = (string) $calendar->id;
+            }
+        }
+
+        if (!$resolvedCalendarId && $doctorId !== '') {
+            $calendar = Calendar::query()
+                ->where('doctor_id', $doctorId)
+                ->orderByDesc('is_active')
+                ->orderByDesc('created_at')
+                ->first();
+
+            if ($calendar) {
+                $resolvedCalendarId = (string) $calendar->id;
+            }
+        }
+
+        if ($resolvedCalendarId) {
+            return redirect()->route('tenant.agenda-settings.calendar-sync', [
+                'slug' => $slug,
+                'id' => $resolvedCalendarId,
+            ]);
+        }
+
+        return redirect()->route('tenant.agenda-settings.index', ['slug' => $slug]);
     }
 
     private function ensureDoctorCanInitiateAuth(Doctor $doctor): void

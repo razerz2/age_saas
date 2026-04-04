@@ -110,7 +110,7 @@ function initCalendarEventsPage() {
 		},
 		buttonText: {
 			today: 'Hoje',
-			month: 'MÃªs',
+			month: 'Mês',
 			week: 'Semana',
 			day: 'Dia',
 			list: 'Lista',

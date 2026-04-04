@@ -33,7 +33,7 @@ class SettingsController extends Controller
     private const BRAZIL_COUNTRY_ID = 31;
 
     /**
-     * Exibe a pÃ¡gina de configuraÃ§Ãµes
+     * Exibe a página de configurações
      */
     public function index(Request $request)
     {
@@ -70,17 +70,17 @@ class SettingsController extends Controller
             'appointments.waitlist.allow_when_confirmed' => tenant_setting_bool('appointments.waitlist.allow_when_confirmed', true),
             'appointments.waitlist.max_per_slot' => tenant_setting_nullable_int('appointments.waitlist.max_per_slot', null),
             
-            // CalendÃ¡rio
+            // Calendário
             'calendar.default_start_time' => TenantSetting::get('calendar.default_start_time', '08:00'),
             'calendar.default_end_time' => TenantSetting::get('calendar.default_end_time', '18:00'),
             'calendar.default_weekdays' => TenantSetting::get('calendar.default_weekdays', '1,2,3,4,5'), // Segunda a Sexta
             'calendar.show_weekends' => TenantSetting::isEnabled('calendar.show_weekends'),
             
-            // NotificaÃ§Ãµes
-            // Verifica explicitamente se o valor Ã© 'true' para garantir que desabilitados retornem false
+            // Notificações
+            // Verifica explicitamente se o valor é 'true' para garantir que desabilitados retornem false
             'notifications.appointments.enabled' => TenantSetting::get('notifications.appointments.enabled') === 'true',
             'notifications.form_responses.enabled' => TenantSetting::get('notifications.form_responses.enabled') === 'true',
-            // Para notificaÃ§Ãµes aos pacientes, verifica explicitamente se Ã© 'true' (opt-in)
+            // Para notificações aos pacientes, verifica explicitamente se é 'true' (opt-in)
             'notifications.send_email_to_patients' => TenantSetting::get('notifications.send_email_to_patients') === 'true',
             'notifications.send_whatsapp_to_patients' => TenantSetting::get('notifications.send_whatsapp_to_patients') === 'true',
             'notifications.send_email_to_doctors' => TenantSetting::get('notifications.send_email_to_doctors') === 'true',
@@ -173,7 +173,7 @@ class SettingsController extends Controller
             'whatsapp_bot.menu.return_after_fallback' => (bool) data_get($botSettings, 'menu.return_after_fallback', true),
             'whatsapp_bot.menu.options_json' => json_encode((array) data_get($botSettings, 'menu.options', WhatsAppBotConfigService::DEFAULT_MENU_OPTIONS), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE),
             
-            // IntegraÃ§Ãµes
+            // Integrações
             'integrations.google_calendar.enabled' => TenantSetting::isEnabled('integrations.google_calendar.enabled'),
             'integrations.google_calendar.auto_sync' => TenantSetting::isEnabled('integrations.google_calendar.auto_sync'),
             'integrations.apple_calendar.enabled' => TenantSetting::isEnabled('integrations.apple_calendar.enabled'),
@@ -185,7 +185,7 @@ class SettingsController extends Controller
             'professional.label_plural' => TenantSetting::get('professional.label_plural', ''),
             'professional.registration_label' => TenantSetting::get('professional.registration_label', ''),
             
-            // AparÃªncia
+            // Aparência
             'appearance.logo' => $appearanceLogoLight,
             'appearance.logo_mini' => $appearanceLogoMiniLight,
             'appearance.logo_light' => $appearanceLogoLight,
@@ -251,7 +251,7 @@ class SettingsController extends Controller
                 ->groupBy('appointments.doctor_id')
                 ->pluck('last_sync_at', 'doctor_id');
         }
-        // Obter tenant atual para gerar o link de agendamento pÃºblico
+        // Obter tenant atual para gerar o link de agendamento público
         $currentTenant = Tenant::current();
         $publicBookingUrl = null;
         
@@ -418,7 +418,7 @@ class SettingsController extends Controller
             $validated['key'],
             (string) ($validated['audience'] ?? 'patient')
         ))
-            ->with('success', 'Template restaurado para o padrÃ£o.');
+            ->with('success', 'Template restaurado para o padrão.');
     }
 
     /**
@@ -496,7 +496,7 @@ class SettingsController extends Controller
     }
 
     /**
-     * Atualiza as informaÃ§Ãµes de cadastro do tenant
+     * Atualiza as informações de cadastro do tenant
      */
     public function updateRegistration(Request $request)
     {
@@ -535,16 +535,16 @@ class SettingsController extends Controller
         ]);
 
         return redirect()->to(route('tenant.settings.index', ['slug' => tenant()->subdomain]) . '#registration')
-            ->with('success', 'InformaÃ§Ãµes de cadastro atualizadas com sucesso.');
+            ->with('success', 'Informações de cadastro atualizadas com sucesso.');
     }
 
     /**
-     * Exibe a pÃ¡gina dedicada do link de agendamento pÃºblico
-     * Esta pÃ¡gina nÃ£o requer acesso ao mÃ³dulo de configuraÃ§Ãµes
+     * Exibe a página dedicada do link de agendamento público
+     * Esta página não requer acesso ao módulo de configurações
      */
     public function publicBookingLink()
     {
-        // Obter tenant atual para gerar o link de agendamento pÃºblico
+        // Obter tenant atual para gerar o link de agendamento público
         $currentTenant = Tenant::current();
         $publicBookingUrl = null;
         
@@ -556,7 +556,7 @@ class SettingsController extends Controller
     }
 
     /**
-     * Atualiza as configuraÃ§Ãµes gerais
+     * Atualiza as configurações gerais
      */
     public function updateGeneral(Request $request)
     {
@@ -568,7 +568,7 @@ class SettingsController extends Controller
             'time_format' => 'required|string|in:H:i,h:i A',
             'language' => 'required|string|in:pt_BR,en_US,es_ES',
         ], [
-            'timezone.in' => 'Selecione um fuso horÃ¡rio vÃ¡lido do Brasil.',
+            'timezone.in' => 'Selecione um fuso horário válido do Brasil.',
         ]);
 
         TenantSetting::set('timezone', $request->timezone);
@@ -577,11 +577,11 @@ class SettingsController extends Controller
         TenantSetting::set('language', $request->language);
 
         return redirect()->route('tenant.settings.index', ['slug' => tenant()->subdomain])
-            ->with('success', 'ConfiguraÃ§Ãµes gerais atualizadas com sucesso.');
+            ->with('success', 'Configurações gerais atualizadas com sucesso.');
     }
 
     /**
-     * Atualiza as configuraÃ§Ãµes de agendamentos
+     * Atualiza as configurações de agendamentos
      */
     public function updateAppointments(Request $request)
     {
@@ -647,11 +647,11 @@ class SettingsController extends Controller
         );
 
         return redirect()->route('tenant.settings.index', ['slug' => tenant()->subdomain])
-            ->with('success', 'ConfiguraÃ§Ãµes de agendamentos atualizadas com sucesso.');
+            ->with('success', 'Configurações de agendamentos atualizadas com sucesso.');
     }
 
     /**
-     * Atualiza as configuraÃ§Ãµes de calendÃ¡rio
+     * Atualiza as configurações de calendário
      */
     public function updateCalendar(Request $request)
     {
@@ -662,10 +662,10 @@ class SettingsController extends Controller
             'calendar_show_weekends' => 'boolean',
         ]);
 
-        // Valida se o horÃ¡rio de tÃ©rmino Ã© depois do inÃ­cio
+        // Valida se o horário de término é depois do início
         if (strtotime($request->calendar_default_end_time) <= strtotime($request->calendar_default_start_time)) {
             return redirect()->route('tenant.settings.index', ['slug' => tenant()->subdomain])
-                ->with('error', 'O horÃ¡rio de tÃ©rmino deve ser posterior ao horÃ¡rio de inÃ­cio.');
+                ->with('error', 'O horário de término deve ser posterior ao horário de início.');
         }
 
         TenantSetting::set('calendar.default_start_time', $request->calendar_default_start_time);
@@ -679,11 +679,11 @@ class SettingsController extends Controller
         }
 
         return redirect()->route('tenant.settings.index', ['slug' => tenant()->subdomain])
-            ->with('success', 'ConfiguraÃ§Ãµes de calendÃ¡rio atualizadas com sucesso.');
+            ->with('success', 'Configurações de calendário atualizadas com sucesso.');
     }
 
     /**
-     * Atualiza as configuraÃ§Ãµes de notificaÃ§Ãµes
+     * Atualiza as configurações de notificações
      */
     public function updateNotifications(Request $request)
     {
@@ -1038,7 +1038,7 @@ class SettingsController extends Controller
         }
 
         return redirect()->route('tenant.settings.index', ['slug' => tenant()->subdomain])
-            ->with('success', 'ConfiguraÃ§Ãµes de notificaÃ§Ãµes atualizadas com sucesso.');
+            ->with('success', 'Configurações de notificações atualizadas com sucesso.');
     }
 
     /**
@@ -1317,7 +1317,7 @@ class SettingsController extends Controller
     }
 
     /**
-     * Atualiza as configuraÃ§Ãµes de mÃ³dulos padrÃ£o por perfil de usuÃ¡rio
+     * Atualiza as configurações de módulos padrão por perfil de usuário
      */
     public function updateUserDefaults(Request $request)
     {
@@ -1329,29 +1329,29 @@ class SettingsController extends Controller
             'user_defaults.modules_doctor.*' => 'string',
         ]);
 
-        // Salvar mÃ³dulos padrÃ£o para usuÃ¡rio comum
-        // O formulÃ¡rio envia como user_defaults[modules_common_user][], entÃ£o acessamos via dot notation
+        // Salvar módulos padrão para usuário comum
+        // O formulário envia como user_defaults[modules_common_user][], então acessamos via dot notation
         $commonUserModules = $request->input('user_defaults.modules_common_user', []);
-        // Se nÃ£o vier nada, garantir que seja array vazio
+        // Se não vier nada, garantir que seja array vazio
         if (empty($commonUserModules)) {
             $commonUserModules = [];
         }
         TenantSetting::set('user_defaults.modules_common_user', json_encode($commonUserModules));
 
-        // Salvar mÃ³dulos padrÃ£o para mÃ©dico
+        // Salvar módulos padrão para médico
         $doctorModules = $request->input('user_defaults.modules_doctor', []);
-        // Se nÃ£o vier nada, garantir que seja array vazio
+        // Se não vier nada, garantir que seja array vazio
         if (empty($doctorModules)) {
             $doctorModules = [];
         }
         TenantSetting::set('user_defaults.modules_doctor', json_encode($doctorModules));
 
         return redirect()->route('tenant.settings.index', ['slug' => tenant()->subdomain])
-            ->with('success', 'ConfiguraÃ§Ãµes de usuÃ¡rios e permissÃµes atualizadas com sucesso.');
+            ->with('success', 'Configurações de usuários e permissões atualizadas com sucesso.');
     }
 
     /**
-     * Atualiza as configuraÃ§Ãµes de profissionais
+     * Atualiza as configurações de profissionais
      */
     public function updateProfessionals(Request $request)
     {
@@ -1362,30 +1362,30 @@ class SettingsController extends Controller
             'professional_registration_label' => 'nullable|string|max:50',
         ]);
 
-        // Habilitar/desabilitar personalizaÃ§Ã£o
-        // Checkbox nÃ£o marcado nÃ£o Ã© enviado no request, entÃ£o verificamos explicitamente
+        // Habilitar/desabilitar personalização
+        // Checkbox não marcado não é enviado no request, então verificamos explicitamente
         if ($request->filled('professional_customization_enabled') || $request->has('professional_customization_enabled')) {
             TenantSetting::enable('professional.customization_enabled');
             
-            // Salvar rÃ³tulos globais quando personalizaÃ§Ã£o estÃ¡ habilitada
+            // Salvar rótulos globais quando personalização está habilitada
             TenantSetting::set('professional.label_singular', $request->professional_label_singular ?? '');
             TenantSetting::set('professional.label_plural', $request->professional_label_plural ?? '');
             TenantSetting::set('professional.registration_label', $request->professional_registration_label ?? '');
         } else {
             TenantSetting::disable('professional.customization_enabled');
             
-            // Limpar rÃ³tulos quando desabilitado
+            // Limpar rótulos quando desabilitado
             TenantSetting::set('professional.label_singular', '');
             TenantSetting::set('professional.label_plural', '');
             TenantSetting::set('professional.registration_label', '');
         }
 
         return redirect()->route('tenant.settings.index', ['slug' => tenant()->subdomain])
-            ->with('success', 'ConfiguraÃ§Ãµes de profissionais atualizadas com sucesso.');
+            ->with('success', 'Configurações de profissionais atualizadas com sucesso.');
     }
 
     /**
-     * Atualiza as configuraÃ§Ãµes de aparÃªncia (logo e favicon)
+     * Atualiza as configurações de aparência (logo e favicon)
      */
     public function updateAppearance(Request $request)
     {
@@ -1402,12 +1402,12 @@ class SettingsController extends Controller
             'remove_favicon' => 'nullable|boolean',
         ]);
 
-        // Obter tenant atual para criar diretÃ³rio especÃ­fico
+        // Obter tenant atual para criar diretório específico
         $currentTenant = Tenant::current();
         $tenantId = $currentTenant ? $currentTenant->id : 'default';
         $storagePath = 'tenant/' . $tenantId . '/branding';
         
-        // Garantir que o diretÃ³rio existe
+        // Garantir que o diretório existe
         if (!Storage::disk('public')->exists($storagePath)) {
             Storage::disk('public')->makeDirectory($storagePath, 0755, true);
         }
@@ -1450,10 +1450,10 @@ class SettingsController extends Controller
         TenantSetting::set('appearance.logo', $logoLight ?: $logoDark ?: '');
         TenantSetting::set('appearance.logo_mini', $logoMiniLight ?: $logoMiniDark ?: '');
 
-        // Redirecionar para a pÃ¡gina de configuraÃ§Ãµes mantendo o hash na URL
+        // Redirecionar para a página de configurações mantendo o hash na URL
         $redirectUrl = route('tenant.settings.index', ['slug' => tenant()->subdomain]) . '#appearance';
         return redirect($redirectUrl)
-            ->with('success', 'ConfiguraÃ§Ãµes de aparÃªncia atualizadas com sucesso.');
+            ->with('success', 'Configurações de aparência atualizadas com sucesso.');
     }
 
     private function renderNotificationPreview(
@@ -1907,7 +1907,7 @@ class SettingsController extends Controller
 
         $decoded = json_decode($trimmed, true);
         if (!is_array($decoded)) {
-            throw new \InvalidArgumentException('As opÃ§Ãµes do menu devem estar em JSON vÃ¡lido.');
+            throw new \InvalidArgumentException('As opções do menu devem estar em JSON válido.');
         }
 
         $normalized = [];
@@ -1927,7 +1927,7 @@ class SettingsController extends Controller
                     'schedule' => 'Agendar consulta',
                     'view_appointments' => 'Ver meus agendamentos',
                     'cancel_appointments' => 'Cancelar agendamento',
-                    default => 'OpÃ§Ã£o',
+                    default => 'Opção',
                 };
             }
 
@@ -1944,7 +1944,7 @@ class SettingsController extends Controller
         }
 
         if ($normalized === []) {
-            throw new \InvalidArgumentException('As opÃ§Ãµes do menu nÃ£o possuem itens vÃ¡lidos.');
+            throw new \InvalidArgumentException('As opções do menu não possuem itens válidos.');
         }
 
         $normalizedList = array_values($normalized);
@@ -1989,11 +1989,11 @@ class SettingsController extends Controller
     {
         $groups = [
             'CLINIC' => [
-                ['key' => '{{clinic.name}}', 'description' => 'Nome da clÃ­nica'],
-                ['key' => '{{clinic.phone}}', 'description' => 'Telefone da clÃ­nica'],
-                ['key' => '{{clinic.email}}', 'description' => 'E-mail da clÃ­nica'],
-                ['key' => '{{clinic.address}}', 'description' => 'EndereÃ§o da clÃ­nica'],
-                ['key' => '{{clinic.slug}}', 'description' => 'Identificador da clÃ­nica'],
+                ['key' => '{{clinic.name}}', 'description' => 'Nome da clínica'],
+                ['key' => '{{clinic.phone}}', 'description' => 'Telefone da clínica'],
+                ['key' => '{{clinic.email}}', 'description' => 'E-mail da clínica'],
+                ['key' => '{{clinic.address}}', 'description' => 'Endereço da clínica'],
+                ['key' => '{{clinic.slug}}', 'description' => 'Identificador da clínica'],
             ],
             'PATIENT' => [
                 ['key' => '{{patient.name}}', 'description' => 'Nome do paciente'],
@@ -2001,10 +2001,10 @@ class SettingsController extends Controller
                 ['key' => '{{patient.email}}', 'description' => 'E-mail do paciente'],
             ],
             'DOCTOR / PROFESSIONAL' => [
-                ['key' => '{{doctor.name}}', 'description' => 'Nome do mÃ©dico'],
-                ['key' => '{{doctor.specialty}}', 'description' => 'Especialidade do mÃ©dico'],
-                ['key' => '{{doctor.phone}}', 'description' => 'Telefone do mÃ©dico'],
-                ['key' => '{{doctor.email}}', 'description' => 'E-mail do mÃ©dico'],
+                ['key' => '{{doctor.name}}', 'description' => 'Nome do médico'],
+                ['key' => '{{doctor.specialty}}', 'description' => 'Especialidade do médico'],
+                ['key' => '{{doctor.phone}}', 'description' => 'Telefone do médico'],
+                ['key' => '{{doctor.email}}', 'description' => 'E-mail do médico'],
                 ['key' => '{{professional.name}}', 'description' => 'Nome do profissional'],
                 ['key' => '{{professional.specialty}}', 'description' => 'Especialidade do profissional'],
                 ['key' => '{{professional.phone}}', 'description' => 'Telefone do profissional'],
@@ -2014,12 +2014,12 @@ class SettingsController extends Controller
                 ['key' => '{{appointment.date}}', 'description' => 'Data da consulta'],
                 ['key' => '{{appointment.time}}', 'description' => 'Hora da consulta'],
                 ['key' => '{{appointment.datetime}}', 'description' => 'Data e hora da consulta'],
-                ['key' => '{{appointment.starts_at}}', 'description' => 'InÃ­cio da consulta'],
+                ['key' => '{{appointment.starts_at}}', 'description' => 'Início da consulta'],
                 ['key' => '{{appointment.ends_at}}', 'description' => 'Fim da consulta'],
                 ['key' => '{{appointment.type}}', 'description' => 'Tipo de consulta'],
                 ['key' => '{{appointment.mode}}', 'description' => 'Modalidade da consulta'],
                 ['key' => '{{appointment.status}}', 'description' => 'Status da consulta'],
-                ['key' => '{{appointment.confirmation_expires_at}}', 'description' => 'Prazo de confirmaÃ§Ã£o da consulta'],
+                ['key' => '{{appointment.confirmation_expires_at}}', 'description' => 'Prazo de confirmação da consulta'],
             ],
             'LINKS' => [
                 ['key' => '{{links.appointment_confirm}}', 'description' => 'Link para confirmar consulta'],
@@ -2027,26 +2027,26 @@ class SettingsController extends Controller
                 ['key' => '{{links.appointment_details}}', 'description' => 'Link com detalhes da consulta'],
                 ['key' => '{{links.online_appointment_details}}', 'description' => 'Link interno dos detalhes da consulta online'],
                 ['key' => '{{links.waitlist_offer}}', 'description' => 'Link da oferta da lista de espera'],
-                ['key' => '{{links.form_response}}', 'description' => 'Link interno para resposta de formulÃ¡rio'],
-                ['key' => '{{links.form_fill}}', 'description' => 'Link pÃºblico para preenchimento do formulÃ¡rio do agendamento'],
+                ['key' => '{{links.form_response}}', 'description' => 'Link interno para resposta de formulário'],
+                ['key' => '{{links.form_fill}}', 'description' => 'Link público para preenchimento do formulário do agendamento'],
             ],
             'ONLINE APPOINTMENT' => [
-                ['key' => '{{online.is_online}}', 'description' => 'Indica se a consulta Ã© online (true/false)'],
-                ['key' => '{{online.meeting_link}}', 'description' => 'Link da reuniÃ£o online'],
-                ['key' => '{{online.meeting_app}}', 'description' => 'Aplicativo da reuniÃ£o online'],
-                ['key' => '{{online.general_instructions}}', 'description' => 'InstruÃ§Ãµes gerais da consulta online'],
-                ['key' => '{{online.patient_instructions}}', 'description' => 'ObservaÃ§Ãµes ao paciente da consulta online'],
-                ['key' => '{{online.instructions_sent}}', 'description' => 'Indica se instruÃ§Ãµes jÃ¡ foram enviadas'],
-                ['key' => '{{online.instructions_sent_email_at}}', 'description' => 'Data/hora do Ãºltimo envio por e-mail'],
-                ['key' => '{{online.instructions_sent_whatsapp_at}}', 'description' => 'Data/hora do Ãºltimo envio por WhatsApp'],
+                ['key' => '{{online.is_online}}', 'description' => 'Indica se a consulta é online (true/false)'],
+                ['key' => '{{online.meeting_link}}', 'description' => 'Link da reunião online'],
+                ['key' => '{{online.meeting_app}}', 'description' => 'Aplicativo da reunião online'],
+                ['key' => '{{online.general_instructions}}', 'description' => 'Instruções gerais da consulta online'],
+                ['key' => '{{online.patient_instructions}}', 'description' => 'Observações ao paciente da consulta online'],
+                ['key' => '{{online.instructions_sent}}', 'description' => 'Indica se instruções já foram enviadas'],
+                ['key' => '{{online.instructions_sent_email_at}}', 'description' => 'Data/hora do último envio por e-mail'],
+                ['key' => '{{online.instructions_sent_whatsapp_at}}', 'description' => 'Data/hora do último envio por WhatsApp'],
             ],
             'WAITLIST' => [
                 ['key' => '{{waitlist.offer_expires_at}}', 'description' => 'Validade da oferta da lista de espera'],
                 ['key' => '{{waitlist.status}}', 'description' => 'Status da lista de espera'],
             ],
             'FORM / RESPONSE' => [
-                ['key' => '{{form.id}}', 'description' => 'ID do formulÃ¡rio'],
-                ['key' => '{{form.name}}', 'description' => 'Nome do formulÃ¡rio'],
+                ['key' => '{{form.id}}', 'description' => 'ID do formulário'],
+                ['key' => '{{form.name}}', 'description' => 'Nome do formulário'],
                 ['key' => '{{response.id}}', 'description' => 'ID da resposta'],
                 ['key' => '{{response.submitted_at}}', 'description' => 'Data/hora de envio da resposta'],
             ],

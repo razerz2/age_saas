@@ -1,7 +1,7 @@
-﻿@extends('layouts.tailadmin.app')
+@extends('layouts.tailadmin.app')
 
 @section('title', 'Apple Calendar')
-@section('page', 'integrations')
+@section('page', 'agenda-settings-sync')
 
 @section('content')
     <div class="space-y-6">
@@ -10,13 +10,15 @@
                 <ol class="flex flex-wrap items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
                     <li><a href="{{ workspace_route('tenant.dashboard') }}" class="hover:text-gray-800 dark:hover:text-white">Dashboard</a></li>
                     <li>/</li>
-                    <li><a href="{{ workspace_route('tenant.integrations.index') }}" class="hover:text-gray-800 dark:hover:text-white">Integracoes</a></li>
+                    <li><a href="{{ workspace_route('tenant.agenda-settings.index') }}" class="hover:text-gray-800 dark:hover:text-white">Agenda do Profissional</a></li>
+                    <li>/</li>
+                    <li>Sincronização</li>
                     <li>/</li>
                     <li class="font-medium text-gray-900 dark:text-white">Apple Calendar</li>
                 </ol>
             </nav>
-            <h1 class="text-2xl font-semibold text-gray-900 dark:text-white">Apple Calendar por Medico</h1>
-            <p class="text-sm text-gray-600 dark:text-gray-400">Conexao via CalDAV/iCloud por medico, com token salvo no tenant. A autenticacao deve ser iniciada na Agenda do Profissional.</p>
+            <h1 class="text-2xl font-semibold text-gray-900 dark:text-white">Sincronização Apple Calendar</h1>
+            <p class="text-sm text-gray-600 dark:text-gray-400">A sincronização via CalDAV/iCloud é individual por profissional, com token salvo no tenant. A autenticação deve ser iniciada na Agenda do Profissional.</p>
         </div>
 
         @if (session('success'))
@@ -31,28 +33,28 @@
 
         @if (!isset($hasAppleCalendarTable) || !$hasAppleCalendarTable)
             <div class="rounded-lg border border-yellow-200 bg-yellow-50 px-4 py-3 text-sm text-yellow-800 dark:border-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-300">
-                A tabela <code>apple_calendar_tokens</code> nao esta disponivel neste tenant. Execute as migrations tenant de Apple Calendar para habilitar a conexao.
+                A tabela <code>apple_calendar_tokens</code> não está disponível neste tenant. Execute as migrations tenant de Apple Calendar para habilitar a conexão.
             </div>
         @endif
 
         <div class="rounded-xl border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-800">
             <div class="border-b border-gray-200 px-6 py-4 dark:border-gray-700">
-                <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Conexoes por Medico</h2>
+                <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Conexões por Profissional</h2>
             </div>
 
             <div class="p-6 space-y-4">
                 <div class="rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-800 dark:border-blue-800 dark:bg-blue-900/20 dark:text-blue-300">
-                    Recomendado: usar senha de app da Apple (nao a senha principal da conta iCloud).
+                    Recomendado: usar senha de app da Apple (não a senha principal da conta iCloud).
                 </div>
 
                 <div class="overflow-x-auto">
                     <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                         <thead class="bg-gray-50 dark:bg-gray-700/40">
                             <tr>
-                                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-gray-300">Medico</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-gray-300">Profissional</th>
                                 <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-gray-300">Status</th>
                                 <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-gray-300">Atualizado em</th>
-                                <th class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-gray-300">Acoes</th>
+                                <th class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-gray-300">Ações</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-800">
@@ -91,18 +93,18 @@
                                                 </form>
                                         @elseif($canInitiateAuth && isset($hasAppleCalendarTable) && $hasAppleCalendarTable)
                                                 <a href="{{ workspace_route('tenant.integrations.apple.connect.form', ['doctor' => $doctor->id]) }}" class="rounded-lg bg-brand-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-brand-700">
-                                                    Conectar Apple
+                                                    Conectar Apple Calendar
                                                 </a>
                                         @elseif($isOwnerDoctor && !(isset($hasAppleCalendarTable) && $hasAppleCalendarTable))
                                             <span class="text-xs text-gray-500 dark:text-gray-400">Migrations pendentes</span>
                                         @else
-                                            <span class="text-xs text-gray-500 dark:text-gray-400">Apenas governanca</span>
+                                            <span class="text-xs text-gray-500 dark:text-gray-400">Apenas governança administrativa</span>
                                         @endif
                                     </td>
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="4" class="px-4 py-8 text-center text-sm text-gray-500 dark:text-gray-400">Nenhum medico ativo encontrado.</td>
+                                    <td colspan="4" class="px-4 py-8 text-center text-sm text-gray-500 dark:text-gray-400">Nenhum profissional ativo encontrado.</td>
                                 </tr>
                             @endforelse
                         </tbody>
@@ -110,7 +112,7 @@
                 </div>
 
                 <div class="pt-2">
-                    <a href="{{ workspace_route('tenant.integrations.index') }}" class="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-700/60">Voltar para Integracoes</a>
+                    <a href="{{ workspace_route('tenant.agenda-settings.index') }}" class="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-700/60">Voltar para Agenda do Profissional</a>
                 </div>
             </div>
         </div>

@@ -86,7 +86,7 @@
                             @error('doctor_id')
                                 <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
                             @enderror
-                            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Selecione o médico para ver os dias e horÃ¡rios disponÃ­veis</p>
+                            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Selecione o médico para ver os dias e horários disponíveis</p>
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -125,7 +125,7 @@
                             </label>
                             <select name="end_type" id="end_type" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white @error('end_type') border-red-500 @enderror" required>
                                 <option value="none" {{ old('end_type', $recurringAppointment->end_type) == 'none' ? 'selected' : '' }}>Sem limite (infinito)</option>
-                                <option value="total_sessions" {{ old('end_type', $recurringAppointment->end_type) == 'total_sessions' ? 'selected' : '' }}>Total de sessÃµes</option>
+                                <option value="total_sessions" {{ old('end_type', $recurringAppointment->end_type) == 'total_sessions' ? 'selected' : '' }}>Total de sessões</option>
                                 <option value="date" {{ old('end_type', $recurringAppointment->end_type) == 'date' ? 'selected' : '' }}>Data final</option>
                             </select>
                             @error('end_type')
@@ -134,7 +134,7 @@
                         </div>
                         <div id="total_sessions_field" style="display: {{ old('end_type', $recurringAppointment->end_type) == 'total_sessions' ? 'block' : 'none' }};">
                             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                Total de SessÃµes <span class="text-red-500">*</span>
+                                Total de Sessões <span class="text-red-500">*</span>
                             </label>
                             <input type="number" name="total_sessions" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white @error('total_sessions') border-red-500 @enderror"
                                    value="{{ old('total_sessions', $recurringAppointment->total_sessions) }}" min="1">
@@ -176,7 +176,7 @@
                                         </select>
                                     </div>
                                     <div>
-                                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">HorÃ¡rio DisponÃ­vel <span class="text-red-500">*</span></label>
+                                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Horário Disponível <span class="text-red-500">*</span></label>
                                         <select name="rules[{{ $index }}][time_slot]" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white rule-time-slot" required data-selected="{{ $rule->start_time }}|{{ $rule->end_time }}">
                                             <option value="">Carregando...</option>
                                         </select>

@@ -450,28 +450,11 @@
         <li class="nav-item nav-category">Integrações</li>
 
         {{-- INTEGRAÇÕES --}}
-        <li class="nav-item {{ request()->routeIs('tenant.integrations.*') || request()->routeIs('tenant.integrations.google.*') ? 'active' : '' }}">
-            <a class="nav-link" data-bs-toggle="collapse" href="#integrations-menu"
-                aria-expanded="{{ request()->routeIs('tenant.integrations.*') || request()->routeIs('tenant.integrations.google.*') ? 'true' : 'false' }}" title="Integrações">
+        <li class="nav-item {{ request()->routeIs('tenant.integrations.*') ? 'active' : '' }}">
+            <a class="nav-link" href="{{ workspace_route('tenant.integrations.index') }}" title="Integrações">
                 <span class="icon-bg"><i class="mdi mdi-puzzle menu-icon"></i></span>
                 <span class="menu-title">Integrações</span>
-                <i class="menu-arrow"></i>
             </a>
-
-            <div class="collapse {{ request()->routeIs('tenant.integrations.*') || request()->routeIs('tenant.integrations.google.*') || request()->routeIs('tenant.integrations.apple.*') ? 'show' : '' }}" id="integrations-menu">
-                <ul class="nav flex-column sub-menu">
-                    <li class="nav-item">
-                        <a class="nav-link {{ request()->routeIs('tenant.integrations.google.*') ? 'active' : '' }}" href="{{ workspace_route('tenant.integrations.google.index') }}" title="Google Calendar">
-                            <i class="mdi mdi-google me-1"></i> Google Calendar
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link {{ request()->routeIs('tenant.integrations.apple.*') ? 'active' : '' }}" href="{{ workspace_route('tenant.integrations.apple.index') }}" title="Apple Calendar">
-                            <i class="mdi mdi-apple me-1"></i> Apple Calendar
-                        </a>
-                    </li>
-                </ul>
-            </div>
         </li>
 
         {{-- 

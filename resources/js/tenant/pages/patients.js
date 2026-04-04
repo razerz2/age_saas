@@ -298,7 +298,7 @@ function bindLoginForm() {
                     const errorDiv = document.createElement('p');
                     errorDiv.id = 'password-confirmation-error';
                     errorDiv.className = 'mt-1 text-sm text-red-600 dark:text-red-400';
-                    errorDiv.textContent = 'As senhas nÃ£o coincidem.';
+                    errorDiv.textContent = 'As senhas não coincidem.';
                     confirmationField.parentNode.appendChild(errorDiv);
                 }
                 return false;
@@ -324,7 +324,7 @@ function bindLoginForm() {
             showAlert({
                 type: 'warning',
                 title: 'Atenção',
-                message: 'As senhas nÃ£o coincidem. Por favor, verifique.',
+                message: 'As senhas não coincidem. Por favor, verifique.',
             });
         }
     });

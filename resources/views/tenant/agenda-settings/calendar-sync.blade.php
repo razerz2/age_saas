@@ -1,6 +1,6 @@
 @extends('layouts.tailadmin.app')
 
-@section('title', 'Sincronizar Calendario')
+@section('title', 'Sincronização de Calendário')
 @section('page', 'agenda-settings-sync')
 
 @section('content')
@@ -14,7 +14,7 @@
 
 <div class="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
     <div class="mb-6">
-        <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Sincronizar Calendario</h1>
+        <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Sincronização de Calendário</h1>
         <nav class="mt-2 flex" aria-label="Breadcrumb">
             <ol class="inline-flex items-center space-x-1 md:space-x-3">
                 <li class="inline-flex items-center">
@@ -32,7 +32,7 @@
                 <li>
                     <div class="flex items-center">
                         <x-icon name="chevron-right" size="text-sm" class="text-gray-400" />
-                        <span class="ml-1 text-gray-500 dark:text-gray-400">Sincronizacao</span>
+                        <span class="ml-1 text-gray-500 dark:text-gray-400">Sincronização</span>
                     </div>
                 </li>
             </ol>
@@ -65,7 +65,7 @@
                     <p class="mt-1 text-sm font-medium text-gray-900 dark:text-gray-100">{{ $calendar->name }}</p>
                 </div>
                 <div>
-                    <p class="text-xs uppercase text-gray-500 dark:text-gray-400">Ultima sincronizacao</p>
+                    <p class="text-xs uppercase text-gray-500 dark:text-gray-400">Última sincronização</p>
                     <p class="mt-1 text-sm font-medium text-gray-900 dark:text-gray-100">
                         {{ $lastSyncAt ? \Carbon\Carbon::parse($lastSyncAt)->format('d/m/Y H:i') : '-' }}
                     </p>
@@ -77,9 +77,9 @@
     @if (!$canInitiateAuth)
         <div class="mt-6 rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-800 dark:border-blue-800 dark:bg-blue-900/20 dark:text-blue-300">
             @if ($user && $user->role === 'admin')
-                A governanca administrativa permite revogar vinculos, mas a autenticacao da conta deve ser feita pelo proprio profissional.
+                A governança administrativa permite revogar vínculos, mas a autenticação da conta deve ser feita pelo próprio profissional.
             @elseif ($user && $user->role === 'user')
-                Seu perfil nao possui permissao para conectar contas de calendario.
+                Seu perfil não possui permissão para conectar contas de calendário.
             @endif
         </div>
     @endif
@@ -92,7 +92,7 @@
                     @if ($googleToken)
                         <span class="inline-flex rounded-full bg-green-100 px-2.5 py-1 text-xs font-medium text-green-700 dark:bg-green-900/30 dark:text-green-300">Conectado</span>
                     @else
-                        <span class="inline-flex rounded-full bg-gray-100 px-2.5 py-1 text-xs font-medium text-gray-700 dark:bg-gray-700 dark:text-gray-300">Nao conectado</span>
+                        <span class="inline-flex rounded-full bg-gray-100 px-2.5 py-1 text-xs font-medium text-gray-700 dark:bg-gray-700 dark:text-gray-300">Não conectado</span>
                     @endif
                 </div>
             </div>
@@ -105,6 +105,7 @@
                         <form action="{{ workspace_route('tenant.integrations.google.disconnect', ['doctor' => $doctor->id]) }}" method="POST">
                             @csrf
                             @method('DELETE')
+                            <input type="hidden" name="calendar_id" value="{{ $calendar->id }}">
                             <button type="submit" class="rounded-lg border border-red-300 px-3 py-1.5 text-xs font-medium text-red-700 hover:bg-red-50 dark:border-red-700 dark:text-red-300 dark:hover:bg-red-900/20">
                                 Desconectar
                             </button>
@@ -112,8 +113,8 @@
                     @endif
 
                     @if ($canInitiateAuth)
-                        <a href="{{ workspace_route('tenant.integrations.google.connect', ['doctor' => $doctor->id]) }}" class="rounded-lg bg-brand-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-brand-700">
-                            {{ $googleToken ? 'Trocar conta' : 'Conectar Google' }}
+                        <a href="{{ workspace_route('tenant.integrations.google.connect', ['doctor' => $doctor->id, 'calendar_id' => $calendar->id]) }}" class="rounded-lg bg-brand-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-brand-700">
+                            {{ $googleToken ? 'Trocar conta' : 'Conectar Google Calendar' }}
                         </a>
                     @endif
                 </div>
@@ -127,19 +128,20 @@
                     @if ($appleToken)
                         <span class="inline-flex rounded-full bg-green-100 px-2.5 py-1 text-xs font-medium text-green-700 dark:bg-green-900/30 dark:text-green-300">Conectado</span>
                     @else
-                        <span class="inline-flex rounded-full bg-gray-100 px-2.5 py-1 text-xs font-medium text-gray-700 dark:bg-gray-700 dark:text-gray-300">Nao conectado</span>
+                        <span class="inline-flex rounded-full bg-gray-100 px-2.5 py-1 text-xs font-medium text-gray-700 dark:bg-gray-700 dark:text-gray-300">Não conectado</span>
                     @endif
                 </div>
             </div>
             <div class="space-y-4 p-6">
                 <p class="text-sm text-gray-600 dark:text-gray-300">
-                    Conexao por CalDAV com credenciais do profissional.
+                    Conexão por CalDAV com credenciais do profissional.
                 </p>
                 <div class="flex flex-wrap gap-2">
                     @if ($appleToken && $canRevokeConnection)
                         <form action="{{ workspace_route('tenant.integrations.apple.disconnect', ['doctor' => $doctor->id]) }}" method="POST">
                             @csrf
                             @method('DELETE')
+                            <input type="hidden" name="calendar_id" value="{{ $calendar->id }}">
                             <button type="submit" class="rounded-lg border border-red-300 px-3 py-1.5 text-xs font-medium text-red-700 hover:bg-red-50 dark:border-red-700 dark:text-red-300 dark:hover:bg-red-900/20">
                                 Desconectar
                             </button>
@@ -147,8 +149,8 @@
                     @endif
 
                     @if ($canInitiateAuth)
-                        <a href="{{ workspace_route('tenant.integrations.apple.connect.form', ['doctor' => $doctor->id]) }}" class="rounded-lg bg-brand-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-brand-700">
-                            {{ $appleToken ? 'Trocar conta' : 'Conectar Apple' }}
+                        <a href="{{ workspace_route('tenant.integrations.apple.connect.form', ['doctor' => $doctor->id, 'calendar_id' => $calendar->id]) }}" class="rounded-lg bg-brand-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-brand-700">
+                            {{ $appleToken ? 'Trocar conta' : 'Conectar Apple Calendar' }}
                         </a>
                     @endif
                 </div>

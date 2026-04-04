@@ -4,9 +4,11 @@ namespace App\Http\Controllers\Tenant\Integrations;
 
 use App\Http\Controllers\Controller;
 use App\Models\Tenant\AppleCalendarToken;
+use App\Models\Tenant\Calendar;
 use App\Models\Tenant\Doctor;
 use App\Services\Tenant\AppleCalendarService;
 use Illuminate\Http\Request;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
@@ -63,32 +65,35 @@ class AppleCalendarController extends Controller
         return view('tenant.integrations.apple.index', compact('doctors', 'user', 'hasAppleCalendarTable'));
     }
 
-    public function showConnectForm(string $slug, string $doctor)
+    public function showConnectForm(string $slug, string $doctor, Request $request)
     {
         $doctorId = (string) $doctor;
         $doctor = Doctor::findOrFail($doctorId);
         $this->ensureDoctorCanInitiateAuth($doctor);
+        $returnCalendarId = $this->resolveReturnCalendarId($doctor, (string) $request->query('calendar_id', ''));
 
         if (!$this->hasAppleCalendarTable()) {
-            return redirect()->route('tenant.integrations.apple.index', ['slug' => $slug])
+            return $this->redirectAfterAction($slug, $doctor->id, $returnCalendarId)
                 ->with('error', 'A estrutura do Apple Calendar nao esta disponivel neste tenant.');
         }
 
-        return view('tenant.integrations.apple.connect', compact('doctor'));
+        return view('tenant.integrations.apple.connect', compact('doctor', 'returnCalendarId'));
     }
 
     public function connect(string $slug, string $doctor, Request $request)
     {
         $doctorId = (string) $doctor;
+        $requestedCalendarId = (string) $request->input('calendar_id', '');
 
         try {
             if (!$this->hasAppleCalendarTable()) {
-                return redirect()->route('tenant.integrations.apple.index', ['slug' => $slug])
+                return $this->redirectAfterAction($slug, $doctorId, $requestedCalendarId)
                     ->with('error', 'A estrutura do Apple Calendar nao esta disponivel neste tenant.');
             }
 
             $doctor = Doctor::findOrFail($doctorId);
             $this->ensureDoctorCanInitiateAuth($doctor);
+            $returnCalendarId = $this->resolveReturnCalendarId($doctor, $requestedCalendarId);
 
             $request->validate([
                 'username' => ['required', 'email'],
@@ -128,8 +133,8 @@ class AppleCalendarController extends Controller
                 'tenant_slug' => $slug,
             ]);
 
-            return redirect()->route('tenant.integrations.apple.index', ['slug' => $slug])
-                ->with('success', 'Integracao com Apple Calendar realizada com sucesso.');
+            return $this->redirectAfterAction($slug, $doctor->id, $returnCalendarId)
+                ->with('success', 'Sincronização com Apple Calendar conectada com sucesso.');
         } catch (\Throwable $e) {
             Log::error('Erro ao conectar com Apple Calendar', [
                 'doctor_id' => $doctorId,
@@ -137,23 +142,26 @@ class AppleCalendarController extends Controller
                 'error' => $e->getMessage(),
             ]);
 
-            return redirect()->route('tenant.integrations.apple.index', ['slug' => $slug])
+            return $this->redirectAfterAction($slug, $doctorId, $requestedCalendarId)
                 ->with('error', 'Erro ao conectar com Apple Calendar. Verifique as credenciais.');
         }
     }
 
-    public function disconnect(string $slug, string $doctor)
+    public function disconnect(string $slug, string $doctor, Request $request)
     {
         $doctorId = (string) $doctor;
+        $requestedCalendarId = (string) $request->input('calendar_id', '');
+        $returnContext = (string) $request->input('return_context', '');
 
         try {
             if (!$this->hasAppleCalendarTable()) {
-                return redirect()->route('tenant.integrations.apple.index', ['slug' => $slug])
+                return $this->redirectAfterAction($slug, $doctorId, $requestedCalendarId, $returnContext)
                     ->with('error', 'A estrutura do Apple Calendar nao esta disponivel neste tenant.');
             }
 
             $doctor = Doctor::findOrFail($doctorId);
             $this->ensureDoctorCanManage($doctor);
+            $returnCalendarId = $this->resolveReturnCalendarId($doctor, $requestedCalendarId);
 
             $token = $doctor->appleCalendarToken;
 
@@ -165,12 +173,12 @@ class AppleCalendarController extends Controller
                     'tenant_slug' => $slug,
                 ]);
 
-                return redirect()->route('tenant.integrations.apple.index', ['slug' => $slug])
-                    ->with('success', 'Integracao com Apple Calendar removida com sucesso.');
+                return $this->redirectAfterAction($slug, $doctor->id, $returnCalendarId, $returnContext)
+                    ->with('success', 'Sincronização com Apple Calendar desconectada com sucesso.');
             }
 
-            return redirect()->route('tenant.integrations.apple.index', ['slug' => $slug])
-                ->with('info', 'Nenhuma integracao encontrada para este medico.');
+            return $this->redirectAfterAction($slug, $doctor->id, $returnCalendarId, $returnContext)
+                ->with('info', 'Nenhuma sincronização encontrada para este profissional.');
         } catch (\Throwable $e) {
             Log::error('Erro ao desconectar Apple Calendar', [
                 'doctor_id' => $doctorId,
@@ -178,8 +186,8 @@ class AppleCalendarController extends Controller
                 'error' => $e->getMessage(),
             ]);
 
-            return redirect()->route('tenant.integrations.apple.index', ['slug' => $slug])
-                ->with('error', 'Erro ao remover integracao. Tente novamente.');
+            return $this->redirectAfterAction($slug, $doctorId, $requestedCalendarId, $returnContext)
+                ->with('error', 'Erro ao remover sincronização. Tente novamente.');
         }
     }
 
@@ -245,6 +253,78 @@ class AppleCalendarController extends Controller
     private function hasAppleCalendarTable(): bool
     {
         return Schema::connection('tenant')->hasTable('apple_calendar_tokens');
+    }
+
+    private function resolveReturnCalendarId(Doctor $doctor, ?string $calendarId): ?string
+    {
+        $calendarId = trim((string) $calendarId);
+
+        if ($calendarId !== '') {
+            $calendar = Calendar::query()
+                ->where('id', $calendarId)
+                ->where('doctor_id', $doctor->id)
+                ->first();
+
+            if ($calendar) {
+                return (string) $calendar->id;
+            }
+        }
+
+        $calendar = Calendar::query()
+            ->where('doctor_id', $doctor->id)
+            ->orderByDesc('is_active')
+            ->orderByDesc('created_at')
+            ->first();
+
+        return $calendar ? (string) $calendar->id : null;
+    }
+
+    private function redirectAfterAction(
+        string $slug,
+        ?string $doctorId = null,
+        ?string $calendarId = null,
+        ?string $returnContext = null
+    ): RedirectResponse {
+        $returnContext = trim((string) $returnContext);
+        if ($returnContext === 'settings') {
+            return redirect()->to(route('tenant.settings.index', ['slug' => $slug]) . '#integracoes');
+        }
+
+        $resolvedCalendarId = null;
+        $doctorId = trim((string) $doctorId);
+        $calendarId = trim((string) $calendarId);
+
+        if ($calendarId !== '') {
+            $calendarQuery = Calendar::query()->where('id', $calendarId);
+            if ($doctorId !== '') {
+                $calendarQuery->where('doctor_id', $doctorId);
+            }
+            $calendar = $calendarQuery->first();
+            if ($calendar) {
+                $resolvedCalendarId = (string) $calendar->id;
+            }
+        }
+
+        if (!$resolvedCalendarId && $doctorId !== '') {
+            $calendar = Calendar::query()
+                ->where('doctor_id', $doctorId)
+                ->orderByDesc('is_active')
+                ->orderByDesc('created_at')
+                ->first();
+
+            if ($calendar) {
+                $resolvedCalendarId = (string) $calendar->id;
+            }
+        }
+
+        if ($resolvedCalendarId) {
+            return redirect()->route('tenant.agenda-settings.calendar-sync', [
+                'slug' => $slug,
+                'id' => $resolvedCalendarId,
+            ]);
+        }
+
+        return redirect()->route('tenant.agenda-settings.index', ['slug' => $slug]);
     }
 
     private function ensureDoctorCanManage(Doctor $doctor): void

@@ -512,7 +512,7 @@ function bindDoctorSpecialtiesSection() {
 
     const showWarning = (message) => {
         if (typeof showAlert === 'function') {
-            showAlert({ type: 'warning', title: 'AtenÃ§Ã£o', message });
+            showAlert({ type: 'warning', title: 'Atenção', message });
         }
     };
 
@@ -526,7 +526,7 @@ function bindDoctorSpecialtiesSection() {
 
         const normalizedId = String(specialtyId);
         if (selectedSpecialties.includes(normalizedId)) {
-            showWarning('Esta especialidade jÃ¡ foi adicionada.');
+            showWarning('Esta especialidade já foi adicionada.');
             specialtySelect.focus();
             return;
         }
@@ -574,7 +574,7 @@ function bindDoctorSpecialtiesSection() {
         }
 
         event.preventDefault();
-        showWarning('Por favor, selecione pelo menos uma especialidade mÃ©dica.');
+        showWarning('Por favor, selecione pelo menos uma especialidade médica.');
         specialtySelect.focus();
     });
 

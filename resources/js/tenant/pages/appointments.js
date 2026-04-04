@@ -981,7 +981,7 @@ function fallbackCopy(text, onSuccess) {
 			window.showAlert({
 				type: 'error',
 				title: 'Erro',
-				message: 'NÃ£o foi possÃ­vel copiar o link.',
+				message: 'Não foi possível copiar o link.',
 			});
 		}
 	}
@@ -1075,7 +1075,7 @@ function initRecurringCreate($, tenantSlug) {
 					$appointmentTypeSelect.empty();
 
 					if (data.length === 0) {
-						$appointmentTypeSelect.append('<option value="">Nenhum tipo de consulta disponÃ­vel</option>');
+						$appointmentTypeSelect.append('<option value="">Nenhum tipo de consulta disponível</option>');
 						$appointmentTypeSelect.prop('disabled', true);
 						return;
 					}
@@ -1318,12 +1318,12 @@ function initRecurringCreate($, tenantSlug) {
 				$timeSlotSelect.empty();
 
 				if (slots.length === 0) {
-					$timeSlotSelect.append('<option value="">Nenhum horÃ¡rio disponÃ­vel</option>');
+					$timeSlotSelect.append('<option value="">Nenhum horário disponível</option>');
 					$timeSlotSelect.prop('disabled', true);
 					return;
 				}
 
-				$timeSlotSelect.append('<option value="">Selecione um horÃ¡rio</option>');
+				$timeSlotSelect.append('<option value="">Selecione um horário</option>');
 				slots.forEach(function (slot) {
 					$timeSlotSelect.append(
 						`<option value="${slot.start}|${slot.end}" data-start="${slot.start}" data-end="${slot.end}">${slot.display}</option>`
@@ -1403,7 +1403,7 @@ function initRecurringCreate($, tenantSlug) {
 					type: 'warning',
 					title: 'Atenção',
 					message:
-						'Por favor, selecione um dia da semana e um horÃ¡rio na primeira regra antes de adicionar outra.',
+						'Por favor, selecione um dia da semana e um horário na primeira regra antes de adicionar outra.',
 				});
 				return;
 			}
@@ -1420,7 +1420,7 @@ function initRecurringCreate($, tenantSlug) {
 				showAlert({
 					type: 'warning',
 					title: 'Atenção',
-					message: 'Este dia da semana jÃ¡ foi adicionado em outra regra. NÃ£o Ã© possÃ­vel duplicar dias.',
+					message: 'Este dia da semana já foi adicionado em outra regra. Não é possível duplicar dias.',
 				});
 				return;
 			}
@@ -1441,7 +1441,7 @@ function initRecurringCreate($, tenantSlug) {
                     </div>
                     <div class="col-md-4">
                         <div class="form-group mb-0">
-                            <label class="fw-semibold mb-2">HorÃ¡rio DisponÃ­vel <span class="text-danger">*</span></label>
+                            <label class="fw-semibold mb-2">Horário Disponível <span class="text-danger">*</span></label>
                             <select class="form-control rule-time-slot" disabled>
                                 <option value="${currentTimeSlot}" selected>${currentTimeSlotText}</option>
                             </select>
@@ -1507,7 +1507,7 @@ function initRecurringCreate($, tenantSlug) {
 					type: 'warning',
 					title: 'Atenção',
 					message:
-						'Por favor, adicione pelo menos uma regra de recorrÃªncia completa (dia da semana e horÃ¡rio).',
+						'Por favor, adicione pelo menos uma regra de recorrência completa (dia da semana e horário).',
 				});
 				return false;
 			}
@@ -1620,7 +1620,7 @@ function initRecurringEdit($, tenantSlug) {
 				$appointmentTypeSelect.empty();
 
 				if (!data || data.length === 0) {
-					$appointmentTypeSelect.append('<option value="">Nenhum tipo de consulta disponÃ­vel</option>');
+					$appointmentTypeSelect.append('<option value="">Nenhum tipo de consulta disponível</option>');
 					$appointmentTypeSelect.prop('disabled', true);
 					return;
 				}
@@ -1775,12 +1775,12 @@ function initRecurringEdit($, tenantSlug) {
 				$timeSlotSelect.empty();
 
 				if (slots.length === 0) {
-					$timeSlotSelect.append('<option value="">Nenhum horÃ¡rio disponÃ­vel</option>');
+					$timeSlotSelect.append('<option value="">Nenhum horário disponível</option>');
 					$timeSlotSelect.prop('disabled', true);
 					return;
 				}
 
-				$timeSlotSelect.append('<option value="">Selecione um horÃ¡rio</option>');
+				$timeSlotSelect.append('<option value="">Selecione um horário</option>');
 				slots.forEach(function (slot) {
 					const timeSlotValue = `${slot.start}|${slot.end}`;
 					const selected = selectedTimeSlot === timeSlotValue ? 'selected' : '';
@@ -1863,7 +1863,7 @@ function initRecurringEdit($, tenantSlug) {
                     </div>
                     <div class="col-md-4">
                         <div class="form-group">
-                            <label class="fw-semibold">HorÃ¡rio DisponÃ­vel <span class="text-danger">*</span></label>
+                            <label class="fw-semibold">Horário Disponível <span class="text-danger">*</span></label>
                             <select name="rules[${ruleIndex}][time_slot]" class="form-control rule-time-slot" required>
                                 <option value="">Selecione o dia e tipo de consulta</option>
                             </select>
