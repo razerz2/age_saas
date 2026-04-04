@@ -227,39 +227,35 @@ class AgendaSettingsController extends Controller
         );
 
         $validator->after(function ($validator) use ($businessHours, $appointmentTypes) {
-            $seenHourKeys = [];
+            $seenWeekdays = [];
             foreach ($businessHours as $index => $hour) {
+                $weekday = (string) ($hour['weekday'] ?? '');
                 $start = (string) ($hour['start_time'] ?? '');
                 $end = (string) ($hour['end_time'] ?? '');
                 $breakStart = (string) ($hour['break_start_time'] ?? '');
                 $breakEnd = (string) ($hour['break_end_time'] ?? '');
 
                 if ($start >= $end) {
-                    $validator->errors()->add("business_hours.{$index}.end_time", 'O horário final deve ser maior que o horário inicial.');
+                    $validator->errors()->add("business_hours.{$index}.end_time", 'O horário de término deve ser maior que o horário de início.');
                 }
 
                 if (($breakStart !== '' && $breakEnd === '') || ($breakStart === '' && $breakEnd !== '')) {
-                    $validator->errors()->add("business_hours.{$index}.break_end_time", 'Preencha início e fim do intervalo.');
+                    $validator->errors()->add("business_hours.{$index}.break_end_time", 'Informe os dois campos do intervalo ou deixe ambos em branco.');
                 }
 
                 if ($breakStart !== '' && $breakEnd !== '') {
                     if ($breakStart >= $breakEnd) {
-                        $validator->errors()->add("business_hours.{$index}.break_end_time", 'O fim do intervalo deve ser maior que o início.');
+                        $validator->errors()->add("business_hours.{$index}.break_end_time", 'O intervalo deve terminar depois de começar.');
                     }
                     if ($breakStart <= $start || $breakEnd >= $end) {
-                        $validator->errors()->add("business_hours.{$index}.break_start_time", 'O intervalo precisa estar dentro do horário de atendimento.');
+                        $validator->errors()->add("business_hours.{$index}.break_start_time", 'O intervalo deve estar dentro do horário de atendimento.');
                     }
                 }
 
-                $key = implode('|', [
-                    (string) ($hour['weekday'] ?? ''),
-                    $start,
-                    $end,
-                ]);
-                if (in_array($key, $seenHourKeys, true)) {
-                    $validator->errors()->add("business_hours.{$index}.weekday", 'Existem horários duplicados no formulário.');
+                if ($weekday !== '' && in_array($weekday, $seenWeekdays, true)) {
+                    $validator->errors()->add("business_hours.{$index}.weekday", 'Já existe horário cadastrado para este dia da semana.');
                 }
-                $seenHourKeys[] = $key;
+                $seenWeekdays[] = $weekday;
             }
 
             $seenTypeNames = [];

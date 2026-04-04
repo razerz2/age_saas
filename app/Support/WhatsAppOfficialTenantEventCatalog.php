@@ -14,6 +14,7 @@ class WhatsAppOfficialTenantEventCatalog
             ['key' => 'appointment.confirmed', 'label' => 'Agendamento confirmado', 'domain' => 'tenant'],
             ['key' => 'appointment.canceled', 'label' => 'Agendamento cancelado', 'domain' => 'tenant'],
             ['key' => 'appointment.expired', 'label' => 'Agendamento expirado', 'domain' => 'tenant'],
+            ['key' => 'appointment.form_requested.patient', 'label' => 'Solicitacao de formulario para paciente', 'domain' => 'tenant'],
             ['key' => 'appointment.created.doctor', 'label' => 'Novo agendamento para medico', 'domain' => 'tenant'],
             ['key' => 'appointment.confirmed.doctor', 'label' => 'Agendamento confirmado para medico', 'domain' => 'tenant'],
             ['key' => 'appointment.canceled.doctor', 'label' => 'Agendamento cancelado para medico', 'domain' => 'tenant'],

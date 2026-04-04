@@ -1316,20 +1316,22 @@ class AppointmentController extends Controller
 
         $queryText = trim((string) ($validated['q'] ?? ''));
         $limit = (int) ($validated['limit'] ?? 10);
+        $searchWindow = min(max($limit * 6, 30), 120);
 
         $patientsQuery = Patient::query()->orderBy('full_name');
 
         if ($queryText !== '') {
-            $patientsQuery->where(function ($query) use ($queryText) {
-                $query->where('full_name', 'like', "%{$queryText}%")
-                    ->orWhere('email', 'like', "%{$queryText}%")
-                    ->orWhere('phone', 'like', "%{$queryText}%")
-                    ->orWhere('cpf', 'like', "%{$queryText}%");
+            $containsPattern = '%' . $this->normalizeSearchTerm($queryText) . '%';
+            $patientsQuery->where(function ($query) use ($containsPattern) {
+                $query->whereRaw('LOWER(full_name) LIKE ?', [$containsPattern])
+                    ->orWhereRaw('LOWER(email) LIKE ?', [$containsPattern])
+                    ->orWhereRaw('LOWER(phone) LIKE ?', [$containsPattern])
+                    ->orWhereRaw('LOWER(cpf) LIKE ?', [$containsPattern]);
             });
         }
 
         $patients = $patientsQuery
-            ->limit($limit)
+            ->limit($searchWindow)
             ->get(['id', 'full_name', 'email', 'phone', 'cpf'])
             ->map(function (Patient $patient) {
                 $secondary = $patient->email ?: ($patient->phone ?: $patient->cpf);
@@ -1340,6 +1342,26 @@ class AppointmentController extends Controller
                     'secondary' => $secondary,
                 ];
             });
+
+        if ($queryText !== '') {
+            $normalizedQuery = $this->normalizeSearchTerm($queryText);
+
+            $patients = $patients
+                ->sortBy(function (array $item) use ($normalizedQuery) {
+                    $score = $this->calculateSearchScore(
+                        $normalizedQuery,
+                        (string) ($item['name'] ?? ''),
+                        [
+                            (string) ($item['secondary'] ?? ''),
+                        ]
+                    );
+
+                    return sprintf('%04d|%s', $score, $this->normalizeSearchTerm((string) ($item['name'] ?? '')));
+                })
+                ->values();
+        }
+
+        $patients = $patients->take($limit)->values();
 
         return response()->json(['data' => $patients]);
     }
@@ -1356,6 +1378,7 @@ class AppointmentController extends Controller
 
         $queryText = trim((string) ($validated['q'] ?? ''));
         $limit = (int) ($validated['limit'] ?? 10);
+        $searchWindow = min(max($limit * 6, 30), 120);
 
         $doctorsQuery = Doctor::query()
             ->with(['user:id,name,name_full,status', 'specialties:id,name'])
@@ -1371,25 +1394,26 @@ class AppointmentController extends Controller
         $this->applyDoctorFilter($doctorsQuery);
 
         if ($queryText !== '') {
-            $doctorsQuery->where(function ($query) use ($queryText) {
-                $query->whereHas('user', function ($subQuery) use ($queryText) {
-                    $subQuery->where('name_full', 'like', "%{$queryText}%")
-                        ->orWhere('name', 'like', "%{$queryText}%");
+            $containsPattern = '%' . $this->normalizeSearchTerm($queryText) . '%';
+            $doctorsQuery->where(function ($query) use ($containsPattern) {
+                $query->whereHas('user', function ($subQuery) use ($containsPattern) {
+                    $subQuery->whereRaw('LOWER(name_full) LIKE ?', [$containsPattern])
+                        ->orWhereRaw('LOWER(name) LIKE ?', [$containsPattern]);
                 })
-                ->orWhere('registration_value', 'like', "%{$queryText}%")
-                ->orWhere('crm_number', 'like', "%{$queryText}%")
-                ->orWhereHas('specialties', function ($subQuery) use ($queryText) {
-                    $subQuery->where('name', 'like', "%{$queryText}%");
+                ->orWhereRaw('LOWER(registration_value) LIKE ?', [$containsPattern])
+                ->orWhereRaw('LOWER(crm_number) LIKE ?', [$containsPattern])
+                ->orWhereHas('specialties', function ($subQuery) use ($containsPattern) {
+                    $subQuery->whereRaw('LOWER(name) LIKE ?', [$containsPattern]);
                 });
             });
         }
 
         $doctors = $doctorsQuery
             ->orderBy('id')
-            ->limit($limit)
+            ->limit($searchWindow)
             ->get()
             ->map(function (Doctor $doctor) {
-                $name = $doctor->user?->name_full ?: $doctor->user?->name ?: 'MÃƒÂ©dico';
+                $name = $doctor->user?->name_full ?: $doctor->user?->name ?: 'Médico';
                 $registration = $doctor->registration_value ?: $doctor->crm_number;
                 $specialty = $doctor->specialties->first()?->name;
                 $secondary = $registration ?: $specialty;
@@ -1401,7 +1425,69 @@ class AppointmentController extends Controller
                 ];
             });
 
+        if ($queryText !== '') {
+            $normalizedQuery = $this->normalizeSearchTerm($queryText);
+
+            $doctors = $doctors
+                ->sortBy(function (array $item) use ($normalizedQuery) {
+                    $score = $this->calculateSearchScore(
+                        $normalizedQuery,
+                        (string) ($item['name'] ?? ''),
+                        [
+                            (string) ($item['secondary'] ?? ''),
+                        ]
+                    );
+
+                    return sprintf('%04d|%s', $score, $this->normalizeSearchTerm((string) ($item['name'] ?? '')));
+                })
+                ->values();
+        } else {
+            $doctors = $doctors
+                ->sortBy(fn (array $item) => $this->normalizeSearchTerm((string) ($item['name'] ?? '')))
+                ->values();
+        }
+
+        $doctors = $doctors->take($limit)->values();
+
         return response()->json(['data' => $doctors]);
+    }
+
+    private function normalizeSearchTerm(string $value): string
+    {
+        return mb_strtolower(trim($value), 'UTF-8');
+    }
+
+    private function calculateSearchScore(string $query, string $primaryText, array $secondaryTexts = []): int
+    {
+        $score = $this->scoreTextMatch($query, $primaryText, 0);
+
+        foreach ($secondaryTexts as $index => $secondaryText) {
+            $score = min($score, $this->scoreTextMatch($query, (string) $secondaryText, 20 + ($index * 10)));
+        }
+
+        return $score;
+    }
+
+    private function scoreTextMatch(string $query, string $text, int $base): int
+    {
+        $normalizedText = $this->normalizeSearchTerm($text);
+        if ($normalizedText === '') {
+            return $base + 1000;
+        }
+
+        if ($normalizedText === $query) {
+            return $base;
+        }
+
+        if (str_starts_with($normalizedText, $query)) {
+            return $base + 1;
+        }
+
+        if (str_contains($normalizedText, $query)) {
+            return $base + 2;
+        }
+
+        return $base + 100;
     }
 
     private function generateUniqueConfirmationToken(): string

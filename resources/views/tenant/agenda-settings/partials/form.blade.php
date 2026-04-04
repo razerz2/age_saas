@@ -9,16 +9,18 @@
         6 => 'Sábado',
     ];
 
+    $weekdayOrder = [1, 2, 3, 4, 5, 6, 0];
+
     $hoursRows = old('business_hours', $businessHoursRows ?? []);
-    if (empty($hoursRows)) {
-        $hoursRows = [[
-            'weekday' => 1,
-            'start_time' => '',
-            'end_time' => '',
-            'break_start_time' => '',
-            'break_end_time' => '',
-        ]];
-    }
+    $hoursRows = collect($hoursRows)->map(function ($hour) {
+        return [
+            'weekday' => $hour['weekday'] ?? '',
+            'start_time' => isset($hour['start_time']) ? substr((string) $hour['start_time'], 0, 5) : '',
+            'end_time' => isset($hour['end_time']) ? substr((string) $hour['end_time'], 0, 5) : '',
+            'break_start_time' => isset($hour['break_start_time']) ? substr((string) $hour['break_start_time'], 0, 5) : '',
+            'break_end_time' => isset($hour['break_end_time']) ? substr((string) $hour['break_end_time'], 0, 5) : '',
+        ];
+    })->values()->all();
 
     $typesRows = old('appointment_types', $appointmentTypesRows ?? []);
     if (empty($typesRows)) {
@@ -118,43 +120,42 @@
     <section class="rounded-xl border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-gray-800">
         <div class="mb-4 flex items-center justify-between">
             <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Horários de atendimento</h2>
-            <button type="button" id="add-business-hour-row" class="btn btn-outline">Adicionar horário</button>
+            <button type="button" id="open-business-hour-modal" class="btn btn-outline">Adicionar horário</button>
         </div>
 
-        <div class="space-y-3" id="business-hours-rows">
-            @foreach ($hoursRows as $index => $hour)
-                <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-900/30 business-hour-row">
-                    <div class="grid grid-cols-1 gap-3 md:grid-cols-6">
-                        <div>
-                            <label class="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-300">Dia</label>
-                            <select name="business_hours[{{ $index }}][weekday]" class="w-full rounded-lg border border-gray-300 bg-white px-2 py-2 text-sm dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100">
-                                @foreach ($weekdays as $weekdayValue => $weekdayLabel)
-                                    <option value="{{ $weekdayValue }}" {{ (string) ($hour['weekday'] ?? '') === (string) $weekdayValue ? 'selected' : '' }}>{{ $weekdayLabel }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                        <div>
-                            <label class="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-300">Início</label>
-                            <input type="time" name="business_hours[{{ $index }}][start_time]" value="{{ $hour['start_time'] ?? '' }}" class="w-full rounded-lg border border-gray-300 bg-white px-2 py-2 text-sm dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100">
-                        </div>
-                        <div>
-                            <label class="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-300">Fim</label>
-                            <input type="time" name="business_hours[{{ $index }}][end_time]" value="{{ $hour['end_time'] ?? '' }}" class="w-full rounded-lg border border-gray-300 bg-white px-2 py-2 text-sm dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100">
-                        </div>
-                        <div>
-                            <label class="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-300">Início intervalo</label>
-                            <input type="time" name="business_hours[{{ $index }}][break_start_time]" value="{{ $hour['break_start_time'] ?? '' }}" class="w-full rounded-lg border border-gray-300 bg-white px-2 py-2 text-sm dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100">
-                        </div>
-                        <div>
-                            <label class="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-300">Fim intervalo</label>
-                            <input type="time" name="business_hours[{{ $index }}][break_end_time]" value="{{ $hour['break_end_time'] ?? '' }}" class="w-full rounded-lg border border-gray-300 bg-white px-2 py-2 text-sm dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100">
-                        </div>
-                        <div class="flex items-end justify-end">
-                            <button type="button" class="btn btn-outline text-red-600 hover:text-red-700 remove-business-hour-row">Remover</button>
-                        </div>
-                    </div>
-                </div>
-            @endforeach
+        <div
+            id="agenda-business-hours-section"
+            data-weekdays='@json($weekdays)'
+            data-weekday-order='@json($weekdayOrder)'
+            data-initial-hours='@json($hoursRows)'
+        >
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                    <thead class="bg-gray-50 dark:bg-gray-900/40">
+                        <tr>
+                            <th class="px-3 py-2 text-left text-xs uppercase text-gray-500 dark:text-gray-400">Dia</th>
+                            <th class="px-3 py-2 text-left text-xs uppercase text-gray-500 dark:text-gray-400">Atendimento</th>
+                            <th class="px-3 py-2 text-left text-xs uppercase text-gray-500 dark:text-gray-400">Intervalo</th>
+                            <th class="px-3 py-2 text-right text-xs uppercase text-gray-500 dark:text-gray-400">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody id="business-hours-table-body" class="divide-y divide-gray-200 dark:divide-gray-700"></tbody>
+                </table>
+            </div>
+
+            <p id="business-hours-empty-state" class="mt-3 text-sm text-gray-500 dark:text-gray-400 hidden">
+                Nenhum horário cadastrado. Dias ausentes serão considerados sem atendimento.
+            </p>
+
+            <div id="business-hours-hidden-inputs">
+                @foreach ($hoursRows as $index => $hour)
+                    <input type="hidden" name="business_hours[{{ $index }}][weekday]" value="{{ $hour['weekday'] ?? '' }}">
+                    <input type="hidden" name="business_hours[{{ $index }}][start_time]" value="{{ $hour['start_time'] ?? '' }}">
+                    <input type="hidden" name="business_hours[{{ $index }}][end_time]" value="{{ $hour['end_time'] ?? '' }}">
+                    <input type="hidden" name="business_hours[{{ $index }}][break_start_time]" value="{{ $hour['break_start_time'] ?? '' }}">
+                    <input type="hidden" name="business_hours[{{ $index }}][break_end_time]" value="{{ $hour['break_end_time'] ?? '' }}">
+                @endforeach
+            </div>
         </div>
     </section>
 
@@ -202,39 +203,63 @@
     </div>
 </form>
 
-<template id="business-hour-row-template">
-    <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-900/30 business-hour-row">
-        <div class="grid grid-cols-1 gap-3 md:grid-cols-6">
-            <div>
-                <label class="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-300">Dia</label>
-                <select name="business_hours[__INDEX__][weekday]" class="w-full rounded-lg border border-gray-300 bg-white px-2 py-2 text-sm dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100">
-                    @foreach ($weekdays as $weekdayValue => $weekdayLabel)
-                        <option value="{{ $weekdayValue }}">{{ $weekdayLabel }}</option>
-                    @endforeach
-                </select>
+<div id="business-hour-modal" class="fixed inset-0 hidden p-4" style="z-index:2147483646;" role="dialog" aria-modal="true" aria-labelledby="business-hour-modal-title">
+    <div class="absolute inset-0 bg-black/50" data-business-hour-modal-close aria-hidden="true"></div>
+
+    <div class="absolute inset-0 flex items-center justify-center p-4" style="z-index:2147483647;">
+        <div class="relative w-full max-w-3xl rounded-2xl border border-gray-200 bg-white p-5 shadow-2xl dark:border-gray-700 dark:bg-gray-900">
+            <button type="button" class="absolute right-3 top-3 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200" data-business-hour-modal-close aria-label="Fechar">
+                <x-icon name="close-outline" class="h-5 w-5" />
+            </button>
+
+            <div class="mb-4 pr-8">
+                <h3 id="business-hour-modal-title" class="text-lg font-semibold text-gray-900 dark:text-white">Adicionar horário</h3>
+                <p class="text-sm text-gray-500 dark:text-gray-400">Defina o dia e os horários de atendimento.</p>
             </div>
-            <div>
-                <label class="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-300">Início</label>
-                <input type="time" name="business_hours[__INDEX__][start_time]" class="w-full rounded-lg border border-gray-300 bg-white px-2 py-2 text-sm dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100">
+
+            <div id="business-hour-modal-error" class="mb-4 hidden rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700 dark:border-red-700 dark:bg-red-900/20 dark:text-red-200"></div>
+
+            <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <div class="md:col-span-2">
+                    <label for="business-hour-modal-weekday" class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">Dia da semana <span class="text-red-500">*</span></label>
+                    <select id="business-hour-modal-weekday" class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm focus:border-brand-500 focus:outline-none dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100"></select>
+                </div>
+
+                <div>
+                    <label for="business-hour-modal-start-time" class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">Hora inicial <span class="text-red-500">*</span></label>
+                    <input id="business-hour-modal-start-time" type="time" class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm focus:border-brand-500 focus:outline-none dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100">
+                </div>
+
+                <div>
+                    <label for="business-hour-modal-end-time" class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">Hora final <span class="text-red-500">*</span></label>
+                    <input id="business-hour-modal-end-time" type="time" class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm focus:border-brand-500 focus:outline-none dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100">
+                </div>
+
+                <div class="md:col-span-2">
+                    <label class="inline-flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+                        <input id="business-hour-modal-has-break" type="checkbox" class="h-4 w-4 rounded border-gray-300 text-brand-600 focus:ring-brand-500 dark:border-gray-600 dark:bg-gray-900">
+                        Possui intervalo
+                    </label>
+                </div>
+
+                <div>
+                    <label for="business-hour-modal-break-start" class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">Início do intervalo</label>
+                    <input id="business-hour-modal-break-start" type="time" class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm focus:border-brand-500 focus:outline-none dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100">
+                </div>
+
+                <div>
+                    <label for="business-hour-modal-break-end" class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">Fim do intervalo</label>
+                    <input id="business-hour-modal-break-end" type="time" class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm focus:border-brand-500 focus:outline-none dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100">
+                </div>
             </div>
-            <div>
-                <label class="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-300">Fim</label>
-                <input type="time" name="business_hours[__INDEX__][end_time]" class="w-full rounded-lg border border-gray-300 bg-white px-2 py-2 text-sm dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100">
-            </div>
-            <div>
-                <label class="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-300">Início intervalo</label>
-                <input type="time" name="business_hours[__INDEX__][break_start_time]" class="w-full rounded-lg border border-gray-300 bg-white px-2 py-2 text-sm dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100">
-            </div>
-            <div>
-                <label class="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-300">Fim intervalo</label>
-                <input type="time" name="business_hours[__INDEX__][break_end_time]" class="w-full rounded-lg border border-gray-300 bg-white px-2 py-2 text-sm dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100">
-            </div>
-            <div class="flex items-end justify-end">
-                <button type="button" class="btn btn-outline text-red-600 hover:text-red-700 remove-business-hour-row">Remover</button>
+
+            <div class="mt-5 flex items-center justify-end gap-2">
+                <button type="button" class="btn btn-outline" data-business-hour-modal-close>Cancelar</button>
+                <button type="button" id="save-business-hour-modal" class="btn btn-primary">Salvar horário</button>
             </div>
         </div>
     </div>
-</template>
+</div>
 
 <template id="appointment-type-row-template">
     <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-900/30 appointment-type-row">

@@ -155,8 +155,6 @@ class BusinessHourController extends Controller
             // Verificar se já existe um horário para este médico, dia e horário
             $exists = BusinessHour::where('doctor_id', $doctorId)
                 ->where('weekday', $weekday)
-                ->where('start_time', $startTime)
-                ->where('end_time', $endTime)
                 ->exists();
 
             if (!$exists) {
@@ -175,7 +173,7 @@ class BusinessHourController extends Controller
 
         $message = $createdCount > 0 
             ? "Horário de atendimento criado com sucesso para {$createdCount} dia(s)."
-            : "Nenhum horário foi criado. Os horários selecionados já existem.";
+            : "Nenhum horário foi criado. Já existe horário cadastrado para os dias selecionados.";
 
         return redirect()->route('tenant.business-hours.index', ['slug' => tenant()->subdomain])
             ->with('success', $message);

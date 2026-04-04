@@ -878,6 +878,13 @@ class WhatsAppOfficialTenantTemplateController extends Controller
                 ['appointment_date', 'appointment_datetime'],
                 ['appointment_new_link', 'appointment_reschedule_link', 'appointment_details_link', 'appointment_link'],
             ],
+            'appointment.form_requested.patient' => [
+                ['patient_name', 'customer_name'],
+                ['form_name'],
+                ['appointment_date', 'appointment_datetime'],
+                ['appointment_time'],
+                ['form_fill_link', 'form_link', 'links.form_fill'],
+            ],
             'waitlist.joined' => [
                 ['patient_name', 'customer_name'],
             ],

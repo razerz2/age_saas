@@ -97,7 +97,9 @@ Route::prefix('customer/{slug}')
         Route::get('/agendamento/criar', [PublicAppointmentController::class, 'create'])->name('appointment.create');
         Route::post('/agendamento/criar', [PublicAppointmentController::class, 'store'])->name('appointment.store');
         Route::get('/agendamento/sucesso/{appointment_id?}', [PublicAppointmentController::class, 'success'])->name('appointment.success');
-        Route::get('/agendamento/{appointment_id}', [PublicAppointmentController::class, 'show'])->name('appointment.show');
+        Route::get('/agendamento/{appointment_id}', [PublicAppointmentController::class, 'show'])
+            ->whereUuid('appointment_id')
+            ->name('appointment.show');
         Route::get('/agendamento/confirm/{token}', [PublicAppointmentController::class, 'confirmByToken'])->name('appointment.confirm');
         Route::post('/agendamento/cancel/{token}', [PublicAppointmentController::class, 'cancelByToken'])->name('appointment.cancel');
         Route::post('/agendamento/waitlist', [PublicAppointmentWaitlistController::class, 'store'])->name('waitlist.store');

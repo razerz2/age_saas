@@ -5,6 +5,7 @@ use App\Models\Tenant\Appointment;
 use App\Observers\AppointmentObserver;
 use App\Services\Tenant\AppleCalendarService;
 use App\Services\Tenant\GoogleCalendarService;
+use App\Services\Tenant\NotificationDispatcher;
 use Illuminate\Support\Facades\Bus;
 use Tests\TestCase;
 
@@ -23,8 +24,10 @@ it('adds whatsapp suppression metadata for created appointments from whatsapp bo
 
     $googleCalendarService = Mockery::mock(GoogleCalendarService::class);
     $appleCalendarService = Mockery::mock(AppleCalendarService::class);
+    $notificationDispatcher = Mockery::mock(NotificationDispatcher::class);
+    $notificationDispatcher->shouldNotReceive('dispatchAppointment');
 
-    $observer = new AppointmentObserver($googleCalendarService, $appleCalendarService);
+    $observer = new AppointmentObserver($googleCalendarService, $appleCalendarService, $notificationDispatcher);
 
     $appointment = Mockery::mock(Appointment::class)->makePartial();
     $appointment->id = 'appointment-1';
@@ -59,8 +62,10 @@ it('keeps default notification channels for non-whatsapp-bot appointments', func
 
     $googleCalendarService = Mockery::mock(GoogleCalendarService::class);
     $appleCalendarService = Mockery::mock(AppleCalendarService::class);
+    $notificationDispatcher = Mockery::mock(NotificationDispatcher::class);
+    $notificationDispatcher->shouldNotReceive('dispatchAppointment');
 
-    $observer = new AppointmentObserver($googleCalendarService, $appleCalendarService);
+    $observer = new AppointmentObserver($googleCalendarService, $appleCalendarService, $notificationDispatcher);
 
     $appointment = Mockery::mock(Appointment::class)->makePartial();
     $appointment->id = 'appointment-2';
@@ -80,4 +85,78 @@ it('keeps default notification channels for non-whatsapp-bot appointments', func
         return !array_key_exists('suppress_patient_channels', $metadata)
             && (string) ($metadata['origin'] ?? '') === 'portal';
     });
+});
+
+it('dispatches dedicated form notification key when appointment has active linked form', function () {
+    Bus::fake();
+
+    Mockery::mock('alias:App\Models\Platform\Tenant')
+        ->shouldReceive('current')
+        ->andReturn((object) ['id' => 'tenant-1']);
+
+    Mockery::mock('alias:App\Models\Tenant\Form')
+        ->shouldReceive('getFormForAppointment')
+        ->once()
+        ->andReturn((object) ['id' => 'form-1']);
+
+    $googleCalendarService = Mockery::mock(GoogleCalendarService::class);
+    $appleCalendarService = Mockery::mock(AppleCalendarService::class);
+    $notificationDispatcher = Mockery::mock(NotificationDispatcher::class);
+
+    $notificationDispatcher->shouldReceive('dispatchAppointment')
+        ->once()
+        ->withArgs(function ($appointment, string $key, array $meta): bool {
+            return $appointment instanceof Appointment
+                && $key === 'appointment.form_requested.patient'
+                && (string) ($meta['event'] ?? '') === 'appointment_form_requested_patient'
+                && (string) ($meta['origin'] ?? '') === Appointment::ORIGIN_INTERNAL;
+        });
+
+    $observer = new AppointmentObserver($googleCalendarService, $appleCalendarService, $notificationDispatcher);
+
+    $appointment = Mockery::mock(Appointment::class)->makePartial();
+    $appointment->id = 'appointment-3';
+    $appointment->origin = Appointment::ORIGIN_INTERNAL;
+    $appointment->appointment_mode = 'presencial';
+    $appointment->recurring_appointment_id = 'recurring-3';
+    $appointment->shouldReceive('load')->once()->andReturnSelf();
+
+    $observer->created($appointment);
+});
+
+it('suppresses whatsapp patient channel on form notification when appointment origin is whatsapp bot', function () {
+    Bus::fake();
+
+    Mockery::mock('alias:App\Models\Platform\Tenant')
+        ->shouldReceive('current')
+        ->andReturn((object) ['id' => 'tenant-1']);
+
+    Mockery::mock('alias:App\Models\Tenant\Form')
+        ->shouldReceive('getFormForAppointment')
+        ->once()
+        ->andReturn((object) ['id' => 'form-2']);
+
+    $googleCalendarService = Mockery::mock(GoogleCalendarService::class);
+    $appleCalendarService = Mockery::mock(AppleCalendarService::class);
+    $notificationDispatcher = Mockery::mock(NotificationDispatcher::class);
+
+    $notificationDispatcher->shouldReceive('dispatchAppointment')
+        ->once()
+        ->withArgs(function ($appointment, string $key, array $meta): bool {
+            return $appointment instanceof Appointment
+                && $key === 'appointment.form_requested.patient'
+                && in_array('whatsapp', (array) ($meta['suppress_patient_channels'] ?? []), true)
+                && (string) ($meta['origin'] ?? '') === Appointment::ORIGIN_WHATSAPP_BOT;
+        });
+
+    $observer = new AppointmentObserver($googleCalendarService, $appleCalendarService, $notificationDispatcher);
+
+    $appointment = Mockery::mock(Appointment::class)->makePartial();
+    $appointment->id = 'appointment-4';
+    $appointment->origin = Appointment::ORIGIN_WHATSAPP_BOT;
+    $appointment->appointment_mode = 'presencial';
+    $appointment->recurring_appointment_id = 'recurring-4';
+    $appointment->shouldReceive('load')->once()->andReturnSelf();
+
+    $observer->created($appointment);
 });

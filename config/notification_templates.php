@@ -19,6 +19,7 @@
 | - {{links.appointment_confirm}}
 | - {{links.appointment_cancel}}
 | - {{links.appointment_details}}
+| - {{links.form_fill}}
 | - {{links.waitlist_offer}}
 | - {{links.form_response}}
 | - {{links.online_appointment_details}}
@@ -79,6 +80,17 @@ return [
             ],
             'whatsapp' => [
                 'content' => "⚠️ Prazo expirado — {{clinic.name}}\n\nOlá {{patient.name}},\nO prazo para confirmar seu agendamento expirou e o horário foi liberado:\n\n📅 Data: {{appointment.date}}\n🕐 Horário: {{appointment.time}}\n👨‍⚕️ Profissional: {{professional.name}}\n\nSe desejar, faça um novo agendamento.\nAtenciosamente,\n{{clinic.name}}",
+            ],
+        ],
+
+        'appointment.form_requested.patient' => [
+            'label' => 'Solicitação de formulário para paciente',
+            'email' => [
+                'subject' => '📝 Formulário disponível — {{clinic.name}}',
+                'content' => "Olá {{patient.name}}!\n\nSeu formulário pré-consulta está disponível para o agendamento abaixo:\n\n📄 Formulário: {{form.name}}\n📅 Data: {{appointment.date}}\n🕐 Horário: {{appointment.time}}\n👨‍⚕️ Profissional: {{professional.name}}\n\n➡️ Preencher formulário: {{links.form_fill}}\n\nPor favor, preencha antes da consulta.\n\nAtenciosamente,\n{{clinic.name}}",
+            ],
+            'whatsapp' => [
+                'content' => "Olá {{patient.name}}!\n\nSeu formulário pré-consulta está disponível para o agendamento abaixo:\n\n📄 Formulário: {{form.name}}\n📅 Data: {{appointment.date}}\n🕐 Horário: {{appointment.time}}\n👨‍⚕️ Profissional: {{professional.name}}\n\n➡️ Preencher formulário: {{links.form_fill}}\n\nPor favor, preencha antes da consulta.",
             ],
         ],
 

@@ -1492,6 +1492,9 @@ class SettingsController extends Controller
         if (str_starts_with($key, 'waitlist.')) {
             $context = $this->applyWaitlistPreviewFallback($context, $tenant);
         }
+        if ($key === 'appointment.form_requested.patient') {
+            $context = $this->applyAppointmentFormRequestedPreviewFallback($context, $tenant);
+        }
         if (str_starts_with($key, 'form.')) {
             $context = $this->applyFormResponsePreviewFallback($context, $tenant);
         }
@@ -1588,6 +1591,7 @@ class SettingsController extends Controller
                 'online_appointment_details' => '',
                 'waitlist_offer' => '',
                 'form_response' => '',
+                'form_fill' => '',
             ],
             'waitlist' => [
                 'offer_expires_at' => '',
@@ -1646,6 +1650,23 @@ class SettingsController extends Controller
             $slug = (string) ($tenant->subdomain ?? '');
             $fallbackUrl = $slug !== '' ? url('/customer/' . $slug . '/responses/preview') : '#';
             data_set($context, 'links.form_response', $fallbackUrl);
+        }
+
+        return $context;
+    }
+
+    private function applyAppointmentFormRequestedPreviewFallback(array $context, Tenant $tenant): array
+    {
+        $formName = data_get($context, 'form.name');
+        if (!is_string($formName) || trim($formName) === '') {
+            data_set($context, 'form.name', 'Anamnese Inicial');
+        }
+
+        $formLink = data_get($context, 'links.form_fill');
+        if (!is_string($formLink) || trim($formLink) === '') {
+            $slug = (string) ($tenant->subdomain ?? '');
+            $fallbackUrl = $slug !== '' ? url('/customer/' . $slug . '/formulario/preview/responder') : '#';
+            data_set($context, 'links.form_fill', $fallbackUrl);
         }
 
         return $context;
@@ -1996,6 +2017,7 @@ class SettingsController extends Controller
                 ['key' => '{{links.online_appointment_details}}', 'description' => 'Link interno dos detalhes da consulta online'],
                 ['key' => '{{links.waitlist_offer}}', 'description' => 'Link da oferta da lista de espera'],
                 ['key' => '{{links.form_response}}', 'description' => 'Link interno para resposta de formulário'],
+                ['key' => '{{links.form_fill}}', 'description' => 'Link público para preenchimento do formulário do agendamento'],
             ],
             'ONLINE APPOINTMENT' => [
                 ['key' => '{{online.is_online}}', 'description' => 'Indica se a consulta é online (true/false)'],

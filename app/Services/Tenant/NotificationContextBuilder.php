@@ -5,6 +5,7 @@ namespace App\Services\Tenant;
 use App\Models\Platform\Tenant as PlatformTenant;
 use App\Models\Tenant\Appointment;
 use App\Models\Tenant\AppointmentWaitlistEntry;
+use App\Models\Tenant\Form;
 use App\Models\Tenant\FormResponse;
 use App\Models\Tenant\TenantSetting;
 use Illuminate\Support\Carbon;
@@ -48,7 +49,14 @@ class NotificationContextBuilder
         $confirmationExpiresAt = $this->toCarbon($appointment->confirmation_expires_at, $timezone);
 
         $confirmToken = $this->normalizeString($appointment->confirmation_token);
+        $appointmentDetailsParams = [
+            'appointment_id' => $appointment->id,
+        ];
+        if ($confirmToken) {
+            $appointmentDetailsParams['token'] = $confirmToken;
+        }
         $onlineInstructions = $appointment->onlineInstructions;
+        $form = Form::getFormForAppointment($appointment);
         $sentByEmailAt = $this->toCarbon($onlineInstructions?->sent_by_email_at, $timezone);
         $sentByWhatsappAt = $this->toCarbon($onlineInstructions?->sent_by_whatsapp_at, $timezone);
         $isOnlineAppointment = $this->normalizeString($appointment->appointment_mode) === 'online';
@@ -94,6 +102,10 @@ class NotificationContextBuilder
                 'instructions_sent_email_at' => $this->formatDateTime($sentByEmailAt),
                 'instructions_sent_whatsapp_at' => $this->formatDateTime($sentByWhatsappAt),
             ],
+            'form' => [
+                'id' => $form?->id ? (string) $form->id : null,
+                'name' => $this->normalizeString($form?->name),
+            ],
             'links' => [
                 'appointment_confirm' => $confirmToken
                     ? $this->buildPublicRoute('public.appointment.confirm', $slug, ['token' => $confirmToken])
@@ -101,11 +113,15 @@ class NotificationContextBuilder
                 'appointment_cancel' => $confirmToken
                     ? $this->buildPublicRoute('public.appointment.cancel', $slug, ['token' => $confirmToken])
                     : null,
-                'appointment_details' => $this->buildPublicRoute('public.appointment.show', $slug, [
-                    'appointment_id' => $appointment->id,
-                ]),
+                'appointment_details' => $this->buildPublicRoute('public.appointment.show', $slug, $appointmentDetailsParams),
                 'online_appointment_details' => $isOnlineAppointment
                     ? $this->buildTenantRoute('tenant.online-appointments.show', $slug, ['appointment' => $appointment->id])
+                    : null,
+                'form_fill' => $form?->id
+                    ? $this->buildPublicRoute('public.form.response.create', $slug, [
+                        'form' => (string) $form->id,
+                        'appointment' => (string) $appointment->id,
+                    ])
                     : null,
                 'waitlist_offer' => null,
             ],

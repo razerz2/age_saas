@@ -24,12 +24,25 @@ function buildModalMarkup() {
 	`;
 }
 
-function ensureModal() {
+function ensureModal(config = {}) {
 	let modal = document.querySelector('[data-entity-search-modal]');
-	if (modal) return modal;
+	if (!modal) {
+		document.body.insertAdjacentHTML('beforeend', buildModalMarkup());
+		modal = document.querySelector('[data-entity-search-modal]');
+	}
 
-	document.body.insertAdjacentHTML('beforeend', buildModalMarkup());
-	modal = document.querySelector('[data-entity-search-modal]');
+	if (modal && config.attachToBody === true && modal.parentElement !== document.body) {
+		document.body.appendChild(modal);
+	}
+
+	if (modal && config.forceLayering === true) {
+		modal.style.zIndex = String(config.modalZIndex || 2147483646);
+		const dialog = modal.querySelector('.entity-search-modal__dialog');
+		if (dialog) {
+			dialog.style.zIndex = String(config.dialogZIndex || 2147483647);
+		}
+	}
+
 	return modal;
 }
 
@@ -44,7 +57,7 @@ export function initEntitySearchModal(config = {}) {
 	const triggers = Array.from(document.querySelectorAll(triggerSelector));
 	if (triggers.length === 0) return;
 
-	const modal = ensureModal();
+	const modal = ensureModal(config);
 	if (!modal || modal.dataset.entitySearchBound === '1') return;
 
 	const searchInput = modal.querySelector('[data-entity-search-input]');
@@ -60,6 +73,23 @@ export function initEntitySearchModal(config = {}) {
 	let currentConfig = null;
 	let selectedItem = null;
 	let selectedButton = null;
+	let activeRequestId = 0;
+	let previousBodyOverflow = '';
+	let bodyScrollLocked = false;
+	const debounceMs = Number.isFinite(config.debounceMs) ? config.debounceMs : 300;
+
+	const lockBodyScroll = () => {
+		if (config.lockBodyScroll !== true || bodyScrollLocked) return;
+		previousBodyOverflow = document.body.style.overflow;
+		document.body.style.overflow = 'hidden';
+		bodyScrollLocked = true;
+	};
+
+	const unlockBodyScroll = () => {
+		if (config.lockBodyScroll !== true || !bodyScrollLocked) return;
+		document.body.style.overflow = previousBodyOverflow;
+		bodyScrollLocked = false;
+	};
 
 	const applySelection = (button, item) => {
 		if (selectedButton) {
@@ -95,8 +125,10 @@ export function initEntitySearchModal(config = {}) {
 		modal.classList.add('hidden');
 		searchInput.value = '';
 		currentConfig = null;
+		activeRequestId += 1;
 		resetSelection();
 		renderEmpty('Digite para buscar.');
+		unlockBodyScroll();
 	};
 
 	const commitSelection = () => {
@@ -166,6 +198,7 @@ export function initEntitySearchModal(config = {}) {
 
 	const fetchResults = (query) => {
 		if (!currentConfig?.searchUrl) return;
+		const requestId = ++activeRequestId;
 
 		loadingEl.classList.remove('hidden');
 		emptyEl.classList.add('hidden');
@@ -174,14 +207,27 @@ export function initEntitySearchModal(config = {}) {
 
 		fetch(`${currentConfig.searchUrl}?q=${encodeURIComponent(query)}&limit=10`)
 			.then((response) => response.json())
-			.then((payload) => renderResults(normalizeItems(payload)))
-			.catch(() => renderEmpty('Erro ao buscar resultados.'));
+			.then((payload) => {
+				if (requestId !== activeRequestId) return;
+				renderResults(normalizeItems(payload));
+			})
+			.catch(() => {
+				if (requestId !== activeRequestId) return;
+				renderEmpty('Erro ao buscar resultados.');
+			});
 	};
 
 	searchInput.addEventListener('input', () => {
 		const query = searchInput.value.trim();
 		if (debounceTimer) clearTimeout(debounceTimer);
-		debounceTimer = setTimeout(() => fetchResults(query), 250);
+
+		if (!query) {
+			activeRequestId += 1;
+			renderEmpty('Digite para buscar.');
+			return;
+		}
+
+		debounceTimer = setTimeout(() => fetchResults(query), debounceMs);
 	});
 
 	triggers.forEach((button) => {
@@ -195,6 +241,7 @@ export function initEntitySearchModal(config = {}) {
 
 			titleEl.textContent = button.dataset.modalTitle || 'Buscar';
 			renderEmpty('Digite para buscar.');
+			lockBodyScroll();
 			modal.classList.remove('hidden');
 			if (confirmButton) confirmButton.disabled = true;
 			searchInput.focus();

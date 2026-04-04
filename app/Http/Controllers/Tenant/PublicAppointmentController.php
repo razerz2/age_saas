@@ -264,15 +264,38 @@ class PublicAppointmentController extends Controller
         $appointment = Appointment::with(['calendar.doctor.user', 'patient', 'type', 'specialty'])
             ->findOrFail($appointmentId);
 
-        // Verifica se o paciente tem permissão para ver este agendamento
-        // O paciente só pode ver seus próprios agendamentos
+        // Fluxo público controlado:
+        // 1) sessão do paciente (fluxo identificar/agendar)
+        // 2) token público do próprio agendamento (link de notificação)
         $patientIdFromSession = Session::get('last_appointment_patient_id') ?? Session::get('public_patient_id');
-        
-        // Valida que o agendamento pertence ao paciente da sessão
-        // Se não houver sessão ou não corresponder, bloqueia o acesso
-        if (!$patientIdFromSession || $appointment->patient_id !== $patientIdFromSession) {
+        $hasSessionAccess = $patientIdFromSession && (string) $appointment->patient_id === (string) $patientIdFromSession;
+
+        $accessToken = trim((string) $request->query('token', ''));
+        $hasTokenAccess = $accessToken !== ''
+            && !empty($appointment->confirmation_token)
+            && hash_equals((string) $appointment->confirmation_token, $accessToken);
+
+        if (!$hasSessionAccess && !$hasTokenAccess) {
+            // Compatibilidade com links antigos sem token:
+            // gera (se necessário) e redireciona para URL tokenizada.
+            if ($accessToken === '') {
+                if (empty($appointment->confirmation_token)) {
+                    $appointment->confirmation_token = $this->generateUniqueConfirmationToken();
+                    $appointment->save();
+                }
+
+                return redirect()->route('public.appointment.show', [
+                    'slug' => $tenant,
+                    'appointment_id' => $appointment->id,
+                    'token' => $appointment->confirmation_token,
+                ]);
+            }
+
             abort(403, 'Você não tem permissão para visualizar este agendamento. Por favor, identifique-se novamente.');
         }
+
+        Session::put('last_appointment_id', $appointment->id);
+        Session::put('last_appointment_patient_id', $appointment->patient_id);
 
         return view('tenant.public.appointment-show', [
             'tenant' => $tenantModel,

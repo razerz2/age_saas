@@ -4,16 +4,13 @@ namespace App\Observers;
 
 use App\Models\Tenant\Appointment;
 use App\Models\Tenant\Form;
-use App\Models\Tenant\TenantSetting;
 use App\Models\Tenant\OnlineAppointmentInstruction;
 use App\Models\Platform\Tenant;
 use App\Jobs\Tenant\SendAppointmentNotificationsJob;
-use App\Services\NotificationService;
 use App\Services\Tenant\NotificationDispatcher;
 use App\Services\Tenant\GoogleCalendarService;
 use App\Services\Tenant\AppleCalendarService;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Str;
 
 class AppointmentObserver
@@ -66,44 +63,26 @@ class AppointmentObserver
 
         $this->dispatchAppointmentNotificationJob('created', $appointment, $metadata);
 
-        // Enviar link do formulário se existir formulário ativo
+        // Dispara notificação específica de formulário para paciente quando houver formulário ativo/vinculado.
         $form = Form::getFormForAppointment($appointment);
         if ($form) {
             try {
-                // Obtém o tenant atual
-                $tenant = Tenant::current();
-                if (!$tenant) {
-                    Log::warning('Não foi possível obter tenant atual para enviar link do formulário', [
-                        'appointment_id' => $appointment->id
-                    ]);
-                } else {
-                    // Gera URL do formulário usando tenant_route
-                    $url = tenant_route(
-                        $tenant,
-                        'public.form.response.create',
-                        [
-                            'form' => $form->id,
-                            'appointment' => $appointment->id
-                        ]
-                    );
+                $formRequestMeta = [
+                    'event' => 'appointment_form_requested_patient',
+                    'origin' => (string) ($appointment->origin ?? ''),
+                ];
 
-                    // Verifica configurações do tenant
-                    $settings = TenantSetting::getAll();
-
-                    // Envia email se configurado
-                    if (($settings['notifications.form_send_email'] ?? false) === 'true' || 
-                        ($settings['notifications.form_send_email'] ?? false) === true) {
-                        NotificationService::sendEmailFormLink($appointment->patient, $appointment, $url);
-                    }
-
-                    // Envia WhatsApp se configurado
-                    if (($settings['notifications.form_send_whatsapp'] ?? false) === 'true' || 
-                        ($settings['notifications.form_send_whatsapp'] ?? false) === true) {
-                        NotificationService::sendWhatsappFormLink($appointment->patient, $appointment, $url);
-                    }
+                if ($this->isWhatsAppBotOrigin($appointment)) {
+                    $formRequestMeta['suppress_patient_channels'] = ['whatsapp'];
                 }
+
+                $this->notificationDispatcher->dispatchAppointment(
+                    $appointment,
+                    'appointment.form_requested.patient',
+                    $formRequestMeta
+                );
             } catch (\Exception $e) {
-                Log::error('Erro ao enviar link do formulário após criar agendamento', [
+                Log::error('Erro ao disparar notificação de solicitação de formulário após criar agendamento', [
                     'appointment_id' => $appointment->id,
                     'error' => $e->getMessage(),
                 ]);

@@ -20,7 +20,7 @@ class StoreAgendaSettingsRequest extends FormRequest
             'is_active' => ['required', 'in:0,1'],
 
             'business_hours' => ['required', 'array', 'min:1'],
-            'business_hours.*.weekday' => ['required', 'integer', 'min:0', 'max:6'],
+            'business_hours.*.weekday' => ['required', 'integer', 'min:0', 'max:6', 'distinct'],
             'business_hours.*.start_time' => ['required', 'date_format:H:i'],
             'business_hours.*.end_time' => ['required', 'date_format:H:i'],
             'business_hours.*.break_start_time' => ['nullable', 'date_format:H:i'],
@@ -41,6 +41,7 @@ class StoreAgendaSettingsRequest extends FormRequest
             'name.required' => 'Informe o nome da agenda.',
             'is_active.required' => 'Informe o status da agenda.',
             'business_hours.required' => 'Cadastre ao menos um horário de atendimento.',
+            'business_hours.*.weekday.distinct' => 'Já existe horário cadastrado para este dia da semana.',
             'appointment_types.required' => 'Cadastre ao menos um tipo de atendimento.',
         ];
     }

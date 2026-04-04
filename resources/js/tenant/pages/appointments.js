@@ -49,7 +49,14 @@ export function init() {
 	});
 
 	bindCopyBookingLinks();
-	initEntitySearchModal();
+	initEntitySearchModal({
+		attachToBody: true,
+		forceLayering: true,
+		modalZIndex: 2147483646,
+		dialogZIndex: 2147483647,
+		lockBodyScroll: true,
+		debounceMs: 300,
+	});
 
 	const doctorSelect = document.getElementById('doctor_id');
 	const doctorNameInput = document.getElementById('doctor_name');
@@ -64,6 +71,7 @@ export function init() {
 	const slotWaitlistAlertMessage = document.getElementById('slot_waitlist_alert_message');
 	const calendarIdInput = document.getElementById('calendar_id');
 	const businessHoursModal = document.getElementById('businessHoursModal');
+	const businessHoursPanel = document.getElementById('business-hours-panel');
 	const btnShowBusinessHours = document.getElementById('btn-show-business-hours');
 	const appointmentTypeWrapper = appointmentTypeSelect?.closest('[data-appointment-type-wrapper]') || null;
 	const openDatePickerButtons = document.querySelectorAll('[data-action="open-date-picker"]');
@@ -111,6 +119,16 @@ export function init() {
 	const initialEndsAt = form ? form.dataset.initialEndsAt : null;
 	const waitlistAlertDefaultMessage =
 		'Você escolheu um horário já reservado. Você será encaminhado para a fila de espera e receberá uma notificação com link se a vaga ficar disponível.';
+
+	function showElement(el) {
+		if (!el) return;
+		el.classList.remove('hidden', 'd-none');
+	}
+
+	function hideElement(el) {
+		if (!el) return;
+		el.classList.add('hidden');
+	}
 
 	function setTimeState(placeholder, disabled = true, clearHidden = true) {
 		timeSelect.innerHTML = `<option value="">${placeholder}</option>`;
@@ -547,6 +565,7 @@ export function init() {
 			resetDependentFields();
 			if (btnShowBusinessHours) btnShowBusinessHours.disabled = true;
 			if (calendarIdInput) calendarIdInput.value = '';
+			if (businessHoursPanel) businessHoursPanel.classList.add('hidden');
 			return;
 		}
 
@@ -558,6 +577,20 @@ export function init() {
 		dateInput.disabled = false;
 
 		if (btnShowBusinessHours) btnShowBusinessHours.disabled = false;
+		if (businessHoursPanel) {
+			businessHoursPanel.classList.remove('hidden');
+		}
+		if (businessHoursPanel) {
+			if (typeof window.loadBusinessHours === 'function') {
+				window.loadBusinessHours(doctorId);
+			} else {
+				setTimeout(() => {
+					if (typeof window.loadBusinessHours === 'function') {
+						window.loadBusinessHours(doctorId);
+					}
+				}, 0);
+			}
+		}
 
 		if (calendarIdInput) {
 			fetch(`/workspace/${tenantSlug}/api/doctors/${doctorId}/calendars`)
@@ -617,6 +650,12 @@ export function init() {
 	}
 
 	setInitialState();
+	if (btnShowBusinessHours) {
+		btnShowBusinessHours.disabled = !doctorSelect.value;
+	}
+	if (businessHoursPanel && !doctorSelect.value) {
+		businessHoursPanel.classList.add('hidden');
+	}
 
 	// Fechar modal de dias trabalhados (create: Tailwind overlay, edit: Bootstrap modal)
 	document.querySelectorAll('.js-close-business-hours-modal').forEach((btn) => {
@@ -662,8 +701,8 @@ export function init() {
 		}
 	}
 
-	// Modal de dias trabalhados (Tailwind ou Bootstrap, dependendo da view)
-	if (businessHoursModal) {
+	// Dias trabalhados (modal na create e card lateral na edit)
+	if (businessHoursModal || businessHoursPanel) {
 		window.loadBusinessHours = function loadBusinessHours(doctorId) {
 			const loadingEl = document.getElementById('business-hours-loading');
 			const contentEl = document.getElementById('business-hours-content');
@@ -671,32 +710,32 @@ export function init() {
 			const emptyEl = document.getElementById('business-hours-empty');
 			const listEl = document.getElementById('business-hours-list');
 			const doctorNameEl = document.getElementById('business-hours-doctor-name');
+			const messageEl = document.getElementById('business-hours-error-message');
 
-			if (loadingEl) {
-				loadingEl.classList.remove('d-none');
-				loadingEl.style.display = 'block';
+			const escapeHtml = (value) =>
+				String(value ?? '')
+					.replaceAll('&', '&amp;')
+					.replaceAll('<', '&lt;')
+					.replaceAll('>', '&gt;')
+					.replaceAll('"', '&quot;')
+					.replaceAll("'", '&#39;');
+
+			if (businessHoursPanel) {
+				businessHoursPanel.classList.remove('hidden');
 			}
-			if (contentEl) {
-				contentEl.classList.add('d-none');
-				contentEl.style.display = 'none';
-			}
-			if (errorEl) {
-				errorEl.classList.add('d-none');
-				errorEl.style.display = 'none';
-			}
-			if (emptyEl) {
-				emptyEl.classList.add('d-none');
-				emptyEl.style.display = 'none';
+
+			showElement(loadingEl);
+			hideElement(contentEl);
+			hideElement(errorEl);
+			hideElement(emptyEl);
+			if (listEl) {
+				listEl.innerHTML = '';
 			}
 
 			if (!doctorId) {
-				if (loadingEl) loadingEl.style.display = 'none';
-				if (errorEl) {
-					errorEl.classList.remove('d-none');
-					errorEl.style.display = 'block';
-					const msgEl = document.getElementById('business-hours-error-message');
-					if (msgEl) msgEl.textContent = 'Por favor, selecione um médico primeiro.';
-				}
+				hideElement(loadingEl);
+				showElement(errorEl);
+				if (messageEl) messageEl.textContent = 'Por favor, selecione um médico primeiro.';
 				return;
 			}
 
@@ -708,7 +747,7 @@ export function init() {
 					return response.json();
 				})
 				.then((data) => {
-					if (loadingEl) loadingEl.style.display = 'none';
+					hideElement(loadingEl);
 
 					let businessHoursArray = null;
 					let doctorInfo = null;
@@ -718,31 +757,15 @@ export function init() {
 						doctorInfo = { name: getDoctorName() };
 					} else if (data && typeof data === 'object') {
 						if (data.error) {
-							if (errorEl) {
-								errorEl.classList.remove('d-none');
-								errorEl.style.display = 'block';
-								const msgEl = document.getElementById('business-hours-error-message');
-								if (msgEl) msgEl.textContent = data.error;
-							}
+							showElement(errorEl);
+							if (messageEl) messageEl.textContent = data.error;
 							return;
 						}
 						businessHoursArray = data.business_hours;
 						doctorInfo = data.doctor;
 					} else {
-						if (errorEl) {
-							errorEl.classList.remove('d-none');
-							errorEl.style.display = 'block';
-							const msgEl = document.getElementById('business-hours-error-message');
-							if (msgEl) msgEl.textContent = 'Formato de dados inválido recebido da API.';
-						}
-						return;
-					}
-
-					if (!businessHoursArray || businessHoursArray.length === 0) {
-						if (emptyEl) {
-							emptyEl.classList.remove('d-none');
-							emptyEl.style.display = 'block';
-						}
+						showElement(errorEl);
+						if (messageEl) messageEl.textContent = 'Formato de dados inválido recebido da API.';
 						return;
 					}
 
@@ -750,49 +773,46 @@ export function init() {
 						doctorNameEl.textContent = doctorInfo.name || 'N/A';
 					}
 
-					let html = '<div class="table-responsive"><table class="table table-bordered table-hover">';
-					html += '<thead class="table-light"><tr><th>Dia da Semana</th><th>Horários</th></tr></thead>';
-					html += '<tbody>';
+					showElement(contentEl);
+
+					if (!businessHoursArray || businessHoursArray.length === 0) {
+						showElement(emptyEl);
+						return;
+					}
+
+					hideElement(emptyEl);
+
+					let html = '';
 
 					businessHoursArray.forEach((day) => {
-						html += '<tr>';
-						html += `<td><strong>${day.weekday_name || 'N/A'}</strong></td>`;
-						html += '<td>';
+						html += '<div class="rounded-lg border border-gray-200 bg-gray-50 p-3 dark:border-gray-700 dark:bg-gray-800/60">';
+						html += `<p class="mb-2 text-sm font-semibold text-gray-900 dark:text-gray-100">${escapeHtml(day.weekday_name || 'N/A')}</p>`;
 
 						if (day.hours && Array.isArray(day.hours) && day.hours.length > 0) {
+							html += '<div class="space-y-2">';
 							day.hours.forEach((hour, index) => {
-								if (index > 0) html += '<br>';
-								html += `<span class="badge bg-primary me-1">${hour.start_time || 'N/A'}</span> até <span class="badge bg-primary">${hour.end_time || 'N/A'}</span>`;
+								html += `<div class="text-sm text-gray-700 dark:text-gray-200"><span class="font-medium">${escapeHtml(hour.start_time || 'N/A')}</span> às <span class="font-medium">${escapeHtml(hour.end_time || 'N/A')}</span>`;
 								if (hour.break_start_time && hour.break_end_time) {
-									html += ` <small class="text-muted">(Intervalo: ${hour.break_start_time} - ${hour.break_end_time})</small>`;
+									html += ` <span class="text-xs text-gray-500 dark:text-gray-400">(Intervalo: ${escapeHtml(hour.break_start_time)} - ${escapeHtml(hour.break_end_time)})</span>`;
 								}
+								html += '</div>';
 							});
+							html += '</div>';
 						} else {
-							html += '<span class="text-muted">Não trabalha neste dia</span>';
+							html += '<p class="text-sm text-gray-500 dark:text-gray-400">Não trabalha neste dia.</p>';
 						}
 
-						html += '</td>';
-						html += '</tr>';
+						html += '</div>';
 					});
-
-					html += '</tbody></table></div>';
 
 					if (listEl) {
 						listEl.innerHTML = html;
 					}
-
-					if (contentEl) {
-						contentEl.classList.remove('d-none');
-						contentEl.style.display = 'block';
-					}
 				})
 				.catch((error) => {
-					if (errorEl) {
-						errorEl.classList.remove('d-none');
-						errorEl.style.display = 'block';
-						const msgEl = document.getElementById('business-hours-error-message');
-						if (msgEl) msgEl.textContent = `Erro ao carregar informações: ${error.message}`;
-					}
+					hideElement(loadingEl);
+					showElement(errorEl);
+					if (messageEl) messageEl.textContent = `Erro ao carregar informações: ${error.message}`;
 				});
 		};
 	}
@@ -805,7 +825,7 @@ export function init() {
 		});
 	}
 
-	if (btnShowBusinessHours && businessHoursModal) {
+	if (btnShowBusinessHours && (businessHoursModal || businessHoursPanel)) {
 		btnShowBusinessHours.addEventListener('click', () => {
 			if (doctorSelect && !doctorSelect.value) {
 				if (typeof window.showAlert === 'function') {
@@ -818,7 +838,12 @@ export function init() {
 				return;
 			}
 
-			businessHoursModal.classList.remove('hidden');
+			if (businessHoursPanel) {
+				businessHoursPanel.classList.remove('hidden');
+			}
+			if (businessHoursModal) {
+				businessHoursModal.classList.remove('hidden');
+			}
 			if (typeof window.loadBusinessHours === 'function') {
 				window.loadBusinessHours(doctorSelect.value);
 			}
