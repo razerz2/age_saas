@@ -65,30 +65,6 @@
     }
 }
 
-@media (prefers-color-scheme: dark) {
-    [data-page="patients"] .btn-patient-primary {
-        background-color: #1d4ed8;
-        border-color: #1d4ed8;
-        color: white;
-    }
-
-    [data-page="patients"] .btn-patient-primary:hover {
-        background-color: #1d4ed8;
-        border-color: #1d4ed8;
-    }
-
-    [data-page="patients"] .btn-patient-secondary {
-        background-color: #111827;
-        border-color: #1f2937;
-        color: #f9fafb;
-    }
-
-    [data-page="patients"] .btn-patient-secondary:hover {
-        background-color: #1f2937;
-        border-color: #4b5563;
-    }
-}
-
 [data-page="patients"].dark .btn-patient-primary,
 .dark [data-page="patients"] .btn-patient-primary {
     background-color: #1d4ed8;

@@ -25,35 +25,6 @@
     <style>
         [x-cloak] { display: none !important; }
     </style>
-    <style>
-        /* Mesma correção do layout principal (ver `layouts.tailadmin.app`). */
-        @media (prefers-color-scheme: dark) {
-            body:not(.dark) .btn-patient-primary {
-                background-color: #2563eb;
-                border-color: #2563eb;
-            }
-            body:not(.dark) .btn-patient-primary:hover {
-                background-color: #1d4ed8;
-                border-color: #1d4ed8;
-            }
-
-            body:not(.dark) .btn-patient-secondary {
-                background-color: transparent;
-                color: #374151;
-            }
-            body:not(.dark) .btn-patient-secondary:hover {
-                background-color: #f9fafb;
-                border-color: #9ca3af;
-            }
-
-            body:not(.dark) .btn-patient-secondary.text-red-600 { color: #dc2626; }
-            body:not(.dark) .btn-patient-secondary.text-gray-500 { color: #6b7280; }
-        }
-
-        body.dark .btn-patient-secondary.text-red-600 { color: #f87171; }
-        body.dark .btn-patient-secondary.hover\:text-red-800:hover,
-        body.dark .btn-patient-secondary.hover\:text-red-900:hover { color: #fecaca; }
-    </style>
 </head>
 <body class="bg-gray-50" data-page="@yield('page', 'public')">
     <!-- ===== Preloader Start ===== -->

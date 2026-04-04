@@ -4,12 +4,19 @@
 @section('page', 'users')
 
 @section('content')
+    @php
+        $isSelfPasswordChange = (bool) ($isSelfPasswordChange ?? false);
+        $screenTitle = $isSelfPasswordChange ? 'Alterar Senha' : 'Redefinir Senha';
+        $screenDescription = $isSelfPasswordChange
+            ? 'Digite sua senha atual e a nova senha.'
+            : 'Defina a nova senha para o usuario selecionado.';
+    @endphp
     <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6">
         <!-- Page Header -->
         <div class="mb-6">
             <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div class="min-w-0 flex-1">
-                    <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Alterar Senha</h1>
+                    <h1 class="text-2xl font-bold text-gray-900 dark:text-white">{{ $screenTitle }}</h1>
                     <nav class="flex mt-2" aria-label="Breadcrumb">
                         <ol class="flex flex-wrap items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
                             <li>
@@ -26,7 +33,7 @@
                             </li>
                             <li class="flex items-center gap-2">
                                 <x-icon name="chevron-right" size="text-sm" class="text-gray-400" />
-                                <span class="text-gray-900 dark:text-white font-semibold">Alterar Senha</span>
+                                <span class="text-gray-900 dark:text-white font-semibold">{{ $screenTitle }}</span>
                             </li>
                         </ol>
                     </nav>
@@ -37,8 +44,13 @@
         <!-- Card Principal -->
         <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 max-w-2xl mx-auto">
             <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
-                <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Alterar Senha</h2>
-                <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Digite a senha atual e a nova senha.</p>
+                <h2 class="text-lg font-semibold text-gray-900 dark:text-white">{{ $screenTitle }}</h2>
+                <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">{{ $screenDescription }}</p>
+                @unless($isSelfPasswordChange)
+                    <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                        Usuario: <span class="font-medium text-gray-700 dark:text-gray-200">{{ $user->name_full ?? $user->name }}</span>
+                    </p>
+                @endunless
             </div>
 
             <div class="p-6">
@@ -46,31 +58,33 @@
                     @csrf
 
                     <div class="space-y-6">
-                        <!-- Senha Atual -->
-                        <div>
-                            <label for="current_password"
-                                class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Senha Atual</label>
-                            <div class="relative w-full">
-                                <div class="flex w-full">
-                                    <input type="password" name="current_password" id="current_password"
-                                        class="w-full min-w-0 flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 rounded-l-md shadow-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 dark:text-white"
-                                        required>
-                                    <button type="button" data-toggle-password-target="current_password"
-                                        class="shrink-0 w-11 inline-flex items-center justify-center px-0 py-2 border-y border-r border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-600 text-gray-500 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-500 focus:outline-none focus:ring-2 focus:ring-brand-500"
-                                        title="Mostrar/Ocultar senha">
-                                        <x-icon name="eye-outline" id="current_password-eye-icon" size="text-lg" />
-                                    </button>
-                                    <!-- Placeholder para manter largura igual ao campo com "Gerar" -->
-                                    <div class="shrink-0 w-24 inline-flex items-center justify-center px-0 py-2 border-y border-r border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-600 rounded-r-md pointer-events-none select-none"
-                                        aria-hidden="true">
-                                        <x-icon name="check-circle-outline" size="text-lg" class="opacity-0" />
+                        @if($isSelfPasswordChange)
+                            <!-- Senha Atual -->
+                            <div>
+                                <label for="current_password"
+                                    class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Senha Atual</label>
+                                <div class="relative w-full">
+                                    <div class="flex w-full">
+                                        <input type="password" name="current_password" id="current_password"
+                                            class="w-full min-w-0 flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 rounded-l-md shadow-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 dark:text-white"
+                                            required>
+                                        <button type="button" data-toggle-password-target="current_password"
+                                            class="shrink-0 w-11 inline-flex items-center justify-center px-0 py-2 border-y border-r border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-600 text-gray-500 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-500 focus:outline-none focus:ring-2 focus:ring-brand-500"
+                                            title="Mostrar/Ocultar senha">
+                                            <x-icon name="eye-outline" id="current_password-eye-icon" size="text-lg" />
+                                        </button>
+                                        <!-- Placeholder para manter largura igual ao campo com "Gerar" -->
+                                        <div class="shrink-0 w-24 inline-flex items-center justify-center px-0 py-2 border-y border-r border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-600 rounded-r-md pointer-events-none select-none"
+                                            aria-hidden="true">
+                                            <x-icon name="check-circle-outline" size="text-lg" class="opacity-0" />
+                                        </div>
                                     </div>
                                 </div>
+                                @error('current_password')
+                                    <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+                                @enderror
                             </div>
-                            @error('current_password')
-                                <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
-                            @enderror
-                        </div>
+                        @endif
 
                         <!-- Nova Senha -->
                         <div>
@@ -139,7 +153,7 @@
                         </a>
                         <button type="submit" class="btn btn-primary">
                             <x-icon name="lock-reset" size="text-sm" />
-                            Alterar Senha
+                            {{ $isSelfPasswordChange ? 'Alterar Senha' : 'Redefinir Senha' }}
                         </button>
                     </div>
                 </form>

@@ -54,18 +54,16 @@
 }
 
 /* Dark mode: ajustar sombras para tema escuro */
-@media (prefers-color-scheme: dark) {
-    [data-page="public-appointment-create"] body.dark {
-        background-color: #0f172a;
-    }
-    
-    [data-page="public-appointment-create"] body.dark .bg-white {
-        background-color: #1e293b;
-        border-color: #334155;
-    }
-    
-    [data-page="public-appointment-create"] body.dark .appointment-card,
-    [data-page="public-appointment-create"] body.dark .summary-card {
-        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-    }
+body.dark[data-page="public-appointment-create"] {
+    background-color: #0f172a;
+}
+
+body.dark[data-page="public-appointment-create"] .bg-white {
+    background-color: #1e293b;
+    border-color: #334155;
+}
+
+body.dark[data-page="public-appointment-create"] .appointment-card,
+body.dark[data-page="public-appointment-create"] .summary-card {
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
 }

@@ -40,7 +40,7 @@
         'resources/js/tenant/app.js',
     ])
     <style>
-        /* Botões padrão do Tenant (padrão usado em Users) */
+        /* Botoes padrao do Tenant (padrao usado em Users) */
         .btn-patient-primary {
             display: inline-flex;
             align-items: center;
@@ -79,46 +79,6 @@
     @stack('styles')
     <style>
         [x-cloak] { display: none !important; }
-    </style>
-    <style>
-        /*
-         * Tenant buttons: evita "invisibilidade" no modo claro quando o SO está em dark mode.
-         *
-         * Muitos templates do tenant ainda têm CSS com:
-         *   @media (prefers-color-scheme: dark) { .btn-patient-* { ... } }
-         * Isso aplica mesmo quando o TailAdmin está em light (sem classe .dark no body).
-         * Resultado: botões podem ficar com texto branco/fundo transparente no modo claro.
-         *
-         * A regra abaixo garante que, sem `.dark`, prevaleça o estilo claro.
-         */
-        @media (prefers-color-scheme: dark) {
-            body:not(.dark) .btn-patient-primary {
-                background-color: #2563eb;
-                border-color: #2563eb;
-            }
-            body:not(.dark) .btn-patient-primary:hover {
-                background-color: #1d4ed8;
-                border-color: #1d4ed8;
-            }
-
-            body:not(.dark) .btn-patient-secondary {
-                background-color: transparent;
-                color: #374151;
-            }
-            body:not(.dark) .btn-patient-secondary:hover {
-                background-color: #f9fafb;
-                border-color: #9ca3af;
-            }
-
-            /* Mantém variações explícitas (destrutivo/desabilitado) legíveis no modo claro */
-            body:not(.dark) .btn-patient-secondary.text-red-600 { color: #dc2626; }
-            body:not(.dark) .btn-patient-secondary.text-gray-500 { color: #6b7280; }
-        }
-
-        /* Mantém destrutivos vermelhos também no dark mode (classe .dark do TailAdmin) */
-        body.dark .btn-patient-secondary.text-red-600 { color: #f87171; }
-        body.dark .btn-patient-secondary.hover\:text-red-800:hover,
-        body.dark .btn-patient-secondary.hover\:text-red-900:hover { color: #fecaca; }
     </style>
     <style>
         .table-action-btn {

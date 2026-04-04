@@ -72,19 +72,6 @@
     box-shadow: 0 0 0 3px rgba(17, 24, 39, 0.15);
 }
 
-@media (prefers-color-scheme: dark) {
-    .btn-outline {
-        background-color: #111827;
-        border-color: #1f2937;
-        color: #f9fafb;
-    }
-
-    .btn-outline:hover {
-        background-color: #1f2937;
-        border-color: #4b5563;
-    }
-}
-
 .dark .btn-outline,
 .btn-outline.dark {
     background-color: #111827;

@@ -582,33 +582,41 @@ class UserController extends Controller
 
     public function showChangePasswordForm($slug, $id)
     {
-        // Recupera o usuário pelo ID
         $user = User::findOrFail($id);
+        $authUser = Auth::guard('tenant')->user();
+        $isSelfPasswordChange = $authUser && (int) $authUser->id === (int) $user->id;
 
-        // Retorna a view, passando o usuário
-        return view('tenant.users.change-password', compact('user'));
+        if (!$isSelfPasswordChange && (!$authUser || $authUser->role !== 'admin')) {
+            abort(403, 'Voce nao tem permissao para redefinir a senha de outros usuarios.');
+        }
+
+        return view('tenant.users.change-password', compact('user', 'isSelfPasswordChange'));
     }
 
     public function changePassword(ChangePasswordUserRequest $request, $slug, $id)
     {
-        // Valida os dados com a ChangePasswordRequest
         $validated = $request->validated();
-
-        // Recupera o usuário pelo ID
         $user = User::findOrFail($id);
+        $authUser = Auth::guard('tenant')->user();
+        $isSelfPasswordChange = $authUser && (int) $authUser->id === (int) $user->id;
 
-        // Verifica se a senha atual está correta
-        if (!Hash::check($request->current_password, $user->password)) {
-            return back()->withErrors(['current_password' => 'A senha atual está incorreta.']);
+        if (!$isSelfPasswordChange && (!$authUser || $authUser->role !== 'admin')) {
+            abort(403, 'Voce nao tem permissao para redefinir a senha de outros usuarios.');
         }
 
-        // Atualiza a senha
-        $user->password = Hash::make($request->new_password);
+        if ($isSelfPasswordChange && !Hash::check((string) ($validated['current_password'] ?? ''), $user->password)) {
+            return back()->withErrors(['current_password' => 'A senha atual esta incorreta.']);
+        }
+
+        $user->password = Hash::make($validated['new_password']);
         $user->save();
 
-        // Redireciona com sucesso
+        $successMessage = $isSelfPasswordChange
+            ? 'Senha alterada com sucesso!'
+            : 'Senha redefinida com sucesso!';
+
         return redirect()->route('tenant.users.index', ['slug' => tenant()->subdomain])
-            ->with('success', 'Senha alterada com sucesso!');
+            ->with('success', $successMessage);
     }
 
     /**

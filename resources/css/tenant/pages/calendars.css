@@ -47,28 +47,6 @@
     background-color: #f9fafb;
 }
 
-@media (prefers-color-scheme: dark) {
-    .btn-patient-primary {
-        background-color: transparent;
-        color: #ffffff;
-        border-color: #d1d5db;
-    }
-
-    .btn-patient-primary:hover {
-        background-color: #1f2937;
-    }
-
-    .btn-patient-secondary {
-        background-color: transparent;
-        color: #ffffff;
-        border-color: #d1d5db;
-    }
-
-    .btn-patient-secondary:hover {
-        background-color: #1f2937;
-    }
-}
-
 .dark .btn-patient-primary {
     background-color: transparent;
     color: #ffffff;
