@@ -176,7 +176,7 @@ class PreRegisterController extends Controller
             $asaas = new AsaasService();
             
             // Validar configuração do Asaas
-            if (empty(config('services.asaas.api_key')) && empty(env('ASAAS_API_KEY'))) {
+            if (!has_asaas_credentials()) {
                 Log::error('Configuração do Asaas não encontrada');
                 throw new \Exception('Configuração do sistema de pagamento não encontrada. Entre em contato com o suporte.');
             }

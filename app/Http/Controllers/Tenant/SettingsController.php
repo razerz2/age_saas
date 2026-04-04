@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\Tenant\TenantSetting;
 use App\Models\Tenant\Integrations;
 use App\Models\Tenant\Appointment;
+use App\Models\Tenant\Doctor;
+use App\Models\Tenant\CalendarSyncState;
 use App\Models\Platform\Tenant;
 use App\Models\Platform\Estado;
 use App\Models\Platform\Cidade;
@@ -21,6 +23,7 @@ use App\Services\WhatsApp\TenantWahaGlobalInstanceService;
 use App\Services\WhatsApp\TenantWahaGlobalOperationsService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
@@ -30,7 +33,7 @@ class SettingsController extends Controller
     private const BRAZIL_COUNTRY_ID = 31;
 
     /**
-     * Exibe a página de configurações
+     * Exibe a pÃ¡gina de configuraÃ§Ãµes
      */
     public function index(Request $request)
     {
@@ -67,17 +70,17 @@ class SettingsController extends Controller
             'appointments.waitlist.allow_when_confirmed' => tenant_setting_bool('appointments.waitlist.allow_when_confirmed', true),
             'appointments.waitlist.max_per_slot' => tenant_setting_nullable_int('appointments.waitlist.max_per_slot', null),
             
-            // Calendário
+            // CalendÃ¡rio
             'calendar.default_start_time' => TenantSetting::get('calendar.default_start_time', '08:00'),
             'calendar.default_end_time' => TenantSetting::get('calendar.default_end_time', '18:00'),
             'calendar.default_weekdays' => TenantSetting::get('calendar.default_weekdays', '1,2,3,4,5'), // Segunda a Sexta
             'calendar.show_weekends' => TenantSetting::isEnabled('calendar.show_weekends'),
             
-            // Notificações
-            // Verifica explicitamente se o valor é 'true' para garantir que desabilitados retornem false
+            // NotificaÃ§Ãµes
+            // Verifica explicitamente se o valor Ã© 'true' para garantir que desabilitados retornem false
             'notifications.appointments.enabled' => TenantSetting::get('notifications.appointments.enabled') === 'true',
             'notifications.form_responses.enabled' => TenantSetting::get('notifications.form_responses.enabled') === 'true',
-            // Para notificações aos pacientes, verifica explicitamente se é 'true' (opt-in)
+            // Para notificaÃ§Ãµes aos pacientes, verifica explicitamente se Ã© 'true' (opt-in)
             'notifications.send_email_to_patients' => TenantSetting::get('notifications.send_email_to_patients') === 'true',
             'notifications.send_whatsapp_to_patients' => TenantSetting::get('notifications.send_whatsapp_to_patients') === 'true',
             'notifications.send_email_to_doctors' => TenantSetting::get('notifications.send_email_to_doctors') === 'true',
@@ -170,7 +173,7 @@ class SettingsController extends Controller
             'whatsapp_bot.menu.return_after_fallback' => (bool) data_get($botSettings, 'menu.return_after_fallback', true),
             'whatsapp_bot.menu.options_json' => json_encode((array) data_get($botSettings, 'menu.options', WhatsAppBotConfigService::DEFAULT_MENU_OPTIONS), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE),
             
-            // Integrações
+            // IntegraÃ§Ãµes
             'integrations.google_calendar.enabled' => TenantSetting::isEnabled('integrations.google_calendar.enabled'),
             'integrations.google_calendar.auto_sync' => TenantSetting::isEnabled('integrations.google_calendar.auto_sync'),
             'integrations.apple_calendar.enabled' => TenantSetting::isEnabled('integrations.apple_calendar.enabled'),
@@ -182,7 +185,7 @@ class SettingsController extends Controller
             'professional.label_plural' => TenantSetting::get('professional.label_plural', ''),
             'professional.registration_label' => TenantSetting::get('professional.registration_label', ''),
             
-            // Aparência
+            // AparÃªncia
             'appearance.logo' => $appearanceLogoLight,
             'appearance.logo_mini' => $appearanceLogoMiniLight,
             'appearance.logo_light' => $appearanceLogoLight,
@@ -196,52 +199,59 @@ class SettingsController extends Controller
             $settings['whatsapp.global_provider'] = $tenantGlobalProviderCatalog->resolveTenantGlobalProvider(null) ?? '';
         }
 
-        // Buscar integrações ativas
+        // Buscar integracoes ativas
         $integrations = Integrations::where('is_enabled', true)->get();
-        
-        // Verificar se Google Calendar está cadastrado e configurado
+
+        // Cadastros genericos opcionais (feature metadata)
         $googleCalendarIntegration = Integrations::where('key', 'google_calendar')->first();
         $appleCalendarIntegration = Integrations::where('key', 'apple_calendar')->first();
-        
-        // Considera válida se existe, está habilitada e tem config não vazio
-        $hasGoogleCalendarIntegration = false;
-        
-        if ($googleCalendarIntegration) {
-            $hasConfig = false;
-            if ($googleCalendarIntegration->config) {
-                $config = $googleCalendarIntegration->config;
-                if (is_array($config)) {
-                    $hasConfig = !empty($config);
-                } elseif (is_string($config)) {
-                    $hasConfig = !empty(trim($config));
-                } else {
-                    $hasConfig = !empty($config);
-                }
-            }
-            
-            $hasGoogleCalendarIntegration = $googleCalendarIntegration->is_enabled && $hasConfig;
+
+        // Google usa credenciais globais na Platform com fallback para services.google.* (ambiente)
+        $hasGoogleCalendarIntegration = has_google_oauth_credentials();
+        $hasGoogleCalendarTokenTable = Schema::connection('tenant')->hasTable('google_calendar_tokens');
+
+        // Apple depende da infraestrutura/tabela de tokens por medico
+        $hasAppleCalendarIntegration = Schema::connection('tenant')->hasTable('apple_calendar_tokens');
+
+        $doctorRelations = ['user'];
+        if ($hasGoogleCalendarTokenTable) {
+            $doctorRelations[] = 'googleCalendarToken';
+        }
+        if ($hasAppleCalendarIntegration) {
+            $doctorRelations[] = 'appleCalendarToken';
         }
 
-        // Considera válida se existe, está habilitada e tem config não vazio
-        $hasAppleCalendarIntegration = false;
+        $calendarSyncDoctors = Doctor::with($doctorRelations)
+            ->whereHas('user', function ($query) {
+                $query->where('status', 'active');
+            })
+            ->orderBy('id')
+            ->get();
 
-        if ($appleCalendarIntegration) {
-            $hasConfig = false;
-            if ($appleCalendarIntegration->config) {
-                $config = $appleCalendarIntegration->config;
-                if (is_array($config)) {
-                    $hasConfig = !empty($config);
-                } elseif (is_string($config)) {
-                    $hasConfig = !empty(trim($config));
-                } else {
-                    $hasConfig = !empty($config);
-                }
+        if (!$hasGoogleCalendarTokenTable) {
+            foreach ($calendarSyncDoctors as $doctor) {
+                $doctor->setRelation('googleCalendarToken', null);
             }
-
-            $hasAppleCalendarIntegration = $appleCalendarIntegration->is_enabled && $hasConfig;
         }
 
-        // Obter tenant atual para gerar o link de agendamento público
+        if (!$hasAppleCalendarIntegration) {
+            foreach ($calendarSyncDoctors as $doctor) {
+                $doctor->setRelation('appleCalendarToken', null);
+            }
+        }
+
+        $calendarSyncLastSyncByDoctor = collect();
+        if (
+            Schema::connection('tenant')->hasTable('calendar_sync_state')
+            && Schema::connection('tenant')->hasTable('appointments')
+        ) {
+            $calendarSyncLastSyncByDoctor = CalendarSyncState::query()
+                ->join('appointments', 'appointments.id', '=', 'calendar_sync_state.appointment_id')
+                ->selectRaw('appointments.doctor_id as doctor_id, MAX(calendar_sync_state.last_sync_at) as last_sync_at')
+                ->groupBy('appointments.doctor_id')
+                ->pluck('last_sync_at', 'doctor_id');
+        }
+        // Obter tenant atual para gerar o link de agendamento pÃºblico
         $currentTenant = Tenant::current();
         $publicBookingUrl = null;
         
@@ -285,6 +295,8 @@ class SettingsController extends Controller
             'googleCalendarIntegration', 
             'hasAppleCalendarIntegration',
             'appleCalendarIntegration',
+            'calendarSyncDoctors',
+            'calendarSyncLastSyncByDoctor',
             'publicBookingUrl',
             'currentTenant',
             'localizacao',
@@ -406,7 +418,7 @@ class SettingsController extends Controller
             $validated['key'],
             (string) ($validated['audience'] ?? 'patient')
         ))
-            ->with('success', 'Template restaurado para o padrão.');
+            ->with('success', 'Template restaurado para o padrÃ£o.');
     }
 
     /**
@@ -484,7 +496,7 @@ class SettingsController extends Controller
     }
 
     /**
-     * Atualiza as informações de cadastro do tenant
+     * Atualiza as informaÃ§Ãµes de cadastro do tenant
      */
     public function updateRegistration(Request $request)
     {
@@ -523,16 +535,16 @@ class SettingsController extends Controller
         ]);
 
         return redirect()->to(route('tenant.settings.index', ['slug' => tenant()->subdomain]) . '#registration')
-            ->with('success', 'Informações de cadastro atualizadas com sucesso.');
+            ->with('success', 'InformaÃ§Ãµes de cadastro atualizadas com sucesso.');
     }
 
     /**
-     * Exibe a página dedicada do link de agendamento público
-     * Esta página não requer acesso ao módulo de configurações
+     * Exibe a pÃ¡gina dedicada do link de agendamento pÃºblico
+     * Esta pÃ¡gina nÃ£o requer acesso ao mÃ³dulo de configuraÃ§Ãµes
      */
     public function publicBookingLink()
     {
-        // Obter tenant atual para gerar o link de agendamento público
+        // Obter tenant atual para gerar o link de agendamento pÃºblico
         $currentTenant = Tenant::current();
         $publicBookingUrl = null;
         
@@ -544,7 +556,7 @@ class SettingsController extends Controller
     }
 
     /**
-     * Atualiza as configurações gerais
+     * Atualiza as configuraÃ§Ãµes gerais
      */
     public function updateGeneral(Request $request)
     {
@@ -556,7 +568,7 @@ class SettingsController extends Controller
             'time_format' => 'required|string|in:H:i,h:i A',
             'language' => 'required|string|in:pt_BR,en_US,es_ES',
         ], [
-            'timezone.in' => 'Selecione um fuso horário válido do Brasil.',
+            'timezone.in' => 'Selecione um fuso horÃ¡rio vÃ¡lido do Brasil.',
         ]);
 
         TenantSetting::set('timezone', $request->timezone);
@@ -565,11 +577,11 @@ class SettingsController extends Controller
         TenantSetting::set('language', $request->language);
 
         return redirect()->route('tenant.settings.index', ['slug' => tenant()->subdomain])
-            ->with('success', 'Configurações gerais atualizadas com sucesso.');
+            ->with('success', 'ConfiguraÃ§Ãµes gerais atualizadas com sucesso.');
     }
 
     /**
-     * Atualiza as configurações de agendamentos
+     * Atualiza as configuraÃ§Ãµes de agendamentos
      */
     public function updateAppointments(Request $request)
     {
@@ -635,11 +647,11 @@ class SettingsController extends Controller
         );
 
         return redirect()->route('tenant.settings.index', ['slug' => tenant()->subdomain])
-            ->with('success', 'Configurações de agendamentos atualizadas com sucesso.');
+            ->with('success', 'ConfiguraÃ§Ãµes de agendamentos atualizadas com sucesso.');
     }
 
     /**
-     * Atualiza as configurações de calendário
+     * Atualiza as configuraÃ§Ãµes de calendÃ¡rio
      */
     public function updateCalendar(Request $request)
     {
@@ -650,10 +662,10 @@ class SettingsController extends Controller
             'calendar_show_weekends' => 'boolean',
         ]);
 
-        // Valida se o horário de término é depois do início
+        // Valida se o horÃ¡rio de tÃ©rmino Ã© depois do inÃ­cio
         if (strtotime($request->calendar_default_end_time) <= strtotime($request->calendar_default_start_time)) {
             return redirect()->route('tenant.settings.index', ['slug' => tenant()->subdomain])
-                ->with('error', 'O horário de término deve ser posterior ao horário de início.');
+                ->with('error', 'O horÃ¡rio de tÃ©rmino deve ser posterior ao horÃ¡rio de inÃ­cio.');
         }
 
         TenantSetting::set('calendar.default_start_time', $request->calendar_default_start_time);
@@ -667,11 +679,11 @@ class SettingsController extends Controller
         }
 
         return redirect()->route('tenant.settings.index', ['slug' => tenant()->subdomain])
-            ->with('success', 'Configurações de calendário atualizadas com sucesso.');
+            ->with('success', 'ConfiguraÃ§Ãµes de calendÃ¡rio atualizadas com sucesso.');
     }
 
     /**
-     * Atualiza as configurações de notificações
+     * Atualiza as configuraÃ§Ãµes de notificaÃ§Ãµes
      */
     public function updateNotifications(Request $request)
     {
@@ -1026,7 +1038,7 @@ class SettingsController extends Controller
         }
 
         return redirect()->route('tenant.settings.index', ['slug' => tenant()->subdomain])
-            ->with('success', 'Configurações de notificações atualizadas com sucesso.');
+            ->with('success', 'ConfiguraÃ§Ãµes de notificaÃ§Ãµes atualizadas com sucesso.');
     }
 
     /**
@@ -1261,14 +1273,13 @@ class SettingsController extends Controller
             'integrations_apple_calendar_auto_sync' => 'boolean',
         ]);
 
-        // Verificar se Google Calendar está cadastrado antes de permitir habilitar
-        $googleCalendarIntegration = Integrations::where('key', 'google_calendar')->first();
-        $appleCalendarIntegration = Integrations::where('key', 'apple_calendar')->first();
+        $hasGoogleCredentials = has_google_oauth_credentials();
+        $hasAppleInfrastructure = Schema::connection('tenant')->hasTable('apple_calendar_tokens');
 
         if ($request->has('integrations_google_calendar_enabled')) {
-            if (!$googleCalendarIntegration || !$googleCalendarIntegration->is_enabled || empty($googleCalendarIntegration->config)) {
+            if (!$hasGoogleCredentials) {
                 return redirect()->route('tenant.settings.index', ['slug' => tenant()->subdomain])
-                    ->with('error', 'Não é possível habilitar o Google Calendar. Cadastre primeiro a integração em Integrações com a chave "google_calendar" e configure a API.');
+                    ->with('error', 'Nao foi possivel habilitar Google Calendar: configure as credenciais globais na Platform > Configuracoes > Integracoes (ou fallback no ambiente).');
             }
 
             TenantSetting::enable('integrations.google_calendar.enabled');
@@ -1284,9 +1295,9 @@ class SettingsController extends Controller
         }
 
         if ($request->has('integrations_apple_calendar_enabled')) {
-            if (!$appleCalendarIntegration || !$appleCalendarIntegration->is_enabled || empty($appleCalendarIntegration->config)) {
+            if (!$hasAppleInfrastructure) {
                 return redirect()->route('tenant.settings.index', ['slug' => tenant()->subdomain])
-                    ->with('error', 'Não é possível habilitar o Apple Calendar. Cadastre primeiro a integração em Integrações com a chave "apple_calendar" e configure a API.');
+                    ->with('error', 'Nao foi possivel habilitar Apple Calendar: execute as migrations de token do Apple Calendar no tenant.');
             }
 
             TenantSetting::enable('integrations.apple_calendar.enabled');
@@ -1302,11 +1313,11 @@ class SettingsController extends Controller
         }
 
         return redirect()->route('tenant.settings.index', ['slug' => tenant()->subdomain])
-            ->with('success', 'Configurações de integrações atualizadas com sucesso.');
+            ->with('success', 'Configuracoes de integracoes atualizadas com sucesso.');
     }
 
     /**
-     * Atualiza as configurações de módulos padrão por perfil de usuário
+     * Atualiza as configuraÃ§Ãµes de mÃ³dulos padrÃ£o por perfil de usuÃ¡rio
      */
     public function updateUserDefaults(Request $request)
     {
@@ -1318,29 +1329,29 @@ class SettingsController extends Controller
             'user_defaults.modules_doctor.*' => 'string',
         ]);
 
-        // Salvar módulos padrão para usuário comum
-        // O formulário envia como user_defaults[modules_common_user][], então acessamos via dot notation
+        // Salvar mÃ³dulos padrÃ£o para usuÃ¡rio comum
+        // O formulÃ¡rio envia como user_defaults[modules_common_user][], entÃ£o acessamos via dot notation
         $commonUserModules = $request->input('user_defaults.modules_common_user', []);
-        // Se não vier nada, garantir que seja array vazio
+        // Se nÃ£o vier nada, garantir que seja array vazio
         if (empty($commonUserModules)) {
             $commonUserModules = [];
         }
         TenantSetting::set('user_defaults.modules_common_user', json_encode($commonUserModules));
 
-        // Salvar módulos padrão para médico
+        // Salvar mÃ³dulos padrÃ£o para mÃ©dico
         $doctorModules = $request->input('user_defaults.modules_doctor', []);
-        // Se não vier nada, garantir que seja array vazio
+        // Se nÃ£o vier nada, garantir que seja array vazio
         if (empty($doctorModules)) {
             $doctorModules = [];
         }
         TenantSetting::set('user_defaults.modules_doctor', json_encode($doctorModules));
 
         return redirect()->route('tenant.settings.index', ['slug' => tenant()->subdomain])
-            ->with('success', 'Configurações de usuários e permissões atualizadas com sucesso.');
+            ->with('success', 'ConfiguraÃ§Ãµes de usuÃ¡rios e permissÃµes atualizadas com sucesso.');
     }
 
     /**
-     * Atualiza as configurações de profissionais
+     * Atualiza as configuraÃ§Ãµes de profissionais
      */
     public function updateProfessionals(Request $request)
     {
@@ -1351,30 +1362,30 @@ class SettingsController extends Controller
             'professional_registration_label' => 'nullable|string|max:50',
         ]);
 
-        // Habilitar/desabilitar personalização
-        // Checkbox não marcado não é enviado no request, então verificamos explicitamente
+        // Habilitar/desabilitar personalizaÃ§Ã£o
+        // Checkbox nÃ£o marcado nÃ£o Ã© enviado no request, entÃ£o verificamos explicitamente
         if ($request->filled('professional_customization_enabled') || $request->has('professional_customization_enabled')) {
             TenantSetting::enable('professional.customization_enabled');
             
-            // Salvar rótulos globais quando personalização está habilitada
+            // Salvar rÃ³tulos globais quando personalizaÃ§Ã£o estÃ¡ habilitada
             TenantSetting::set('professional.label_singular', $request->professional_label_singular ?? '');
             TenantSetting::set('professional.label_plural', $request->professional_label_plural ?? '');
             TenantSetting::set('professional.registration_label', $request->professional_registration_label ?? '');
         } else {
             TenantSetting::disable('professional.customization_enabled');
             
-            // Limpar rótulos quando desabilitado
+            // Limpar rÃ³tulos quando desabilitado
             TenantSetting::set('professional.label_singular', '');
             TenantSetting::set('professional.label_plural', '');
             TenantSetting::set('professional.registration_label', '');
         }
 
         return redirect()->route('tenant.settings.index', ['slug' => tenant()->subdomain])
-            ->with('success', 'Configurações de profissionais atualizadas com sucesso.');
+            ->with('success', 'ConfiguraÃ§Ãµes de profissionais atualizadas com sucesso.');
     }
 
     /**
-     * Atualiza as configurações de aparência (logo e favicon)
+     * Atualiza as configuraÃ§Ãµes de aparÃªncia (logo e favicon)
      */
     public function updateAppearance(Request $request)
     {
@@ -1391,12 +1402,12 @@ class SettingsController extends Controller
             'remove_favicon' => 'nullable|boolean',
         ]);
 
-        // Obter tenant atual para criar diretório específico
+        // Obter tenant atual para criar diretÃ³rio especÃ­fico
         $currentTenant = Tenant::current();
         $tenantId = $currentTenant ? $currentTenant->id : 'default';
         $storagePath = 'tenant/' . $tenantId . '/branding';
         
-        // Garantir que o diretório existe
+        // Garantir que o diretÃ³rio existe
         if (!Storage::disk('public')->exists($storagePath)) {
             Storage::disk('public')->makeDirectory($storagePath, 0755, true);
         }
@@ -1439,10 +1450,10 @@ class SettingsController extends Controller
         TenantSetting::set('appearance.logo', $logoLight ?: $logoDark ?: '');
         TenantSetting::set('appearance.logo_mini', $logoMiniLight ?: $logoMiniDark ?: '');
 
-        // Redirecionar para a página de configurações mantendo o hash na URL
+        // Redirecionar para a pÃ¡gina de configuraÃ§Ãµes mantendo o hash na URL
         $redirectUrl = route('tenant.settings.index', ['slug' => tenant()->subdomain]) . '#appearance';
         return redirect($redirectUrl)
-            ->with('success', 'Configurações de aparência atualizadas com sucesso.');
+            ->with('success', 'ConfiguraÃ§Ãµes de aparÃªncia atualizadas com sucesso.');
     }
 
     private function renderNotificationPreview(
@@ -1896,7 +1907,7 @@ class SettingsController extends Controller
 
         $decoded = json_decode($trimmed, true);
         if (!is_array($decoded)) {
-            throw new \InvalidArgumentException('As opções do menu devem estar em JSON válido.');
+            throw new \InvalidArgumentException('As opÃ§Ãµes do menu devem estar em JSON vÃ¡lido.');
         }
 
         $normalized = [];
@@ -1916,7 +1927,7 @@ class SettingsController extends Controller
                     'schedule' => 'Agendar consulta',
                     'view_appointments' => 'Ver meus agendamentos',
                     'cancel_appointments' => 'Cancelar agendamento',
-                    default => 'Opção',
+                    default => 'OpÃ§Ã£o',
                 };
             }
 
@@ -1933,7 +1944,7 @@ class SettingsController extends Controller
         }
 
         if ($normalized === []) {
-            throw new \InvalidArgumentException('As opções do menu não possuem itens válidos.');
+            throw new \InvalidArgumentException('As opÃ§Ãµes do menu nÃ£o possuem itens vÃ¡lidos.');
         }
 
         $normalizedList = array_values($normalized);
@@ -1978,11 +1989,11 @@ class SettingsController extends Controller
     {
         $groups = [
             'CLINIC' => [
-                ['key' => '{{clinic.name}}', 'description' => 'Nome da clínica'],
-                ['key' => '{{clinic.phone}}', 'description' => 'Telefone da clínica'],
-                ['key' => '{{clinic.email}}', 'description' => 'E-mail da clínica'],
-                ['key' => '{{clinic.address}}', 'description' => 'Endereço da clínica'],
-                ['key' => '{{clinic.slug}}', 'description' => 'Identificador da clínica'],
+                ['key' => '{{clinic.name}}', 'description' => 'Nome da clÃ­nica'],
+                ['key' => '{{clinic.phone}}', 'description' => 'Telefone da clÃ­nica'],
+                ['key' => '{{clinic.email}}', 'description' => 'E-mail da clÃ­nica'],
+                ['key' => '{{clinic.address}}', 'description' => 'EndereÃ§o da clÃ­nica'],
+                ['key' => '{{clinic.slug}}', 'description' => 'Identificador da clÃ­nica'],
             ],
             'PATIENT' => [
                 ['key' => '{{patient.name}}', 'description' => 'Nome do paciente'],
@@ -1990,10 +2001,10 @@ class SettingsController extends Controller
                 ['key' => '{{patient.email}}', 'description' => 'E-mail do paciente'],
             ],
             'DOCTOR / PROFESSIONAL' => [
-                ['key' => '{{doctor.name}}', 'description' => 'Nome do médico'],
-                ['key' => '{{doctor.specialty}}', 'description' => 'Especialidade do médico'],
-                ['key' => '{{doctor.phone}}', 'description' => 'Telefone do médico'],
-                ['key' => '{{doctor.email}}', 'description' => 'E-mail do médico'],
+                ['key' => '{{doctor.name}}', 'description' => 'Nome do mÃ©dico'],
+                ['key' => '{{doctor.specialty}}', 'description' => 'Especialidade do mÃ©dico'],
+                ['key' => '{{doctor.phone}}', 'description' => 'Telefone do mÃ©dico'],
+                ['key' => '{{doctor.email}}', 'description' => 'E-mail do mÃ©dico'],
                 ['key' => '{{professional.name}}', 'description' => 'Nome do profissional'],
                 ['key' => '{{professional.specialty}}', 'description' => 'Especialidade do profissional'],
                 ['key' => '{{professional.phone}}', 'description' => 'Telefone do profissional'],
@@ -2003,12 +2014,12 @@ class SettingsController extends Controller
                 ['key' => '{{appointment.date}}', 'description' => 'Data da consulta'],
                 ['key' => '{{appointment.time}}', 'description' => 'Hora da consulta'],
                 ['key' => '{{appointment.datetime}}', 'description' => 'Data e hora da consulta'],
-                ['key' => '{{appointment.starts_at}}', 'description' => 'Início da consulta'],
+                ['key' => '{{appointment.starts_at}}', 'description' => 'InÃ­cio da consulta'],
                 ['key' => '{{appointment.ends_at}}', 'description' => 'Fim da consulta'],
                 ['key' => '{{appointment.type}}', 'description' => 'Tipo de consulta'],
                 ['key' => '{{appointment.mode}}', 'description' => 'Modalidade da consulta'],
                 ['key' => '{{appointment.status}}', 'description' => 'Status da consulta'],
-                ['key' => '{{appointment.confirmation_expires_at}}', 'description' => 'Prazo de confirmação da consulta'],
+                ['key' => '{{appointment.confirmation_expires_at}}', 'description' => 'Prazo de confirmaÃ§Ã£o da consulta'],
             ],
             'LINKS' => [
                 ['key' => '{{links.appointment_confirm}}', 'description' => 'Link para confirmar consulta'],
@@ -2016,26 +2027,26 @@ class SettingsController extends Controller
                 ['key' => '{{links.appointment_details}}', 'description' => 'Link com detalhes da consulta'],
                 ['key' => '{{links.online_appointment_details}}', 'description' => 'Link interno dos detalhes da consulta online'],
                 ['key' => '{{links.waitlist_offer}}', 'description' => 'Link da oferta da lista de espera'],
-                ['key' => '{{links.form_response}}', 'description' => 'Link interno para resposta de formulário'],
-                ['key' => '{{links.form_fill}}', 'description' => 'Link público para preenchimento do formulário do agendamento'],
+                ['key' => '{{links.form_response}}', 'description' => 'Link interno para resposta de formulÃ¡rio'],
+                ['key' => '{{links.form_fill}}', 'description' => 'Link pÃºblico para preenchimento do formulÃ¡rio do agendamento'],
             ],
             'ONLINE APPOINTMENT' => [
-                ['key' => '{{online.is_online}}', 'description' => 'Indica se a consulta é online (true/false)'],
-                ['key' => '{{online.meeting_link}}', 'description' => 'Link da reunião online'],
-                ['key' => '{{online.meeting_app}}', 'description' => 'Aplicativo da reunião online'],
-                ['key' => '{{online.general_instructions}}', 'description' => 'Instruções gerais da consulta online'],
-                ['key' => '{{online.patient_instructions}}', 'description' => 'Observações ao paciente da consulta online'],
-                ['key' => '{{online.instructions_sent}}', 'description' => 'Indica se instruções já foram enviadas'],
-                ['key' => '{{online.instructions_sent_email_at}}', 'description' => 'Data/hora do último envio por e-mail'],
-                ['key' => '{{online.instructions_sent_whatsapp_at}}', 'description' => 'Data/hora do último envio por WhatsApp'],
+                ['key' => '{{online.is_online}}', 'description' => 'Indica se a consulta Ã© online (true/false)'],
+                ['key' => '{{online.meeting_link}}', 'description' => 'Link da reuniÃ£o online'],
+                ['key' => '{{online.meeting_app}}', 'description' => 'Aplicativo da reuniÃ£o online'],
+                ['key' => '{{online.general_instructions}}', 'description' => 'InstruÃ§Ãµes gerais da consulta online'],
+                ['key' => '{{online.patient_instructions}}', 'description' => 'ObservaÃ§Ãµes ao paciente da consulta online'],
+                ['key' => '{{online.instructions_sent}}', 'description' => 'Indica se instruÃ§Ãµes jÃ¡ foram enviadas'],
+                ['key' => '{{online.instructions_sent_email_at}}', 'description' => 'Data/hora do Ãºltimo envio por e-mail'],
+                ['key' => '{{online.instructions_sent_whatsapp_at}}', 'description' => 'Data/hora do Ãºltimo envio por WhatsApp'],
             ],
             'WAITLIST' => [
                 ['key' => '{{waitlist.offer_expires_at}}', 'description' => 'Validade da oferta da lista de espera'],
                 ['key' => '{{waitlist.status}}', 'description' => 'Status da lista de espera'],
             ],
             'FORM / RESPONSE' => [
-                ['key' => '{{form.id}}', 'description' => 'ID do formulário'],
-                ['key' => '{{form.name}}', 'description' => 'Nome do formulário'],
+                ['key' => '{{form.id}}', 'description' => 'ID do formulÃ¡rio'],
+                ['key' => '{{form.name}}', 'description' => 'Nome do formulÃ¡rio'],
                 ['key' => '{{response.id}}', 'description' => 'ID da resposta'],
                 ['key' => '{{response.submitted_at}}', 'description' => 'Data/hora de envio da resposta'],
             ],

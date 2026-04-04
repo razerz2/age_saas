@@ -24,10 +24,12 @@ class GoogleCalendarService
      */
     public function client(GoogleCalendarToken $token): Google_Client
     {
+        $oauthConfig = google_oauth_config();
+
         $this->client = new Google_Client();
-        $this->client->setClientId(config('services.google.client_id'));
-        $this->client->setClientSecret(config('services.google.client_secret'));
-        $this->client->setRedirectUri(route('google.callback'));
+        $this->client->setClientId((string) ($oauthConfig['client_id'] ?? ''));
+        $this->client->setClientSecret((string) ($oauthConfig['client_secret'] ?? ''));
+        $this->client->setRedirectUri((string) ($oauthConfig['redirect_uri'] ?? route('google.callback')));
         $this->client->setAccessType('offline');
         $this->client->setPrompt('consent');
         $this->client->addScope([
@@ -384,9 +386,10 @@ class GoogleCalendarService
             }
 
             $this->client = new Google_Client();
-            $this->client->setClientId(config('services.google.client_id'));
-            $this->client->setClientSecret(config('services.google.client_secret'));
-            $this->client->setRedirectUri(route('google.callback'));
+            $oauthConfig = google_oauth_config();
+            $this->client->setClientId((string) ($oauthConfig['client_id'] ?? ''));
+            $this->client->setClientSecret((string) ($oauthConfig['client_secret'] ?? ''));
+            $this->client->setRedirectUri((string) ($oauthConfig['redirect_uri'] ?? route('google.callback')));
 
             $this->client->refreshToken($token->refresh_token);
 
@@ -1022,4 +1025,3 @@ class GoogleCalendarService
         return $rrule;
     }
 }
-

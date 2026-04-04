@@ -3,11 +3,9 @@
 namespace App\Http\Controllers\Tenant;
 
 use App\Http\Controllers\Controller;
-use App\Models\Tenant\Integrations;
-
 use App\Http\Requests\Tenant\Integrations\StoreIntegrationRequest;
 use App\Http\Requests\Tenant\Integrations\UpdateIntegrationRequest;
-
+use App\Models\Tenant\Integrations;
 use Illuminate\Support\Str;
 
 class IntegrationController extends Controller
@@ -26,42 +24,44 @@ class IntegrationController extends Controller
 
     public function store(StoreIntegrationRequest $request)
     {
-        $data = $request->validated();
+        $data = $request->payload();
         $data['id'] = Str::uuid();
 
         Integrations::create($data);
 
         return redirect()->route('tenant.integrations.index', ['slug' => tenant()->subdomain])
-            ->with('success', 'Integração criada com sucesso.');
+            ->with('success', 'Integracao criada com sucesso.');
     }
 
-    public function show($slug, $id)
+    public function show(string $slug, string $integration)
     {
-        $integration = Integrations::findOrFail($id);
+        $integration = Integrations::findOrFail($integration);
+
         return view('tenant.integrations.show', compact('integration'));
     }
 
-    public function edit($slug, $id)
+    public function edit(string $slug, string $integration)
     {
-        $integration = Integrations::findOrFail($id);
+        $integration = Integrations::findOrFail($integration);
+
         return view('tenant.integrations.edit', compact('integration'));
     }
 
-    public function update(UpdateIntegrationRequest $request, $slug, $id)
+    public function update(UpdateIntegrationRequest $request, string $slug, string $integration)
     {
-        $integration = Integrations::findOrFail($id);
-        $integration->update($request->validated());
+        $integration = Integrations::findOrFail($integration);
+        $integration->update($request->payload());
 
         return redirect()->route('tenant.integrations.index', ['slug' => $slug])
-            ->with('success', 'Integração atualizada com sucesso.');
+            ->with('success', 'Integracao atualizada com sucesso.');
     }
 
-    public function destroy($slug, $id)
+    public function destroy(string $slug, string $integration)
     {
-        $integration = Integrations::findOrFail($id);
+        $integration = Integrations::findOrFail($integration);
         $integration->delete();
 
         return redirect()->route('tenant.integrations.index', ['slug' => $slug])
-            ->with('success', 'Integração removida.');
+            ->with('success', 'Integracao removida.');
     }
 }

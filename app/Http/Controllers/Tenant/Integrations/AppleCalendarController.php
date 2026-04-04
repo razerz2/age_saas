@@ -3,15 +3,14 @@
 namespace App\Http\Controllers\Tenant\Integrations;
 
 use App\Http\Controllers\Controller;
-use App\Models\Tenant\Doctor;
 use App\Models\Tenant\AppleCalendarToken;
+use App\Models\Tenant\Doctor;
 use App\Services\Tenant\AppleCalendarService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Str;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Str;
 
 class AppleCalendarController extends Controller
 {
@@ -22,34 +21,26 @@ class AppleCalendarController extends Controller
         $this->appleCalendarService = $appleCalendarService;
     }
 
-    /**
-     * Página principal de integrações Apple Calendar
-     */
-    public function index()
+    public function index(string $slug)
     {
         $user = Auth::guard('tenant')->user();
-        
-        // Carregar relacionamento doctor do usuário se necessário
+
         if ($user->role === 'doctor' && !$user->relationLoaded('doctor')) {
             $user->load('doctor');
         }
-        
-        // Verificar se a tabela apple_calendar_tokens existe
-        $hasAppleCalendarTable = Schema::connection('tenant')
-            ->hasTable('apple_calendar_tokens');
-        
-        // Construir array de relacionamentos
+
+        $hasAppleCalendarTable = $this->hasAppleCalendarTable();
+
         $relations = ['user'];
         if ($hasAppleCalendarTable) {
             $relations[] = 'appleCalendarToken';
         }
-        
+
         $doctorsQuery = Doctor::with($relations)
-            ->whereHas('user', function($query) {
+            ->whereHas('user', function ($query) {
                 $query->where('status', 'active');
             });
 
-        // Aplicar filtros baseado no role
         if ($user->role === 'doctor' && $user->doctor) {
             $doctorsQuery->where('id', $user->doctor->id);
         } elseif ($user->role === 'user') {
@@ -62,8 +53,7 @@ class AppleCalendarController extends Controller
         }
 
         $doctors = $doctorsQuery->orderBy('id')->get();
-        
-        // Se a tabela não existe, carregar relacionamento manualmente (vazio)
+
         if (!$hasAppleCalendarTable) {
             foreach ($doctors as $doctor) {
                 $doctor->setRelation('appleCalendarToken', null);
@@ -73,35 +63,32 @@ class AppleCalendarController extends Controller
         return view('tenant.integrations.apple.index', compact('doctors', 'user', 'hasAppleCalendarTable'));
     }
 
-    /**
-     * Mostra formulário para conectar com Apple Calendar
-     */
-    public function showConnectForm($slug, $doctorId)
+    public function showConnectForm(string $slug, string $doctor)
     {
+        $doctorId = (string) $doctor;
         $doctor = Doctor::findOrFail($doctorId);
-        
-        // Verificar permissões
-        $user = Auth::guard('tenant')->user();
-        if ($user->role === 'doctor' && $user->doctor && $user->doctor->id !== $doctor->id) {
-            abort(403, 'Você só pode conectar seu próprio calendário.');
+        $this->ensureDoctorCanInitiateAuth($doctor);
+
+        if (!$this->hasAppleCalendarTable()) {
+            return redirect()->route('tenant.integrations.apple.index', ['slug' => $slug])
+                ->with('error', 'A estrutura do Apple Calendar nao esta disponivel neste tenant.');
         }
 
         return view('tenant.integrations.apple.connect', compact('doctor'));
     }
 
-    /**
-     * Conecta com Apple Calendar usando credenciais CalDAV
-     */
-    public function connect($slug, $doctorId, Request $request)
+    public function connect(string $slug, string $doctor, Request $request)
     {
-        try {
-            $doctor = Doctor::findOrFail($doctorId);
+        $doctorId = (string) $doctor;
 
-            // Verificar permissões
-            $user = Auth::guard('tenant')->user();
-            if ($user->role === 'doctor' && $user->doctor && $user->doctor->id !== $doctor->id) {
-                abort(403, 'Você só pode conectar seu próprio calendário.');
+        try {
+            if (!$this->hasAppleCalendarTable()) {
+                return redirect()->route('tenant.integrations.apple.index', ['slug' => $slug])
+                    ->with('error', 'A estrutura do Apple Calendar nao esta disponivel neste tenant.');
             }
+
+            $doctor = Doctor::findOrFail($doctorId);
+            $this->ensureDoctorCanInitiateAuth($doctor);
 
             $request->validate([
                 'username' => ['required', 'email'],
@@ -110,122 +97,130 @@ class AppleCalendarController extends Controller
                 'calendar_url' => ['nullable', 'string'],
             ]);
 
-            // Criar ou atualizar token
-            // IMPORTANTE: Para CalDAV, precisamos da senha em texto plano para autenticação
-            // Em produção, considere usar senhas de app específicas do iCloud
             $token = AppleCalendarToken::updateOrCreate(
                 ['doctor_id' => $doctor->id],
                 [
-                    'id' => Str::uuid(),
-                    'username' => $request->username,
-                    'password' => encrypt($request->password), // Criptografar senha usando encrypt do Laravel
-                    'server_url' => $request->server_url ?: 'https://caldav.icloud.com',
-                    'calendar_url' => $request->calendar_url,
+                    'id' => (string) Str::uuid(),
+                    'username' => (string) $request->username,
+                    'password' => encrypt((string) $request->password),
+                    'server_url' => (string) ($request->server_url ?: 'https://caldav.icloud.com'),
+                    'calendar_url' => $request->filled('calendar_url') ? (string) $request->calendar_url : null,
                 ]
             );
 
-            // Tentar descobrir calendários se calendar_url não foi fornecido
-            if (!$request->calendar_url) {
+            if (!$request->filled('calendar_url')) {
                 try {
                     $calendars = $this->appleCalendarService->discoverCalendars($token);
-                    if (!empty($calendars)) {
-                        // Usar o primeiro calendário encontrado
-                        $token->update(['calendar_url' => $calendars[0]['path']]);
+                    if (!empty($calendars) && isset($calendars[0]['path'])) {
+                        $token->update(['calendar_url' => (string) $calendars[0]['path']]);
                     }
-                } catch (\Exception $e) {
-                    Log::warning('Não foi possível descobrir calendários automaticamente', [
+                } catch (\Throwable $e) {
+                    Log::warning('Nao foi possivel descobrir calendarios automaticamente', [
                         'doctor_id' => $doctor->id,
                         'error' => $e->getMessage(),
                     ]);
                 }
             }
 
-            Log::info('Integração Apple Calendar conectada', [
+            Log::info('Integracao Apple Calendar conectada', [
                 'doctor_id' => $doctor->id,
                 'token_id' => $token->id,
+                'tenant_slug' => $slug,
             ]);
 
-            return redirect()->route('tenant.integrations.apple.index', ['slug' => tenant()->subdomain])
-                ->with('success', 'Integração com Apple Calendar realizada com sucesso!');
-        } catch (\Exception $e) {
+            return redirect()->route('tenant.integrations.apple.index', ['slug' => $slug])
+                ->with('success', 'Integracao com Apple Calendar realizada com sucesso.');
+        } catch (\Throwable $e) {
             Log::error('Erro ao conectar com Apple Calendar', [
                 'doctor_id' => $doctorId,
+                'tenant_slug' => $slug,
                 'error' => $e->getMessage(),
             ]);
 
-            return redirect()->route('tenant.integrations.apple.index', ['slug' => tenant()->subdomain])
-                ->with('error', 'Erro ao conectar com Apple Calendar. Verifique suas credenciais.');
+            return redirect()->route('tenant.integrations.apple.index', ['slug' => $slug])
+                ->with('error', 'Erro ao conectar com Apple Calendar. Verifique as credenciais.');
         }
     }
 
-    /**
-     * Remove a integração do Apple Calendar
-     */
-    public function disconnect($slug, $doctorId)
+    public function disconnect(string $slug, string $doctor)
     {
-        try {
-            $doctor = Doctor::findOrFail($doctorId);
+        $doctorId = (string) $doctor;
 
-            // Verificar permissões
-            $user = Auth::guard('tenant')->user();
-            if ($user->role === 'doctor' && $user->doctor && $user->doctor->id !== $doctor->id) {
-                abort(403, 'Você só pode desconectar seu próprio calendário.');
+        try {
+            if (!$this->hasAppleCalendarTable()) {
+                return redirect()->route('tenant.integrations.apple.index', ['slug' => $slug])
+                    ->with('error', 'A estrutura do Apple Calendar nao esta disponivel neste tenant.');
             }
+
+            $doctor = Doctor::findOrFail($doctorId);
+            $this->ensureDoctorCanManage($doctor);
 
             $token = $doctor->appleCalendarToken;
 
             if ($token) {
                 $token->delete();
 
-                Log::info('Integração Apple Calendar removida', [
+                Log::info('Integracao Apple Calendar removida', [
                     'doctor_id' => $doctor->id,
+                    'tenant_slug' => $slug,
                 ]);
 
-                return redirect()->route('tenant.integrations.apple.index', ['slug' => tenant()->subdomain])
-                    ->with('success', 'Integração com Apple Calendar removida com sucesso.');
+                return redirect()->route('tenant.integrations.apple.index', ['slug' => $slug])
+                    ->with('success', 'Integracao com Apple Calendar removida com sucesso.');
             }
 
-            return redirect()->route('tenant.integrations.apple.index', ['slug' => tenant()->subdomain])
-                ->with('info', 'Nenhuma integração encontrada para este médico.');
-        } catch (\Exception $e) {
+            return redirect()->route('tenant.integrations.apple.index', ['slug' => $slug])
+                ->with('info', 'Nenhuma integracao encontrada para este medico.');
+        } catch (\Throwable $e) {
             Log::error('Erro ao desconectar Apple Calendar', [
                 'doctor_id' => $doctorId,
+                'tenant_slug' => $slug,
                 'error' => $e->getMessage(),
             ]);
 
-            return redirect()->route('tenant.integrations.apple.index', ['slug' => tenant()->subdomain])
-                ->with('error', 'Erro ao remover integração. Tente novamente.');
+            return redirect()->route('tenant.integrations.apple.index', ['slug' => $slug])
+                ->with('error', 'Erro ao remover integracao. Tente novamente.');
         }
     }
 
-    /**
-     * Verifica o status da integração
-     */
-    public function status($slug, $doctorId)
+    public function status(string $slug, string $doctor)
     {
+        $doctorId = (string) $doctor;
+
+        if (!$this->hasAppleCalendarTable()) {
+            return response()->json([
+                'connected' => false,
+                'available' => false,
+            ]);
+        }
+
         $doctor = Doctor::findOrFail($doctorId);
-        $token = $doctor->appleCalendarToken;
+        $this->ensureDoctorCanView($doctor);
 
         return response()->json([
-            'connected' => $token !== null,
+            'connected' => $doctor->appleCalendarToken !== null,
+            'available' => true,
         ]);
     }
 
-    /**
-     * Lista eventos do Apple Calendar para um médico (API para FullCalendar)
-     */
-    public function getEvents($slug, $doctorId, Request $request)
+    public function getEvents(string $slug, string $doctor, Request $request)
     {
+        $doctorId = (string) $doctor;
+
         try {
+            if (!$this->hasAppleCalendarTable()) {
+                return response()->json([], 200);
+            }
+
             $doctor = Doctor::findOrFail($doctorId);
+            $this->ensureDoctorCanView($doctor);
 
             $startDate = $request->get('start');
             $endDate = $request->get('end');
 
             $events = $this->appleCalendarService->listEvents($doctor->id, $startDate, $endDate);
 
-            // Formata para FullCalendar
-            $formattedEvents = array_map(function ($event) {
+            $formattedEvents = array_map(function (array $event): array {
                 return [
                     'id' => $event['id'],
                     'title' => $event['title'],
@@ -236,13 +231,76 @@ class AppleCalendarController extends Controller
             }, $events);
 
             return response()->json($formattedEvents);
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             Log::error('Erro ao buscar eventos do Apple Calendar', [
                 'doctor_id' => $doctorId,
+                'tenant_slug' => $slug,
                 'error' => $e->getMessage(),
             ]);
 
             return response()->json([], 500);
         }
+    }
+
+    private function hasAppleCalendarTable(): bool
+    {
+        return Schema::connection('tenant')->hasTable('apple_calendar_tokens');
+    }
+
+    private function ensureDoctorCanManage(Doctor $doctor): void
+    {
+        $user = Auth::guard('tenant')->user();
+        if (!$user) {
+            abort(403);
+        }
+
+        if ($user->role === 'admin') {
+            return;
+        }
+
+        if ($user->role === 'doctor' && $user->doctor && (string) $user->doctor->id === (string) $doctor->id) {
+            return;
+        }
+
+        abort(403, 'Voce so pode gerenciar seu proprio calendario.');
+    }
+
+    private function ensureDoctorCanInitiateAuth(Doctor $doctor): void
+    {
+        $user = Auth::guard('tenant')->user();
+        if (!$user) {
+            abort(403);
+        }
+
+        if ($user->role === 'doctor' && $user->doctor && (string) $user->doctor->id === (string) $doctor->id) {
+            return;
+        }
+
+        abort(403, 'A autenticacao deve ser iniciada pelo proprio profissional.');
+    }
+
+    private function ensureDoctorCanView(Doctor $doctor): void
+    {
+        $user = Auth::guard('tenant')->user();
+        if (!$user) {
+            abort(403);
+        }
+
+        if ($user->role === 'admin') {
+            return;
+        }
+
+        if ($user->role === 'doctor' && $user->doctor && (string) $user->doctor->id === (string) $doctor->id) {
+            return;
+        }
+
+        if ($user->role === 'user') {
+            $allowed = $user->allowedDoctors()->where('doctors.id', $doctor->id)->exists();
+            if ($allowed) {
+                return;
+            }
+        }
+
+        abort(403, 'Voce nao possui permissao para visualizar este calendario.');
     }
 }

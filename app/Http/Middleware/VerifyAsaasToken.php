@@ -11,7 +11,8 @@ class VerifyAsaasToken
     public function handle(Request $request, Closure $next)
     {
         $provided = $request->header('asaas-access-token');
-        $expected = config('services.asaas.webhook_secret', env('ASAAS_WEBHOOK_SECRET'));
+        $asaas = function_exists('asaas_config') ? asaas_config() : [];
+        $expected = (string) ($asaas['webhook_secret'] ?? config('services.asaas.webhook_secret', env('ASAAS_WEBHOOK_SECRET')));
 
         Log::info('🔐 Verificando token Asaas', [
             'has_header' => $provided !== null,

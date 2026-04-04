@@ -160,3 +160,93 @@ it('suppresses whatsapp patient channel on form notification when appointment or
 
     $observer->created($appointment);
 });
+
+it('syncs google and apple calendars only when enabled and auto sync flags are active', function () {
+    Bus::fake();
+
+    Mockery::mock('alias:App\Models\Platform\Tenant')
+        ->shouldReceive('current')
+        ->andReturn((object) ['id' => 'tenant-1']);
+
+    Mockery::mock('alias:App\Models\Tenant\Form')
+        ->shouldReceive('getFormForAppointment')
+        ->andReturn(null);
+
+    $tenantSetting = Mockery::mock('alias:App\Models\Tenant\TenantSetting');
+    $tenantSetting->shouldReceive('isEnabled')
+        ->with('integrations.google_calendar.enabled')
+        ->once()
+        ->andReturn(true);
+    $tenantSetting->shouldReceive('isEnabled')
+        ->with('integrations.google_calendar.auto_sync')
+        ->once()
+        ->andReturn(true);
+    $tenantSetting->shouldReceive('isEnabled')
+        ->with('integrations.apple_calendar.enabled')
+        ->once()
+        ->andReturn(true);
+    $tenantSetting->shouldReceive('isEnabled')
+        ->with('integrations.apple_calendar.auto_sync')
+        ->once()
+        ->andReturn(true);
+
+    $googleCalendarService = Mockery::mock(GoogleCalendarService::class);
+    $appleCalendarService = Mockery::mock(AppleCalendarService::class);
+    $notificationDispatcher = Mockery::mock(NotificationDispatcher::class);
+    $notificationDispatcher->shouldNotReceive('dispatchAppointment');
+
+    $googleCalendarService->shouldReceive('syncEvent')->once();
+    $appleCalendarService->shouldReceive('syncEvent')->once();
+
+    $observer = new AppointmentObserver($googleCalendarService, $appleCalendarService, $notificationDispatcher);
+
+    $appointment = Mockery::mock(Appointment::class)->makePartial();
+    $appointment->id = 'appointment-5';
+    $appointment->origin = Appointment::ORIGIN_INTERNAL;
+    $appointment->appointment_mode = 'presencial';
+    $appointment->recurring_appointment_id = null;
+    $appointment->shouldReceive('load')->once()->andReturnSelf();
+
+    $observer->created($appointment);
+});
+
+it('does not sync google or apple calendars when integration flags are disabled', function () {
+    Bus::fake();
+
+    Mockery::mock('alias:App\Models\Platform\Tenant')
+        ->shouldReceive('current')
+        ->andReturn((object) ['id' => 'tenant-1']);
+
+    Mockery::mock('alias:App\Models\Tenant\Form')
+        ->shouldReceive('getFormForAppointment')
+        ->andReturn(null);
+
+    $tenantSetting = Mockery::mock('alias:App\Models\Tenant\TenantSetting');
+    $tenantSetting->shouldReceive('isEnabled')
+        ->with('integrations.google_calendar.enabled')
+        ->once()
+        ->andReturn(false);
+    $tenantSetting->shouldReceive('isEnabled')
+        ->with('integrations.apple_calendar.enabled')
+        ->once()
+        ->andReturn(false);
+
+    $googleCalendarService = Mockery::mock(GoogleCalendarService::class);
+    $appleCalendarService = Mockery::mock(AppleCalendarService::class);
+    $notificationDispatcher = Mockery::mock(NotificationDispatcher::class);
+    $notificationDispatcher->shouldNotReceive('dispatchAppointment');
+
+    $googleCalendarService->shouldNotReceive('syncEvent');
+    $appleCalendarService->shouldNotReceive('syncEvent');
+
+    $observer = new AppointmentObserver($googleCalendarService, $appleCalendarService, $notificationDispatcher);
+
+    $appointment = Mockery::mock(Appointment::class)->makePartial();
+    $appointment->id = 'appointment-6';
+    $appointment->origin = Appointment::ORIGIN_INTERNAL;
+    $appointment->appointment_mode = 'presencial';
+    $appointment->recurring_appointment_id = null;
+    $appointment->shouldReceive('load')->once()->andReturnSelf();
+
+    $observer->created($appointment);
+});

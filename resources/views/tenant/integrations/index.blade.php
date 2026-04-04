@@ -1,111 +1,127 @@
-@extends('layouts.tailadmin.app')
+﻿@extends('layouts.tailadmin.app')
 
-@section('title', 'Integrações')
+@section('title', 'Integracoes')
 
 @section('content')
+    @php
+        $googleCredentialsReady = has_google_oauth_credentials();
+    @endphp
 
-    <div class="page-header">
-        <h3 class="page-title"> Integrações </h3>
+    <div class="space-y-6">
+        <div class="flex flex-col gap-2">
+            <nav aria-label="breadcrumb">
+                <ol class="flex flex-wrap items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
+                    <li>
+                        <a href="{{ workspace_route('tenant.dashboard') }}" class="text-gray-700 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white">Dashboard</a>
+                    </li>
+                    <li>/</li>
+                    <li class="font-medium text-gray-900 dark:text-white">Integracoes</li>
+                </ol>
+            </nav>
+            <h1 class="text-2xl font-semibold text-gray-900 dark:text-white">Integracoes</h1>
+            <p class="text-sm text-gray-600 dark:text-gray-400">Gerencie Google Calendar, Apple Calendar e integracoes genericas.</p>
+        </div>
 
-        <nav aria-label="breadcrumb">
-            <ol class="breadcrumb">
-                <li class="breadcrumb-item">
-                    <a href="{{ workspace_route('tenant.dashboard') }}">Dashboard</a>
-                </li>
-                <li class="breadcrumb-item active" aria-current="page">Integrações</li>
-            </ol>
-        </nav>
-    </div>
+        @if (session('success'))
+            <div class="rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800 dark:border-green-800 dark:bg-green-900/20 dark:text-green-300">
+                {{ session('success') }}
+            </div>
+        @endif
+        @if (session('error'))
+            <div class="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800 dark:border-red-800 dark:bg-red-900/20 dark:text-red-300">
+                {{ session('error') }}
+            </div>
+        @endif
+        @if (session('info'))
+            <div class="rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-800 dark:border-blue-800 dark:bg-blue-900/20 dark:text-blue-300">
+                {{ session('info') }}
+            </div>
+        @endif
 
-    <div class="row">
-        <div class="col-lg-12 grid-margin stretch-card">
-            <div class="card">
-                <div class="card-body">
-                    <h4 class="card-title">Integrações Disponíveis</h4>
-
-                    <div class="row mb-4">
-                        <div class="col-md-6">
-                            <div class="card border-primary shadow-sm">
-                                <div class="card-body">
-                                    <div class="d-flex align-items-center mb-3">
-                                        <div class="me-3">
-                                            <x-icon name="google" class=" text-primary" />
-                                        </div>
-                                        <div>
-                                            <h5 class="card-title mb-0">Google Calendar</h5>
-                                            <small class="text-muted">Sincronização Automática</small>
-                                        </div>
-                                    </div>
-                                    <p class="card-text text-muted mb-3">
-                                        Sincronize automaticamente os agendamentos com o Google Calendar. 
-                                        Cada médico pode conectar sua própria conta do Google.
-                                    </p>
-                                    <ul class="list-unstyled mb-3">
-                                        <li class="mb-2">
-                                            <x-icon name="check-circle" class=" text-success me-2" />
-                                            Sincronização automática de agendamentos
-                                        </li>
-                                        <li class="mb-2">
-                                            <x-icon name="check-circle" class=" text-success me-2" />
-                                            Suporte a agendamentos recorrentes
-                                        </li>
-                                        <li class="mb-2">
-                                            <x-icon name="check-circle" class=" text-success me-2" />
-                                            Conta individual por médico
-                                        </li>
-                                    </ul>
-                                    <x-tailadmin-button variant="primary" size="md" href="{{ workspace_route('tenant.integrations.google.index') }}">
-                                        <x-icon name="google" class="" />
-                                        Configurar Google Calendar
-                                    </x-tailadmin-button>
-                                </div>
-                            </div>
-                        </div>
+        <div class="grid grid-cols-1 gap-6 xl:grid-cols-2">
+            <div class="rounded-xl border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-800">
+                <div class="border-b border-gray-200 px-6 py-4 dark:border-gray-700">
+                    <div class="flex items-center justify-between gap-3">
+                        <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Google Calendar</h2>
+                        <span class="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium {{ $googleCredentialsReady ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300' : 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300' }}">
+                            {{ $googleCredentialsReady ? 'Credenciais globais ok' : 'Credenciais ausentes' }}
+                        </span>
                     </div>
+                </div>
+                <div class="p-6 space-y-4">
+                    <p class="text-sm text-gray-600 dark:text-gray-300">
+                        As credenciais OAuth do Google sao configuradas globalmente na Platform (com fallback para ambiente). A conexao real e feita por medico, via OAuth.
+                    </p>
+                    <ul class="space-y-2 text-sm text-gray-600 dark:text-gray-300">
+                        <li>- Prioridade: Platform Settings -> <code>services.google.*</code> no ambiente.</li>
+                        <li>- Cada medico conecta a propria conta do Google Calendar.</li>
+                    </ul>
+                    <a href="{{ workspace_route('tenant.integrations.google.index') }}" class="inline-flex items-center rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white hover:bg-brand-700">
+                        Gerenciar Google Calendar
+                    </a>
+                </div>
+            </div>
 
-                    <hr class="my-4">
+            <div class="rounded-xl border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-800">
+                <div class="border-b border-gray-200 px-6 py-4 dark:border-gray-700">
+                    <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Apple Calendar</h2>
+                </div>
+                <div class="p-6 space-y-4">
+                    <p class="text-sm text-gray-600 dark:text-gray-300">
+                        A conexao Apple Calendar usa CalDAV por medico com token salvo no tenant.
+                    </p>
+                    <ul class="space-y-2 text-sm text-gray-600 dark:text-gray-300">
+                        <li>- Cada medico conecta sua conta iCloud.</li>
+                        <li>- Recomendado usar senha de app da Apple.</li>
+                    </ul>
+                    <a href="{{ workspace_route('tenant.integrations.apple.index') }}" class="inline-flex items-center rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white hover:bg-brand-700">
+                        Gerenciar Apple Calendar
+                    </a>
+                </div>
+            </div>
+        </div>
 
-                    <h5 class="mb-3">Outras Integrações</h5>
+        <div class="rounded-xl border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-800">
+            <div class="flex flex-col gap-3 border-b border-gray-200 px-6 py-4 dark:border-gray-700 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                    <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Integracoes Genericas</h2>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">Cadastros complementares de feature flag/configuracao por tenant.</p>
+                </div>
+                <a href="{{ workspace_route('tenant.integrations.create') }}" class="inline-flex items-center rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-700/60">
+                    Nova integracao
+                </a>
+            </div>
 
-                    <x-tailadmin-button variant="secondary" size="md" href="{{ workspace_route('tenant.integrations.create') }}"
-                        class="mb-3 bg-transparent border-gray-300 text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-white/5">
-                        + Nova Integração
-                    </x-tailadmin-button>
-
-                    <div>
-                        <table class="table table-hover" id="datatable-list">
-                            <thead>
+            <div class="p-6">
+                @if ($integrations->isEmpty())
+                    <div class="rounded-lg border border-dashed border-gray-300 px-4 py-8 text-center text-sm text-gray-500 dark:border-gray-600 dark:text-gray-400">
+                        Nenhuma integracao generica cadastrada.
+                    </div>
+                @else
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                            <thead class="bg-gray-50 dark:bg-gray-700/40">
                                 <tr>
-                                    <th>ID</th>
-                                    <th>Chave</th>
-                                    <th>Status</th>
-                                    <th style="width: 140px;">Ações</th>
+                                    <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-gray-300">ID</th>
+                                    <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-gray-300">Chave</th>
+                                    <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-gray-300">Status</th>
+                                    <th class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-gray-300">Acoes</th>
                                 </tr>
                             </thead>
-
-                            <tbody>
+                            <tbody class="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-800">
                                 @foreach ($integrations as $integration)
                                     <tr>
-                                        <td>{{ truncate_uuid($integration->id) }}</td>
-                                        <td>{{ $integration->key }}</td>
-                                        <td>
-                                            @if ($integration->is_enabled)
-                                                <span class="badge bg-success">Habilitado</span>
-                                            @else
-                                                <span class="badge bg-danger">Desabilitado</span>
-                                            @endif
+                                        <td class="px-4 py-3 text-sm text-gray-600 dark:text-gray-300">{{ truncate_uuid($integration->id) }}</td>
+                                        <td class="px-4 py-3 text-sm font-medium text-gray-900 dark:text-white">{{ $integration->key }}</td>
+                                        <td class="px-4 py-3 text-sm">
+                                            <span class="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium {{ $integration->is_enabled ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300' : 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300' }}">
+                                                {{ $integration->is_enabled ? 'Habilitado' : 'Desabilitado' }}
+                                            </span>
                                         </td>
-                                        <td>
-                                            <div class="flex items-center gap-2">
-                                                <x-tailadmin-button variant="secondary" size="sm"
-                                                    href="{{ workspace_route('tenant.integrations.show', $integration->id) }}"
-                                                    class="border-info text-info bg-info/10 hover:bg-info/20 dark:border-info/40 dark:text-info dark:hover:bg-info/30 tenant-action-view">
-                                                    Ver
-                                                </x-tailadmin-button>
-                                                <x-tailadmin-button variant="warning" size="sm"
-                                                    href="{{ workspace_route('tenant.integrations.edit', $integration->id) }}" class="tenant-action-edit">
-                                                    Editar
-                                                </x-tailadmin-button>
+                                        <td class="px-4 py-3 text-right text-sm">
+                                            <div class="inline-flex items-center gap-2">
+                                                <a href="{{ workspace_route('tenant.integrations.show', $integration->id) }}" class="rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-700/60">Ver</a>
+                                                <a href="{{ workspace_route('tenant.integrations.edit', $integration->id) }}" class="rounded-lg bg-amber-500 px-3 py-1.5 text-xs font-medium text-white hover:bg-amber-600">Editar</a>
                                             </div>
                                         </td>
                                     </tr>
@@ -113,12 +129,8 @@
                             </tbody>
                         </table>
                     </div>
-
-                </div>
+                @endif
             </div>
         </div>
     </div>
-
 @endsection
-
-

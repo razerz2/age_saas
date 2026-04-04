@@ -9,10 +9,13 @@ use App\Http\Requests\Tenant\UpdateAgendaSettingsRequest;
 use App\Models\Tenant\AppointmentType;
 use App\Models\Tenant\BusinessHour;
 use App\Models\Tenant\Calendar;
+use App\Models\Tenant\CalendarSyncState;
 use App\Models\Tenant\Doctor;
 use App\Models\Tenant\RecurringAppointment;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
@@ -188,6 +191,41 @@ class AgendaSettingsController extends Controller
 
         return redirect()->route('tenant.agenda-settings.index', ['slug' => tenant()->subdomain])
             ->with('success', 'Agenda excluída com sucesso.');
+    }
+
+    public function calendarSync($slug, $id)
+    {
+        $calendar = $this->findAccessibleCalendar($id);
+        $calendar->load([
+            'doctor.user',
+            'doctor.googleCalendarToken',
+            'doctor.appleCalendarToken',
+        ]);
+
+        $user = Auth::guard('tenant')->user();
+        $isOwnerDoctor = $user
+            && $user->role === 'doctor'
+            && $user->doctor
+            && (string) $user->doctor->id === (string) $calendar->doctor_id;
+
+        $canInitiateAuth = $isOwnerDoctor;
+        $canRevokeConnection = $user && ($user->role === 'admin' || $isOwnerDoctor);
+
+        $lastSyncAt = null;
+        if (Schema::connection('tenant')->hasTable('calendar_sync_state')) {
+            $lastSyncAt = CalendarSyncState::query()
+                ->join('appointments', 'appointments.id', '=', 'calendar_sync_state.appointment_id')
+                ->where('appointments.doctor_id', $calendar->doctor_id)
+                ->max('calendar_sync_state.last_sync_at');
+        }
+
+        return view('tenant.agenda-settings.calendar-sync', compact(
+            'calendar',
+            'user',
+            'canInitiateAuth',
+            'canRevokeConnection',
+            'lastSyncAt'
+        ));
     }
 
     private function findAccessibleCalendar(string $calendarId): Calendar

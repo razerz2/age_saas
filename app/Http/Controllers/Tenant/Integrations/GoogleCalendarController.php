@@ -3,16 +3,17 @@
 namespace App\Http\Controllers\Tenant\Integrations;
 
 use App\Http\Controllers\Controller;
+use App\Models\Platform\Tenant as PlatformTenant;
 use App\Models\Tenant\Doctor;
 use App\Models\Tenant\GoogleCalendarToken;
 use App\Services\Tenant\GoogleCalendarService;
-use Google_Client;
-use Google_Service_Calendar;
-use Illuminate\Http\Request;
-use Illuminate\Support\Str;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
+use Google_Client;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 
 class GoogleCalendarController extends Controller
 {
@@ -23,73 +24,78 @@ class GoogleCalendarController extends Controller
         $this->googleCalendarService = $googleCalendarService;
     }
 
-    /**
-     * Redireciona para o Google OAuth
-     */
-    public function connect($doctorId, Request $request)
+    public function index(string $slug)
     {
+        $user = Auth::guard('tenant')->user();
+        $doctorsQuery = Doctor::with(['user', 'googleCalendarToken'])
+            ->whereHas('user', function ($query) {
+                $query->where('status', 'active');
+            });
+
+        if ($user->role === 'doctor' && $user->doctor) {
+            $doctorsQuery->where('id', $user->doctor->id);
+        } elseif ($user->role === 'user') {
+            $allowedDoctorIds = $user->allowedDoctors()->pluck('doctors.id')->toArray();
+            if (!empty($allowedDoctorIds)) {
+                $doctorsQuery->whereIn('id', $allowedDoctorIds);
+            } else {
+                $doctorsQuery->whereRaw('1 = 0');
+            }
+        }
+
+        $doctors = $doctorsQuery->orderBy('id')->get();
+        $hasGoogleCredentials = $this->hasGoogleOAuthCredentials();
+
+        return view('tenant.integrations.google.index', compact('doctors', 'user', 'hasGoogleCredentials'));
+    }
+
+    public function connect(string $slug, string $doctor, Request $request)
+    {
+        $doctorId = (string) $doctor;
+
         try {
-            // Busca o doctor manualmente após garantir que o tenant está ativo
             $doctor = Doctor::findOrFail($doctorId);
+            $this->ensureDoctorCanInitiateAuth($doctor);
 
-            // Verifica se as credenciais do Google estão configuradas
-            $clientId = config('services.google.client_id');
-            $clientSecret = config('services.google.client_secret');
-            
-            if (empty($clientId) || empty($clientSecret)) {
-                Log::error('Credenciais do Google não configuradas', [
-                    'doctor_id' => $doctorId,
-                ]);
-                
-                return redirect()->route('tenant.integrations.google.index', ['slug' => tenant()->subdomain])
-                    ->with('error', 'Credenciais do Google não configuradas. Entre em contato com o administrador.');
+            if (!$this->hasGoogleOAuthCredentials()) {
+                return redirect()->route('tenant.integrations.google.index', ['slug' => $slug])
+                    ->with('error', 'Credenciais globais do Google nao configuradas na Platform (com fallback para ambiente).');
             }
 
-            // Obtém o tenant atual
-            $tenant = \App\Models\Platform\Tenant::current();
+            $tenant = PlatformTenant::current();
             if (!$tenant) {
-                throw new \Exception('Não foi possível determinar o tenant para o callback do Google OAuth');
+                $tenant = PlatformTenant::where('subdomain', $slug)->first();
+            }
+            if (!$tenant) {
+                throw new \RuntimeException('Tenant nao encontrado para iniciar OAuth do Google Calendar.');
             }
 
-            // Redirect global único (não usa tenant na URL)
-            $redirectUri = route('google.callback');
-            
-            // 🔍 DIAGNÓSTICO: Log para verificar qual redirect está sendo gerado
-            // Compare este valor com o cadastrado no Google Cloud Console
-            Log::info('🔍 DIAGNÓSTICO REDIRECT URI - Google Calendar OAuth', [
-                'redirect_uri_gerado' => $redirectUri,
-                'app_url_config' => config('app.url'),
-                'app_url_env' => env('APP_URL'),
-                'url_esperada_ngrok' => 'https://5946f73d7978.ngrok-free.app/google/callback',
-                'sao_iguais' => $redirectUri === 'https://5946f73d7978.ngrok-free.app/google/callback',
-                'diferenca' => $redirectUri !== 'https://5946f73d7978.ngrok-free.app/google/callback' 
-                    ? '⚠️ URLs DIFERENTES! Verifique APP_URL no .env' 
-                    : '✅ URLs iguais',
-            ]);
-            
-            // 🔍 TEMPORÁRIO: Descomente a linha abaixo para ver o redirect no navegador
-            // REMOVER/COMENTAR APÓS CORRIGIR O APP_URL
-            // dd(['redirect_uri' => $redirectUri, 'app_url' => config('app.url')]);
+            $googleOAuthConfig = google_oauth_config();
+            $redirectUri = (string) ($googleOAuthConfig['redirect_uri'] ?? route('google.callback'));
+            $stateNonce = (string) Str::uuid();
+            Cache::put($this->stateCacheKey($stateNonce), [
+                'slug' => $tenant->subdomain,
+                'doctor' => (string) $doctor->id,
+                'initiator_user_id' => (string) (Auth::guard('tenant')->id() ?? ''),
+            ], now()->addMinutes(15));
 
-            // State: JSON com slug + doctor para recuperar no callback
             $state = json_encode([
                 'slug' => $tenant->subdomain,
                 'doctor' => $doctor->id,
+                'nonce' => $stateNonce,
             ]);
 
             $client = new Google_Client();
-            $client->setClientId($clientId);
-            $client->setClientSecret($clientSecret);
+            $client->setClientId((string) ($googleOAuthConfig['client_id'] ?? ''));
+            $client->setClientSecret((string) ($googleOAuthConfig['client_secret'] ?? ''));
             $client->setRedirectUri($redirectUri);
             $client->setAccessType('offline');
             $client->setPrompt('consent');
             $client->addScope([
                 'https://www.googleapis.com/auth/calendar',
-                'https://www.googleapis.com/auth/calendar.events'
+                'https://www.googleapis.com/auth/calendar.events',
             ]);
-
-            // Passa o state com tenant e doctor
-            $client->setState($state);
+            $client->setState((string) $state);
 
             $authUrl = $client->createAuthUrl();
 
@@ -100,215 +106,162 @@ class GoogleCalendarController extends Controller
             ]);
 
             return redirect()->away($authUrl);
-        } catch (\Exception $e) {
-            Log::error('Erro ao iniciar conexão com Google Calendar', [
+        } catch (\Throwable $e) {
+            Log::error('Erro ao iniciar conexao com Google Calendar', [
                 'doctor_id' => $doctorId,
+                'tenant_slug' => $slug,
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
             ]);
 
-            return redirect()->route('tenant.integrations.google.index', ['slug' => tenant()->subdomain])
+            return redirect()->route('tenant.integrations.google.index', ['slug' => $slug])
                 ->with('error', 'Erro ao conectar com Google Calendar. Tente novamente.');
         }
     }
 
-    /**
-     * Callback do Google OAuth (rota global)
-     */
     public function callback(Request $request)
     {
-        try {
-            $code = $request->get('code');
-            $error = $request->get('error');
-            $stateRaw = $request->get('state');
+        $stateRaw = (string) $request->get('state', '');
+        $state = $this->decodeState($stateRaw);
+        $tenantSlug = $state['slug'] ?? null;
 
-            if ($error) {
-                Log::error('Erro no callback do Google OAuth', [
-                    'error' => $error,
-                    'error_description' => $request->get('error_description'),
-                ]);
-                
-                // Tenta redirecionar para o tenant correto se o state estiver presente
-                $tenantSlug = null;
-                if ($stateRaw) {
-                    $state = json_decode($stateRaw, true);
-                    $tenantSlug = $state['slug'] ?? $state['tenant'] ?? null; // Fallback para 'tenant' por compatibilidade
+        try {
+            if ($tenantSlug) {
+                $tenant = PlatformTenant::where('subdomain', $tenantSlug)->first();
+                if ($tenant) {
+                    $tenant->makeCurrent();
                 }
-                
-                if ($tenantSlug) {
-                    // Inicializa o tenant antes de redirecionar
-                    $tenant = \App\Models\Platform\Tenant::where('subdomain', $tenantSlug)->first();
-                    if ($tenant) {
-                        $tenant->makeCurrent();
-                    }
-                    return redirect()->route('tenant.integrations.google.index', ['slug' => $tenantSlug])
-                        ->with('error', 'Erro ao autorizar acesso ao Google Calendar: ' . $error);
-                }
-                
-                // Fallback: redireciona para home
+            }
+
+            if (!$tenantSlug) {
                 return redirect()->route('login')
+                    ->with('error', 'Estado OAuth invalido. Conecte novamente.');
+            }
+
+            $error = $request->get('error');
+            if ($error) {
+                return redirect()->route('tenant.integrations.google.index', ['slug' => $tenantSlug])
                     ->with('error', 'Erro ao autorizar acesso ao Google Calendar: ' . $error);
             }
 
-            if (!$code) {
-                Log::error('Código de autorização não recebido no callback do Google OAuth');
-                return redirect()->route('login')
-                    ->with('error', 'Código de autorização não recebido.');
-            }
-
-            // Recupera o state (JSON com tenant e doctor)
-            if (!$stateRaw) {
-                Log::error('State OAuth não recebido no callback do Google OAuth');
-                return redirect()->route('login')
-                    ->with('error', 'Estado OAuth não recebido. Tente conectar novamente.');
-            }
-
-            $state = json_decode($stateRaw, true);
-            // Aceita tanto 'slug' quanto 'tenant' para compatibilidade
-            $tenantSlug = $state['slug'] ?? $state['tenant'] ?? null;
+            $code = $request->get('code');
             $doctorId = $state['doctor'] ?? null;
-            
-            if (!$state || !$tenantSlug || !$doctorId) {
-                Log::error('State OAuth inválido no callback do Google OAuth', [
-                    'state_raw' => $stateRaw,
-                    'state_decoded' => $state,
-                ]);
-                return redirect()->route('login')
-                    ->with('error', 'Estado OAuth inválido. Tente conectar novamente.');
+            $stateNonce = $state['nonce'] ?? null;
+
+            if (!$this->isValidStateNonce($stateNonce, $tenantSlug, $doctorId)) {
+                return redirect()->route('tenant.integrations.google.index', ['slug' => $tenantSlug])
+                    ->with('error', 'Fluxo de autorizacao invalido ou expirado. Inicie novamente a conexao.');
             }
 
-            // Inicializa o tenant correto
-            $tenant = \App\Models\Platform\Tenant::where('subdomain', $tenantSlug)->firstOrFail();
+            if (!$code || !$doctorId) {
+                return redirect()->route('tenant.integrations.google.index', ['slug' => $tenantSlug])
+                    ->with('error', 'Dados de autorizacao incompletos. Conecte novamente.');
+            }
+
+            $tenant = PlatformTenant::where('subdomain', $tenantSlug)->firstOrFail();
             $tenant->makeCurrent();
 
-            Log::info('Tenant inicializado no callback do Google OAuth', [
-                'tenant_slug' => $tenantSlug,
-                'tenant_id' => $tenant->id,
-            ]);
-
-            // Busca o doctor no banco do tenant
             $doctor = Doctor::findOrFail($doctorId);
 
-            // Redirect global (mesma usada no connect)
-            $redirectUri = route('google.callback');
+            if (!$this->hasGoogleOAuthCredentials()) {
+                return redirect()->route('tenant.integrations.google.index', ['slug' => $tenantSlug])
+                    ->with('error', 'Credenciais globais do Google nao configuradas na Platform (com fallback para ambiente).');
+            }
 
-            // Troca o código por tokens
+            $googleOAuthConfig = google_oauth_config();
             $client = new Google_Client();
-            $client->setClientId(config('services.google.client_id'));
-            $client->setClientSecret(config('services.google.client_secret'));
-            $client->setRedirectUri($redirectUri);
+            $client->setClientId((string) ($googleOAuthConfig['client_id'] ?? ''));
+            $client->setClientSecret((string) ($googleOAuthConfig['client_secret'] ?? ''));
+            $client->setRedirectUri((string) ($googleOAuthConfig['redirect_uri'] ?? route('google.callback')));
 
-            $accessToken = $client->fetchAccessTokenWithAuthCode($code);
+            $accessToken = $client->fetchAccessTokenWithAuthCode((string) $code);
 
             if (isset($accessToken['error'])) {
+                $reason = $accessToken['error_description'] ?? $accessToken['error'];
                 Log::error('Erro ao obter token do Google', [
-                    'error' => $accessToken['error_description'] ?? $accessToken['error'],
                     'tenant_slug' => $tenantSlug,
                     'doctor_id' => $doctorId,
+                    'error' => $reason,
                 ]);
 
                 return redirect()->route('tenant.integrations.google.index', ['slug' => $tenantSlug])
                     ->with('error', 'Erro ao obter token de acesso do Google.');
             }
 
-            // Calcula a data de expiração
             $expiresAt = null;
             if (isset($accessToken['expires_in'])) {
-                $expiresAt = Carbon::now()->addSeconds($accessToken['expires_in']);
+                $expiresAt = Carbon::now()->addSeconds((int) $accessToken['expires_in']);
             }
 
-            // Salva ou atualiza o token vinculado ao médico no banco do tenant correto
-            $token = GoogleCalendarToken::updateOrCreate(
+            GoogleCalendarToken::updateOrCreate(
                 ['doctor_id' => $doctor->id],
                 [
-                    'id' => Str::uuid(),
+                    'id' => (string) Str::uuid(),
                     'access_token' => $accessToken,
                     'refresh_token' => $accessToken['refresh_token'] ?? null,
                     'expires_at' => $expiresAt,
                 ]
             );
 
-            Log::info('Token do Google Calendar salvo', [
-                'tenant_slug' => $tenantSlug,
-                'doctor_id' => $doctor->id,
-                'token_id' => $token->id,
-            ]);
-
-            // Redireciona para a página de integrações do tenant
             return redirect()->route('tenant.integrations.google.index', ['slug' => $tenantSlug])
-                ->with('success', 'Integração com Google Calendar realizada com sucesso!');
-        } catch (\Exception $e) {
+                ->with('success', 'Integracao com Google Calendar realizada com sucesso.');
+        } catch (\Throwable $e) {
             Log::error('Erro no callback do Google Calendar', [
+                'tenant_slug' => $tenantSlug,
+                'state' => $state,
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
-                'state' => $request->get('state'),
             ]);
 
-            // Tenta redirecionar para o tenant correto se possível
-            $tenantSlug = null;
-            $stateRaw = $request->get('state');
-            if ($stateRaw) {
-                $state = json_decode($stateRaw, true);
-                $tenantSlug = $state['tenant'] ?? null;
-            }
-            
             if ($tenantSlug) {
-                // Inicializa o tenant antes de redirecionar
-                $tenant = \App\Models\Platform\Tenant::where('subdomain', $tenantSlug)->first();
-                if ($tenant) {
-                    $tenant->makeCurrent();
-                }
                 return redirect()->route('tenant.integrations.google.index', ['slug' => $tenantSlug])
-                    ->with('error', 'Erro ao processar autorização. Tente novamente.');
+                    ->with('error', 'Erro ao processar autorizacao. Tente novamente.');
             }
 
             return redirect()->route('login')
-                ->with('error', 'Erro ao processar autorização. Tente novamente.');
+                ->with('error', 'Erro ao processar autorizacao. Tente novamente.');
         }
     }
 
-    /**
-     * Remove a integração do Google Calendar
-     */
-    public function disconnect($doctorId)
+    public function disconnect(string $slug, string $doctor)
     {
+        $doctorId = (string) $doctor;
+
         try {
-            // Busca o doctor manualmente após garantir que o tenant está ativo
             $doctor = Doctor::findOrFail($doctorId);
+            $this->ensureDoctorCanManage($doctor);
 
             $token = $doctor->googleCalendarToken;
 
             if ($token) {
                 $token->delete();
 
-                Log::info('Integração Google Calendar removida', [
+                Log::info('Integracao Google Calendar removida', [
                     'doctor_id' => $doctor->id,
+                    'tenant_slug' => $slug,
                 ]);
 
-                return redirect()->route('tenant.integrations.google.index', ['slug' => tenant()->subdomain])
-                    ->with('success', 'Integração com Google Calendar removida com sucesso.');
+                return redirect()->route('tenant.integrations.google.index', ['slug' => $slug])
+                    ->with('success', 'Integracao com Google Calendar removida com sucesso.');
             }
 
-            return redirect()->route('tenant.integrations.google.index', ['slug' => tenant()->subdomain])
-                ->with('info', 'Nenhuma integração encontrada para este médico.');
-        } catch (\Exception $e) {
+            return redirect()->route('tenant.integrations.google.index', ['slug' => $slug])
+                ->with('info', 'Nenhuma integracao encontrada para este medico.');
+        } catch (\Throwable $e) {
             Log::error('Erro ao desconectar Google Calendar', [
                 'doctor_id' => $doctorId,
+                'tenant_slug' => $slug,
                 'error' => $e->getMessage(),
             ]);
 
-            return redirect()->route('tenant.integrations.google.index', ['slug' => tenant()->subdomain])
-                ->with('error', 'Erro ao remover integração. Tente novamente.');
+            return redirect()->route('tenant.integrations.google.index', ['slug' => $slug])
+                ->with('error', 'Erro ao remover integracao. Tente novamente.');
         }
     }
 
-    /**
-     * Verifica o status da integração
-     */
-    public function status($doctorId)
+    public function status(string $slug, string $doctor)
     {
-        // Busca o doctor manualmente após garantir que o tenant está ativo
+        $doctorId = (string) $doctor;
         $doctor = Doctor::findOrFail($doctorId);
+        $this->ensureDoctorCanView($doctor);
 
         $token = $doctor->googleCalendarToken;
 
@@ -319,22 +272,20 @@ class GoogleCalendarController extends Controller
         ]);
     }
 
-    /**
-     * Lista eventos do Google Calendar para um médico (API para FullCalendar)
-     */
-    public function getEvents($doctorId, Request $request)
+    public function getEvents(string $slug, string $doctor, Request $request)
     {
+        $doctorId = (string) $doctor;
+
         try {
-            // Busca o doctor manualmente após garantir que o tenant está ativo
             $doctor = Doctor::findOrFail($doctorId);
+            $this->ensureDoctorCanView($doctor);
 
             $startDate = $request->get('start');
             $endDate = $request->get('end');
 
             $events = $this->googleCalendarService->listEvents($doctor->id, $startDate, $endDate);
 
-            // Formata para FullCalendar
-            $formattedEvents = array_map(function ($event) {
+            $formattedEvents = array_map(function (array $event): array {
                 return [
                     'id' => $event['id'],
                     'title' => $event['title'],
@@ -345,9 +296,10 @@ class GoogleCalendarController extends Controller
             }, $events);
 
             return response()->json($formattedEvents);
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             Log::error('Erro ao buscar eventos do Google Calendar', [
                 'doctor_id' => $doctorId,
+                'tenant_slug' => $slug,
                 'error' => $e->getMessage(),
             ]);
 
@@ -356,34 +308,111 @@ class GoogleCalendarController extends Controller
     }
 
     /**
-     * Página principal de integrações Google Calendar
+     * @return array{slug?: string, doctor?: string}|array<string, mixed>
      */
-    public function index()
+    private function decodeState(string $rawState): array
+    {
+        if (trim($rawState) === '') {
+            return [];
+        }
+
+        $decoded = json_decode($rawState, true);
+        if (!is_array($decoded)) {
+            return [];
+        }
+
+        if (!isset($decoded['slug']) && isset($decoded['tenant'])) {
+            $decoded['slug'] = $decoded['tenant'];
+        }
+
+        return $decoded;
+    }
+
+    private function hasGoogleOAuthCredentials(?array $oauthConfig = null): bool
+    {
+        $oauthConfig = $oauthConfig ?? google_oauth_config();
+
+        return trim((string) ($oauthConfig['client_id'] ?? '')) !== ''
+            && trim((string) ($oauthConfig['client_secret'] ?? '')) !== '';
+    }
+
+    private function stateCacheKey(string $nonce): string
+    {
+        return 'google_oauth_state:' . $nonce;
+    }
+
+    private function isValidStateNonce(?string $nonce, ?string $slug, ?string $doctorId): bool
+    {
+        if (!$nonce || !$slug || !$doctorId) {
+            return false;
+        }
+
+        $cacheKey = $this->stateCacheKey($nonce);
+        $stateData = Cache::get($cacheKey);
+        Cache::forget($cacheKey);
+
+        if (!is_array($stateData)) {
+            return false;
+        }
+
+        return (string) ($stateData['slug'] ?? '') === (string) $slug
+            && (string) ($stateData['doctor'] ?? '') === (string) $doctorId;
+    }
+
+    private function ensureDoctorCanInitiateAuth(Doctor $doctor): void
     {
         $user = Auth::guard('tenant')->user();
-        $doctorsQuery = Doctor::with(['user', 'googleCalendarToken'])
-            ->whereHas('user', function($query) {
-                $query->where('status', 'active');
-            });
+        if (!$user) {
+            abort(403);
+        }
 
-        // Aplicar filtros baseado no role
-        if ($user->role === 'doctor' && $user->doctor) {
-            // Médico só vê a si mesmo
-            $doctorsQuery->where('id', $user->doctor->id);
-        } elseif ($user->role === 'user') {
-            // Usuário comum só vê médicos relacionados
-            $allowedDoctorIds = $user->allowedDoctors()->pluck('doctors.id')->toArray();
-            if (!empty($allowedDoctorIds)) {
-                $doctorsQuery->whereIn('id', $allowedDoctorIds);
-            } else {
-                $doctorsQuery->whereRaw('1 = 0');
+        if ($user->role === 'doctor' && $user->doctor && (string) $user->doctor->id === (string) $doctor->id) {
+            return;
+        }
+
+        abort(403, 'A autenticacao deve ser iniciada pelo proprio profissional.');
+    }
+
+    private function ensureDoctorCanManage(Doctor $doctor): void
+    {
+        $user = Auth::guard('tenant')->user();
+        if (!$user) {
+            abort(403);
+        }
+
+        if ($user->role === 'admin') {
+            return;
+        }
+
+        if ($user->role === 'doctor' && $user->doctor && (string) $user->doctor->id === (string) $doctor->id) {
+            return;
+        }
+
+        abort(403, 'Voce so pode gerenciar seu proprio calendario.');
+    }
+
+    private function ensureDoctorCanView(Doctor $doctor): void
+    {
+        $user = Auth::guard('tenant')->user();
+        if (!$user) {
+            abort(403);
+        }
+
+        if ($user->role === 'admin') {
+            return;
+        }
+
+        if ($user->role === 'doctor' && $user->doctor && (string) $user->doctor->id === (string) $doctor->id) {
+            return;
+        }
+
+        if ($user->role === 'user') {
+            $allowed = $user->allowedDoctors()->where('doctors.id', $doctor->id)->exists();
+            if ($allowed) {
+                return;
             }
         }
-        // Admin vê tudo (sem filtro)
 
-        $doctors = $doctorsQuery->orderBy('id')->get();
-
-        return view('tenant.integrations.google.index', compact('doctors', 'user'));
+        abort(403, 'Voce nao possui permissao para visualizar este calendario.');
     }
 }
-

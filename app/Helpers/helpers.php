@@ -62,6 +62,103 @@ if (!function_exists('set_sysconfig')) {
 }
 
 /**
+ * Resolve configuracao global do Asaas com prioridade:
+ * Platform (SystemSetting) -> config/services (.env) -> fallback legado.
+ */
+if (!function_exists('asaas_config')) {
+    function asaas_config(): array
+    {
+        $apiUrl = trim((string) sysconfig('ASAAS_API_URL', sysconfig('asaas_api_url', '')));
+        if ($apiUrl === '') {
+            $apiUrl = trim((string) sysconfig('ASAAS_BASE_URL', sysconfig('asaas_base_url', '')));
+        }
+        if ($apiUrl === '') {
+            $apiUrl = trim((string) config('services.asaas.api_url', ''));
+        }
+        if ($apiUrl === '') {
+            $apiUrl = trim((string) config('services.asaas.url', ''));
+        }
+        if ($apiUrl === '') {
+            $apiUrl = trim((string) env('ASAAS_BASE_URL', env('ASAAS_API_URL', '')));
+        }
+
+        $apiKey = trim((string) sysconfig('ASAAS_API_KEY', sysconfig('asaas_api_key', '')));
+        if ($apiKey === '') {
+            $apiKey = trim((string) config('services.asaas.api_key', ''));
+        }
+
+        $webhookSecret = trim((string) sysconfig('ASAAS_WEBHOOK_SECRET', sysconfig('asaas_webhook_secret', '')));
+        if ($webhookSecret === '') {
+            $webhookSecret = trim((string) config('services.asaas.webhook_secret', ''));
+        }
+
+        return [
+            'api_url' => $apiUrl,
+            'api_key' => $apiKey,
+            'webhook_secret' => $webhookSecret,
+        ];
+    }
+}
+
+if (!function_exists('has_asaas_credentials')) {
+    function has_asaas_credentials(): bool
+    {
+        $config = asaas_config();
+
+        return trim((string) ($config['api_url'] ?? '')) !== ''
+            && trim((string) ($config['api_key'] ?? '')) !== '';
+    }
+}
+
+/**
+ * Resolve configuracao global OAuth do Google com prioridade:
+ * Platform (SystemSetting) -> config/services (.env) -> fallback de rota.
+ */
+if (!function_exists('google_oauth_config')) {
+    function google_oauth_config(): array
+    {
+        $clientId = trim((string) sysconfig('GOOGLE_CLIENT_ID', sysconfig('google_client_id', '')));
+        if ($clientId === '') {
+            $clientId = trim((string) config('services.google.client_id', ''));
+        }
+
+        $clientSecret = trim((string) sysconfig('GOOGLE_CLIENT_SECRET', sysconfig('google_client_secret', '')));
+        if ($clientSecret === '') {
+            $clientSecret = trim((string) config('services.google.client_secret', ''));
+        }
+
+        $redirectUri = trim((string) sysconfig('GOOGLE_REDIRECT_URI', sysconfig('google_redirect_uri', '')));
+        if ($redirectUri === '') {
+            $redirectUri = trim((string) config('services.google.redirect', ''));
+        }
+
+        if ($redirectUri === '') {
+            try {
+                $redirectUri = (string) route('google.callback');
+            } catch (\Throwable $e) {
+                $redirectUri = '';
+            }
+        }
+
+        return [
+            'client_id' => $clientId,
+            'client_secret' => $clientSecret,
+            'redirect_uri' => $redirectUri,
+        ];
+    }
+}
+
+if (!function_exists('has_google_oauth_credentials')) {
+    function has_google_oauth_credentials(): bool
+    {
+        $config = google_oauth_config();
+
+        return trim((string) ($config['client_id'] ?? '')) !== ''
+            && trim((string) ($config['client_secret'] ?? '')) !== '';
+    }
+}
+
+/**
  * 🔧 Atualiza variáveis do arquivo .env com segurança.
  */
 if (!function_exists('updateEnv')) {
@@ -119,8 +216,13 @@ if (!function_exists('testConnection')) {
 
                 // 🔸 Teste ASAAS
                 case 'asaas':
-                    $baseUrl = env('ASAAS_API_URL', 'https://api.asaas.com/v3');
-                    $token   = env('ASAAS_API_KEY');
+                    $asaas = asaas_config();
+                    $baseUrl = trim((string) ($asaas['api_url'] ?? ''));
+                    if ($baseUrl === '') {
+                        $baseUrl = 'https://api.asaas.com/v3';
+                    }
+                    $token = trim((string) ($asaas['api_key'] ?? ''));
+                    $baseUrl = rtrim($baseUrl, '/');
 
                     if (!$token) {
                         return ['status' => false, 'message' => 'Chave ASAAS não configurada.'];
@@ -128,8 +230,8 @@ if (!function_exists('testConnection')) {
 
                     // Se estiver em sandbox, usa /customers?limit=1
                     $endpoint = str_contains($baseUrl, 'sandbox')
-                        ? "{$baseUrl}/customers?limit=1"
-                        : "{$baseUrl}/me";
+                        ? $baseUrl . '/customers?limit=1'
+                        : $baseUrl . '/me';
 
                     $response = Http::withHeaders([
                         'access_token' => $token

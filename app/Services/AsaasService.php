@@ -15,26 +15,24 @@ class AsaasService
 
     public function __construct()
     {
-        $baseUrl = null;
-        $apiKey = null;
+        $resolved = function_exists('asaas_config')
+            ? asaas_config()
+            : [
+                'api_url' => (string) config('services.asaas.api_url', config('services.asaas.url', env('ASAAS_BASE_URL', env('ASAAS_API_URL', '')))),
+                'api_key' => (string) config('services.asaas.api_key', env('ASAAS_API_KEY', '')),
+                'webhook_secret' => (string) config('services.asaas.webhook_secret', env('ASAAS_WEBHOOK_SECRET', '')),
+            ];
 
         // Usa sysconfig se disponível
-        if (function_exists('sysconfig')) {
-            $baseUrl = sysconfig('ASAAS_API_URL');
-            $apiKey = sysconfig('ASAAS_API_KEY');
-        }
+        
 
         // fallback: usa config() e env()
         // OBS: em config/services.php a chave é "services.asaas.url" (não "base_url")
-        $rawBaseUrl = $baseUrl
-            ?: config('services.asaas.url', env('ASAAS_BASE_URL', env('ASAAS_API_URL')))
-            ?: '';
+        $rawBaseUrl = (string) ($resolved['api_url'] ?? '');
 
         $this->baseUrl = rtrim((string) $rawBaseUrl, '/') . '/';
 
-        $rawApiKey = $apiKey
-            ?: config('services.asaas.api_key', env('ASAAS_API_KEY'))
-            ?: '';
+        $rawApiKey = (string) ($resolved['api_key'] ?? '');
 
         // Garante string para não quebrar com typed properties (PHP 8+)
         $this->apiKey = (string) $rawApiKey;

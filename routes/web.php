@@ -456,6 +456,9 @@ Route::middleware(['auth'])->prefix('Platform')->name('Platform.')->group(functi
         Route::get('settings/commands/available', [SystemSettingsController::class, 'getAvailableCommands'])->name('settings.commands.available');
         // Service pode ser uma string, então não precisa restrição numérica
         Route::get('settings/test/{service}', [SystemSettingsController::class, 'testConnection'])->name('settings.test');
+        Route::get('settings/integrations/google/test', [SystemSettingsController::class, 'testConnection'])
+            ->defaults('service', 'google')
+            ->name('settings.integrations.google.test');
         Route::post('settings/test/meta/send', [SystemSettingsController::class, 'testMetaSend'])->name('settings.test.meta.send');
         Route::post('settings/test/zapi/send', [SystemSettingsController::class, 'testZapiSend'])->name('settings.test.zapi.send');
         Route::post('settings/test/waha/send', [SystemSettingsController::class, 'testWahaSend'])->name('settings.test.waha.send');

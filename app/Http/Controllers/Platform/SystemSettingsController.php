@@ -30,14 +30,20 @@ class SystemSettingsController extends Controller
     public function index()
     {
         $tenantGlobalProviderCatalog = app(TenantGlobalProviderCatalogService::class);
+        $asaas = asaas_config();
+        $google = google_oauth_config();
 
         $settings = [
             'timezone' => sysconfig('timezone', 'America/Sao_Paulo'),
             'language' => sysconfig('language', 'pt_BR'),
             // demais integraÃ§Ãµes
-            'ASAAS_API_URL' => sysconfig('ASAAS_API_URL', env('ASAAS_API_URL')),
-            'ASAAS_API_KEY' => sysconfig('ASAAS_API_KEY', env('ASAAS_API_KEY')),
+            'ASAAS_API_URL' => $asaas['api_url'] ?? '',
+            'ASAAS_API_KEY' => $asaas['api_key'] ?? '',
+            'ASAAS_WEBHOOK_SECRET' => $asaas['webhook_secret'] ?? '',
             'ASAAS_ENV' => sysconfig('ASAAS_ENV', env('ASAAS_ENV', 'sandbox')),
+            'GOOGLE_CLIENT_ID' => sysconfig('GOOGLE_CLIENT_ID') ?: ($google['client_id'] ?? ''),
+            'GOOGLE_CLIENT_SECRET' => sysconfig('GOOGLE_CLIENT_SECRET') ?: ($google['client_secret'] ?? ''),
+            'GOOGLE_REDIRECT_URI' => sysconfig('GOOGLE_REDIRECT_URI') ?: ($google['redirect_uri'] ?? ''),
             'META_ACCESS_TOKEN' => sysconfig('META_ACCESS_TOKEN', env('META_ACCESS_TOKEN')),
             'META_PHONE_NUMBER_ID' => sysconfig('META_PHONE_NUMBER_ID', env('META_PHONE_NUMBER_ID')),
             'META_WABA_ID' => sysconfig('META_WABA_ID', env('META_WABA_ID')),
@@ -127,7 +133,12 @@ class SystemSettingsController extends Controller
 
         $rules = [
             'tab' => 'nullable|string|in:integracoes,whatsapp,email',
+            'ASAAS_API_URL' => 'nullable|string|url',
             'ASAAS_API_KEY' => 'nullable|string',
+            'ASAAS_WEBHOOK_SECRET' => 'nullable|string',
+            'GOOGLE_CLIENT_ID' => 'nullable|string|max:255',
+            'GOOGLE_CLIENT_SECRET' => 'nullable|string|max:255',
+            'GOOGLE_REDIRECT_URI' => 'nullable|url|max:500',
             'ASAAS_ENV' => 'nullable|string',
             'META_ACCESS_TOKEN' => 'nullable|string',
             'META_PHONE_NUMBER_ID' => 'nullable|string',
@@ -168,7 +179,12 @@ class SystemSettingsController extends Controller
 
         // Lista de campos que serÃ£o atualizados
         $fields = [
+            'ASAAS_API_URL',
             'ASAAS_API_KEY',
+            'ASAAS_WEBHOOK_SECRET',
+            'GOOGLE_CLIENT_ID',
+            'GOOGLE_CLIENT_SECRET',
+            'GOOGLE_REDIRECT_URI',
             'ASAAS_ENV',
             'META_ACCESS_TOKEN',
             'META_PHONE_NUMBER_ID',
@@ -866,6 +882,26 @@ class SystemSettingsController extends Controller
                 'http_status' => $result['status'] ?? null,
             ]);
         }
+        if ($serviceKey === 'google') {
+            $google = google_oauth_config();
+            $clientId = trim((string) ($google['client_id'] ?? ''));
+            $clientSecret = trim((string) ($google['client_secret'] ?? ''));
+
+            $ok = $clientId !== '' && $clientSecret !== '';
+            $payload = [
+                'status' => $ok ? 'OK' : 'ERROR',
+                'success' => $ok,
+                'message' => $ok
+                    ? 'Configuracao Google Calendar valida.'
+                    : 'Client ID ou Client Secret invalidos.',
+            ];
+
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json($payload);
+            }
+
+            return back()->with($ok ? 'success' : 'error', $payload['message']);
+        }
 
         $result = testConnection($serviceKey);
 
@@ -1215,4 +1251,3 @@ class SystemSettingsController extends Controller
         return $aliases[$normalized] ?? $normalized;
     }
 }
-

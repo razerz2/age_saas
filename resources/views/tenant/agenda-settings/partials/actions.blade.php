@@ -17,6 +17,15 @@
         <x-icon name="pencil-outline" class="w-3 h-3" />
     </a>
 
+    <a
+        href="{{ workspace_route('tenant.agenda-settings.calendar-sync', $calendar->id) }}"
+        title="Sincronizar calendário"
+        onclick="event.stopPropagation()"
+        class="inline-flex items-center justify-center rounded-xl border border-blue-100 bg-blue-50 px-2.5 py-1.5 text-xs font-medium text-blue-700 hover:bg-blue-100 dark:border-blue-900/40 dark:bg-blue-900/20 dark:text-blue-300 table-action-btn"
+    >
+        <x-icon name="calendar-outline" class="w-3 h-3" />
+    </a>
+
     <form
         action="{{ workspace_route('tenant.agenda-settings.toggle-status', $calendar->id) }}"
         method="POST"

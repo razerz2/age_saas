@@ -342,6 +342,9 @@ Route::prefix('workspace/{slug}')
         Route::delete('agenda-settings/{id}', [AgendaSettingsController::class, 'destroy'])
             ->where('id', '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}')
             ->name('agenda-settings.destroy');
+        Route::get('agenda-settings/{id}/sync', [AgendaSettingsController::class, 'calendarSync'])
+            ->where('id', '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}')
+            ->name('agenda-settings.calendar-sync');
 
         // =====================================================================
         // DOCTOR SETTINGS (Página única legada)

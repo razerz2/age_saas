@@ -80,16 +80,78 @@
                     <div class="mb-3">
                         <label>API URL</label>
                         <input type="text" class="form-control" name="ASAAS_API_URL"
-                            value="{{ old('ASAAS_API_URL', env('ASAAS_API_URL')) }}">
+                            value="{{ old('ASAAS_API_URL', $settings['ASAAS_API_URL'] ?? '') }}">
                     </div>
                     <div class="mb-3">
                         <label>API Key</label>
                         <input type="text" class="form-control" name="ASAAS_API_KEY"
                             value="{{ old('ASAAS_API_KEY', $settings['ASAAS_API_KEY']) }}">
                     </div>
+                    <div class="mb-3">
+                        <label>Webhook Secret</label>
+                        <input type="password" class="form-control" name="ASAAS_WEBHOOK_SECRET"
+                            value="{{ old('ASAAS_WEBHOOK_SECRET', $settings['ASAAS_WEBHOOK_SECRET'] ?? '') }}"
+                            placeholder="Token do header asaas-access-token">
+                        <small class="text-muted">Usado na validação de webhook do Asaas.</small>
+                    </div>
 
-                    <a href="{{ route('Platform.settings.test', 'asaas') }}" class="btn btn-secondary mb-4">
-                        <i class="fas fa-plug me-1"></i> Testar Conexão ASAAS</a>
+                    <div class="d-flex align-items-center flex-wrap gap-2 mb-4">
+                        <button
+                            type="button"
+                            id="btn-test-asaas"
+                            data-test-url="{{ route('Platform.settings.test', ['service' => 'asaas']) }}"
+                            class="btn btn-secondary"
+                        >
+                            <i class="fas fa-plug me-1"></i> Testar Conexao ASAAS
+                        </button>
+                        <span id="asaas-test-badge" class="badge bg-secondary d-none">-</span>
+                        <small id="asaas-test-message" class="text-muted"></small>
+                    </div>
+
+                    <hr class="my-4">
+
+                    <h5 class="mt-2">Google Calendar</h5>
+                    <p class="text-muted mb-3">
+                        Credenciais OAuth globais utilizadas pelas integracoes Google Calendar das tenants.
+                    </p>
+
+                    <div class="mb-3">
+                        <label>Client ID</label>
+                        <input type="text" class="form-control" name="GOOGLE_CLIENT_ID"
+                            value="{{ old('GOOGLE_CLIENT_ID', $settings['GOOGLE_CLIENT_ID'] ?? '') }}"
+                            placeholder="Seu Google OAuth Client ID">
+                    </div>
+
+                    <div class="mb-3">
+                        <label>Client Secret</label>
+                        <div class="input-group">
+                            <input type="password" class="form-control" id="google-client-secret-input" name="GOOGLE_CLIENT_SECRET"
+                                value="{{ old('GOOGLE_CLIENT_SECRET', $settings['GOOGLE_CLIENT_SECRET'] ?? '') }}"
+                                placeholder="Seu Google OAuth Client Secret">
+                            <button type="button" class="btn btn-outline-secondary" id="toggle-google-client-secret">
+                                Mostrar
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label>Redirect URI</label>
+                        <input type="url" class="form-control" name="GOOGLE_REDIRECT_URI"
+                            value="{{ old('GOOGLE_REDIRECT_URI', $settings['GOOGLE_REDIRECT_URI'] ?? route('google.callback')) }}"
+                            placeholder="{{ route('google.callback') }}">
+                        <small class="text-muted">A URI precisa bater com a configuracao do app OAuth no Google Cloud.</small>
+                    </div>
+
+                    <div class="d-flex align-items-center flex-wrap gap-2 mb-4">
+                        <button type="button"
+                            id="btn-test-google"
+                            data-test-url="{{ route('Platform.settings.integrations.google.test') }}"
+                            class="btn btn-secondary">
+                            <i class="fas fa-plug me-1"></i> Testar Conexao Google
+                        </button>
+                        <span id="google-test-badge" class="badge bg-secondary d-none">-</span>
+                        <small id="google-test-message" class="text-muted"></small>
+                    </div>
 
                     <div class="d-flex gap-2">
                         <button type="submit" class="btn btn-primary">
@@ -1478,6 +1540,18 @@
                 };
             }
 
+            function getGoogleRuntimeConfig() {
+                var clientIdInput = document.querySelector('input[name="GOOGLE_CLIENT_ID"]');
+                var clientSecretInput = document.querySelector('input[name="GOOGLE_CLIENT_SECRET"]');
+                var redirectInput = document.querySelector('input[name="GOOGLE_REDIRECT_URI"]');
+
+                return {
+                    GOOGLE_CLIENT_ID: clientIdInput ? clientIdInput.value.trim() : '',
+                    GOOGLE_CLIENT_SECRET: clientSecretInput ? clientSecretInput.value.trim() : '',
+                    GOOGLE_REDIRECT_URI: redirectInput ? redirectInput.value.trim() : ''
+                };
+            }
+
             function appendWahaRuntimeConfigToUrl(url) {
                 var runtimeConfig = getWahaRuntimeConfig();
                 var params = new URLSearchParams();
@@ -1511,6 +1585,23 @@
 
                 return url + (url.indexOf('?') >= 0 ? '&' : '?') + params.toString();
             }
+
+            function appendGoogleRuntimeConfigToUrl(url) {
+                var runtimeConfig = getGoogleRuntimeConfig();
+                var params = new URLSearchParams();
+
+                Object.keys(runtimeConfig).forEach(function (key) {
+                    if (runtimeConfig[key]) {
+                        params.append(key, runtimeConfig[key]);
+                    }
+                });
+
+                if (!params.toString()) {
+                    return url;
+                }
+
+                return url + (url.indexOf('?') >= 0 ? '&' : '?') + params.toString();
+            }
             function setupTestButton(buttonId, badgeId, messageId) {
                 var button = document.getElementById(buttonId);
                 if (!button) return;
@@ -1525,6 +1616,8 @@
                         url = appendWahaRuntimeConfigToUrl(url);
                     } else if (buttonId === 'btn-test-evolution') {
                         url = appendEvolutionRuntimeConfigToUrl(url);
+                    } else if (buttonId === 'btn-test-google') {
+                        url = appendGoogleRuntimeConfigToUrl(url);
                     }
 
                     var badge = document.getElementById(badgeId);
@@ -1602,10 +1695,26 @@
             document.addEventListener('DOMContentLoaded', function () {
                 activateSettingsTabFromQuery();
                 setupProviderToggle();
+                setupTestButton('btn-test-asaas', 'asaas-test-badge', 'asaas-test-message');
                 setupTestButton('btn-test-meta', 'meta-test-badge', 'meta-test-message');
                 setupTestButton('btn-test-zapi', 'zapi-test-badge', 'zapi-test-message');
                 setupTestButton('btn-test-waha', 'waha-test-badge', 'waha-test-message');
                 setupTestButton('btn-test-evolution', 'evolution-test-badge', 'evolution-test-message');
+                setupTestButton('btn-test-google', 'google-test-badge', 'google-test-message');
+
+                var toggleGoogleSecretButton = document.getElementById('toggle-google-client-secret');
+                var googleSecretInput = document.getElementById('google-client-secret-input');
+                if (toggleGoogleSecretButton && googleSecretInput) {
+                    toggleGoogleSecretButton.addEventListener('click', function () {
+                        if (googleSecretInput.type === 'password') {
+                            googleSecretInput.type = 'text';
+                            toggleGoogleSecretButton.textContent = 'Ocultar';
+                        } else {
+                            googleSecretInput.type = 'password';
+                            toggleGoogleSecretButton.textContent = 'Mostrar';
+                        }
+                    });
+                }
 
                 document.querySelectorAll('.js-submit-platform-action').forEach(function (button) {
                     button.addEventListener('click', function () {

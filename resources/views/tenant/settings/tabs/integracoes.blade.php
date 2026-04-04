@@ -1,170 +1,189 @@
-<!-- Aba Integrações -->
+﻿<!-- Aba Integracoes -->
 <div class="space-y-8">
-    <div class="mb-8">
-        <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-2">Configurações de Integrações</h2>
-        <p class="text-sm text-gray-600 dark:text-gray-400">
-            Configure as integrações com serviços externos.
+    <div>
+        <h2 class="text-xl font-semibold text-gray-900 dark:text-white">Configuracoes de Integracoes</h2>
+        <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
+            Defina quais sincronizacoes automaticas ficam ativas neste tenant.
         </p>
     </div>
 
-    <form method="POST" action="{{ workspace_route('tenant.settings.update.integrations') }}">
+    <form method="POST" action="{{ workspace_route('tenant.settings.update.integrations') }}" class="space-y-6">
         @csrf
 
-        <!-- Google Calendar -->
-        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 mb-6">
-            <div class="border-b border-gray-200 dark:border-gray-700 pb-4 mb-4">
-                <h3 class="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-                    <svg class="w-5 h-5 text-blue-600" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-                        <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-                        <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
-                        <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
-                    </svg>
-                    Google Calendar
-                </h3>
-                @if($hasGoogleCalendarIntegration && $googleCalendarIntegration)
-                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400">Configurado</span>
-                @else
-                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400">Não configurado</span>
-                @endif
-            </div>
-
-            @if(!$hasGoogleCalendarIntegration)
-                <div class="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4 mb-4">
-                    <strong class="block text-sm font-medium text-yellow-900 dark:text-yellow-100 mb-2">Atenção! Integração não configurada</strong>
-                    <p class="text-xs text-yellow-800 dark:text-yellow-200 mb-2">
-                        Cadastre a integração com a chave <code class="bg-yellow-100 dark:bg-yellow-900/40 px-1 py-0.5 rounded text-xs">google_calendar</code> e configure a API no campo de configuração (JSON).
-                    </p>
-                    <div class="flex gap-2">
-                        <a href="{{ workspace_route('tenant.integrations.create') }}" class="inline-flex items-center px-3 py-1.5 bg-yellow-600 text-white text-xs font-medium rounded hover:bg-yellow-700 transition-colors duration-200">Cadastrar integração</a>
-                        <a href="{{ workspace_route('tenant.integrations.index') }}" class="inline-flex items-center px-3 py-1.5 bg-gray-600 text-white text-xs font-medium rounded hover:bg-gray-700 transition-colors duration-200">Ver integrações</a>
-                    </div>
+        <div class="rounded-xl border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-800">
+            <div class="border-b border-gray-200 px-6 py-4 dark:border-gray-700">
+                <div class="flex flex-wrap items-center justify-between gap-3">
+                    <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Google Calendar</h3>
+                    <span class="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium {{ $hasGoogleCalendarIntegration ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300' : 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300' }}">
+                        {{ $hasGoogleCalendarIntegration ? 'Credenciais globais ok' : 'Credenciais globais ausentes' }}
+                    </span>
                 </div>
-            @endif
+            </div>
+            <div class="space-y-4 p-6">
+                <div class="rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-800 dark:border-blue-800 dark:bg-blue-900/20 dark:text-blue-300">
+                    O Google Calendar usa credenciais OAuth globais da Platform (com fallback para <code>services.google.client_id</code> e <code>services.google.client_secret</code>).
+                </div>
 
-            <div class="space-y-4">
-                <div class="p-4 border border-gray-200 dark:border-gray-600 rounded-lg {{ !$hasGoogleCalendarIntegration ? 'bg-gray-50 dark:bg-gray-700' : '' }}">
-                    <label class="flex items-start cursor-pointer">
-                        <input class="mt-1 w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                               type="checkbox"
-                               id="integrations_google_calendar_enabled"
-                               name="integrations_google_calendar_enabled"
-                               value="1"
+                <div class="rounded-lg border border-gray-200 p-4 dark:border-gray-700">
+                    <label class="flex items-start gap-3">
+                        <input type="checkbox" id="integrations_google_calendar_enabled" name="integrations_google_calendar_enabled" value="1"
+                               class="mt-1 h-4 w-4 rounded border-gray-300 text-brand-600 focus:ring-brand-500"
                                {{ $settings['integrations.google_calendar.enabled'] ? 'checked' : '' }}
-                               {{ !$hasGoogleCalendarIntegration ? 'disabled' : '' }}
-                               style="cursor: {{ !$hasGoogleCalendarIntegration ? 'not-allowed' : 'pointer' }};">
-                        <div class="ml-3">
-                            <span class="block text-sm font-medium {{ !$hasGoogleCalendarIntegration ? 'text-gray-500' : 'text-gray-900 dark:text-white' }}">Habilitar sincronização com Google Calendar</span>
-                            <span class="block text-xs text-gray-500 dark:text-gray-400 mt-1">Sincronize seus agendamentos com o Google Calendar.</span>
-                        </div>
+                               {{ !$hasGoogleCalendarIntegration ? 'disabled' : '' }}>
+                        <span>
+                            <span class="block text-sm font-medium text-gray-900 dark:text-white">Habilitar Google Calendar</span>
+                            <span class="block text-xs text-gray-500 dark:text-gray-400">Ativa a integracao Google no tenant.</span>
+                        </span>
                     </label>
                 </div>
 
-                <div id="google_calendar_auto_sync_group"
-                     style="display: {{ $settings['integrations.google_calendar.enabled'] && $hasGoogleCalendarIntegration ? 'block' : 'none' }};"
-                     class="p-4 border border-gray-200 dark:border-gray-600 rounded-lg {{ !$hasGoogleCalendarIntegration ? 'bg-gray-50 dark:bg-gray-700' : '' }}">
-                    <label class="flex items-start cursor-pointer">
-                        <input class="mt-1 w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                               type="checkbox"
-                               id="integrations_google_calendar_auto_sync"
-                               name="integrations_google_calendar_auto_sync"
-                               value="1"
+                <div class="rounded-lg border border-gray-200 p-4 dark:border-gray-700 {{ !$settings['integrations.google_calendar.enabled'] ? 'opacity-70' : '' }}">
+                    <label class="flex items-start gap-3">
+                        <input type="checkbox" id="integrations_google_calendar_auto_sync" name="integrations_google_calendar_auto_sync" value="1"
+                               class="mt-1 h-4 w-4 rounded border-gray-300 text-brand-600 focus:ring-brand-500"
                                {{ $settings['integrations.google_calendar.auto_sync'] ? 'checked' : '' }}
-                               {{ !$hasGoogleCalendarIntegration ? 'disabled' : '' }}
-                               style="cursor: {{ !$hasGoogleCalendarIntegration ? 'not-allowed' : 'pointer' }};">
-                        <div class="ml-3">
-                            <span class="block text-sm font-medium {{ !$hasGoogleCalendarIntegration ? 'text-gray-500' : 'text-gray-900 dark:text-white' }}">Sincronização automática</span>
-                            <span class="block text-xs text-gray-500 dark:text-gray-400 mt-1">Sincronize automaticamente os agendamentos em tempo real.</span>
-                        </div>
+                               {{ !$hasGoogleCalendarIntegration ? 'disabled' : '' }}>
+                        <span>
+                            <span class="block text-sm font-medium text-gray-900 dark:text-white">Sincronizacao automatica</span>
+                            <span class="block text-xs text-gray-500 dark:text-gray-400">Criacao/edicao/cancelamento de agendamento atualizam o Google automaticamente quando o medico tiver token.</span>
+                        </span>
                     </label>
                 </div>
-            </div>
 
-            @if($hasGoogleCalendarIntegration && $googleCalendarIntegration)
-                <div class="border-t border-gray-200 dark:border-gray-700 pt-4 mt-4">
-                    <div class="flex gap-2">
-                        <a href="{{ workspace_route('tenant.integrations.edit', ['id' => $googleCalendarIntegration->id]) }}" class="inline-flex items-center px-3 py-1.5 bg-primary text-white text-xs font-medium rounded hover:bg-primary/90 transition-colors duration-200">Editar integração</a>
-                        <a href="{{ workspace_route('tenant.oauth-accounts.index') }}" class="inline-flex items-center px-3 py-1.5 bg-gray-600 text-white text-xs font-medium rounded hover:bg-gray-700 transition-colors duration-200">Gerenciar contas OAuth</a>
-                    </div>
-                </div>
-            @endif
+            </div>
         </div>
 
-        <!-- Apple Calendar -->
-        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 mb-6">
-            <div class="border-b border-gray-200 dark:border-gray-700 pb-4 mb-4">
-                <h3 class="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-                    <x-icon name="apple" class="text-gray-800 dark:text-gray-100" />
-                    Apple Calendar
-                </h3>
-                @if($hasAppleCalendarIntegration && $appleCalendarIntegration)
-                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400">Configurado</span>
-                @else
-                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400">Não configurado</span>
-                @endif
-            </div>
-
-            @if(!$hasAppleCalendarIntegration)
-                <div class="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4 mb-4">
-                    <strong class="block text-sm font-medium text-yellow-900 dark:text-yellow-100 mb-2">Atenção! Integração não configurada</strong>
-                    <p class="text-xs text-yellow-800 dark:text-yellow-200 mb-2">
-                        Cadastre a integração com a chave <code class="bg-yellow-100 dark:bg-yellow-900/40 px-1 py-0.5 rounded text-xs">apple_calendar</code> e configure a API no campo de configuração (JSON).
-                    </p>
-                    <div class="flex gap-2">
-                        <a href="{{ workspace_route('tenant.integrations.create') }}" class="inline-flex items-center px-3 py-1.5 bg-yellow-600 text-white text-xs font-medium rounded hover:bg-yellow-700 transition-colors duration-200">Cadastrar integração</a>
-                        <a href="{{ workspace_route('tenant.integrations.index') }}" class="inline-flex items-center px-3 py-1.5 bg-gray-600 text-white text-xs font-medium rounded hover:bg-gray-700 transition-colors duration-200">Ver integrações</a>
-                    </div>
+        <div class="rounded-xl border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-800">
+            <div class="border-b border-gray-200 px-6 py-4 dark:border-gray-700">
+                <div class="flex flex-wrap items-center justify-between gap-3">
+                    <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Apple Calendar</h3>
+                    <span class="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium {{ $hasAppleCalendarIntegration ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300' : 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300' }}">
+                        {{ $hasAppleCalendarIntegration ? 'Infraestrutura ok' : 'Migrations pendentes' }}
+                    </span>
                 </div>
-            @endif
+            </div>
+            <div class="space-y-4 p-6">
+                <div class="rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-800 dark:border-blue-800 dark:bg-blue-900/20 dark:text-blue-300">
+                    O Apple Calendar funciona por medico, via CalDAV com token em <code>apple_calendar_tokens</code>.
+                </div>
 
-            <div class="space-y-4">
-                <div class="p-4 border border-gray-200 dark:border-gray-600 rounded-lg {{ !$hasAppleCalendarIntegration ? 'bg-gray-50 dark:bg-gray-700' : '' }}">
-                    <label class="flex items-start cursor-pointer">
-                        <input class="mt-1 w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                               type="checkbox"
-                               id="integrations_apple_calendar_enabled"
-                               name="integrations_apple_calendar_enabled"
-                               value="1"
+                <div class="rounded-lg border border-gray-200 p-4 dark:border-gray-700">
+                    <label class="flex items-start gap-3">
+                        <input type="checkbox" id="integrations_apple_calendar_enabled" name="integrations_apple_calendar_enabled" value="1"
+                               class="mt-1 h-4 w-4 rounded border-gray-300 text-brand-600 focus:ring-brand-500"
                                {{ $settings['integrations.apple_calendar.enabled'] ? 'checked' : '' }}
-                               {{ !$hasAppleCalendarIntegration ? 'disabled' : '' }}
-                               style="cursor: {{ !$hasAppleCalendarIntegration ? 'not-allowed' : 'pointer' }};">
-                        <div class="ml-3">
-                            <span class="block text-sm font-medium {{ !$hasAppleCalendarIntegration ? 'text-gray-500' : 'text-gray-900 dark:text-white' }}">Habilitar sincronização com Apple Calendar</span>
-                            <span class="block text-xs text-gray-500 dark:text-gray-400 mt-1">Sincronize seus agendamentos com o Apple Calendar.</span>
-                        </div>
+                               {{ !$hasAppleCalendarIntegration ? 'disabled' : '' }}>
+                        <span>
+                            <span class="block text-sm font-medium text-gray-900 dark:text-white">Habilitar Apple Calendar</span>
+                            <span class="block text-xs text-gray-500 dark:text-gray-400">Ativa a integracao Apple no tenant.</span>
+                        </span>
                     </label>
                 </div>
 
-                <div id="apple_calendar_auto_sync_group"
-                     style="display: {{ $settings['integrations.apple_calendar.enabled'] && $hasAppleCalendarIntegration ? 'block' : 'none' }};"
-                     class="p-4 border border-gray-200 dark:border-gray-600 rounded-lg {{ !$hasAppleCalendarIntegration ? 'bg-gray-50 dark:bg-gray-700' : '' }}">
-                    <label class="flex items-start cursor-pointer">
-                        <input class="mt-1 w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                               type="checkbox"
-                               id="integrations_apple_calendar_auto_sync"
-                               name="integrations_apple_calendar_auto_sync"
-                               value="1"
+                <div class="rounded-lg border border-gray-200 p-4 dark:border-gray-700 {{ !$settings['integrations.apple_calendar.enabled'] ? 'opacity-70' : '' }}">
+                    <label class="flex items-start gap-3">
+                        <input type="checkbox" id="integrations_apple_calendar_auto_sync" name="integrations_apple_calendar_auto_sync" value="1"
+                               class="mt-1 h-4 w-4 rounded border-gray-300 text-brand-600 focus:ring-brand-500"
                                {{ $settings['integrations.apple_calendar.auto_sync'] ? 'checked' : '' }}
-                               {{ !$hasAppleCalendarIntegration ? 'disabled' : '' }}
-                               style="cursor: {{ !$hasAppleCalendarIntegration ? 'not-allowed' : 'pointer' }};">
-                        <div class="ml-3">
-                            <span class="block text-sm font-medium {{ !$hasAppleCalendarIntegration ? 'text-gray-500' : 'text-gray-900 dark:text-white' }}">Sincronização automática</span>
-                            <span class="block text-xs text-gray-500 dark:text-gray-400 mt-1">Sincronize automaticamente os agendamentos em tempo real.</span>
-                        </div>
+                               {{ !$hasAppleCalendarIntegration ? 'disabled' : '' }}>
+                        <span>
+                            <span class="block text-sm font-medium text-gray-900 dark:text-white">Sincronizacao automatica</span>
+                            <span class="block text-xs text-gray-500 dark:text-gray-400">Criacao/edicao/cancelamento de agendamento atualizam o Apple automaticamente quando o medico tiver conexao.</span>
+                        </span>
                     </label>
                 </div>
-            </div>
 
-            @if($hasAppleCalendarIntegration && $appleCalendarIntegration)
-                <div class="border-t border-gray-200 dark:border-gray-700 pt-4 mt-4">
-                    <div class="flex gap-2">
-                        <a href="{{ workspace_route('tenant.integrations.edit', ['id' => $appleCalendarIntegration->id]) }}" class="inline-flex items-center px-3 py-1.5 bg-primary text-white text-xs font-medium rounded hover:bg-primary/90 transition-colors duration-200">Editar integração</a>
-                        <a href="{{ workspace_route('tenant.integrations.apple.index') }}" class="inline-flex items-center px-3 py-1.5 bg-gray-600 text-white text-xs font-medium rounded hover:bg-gray-700 transition-colors duration-200">Gerenciar conexões Apple</a>
-                    </div>
-                </div>
-            @endif
+            </div>
         </div>
 
         @include('tenant.settings.partials.form-actions')
     </form>
+
+    @php
+        $currentUser = auth()->guard('tenant')->user();
+        $isAdmin = $currentUser && $currentUser->role === 'admin';
+    @endphp
+
+    <div class="rounded-xl border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-800">
+        <div class="border-b border-gray-200 px-6 py-4 dark:border-gray-700">
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Conexoes por profissional</h3>
+            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                Governanca administrativa: status e revogacao de vinculos. A autenticacao deve ser feita pelo proprio profissional na Agenda do Profissional.
+            </p>
+        </div>
+        <div class="p-6">
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                    <thead class="bg-gray-50 dark:bg-gray-700/40">
+                        <tr>
+                            <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-gray-300">Profissional</th>
+                            <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-gray-300">Google</th>
+                            <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-gray-300">Apple</th>
+                            <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-gray-300">Ultima sincronizacao</th>
+                            <th class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-gray-300">Acoes</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-800">
+                        @forelse ($calendarSyncDoctors as $doctor)
+                            @php
+                                $doctorName = $doctor->user->name_full ?? $doctor->user->name ?? 'Profissional';
+                                $hasGoogle = (bool) $doctor->googleCalendarToken;
+                                $hasApple = (bool) $doctor->appleCalendarToken;
+                                $doctorLastSync = $calendarSyncLastSyncByDoctor->get($doctor->id);
+                            @endphp
+                            <tr>
+                                <td class="px-4 py-3 text-sm text-gray-800 dark:text-gray-200">{{ $doctorName }}</td>
+                                <td class="px-4 py-3 text-sm">
+                                    <span class="inline-flex rounded-full px-2.5 py-1 text-xs font-medium {{ $hasGoogle ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300' : 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300' }}">
+                                        {{ $hasGoogle ? 'Conectado' : 'Nao conectado' }}
+                                    </span>
+                                </td>
+                                <td class="px-4 py-3 text-sm">
+                                    <span class="inline-flex rounded-full px-2.5 py-1 text-xs font-medium {{ $hasApple ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300' : 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300' }}">
+                                        {{ $hasApple ? 'Conectado' : 'Nao conectado' }}
+                                    </span>
+                                </td>
+                                <td class="px-4 py-3 text-sm text-gray-600 dark:text-gray-300">
+                                    {{ $doctorLastSync ? \Carbon\Carbon::parse($doctorLastSync)->format('d/m/Y H:i') : '-' }}
+                                </td>
+                                <td class="px-4 py-3 text-right text-sm">
+                                    <div class="inline-flex items-center gap-2">
+                                        @if ($isAdmin && $hasGoogle)
+                                            <form action="{{ workspace_route('tenant.integrations.google.disconnect', ['doctor' => $doctor->id]) }}" method="POST">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" class="rounded-lg border border-red-300 px-3 py-1.5 text-xs font-medium text-red-700 hover:bg-red-50 dark:border-red-700 dark:text-red-300 dark:hover:bg-red-900/20">
+                                                    Revogar Google
+                                                </button>
+                                            </form>
+                                        @endif
+
+                                        @if ($isAdmin && $hasApple)
+                                            <form action="{{ workspace_route('tenant.integrations.apple.disconnect', ['doctor' => $doctor->id]) }}" method="POST">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" class="rounded-lg border border-red-300 px-3 py-1.5 text-xs font-medium text-red-700 hover:bg-red-50 dark:border-red-700 dark:text-red-300 dark:hover:bg-red-900/20">
+                                                    Revogar Apple
+                                                </button>
+                                            </form>
+                                        @endif
+
+                                        @if (!$isAdmin)
+                                            <span class="text-xs text-gray-500 dark:text-gray-400">Somente administradores</span>
+                                        @endif
+                                    </div>
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="5" class="px-4 py-8 text-center text-sm text-gray-500 dark:text-gray-400">
+                                    Nenhum profissional ativo encontrado.
+                                </td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
 </div>
