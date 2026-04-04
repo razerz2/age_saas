@@ -14,6 +14,11 @@ class NotificationTemplateService
     private ?bool $overrideTableExists = null;
     private bool $missingTableWarningLogged = false;
 
+    public function __construct(
+        private readonly ProfessionalLabelService $professionalLabelService
+    ) {
+    }
+
     /**
      * Exemplo de uso:
      * $template = app(NotificationTemplateService::class)
@@ -33,7 +38,7 @@ class NotificationTemplateService
 
             $items[] = [
                 'key' => (string) $key,
-                'label' => (string) ($templateConfig['label'] ?? $key),
+                'label' => $this->resolveTemplateLabel((string) ($templateConfig['label'] ?? $key)),
                 'channels' => $channels,
                 'audience' => $this->resolveAudienceByKey((string) $key, $templateConfig),
             ];
@@ -242,7 +247,7 @@ class NotificationTemplateService
         return [
             'key' => $key,
             'channel' => $channel,
-            'label' => (string) ($template['label'] ?? $key),
+            'label' => $this->resolveTemplateLabel((string) ($template['label'] ?? $key)),
             'subject' => $subject !== null ? (string) $subject : null,
             'content' => $content,
         ];
@@ -261,6 +266,53 @@ class NotificationTemplateService
     private function catalogTemplates(): array
     {
         return (array) config('notification_templates.templates', []);
+    }
+
+    private function resolveTemplateLabel(string $label): string
+    {
+        if ($label === '') {
+            return $label;
+        }
+
+        return strtr($label, $this->professionalLabelReplacements());
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    private function professionalLabelReplacements(): array
+    {
+        $singular = trim((string) $this->professionalLabelService->singular());
+        $plural = trim((string) $this->professionalLabelService->plural());
+        $registration = trim((string) $this->professionalLabelService->registration());
+
+        if ($singular === '') {
+            $singular = 'Médico';
+        }
+        if ($plural === '') {
+            $plural = 'Médicos';
+        }
+        if ($registration === '') {
+            $registration = 'CRM';
+        }
+
+        return [
+            '{{labels.professional_singular}}' => $singular,
+            '{{labels.professional_plural}}' => $plural,
+            '{{labels.professional_registration}}' => $registration,
+            '{{labels.professional_singular_lower}}' => $this->toLower($singular),
+            '{{labels.professional_plural_lower}}' => $this->toLower($plural),
+            '{{labels.professional_registration_lower}}' => $this->toLower($registration),
+        ];
+    }
+
+    private function toLower(string $value): string
+    {
+        if (function_exists('mb_strtolower')) {
+            return mb_strtolower($value, 'UTF-8');
+        }
+
+        return strtolower($value);
     }
 
     /**

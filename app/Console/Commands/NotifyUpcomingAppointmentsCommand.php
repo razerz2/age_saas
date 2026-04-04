@@ -6,6 +6,7 @@ use Illuminate\Console\Command;
 use App\Models\Platform\Tenant;
 use App\Models\Tenant\Appointment;
 use App\Models\Tenant\TenantSetting;
+use App\Services\Tenant\ProfessionalLabelService;
 use App\Services\MailTenantService;
 use App\Services\WhatsappTenantService;
 use Illuminate\Support\Facades\Log;
@@ -132,6 +133,13 @@ class NotifyUpcomingAppointmentsCommand extends Command
 
                         $doctorName = $appointment->calendar->doctor->user->name ?? 'Dr(a).';
                         $specialtyName = $appointment->specialty->name ?? '';
+                        $professionalSingular = trim((string) app(ProfessionalLabelService::class)->singular(
+                            $appointment->calendar?->doctor,
+                            $appointment->specialty
+                        ));
+                        if ($professionalSingular === '') {
+                            $professionalSingular = 'Profissional';
+                        }
                         $appointmentDate = $appointment->starts_at->format('d/m/Y');
                         $appointmentTime = $appointment->starts_at->format('H:i');
                         $appointmentMode = $appointment->appointment_mode === 'online' ? 'Online' : 'Presencial';
@@ -143,7 +151,7 @@ class NotifyUpcomingAppointmentsCommand extends Command
                             "Este é um lembrete do seu agendamento:\n\n" .
                             "📅 Data: {$appointmentDate}\n" .
                             "🕐 Horário: {$appointmentTime}\n" .
-                            "👨‍⚕️ Profissional: {$doctorName}\n" .
+                            "👨‍⚕️ {$professionalSingular}: {$doctorName}\n" .
                             ($specialtyName ? "🏥 Especialidade: {$specialtyName}\n" : "") .
                             "📍 Modalidade: {$appointmentMode}\n" .
                             "⏰ Faltam aproximadamente {$hoursUntil} hora(s)\n\n" .
@@ -154,7 +162,7 @@ class NotifyUpcomingAppointmentsCommand extends Command
                             "🔔 *Lembrete de Agendamento*\n\n" .
                             "📅 Data: {$appointmentDate}\n" .
                             "🕐 Horário: {$appointmentTime}\n" .
-                            "👨‍⚕️ Profissional: {$doctorName}\n" .
+                            "👨‍⚕️ {$professionalSingular}: {$doctorName}\n" .
                             ($specialtyName ? "🏥 Especialidade: {$specialtyName}\n" : "") .
                             "📍 Modalidade: {$appointmentMode}\n" .
                             "⏰ Faltam aproximadamente {$hoursUntil} hora(s)\n\n" .
@@ -255,4 +263,3 @@ class NotifyUpcomingAppointmentsCommand extends Command
         return Command::SUCCESS;
     }
 }
-

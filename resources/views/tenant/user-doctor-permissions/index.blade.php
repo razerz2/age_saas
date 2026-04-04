@@ -1,6 +1,13 @@
 @extends('layouts.tailadmin.app')
 
-@section('title', 'Gerenciar Permissões de Médicos')
+@php
+    $professionalLabels = $professionalLabels ?? [];
+    $professionalPlural = $professionalLabels['plural'] ?? app(\App\Services\Tenant\ProfessionalLabelService::class)->plural();
+    $professionalPluralLower = $professionalLabels['plural_lower'] ?? (function_exists('mb_strtolower') ? mb_strtolower($professionalPlural, 'UTF-8') : strtolower($professionalPlural));
+    $professionalRegistration = $professionalLabels['registration'] ?? app(\App\Services\Tenant\ProfessionalLabelService::class)->registration();
+@endphp
+
+@section('title', 'Gerenciar Permissões de ' . $professionalPlural)
 @section('page', 'user-doctor-permissions')
 
 @section('content')
@@ -11,7 +18,7 @@
                 <div class="min-w-0 flex-1">
                     <h1 class="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
                         <x-icon name="shield-account-outline" size="text-xl" class="text-blue-600 dark:text-blue-400" />
-                        Gerenciar Permissões de Médicos
+                        Gerenciar Permissões de {{ $professionalPlural }}
                     </h1>
                     <nav class="flex mt-2" aria-label="Breadcrumb">
                         <ol class="flex flex-wrap items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
@@ -34,7 +41,7 @@
                             </li>
                             <li class="flex items-center gap-2">
                                 <x-icon name="chevron-right" size="text-sm" class="text-gray-400" />
-                                <span class="text-gray-900 dark:text-white font-semibold">Permissões de Médicos</span>
+                                <span class="text-gray-900 dark:text-white font-semibold">Permissões de {{ $professionalPlural }}</span>
                             </li>
                         </ol>
                     </nav>
@@ -49,7 +56,7 @@
         <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
             <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
                 <h2 class="text-lg font-semibold text-gray-900 dark:text-white">
-                    Permissões de Médicos — {{ $user->name_full }}
+                    Permissões de {{ $professionalPlural }} — {{ $user->name_full }}
                 </h2>
             </div>
 
@@ -62,9 +69,9 @@
                         <div class="flex gap-3">
                             <x-icon name="information-outline" size="text-lg" class="mt-0.5 text-blue-700 dark:text-blue-300" />
                             <div class="text-sm">
-                                <p>Selecione os médicos que este usuário pode visualizar nas agendas.</p>
+                                <p>Selecione os {{ $professionalPluralLower }} que este usuário pode visualizar nas agendas.</p>
                                 <p class="mt-1">
-                                    <strong>Nota:</strong> se nenhum médico for selecionado, o usuário poderá visualizar todos os médicos.
+                                    <strong>Nota:</strong> se nenhum {{ $professionalPluralLower }} for selecionado, o usuário poderá visualizar todos os {{ $professionalPluralLower }}.
                                 </p>
                             </div>
                         </div>
@@ -74,7 +81,7 @@
                         <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 text-gray-900 dark:border-gray-700 dark:bg-gray-900/30 dark:text-gray-100">
                             <div class="flex items-center gap-2 text-sm">
                                 <x-icon name="information-outline" size="text-lg" class="text-gray-600 dark:text-gray-300" />
-                                Nenhum médico cadastrado no sistema.
+                                Nenhum {{ $professionalPluralLower }} cadastrado no sistema.
                             </div>
                         </div>
                     @else
@@ -92,7 +99,7 @@
                                         </div>
                                         @if ($doctor->crm_number)
                                             <div class="text-xs text-gray-500 dark:text-gray-300 mt-1">
-                                                CRM: {{ $doctor->crm_number }}/{{ $doctor->crm_state }}
+                                                {{ $professionalRegistration }}: {{ $doctor->crm_number }}/{{ $doctor->crm_state }}
                                             </div>
                                         @endif
                                     </div>

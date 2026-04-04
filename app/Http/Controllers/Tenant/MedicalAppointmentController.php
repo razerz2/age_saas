@@ -8,6 +8,7 @@ use App\Models\Tenant\Doctor;
 use App\Models\Tenant\Form;
 use App\Models\Tenant\FormResponse;
 use App\Models\Platform\Tenant;
+use App\Services\Tenant\ProfessionalLabelService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Config;
@@ -67,6 +68,7 @@ class MedicalAppointmentController extends Controller
     public function start(Request $request)
     {
         $user = Auth::guard('tenant')->user();
+        $professionalLabels = $this->professionalLabels();
         
         $rules = [
             'date' => 'required|date',
@@ -102,7 +104,7 @@ class MedicalAppointmentController extends Controller
             if (!empty($invalidDoctorIds)) {
                 return redirect()->back()
                     ->withInput()
-                    ->with('error', 'Você não tem permissão para acessar um ou mais médicos selecionados.');
+                    ->with('error', 'Você não tem permissão para acessar um ou mais ' . $professionalLabels['plural_lower'] . ' selecionados.');
             }
         }
 
@@ -186,7 +188,8 @@ class MedicalAppointmentController extends Controller
                     'appointment_id' => $appointment->id,
                     'calendar_id' => $appointment->calendar->id
                 ]);
-                abort(404, 'Médico não encontrado para este calendário.');
+                $professionalLabels = $this->professionalLabels();
+                abort(404, $professionalLabels['singular'] . ' não encontrado para este calendário.');
             }
 
             // Verificar permissão de acesso
@@ -821,7 +824,8 @@ class MedicalAppointmentController extends Controller
             if (!empty($doctorIds)) {
                 $invalidDoctorIds = array_diff($doctorIds, $allowedDoctorIds);
                 if (!empty($invalidDoctorIds)) {
-                    abort(403, 'Você não tem permissão para acessar um ou mais médicos selecionados.');
+                    $professionalLabels = $this->professionalLabels();
+                    abort(403, 'Você não tem permissão para acessar um ou mais ' . $professionalLabels['plural_lower'] . ' selecionados.');
                 }
 
                 $query->whereHas('calendar', function ($calendarQuery) use ($doctorIds) {
@@ -1114,6 +1118,32 @@ class MedicalAppointmentController extends Controller
                 'message' => 'Erro ao carregar resposta do formulario: ' . $e->getMessage()
             ], 500);
         }
+    }
+
+    /**
+     * @return array{singular:string,plural:string,singular_lower:string,plural_lower:string}
+     */
+    private function professionalLabels(): array
+    {
+        $service = app(ProfessionalLabelService::class);
+        $singular = $service->singular();
+        $plural = $service->plural();
+
+        return [
+            'singular' => $singular,
+            'plural' => $plural,
+            'singular_lower' => $this->lowerLabel($singular),
+            'plural_lower' => $this->lowerLabel($plural),
+        ];
+    }
+
+    private function lowerLabel(string $value): string
+    {
+        if (function_exists('mb_strtolower')) {
+            return mb_strtolower($value, 'UTF-8');
+        }
+
+        return strtolower($value);
     }
 }
 

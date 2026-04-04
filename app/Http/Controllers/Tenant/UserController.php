@@ -11,6 +11,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Tenant\StoreUserRequest;
 use App\Http\Requests\Tenant\UpdateUserRequest;
 use App\Http\Requests\Tenant\ChangePasswordUserRequest;
+use App\Services\Tenant\ProfessionalLabelService;
 use App\Traits\HasFeatureAccess;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -25,18 +26,25 @@ class UserController extends Controller
 {
     use HasFeatureAccess;
     use HandlesGridRequests;
+
+    public function __construct(
+        private readonly ProfessionalLabelService $professionalLabelService
+    ) {
+    }
+
     public function index()
     {
         $users = User::orderBy('name')->paginate(15);
         return view('tenant.users.index', [
             'users' => $users,
             'doctorsOnly' => false,
+            'professionalLabels' => $this->professionalLabels(),
         ]);
     }
 
     public function doctorsIndex()
     {
-        $query = User::query();
+        $query = User::query()->with(['doctor.primarySpecialty', 'doctor.specialties']);
         $this->applyDoctorUsersFilter($query);
 
         $users = $query->orderBy('name')->paginate(15);
@@ -44,12 +52,15 @@ class UserController extends Controller
         return view('tenant.users.index', [
             'users' => $users,
             'doctorsOnly' => true,
+            'professionalLabels' => $this->professionalLabels(),
         ]);
     }
 
     public function create()
     {
-        return view('tenant.users.create');
+        return view('tenant.users.create', [
+            'professionalLabels' => $this->professionalLabels(),
+        ]);
     }
 
     public function store(StoreUserRequest $request)
@@ -87,10 +98,11 @@ class UserController extends Controller
                 $currentCount = $usersQuery->count();
                 
                 if ($currentCount >= $maxLimit) {
+                    $professionalLabels = $this->professionalLabels();
                     $roleLabel = match ($role) {
                         'admin' => 'administradores',
                         'user' => 'usuários comuns',
-                        'doctor' => 'médicos',
+                        'doctor' => $professionalLabels['plural_lower'],
                         default => 'usuários',
                     };
                     
@@ -198,6 +210,8 @@ class UserController extends Controller
      */
     protected function createDoctorForUser(User $user, array $doctorData): Doctor
     {
+        $selection = $this->normalizeDoctorSpecialtySelection($doctorData);
+
         $doctor = Doctor::create([
             'id' => (string) Str::uuid(),
             'user_id' => $user->id,
@@ -208,17 +222,12 @@ class UserController extends Controller
             'label_plural' => $doctorData['label_plural'] ?? null,
             'registration_label' => $doctorData['registration_label'] ?? null,
             'registration_value' => $doctorData['registration_value'] ?? null,
+            'primary_specialty_id' => null,
         ]);
 
-        $specialties = collect($doctorData['specialties'] ?? [])
-            ->filter(fn ($id) => is_string($id) && $id !== '')
-            ->unique()
-            ->values()
-            ->all();
-
-        if (!empty($specialties)) {
-            $doctor->specialties()->sync($specialties);
-        }
+        $doctor->specialties()->sync($selection['specialties']);
+        $doctor->primary_specialty_id = $selection['primary_specialty_id'];
+        $doctor->save();
 
         return $doctor;
     }
@@ -243,9 +252,13 @@ class UserController extends Controller
 
     public function show($slug, $id)
     {
-        $user = User::with(['allowedDoctors.user'])->findOrFail($id);  // Utilizando o ID passado na rota
+        $user = User::with(['allowedDoctors.user', 'doctor.primarySpecialty', 'doctor.specialties'])->findOrFail($id);  // Utilizando o ID passado na rota
+        $doctor = $user->doctor;
 
-        return view('tenant.users.show', compact('user'));
+        return view('tenant.users.show', [
+            'user' => $user,
+            'professionalLabels' => $this->professionalLabels($doctor),
+        ]);
     }
 
     /**
@@ -254,9 +267,13 @@ class UserController extends Controller
      */
     public function edit($slug, $id)
     {
-        $user = User::with(['doctor.specialties'])->findOrFail($id);  // Utilizando o ID passado na rota
+        $user = User::with(['doctor.primarySpecialty', 'doctor.specialties'])->findOrFail($id);  // Utilizando o ID passado na rota
+        $doctor = $user->doctor;
 
-        return view('tenant.users.edit', compact('user'));
+        return view('tenant.users.edit', [
+            'user' => $user,
+            'professionalLabels' => $this->professionalLabels($doctor),
+        ]);
     }
 
     /**
@@ -265,7 +282,7 @@ class UserController extends Controller
      */
     public function update(UpdateUserRequest $request, $slug, $id)
     {
-        $user = User::with('doctor.specialties')->findOrFail($id);
+        $user = User::with(['doctor.primarySpecialty', 'doctor.specialties'])->findOrFail($id);
 
         // Valida os dados da requisicao
         $data = $request->validated();
@@ -336,7 +353,10 @@ class UserController extends Controller
                 return redirect()
                     ->back()
                     ->withInput()
-                    ->with('error', $this->buildBlockingMessage('converter este medico para outro perfil', $doctorBlockingDependencies));
+                    ->with('error', $this->buildBlockingMessage(
+                        'converter este ' . $this->professionalLabels()['singular_lower'] . ' para outro perfil',
+                        $doctorBlockingDependencies
+                    ));
             }
         }
 
@@ -438,6 +458,7 @@ class UserController extends Controller
      */
     protected function upsertDoctorForUser(User $user, array $doctorData): Doctor
     {
+        $selection = $this->normalizeDoctorSpecialtySelection($doctorData);
         $doctor = $user->doctor;
 
         if (!$doctor) {
@@ -455,9 +476,12 @@ class UserController extends Controller
             'label_plural' => $doctorData['label_plural'] ?? null,
             'registration_label' => $doctorData['registration_label'] ?? null,
             'registration_value' => $doctorData['registration_value'] ?? null,
+            'primary_specialty_id' => null,
         ])->save();
 
-        $doctor->specialties()->sync($this->normalizeDoctorSpecialties($doctorData));
+        $doctor->specialties()->sync($selection['specialties']);
+        $doctor->primary_specialty_id = $selection['primary_specialty_id'];
+        $doctor->save();
 
         return $doctor;
     }
@@ -482,10 +506,11 @@ class UserController extends Controller
     protected function getDoctorBlockingDependencies(Doctor $doctor): array
     {
         $dependencies = [];
+        $professionalSingularLower = $this->professionalLabels($doctor)['singular_lower'];
 
         $appointmentsCount = $doctor->appointments()->count();
         if ($appointmentsCount > 0) {
-            $dependencies[] = "- {$appointmentsCount} agendamento(s) vinculado(s) ao medico";
+            $dependencies[] = "- {$appointmentsCount} agendamento(s) vinculado(s) ao {$professionalSingularLower}";
         }
 
         if ($this->hasTenantTable('recurring_appointments')) {
@@ -493,7 +518,7 @@ class UserController extends Controller
                 ->where('doctor_id', $doctor->id)
                 ->count();
             if ($recurringCount > 0) {
-                $dependencies[] = "- {$recurringCount} recorrencia(s) de agendamento vinculada(s) ao medico";
+                $dependencies[] = "- {$recurringCount} recorrencia(s) de agendamento vinculada(s) ao {$professionalSingularLower}";
             }
         }
 
@@ -502,7 +527,7 @@ class UserController extends Controller
                 ->where('doctor_id', $doctor->id)
                 ->count();
             if ($formsCount > 0) {
-                $dependencies[] = "- {$formsCount} formulario(s) vinculado(s) ao medico";
+                $dependencies[] = "- {$formsCount} formulario(s) vinculado(s) ao {$professionalSingularLower}";
             }
         }
 
@@ -511,7 +536,7 @@ class UserController extends Controller
                 ->where('doctor_id', $doctor->id)
                 ->count();
             if ($waitlistCount > 0) {
-                $dependencies[] = "- {$waitlistCount} entrada(s) de fila de espera vinculada(s) ao medico";
+                $dependencies[] = "- {$waitlistCount} entrada(s) de fila de espera vinculada(s) ao {$professionalSingularLower}";
             }
         }
 
@@ -520,7 +545,7 @@ class UserController extends Controller
                 ->where('doctor_id', $doctor->id)
                 ->count();
             if ($transactionsCount > 0) {
-                $dependencies[] = "- {$transactionsCount} transacao(oes) financeira(s) vinculada(s) ao medico";
+                $dependencies[] = "- {$transactionsCount} transacao(oes) financeira(s) vinculada(s) ao {$professionalSingularLower}";
             }
         }
 
@@ -529,7 +554,7 @@ class UserController extends Controller
                 ->where('doctor_id', $doctor->id)
                 ->count();
             if ($commissionsCount > 0) {
-                $dependencies[] = "- {$commissionsCount} comissao(oes) vinculada(s) ao medico";
+                $dependencies[] = "- {$commissionsCount} comissao(oes) vinculada(s) ao {$professionalSingularLower}";
             }
         }
 
@@ -561,11 +586,36 @@ class UserController extends Controller
 
     protected function normalizeDoctorSpecialties(array $doctorData): array
     {
-        return collect($doctorData['specialties'] ?? [])
-            ->filter(fn ($id) => is_string($id) && $id !== '')
+        return $this->normalizeDoctorSpecialtySelection($doctorData)['specialties'];
+    }
+
+    /**
+     * @return array{specialties: array<int, string>, primary_specialty_id: ?string}
+     */
+    protected function normalizeDoctorSpecialtySelection(array $doctorData): array
+    {
+        $specialties = collect($doctorData['specialties'] ?? [])
+            ->filter(fn ($id) => is_string($id) && trim($id) !== '')
+            ->map(fn ($id) => trim($id))
             ->unique()
             ->values()
             ->all();
+
+        $primarySpecialtyId = $doctorData['primary_specialty_id'] ?? null;
+        $primarySpecialtyId = is_string($primarySpecialtyId) ? trim($primarySpecialtyId) : null;
+
+        if ($primarySpecialtyId === '' || !in_array($primarySpecialtyId, $specialties, true)) {
+            $primarySpecialtyId = null;
+        }
+
+        if (empty($specialties)) {
+            $primarySpecialtyId = null;
+        }
+
+        return [
+            'specialties' => $specialties,
+            'primary_specialty_id' => $primarySpecialtyId,
+        ];
     }
 
     protected function buildBlockingMessage(string $actionDescription, array $dependencies): string
@@ -578,6 +628,29 @@ class UserController extends Controller
     protected function hasTenantTable(string $table): bool
     {
         return Schema::connection((new User())->getConnectionName())->hasTable($table);
+    }
+
+    /**
+     * @return array{singular:string,plural:string,registration:string,singular_lower:string,plural_lower:string,registration_lower:string}
+     */
+    protected function professionalLabels(?Doctor $doctor = null, mixed $specialty = null): array
+    {
+        $singular = $this->professionalLabelService->singular($doctor, $specialty);
+        $plural = $this->professionalLabelService->plural($doctor, $specialty);
+        $registration = $this->professionalLabelService->registration($doctor, $specialty);
+
+        $toLower = static fn (string $value): string => function_exists('mb_strtolower')
+            ? mb_strtolower($value, 'UTF-8')
+            : strtolower($value);
+
+        return [
+            'singular' => $singular,
+            'plural' => $plural,
+            'registration' => $registration,
+            'singular_lower' => $toLower($singular),
+            'plural_lower' => $toLower($plural),
+            'registration_lower' => $toLower($registration),
+        ];
     }
 
     public function showChangePasswordForm($slug, $id)
@@ -655,6 +728,7 @@ class UserController extends Controller
         $paginator = $query->paginate($perPage, ['*'], 'page', $page);
 
         $rows = $paginator->items();
+        $professionalLabels = $this->professionalLabels();
 
         $data = [];
         foreach ($rows as $user) {
@@ -679,7 +753,7 @@ class UserController extends Controller
 
             $roleLabel = match ($user->role) {
                 'admin'  => 'Administrador',
-                'doctor' => 'Médico',
+                'doctor' => $this->professionalLabelService->singular($user->doctor),
                 'user'   => 'Usuário',
                 default  => ucfirst($user->role ?? 'Indefinido'),
             };
@@ -732,11 +806,11 @@ class UserController extends Controller
                     '</svg>' .
                 '</a>';
 
-            // Permissões de médicos (se não for médico)
+            // Permissões de profissionais (se não for profissional)
             if ($doctorPermUrl) {
                 $actions .=
                     '<a href="' . e($doctorPermUrl) . '" ' .
-                       'title="Gerenciar Permissões de Médicos" ' .
+                       'title="' . e('Gerenciar Permissões de ' . $professionalLabels['plural']) . '" ' .
                        'onclick="event.stopPropagation()" ' .
                        'class="inline-flex items-center justify-center rounded-xl border border-indigo-100 bg-indigo-50 px-2.5 py-1.5 text-xs font-medium text-indigo-700 hover:bg-indigo-100 dark:border-indigo-900/40 dark:bg-indigo-900/20 dark:text-indigo-300 table-action-btn">' .
                         '<svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">' .
@@ -789,3 +863,4 @@ class UserController extends Controller
         });
     }
 }
+

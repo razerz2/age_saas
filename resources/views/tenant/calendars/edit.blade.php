@@ -1,5 +1,11 @@
 @extends('layouts.tailadmin.app')
 
+@php
+    $professionalLabelService = app(\App\Services\Tenant\ProfessionalLabelService::class);
+    $professionalSingular = $professionalLabelService->singular();
+    $professionalSingularLower = function_exists('mb_strtolower') ? mb_strtolower($professionalSingular, 'UTF-8') : strtolower($professionalSingular);
+@endphp
+
 @section('title', 'Editar Calendário')
 @section('page', 'calendars')
 
@@ -68,10 +74,10 @@
                         <div>
                             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                                 <x-icon name="account-outline" class="w-4 h-4 inline mr-1" />
-                                Médico <span class="text-red-500">*</span>
+                                {{ $professionalSingular }} <span class="text-red-500">*</span>
                             </label>
                             <select name="doctor_id" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white @error('doctor_id') border-red-500 @enderror" required>
-                                <option value="">Selecione um médico</option>
+                                <option value="">Selecione um {{ $professionalSingularLower }}</option>
                                 @foreach($doctors as $doctor)
                                     <option value="{{ $doctor->id }}" {{ old('doctor_id', $calendar->doctor_id) == $doctor->id ? 'selected' : '' }}>{{ $doctor->user->name ?? 'N/A' }}</option>
                                 @endforeach

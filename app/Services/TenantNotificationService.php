@@ -6,6 +6,7 @@ use App\Models\Tenant\Notification;
 use App\Models\Tenant\TenantSetting;
 use App\Services\Tenant\EmailSender;
 use App\Services\Tenant\NotificationDispatcher;
+use App\Services\Tenant\ProfessionalLabelService;
 use App\Services\Tenant\WhatsAppSender;
 use Illuminate\Support\Facades\Log;
 
@@ -209,6 +210,8 @@ class TenantNotificationService
                 'tenant_name' => $tenantName,
                 'doctor_name' => $doctorName,
                 'specialty_name' => $specialtyName,
+                'doctor_model' => $appointment->doctor ?? $appointment->calendar?->doctor,
+                'specialty_model' => $appointment->specialty,
                 'appointment_date' => $appointmentDate,
                 'appointment_time' => $appointmentTime,
                 'appointment_datetime' => $appointment->starts_at->format('d/m/Y H:i'),
@@ -448,6 +451,10 @@ class TenantNotificationService
         $appointmentTime = $data['appointment_time'];
         $appointmentDateTime = $data['appointment_datetime'];
         $appointmentMode = $data['appointment_mode'];
+        $professionalSingular = self::professionalSingularLabel(
+            $data['doctor_model'] ?? null,
+            $data['specialty_model'] ?? null
+        );
 
         $templates = [
             'created' => [
@@ -456,7 +463,7 @@ class TenantNotificationService
                     "Seu agendamento foi confirmado!\n\n" .
                     "📅 Data: {$appointmentDate}\n" .
                     "🕐 Horário: {$appointmentTime}\n" .
-                    "👨‍⚕️ Profissional: {$doctorName}\n" .
+                    "👨‍⚕️ {$professionalSingular}: {$doctorName}\n" .
                     ($specialtyName ? "🏥 Especialidade: {$specialtyName}\n" : "") .
                     "📍 Modalidade: {$appointmentMode}\n\n" .
                     "Atenciosamente,\n{$tenantName}",
@@ -464,7 +471,7 @@ class TenantNotificationService
                     "✅ Seu agendamento foi confirmado!\n\n" .
                     "📅 Data: {$appointmentDate}\n" .
                     "🕐 Horário: {$appointmentTime}\n" .
-                    "👨‍⚕️ Profissional: {$doctorName}\n" .
+                    "👨‍⚕️ {$professionalSingular}: {$doctorName}\n" .
                     ($specialtyName ? "🏥 Especialidade: {$specialtyName}\n" : "") .
                     "📍 Modalidade: {$appointmentMode}\n\n" .
                     "Atenciosamente,\n{$tenantName}",
@@ -475,14 +482,14 @@ class TenantNotificationService
                     "Infelizmente, seu agendamento foi cancelado.\n\n" .
                     "📅 Data: {$appointmentDate}\n" .
                     "🕐 Horário: {$appointmentTime}\n" .
-                    "👨‍⚕️ Profissional: {$doctorName}\n\n" .
+                    "👨‍⚕️ {$professionalSingular}: {$doctorName}\n\n" .
                     "Entre em contato conosco para reagendar, se desejar.\n\n" .
                     "Atenciosamente,\n{$tenantName}",
                 'whatsapp_message' => "Olá {$patientName}! 👋\n\n" .
                     "❌ Seu agendamento foi cancelado.\n\n" .
                     "📅 Data: {$appointmentDate}\n" .
                     "🕐 Horário: {$appointmentTime}\n" .
-                    "👨‍⚕️ Profissional: {$doctorName}\n\n" .
+                    "👨‍⚕️ {$professionalSingular}: {$doctorName}\n\n" .
                     "Entre em contato conosco para reagendar, se desejar.\n\n" .
                     "Atenciosamente,\n{$tenantName}",
             ],
@@ -492,7 +499,7 @@ class TenantNotificationService
                     "Seu agendamento foi reagendado.\n\n" .
                     "📅 Nova Data: {$appointmentDate}\n" .
                     "🕐 Novo Horário: {$appointmentTime}\n" .
-                    "👨‍⚕️ Profissional: {$doctorName}\n" .
+                    "👨‍⚕️ {$professionalSingular}: {$doctorName}\n" .
                     ($specialtyName ? "🏥 Especialidade: {$specialtyName}\n" : "") .
                     "📍 Modalidade: {$appointmentMode}\n\n" .
                     "Atenciosamente,\n{$tenantName}",
@@ -500,7 +507,7 @@ class TenantNotificationService
                     "🔄 Seu agendamento foi reagendado!\n\n" .
                     "📅 Nova Data: {$appointmentDate}\n" .
                     "🕐 Novo Horário: {$appointmentTime}\n" .
-                    "👨‍⚕️ Profissional: {$doctorName}\n" .
+                    "👨‍⚕️ {$professionalSingular}: {$doctorName}\n" .
                     ($specialtyName ? "🏥 Especialidade: {$specialtyName}\n" : "") .
                     "📍 Modalidade: {$appointmentMode}\n\n" .
                     "Atenciosamente,\n{$tenantName}",
@@ -511,7 +518,7 @@ class TenantNotificationService
                     "Seu agendamento foi confirmado!\n\n" .
                     "📅 Data: {$appointmentDate}\n" .
                     "🕐 Horário: {$appointmentTime}\n" .
-                    "👨‍⚕️ Profissional: {$doctorName}\n" .
+                    "👨‍⚕️ {$professionalSingular}: {$doctorName}\n" .
                     ($specialtyName ? "🏥 Especialidade: {$specialtyName}\n" : "") .
                     "📍 Modalidade: {$appointmentMode}\n\n" .
                     "Atenciosamente,\n{$tenantName}",
@@ -519,7 +526,7 @@ class TenantNotificationService
                     "✅ Seu agendamento foi confirmado!\n\n" .
                     "📅 Data: {$appointmentDate}\n" .
                     "🕐 Horário: {$appointmentTime}\n" .
-                    "👨‍⚕️ Profissional: {$doctorName}\n" .
+                    "👨‍⚕️ {$professionalSingular}: {$doctorName}\n" .
                     ($specialtyName ? "🏥 Especialidade: {$specialtyName}\n" : "") .
                     "📍 Modalidade: {$appointmentMode}\n\n" .
                     "Atenciosamente,\n{$tenantName}",
@@ -531,6 +538,26 @@ class TenantNotificationService
             'email_body' => "Olá {$patientName},\n\nSeu agendamento foi atualizado.\n\nAtenciosamente,\n{$tenantName}",
             'whatsapp_message' => "Olá {$patientName}! Seu agendamento foi atualizado. Atenciosamente, {$tenantName}",
         ];
+    }
+
+    /**
+     * Resolve o rótulo singular visual do profissional para mensagens legadas.
+     */
+    private static function professionalSingularLabel(mixed $doctor = null, mixed $specialty = null): string
+    {
+        try {
+            /** @var ProfessionalLabelService $service */
+            $service = app(ProfessionalLabelService::class);
+            $value = trim((string) $service->singular($doctor, $specialty));
+
+            if ($value !== '') {
+                return $value;
+            }
+        } catch (\Throwable) {
+            // Keep legacy fallback for static context.
+        }
+
+        return 'Profissional';
     }
 
     /**
@@ -698,4 +725,3 @@ class TenantNotificationService
         }
     }
 }
-

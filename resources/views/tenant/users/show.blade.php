@@ -4,6 +4,13 @@
 @section('page', 'users')
 
 @section('content')
+    @php
+        $professionalLabels = $professionalLabels ?? [];
+        $currentDoctor = $user->doctor ?? null;
+        $currentSpecialty = $currentDoctor?->primarySpecialty;
+        $professionalSingular = $professionalLabels['singular'] ?? app(\App\Services\Tenant\ProfessionalLabelService::class)->singular($currentDoctor, $currentSpecialty);
+        $professionalSingularLower = $professionalLabels['singular_lower'] ?? (function_exists('mb_strtolower') ? mb_strtolower($professionalSingular, 'UTF-8') : strtolower($professionalSingular));
+    @endphp
     <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6">
         <!-- Page Header -->
         <div class="mb-6">
@@ -90,12 +97,12 @@
                     @if ($user->is_doctor)
                         <span class="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-200">
                             <x-icon name="stethoscope" size="text-sm" />
-                            Médico
+                            {{ $professionalSingular }}
                         </span>
                     @else
                         <span class="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-800 dark:bg-gray-700/40 dark:text-gray-200">
                             <x-icon name="account-outline" size="text-sm" />
-                            Não Médico
+                            Não {{ $professionalSingularLower }}
                         </span>
                     @endif
                 </div>

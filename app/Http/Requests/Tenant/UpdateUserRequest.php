@@ -41,6 +41,7 @@ class UpdateUserRequest extends FormRequest
             'doctor.registration_value' => ['exclude_unless:role,doctor', 'nullable', 'string', 'max:100'],
             'doctor.specialties' => ['exclude_unless:role,doctor', 'required', 'array', 'min:1'],
             'doctor.specialties.*' => ['exclude_unless:role,doctor', 'required', 'uuid', 'exists:tenant.medical_specialties,id'],
+            'doctor.primary_specialty_id' => ['exclude_unless:role,doctor', 'nullable', 'uuid', 'exists:tenant.medical_specialties,id'],
         ];
 
         if ($user && $user->role !== 'doctor' && $user->role !== 'admin') {
@@ -69,6 +70,23 @@ class UpdateUserRequest extends FormRequest
 
             if ($this->input('role') !== 'doctor') {
                 return;
+            }
+
+            $specialties = collect(data_get($this->input('doctor', []), 'specialties', []))
+                ->filter(fn ($id) => is_string($id) && trim($id) !== '')
+                ->map(fn ($id) => trim($id))
+                ->unique()
+                ->values()
+                ->all();
+
+            $primarySpecialtyId = data_get($this->input('doctor', []), 'primary_specialty_id');
+            $primarySpecialtyId = is_string($primarySpecialtyId) ? trim($primarySpecialtyId) : '';
+
+            if ($primarySpecialtyId !== '' && !in_array($primarySpecialtyId, $specialties, true)) {
+                $validator->errors()->add(
+                    'doctor.primary_specialty_id',
+                    'A especialidade principal deve estar entre as especialidades selecionadas.'
+                );
             }
 
             $crmNumber = data_get($this->input('doctor', []), 'crm_number');
@@ -133,6 +151,8 @@ class UpdateUserRequest extends FormRequest
             'doctor.specialties.*.required' => 'Cada especialidade do médico é obrigatória.',
             'doctor.specialties.*.uuid' => 'Cada especialidade do médico deve ser um UUID válido.',
             'doctor.specialties.*.exists' => 'Uma ou mais especialidades selecionadas não existem.',
+            'doctor.primary_specialty_id.uuid' => 'A especialidade principal deve ser um UUID válido.',
+            'doctor.primary_specialty_id.exists' => 'A especialidade principal selecionada não existe.',
 
             'modules.array' => 'Os módulos devem ser passados como um array.',
         ];
@@ -153,6 +173,7 @@ class UpdateUserRequest extends FormRequest
             'doctor.registration_value' => 'valor do registro profissional',
             'doctor.specialties' => 'especialidades do médico',
             'doctor.specialties.*' => 'especialidade do médico',
+            'doctor.primary_specialty_id' => 'especialidade principal do médico',
         ];
     }
 }

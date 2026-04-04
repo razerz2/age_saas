@@ -9,6 +9,7 @@ use App\Models\Tenant\Doctor;
 use App\Models\Tenant\MedicalSpecialty;
 use App\Models\Tenant\Patient;
 use App\Services\Tenant\NotificationDispatcher;
+use App\Services\Tenant\ProfessionalLabelService;
 use App\Services\Tenant\Scheduling\DoctorSlotFinder;
 use App\Services\Tenant\WaitlistService;
 use Carbon\Carbon;
@@ -31,7 +32,10 @@ class WhatsAppBotAppointmentService
      *   appointment_type_id:?string,
      *   duration_min:int,
      *   specialty_id:?string,
-     *   specialty_name:?string
+     *   specialty_name:?string,
+     *   label_singular:string,
+     *   label_plural:string,
+     *   registration_label:string
      * }>>
      */
     private array $doctorsCache = [];
@@ -42,7 +46,8 @@ class WhatsAppBotAppointmentService
     public function __construct(
         private readonly DoctorSlotFinder $slotFinder,
         private readonly NotificationDispatcher $notificationDispatcher,
-        private readonly WaitlistService $waitlistService
+        private readonly WaitlistService $waitlistService,
+        private readonly ProfessionalLabelService $professionalLabelService
     ) {
     }
 
@@ -78,7 +83,10 @@ class WhatsAppBotAppointmentService
      *   appointment_type_id:?string,
      *   duration_min:int,
      *   specialty_id:?string,
-     *   specialty_name:?string
+     *   specialty_name:?string,
+     *   label_singular:string,
+     *   label_plural:string,
+     *   registration_label:string
      * }>
      */
     public function listDoctors(?string $specialtyId = null): Collection
@@ -121,6 +129,7 @@ class WhatsAppBotAppointmentService
 
             $doctorName = $this->resolveDoctorDisplayName($doctor);
             $specialties = $doctor->specialties;
+            $doctorDefaultLabels = $this->professionalLabelService->labels($doctor, $specialties->first());
 
             if ($specialtyId !== null && trim($specialtyId) !== '') {
                 $specialties = $specialties
@@ -137,10 +146,15 @@ class WhatsAppBotAppointmentService
                     'duration_min' => (int) ($appointmentType->duration_min ?? 30),
                     'specialty_id' => null,
                     'specialty_name' => null,
+                    'label_singular' => $doctorDefaultLabels['singular'],
+                    'label_plural' => $doctorDefaultLabels['plural'],
+                    'registration_label' => $doctorDefaultLabels['registration'],
                 ]];
             }
 
-            return $specialties->map(static function (MedicalSpecialty $specialty) use ($doctor, $doctorName, $calendar, $appointmentType): array {
+            return $specialties->map(function (MedicalSpecialty $specialty) use ($doctor, $doctorName, $calendar, $appointmentType): array {
+                $labels = $this->professionalLabelService->labels($doctor, $specialty);
+
                 return [
                     'id' => (string) $doctor->id,
                     'name' => $doctorName,
@@ -149,6 +163,9 @@ class WhatsAppBotAppointmentService
                     'duration_min' => (int) ($appointmentType->duration_min ?? 30),
                     'specialty_id' => (string) $specialty->id,
                     'specialty_name' => (string) $specialty->name,
+                    'label_singular' => $labels['singular'],
+                    'label_plural' => $labels['plural'],
+                    'registration_label' => $labels['registration'],
                 ];
             })->all();
         })->filter()->values();
@@ -477,7 +494,9 @@ class WhatsAppBotAppointmentService
             }
         }
 
-        return 'Profissional';
+        $fallback = trim((string) $this->professionalLabelService->singular($doctor, $doctor->specialties->first()));
+
+        return $fallback !== '' ? $fallback : 'Profissional';
     }
 
     private function looksTechnicalLabel(string $value): bool

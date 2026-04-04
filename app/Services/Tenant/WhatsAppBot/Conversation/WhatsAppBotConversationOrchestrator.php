@@ -4,6 +4,7 @@ namespace App\Services\Tenant\WhatsAppBot\Conversation;
 
 use App\Models\Tenant\Patient;
 use App\Models\Tenant\WhatsAppBotSession;
+use App\Services\Tenant\ProfessionalLabelService;
 use App\Services\Tenant\WhatsAppBot\Domain\WhatsAppBotAppointmentService;
 use App\Services\Tenant\WhatsAppBot\Domain\WhatsAppBotDomainService;
 use App\Services\Tenant\WhatsAppBot\Domain\WhatsAppBotPatientService;
@@ -50,7 +51,8 @@ class WhatsAppBotConversationOrchestrator
         private readonly WhatsAppBotIntentRouter $intentRouter,
         private readonly WhatsAppBotMessageFormatter $messageFormatter,
         private readonly WhatsAppBotPatientService $patientService,
-        private readonly WhatsAppBotAppointmentService $appointmentService
+        private readonly WhatsAppBotAppointmentService $appointmentService,
+        private readonly ProfessionalLabelService $professionalLabelService
     ) {
     }
 
@@ -348,9 +350,11 @@ class WhatsAppBotConversationOrchestrator
 
             $appointmentLabels = [];
             foreach ($appointments as $appointment) {
+                $appointmentDoctor = $appointment->doctor ?? $appointment->calendar?->doctor;
+                $appointmentSpecialty = $appointment->specialty ?? $appointmentDoctor?->primarySpecialty;
                 $doctorName = $this->messageFormatter->sanitizeDisplayName(
                     (string) ($appointment->doctor?->user?->name_full ?? $appointment->doctor?->user?->name ?? ''),
-                    'Profissional'
+                    $this->professionalSingular($appointmentDoctor, $appointmentSpecialty)
                 );
                 $startsAt = $appointment->starts_at ? $appointment->starts_at->copy()->timezone($this->timezone()) : null;
                 $appointmentLabels[] = sprintf('%s - %s', $doctorName, $startsAt ? $startsAt->format('d/m H:i') : '-');
@@ -591,7 +595,10 @@ class WhatsAppBotConversationOrchestrator
                 $detailLines[] = 'Especialidade: ' . $specialtyName;
             }
             if ($doctorName !== '') {
-                $detailLines[] = 'Profissional: ' . $doctorName;
+                $detailLines[] = $this->professionalSingularFromOption(
+                    (array) data_get($state, 'schedule.selected_doctor', []),
+                    (string) data_get($state, 'schedule.selected_specialty_id', '')
+                ) . ': ' . $doctorName;
             }
             $detailLines[] = 'Data: ' . $startsAt->format('d/m/Y');
             $detailLines[] = 'Horário: ' . $startsAt->format('H:i');
@@ -693,7 +700,10 @@ class WhatsAppBotConversationOrchestrator
                     implode("\n", array_values(array_filter([
                         'Data: ' . $startsAt->format('d/m/Y'),
                         'Horário: ' . $startsAt->format('H:i'),
-                        $doctorName !== '' ? 'Profissional: ' . $doctorName : null,
+                        $doctorName !== '' ? ($this->professionalSingularFromOption(
+                            (array) data_get($state, 'schedule.selected_doctor', []),
+                            (string) data_get($state, 'schedule.selected_specialty_id', '')
+                        ) . ': ' . $doctorName) : null,
                     ], static fn (?string $line): bool => $line !== null))),
                 ])
                 : $baseSuccess;
@@ -721,9 +731,11 @@ class WhatsAppBotConversationOrchestrator
         $options = [];
         foreach ($appointments as $appointment) {
             $startsAt = $appointment->starts_at ? $appointment->starts_at->copy()->timezone($this->timezone()) : null;
+            $appointmentDoctor = $appointment->doctor ?? $appointment->calendar?->doctor;
+            $appointmentSpecialty = $appointment->specialty ?? $appointmentDoctor?->primarySpecialty;
             $doctorName = $this->messageFormatter->sanitizeDisplayName(
                 (string) ($appointment->doctor?->user?->name_full ?? $appointment->doctor?->user?->name ?? ''),
-                'Profissional'
+                $this->professionalSingular($appointmentDoctor, $appointmentSpecialty)
             );
             $label = $doctorName . ' - ' . ($startsAt ? $startsAt->format('d/m H:i') : '-');
             $items[] = ['id' => (string) $appointment->id, 'label' => $label];
@@ -1145,9 +1157,11 @@ class WhatsAppBotConversationOrchestrator
 
             $appointmentLabels = [];
             foreach ($appointments as $appointment) {
+                $appointmentDoctor = $appointment->doctor ?? $appointment->calendar?->doctor;
+                $appointmentSpecialty = $appointment->specialty ?? $appointmentDoctor?->primarySpecialty;
                 $doctorName = $this->messageFormatter->sanitizeDisplayName(
                     (string) ($appointment->doctor?->user?->name_full ?? $appointment->doctor?->user?->name ?? ''),
-                    'Profissional'
+                    $this->professionalSingular($appointmentDoctor, $appointmentSpecialty)
                 );
                 $startsAt = $appointment->starts_at ? $appointment->starts_at->copy()->timezone($this->timezone()) : null;
                 $appointmentLabels[] = sprintf('%s - %s', $doctorName, $startsAt ? $startsAt->format('d/m H:i') : '-');
@@ -1272,7 +1286,13 @@ class WhatsAppBotConversationOrchestrator
             reason: null,
             outboundMessages: [OutboundMessage::text(
                 $message->contactPhone,
-                $this->messageFormatter->promptWithOptions('Escolha o profissional:', $options),
+                $this->messageFormatter->promptWithOptions(
+                    'Escolha o ' . $this->professionalSingularLowerFromOption(
+                        null,
+                        (string) data_get($state, 'schedule.selected_specialty_id', '')
+                    ) . ':',
+                    $options
+                ),
                 ['kind' => 'schedule_doctor']
             )],
             flow: self::FLOW_SCHEDULE,
@@ -1313,7 +1333,13 @@ class WhatsAppBotConversationOrchestrator
             $state,
             self::FLOW_SCHEDULE,
             self::STEP_SCHEDULE_AWAITING_DOCTOR,
-            $this->messageFormatter->promptWithOptions('Opção inválida. Escolha o profissional pelo número:', $options),
+            $this->messageFormatter->promptWithOptions(
+                'Opção inválida. Escolha o ' . $this->professionalSingularLowerFromOption(
+                    null,
+                    (string) data_get($state, 'schedule.selected_specialty_id', '')
+                ) . ' pelo número:',
+                $options
+            ),
             'schedule_doctor_retry'
         );
     }
@@ -1322,7 +1348,7 @@ class WhatsAppBotConversationOrchestrator
     {
         $doctorName = $this->messageFormatter->sanitizeDisplayName(
             (string) ($doctor['name'] ?? ''),
-            'Profissional disponível'
+            $this->professionalSingularFromOption($doctor) . ' disponível'
         );
         $specialtyName = $this->messageFormatter->sanitizeDisplayName(
             (string) ($doctor['specialty_name'] ?? ''),
@@ -1968,6 +1994,56 @@ class WhatsAppBotConversationOrchestrator
             'cancel_appointments' => 'Cancelar agendamento',
             default => 'Opção',
         };
+    }
+
+    private function professionalSingular(mixed $doctor = null, mixed $specialty = null): string
+    {
+        $value = trim((string) $this->professionalLabelService->singular($doctor, $specialty));
+
+        return $value !== '' ? $value : 'Profissional';
+    }
+
+    private function professionalSingularLower(mixed $doctor = null, mixed $specialty = null): string
+    {
+        $value = $this->professionalSingular($doctor, $specialty);
+
+        if (function_exists('mb_strtolower')) {
+            return mb_strtolower($value, 'UTF-8');
+        }
+
+        return strtolower($value);
+    }
+
+    /**
+     * @param array<string, mixed>|null $doctorOption
+     */
+    private function professionalSingularFromOption(?array $doctorOption = null, ?string $specialtyId = null): string
+    {
+        $labelFromOption = trim((string) ($doctorOption['label_singular'] ?? ''));
+        if ($labelFromOption !== '') {
+            return $labelFromOption;
+        }
+
+        $normalizedSpecialtyId = trim((string) ($specialtyId ?? ''));
+        if ($normalizedSpecialtyId !== '') {
+            return $this->professionalSingular(null, $normalizedSpecialtyId);
+        }
+
+        return $this->professionalSingular();
+    }
+
+    /**
+     * @param array<string, mixed>|null $doctorOption
+     */
+    private function professionalSingularLowerFromOption(?array $doctorOption = null, ?string $specialtyId = null): string
+    {
+        $value = $this->professionalSingularFromOption($doctorOption, $specialtyId);
+
+        if (function_exists('mb_strtolower')) {
+            return mb_strtolower($value, 'UTF-8');
+        }
+
+        return strtolower($value);
     }
 
     private function message(string $key): string

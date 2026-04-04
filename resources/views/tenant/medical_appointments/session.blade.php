@@ -1,5 +1,13 @@
 @extends('layouts.tailadmin.app')
 
+@php
+    $professionalLabelService = app(\App\Services\Tenant\ProfessionalLabelService::class);
+    $professionalSingular = $professionalLabelService->singular();
+    $professionalPlural = $professionalLabelService->plural();
+    $professionalSingularLower = function_exists('mb_strtolower') ? mb_strtolower($professionalSingular, 'UTF-8') : strtolower($professionalSingular);
+    $professionalPluralLower = function_exists('mb_strtolower') ? mb_strtolower($professionalPlural, 'UTF-8') : strtolower($professionalPlural);
+@endphp
+
 @section('title', 'Atendimento - ' . \Carbon\Carbon::parse($date)->format('d/m/Y'))
 @section('page', 'medical_appointments')
 
@@ -96,7 +104,7 @@
                                         <option value="horario">Horário</option>
                                         <option value="status">Status</option>
                                         <option value="paciente">Paciente</option>
-                                        <option value="medico">Médico</option>
+                                        <option value="medico">{{ $professionalSingular }}</option>
                                         <option value="tipo">Tipo</option>
                                     </select>
                                     <span class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500">

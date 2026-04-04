@@ -1,5 +1,10 @@
 @extends('layouts.tailadmin.app')
 
+@php
+    $professionalLabelService = app(\App\Services\Tenant\ProfessionalLabelService::class);
+    $professionalSingular = $professionalLabelService->singular();
+@endphp
+
 @section('title', 'Agendamentos Recorrentes')
 @section('page', 'recurring-appointments')
 
@@ -48,7 +53,7 @@
                 id="recurring-appointments-grid"
                 :columns="[
                     ['name' => 'patient', 'label' => 'Paciente'],
-                    ['name' => 'doctor', 'label' => 'Médico'],
+                    ['name' => 'doctor', 'label' => $professionalSingular],
                     ['name' => 'start_date', 'label' => 'Data Inicial'],
                     ['name' => 'end_display', 'label' => 'Término'],
                     ['name' => 'rules_display', 'label' => 'Regras'],

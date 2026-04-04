@@ -3,9 +3,15 @@
 *.blade.php text working-tree-encoding=UTF-8 eol=lf diff=html
 *.css text working-tree-encoding=UTF-8 eol=lf diff=css
 *.js text working-tree-encoding=UTF-8 eol=lf
+*.ts text working-tree-encoding=UTF-8 eol=lf
+*.json text working-tree-encoding=UTF-8 eol=lf
 *.html text working-tree-encoding=UTF-8 eol=lf diff=html
 *.md text working-tree-encoding=UTF-8 eol=lf diff=markdown
 *.php text working-tree-encoding=UTF-8 eol=lf diff=php
+*.yml text working-tree-encoding=UTF-8 eol=lf
+*.yaml text working-tree-encoding=UTF-8 eol=lf
+*.xml text working-tree-encoding=UTF-8 eol=lf
+*.txt text working-tree-encoding=UTF-8 eol=lf
 
 /.github export-ignore
 CHANGELOG.md export-ignore

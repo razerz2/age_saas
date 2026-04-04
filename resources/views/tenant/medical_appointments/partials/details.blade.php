@@ -1,3 +1,10 @@
+@php
+    $professionalLabelService = app(\App\Services\Tenant\ProfessionalLabelService::class);
+    $appointmentDoctor = $appointment?->doctor ?? $appointment?->calendar?->doctor;
+    $appointmentSpecialty = $appointment?->specialty;
+    $professionalSingular = $professionalLabelService->singular($appointmentDoctor, $appointmentSpecialty);
+@endphp
+
 @if($appointment)
     <div class="space-y-6">
         <section class="rounded-lg border border-gray-200 dark:border-gray-700 p-4 bg-gray-50 dark:bg-gray-900/20">
@@ -21,7 +28,7 @@
             <h3 class="text-base font-semibold text-gray-900 dark:text-gray-100 mb-3">Consulta</h3>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
                 <p class="text-gray-700 dark:text-gray-300"><span class="font-medium text-gray-900 dark:text-gray-100">Tipo:</span> {{ $appointment->type->name ?? 'N/A' }}</p>
-                <p class="text-gray-700 dark:text-gray-300"><span class="font-medium text-gray-900 dark:text-gray-100">Médico:</span>
+                <p class="text-gray-700 dark:text-gray-300"><span class="font-medium text-gray-900 dark:text-gray-100">{{ $professionalSingular }}:</span>
                     @if($appointment->calendar && $appointment->calendar->doctor && $appointment->calendar->doctor->user)
                         {{ $appointment->calendar->doctor->user->name_full ?? $appointment->calendar->doctor->user->name ?? 'N/A' }}
                     @else

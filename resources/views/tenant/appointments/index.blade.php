@@ -1,5 +1,10 @@
 @extends('layouts.tailadmin.app')
 
+@php
+    $professionalLabelService = app(\App\Services\Tenant\ProfessionalLabelService::class);
+    $professionalSingular = $professionalLabelService->singular();
+@endphp
+
 @section('title', 'Agendamentos')
 @section('page', 'appointments')
 
@@ -80,7 +85,7 @@
                     ['name' => 'date', 'label' => 'Data'],
                     ['name' => 'time', 'label' => 'Hora'],
                     ['name' => 'patient', 'label' => 'Paciente'],
-                    ['name' => 'doctor', 'label' => 'Médico'],
+                    ['name' => 'doctor', 'label' => $professionalSingular],
                     ['name' => 'specialty', 'label' => 'Especialidade'],
                     ['name' => 'mode', 'label' => 'Modo'],
                     ['name' => 'status_badge', 'label' => 'Status'],

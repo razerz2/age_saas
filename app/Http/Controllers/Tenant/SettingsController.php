@@ -12,6 +12,7 @@ use App\Models\Platform\Tenant;
 use App\Models\Platform\Estado;
 use App\Models\Platform\Cidade;
 use App\Services\FeatureAccessService;
+use App\Services\Tenant\ProfessionalLabelService;
 use App\Services\Tenant\NotificationContextBuilder;
 use App\Services\Tenant\NotificationTemplateService;
 use App\Services\Tenant\TemplateRenderer;
@@ -184,6 +185,7 @@ class SettingsController extends Controller
             'professional.label_singular' => TenantSetting::get('professional.label_singular', ''),
             'professional.label_plural' => TenantSetting::get('professional.label_plural', ''),
             'professional.registration_label' => TenantSetting::get('professional.registration_label', ''),
+            'professional.environment_profile' => TenantSetting::get('professional.environment_profile', ''),
             
             // Aparência
             'appearance.logo' => $appearanceLogoLight,
@@ -198,6 +200,14 @@ class SettingsController extends Controller
         if (($settings['whatsapp.global_provider'] ?? '') === '') {
             $settings['whatsapp.global_provider'] = $tenantGlobalProviderCatalog->resolveTenantGlobalProvider(null) ?? '';
         }
+
+        $professionalLabelService = app(ProfessionalLabelService::class);
+        $settings['professional.environment_profile'] = $professionalLabelService->sanitizeEnvironmentProfile(
+            $settings['professional.environment_profile'] ?? '',
+            ''
+        );
+        $professionalEnvironmentProfiles = ProfessionalLabelService::environmentProfileOptions();
+        $professionalEnvironmentPresets = ProfessionalLabelService::presets();
 
         // Buscar integracoes ativas
         $integrations = Integrations::where('is_enabled', true)->get();
@@ -311,7 +321,9 @@ class SettingsController extends Controller
             'showEvolutionGlobalTab',
             'evolutionGlobalStatus',
             'initialTab',
-            'brazilTimezones'
+            'brazilTimezones',
+            'professionalEnvironmentProfiles',
+            'professionalEnvironmentPresets'
         ));
     }
 
@@ -1353,28 +1365,34 @@ class SettingsController extends Controller
     /**
      * Atualiza as configurações de profissionais
      */
-    public function updateProfessionals(Request $request)
+    public function updateProfessionals(Request $request, ProfessionalLabelService $professionalLabelService)
     {
         $request->validate([
             'professional_customization_enabled' => 'nullable|boolean',
             'professional_label_singular' => 'nullable|string|max:50',
             'professional_label_plural' => 'nullable|string|max:50',
             'professional_registration_label' => 'nullable|string|max:50',
+            'professional_environment_profile' => 'nullable|string|max:50',
         ]);
 
-        // Habilitar/desabilitar personalização
-        // Checkbox não marcado não é enviado no request, então verificamos explicitamente
-        if ($request->filled('professional_customization_enabled') || $request->has('professional_customization_enabled')) {
+        $customizationEnabled = $request->filled('professional_customization_enabled') || $request->has('professional_customization_enabled');
+
+        if ($customizationEnabled) {
             TenantSetting::enable('professional.customization_enabled');
-            
-            // Salvar rótulos globais quando personalização está habilitada
-            TenantSetting::set('professional.label_singular', $request->professional_label_singular ?? '');
-            TenantSetting::set('professional.label_plural', $request->professional_label_plural ?? '');
-            TenantSetting::set('professional.registration_label', $request->professional_registration_label ?? '');
+
+            $profile = $professionalLabelService->sanitizeEnvironmentProfile(
+                $request->input('professional_environment_profile'),
+                ProfessionalLabelService::PROFILE_MEDICAL
+            );
+
+            TenantSetting::set('professional.environment_profile', $profile);
+            TenantSetting::set('professional.label_singular', trim((string) $request->input('professional_label_singular', '')));
+            TenantSetting::set('professional.label_plural', trim((string) $request->input('professional_label_plural', '')));
+            TenantSetting::set('professional.registration_label', trim((string) $request->input('professional_registration_label', '')));
         } else {
             TenantSetting::disable('professional.customization_enabled');
-            
-            // Limpar rótulos quando desabilitado
+
+            TenantSetting::set('professional.environment_profile', '');
             TenantSetting::set('professional.label_singular', '');
             TenantSetting::set('professional.label_plural', '');
             TenantSetting::set('professional.registration_label', '');
@@ -1538,6 +1556,7 @@ class SettingsController extends Controller
     private function buildMockEditorPreviewContext(Tenant $tenant): array
     {
         $tenant->loadMissing(['localizacao.cidade', 'localizacao.estado']);
+        $labels = $this->professionalLabelsForTemplateContext();
 
         $street = trim((string) ($tenant->localizacao?->endereco ?? ''));
         $number = trim((string) ($tenant->localizacao?->n_endereco ?? ''));
@@ -1616,7 +1635,54 @@ class SettingsController extends Controller
                 'id' => '',
                 'submitted_at' => '',
             ],
+            'labels' => $labels,
         ];
+    }
+
+    /**
+     * @return array{
+     *   professional_singular:string,
+     *   professional_plural:string,
+     *   professional_registration:string,
+     *   professional_singular_lower:string,
+     *   professional_plural_lower:string,
+     *   professional_registration_lower:string
+     * }
+     */
+    private function professionalLabelsForTemplateContext(): array
+    {
+        $service = app(ProfessionalLabelService::class);
+        $singular = trim((string) $service->singular());
+        $plural = trim((string) $service->plural());
+        $registration = trim((string) $service->registration());
+
+        if ($singular === '') {
+            $singular = 'Médico';
+        }
+        if ($plural === '') {
+            $plural = 'Médicos';
+        }
+        if ($registration === '') {
+            $registration = 'CRM';
+        }
+
+        return [
+            'professional_singular' => $singular,
+            'professional_plural' => $plural,
+            'professional_registration' => $registration,
+            'professional_singular_lower' => $this->toLower($singular),
+            'professional_plural_lower' => $this->toLower($plural),
+            'professional_registration_lower' => $this->toLower($registration),
+        ];
+    }
+
+    private function toLower(string $value): string
+    {
+        if (function_exists('mb_strtolower')) {
+            return mb_strtolower($value, 'UTF-8');
+        }
+
+        return strtolower($value);
     }
 
     private function applyWaitlistPreviewFallback(array $context, Tenant $tenant): array
@@ -1781,6 +1847,12 @@ class SettingsController extends Controller
             $channels = ['email', 'whatsapp'];
         }
 
+        $professionalLabelService = app(ProfessionalLabelService::class);
+        $professionalSingular = trim((string) $professionalLabelService->singular());
+        if ($professionalSingular === '') {
+            $professionalSingular = 'Médico';
+        }
+
         $allKeys = $service->listKeys();
         $audiences = ['patient', 'doctor'];
         $requestedAudience = strtolower((string) $request->input('audience', $request->query('audience', 'patient')));
@@ -1848,6 +1920,7 @@ class SettingsController extends Controller
             'is_custom' => $isCustom,
             'subject_required' => $subjectRequired,
             'preview' => $preview,
+            'professional_singular' => $professionalSingular,
             'variables' => $this->notificationTemplateVariables($audience),
         ];
     }
@@ -2001,14 +2074,22 @@ class SettingsController extends Controller
                 ['key' => '{{patient.email}}', 'description' => 'E-mail do paciente'],
             ],
             'DOCTOR / PROFESSIONAL' => [
-                ['key' => '{{doctor.name}}', 'description' => 'Nome do médico'],
-                ['key' => '{{doctor.specialty}}', 'description' => 'Especialidade do médico'],
-                ['key' => '{{doctor.phone}}', 'description' => 'Telefone do médico'],
-                ['key' => '{{doctor.email}}', 'description' => 'E-mail do médico'],
+                ['key' => '{{doctor.name}}', 'description' => 'Nome do profissional (perfil interno doctor)'],
+                ['key' => '{{doctor.specialty}}', 'description' => 'Especialidade do profissional'],
+                ['key' => '{{doctor.phone}}', 'description' => 'Telefone do profissional'],
+                ['key' => '{{doctor.email}}', 'description' => 'E-mail do profissional'],
                 ['key' => '{{professional.name}}', 'description' => 'Nome do profissional'],
                 ['key' => '{{professional.specialty}}', 'description' => 'Especialidade do profissional'],
                 ['key' => '{{professional.phone}}', 'description' => 'Telefone do profissional'],
                 ['key' => '{{professional.email}}', 'description' => 'E-mail do profissional'],
+            ],
+            'LABELS' => [
+                ['key' => '{{labels.professional_singular}}', 'description' => 'Rótulo singular atual do profissional'],
+                ['key' => '{{labels.professional_plural}}', 'description' => 'Rótulo plural atual do profissional'],
+                ['key' => '{{labels.professional_registration}}', 'description' => 'Rótulo atual do registro profissional (CRM/CRP/CRO/CREFITO/Conselho)'],
+                ['key' => '{{labels.professional_singular_lower}}', 'description' => 'Rótulo singular atual em minúsculo'],
+                ['key' => '{{labels.professional_plural_lower}}', 'description' => 'Rótulo plural atual em minúsculo'],
+                ['key' => '{{labels.professional_registration_lower}}', 'description' => 'Rótulo de registro em minúsculo'],
             ],
             'APPOINTMENT' => [
                 ['key' => '{{appointment.date}}', 'description' => 'Data da consulta'],
@@ -2062,6 +2143,7 @@ class SettingsController extends Controller
                 'ONLINE APPOINTMENT' => $groups['ONLINE APPOINTMENT'],
                 'WAITLIST' => $groups['WAITLIST'],
                 'FORM / RESPONSE' => $groups['FORM / RESPONSE'],
+                'LABELS' => $groups['LABELS'],
             ];
         }
 
@@ -2085,5 +2167,3 @@ class SettingsController extends Controller
         return $driver === 'tenancy' && in_array($provider, ['whatsapp_business', 'business'], true);
     }
 }
-
-

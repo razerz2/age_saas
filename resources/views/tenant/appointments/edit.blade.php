@@ -1,9 +1,24 @@
 @extends('layouts.tailadmin.app')
 
+@php
+    $professionalLabelService = app(\App\Services\Tenant\ProfessionalLabelService::class);
+    $professionalSingular = $professionalLabelService->singular();
+    $professionalPlural = $professionalLabelService->plural();
+    $professionalRegistration = $professionalLabelService->registration();
+    $professionalSingularLower = function_exists('mb_strtolower') ? mb_strtolower($professionalSingular, 'UTF-8') : strtolower($professionalSingular);
+    $professionalPluralLower = function_exists('mb_strtolower') ? mb_strtolower($professionalPlural, 'UTF-8') : strtolower($professionalPlural);
+@endphp
+
 @section('title', 'Editar Agendamento')
 @section('page', 'appointments')
 
 @section('content')
+    <div id="appointments-config" class="hidden"
+        data-professional-singular="{{ $professionalSingular }}"
+        data-professional-singular-lower="{{ $professionalSingularLower }}"
+        data-professional-plural="{{ $professionalPlural }}"
+        data-professional-plural-lower="{{ $professionalPluralLower }}"
+        data-professional-registration="{{ $professionalRegistration }}"></div>
     <div class="page-header mb-6">
         <div class="flex items-center justify-between">
             <div>
@@ -76,7 +91,7 @@
                             <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
                                 <div>
                                     <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                                        Médico <span class="text-red-500">*</span>
+                                        {{ $professionalSingular }} <span class="text-red-500">*</span>
                                     </label>
                                     @php
                                         $selectedDoctorId = old('doctor_id', $appointment->doctor_id);
@@ -85,15 +100,15 @@
                                     @endphp
                                     <div class="flex items-center gap-2">
                                         <input dusk="appointment-doctor-id" type="hidden" name="doctor_id" id="doctor_id" value="{{ $selectedDoctorId }}" data-selected-name="{{ $selectedDoctorName }}" required>
-                                        <input dusk="appointment-doctor-name" type="text" id="doctor_name" class="form-control @error('doctor_id') is-invalid @enderror" value="{{ $selectedDoctorName }}" placeholder="Selecione um médico" readonly>
-                                        <x-tailadmin-button dusk="appointment-search-doctor-button" type="button" variant="secondary" size="sm" class="js-open-entity-search" data-entity-type="doctors" data-search-url="{{ workspace_route('tenant.appointments.api.search-doctors') }}" data-hidden-input-id="doctor_id" data-display-input-id="doctor_name" data-modal-title="Buscar médico">
+                                        <input dusk="appointment-doctor-name" type="text" id="doctor_name" class="form-control @error('doctor_id') is-invalid @enderror" value="{{ $selectedDoctorName }}" placeholder="Selecione um {{ $professionalSingularLower }}" readonly>
+                                        <x-tailadmin-button dusk="appointment-search-doctor-button" type="button" variant="secondary" size="sm" class="js-open-entity-search" data-entity-type="doctors" data-search-url="{{ workspace_route('tenant.appointments.api.search-doctors') }}" data-hidden-input-id="doctor_id" data-display-input-id="doctor_name" data-modal-title="Buscar {{ $professionalSingularLower }}">
                                             Buscar
                                         </x-tailadmin-button>
                                     </div>
                                     @error('doctor_id')
                                         <div class="invalid-feedback d-block">{{ $message }}</div>
                                     @enderror
-                                    <small class="mt-1 block text-xs text-gray-500 dark:text-gray-400">O calendário do médico será selecionado automaticamente</small>
+                                    <small class="mt-1 block text-xs text-gray-500 dark:text-gray-400">O calendário do {{ $professionalSingularLower }} será selecionado automaticamente</small>
                                 </div>
 
                                 <div>
@@ -121,7 +136,7 @@
                                 <div data-appointment-type-wrapper class="hidden">
                                     <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">Tipo de Consulta</label>
                                     <select name="appointment_type" id="appointment_type" class="form-control @error('appointment_type') is-invalid @enderror" disabled>
-                                        <option value="">Primeiro selecione um médico</option>
+                                        <option value="">Primeiro selecione um {{ $professionalSingularLower }}</option>
                                     </select>
                                     @error('appointment_type')
                                         <div class="invalid-feedback d-block">{{ $message }}</div>
@@ -131,7 +146,7 @@
                                 <div>
                                     <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">Especialidade</label>
                                     <select name="specialty_id" id="specialty_id" class="form-control @error('specialty_id') is-invalid @enderror" disabled>
-                                        <option value="">Primeiro selecione um médico</option>
+                                        <option value="">Primeiro selecione um {{ $professionalSingularLower }}</option>
                                     </select>
                                     @error('specialty_id')
                                         <div class="invalid-feedback d-block">{{ $message }}</div>
@@ -181,7 +196,7 @@
                                             size="sm"
                                             id="btn-show-business-hours"
                                             class="whitespace-nowrap"
-                                            title="Ver dias trabalhados do médico"
+                                            title="Ver dias trabalhados do {{ $professionalSingularLower }}"
                                         >
                                             <i class="mdi mdi-calendar-clock mr-1"></i>
                                             Ver dias trabalhados
@@ -205,7 +220,7 @@
                                     @error('appointment_time')
                                         <div class="invalid-feedback d-block">{{ $message }}</div>
                                     @enderror
-                                    <small class="mt-1 block text-xs text-gray-500 dark:text-gray-400">Horários disponíveis baseados nas configurações do médico</small>
+                                    <small class="mt-1 block text-xs text-gray-500 dark:text-gray-400">Horários disponíveis baseados nas configurações do {{ $professionalSingularLower }}</small>
                                 </div>
                             </div>
 
@@ -287,7 +302,7 @@
             <div class="pointer-events-auto relative w-full max-w-3xl overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-2xl dark:border-gray-700 dark:bg-gray-800">
                 <div class="flex items-center justify-between border-b border-gray-200 px-6 py-4 dark:border-gray-700">
                     <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
-                        Dias trabalhados do médico
+                        Dias trabalhados do {{ $professionalSingularLower }}
                     </h3>
                     <button type="button" class="js-close-business-hours-modal text-gray-400 hover:text-gray-600 dark:hover:text-gray-300" aria-label="Fechar modal">
                         <x-icon name="close" class="h-6 w-6" />
@@ -301,12 +316,12 @@
 
                     <div id="business-hours-content" class="hidden space-y-3">
                         <p class="text-sm text-gray-600 dark:text-gray-300">
-                            <span class="font-medium">Médico:</span>
+                            <span class="font-medium">{{ $professionalSingular }}:</span>
                             <span id="business-hours-doctor-name">-</span>
                         </p>
                         <div id="business-hours-list" class="space-y-3"></div>
                         <div id="business-hours-empty" class="hidden rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-sm text-blue-800 dark:border-blue-800 dark:bg-blue-900/20 dark:text-blue-200">
-                            Nenhum dia trabalhado configurado para este médico.
+                            Nenhum dia trabalhado configurado para este {{ $professionalSingularLower }}.
                         </div>
                     </div>
 

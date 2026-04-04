@@ -14,6 +14,11 @@ use Throwable;
 
 class NotificationContextBuilder
 {
+    public function __construct(
+        private readonly ProfessionalLabelService $professionalLabelService
+    ) {
+    }
+
     /**
      * Example:
      * $tpl = 'Ola {{patient.name}}, confirme em {{links.appointment_confirm}}';
@@ -25,8 +30,10 @@ class NotificationContextBuilder
         $appointment->loadMissing([
             'patient',
             'doctor.user',
+            'doctor.primarySpecialty',
             'doctor.specialties',
             'calendar.doctor.user',
+            'calendar.doctor.primarySpecialty',
             'specialty',
             'type',
             'onlineInstructions',
@@ -41,7 +48,7 @@ class NotificationContextBuilder
         $doctorPhone = $this->normalizeString($doctor?->user?->telefone ?? $doctor?->user?->phone);
         $doctorEmail = $this->normalizeString($doctor?->user?->email);
         $doctorSpecialty = $this->normalizeString(
-            $appointment->specialty?->name ?? $doctor?->specialties?->first()?->name
+            $appointment->specialty?->name ?? $doctor?->primarySpecialty?->name
         );
 
         $startsAt = $this->toCarbon($appointment->starts_at, $timezone);
@@ -60,6 +67,7 @@ class NotificationContextBuilder
         $sentByEmailAt = $this->toCarbon($onlineInstructions?->sent_by_email_at, $timezone);
         $sentByWhatsappAt = $this->toCarbon($onlineInstructions?->sent_by_whatsapp_at, $timezone);
         $isOnlineAppointment = $this->normalizeString($appointment->appointment_mode) === 'online';
+        $labels = $this->buildProfessionalLabelsContext($doctor, $appointment->specialty);
 
         return [
             'clinic' => $this->buildClinicContext($tenant, $slug),
@@ -129,6 +137,7 @@ class NotificationContextBuilder
                 'offer_expires_at' => null,
                 'status' => null,
             ],
+            'labels' => $labels,
         ];
     }
 
@@ -137,6 +146,7 @@ class NotificationContextBuilder
         $entry->loadMissing([
             'patient',
             'doctor.user',
+            'doctor.primarySpecialty',
             'doctor.specialties',
         ]);
 
@@ -144,16 +154,18 @@ class NotificationContextBuilder
         $slug = $this->resolveTenantSlug($tenant);
         $timezone = $this->resolveTimezone();
 
-        $doctorName = $this->normalizeString($entry->doctor?->user?->name_full ?? $entry->doctor?->user?->name);
-        $doctorPhone = $this->normalizeString($entry->doctor?->user?->telefone ?? $entry->doctor?->user?->phone);
-        $doctorEmail = $this->normalizeString($entry->doctor?->user?->email);
-        $doctorSpecialty = $this->normalizeString($entry->doctor?->specialties?->first()?->name);
+        $doctor = $entry->doctor;
+        $doctorName = $this->normalizeString($doctor?->user?->name_full ?? $doctor?->user?->name);
+        $doctorPhone = $this->normalizeString($doctor?->user?->telefone ?? $doctor?->user?->phone);
+        $doctorEmail = $this->normalizeString($doctor?->user?->email);
+        $doctorSpecialty = $this->normalizeString($doctor?->primarySpecialty?->name);
 
         $startsAt = $this->toCarbon($entry->starts_at, $timezone);
         $endsAt = $this->toCarbon($entry->ends_at, $timezone);
         $offerExpiresAt = $this->toCarbon($entry->offer_expires_at, $timezone);
 
         $offerToken = $this->normalizeString($entry->offer_token);
+        $labels = $this->buildProfessionalLabelsContext($doctor);
 
         return [
             'clinic' => $this->buildClinicContext($tenant, $slug),
@@ -209,6 +221,7 @@ class NotificationContextBuilder
                 'offer_expires_at' => $this->formatDateTime($offerExpiresAt),
                 'status' => $this->normalizeString($entry->status),
             ],
+            'labels' => $labels,
         ];
     }
 
@@ -283,6 +296,7 @@ class NotificationContextBuilder
                     'offer_expires_at' => null,
                     'status' => null,
                 ],
+                'labels' => $this->buildProfessionalLabelsContext(),
             ];
 
         $context['form'] = [
@@ -298,6 +312,51 @@ class NotificationContextBuilder
         ]);
 
         return $context;
+    }
+
+    /**
+     * @return array{
+     *   professional_singular:string,
+     *   professional_plural:string,
+     *   professional_registration:string,
+     *   professional_singular_lower:string,
+     *   professional_plural_lower:string,
+     *   professional_registration_lower:string
+     * }
+     */
+    private function buildProfessionalLabelsContext(mixed $doctor = null, mixed $specialty = null): array
+    {
+        $singular = trim((string) $this->professionalLabelService->singular($doctor, $specialty));
+        $plural = trim((string) $this->professionalLabelService->plural($doctor, $specialty));
+        $registration = trim((string) $this->professionalLabelService->registration($doctor, $specialty));
+
+        if ($singular === '') {
+            $singular = 'Médico';
+        }
+        if ($plural === '') {
+            $plural = 'Médicos';
+        }
+        if ($registration === '') {
+            $registration = 'CRM';
+        }
+
+        return [
+            'professional_singular' => $singular,
+            'professional_plural' => $plural,
+            'professional_registration' => $registration,
+            'professional_singular_lower' => $this->toLower($singular),
+            'professional_plural_lower' => $this->toLower($plural),
+            'professional_registration_lower' => $this->toLower($registration),
+        ];
+    }
+
+    private function toLower(string $value): string
+    {
+        if (function_exists('mb_strtolower')) {
+            return mb_strtolower($value, 'UTF-8');
+        }
+
+        return strtolower($value);
     }
 
     private function buildClinicContext(?PlatformTenant $tenant, ?string $slug): array

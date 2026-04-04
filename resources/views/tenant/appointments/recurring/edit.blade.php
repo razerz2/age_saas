@@ -1,9 +1,24 @@
 @extends('layouts.tailadmin.app')
 
+@php
+    $professionalLabelService = app(\App\Services\Tenant\ProfessionalLabelService::class);
+    $professionalSingular = $professionalLabelService->singular();
+    $professionalPlural = $professionalLabelService->plural();
+    $professionalRegistration = $professionalLabelService->registration();
+    $professionalSingularLower = function_exists('mb_strtolower') ? mb_strtolower($professionalSingular, 'UTF-8') : strtolower($professionalSingular);
+    $professionalPluralLower = function_exists('mb_strtolower') ? mb_strtolower($professionalPlural, 'UTF-8') : strtolower($professionalPlural);
+@endphp
+
 @section('title', 'Editar Agendamento Recorrente')
 @section('page', 'appointments')
 
 @section('content')
+    <div id="recurring-appointments-config" class="hidden"
+        data-professional-singular="{{ $professionalSingular }}"
+        data-professional-singular-lower="{{ $professionalSingularLower }}"
+        data-professional-plural="{{ $professionalPlural }}"
+        data-professional-plural-lower="{{ $professionalPluralLower }}"
+        data-professional-registration="{{ $professionalRegistration }}"></div>
     <!-- Page Header -->
     <div class="page-header mb-6">
         <div class="flex items-center justify-between">
@@ -73,10 +88,10 @@
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                médico <span class="text-red-500">*</span>
+                                {{ $professionalSingularLower }} <span class="text-red-500">*</span>
                             </label>
                             <select name="doctor_id" id="doctor_id" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white @error('doctor_id') border-red-500 @enderror" required>
-                                <option value="">Selecione um médico</option>
+                                <option value="">Selecione um {{ $professionalSingularLower }}</option>
                                 @foreach($doctors as $doctor)
                                     <option value="{{ $doctor->id }}" {{ old('doctor_id', $recurringAppointment->doctor_id) == $doctor->id ? 'selected' : '' }}>
                                         {{ $doctor->user->name_full ?? $doctor->user->name }}
@@ -86,14 +101,14 @@
                             @error('doctor_id')
                                 <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
                             @enderror
-                            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Selecione o médico para ver os dias e horários disponíveis</p>
+                            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Selecione o {{ $professionalSingularLower }} para ver os dias e horários disponíveis</p>
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                                 Tipo de Consulta
                             </label>
                             <select name="appointment_type_id" id="appointment_type_id" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white @error('appointment_type_id') border-red-500 @enderror" disabled>
-                                <option value="">Primeiro selecione um médico</option>
+                                <option value="">Primeiro selecione um {{ $professionalSingularLower }}</option>
                             </select>
                             @error('appointment_type_id')
                                 <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
@@ -211,4 +226,3 @@
     </div>
 
 @endsection
-

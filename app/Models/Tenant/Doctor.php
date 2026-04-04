@@ -25,6 +25,7 @@ class Doctor extends Model
         'label_plural',
         'registration_label',
         'registration_value',
+        'primary_specialty_id',
     ];
 
     public $timestamps = true;
@@ -37,6 +38,11 @@ class Doctor extends Model
     public function specialties()
     {
         return $this->belongsToMany(MedicalSpecialty::class, 'doctor_specialty', 'doctor_id', 'specialty_id');
+    }
+
+    public function primarySpecialty()
+    {
+        return $this->belongsTo(MedicalSpecialty::class, 'primary_specialty_id');
     }
 
     public function calendars()

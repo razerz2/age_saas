@@ -64,6 +64,7 @@
         ],
         "dev": "npm run dev",
         "build": "npm run build",
+        "check:encoding": "php scripts/check-mojibake.php",
         "test:dusk-smoke": [
             "Composer\\Config::disableProcessTimeout",
             "@php artisan dusk tests/Browser/Auth/TenantLoginTest.php tests/Browser/Tenant/Patients/PatientCreateTest.php tests/Browser/Tenant/Appointments/AppointmentCreateTest.php tests/Browser/Tenant/Attendances/AttendanceCompleteTest.php"

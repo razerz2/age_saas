@@ -1,6 +1,21 @@
 import { applyGridPageSizeSelector } from '../grid/pageSizeSelector';
 import { initEntitySearchModal } from '../components/entitySearchModal';
 
+function resolveProfessionalLabels() {
+	const configEl = document.getElementById('recurring-appointments-config');
+	const singular = configEl?.dataset?.professionalSingular || 'Médico';
+	const plural = configEl?.dataset?.professionalPlural || 'Médicos';
+	const singularLower = configEl?.dataset?.professionalSingularLower || singular.toLocaleLowerCase('pt-BR');
+	const pluralLower = configEl?.dataset?.professionalPluralLower || plural.toLocaleLowerCase('pt-BR');
+
+	return {
+		singular,
+		plural,
+		singularLower,
+		pluralLower,
+	};
+}
+
 function bindRecurringAppointmentsIndexRowClick() {
 	const grid = document.getElementById('recurring-appointments-grid');
 	if (!grid) {
@@ -101,6 +116,14 @@ export function init() {
 	const endDateField = form.querySelector('#end_date_field');
 	const rulesContainer = form.querySelector('#rules-container');
 	const addRuleButton = form.querySelector('#add-rule');
+	const professionalLabels = resolveProfessionalLabels();
+	const professionalSingularLower = professionalLabels.singularLower;
+	const selectAProfessionalFirst = 'Primeiro selecione um ' + professionalSingularLower;
+	const selectProfessionalFirst = 'Selecione um ' + professionalSingularLower + ' primeiro';
+	const noSpecialtyForProfessional = 'Nenhuma especialidade cadastrada para este ' + professionalSingularLower;
+	const noAppointmentTypeForProfessional = 'Este ' + professionalSingularLower + ' não possui tipos de consulta cadastrados. Não é possível criar recorrência.';
+	const autoAppointmentTypeLoadFailure = 'Falha ao carregar tipo de consulta automático do ' + professionalSingularLower + '.';
+	const waitingAutoTypeForProfessional = 'Aguardando tipo automático do ' + professionalSingularLower;
 
 	if (!doctorSelect || !specialtySelect || !appointmentTypeInput || !rulesContainer) return;
 
@@ -186,7 +209,7 @@ export function init() {
 	}
 
 	function resetSpecialty() {
-		specialtySelect.innerHTML = '<option value="">Primeiro selecione um médico</option>';
+		specialtySelect.innerHTML = `<option value="">${selectAProfessionalFirst}</option>`;
 		specialtySelect.disabled = true;
 	}
 
@@ -202,7 +225,7 @@ export function init() {
 		const endTimeInput = firstRule.querySelector('.rule-end-time');
 
 		if (weekdaySelect) {
-			weekdaySelect.innerHTML = '<option value="">Selecione um médico primeiro</option>';
+			weekdaySelect.innerHTML = `<option value="">${selectProfessionalFirst}</option>`;
 			weekdaySelect.disabled = true;
 		}
 		if (timeSlotSelect) {
@@ -226,7 +249,7 @@ export function init() {
 			const list = Array.isArray(data) ? data : [];
 
 			if (list.length === 0) {
-				specialtySelect.innerHTML = '<option value="">Nenhuma especialidade cadastrada para este médico</option>';
+				specialtySelect.innerHTML = `<option value="">${noSpecialtyForProfessional}</option>`;
 				specialtySelect.disabled = true;
 				return;
 			}
@@ -260,7 +283,7 @@ export function init() {
 				showAlert({
 					type: 'warning',
 					title: 'Atenção',
-					message: 'Este médico não possui tipos de consulta cadastrados. Não é possível criar recorrência.',
+					message: noAppointmentTypeForProfessional,
 				});
 				return false;
 			}
@@ -273,7 +296,7 @@ export function init() {
 			showAlert({
 				type: 'error',
 				title: 'Erro',
-				message: 'Falha ao carregar tipo de consulta automático do médico.',
+				message: autoAppointmentTypeLoadFailure,
 			});
 			return false;
 		}
@@ -298,13 +321,13 @@ export function init() {
 		weekdaySelect.innerHTML = '';
 
 		if (!doctorSelect.value) {
-			weekdaySelect.innerHTML = '<option value="">Selecione um médico primeiro</option>';
+			weekdaySelect.innerHTML = `<option value="">${selectProfessionalFirst}</option>`;
 			weekdaySelect.disabled = true;
 			return;
 		}
 
 		if (!appointmentTypeInput.value) {
-			weekdaySelect.innerHTML = '<option value="">Aguardando tipo automático do médico</option>';
+			weekdaySelect.innerHTML = `<option value="">${waitingAutoTypeForProfessional}</option>`;
 			weekdaySelect.disabled = true;
 			return;
 		}
@@ -360,7 +383,7 @@ export function init() {
 		endTimeInput.value = '';
 
 		const missing = [];
-		if (!doctorId) missing.push('médico');
+		if (!doctorId) missing.push(professionalSingularLower);
 		if (!appointmentTypeId) missing.push('tipo automático');
 		if (!startDate) missing.push('data inicial');
 

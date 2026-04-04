@@ -9,22 +9,22 @@ class WhatsAppOfficialTenantEventCatalog
      */
     public static function all(): array
     {
-        return [
+        $events = [
             ['key' => 'appointment.pending_confirmation', 'label' => 'Agendamento pendente de confirmacao', 'domain' => 'tenant'],
             ['key' => 'appointment.confirmed', 'label' => 'Agendamento confirmado', 'domain' => 'tenant'],
             ['key' => 'appointment.canceled', 'label' => 'Agendamento cancelado', 'domain' => 'tenant'],
             ['key' => 'appointment.expired', 'label' => 'Agendamento expirado', 'domain' => 'tenant'],
             ['key' => 'appointment.form_requested.patient', 'label' => 'Solicitacao de formulario para paciente', 'domain' => 'tenant'],
-            ['key' => 'appointment.created.doctor', 'label' => 'Novo agendamento para medico', 'domain' => 'tenant'],
-            ['key' => 'appointment.confirmed.doctor', 'label' => 'Agendamento confirmado para medico', 'domain' => 'tenant'],
-            ['key' => 'appointment.canceled.doctor', 'label' => 'Agendamento cancelado para medico', 'domain' => 'tenant'],
-            ['key' => 'appointment.rescheduled.doctor', 'label' => 'Agendamento remarcado para medico', 'domain' => 'tenant'],
+            ['key' => 'appointment.created.doctor', 'label' => 'Novo agendamento para {{labels.professional_singular_lower}}', 'domain' => 'tenant'],
+            ['key' => 'appointment.confirmed.doctor', 'label' => 'Agendamento confirmado para {{labels.professional_singular_lower}}', 'domain' => 'tenant'],
+            ['key' => 'appointment.canceled.doctor', 'label' => 'Agendamento cancelado para {{labels.professional_singular_lower}}', 'domain' => 'tenant'],
+            ['key' => 'appointment.rescheduled.doctor', 'label' => 'Agendamento remarcado para {{labels.professional_singular_lower}}', 'domain' => 'tenant'],
             ['key' => 'waitlist.joined', 'label' => 'Entrada na fila de espera', 'domain' => 'tenant'],
             ['key' => 'waitlist.offered', 'label' => 'Oferta de vaga na fila de espera', 'domain' => 'tenant'],
-            ['key' => 'waitlist.offered.doctor', 'label' => 'Oferta de vaga para medico', 'domain' => 'tenant'],
-            ['key' => 'waitlist.accepted.doctor', 'label' => 'Oferta aceita na fila de espera para medico', 'domain' => 'tenant'],
-            ['key' => 'form.response_submitted.doctor', 'label' => 'Resposta de formulario para medico', 'domain' => 'tenant'],
-            ['key' => 'online_appointment.updated.doctor', 'label' => 'Consulta online atualizada para medico', 'domain' => 'tenant'],
+            ['key' => 'waitlist.offered.doctor', 'label' => 'Oferta de vaga para {{labels.professional_singular_lower}}', 'domain' => 'tenant'],
+            ['key' => 'waitlist.accepted.doctor', 'label' => 'Oferta aceita na fila de espera para {{labels.professional_singular_lower}}', 'domain' => 'tenant'],
+            ['key' => 'form.response_submitted.doctor', 'label' => 'Resposta de formulario para {{labels.professional_singular_lower}}', 'domain' => 'tenant'],
+            ['key' => 'online_appointment.updated.doctor', 'label' => 'Consulta online atualizada para {{labels.professional_singular_lower}}', 'domain' => 'tenant'],
             ['key' => 'online_appointment.instructions_sent.doctor', 'label' => 'Instrucoes da consulta online enviadas', 'domain' => 'tenant'],
             ['key' => 'online_appointment.form_response_submitted.doctor', 'label' => 'Resposta de formulario da consulta online', 'domain' => 'tenant'],
 
@@ -42,6 +42,12 @@ class WhatsAppOfficialTenantEventCatalog
             ['key' => 'credentials.resent', 'label' => 'Reenvio de credenciais', 'domain' => 'platform'],
             ['key' => 'security.2fa_code', 'label' => 'Codigo de verificacao (2FA)', 'domain' => 'platform'],
         ];
+
+        return array_map(function (array $item): array {
+            $item['label'] = strtr((string) ($item['label'] ?? ''), self::professionalLabelReplacements());
+
+            return $item;
+        }, $events);
     }
 
     /**
@@ -88,5 +94,53 @@ class WhatsAppOfficialTenantEventCatalog
         }
 
         return $groups;
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    private static function professionalLabelReplacements(): array
+    {
+        $singular = 'Médico';
+        $plural = 'Médicos';
+        $registration = 'CRM';
+
+        try {
+            /** @var \App\Services\Tenant\ProfessionalLabelService $service */
+            $service = app(\App\Services\Tenant\ProfessionalLabelService::class);
+            $resolvedSingular = trim((string) $service->singular());
+            $resolvedPlural = trim((string) $service->plural());
+            $resolvedRegistration = trim((string) $service->registration());
+
+            if ($resolvedSingular !== '') {
+                $singular = $resolvedSingular;
+            }
+            if ($resolvedPlural !== '') {
+                $plural = $resolvedPlural;
+            }
+            if ($resolvedRegistration !== '') {
+                $registration = $resolvedRegistration;
+            }
+        } catch (\Throwable) {
+            // Keep default labels when tenant context is unavailable.
+        }
+
+        return [
+            '{{labels.professional_singular}}' => $singular,
+            '{{labels.professional_plural}}' => $plural,
+            '{{labels.professional_registration}}' => $registration,
+            '{{labels.professional_singular_lower}}' => self::toLower($singular),
+            '{{labels.professional_plural_lower}}' => self::toLower($plural),
+            '{{labels.professional_registration_lower}}' => self::toLower($registration),
+        ];
+    }
+
+    private static function toLower(string $value): string
+    {
+        if (function_exists('mb_strtolower')) {
+            return mb_strtolower($value, 'UTF-8');
+        }
+
+        return strtolower($value);
     }
 }

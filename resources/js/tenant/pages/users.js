@@ -261,7 +261,7 @@ function bindAvatarPreview() {
                     showAlert({
                         type: 'warning',
                         title: 'Atenção',
-                        message: 'O arquivo é muito grande. Por favor, selecione uma imagem com no máximo 2MB.',
+                        message: 'O arquivo ? muito grande. Por favor, selecione uma imagem com no máximo 2MB.',
                     });
                     avatarInput.value = '';
                     if (avatarPreviewContainer) {
@@ -419,17 +419,21 @@ function bindWebcam() {
 }
 
 function bindDoctorSpecialtiesSection() {
+    const config = document.getElementById('users-config');
     const roleSelect = document.getElementById('role-select');
     const specialtySelect = document.getElementById('user-doctor-specialty-select');
     const addSpecialtyBtn = document.getElementById('user-doctor-add-specialty-btn');
     const clearSpecialtiesBtn = document.getElementById('user-doctor-clear-specialties-btn');
     const selectedContainer = document.getElementById('user-doctor-selected-specialties');
     const inputsContainer = document.getElementById('user-doctor-specialties-inputs');
+    const primarySpecialtyInput = document.getElementById('user-doctor-primary-specialty-input');
     const form = document.querySelector('form');
 
-    if (!roleSelect || !specialtySelect || !selectedContainer || !inputsContainer) {
+    if (!roleSelect || !specialtySelect || !selectedContainer || !inputsContainer || !primarySpecialtyInput) {
         return;
     }
+
+    const professionalSingularLower = config?.dataset.professionalSingularLower || 'médico';
 
     const parseInitialSelected = () => {
         const raw = selectedContainer.dataset.initialSelected;
@@ -450,6 +454,17 @@ function bindDoctorSpecialtiesSection() {
     };
 
     let selectedSpecialties = parseInitialSelected();
+    let primarySpecialtyId = (primarySpecialtyInput.value || selectedContainer.dataset.initialPrimary || '').trim() || null;
+
+    const ensurePrimaryConsistency = () => {
+        if (!primarySpecialtyId) {
+            return;
+        }
+
+        if (!selectedSpecialties.includes(primarySpecialtyId)) {
+            primarySpecialtyId = null;
+        }
+    };
 
     const renderPlaceholder = () => {
         selectedContainer.innerHTML =
@@ -460,6 +475,8 @@ function bindDoctorSpecialtiesSection() {
         inputsContainer.innerHTML = '';
         const disabled = roleSelect.value !== 'doctor';
 
+        ensurePrimaryConsistency();
+
         selectedSpecialties.forEach((specialtyId) => {
             const input = document.createElement('input');
             input.type = 'hidden';
@@ -468,10 +485,14 @@ function bindDoctorSpecialtiesSection() {
             input.disabled = disabled;
             inputsContainer.appendChild(input);
         });
+
+        primarySpecialtyInput.value = primarySpecialtyId || '';
+        primarySpecialtyInput.disabled = disabled;
     };
 
     const updateDisplay = () => {
         selectedContainer.innerHTML = '';
+        ensurePrimaryConsistency();
 
         if (selectedSpecialties.length === 0) {
             renderPlaceholder();
@@ -491,6 +512,27 @@ function bindDoctorSpecialtiesSection() {
             badge.dataset.id = specialtyId;
             badge.innerHTML = `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>${option.dataset.name}`;
 
+            const primaryLabel = document.createElement('label');
+            primaryLabel.className = 'inline-flex items-center gap-1 ml-2 text-xs text-blue-700 dark:text-blue-200';
+            primaryLabel.title = 'Definir como especialidade principal';
+
+            const primaryRadio = document.createElement('input');
+            primaryRadio.type = 'radio';
+            primaryRadio.name = 'doctor-primary-specialty-choice';
+            primaryRadio.className = 'h-3.5 w-3.5 border-gray-300 text-blue-600 focus:ring-blue-500';
+            primaryRadio.value = specialtyId;
+            primaryRadio.checked = primarySpecialtyId === specialtyId;
+            primaryRadio.addEventListener('change', () => {
+                primarySpecialtyId = specialtyId;
+                updateInputs();
+                updateDisplay();
+            });
+
+            const primaryText = document.createElement('span');
+            primaryText.textContent = 'Principal';
+            primaryLabel.appendChild(primaryRadio);
+            primaryLabel.appendChild(primaryText);
+
             const removeBtn = document.createElement('button');
             removeBtn.type = 'button';
             removeBtn.className = 'text-blue-600 hover:text-blue-800 dark:text-blue-300 dark:hover:text-blue-100 ml-1';
@@ -500,9 +542,13 @@ function bindDoctorSpecialtiesSection() {
             removeBtn.addEventListener('click', (event) => {
                 event.preventDefault();
                 selectedSpecialties = selectedSpecialties.filter((id) => id !== specialtyId);
+                if (primarySpecialtyId === specialtyId) {
+                    primarySpecialtyId = null;
+                }
                 updateDisplay();
             });
 
+            badge.appendChild(primaryLabel);
             badge.appendChild(removeBtn);
             selectedContainer.appendChild(badge);
         });
@@ -557,6 +603,7 @@ function bindDoctorSpecialtiesSection() {
         }
 
         selectedSpecialties = [];
+        primarySpecialtyId = null;
         updateDisplay();
     });
 
@@ -574,7 +621,7 @@ function bindDoctorSpecialtiesSection() {
         }
 
         event.preventDefault();
-        showWarning('Por favor, selecione pelo menos uma especialidade médica.');
+        showWarning(`Por favor, selecione pelo menos uma especialidade de ${professionalSingularLower}.`);
         specialtySelect.focus();
     });
 
@@ -593,6 +640,7 @@ function bindRoleModules() {
         doctor: parseJson(config.dataset.defaultModulesDoctor),
         admin: [],
     };
+    const professionalPluralLower = config.dataset.professionalPluralLower || 'médicos';
     const loggedUserRole = config.dataset.loggedRole || '';
     const settingsUrl = config.dataset.settingsUrl || '';
     const initialRole = config.dataset.initialRole || roleSelect.value;
@@ -635,7 +683,7 @@ function bindRoleModules() {
         }
         if (role === 'doctor') {
             modulesInfoText.innerHTML =
-                `<strong>Nota:</strong> Os módulos foram pré-selecionados conforme as configurações padrão para médicos em <a href="${settingsUrl}" target="_blank" class="text-blue-600 underline hover:text-blue-800">Configurações → Usuários & Permissões</a>. Você pode ajustar manualmente se necessário.`;
+                `<strong>Nota:</strong> Os módulos foram pré-selecionados conforme as configurações padrão para ${professionalPluralLower} em <a href="${settingsUrl}" target="_blank" class="text-blue-600 underline hover:text-blue-800">Configurações → Usuários & Permissões</a>. Você pode ajustar manualmente se necessário.`;
         } else {
             modulesInfoText.innerHTML =
                 `<strong>Nota:</strong> Os módulos foram pré-selecionados conforme as configurações padrão para usuários comuns em <a href="${settingsUrl}" target="_blank" class="text-blue-600 underline hover:text-blue-800">Configurações → Usuários & Permissões</a>. Você pode ajustar manualmente se necessário.`;
@@ -714,4 +762,5 @@ function parseJson(value) {
         return [];
     }
 }
+
 

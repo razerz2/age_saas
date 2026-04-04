@@ -1,6 +1,14 @@
 @extends('layouts.tailadmin.app')
 
-@section('title', 'Atendimento Médico')
+@php
+    $professionalLabelService = app(\App\Services\Tenant\ProfessionalLabelService::class);
+    $professionalSingular = $professionalLabelService->singular();
+    $professionalPlural = $professionalLabelService->plural();
+    $professionalSingularLower = function_exists('mb_strtolower') ? mb_strtolower($professionalSingular, 'UTF-8') : strtolower($professionalSingular);
+    $professionalPluralLower = function_exists('mb_strtolower') ? mb_strtolower($professionalPlural, 'UTF-8') : strtolower($professionalPlural);
+@endphp
+
+@section('title', 'Atendimento do ' . $professionalSingular)
 
 @section('page', 'medical_appointments')
 
@@ -10,7 +18,7 @@
     <div class="mb-6">
         <div class="flex items-center justify-between">
             <div>
-                <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Atendimento Médico</h1>
+                <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Atendimento do {{ $professionalSingular }}</h1>
                 <nav class="flex mt-2" aria-label="Breadcrumb">
                     <ol class="inline-flex items-center space-x-1 md:space-x-3">
                         <li class="inline-flex items-center">
@@ -22,7 +30,7 @@
                         <li>
                             <div class="flex items-center">
                                 <x-icon name="chevron-right" class="w-4 h-4 text-gray-400" />
-                                <span class="ml-1 text-gray-500 dark:text-gray-400">Atendimento Médico</span>
+                                <span class="ml-1 text-gray-500 dark:text-gray-400">Atendimento do {{ $professionalSingular }}</span>
                             </div>
                         </li>
                     </ol>
@@ -50,7 +58,7 @@
 
                     @if($showDoctorSelect)
                         <div class="mb-6">
-                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Médicos</label>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{{ $professionalPlural }}</label>
                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                 @foreach($doctors as $doctor)
                                     <label for="doctor_{{ $doctor->id }}" class="flex items-center gap-2 p-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/40">
@@ -70,7 +78,7 @@
                             @error('doctor_ids.*')
                                 <p class="mt-2 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
                             @enderror
-                            <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">Selecione um ou mais médicos</p>
+                            <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">Selecione um ou mais {{ $professionalPluralLower }}</p>
                         </div>
                     @endif
 

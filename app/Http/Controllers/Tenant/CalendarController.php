@@ -12,6 +12,7 @@ use App\Models\Tenant\Doctor;
 use App\Models\Tenant\RecurringAppointment;
 use App\Http\Requests\Tenant\StoreCalendarRequest;
 use App\Http\Requests\Tenant\UpdateCalendarRequest;
+use App\Services\Tenant\ProfessionalLabelService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Auth;
@@ -98,6 +99,7 @@ class CalendarController extends Controller
     public function create()
     {
         $user = Auth::guard('tenant')->user();
+        $professionalLabels = $this->professionalLabels();
         
         // Busca médicos que ainda não possuem calendário
         $doctorsQuery = Doctor::with('user')
@@ -113,7 +115,7 @@ class CalendarController extends Controller
             $doctor = Doctor::where('user_id', $user->id)->first();
             if ($doctor && $doctor->calendars()->exists()) {
                 return redirect()->route('tenant.calendars.index', ['slug' => tenant()->subdomain])
-                    ->with('error', 'Você já possui um calendário cadastrado. Cada médico pode ter apenas um calendário.');
+                    ->with('error', 'Você já possui um calendário cadastrado. Cada ' . $professionalLabels['singular_lower'] . ' pode ter apenas um calendário.');
             }
         }
 
@@ -123,13 +125,14 @@ class CalendarController extends Controller
     public function store(StoreCalendarRequest $request)
     {
         $user = Auth::guard('tenant')->user();
+        $professionalLabels = $this->professionalLabels();
         $data = $request->validated();
         
         // Verifica se o médico já possui um calendário
         $doctor = Doctor::findOrFail($data['doctor_id']);
         if ($doctor->calendars()->exists()) {
             return redirect()->route('tenant.calendars.create', ['slug' => tenant()->subdomain])
-                ->with('error', 'Este médico já possui um calendário cadastrado. Cada médico pode ter apenas um calendário.')
+                ->with('error', 'Este ' . $professionalLabels['singular_lower'] . ' já possui um calendário cadastrado. Cada ' . $professionalLabels['singular_lower'] . ' pode ter apenas um calendário.')
                 ->withInput();
         }
         
@@ -141,7 +144,7 @@ class CalendarController extends Controller
             // Verifica se já tem calendário
             if ($user->doctor->calendars()->exists()) {
                 return redirect()->route('tenant.calendars.index', ['slug' => tenant()->subdomain])
-                    ->with('error', 'Você já possui um calendário cadastrado. Cada médico pode ter apenas um calendário.');
+                    ->with('error', 'Você já possui um calendário cadastrado. Cada ' . $professionalLabels['singular_lower'] . ' pode ter apenas um calendário.');
             }
         }
         
@@ -242,6 +245,7 @@ class CalendarController extends Controller
     public function update(UpdateCalendarRequest $request, $slug, $id)
     {
         $calendar = Calendar::findOrFail($id);
+        $professionalLabels = $this->professionalLabels();
         
         $user = Auth::guard('tenant')->user();
         $data = $request->validated();
@@ -256,7 +260,7 @@ class CalendarController extends Controller
                 // Médico não pode mudar o médico do calendário
                 if ($data['doctor_id'] !== $calendar->doctor_id) {
                     return redirect()->route('tenant.calendars.edit', ['slug' => tenant()->subdomain, 'id' => $calendar->id])
-                        ->with('error', 'Você não pode alterar o médico do calendário.')
+                        ->with('error', 'Você não pode alterar o ' . $professionalLabels['singular_lower'] . ' do calendário.')
                         ->withInput();
                 }
             } elseif ($user->role === 'user') {
@@ -271,7 +275,7 @@ class CalendarController extends Controller
             $newDoctor = Doctor::findOrFail($data['doctor_id']);
             if ($newDoctor->calendars()->where('id', '!=', $calendar->id)->exists()) {
                 return redirect()->route('tenant.calendars.edit', ['slug' => tenant()->subdomain, 'id' => $calendar->id])
-                    ->with('error', 'Este médico já possui um calendário cadastrado. Cada médico pode ter apenas um calendário.')
+                    ->with('error', 'Este ' . $professionalLabels['singular_lower'] . ' já possui um calendário cadastrado. Cada ' . $professionalLabels['singular_lower'] . ' pode ter apenas um calendário.')
                     ->withInput();
             }
         }
@@ -351,5 +355,31 @@ class CalendarController extends Controller
 
         return redirect()->route('tenant.calendars.index', ['slug' => tenant()->subdomain])
             ->with('info', 'Nenhum calendário encontrado. Crie um calendário primeiro.');
+    }
+
+    /**
+     * @return array{singular:string,plural:string,singular_lower:string,plural_lower:string}
+     */
+    private function professionalLabels(): array
+    {
+        $service = app(ProfessionalLabelService::class);
+        $singular = $service->singular();
+        $plural = $service->plural();
+
+        return [
+            'singular' => $singular,
+            'plural' => $plural,
+            'singular_lower' => $this->lowerLabel($singular),
+            'plural_lower' => $this->lowerLabel($plural),
+        ];
+    }
+
+    private function lowerLabel(string $value): string
+    {
+        if (function_exists('mb_strtolower')) {
+            return mb_strtolower($value, 'UTF-8');
+        }
+
+        return strtolower($value);
     }
 }

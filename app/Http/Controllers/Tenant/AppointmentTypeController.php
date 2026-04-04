@@ -9,6 +9,7 @@ use App\Models\Tenant\AppointmentType;
 use App\Models\Tenant\Doctor;
 use App\Http\Requests\Tenant\StoreAppointmentTypeRequest;
 use App\Http\Requests\Tenant\UpdateAppointmentTypeRequest;
+use App\Services\Tenant\ProfessionalLabelService;
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -87,7 +88,8 @@ class AppointmentTypeController extends Controller
         }
         
         if (!$doctor) {
-            return redirect()->back()->with('error', 'Médico não encontrado.');
+            $professionalLabelService = app(ProfessionalLabelService::class);
+            return redirect()->back()->with('error', $professionalLabelService->singular() . ' não encontrado.');
         }
         
         $data = $request->validated();

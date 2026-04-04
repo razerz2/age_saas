@@ -1,5 +1,11 @@
 @extends('layouts.tailadmin.app')
 
+@php
+    $professionalLabelService = app(\App\Services\Tenant\ProfessionalLabelService::class);
+    $recurringDoctor = $recurringAppointment->doctor ?? null;
+    $professionalSingular = $professionalLabelService->singular($recurringDoctor);
+@endphp
+
 @section('title', 'Detalhes do Agendamento Recorrente')
 @section('page', 'appointments')
 
@@ -46,7 +52,7 @@
                             <span class="text-sm font-medium text-gray-900 dark:text-gray-100">{{ $recurringAppointment->patient->full_name ?? 'N/A' }}</span>
                         </div>
                         <div class="flex items-center justify-between border border-gray-200 dark:border-gray-700 rounded-md p-3">
-                            <span class="text-sm text-gray-600 dark:text-gray-400">Médico</span>
+                            <span class="text-sm text-gray-600 dark:text-gray-400">{{ $professionalSingular }}</span>
                             <span class="text-sm font-medium text-gray-900 dark:text-gray-100">{{ $recurringAppointment->doctor->user->name_full ?? $recurringAppointment->doctor->user->name ?? 'N/A' }}</span>
                         </div>
                         <div class="flex items-center justify-between border border-gray-200 dark:border-gray-700 rounded-md p-3">

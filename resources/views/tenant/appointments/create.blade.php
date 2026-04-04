@@ -1,9 +1,24 @@
 @extends('layouts.tailadmin.app')
 
+@php
+    $professionalLabelService = app(\App\Services\Tenant\ProfessionalLabelService::class);
+    $professionalSingular = $professionalLabelService->singular();
+    $professionalPlural = $professionalLabelService->plural();
+    $professionalRegistration = $professionalLabelService->registration();
+    $professionalSingularLower = function_exists('mb_strtolower') ? mb_strtolower($professionalSingular, 'UTF-8') : strtolower($professionalSingular);
+    $professionalPluralLower = function_exists('mb_strtolower') ? mb_strtolower($professionalPlural, 'UTF-8') : strtolower($professionalPlural);
+@endphp
+
 @section('title', 'Criar Agendamento')
 @section('page', 'appointments')
 
 @section('content')
+    <div id="appointments-config" class="hidden"
+        data-professional-singular="{{ $professionalSingular }}"
+        data-professional-singular-lower="{{ $professionalSingularLower }}"
+        data-professional-plural="{{ $professionalPlural }}"
+        data-professional-plural-lower="{{ $professionalPluralLower }}"
+        data-professional-registration="{{ $professionalRegistration }}"></div>
 
     <!-- Page Header -->
     <div class="page-header mb-6">
@@ -126,7 +141,7 @@
                         <div>
                             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                                 <x-icon name="stethoscope" class="w-4 h-4 inline mr-1" />
-                                Médico <span class="text-red-500">*</span>
+                                {{ $professionalSingular }} <span class="text-red-500">*</span>
                             </label>
                             @php
                                 $selectedDoctorId = old('doctor_id');
@@ -135,15 +150,15 @@
                             @endphp
                             <div class="flex items-center gap-2">
                                 <input dusk="appointment-doctor-id" type="hidden" name="doctor_id" id="doctor_id" data-initial-value="{{ $selectedDoctorId }}" value="{{ $selectedDoctorId }}" data-selected-name="{{ $selectedDoctorName }}" required>
-                                <input dusk="appointment-doctor-name" type="text" id="doctor_name" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-gray-50 dark:bg-gray-700 dark:text-white @error('doctor_id') border-red-500 @enderror" value="{{ $selectedDoctorName }}" placeholder="Selecione um médico" readonly>
-                                <button dusk="appointment-search-doctor-button" type="button" class="btn btn-outline js-open-entity-search" data-entity-type="doctors" data-search-url="{{ workspace_route('tenant.appointments.api.search-doctors') }}" data-hidden-input-id="doctor_id" data-display-input-id="doctor_name" data-modal-title="Buscar médico">
+                                <input dusk="appointment-doctor-name" type="text" id="doctor_name" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-gray-50 dark:bg-gray-700 dark:text-white @error('doctor_id') border-red-500 @enderror" value="{{ $selectedDoctorName }}" placeholder="Selecione um {{ $professionalSingularLower }}" readonly>
+                                <button dusk="appointment-search-doctor-button" type="button" class="btn btn-outline js-open-entity-search" data-entity-type="doctors" data-search-url="{{ workspace_route('tenant.appointments.api.search-doctors') }}" data-hidden-input-id="doctor_id" data-display-input-id="doctor_name" data-modal-title="Buscar {{ $professionalSingularLower }}">
                                     Buscar
                                 </button>
                             </div>
                             @error('doctor_id')
                                 <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
                             @enderror
-                            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">O calendário do médico será selecionado automaticamente</p>
+                            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">O calendário do {{ $professionalSingularLower }} será selecionado automaticamente</p>
                         </div>
                     </div>
 
@@ -152,7 +167,7 @@
                             <x-icon name="clipboard-text-outline" class="w-4 h-4 inline mr-1" />                            Tipo de Consulta
                         </label>
                         <select name="appointment_type" id="appointment_type" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white @error('appointment_type') border-red-500 @enderror" disabled>
-                            <option value="">Primeiro selecione um médico</option>
+                            <option value="">Primeiro selecione um {{ $professionalSingularLower }}</option>
                         </select>
                         @error('appointment_type')
                             <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
@@ -165,7 +180,7 @@
                                 <x-icon name="format-list-bulleted" class="w-4 h-4 inline mr-1" />                                Especialidade
                             </label>
                             <select name="specialty_id" id="specialty_id" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white @error('specialty_id') border-red-500 @enderror" disabled>
-                                <option value="">Primeiro selecione um médico</option>
+                                <option value="">Primeiro selecione um {{ $professionalSingularLower }}</option>
                             </select>
                             @error('specialty_id')
                                 <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
@@ -208,7 +223,7 @@
                                     <x-icon name="calendar-outline" class="w-5 h-5" />
                                 </button>
                                 <button type="button" class="btn btn-primary" id="btn-show-business-hours" 
-                                        title="Ver dias trabalhados do médico" disabled>
+                                        title="Ver dias trabalhados do {{ $professionalSingularLower }}" disabled>
                                     <x-icon name="close" class="w-5 h-5" />                    </button>
                             </div>
                             @error('appointment_date')
@@ -224,12 +239,12 @@
                                 Horário Disponível <span class="text-red-500">*</span>
                             </label>
                             <select dusk="appointment-time" name="appointment_time" id="appointment_time" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white @error('appointment_time') border-red-500 @enderror" required disabled>
-                                <option value="">Primeiro selecione médico</option>
+                                <option value="">Primeiro selecione {{ $professionalSingularLower }}</option>
                             </select>
                             @error('appointment_time')
                                 <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
                             @enderror
-                            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Horários disponíveis baseados nas configurações do médico</p>
+                            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Horários disponíveis baseados nas configurações do {{ $professionalSingularLower }}</p>
                         </div>
                     </div>
                     <input type="hidden" name="starts_at" id="starts_at">
@@ -311,7 +326,7 @@
             <div class="flex items-center justify-between pb-4 border-b border-gray-200 dark:border-gray-700">
                 <h3 class="text-lg font-semibold text-gray-900 dark:text-white flex items-center">
                     <x-icon name="calendar-clock" class="w-5 h-5 mr-2 text-blue-600" />
-                    Dias Trabalhados do Médico
+                    Dias Trabalhados do {{ $professionalSingular }}
                 </h3>
                 <button type="button" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 js-close-business-hours-modal">
                     <x-icon name="close" class="w-6 h-6" />
@@ -324,7 +339,7 @@
                 </div>
                 <div id="business-hours-content" class="hidden">
                     <div class="mb-4">
-                        <span class="font-medium text-gray-900 dark:text-white">Médico:</span> 
+                        <span class="font-medium text-gray-900 dark:text-white">{{ $professionalSingular }}:</span> 
                         <span id="business-hours-doctor-name" class="text-gray-700 dark:text-gray-300">-</span>
                     </div>
                     <div id="business-hours-list">
@@ -333,7 +348,7 @@
                     <div id="business-hours-empty" class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 hidden">
                         <div class="flex items-center">
                             <x-icon name="information-outline" class="w-5 h-5 text-blue-600 dark:text-blue-400 mr-2" />
-                            <span class="text-blue-800 dark:text-blue-200">Nenhum dia trabalhado configurado para este médico.</span>
+                            <span class="text-blue-800 dark:text-blue-200">Nenhum dia trabalhado configurado para este {{ $professionalSingularLower }}.</span>
                         </div>
                     </div>
                 </div>

@@ -1,5 +1,10 @@
 @extends('layouts.tailadmin.app')
 
+@php
+    $professionalLabelService = app(\App\Services\Tenant\ProfessionalLabelService::class);
+    $professionalSingular = $professionalLabelService->singular();
+@endphp
+
 @section('title', 'Detalhes do Tipo de Consulta')
 @section('page', 'appointment-types')
 
@@ -71,7 +76,7 @@
                 <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
                     <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-2 flex items-center">
                         <x-icon name="account-outline" class="w-4 h-4 mr-1" />
-                        Médico
+                        {{ $professionalSingular }}
                     </label>
                     <p class="text-sm font-semibold text-gray-900 dark:text-gray-100">
                         @if($appointmentType->doctor)

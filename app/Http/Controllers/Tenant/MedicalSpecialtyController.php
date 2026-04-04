@@ -25,10 +25,15 @@ class MedicalSpecialtyController extends Controller
 
     public function store(StoreMedicalSpecialtyRequest $request)
     {
+        $data = $this->normalizeLabelOverrides($request->validated());
+
         MedicalSpecialty::create([
             'id'   => \Str::uuid(),
-            'name' => $request->validated()['name'],
-            'code' => $request->validated()['code'] ?? null,
+            'name' => $data['name'],
+            'code' => $data['code'] ?? null,
+            'label_singular' => $data['label_singular'] ?? null,
+            'label_plural' => $data['label_plural'] ?? null,
+            'registration_label' => $data['registration_label'] ?? null,
         ]);
 
         return redirect()->route('tenant.specialties.index', ['slug' => tenant()->subdomain])
@@ -50,7 +55,7 @@ class MedicalSpecialtyController extends Controller
     public function update(UpdateMedicalSpecialtyRequest $request, $slug, $id)
     {
         $specialty = MedicalSpecialty::findOrFail($id);
-        $specialty->update($request->validated());
+        $specialty->update($this->normalizeLabelOverrides($request->validated()));
 
         return redirect()->route('tenant.specialties.index', ['slug' => $slug])
             ->with('success', 'Especialidade atualizada com sucesso.');
@@ -114,5 +119,23 @@ class MedicalSpecialtyController extends Controller
             'data' => $data,
             'meta' => $this->gridMeta($paginator),
         ]);
+    }
+
+    /**
+     * @param array<string, mixed> $data
+     * @return array<string, mixed>
+     */
+    private function normalizeLabelOverrides(array $data): array
+    {
+        foreach (['label_singular', 'label_plural', 'registration_label'] as $key) {
+            if (!array_key_exists($key, $data)) {
+                continue;
+            }
+
+            $value = trim((string) $data[$key]);
+            $data[$key] = $value !== '' ? $value : null;
+        }
+
+        return $data;
     }
 }

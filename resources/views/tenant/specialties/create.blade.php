@@ -1,4 +1,4 @@
-@extends('layouts.tailadmin.app')
+﻿@extends('layouts.tailadmin.app')
 
 @section('title', 'Criar Especialidade')
 @section('page', 'specialties')
@@ -41,7 +41,7 @@
                         <x-icon name="medical-bag" size="text-xl" class="mr-2 text-blue-600" />
                         Nova Especialidade
                     </h2>
-                    <p class="text-gray-600 dark:text-gray-400 mt-1">Preencha os dados abaixo para cadastrar uma nova especialidade médica</p>
+                    <p class="text-gray-600 dark:text-gray-400 mt-1">Preencha os dados abaixo para cadastrar uma nova especialidade mÃ©dica</p>
                 </div>
             </div>
         </div>
@@ -50,11 +50,11 @@
             <form class="space-y-8" action="{{ workspace_route('tenant.specialties.store') }}" method="POST">
                 @csrf
 
-                <!-- Seção: Dados da Especialidade -->
+                <!-- SeÃ§Ã£o: Dados da Especialidade -->
                 <div>
                     <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
                         <x-icon name="information-outline" size="text-lg" class="mr-2 text-blue-600" />
-                        Informações da Especialidade
+                        InformaÃ§Ãµes da Especialidade
                     </h3>
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                         <div class="md:col-span-2">
@@ -70,12 +70,12 @@
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                Código
+                                CÃ³digo
                             </label>
                             <input type="text" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white @error('code') border-red-500 @enderror" 
                                    name="code" value="{{ old('code') }}" 
-                                   maxlength="50" placeholder="Código CBO (opcional)">
-                            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Código CBO da especialidade</p>
+                                   maxlength="50" placeholder="CÃ³digo CBO (opcional)">
+                            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">CÃ³digo CBO da especialidade</p>
                             @error('code')
                                 <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
                             @enderror
@@ -84,50 +84,50 @@
                 </div>
 
                 @if(tenant_setting('professional.customization_enabled'))
-                    <!-- Seção: Personalização de Rótulos -->
+                    <!-- SeÃ§Ã£o: PersonalizaÃ§Ã£o visual do profissional -->
                     <div>
                         <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
                             <x-icon name="tag-outline" size="text-lg" class="mr-2 text-blue-600" />
-                            Personalização de Rótulos
+                            PersonalizaÃ§Ã£o visual do profissional
                         </h3>
                         <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 mb-6">
                             <div class="flex items-start">
                                 <x-icon name="information-outline" size="text-sm" class="mr-3 mt-0.5 text-blue-600 dark:text-blue-400" />
                                 <div class="flex-1">
-                                    <p class="text-blue-800 dark:text-blue-200 text-sm">Configure rótulos personalizados para esta especialidade. Estes valores sobrescrevem os rótulos globais.</p>
+                                    <p class="text-blue-800 dark:text-blue-200 text-sm">Se preenchido, esta especialidade usarÃ¡ estes termos no lugar do perfil global do tenant.</p>
                                 </div>
                             </div>
                         </div>
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                    Rótulo Singular
+                                    Singular
                                 </label>
                                 <input type="text" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white @error('label_singular') border-red-500 @enderror" 
                                        name="label_singular" value="{{ old('label_singular') }}" 
-                                       placeholder="Ex: Psicólogo, Dentista"
+                                       placeholder="Ex: PsicÃ³logo, Dentista"
                                        maxlength="50">
-                                <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Exemplo: "Psicólogo" ou "Dentista"</p>
+                                <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Exemplo: "PsicÃ³logo" ou "Dentista"</p>
                                 @error('label_singular')
                                     <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
                                 @enderror
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                    Rótulo Plural
+                                    Plural
                                 </label>
                                 <input type="text" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white @error('label_plural') border-red-500 @enderror" 
                                        name="label_plural" value="{{ old('label_plural') }}" 
-                                       placeholder="Ex: Psicólogos, Dentistas"
+                                       placeholder="Ex: PsicÃ³logos, Dentistas"
                                        maxlength="50">
-                                <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Exemplo: "Psicólogos" ou "Dentistas"</p>
+                                <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Exemplo: "PsicÃ³logos" ou "Dentistas"</p>
                                 @error('label_plural')
                                     <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
                                 @enderror
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                    Rótulo de Registro
+                                    Registro profissional
                                 </label>
                                 <input type="text" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white @error('registration_label') border-red-500 @enderror" 
                                        name="registration_label" value="{{ old('registration_label') }}" 
@@ -142,7 +142,7 @@
                     </div>
                 @endif
 
-                <!-- Botões de Ação -->
+                <!-- BotÃµes de AÃ§Ã£o -->
                 <div class="flex flex-col gap-3 pt-6 border-t border-gray-200 dark:border-gray-700 sm:flex-row sm:items-center sm:justify-between">
                     <a href="{{ workspace_route('tenant.specialties.index') }}" class="btn btn-outline inline-flex items-center">
                         <x-icon name="arrow-left" size="text-sm" class="mr-2" />
@@ -159,5 +159,6 @@
 
 
 @endsection
+
 
 

@@ -10,6 +10,7 @@ use App\Models\Tenant\Calendar;
 use App\Models\Tenant\Doctor;
 use App\Models\Tenant\BusinessHour;
 use App\Models\Tenant\AppointmentType;
+use App\Services\Tenant\ProfessionalLabelService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Log;
@@ -18,6 +19,11 @@ use Carbon\Carbon;
 
 class AppointmentBotApiController extends Controller
 {
+    public function __construct(
+        private readonly ProfessionalLabelService $professionalLabelService
+    ) {
+    }
+
     /**
      * Criar agendamento
      */
@@ -28,7 +34,7 @@ class AppointmentBotApiController extends Controller
         if (!$tenant) {
             return response()->json([
                 'success' => false,
-                'error' => 'Tenant não identificado'
+                'error' => 'Tenant nÃ£o identificado'
             ], 500);
         }
 
@@ -46,7 +52,7 @@ class AppointmentBotApiController extends Controller
         if ($validator->fails()) {
             return response()->json([
                 'success' => false,
-                'error' => 'Dados inválidos',
+                'error' => 'Dados invÃ¡lidos',
                 'details' => $validator->errors()
             ], 422);
         }
@@ -70,21 +76,21 @@ class AppointmentBotApiController extends Controller
                     ]);
                 }
 
-                // Buscar médico e calendário
+                // Buscar mÃ©dico e calendÃ¡rio
                 $doctor = Doctor::find($validated['doctor_id']);
                 if (!$doctor || !$doctor->user || $doctor->user->status !== 'active') {
                     return response()->json([
                         'success' => false,
-                        'error' => 'Médico não encontrado ou inativo'
+                        'error' => $this->professionalSingular() . ' nÃ£o encontrado ou inativo'
                     ], 404);
                 }
 
-                // Buscar calendário padrão do médico
+                // Buscar calendÃ¡rio padrÃ£o do mÃ©dico
                 $calendar = Calendar::where('doctor_id', $doctor->id)->first();
                 if (!$calendar) {
                     return response()->json([
                         'success' => false,
-                        'error' => 'Calendário não encontrado para este médico'
+                        'error' => 'CalendÃ¡rio nÃ£o encontrado para este ' . $this->professionalSingularLower($doctor)
                     ], 404);
                 }
 
@@ -95,7 +101,7 @@ class AppointmentBotApiController extends Controller
                     if (!$appointmentType || !$appointmentType->is_active) {
                         return response()->json([
                             'success' => false,
-                            'error' => 'Tipo de consulta não encontrado ou inativo'
+                            'error' => 'Tipo de consulta nÃ£o encontrado ou inativo'
                         ], 404);
                     }
                 }
@@ -104,14 +110,14 @@ class AppointmentBotApiController extends Controller
                 $dateTime = Carbon::parse($validated['date'] . ' ' . $validated['time']);
                 $endsAt = $dateTime->copy();
 
-                // Calcular duração
-                $duration = 30; // padrão
+                // Calcular duraÃ§Ã£o
+                $duration = 30; // padrÃ£o
                 if ($appointmentType) {
                     $duration = $appointmentType->duration_min ?? 30;
                 }
                 $endsAt->addMinutes($duration);
 
-                // Validar horário disponível
+                // Validar horÃ¡rio disponÃ­vel
                 $validationError = $this->validateAvailableSlot($doctor->id, $dateTime, $endsAt);
                 if ($validationError) {
                     return response()->json([
@@ -132,7 +138,7 @@ class AppointmentBotApiController extends Controller
                 if ($conflict) {
                     return response()->json([
                         'success' => false,
-                        'error' => 'Horário já está ocupado'
+                        'error' => 'HorÃ¡rio jÃ¡ estÃ¡ ocupado'
                     ], 422);
                 }
 
@@ -147,7 +153,7 @@ class AppointmentBotApiController extends Controller
                     'ends_at' => $endsAt,
                     'status' => 'scheduled',
                     'notes' => $validated['notes'] ?? null,
-                    'appointment_mode' => 'presencial', // padrão
+                    'appointment_mode' => 'presencial', // padrÃ£o
                 ]);
 
                 Log::info('Bot API - Agendamento criado', [
@@ -186,7 +192,7 @@ class AppointmentBotApiController extends Controller
         if (!$tenant) {
             return response()->json([
                 'success' => false,
-                'error' => 'Tenant não identificado'
+                'error' => 'Tenant nÃ£o identificado'
             ], 500);
         }
 
@@ -199,7 +205,7 @@ class AppointmentBotApiController extends Controller
         if ($validator->fails()) {
             return response()->json([
                 'success' => false,
-                'error' => 'Dados inválidos',
+                'error' => 'Dados invÃ¡lidos',
                 'details' => $validator->errors()
             ], 422);
         }
@@ -215,14 +221,14 @@ class AppointmentBotApiController extends Controller
                 if (!$appointment) {
                     return response()->json([
                         'success' => false,
-                        'error' => 'Agendamento não encontrado'
+                        'error' => 'Agendamento nÃ£o encontrado'
                     ], 404);
                 }
 
                 if (in_array($appointment->status, ['canceled', 'attended', 'no_show'])) {
                     return response()->json([
                         'success' => false,
-                        'error' => 'Não é possível remarcar um agendamento ' . $appointment->status
+                        'error' => 'NÃ£o Ã© possÃ­vel remarcar um agendamento ' . $appointment->status
                     ], 422);
                 }
 
@@ -231,15 +237,15 @@ class AppointmentBotApiController extends Controller
                 if ($newDateTime->lt(now())) {
                     return response()->json([
                         'success' => false,
-                        'error' => 'Não é possível remarcar para uma data/hora passada'
+                        'error' => 'NÃ£o Ã© possÃ­vel remarcar para uma data/hora passada'
                     ], 422);
                 }
 
-                // Calcular nova data de término
+                // Calcular nova data de tÃ©rmino
                 $duration = $appointment->starts_at->diffInMinutes($appointment->ends_at);
                 $newEndsAt = $newDateTime->copy()->addMinutes($duration);
 
-                // Validar horário disponível
+                // Validar horÃ¡rio disponÃ­vel
                 $validationError = $this->validateAvailableSlot($appointment->doctor_id, $newDateTime, $newEndsAt);
                 if ($validationError) {
                     return response()->json([
@@ -248,7 +254,7 @@ class AppointmentBotApiController extends Controller
                     ], 422);
                 }
 
-                // Verificar conflitos (exceto o próprio agendamento)
+                // Verificar conflitos (exceto o prÃ³prio agendamento)
                 $conflict = Appointment::where('calendar_id', $appointment->calendar_id)
                     ->where('id', '!=', $appointment->id)
                     ->whereIn('status', ['scheduled', 'rescheduled'])
@@ -261,7 +267,7 @@ class AppointmentBotApiController extends Controller
                 if ($conflict) {
                     return response()->json([
                         'success' => false,
-                        'error' => 'Horário já está ocupado'
+                        'error' => 'HorÃ¡rio jÃ¡ estÃ¡ ocupado'
                     ], 422);
                 }
 
@@ -306,7 +312,7 @@ class AppointmentBotApiController extends Controller
         if (!$tenant) {
             return response()->json([
                 'success' => false,
-                'error' => 'Tenant não identificado'
+                'error' => 'Tenant nÃ£o identificado'
             ], 500);
         }
 
@@ -318,7 +324,7 @@ class AppointmentBotApiController extends Controller
         if ($validator->fails()) {
             return response()->json([
                 'success' => false,
-                'error' => 'Dados inválidos',
+                'error' => 'Dados invÃ¡lidos',
                 'details' => $validator->errors()
             ], 422);
         }
@@ -334,21 +340,21 @@ class AppointmentBotApiController extends Controller
                 if (!$appointment) {
                     return response()->json([
                         'success' => false,
-                        'error' => 'Agendamento não encontrado'
+                        'error' => 'Agendamento nÃ£o encontrado'
                     ], 404);
                 }
 
                 if ($appointment->status === 'canceled') {
                     return response()->json([
                         'success' => false,
-                        'error' => 'Agendamento já está cancelado'
+                        'error' => 'Agendamento jÃ¡ estÃ¡ cancelado'
                     ], 422);
                 }
 
                 $appointment->update([
                     'status' => 'canceled',
                     'notes' => ($appointment->notes ? $appointment->notes . "\n" : '') . 
-                               'Cancelado via Bot API. Motivo: ' . ($validated['reason'] ?? 'Não informado'),
+                               'Cancelado via Bot API. Motivo: ' . ($validated['reason'] ?? 'NÃ£o informado'),
                 ]);
 
                 Log::info('Bot API - Agendamento cancelado', [
@@ -385,7 +391,7 @@ class AppointmentBotApiController extends Controller
         if (!$tenant) {
             return response()->json([
                 'success' => false,
-                'error' => 'Tenant não identificado'
+                'error' => 'Tenant nÃ£o identificado'
             ], 500);
         }
 
@@ -413,7 +419,7 @@ class AppointmentBotApiController extends Controller
                         return [
                             'id' => $appointment->id,
                             'doctor_name' => $appointment->doctor->user->name_full ?? $appointment->doctor->user->name ?? 'N/A',
-                            'type' => $appointment->type->name ?? 'Não especificado',
+                            'type' => $appointment->type->name ?? 'NÃ£o especificado',
                             'date' => $appointment->starts_at->format('Y-m-d'),
                             'time' => $appointment->starts_at->format('H:i'),
                             'status' => $appointment->status,
@@ -439,23 +445,24 @@ class AppointmentBotApiController extends Controller
     }
 
     /**
-     * Valida se o horário está disponível
+     * Valida se o horÃ¡rio estÃ¡ disponÃ­vel
      */
     private function validateAvailableSlot($doctorId, Carbon $startsAt, Carbon $endsAt)
     {
+        $doctor = Doctor::with('specialties')->find($doctorId);
         $weekday = $startsAt->dayOfWeek;
         
-        // Verificar se o médico atende no dia
+        // Verificar se o mÃ©dico atende no dia
         $businessHours = BusinessHour::where('doctor_id', $doctorId)
             ->where('weekday', $weekday)
             ->get();
 
         if ($businessHours->isEmpty()) {
-            $weekdayNames = ['Domingo', 'Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado'];
-            return 'O médico não realiza atendimento em ' . $weekdayNames[$weekday];
+            $weekdayNames = ['Domingo', 'Segunda-feira', 'TerÃ§a-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'SÃ¡bado'];
+            return 'O ' . $this->professionalSingularLower($doctor) . ' nÃ£o realiza atendimento em ' . $weekdayNames[$weekday];
         }
 
-        // Verificar se está dentro do horário de atendimento
+        // Verificar se estÃ¡ dentro do horÃ¡rio de atendimento
         $startTime = $startsAt->format('H:i:s');
         $endTime = $endsAt->format('H:i:s');
         $isWithinBusinessHours = false;
@@ -465,7 +472,7 @@ class AppointmentBotApiController extends Controller
             $bhEnd = Carbon::parse($businessHour->end_time)->format('H:i:s');
 
             if ($startTime >= $bhStart && $endTime <= $bhEnd) {
-                // Verificar se não está dentro de um intervalo
+                // Verificar se nÃ£o estÃ¡ dentro de um intervalo
                 $isInBreak = false;
                 if ($businessHour->break_start_time && $businessHour->break_end_time) {
                     $breakStart = Carbon::parse($businessHour->break_start_time)->format('H:i:s');
@@ -481,9 +488,28 @@ class AppointmentBotApiController extends Controller
         }
 
         if (!$isWithinBusinessHours) {
-            return 'O horário selecionado está fora do horário de atendimento do médico';
+            return 'O horÃ¡rio selecionado estÃ¡ fora do horÃ¡rio de atendimento do ' . $this->professionalSingularLower($doctor);
         }
 
         return null; // Sem erros
     }
+
+    private function professionalSingular(mixed $doctor = null, mixed $specialty = null): string
+    {
+        $value = trim((string) $this->professionalLabelService->singular($doctor, $specialty));
+
+        return $value !== '' ? $value : 'MÃ©dico';
+    }
+
+    private function professionalSingularLower(mixed $doctor = null, mixed $specialty = null): string
+    {
+        $value = $this->professionalSingular($doctor, $specialty);
+
+        if (function_exists('mb_strtolower')) {
+            return mb_strtolower($value, 'UTF-8');
+        }
+
+        return strtolower($value);
+    }
 }
+

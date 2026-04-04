@@ -1,5 +1,10 @@
 @extends('layouts.tailadmin.app')
 
+@php
+    $professionalLabelService = app(\App\Services\Tenant\ProfessionalLabelService::class);
+    $professionalSingular = $professionalLabelService->singular();
+@endphp
+
 @section('title', 'Calendários')
 @section('page', 'calendars')
 
@@ -49,7 +54,7 @@
                 id="calendars-grid"
                 :columns="[
                     ['name' => 'name', 'label' => 'Nome'],
-                    ['name' => 'doctor', 'label' => 'Médico'],
+                    ['name' => 'doctor', 'label' => $professionalSingular],
                     ['name' => 'external_id', 'label' => 'ID Externo'],
                     ['name' => 'actions', 'label' => 'Ações'],
                 ]"

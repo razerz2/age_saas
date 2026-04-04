@@ -1,7 +1,14 @@
-@extends('layouts.tailadmin.app')
+﻿@extends('layouts.tailadmin.app')
 
-@section('title', 'Criar Médico')
+@section('title', 'Criar MÃ©dico')
 @section('page', 'doctors')
+
+@php
+    $professionalLabelService = app(\App\Services\Tenant\ProfessionalLabelService::class);
+    $professionalSingular = $professionalLabelService->singular();
+    $professionalRegistration = $professionalLabelService->registration();
+    $professionalSingularLower = function_exists('mb_strtolower') ? mb_strtolower($professionalSingular, 'UTF-8') : strtolower($professionalSingular);
+@endphp
 
 @section('content')
 
@@ -18,7 +25,7 @@
                     </li>
                     <li class="flex items-center gap-2">
                         <x-icon name="chevron-right" size="text-sm" class="text-gray-400" />
-                        <a href="{{ workspace_route('tenant.doctors.index') }}" class="text-gray-700 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white">Médicos</a>
+                        <a href="{{ workspace_route('tenant.doctors.index') }}" class="text-gray-700 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white">MÃ©dicos</a>
                     </li>
                     <li class="flex items-center gap-2">
                         <x-icon name="chevron-right" size="text-sm" class="text-gray-400" />
@@ -38,9 +45,9 @@
                 <div>
                     <h2 class="text-xl font-semibold text-gray-900 dark:text-white flex items-center">
                         <x-icon name="account-plus-outline" size="text-xl" class="mr-2 text-blue-600" />
-                        Novo Médico
+                        Novo MÃ©dico
                     </h2>
-                    <p class="text-gray-600 dark:text-gray-400 mt-1">Preencha os dados abaixo para cadastrar um novo médico</p>
+                    <p class="text-gray-600 dark:text-gray-400 mt-1">Preencha os dados abaixo para cadastrar um novo mÃ©dico</p>
                 </div>
             </div>
         </div>
@@ -49,19 +56,19 @@
             <form class="space-y-8" action="{{ workspace_route('tenant.doctors.store') }}" method="POST">
                 @csrf
 
-                <!-- Seção: Informações Básicas -->
+                <!-- SeÃ§Ã£o: InformaÃ§Ãµes BÃ¡sicas -->
                 <div>
                     <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
                         <x-icon name="information-outline" size="text-lg" class="mr-2 text-blue-600" />
-                        Informações Básicas
+                        InformaÃ§Ãµes BÃ¡sicas
                     </h3>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                             <x-icon name="account-outline" size="text-sm" class="inline mr-1" />
-                            Usuário <span class="text-red-500">*</span>
+                            UsuÃ¡rio <span class="text-red-500">*</span>
                         </label>
                         <select name="user_id" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white @error('user_id') border-red-500 @enderror" required>
-                            <option value="">Selecione um usuário</option>
+                            <option value="">Selecione um usuÃ¡rio</option>
                             @foreach($users as $user)
                                 <option value="{{ $user->id }}" {{ old('user_id', $selectedUserId) == $user->id ? 'selected' : '' }}>{{ $user->name }}</option>
                             @endforeach
@@ -72,7 +79,7 @@
                     </div>
                 </div>
 
-                <!-- Seção: Dados Profissionais -->
+                <!-- SeÃ§Ã£o: Dados Profissionais -->
                 <div>
                     <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
                         <x-icon name="briefcase-outline" size="text-lg" class="mr-2 text-blue-600" />
@@ -82,7 +89,7 @@
                         <div>
                             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                                 <x-icon name="card-account-details-outline" size="text-sm" class="inline mr-1" />
-                                Número CRM, CRP ou CRO
+                                NÃºmero do {{ $professionalRegistration }}
                             </label>
                             <input type="text" 
                                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white @error('crm_number') border-red-500 @enderror" 
@@ -97,7 +104,7 @@
                         <div>
                             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                                 <x-icon name="map-marker-outline" size="text-sm" class="inline mr-1" />
-                                Estado CRM, CRP ou CRO
+                                UF do {{ $professionalRegistration }}
                             </label>
                             <input type="text" 
                                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white @error('crm_state') border-red-500 @enderror" 
@@ -119,7 +126,7 @@
                         <textarea class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white @error('signature') border-red-500 @enderror" 
                                   name="signature" 
                                   rows="4" 
-                                  placeholder="Digite a assinatura do médico (opcional)">{{ old('signature') }}</textarea>
+                                  placeholder="Digite a assinatura do {{ $professionalSingularLower }} (opcional)">{{ old('signature') }}</textarea>
                         @error('signature')
                             <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
                         @enderror
@@ -131,21 +138,22 @@
                 @endphp
 
                 @if($customizationEnabled)
-                    <!-- Seção: Personalização do Profissional -->
+                    <!-- SeÃ§Ã£o: PersonalizaÃ§Ã£o do Profissional -->
                     <div class="p-4 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg">
-                        <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
+                        <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2 flex items-center">
                             <x-icon name="tune-variant" size="text-lg" class="mr-2 text-blue-600" />
-                            Personalização do Profissional (Opcional)
+                            PersonalizaÃ§Ã£o visual deste profissional
                         </h3>
+                        <p class="text-xs text-gray-500 dark:text-gray-400 mb-4">Se preenchido, este profissional terÃ¡ prioridade sobre a especialidade e sobre o perfil global do tenant.</p>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                    Tipo do Profissional (Singular)
+                                    Singular
                                 </label>
                                 <input type="text" 
                                        name="label_singular" 
                                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white @error('label_singular') border-red-500 @enderror"
-                                       placeholder="Ex: Psicólogo, Fisioterapeuta"
+                                       placeholder="Ex: PsicÃ³logo, Fisioterapeuta"
                                        value="{{ old('label_singular') }}"
                                        maxlength="60">
                                 @error('label_singular')
@@ -154,12 +162,12 @@
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                    Tipo do Profissional (Plural)
+                                    Plural
                                 </label>
                                 <input type="text" 
                                        name="label_plural" 
                                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white @error('label_plural') border-red-500 @enderror"
-                                       placeholder="Ex: Psicólogos, Fisioterapeutas"
+                                       placeholder="Ex: PsicÃ³logos, Fisioterapeutas"
                                        value="{{ old('label_plural') }}"
                                        maxlength="60">
                                 @error('label_plural')
@@ -168,12 +176,12 @@
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                    Registro Profissional (Rótulo)
+                                    Registro Profissional (RÃ³tulo)
                                 </label>
                                 <input type="text" 
                                        name="registration_label" 
                                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white @error('registration_label') border-red-500 @enderror"
-                                       placeholder="Ex: CRM, CRP, CRO, CREFITO"
+                                       placeholder="Ex: {{ $professionalRegistration }}"
                                        value="{{ old('registration_label') }}"
                                        maxlength="40">
                                 @error('registration_label')
@@ -187,7 +195,7 @@
                                 <input type="text" 
                                        name="registration_value" 
                                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white @error('registration_value') border-red-500 @enderror"
-                                       placeholder="Ex: CRM 55221, CRP 05/19999, CREFITO 123456-F"
+                                       placeholder="Ex: {{ $professionalRegistration }} 123456"
                                        value="{{ old('registration_value') }}"
                                        maxlength="100">
                                 @error('registration_value')
@@ -198,15 +206,15 @@
                     </div>
                 @endif
 
-                <!-- Seção: Especialidades Médicas -->
+                <!-- SeÃ§Ã£o: Especialidades MÃ©dicas -->
                 <div>
                     <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
                         <x-icon name="stethoscope" size="text-lg" class="mr-2 text-blue-600" />
-                        Especialidades Médicas
+                        Especialidades MÃ©dicas
                     </h3>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                            Selecione as especialidades do médico <span class="text-red-500">*</span>
+                            Selecione as especialidades do mÃ©dico <span class="text-red-500">*</span>
                         </label>
                         <div class="grid grid-cols-1 md:grid-cols-12 gap-4 mb-4 items-end">
                             <div class="md:col-span-8">
@@ -231,7 +239,7 @@
                             </div>
                         </div>
                         
-                        <!-- Área para exibir especialidades selecionadas -->
+                        <!-- Ãrea para exibir especialidades selecionadas -->
                         <div id="selected-specialties" class="p-4 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700" style="min-height: 60px;" data-badge-style="tailwind" data-initial-selected='@json(old('specialties', []))'>
                             @if(old('specialties'))
                                 @foreach(old('specialties') as $specialtyId)
@@ -256,7 +264,7 @@
                             @endif
                         </div>
                         
-                        <!-- Campos hidden para enviar os IDs (serão criados dinamicamente pelo JavaScript) -->
+                        <!-- Campos hidden para enviar os IDs (serÃ£o criados dinamicamente pelo JavaScript) -->
                         <div id="specialties-inputs"></div>
                         
                         @error('specialties')
@@ -265,7 +273,7 @@
                     </div>
                 </div>
 
-                <!-- Botões de Ação -->
+                <!-- BotÃµes de AÃ§Ã£o -->
                 <div class="flex flex-col gap-3 pt-6 border-t border-gray-200 dark:border-gray-700 sm:flex-row sm:items-center sm:justify-between">
                     <a href="{{ workspace_route('tenant.doctors.index') }}" class="btn btn-outline inline-flex items-center">
                         <x-icon name="arrow-left" size="text-sm" class="mr-2" />
@@ -273,7 +281,7 @@
                     </a>
                     <button type="submit" class="btn btn-primary inline-flex items-center">
                         <x-icon name="content-save-outline" size="text-sm" class="mr-2" />
-                        Salvar Médico
+                        Salvar MÃ©dico
                     </button>
                 </div>
             </form>
@@ -281,3 +289,4 @@
     </div>
 
 @endsection
+

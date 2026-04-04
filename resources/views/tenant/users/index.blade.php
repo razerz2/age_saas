@@ -2,8 +2,12 @@
 
 @php
     $isDoctorsOnly = (bool) ($doctorsOnly ?? false);
-    $pageTitle = $isDoctorsOnly ? 'Todos os Médicos' : 'Usuários';
-    $cardTitle = $isDoctorsOnly ? 'Lista de Médicos' : 'Lista de Usuários';
+    $professionalLabels = $professionalLabels ?? [];
+    $professionalSingular = $professionalLabels['singular'] ?? app(\App\Services\Tenant\ProfessionalLabelService::class)->singular();
+    $professionalPlural = $professionalLabels['plural'] ?? app(\App\Services\Tenant\ProfessionalLabelService::class)->plural();
+    $pageTitle = $isDoctorsOnly ? 'Todos os ' . $professionalPlural : 'Usu�rios';
+    $cardTitle = $isDoctorsOnly ? 'Lista de ' . $professionalPlural : 'Lista de Usu�rios';
+    $createButtonLabel = $isDoctorsOnly ? 'Novo ' . $professionalSingular : 'Novo Usu�rio';
     $gridAjaxUrl = $isDoctorsOnly
         ? workspace_route('tenant.users.grid-data') . '?role=doctor'
         : workspace_route('tenant.users.grid-data');
@@ -41,7 +45,7 @@
                                 <li>
                                     <div class="flex items-center">
                                         <x-icon name="chevron-right" size="text-sm" class="text-gray-400" />
-                                        <span class="ml-1 text-gray-500 dark:text-gray-400">Todos os Médicos</span>
+                                        <span class="ml-1 text-gray-500 dark:text-gray-400">Todos os {{ $professionalPlural }}</span>
                                     </div>
                                 </li>
                             @else
@@ -57,7 +61,7 @@
                 </div>
                 <a href="{{ workspace_route('tenant.users.create') }}" class="btn btn-primary">
                     <x-icon name="plus" size="text-sm" />
-                    Novo Usuário
+                    {{ $createButtonLabel }}
                 </a>
             </div>
         </div>
@@ -131,3 +135,4 @@
         </div>
     </div>
 @endsection
+

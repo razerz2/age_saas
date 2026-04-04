@@ -1,9 +1,24 @@
-﻿@extends('layouts.tailadmin.app')
+@extends('layouts.tailadmin.app')
+
+@php
+    $professionalLabelService = app(\App\Services\Tenant\ProfessionalLabelService::class);
+    $professionalSingular = $professionalLabelService->singular();
+    $professionalPlural = $professionalLabelService->plural();
+    $professionalRegistration = $professionalLabelService->registration();
+    $professionalSingularLower = function_exists('mb_strtolower') ? mb_strtolower($professionalSingular, 'UTF-8') : strtolower($professionalSingular);
+    $professionalPluralLower = function_exists('mb_strtolower') ? mb_strtolower($professionalPlural, 'UTF-8') : strtolower($professionalPlural);
+@endphp
 
 @section('title', 'Criar Agendamento Recorrente')
 @section('page', 'recurring-appointments')
 
 @section('content')
+    <div id="recurring-appointments-config" class="hidden"
+        data-professional-singular="{{ $professionalSingular }}"
+        data-professional-singular-lower="{{ $professionalSingularLower }}"
+        data-professional-plural="{{ $professionalPlural }}"
+        data-professional-plural-lower="{{ $professionalPluralLower }}"
+        data-professional-registration="{{ $professionalRegistration }}"></div>
 
     <!-- Page Header -->
     <div class="page-header mb-6">
@@ -91,7 +106,7 @@
                         <div>
                             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                                 <x-icon name="account" size="text-sm" class="inline mr-1" />
-                                Médico <span class="text-red-500">*</span>
+                                {{ $professionalSingular }} <span class="text-red-500">*</span>
                             </label>
                             @php
                                 $selectedDoctorId = old('doctor_id');
@@ -100,15 +115,15 @@
                             @endphp
                             <div class="flex items-center gap-2 mb-2">
                                 <input type="hidden" name="doctor_id" id="doctor_id" data-initial-value="{{ $selectedDoctorId }}" value="{{ $selectedDoctorId }}" data-selected-name="{{ $selectedDoctorName }}" required>
-                                <input type="text" id="doctor_name" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-gray-50 dark:bg-gray-700 dark:text-white @error('doctor_id') border-red-500 @enderror" value="{{ $selectedDoctorName }}" placeholder="Selecione um médico" readonly>
-                                <button type="button" class="btn btn-outline js-open-entity-search" data-entity-type="doctors" data-search-url="{{ workspace_route('tenant.appointments.api.search-doctors') }}" data-hidden-input-id="doctor_id" data-display-input-id="doctor_name" data-modal-title="Buscar médico">
+                                <input type="text" id="doctor_name" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-gray-50 dark:bg-gray-700 dark:text-white @error('doctor_id') border-red-500 @enderror" value="{{ $selectedDoctorName }}" placeholder="Selecione um {{ $professionalSingularLower }}" readonly>
+                                <button type="button" class="btn btn-outline js-open-entity-search" data-entity-type="doctors" data-search-url="{{ workspace_route('tenant.appointments.api.search-doctors') }}" data-hidden-input-id="doctor_id" data-display-input-id="doctor_name" data-modal-title="Buscar {{ $professionalSingularLower }}">
                                     Buscar
                                 </button>
                             </div>
                             @error('doctor_id')
                                 <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
                             @enderror
-                            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Selecione o médico para carregar especialidades e dias disponíveis.</p>
+                            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Selecione o {{ $professionalSingularLower }} para carregar especialidades e dias disponíveis.</p>
                         </div>
                     </div>
 
@@ -119,7 +134,7 @@
                                 Especialidade
                             </label>
                             <select name="specialty_id" id="specialty_id" data-initial-value="{{ old('specialty_id') }}" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white @error('specialty_id') border-red-500 @enderror" disabled>
-                                <option value="">Primeiro selecione um médico</option>
+                                <option value="">Primeiro selecione um {{ $professionalSingularLower }}</option>
                             </select>
                             @error('specialty_id')
                                 <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
@@ -200,7 +215,7 @@
                                         Dia da Semana <span class="text-red-500 rule-required-indicator">*</span>
                                     </label>
                                     <select name="rules[0][weekday]" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white rule-weekday" required disabled>
-                                        <option value="">Selecione um médico primeiro</option>
+                                        <option value="">Selecione um {{ $professionalSingularLower }} primeiro</option>
                                     </select>
                                 </div>
                                 <div>

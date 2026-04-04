@@ -1,5 +1,13 @@
 @extends('layouts.tailadmin.app')
 
+@php
+    $professionalLabelService = app(\App\Services\Tenant\ProfessionalLabelService::class);
+    $professionalSingular = $professionalLabelService->singular();
+    $professionalPlural = $professionalLabelService->plural();
+    $professionalSingularLower = function_exists('mb_strtolower') ? mb_strtolower($professionalSingular, 'UTF-8') : strtolower($professionalSingular);
+    $professionalPluralLower = function_exists('mb_strtolower') ? mb_strtolower($professionalPlural, 'UTF-8') : strtolower($professionalPlural);
+@endphp
+
 @section('title', 'Tipos de Consulta')
 
 @section('page', 'appointment-types')
@@ -44,7 +52,7 @@
             <div class="mb-4 flex items-center justify-end">
                 <form method="GET" action="{{ workspace_route('tenant.appointment-types.index') }}" class="flex items-center space-x-3">
                     <select name="doctor_id" class="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white" onchange="this.form.submit()">
-                        <option value="">Todos os médicos</option>
+                        <option value="">Todos os {{ $professionalPluralLower }}</option>
                         @foreach($doctors as $doctor)
                             <option value="{{ $doctor->id }}" {{ request('doctor_id') == $doctor->id ? 'selected' : '' }}>
                                 {{ $doctor->user->display_name ?? $doctor->user->name }}
@@ -68,7 +76,7 @@
                 id="appointment-types-grid"
                 :columns="[
                     ['name' => 'name', 'label' => 'Nome'],
-                    ['name' => 'doctor', 'label' => 'Médico'],
+                    ['name' => 'doctor', 'label' => $professionalSingular],
                     ['name' => 'duration_min', 'label' => 'Duração'],
                     ['name' => 'price', 'label' => 'Preço'],
                     ['name' => 'color', 'label' => 'Cor'],

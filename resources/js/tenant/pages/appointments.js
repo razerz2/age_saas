@@ -1,6 +1,21 @@
 import { applyGridPageSizeSelector } from '../grid/pageSizeSelector';
 import { initEntitySearchModal } from '../components/entitySearchModal';
 
+function resolveProfessionalLabels(configId) {
+	const configEl = document.getElementById(configId);
+	const singular = configEl?.dataset?.professionalSingular || 'Médico';
+	const plural = configEl?.dataset?.professionalPlural || 'Médicos';
+	const singularLower = configEl?.dataset?.professionalSingularLower || singular.toLocaleLowerCase('pt-BR');
+	const pluralLower = configEl?.dataset?.professionalPluralLower || plural.toLocaleLowerCase('pt-BR');
+
+	return {
+		singular,
+		plural,
+		singularLower,
+		pluralLower,
+	};
+}
+
 export function init() {
     if (
         !applyGridPageSizeSelector({
@@ -117,6 +132,13 @@ export function init() {
 	const initialTimeEnd = form ? form.dataset.initialTimeEnd : null;
 	const initialStartsAt = form ? form.dataset.initialStartsAt : null;
 	const initialEndsAt = form ? form.dataset.initialEndsAt : null;
+	const professionalLabels = resolveProfessionalLabels('appointments-config');
+	const professionalSingularLower = professionalLabels.singularLower;
+	const selectProfessionalFirst = 'Primeiro selecione ' + professionalSingularLower;
+	const selectAProfessionalFirst = 'Primeiro selecione um ' + professionalSingularLower;
+	const noSpecialtyForProfessional = 'Nenhuma especialidade cadastrada para este ' + professionalSingularLower;
+	const chooseProfessionalFirstMessage = 'Por favor, selecione um ' + professionalSingularLower + ' primeiro.';
+	const selectProfessionalFirstForBusinessHours = 'Selecione um ' + professionalSingularLower + ' primeiro para ver os dias trabalhados.';
 	const waitlistAlertDefaultMessage =
 		'Você escolheu um horário já reservado. Você será encaminhado para a fila de espera e receberá uma notificação com link se a vaga ficar disponível.';
 
@@ -261,14 +283,14 @@ export function init() {
 
 		if (!isEditMode) {
 			dateInput.disabled = true;
-			setTimeState('Primeiro selecione médico', true);
+			setTimeState(selectProfessionalFirst, true);
 			return;
 		}
 
 		dateInput.disabled = !hasDoctor;
 
 		if (!hasDoctor) {
-			setTimeState('Primeiro selecione médico', true);
+			setTimeState(selectProfessionalFirst, true);
 			return;
 		}
 
@@ -287,7 +309,7 @@ export function init() {
 
 		if (!doctorId) {
 			dateInput.disabled = true;
-			setTimeState('Primeiro selecione médico', true);
+			setTimeState(selectProfessionalFirst, true);
 			return;
 		}
 
@@ -325,18 +347,18 @@ export function init() {
 	// Helpers compartilhados
 	function resetDependentFields() {
 		if (appointmentTypeSelect) {
-			appointmentTypeSelect.innerHTML = '<option value="">Primeiro selecione um médico</option>';
+			appointmentTypeSelect.innerHTML = `<option value="">${selectAProfessionalFirst}</option>`;
 			appointmentTypeSelect.disabled = true;
 		}
 
 		if (specialtySelect) {
-			specialtySelect.innerHTML = '<option value="">Primeiro selecione um médico</option>';
+			specialtySelect.innerHTML = `<option value="">${selectAProfessionalFirst}</option>`;
 			specialtySelect.disabled = true;
 		}
 
 		dateInput.value = '';
 		dateInput.disabled = true;
-		setTimeState('Primeiro selecione médico', true);
+		setTimeState(selectProfessionalFirst, true);
 	}
 
 	function loadAppointmentTypes(doctorId, currentTypeId = null) {
@@ -411,7 +433,7 @@ export function init() {
 						specialtySelect.appendChild(option);
 					});
 				} else {
-					specialtySelect.innerHTML = '<option value="">Nenhuma especialidade cadastrada para este médico</option>';
+					specialtySelect.innerHTML = `<option value="">${noSpecialtyForProfessional}</option>`;
 				}
 
 				specialtySelect.disabled = false;
@@ -433,7 +455,7 @@ export function init() {
 	) {
 		const date = dateInput.value;
 		if (!doctorId || !date) {
-			setTimeState(doctorId ? 'Selecione uma data' : 'Primeiro selecione médico', true);
+			setTimeState(doctorId ? 'Selecione uma data' : selectProfessionalFirst, true);
 			return;
 		}
 
@@ -735,7 +757,7 @@ export function init() {
 			if (!doctorId) {
 				hideElement(loadingEl);
 				showElement(errorEl);
-				if (messageEl) messageEl.textContent = 'Por favor, selecione um médico primeiro.';
+				if (messageEl) messageEl.textContent = chooseProfessionalFirstMessage;
 				return;
 			}
 
@@ -832,7 +854,7 @@ export function init() {
 					window.showAlert({
 						type: 'warning',
 						title: 'Atenção',
-						message: 'Selecione um médico primeiro para ver os dias trabalhados.',
+						message: selectProfessionalFirstForBusinessHours,
 					});
 				}
 				return;
@@ -992,6 +1014,10 @@ function fallbackCopy(text, onSuccess) {
 function initRecurringCreate($, tenantSlug) {
 	const form = document.getElementById('recurring-appointment-form');
 	if (!form) return;
+	const recurringLabels = resolveProfessionalLabels('recurring-appointments-config');
+	const professionalSingularLower = recurringLabels.singularLower;
+	const selectAProfessionalFirst = 'Primeiro selecione um ' + professionalSingularLower;
+	const professionalUnavailableHoursMessage = 'Erro ao carregar horários do ' + professionalSingularLower + '. Por favor, tente novamente.';
 
 	let ruleIndex = 1;
 	let businessHours = [];
@@ -1039,7 +1065,7 @@ function initRecurringCreate($, tenantSlug) {
 			if (!doctorId) {
 				businessHours = [];
 				$('#specialty_id')
-					.html('<option value="">Primeiro selecione um médico</option>')
+					.html(`<option value="">${selectAProfessionalFirst}</option>`)
 					.prop('disabled', true);
 				$('#appointment_type_id')
 					.html('<option value="">Primeiro selecione uma especialidade</option>')
@@ -1121,11 +1147,11 @@ function initRecurringCreate($, tenantSlug) {
 				updateAllRules();
 			},
 			error: function (xhr) {
-				console.error('Erro ao buscar horários do médico:', xhr);
+				console.error('Erro ao buscar horários do profissional:', xhr);
 				showAlert({
 					type: 'error',
 					title: 'Erro',
-					message: 'Erro ao carregar horários do médico. Por favor, tente novamente.',
+					message: professionalUnavailableHoursMessage,
 				});
 			},
 		});
@@ -1245,7 +1271,7 @@ function initRecurringCreate($, tenantSlug) {
 		}
 
 		if (!doctorId || businessHours.length === 0) {
-			$weekdaySelect.append('<option value="">Primeiro selecione um médico</option>');
+			$weekdaySelect.append(`<option value="">${selectAProfessionalFirst}</option>`);
 			$weekdaySelect.prop('disabled', true);
 			return;
 		}
@@ -1299,7 +1325,7 @@ function initRecurringCreate($, tenantSlug) {
 		if (!doctorId || !appointmentTypeId || !startDate) {
 			$timeSlotSelect.empty();
 			const missingFields = [];
-			if (!doctorId) missingFields.push('médico');
+			if (!doctorId) missingFields.push(professionalSingularLower);
 			if (!appointmentTypeId) missingFields.push('tipo de consulta');
 			if (!startDate) missingFields.push('data inicial');
 			$timeSlotSelect.append(`<option value="">Selecione: ${missingFields.join(', ')}</option>`);
@@ -1586,6 +1612,11 @@ function initRecurringCreate($, tenantSlug) {
 function initRecurringEdit($, tenantSlug) {
 	const form = document.querySelector('form[data-recurring-edit=\"true\"]');
 	if (!form) return;
+	const recurringLabels = resolveProfessionalLabels('recurring-appointments-config');
+	const professionalSingularLower = recurringLabels.singularLower;
+	const selectAProfessionalFirst = 'Primeiro selecione um ' + professionalSingularLower;
+	const selectProfessionalTypeAndDate = 'Selecione ' + professionalSingularLower + ', tipo de consulta e data inicial';
+	const professionalUnavailableHoursMessage = 'Erro ao carregar horários do ' + professionalSingularLower + '. Por favor, tente novamente.';
 
 	let ruleIndex = $('.rule-item').length;
 	let businessHours = [];
@@ -1607,7 +1638,7 @@ function initRecurringEdit($, tenantSlug) {
 		const $appointmentTypeSelect = $('#appointment_type_id');
 
 		if (!doctorId) {
-			$appointmentTypeSelect.html('<option value="">Primeiro selecione um médico</option>').prop('disabled', true);
+			$appointmentTypeSelect.html(`<option value="">${selectAProfessionalFirst}</option>`).prop('disabled', true);
 			return;
 		}
 
@@ -1669,11 +1700,11 @@ function initRecurringEdit($, tenantSlug) {
 				updateAllRules();
 			},
 			error: function (xhr) {
-				console.error('Erro ao buscar horários do médico:', xhr);
+				console.error('Erro ao buscar horários do profissional:', xhr);
 				showAlert({
 					type: 'error',
 					title: 'Erro',
-					message: 'Erro ao carregar horários do médico. Por favor, tente novamente.',
+					message: professionalUnavailableHoursMessage,
 				});
 			},
 		});
@@ -1729,7 +1760,7 @@ function initRecurringEdit($, tenantSlug) {
 		$timeSlotSelect.prop('disabled', true);
 
 		if (!doctorId || businessHours.length === 0) {
-			$weekdaySelect.append('<option value="">Primeiro selecione um médico</option>');
+			$weekdaySelect.append(`<option value="">${selectAProfessionalFirst}</option>`);
 			$weekdaySelect.prop('disabled', true);
 			return;
 		}
@@ -1758,7 +1789,7 @@ function initRecurringEdit($, tenantSlug) {
 
 		if (!doctorId || !appointmentTypeId || !startDate) {
 			$timeSlotSelect.empty();
-			$timeSlotSelect.append('<option value="">Selecione médico, tipo de consulta e data inicial</option>');
+			$timeSlotSelect.append(`<option value="">${selectProfessionalTypeAndDate}</option>`);
 			return;
 		}
 
@@ -1857,7 +1888,7 @@ function initRecurringEdit($, tenantSlug) {
                         <div class="form-group">
                             <label class="fw-semibold">Dia da Semana <span class="text-danger">*</span></label>
                             <select name="rules[${ruleIndex}][weekday]" class="form-control rule-weekday" required>
-                                ${businessHours.length > 0 ? businessHours.map(bh => `<option value="${bh.weekday_string}" ${bh.weekday_string === currentWeekday ? 'selected' : ''}>${bh.weekday_name}</option>`).join('') : '<option value="">Primeiro selecione um médico</option>'}
+                                ${businessHours.length > 0 ? businessHours.map(bh => `<option value="${bh.weekday_string}" ${bh.weekday_string === currentWeekday ? 'selected' : ''}>${bh.weekday_name}</option>`).join('') : `<option value="">${selectAProfessionalFirst}</option>`}
                             </select>
                         </div>
                     </div>

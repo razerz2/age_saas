@@ -11,7 +11,10 @@
         <div class="xl:col-span-8 space-y-6">
             <form method="GET" action="{{ workspace_route('tenant.settings.index') }}" id="notification-template-filter-form" class="grid grid-cols-1 gap-4">
                 <input type="hidden" name="tab" value="editor">
-                @php $selectedAudience = $editor['current_audience'] ?? 'patient'; @endphp
+                @php
+                    $selectedAudience = $editor['current_audience'] ?? 'patient';
+                    $professionalSingular = $editor['professional_singular'] ?? 'Médico';
+                @endphp
 
                 <div>
                     <label for="editor_audience" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Destinatário</label>
@@ -20,7 +23,7 @@
                             class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white">
                         @foreach(($editor['audiences'] ?? ['patient', 'doctor']) as $audience)
                             <option value="{{ $audience }}" {{ $selectedAudience === $audience ? 'selected' : '' }}>
-                                {{ $audience === 'doctor' ? 'Médico' : 'Paciente' }}
+                                {{ $audience === 'doctor' ? $professionalSingular : 'Paciente' }}
                             </option>
                         @endforeach
                     </select>
@@ -67,7 +70,7 @@
                             <p class="text-sm text-gray-500 dark:text-gray-400">Template selecionado</p>
                             <h3 class="text-base font-semibold text-gray-900 dark:text-white">{{ $editor['current_key'] }}</h3>
                             <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                                Destinatário: {{ ($editor['current_audience'] ?? 'patient') === 'doctor' ? 'Médico' : 'Paciente' }}
+                                Destinatário: {{ ($editor['current_audience'] ?? 'patient') === 'doctor' ? $professionalSingular : 'Paciente' }}
                             </p>
                         </div>
                         @if(($editor['is_custom'] ?? false) === true)

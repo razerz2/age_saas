@@ -1,5 +1,12 @@
 @extends('layouts.tailadmin.app')
 
+@php
+    $professionalLabelService = app(\App\Services\Tenant\ProfessionalLabelService::class);
+    $appointmentDoctor = $appointment->doctor ?? $appointment->calendar?->doctor;
+    $appointmentSpecialty = $appointment->specialty ?? null;
+    $professionalSingular = $professionalLabels['singular'] ?? $professionalLabelService->singular($appointmentDoctor, $appointmentSpecialty);
+@endphp
+
 @section('title', 'Detalhes do Agendamento')
 @section('page', 'appointments')
 
@@ -91,7 +98,7 @@
                         @endif
                     </div>
                     <div class="bg-gray-50 rounded-lg p-4">
-                        <label class="text-sm font-medium text-gray-500 mb-1 block">Médico</label>
+                        <label class="text-sm font-medium text-gray-500 mb-1 block">{{ $professionalSingular }}</label>
                         @if($appointment->calendar && $appointment->calendar->doctor && $appointment->calendar->doctor->user)
                             <p class="text-gray-900 font-medium">
                                 <a href="{{ workspace_route('tenant.doctors.show', $appointment->calendar->doctor->id) }}" class="text-blue-600 hover:text-blue-800">
