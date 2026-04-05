@@ -15,7 +15,7 @@ class MailTenantService
      * Envia email usando SMTP do tenant ou global
      * Aplica automaticamente o layout de email configurado
      */
-    public static function send($to, $subject, $view, $data = [], array $attachments = [])
+    public static function send($to, $subject, $view, $data = [], array $attachments = [], ?array $providerOverride = null)
     {
         try {
             // Verifica se a funcionalidade de notificação por email está habilitada no plano
@@ -28,10 +28,18 @@ class MailTenantService
                 return;
             }
 
-            $provider = TenantSetting::emailProvider();
+            $provider = is_array($providerOverride) && $providerOverride !== []
+                ? $providerOverride
+                : TenantSetting::emailProvider();
             $data = array_merge(['subject' => $subject], $data);
 
-            if ($provider['driver'] === 'tenancy') {
+            $driver = strtolower(trim((string) ($provider['driver'] ?? 'global')));
+            if (in_array($driver, ['tenancy', 'smtp'], true)) {
+                $encryption = strtolower(trim((string) ($provider['encryption'] ?? '')));
+                if ($encryption === '' || $encryption === 'none') {
+                    $encryption = null;
+                }
+
                 // Configura SMTP do tenant
                 config([
                     'mail.mailers.tenant_smtp' => [
@@ -40,7 +48,7 @@ class MailTenantService
                         'port' => $provider['port'],
                         'username' => $provider['username'],
                         'password' => $provider['password'],
-                        'encryption' => null,
+                        'encryption' => $encryption,
                     ],
                     'mail.default' => 'tenant_smtp',
                     'mail.from.address' => $provider['from_address'],

@@ -216,9 +216,9 @@
     $requireWhatsapp = $whatsappSelected ? 1 : 0;
 
     $tenantSlug = request()->route('slug') ?? tenant()?->subdomain ?? '';
-    $integrationsUrl = \Illuminate\Support\Facades\Route::has('tenant.integrations.index')
-        ? workspace_route('tenant.integrations.index')
-        : url('/workspace/' . $tenantSlug . '/integrations');
+    $campaignSettingsUrl = \Illuminate\Support\Facades\Route::has('tenant.settings.index')
+        ? workspace_route('tenant.settings.index', ['tab' => 'campanhas'])
+        : url('/workspace/' . $tenantSlug . '/settings?tab=campanhas');
     $assetUploadUrl = \Illuminate\Support\Facades\Route::has('tenant.campaigns.assets.store')
         ? workspace_route('tenant.campaigns.assets.store')
         : '';
@@ -280,12 +280,13 @@
                 <div class="flex">
                     <x-icon name="alert-circle-outline" size="text-lg" class="text-amber-600 dark:text-amber-400" />
                     <p class="ml-3 text-sm text-amber-800 dark:text-amber-200">
-                        Campanhas indisponíveis: configure sua API de Email e/ou WhatsApp em Integrações.
+                        Nenhum canal de campanha está configurado.
+                        Configure os canais na aba Campanhas ou reutilize os canais de notificações.
                     </p>
                 </div>
-                <a href="{{ $integrationsUrl }}" class="btn btn-outline whitespace-nowrap inline-flex items-center gap-2">
+                <a href="{{ $campaignSettingsUrl }}" class="btn btn-outline whitespace-nowrap inline-flex items-center gap-2">
                     <i class="mdi mdi-cog-outline text-sm" aria-hidden="true"></i>
-                    <span>Configurar Integrações</span>
+                    <span>Configurar Campanhas</span>
                 </a>
             </div>
         </div>

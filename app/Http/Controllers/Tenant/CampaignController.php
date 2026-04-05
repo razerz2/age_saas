@@ -20,7 +20,7 @@ class CampaignController extends Controller
 {
     use HandlesGridRequests;
 
-    private const MODULE_DISABLED_MESSAGE = 'Campanhas indisponíveis: configure sua API de Email e/ou WhatsApp em Integrações.';
+    private const MODULE_DISABLED_MESSAGE = 'Nenhum canal de campanha está configurado. Configure os canais na aba Campanhas ou reutilize os canais de notificações.';
 
     public function index(Request $request, CampaignChannelGate $gate)
     {

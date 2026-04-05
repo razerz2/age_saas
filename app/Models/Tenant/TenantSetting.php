@@ -144,6 +144,62 @@ class TenantSetting extends Model
     }
 
     /**
+     * Obtém as configurações de email para campanhas.
+     */
+    public static function campaignEmailConfig(): array
+    {
+        $settings = self::getAll();
+        $mode = strtolower(trim((string) ($settings['campaigns.email.mode'] ?? 'notifications')));
+
+        if (!in_array($mode, ['notifications', 'custom'], true)) {
+            $mode = 'notifications';
+        }
+
+        return [
+            'mode' => $mode,
+            'driver' => $settings['campaigns.email.driver'] ?? 'smtp',
+            'host' => $settings['campaigns.email.host'] ?? null,
+            'port' => $settings['campaigns.email.port'] ?? null,
+            'username' => $settings['campaigns.email.username'] ?? null,
+            'password' => $settings['campaigns.email.password'] ?? null,
+            'encryption' => $settings['campaigns.email.encryption'] ?? null,
+            'from_name' => $settings['campaigns.email.from_name'] ?? null,
+            'from_address' => $settings['campaigns.email.from_address'] ?? null,
+        ];
+    }
+
+    /**
+     * Obtém as configurações de WhatsApp para campanhas.
+     */
+    public static function campaignWhatsAppConfig(): array
+    {
+        $settings = self::getAll();
+        $mode = strtolower(trim((string) ($settings['campaigns.whatsapp.mode'] ?? 'notifications')));
+
+        if (!in_array($mode, ['notifications', 'custom'], true)) {
+            $mode = 'notifications';
+        }
+
+        return [
+            'mode' => $mode,
+            'driver' => $settings['campaigns.whatsapp.driver'] ?? 'tenancy',
+            'provider' => $settings['campaigns.whatsapp.provider'] ?? 'whatsapp_business',
+            'meta_access_token' => $settings['campaigns.whatsapp.meta.access_token'] ?? null,
+            'meta_phone_number_id' => $settings['campaigns.whatsapp.meta.phone_number_id'] ?? null,
+            'zapi_api_url' => $settings['campaigns.whatsapp.zapi.api_url'] ?? null,
+            'zapi_token' => $settings['campaigns.whatsapp.zapi.token'] ?? null,
+            'zapi_client_token' => $settings['campaigns.whatsapp.zapi.client_token'] ?? null,
+            'zapi_instance_id' => $settings['campaigns.whatsapp.zapi.instance_id'] ?? null,
+            'waha_base_url' => $settings['campaigns.whatsapp.waha.base_url'] ?? null,
+            'waha_api_key' => $settings['campaigns.whatsapp.waha.api_key'] ?? null,
+            'waha_session' => $settings['campaigns.whatsapp.waha.session'] ?? 'default',
+            'evolution_base_url' => $settings['campaigns.whatsapp.evolution.base_url'] ?? null,
+            'evolution_api_key' => $settings['campaigns.whatsapp.evolution.api_key'] ?? null,
+            'evolution_instance' => $settings['campaigns.whatsapp.evolution.instance'] ?? 'default',
+        ];
+    }
+
+    /**
      * Obtem as configuracoes do bot de WhatsApp.
      */
     public static function whatsappBotProvider(): array

@@ -6,6 +6,7 @@ use App\Models\Tenant\Asset;
 use App\Models\Tenant\Campaign;
 use App\Models\Tenant\CampaignRecipient;
 use App\Models\Tenant\CampaignRun;
+use App\Models\Tenant\TenantSetting;
 use Illuminate\Support\Facades\Storage;
 use RuntimeException;
 use Throwable;
@@ -123,6 +124,7 @@ class CampaignDeliveryService
 
         $attachments = $this->resolveEmailAttachments($payload['attachments'] ?? []);
         $tenantId = $this->resolveTenantId();
+        $emailProviderOverride = $this->resolveCampaignEmailProviderOverride();
 
         $sent = $this->emailSender->sendCampaign(
             $tenantId,
@@ -130,7 +132,8 @@ class CampaignDeliveryService
             $subject,
             $message,
             $attachments,
-            $meta
+            $meta,
+            $emailProviderOverride
         );
 
         return [
@@ -148,6 +151,7 @@ class CampaignDeliveryService
     {
         $payload = $this->renderer->renderChannel($campaign, 'whatsapp', $vars);
         $messageType = strtolower(trim((string) ($payload['message_type'] ?? 'text')));
+        $whatsAppProviderOverride = $this->resolveCampaignWhatsAppProviderOverride();
 
         if ($messageType === 'media') {
             $media = is_array($payload['media'] ?? null) ? $payload['media'] : [];
@@ -169,7 +173,8 @@ class CampaignDeliveryService
                     $destination,
                     $url,
                     $caption !== '' ? $caption : null,
-                    $meta
+                    $meta,
+                    $whatsAppProviderOverride
                 );
 
                 return [
@@ -201,7 +206,8 @@ class CampaignDeliveryService
                     $destination,
                     $publicUrl,
                     $caption !== '' ? $caption : null,
-                    $meta
+                    $meta,
+                    $whatsAppProviderOverride
                 );
 
                 return [
@@ -218,7 +224,13 @@ class CampaignDeliveryService
             throw new RuntimeException('Mensagem de WhatsApp não configurada para esta campanha.');
         }
 
-        $sent = $this->whatsAppSender->send($this->resolveTenantId(), $destination, $text, $meta);
+        $sent = $this->whatsAppSender->send(
+            $this->resolveTenantId(),
+            $destination,
+            $text,
+            $meta,
+            $whatsAppProviderOverride
+        );
 
         return [
             'success' => $sent,
@@ -318,6 +330,65 @@ class CampaignDeliveryService
             $error,
             $meta
         );
+    }
+
+    /**
+     * @return array<string, mixed>|null
+     */
+    private function resolveCampaignEmailProviderOverride(): ?array
+    {
+        $config = TenantSetting::campaignEmailConfig();
+        $mode = strtolower(trim((string) ($config['mode'] ?? 'notifications')));
+
+        if ($mode !== 'custom') {
+            return null;
+        }
+
+        $fromName = trim((string) ($config['from_name'] ?? ''));
+        if ($fromName === '') {
+            $fromName = (string) config('mail.from.name', '');
+        }
+
+        return [
+            'driver' => 'tenancy',
+            'host' => (string) ($config['host'] ?? ''),
+            'port' => (string) ($config['port'] ?? ''),
+            'username' => (string) ($config['username'] ?? ''),
+            'password' => (string) ($config['password'] ?? ''),
+            'encryption' => (string) ($config['encryption'] ?? ''),
+            'from_name' => $fromName,
+            'from_address' => (string) ($config['from_address'] ?? ''),
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>|null
+     */
+    private function resolveCampaignWhatsAppProviderOverride(): ?array
+    {
+        $config = TenantSetting::campaignWhatsAppConfig();
+        $mode = strtolower(trim((string) ($config['mode'] ?? 'notifications')));
+
+        if ($mode !== 'custom') {
+            return null;
+        }
+
+        return [
+            'driver' => 'tenancy',
+            'provider' => (string) ($config['provider'] ?? 'whatsapp_business'),
+            'meta_access_token' => (string) ($config['meta_access_token'] ?? ''),
+            'meta_phone_number_id' => (string) ($config['meta_phone_number_id'] ?? ''),
+            'zapi_api_url' => (string) ($config['zapi_api_url'] ?? ''),
+            'zapi_token' => (string) ($config['zapi_token'] ?? ''),
+            'zapi_client_token' => (string) ($config['zapi_client_token'] ?? ''),
+            'zapi_instance_id' => (string) ($config['zapi_instance_id'] ?? ''),
+            'waha_base_url' => (string) ($config['waha_base_url'] ?? ''),
+            'waha_api_key' => (string) ($config['waha_api_key'] ?? ''),
+            'waha_session' => (string) ($config['waha_session'] ?? 'default'),
+            'evolution_base_url' => (string) ($config['evolution_base_url'] ?? ''),
+            'evolution_api_key' => (string) ($config['evolution_api_key'] ?? ''),
+            'evolution_instance' => (string) ($config['evolution_instance'] ?? 'default'),
+        ];
     }
 
     private function resolveTenantId(): string

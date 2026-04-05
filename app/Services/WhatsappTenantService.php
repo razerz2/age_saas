@@ -14,10 +14,12 @@ class WhatsappTenantService
     /**
      * Envia mensagem WhatsApp usando API do tenant ou global
      */
-    public static function send($phone, $message): bool
+    public static function send($phone, $message, ?array $providerOverride = null): bool
     {
         try {
-            $provider = TenantSetting::whatsappProvider();
+            $provider = is_array($providerOverride) && $providerOverride !== []
+                ? $providerOverride
+                : TenantSetting::whatsappProvider();
             $resolver = new ProviderConfigResolver();
 
             if (($provider['driver'] ?? 'global') === 'tenancy') {

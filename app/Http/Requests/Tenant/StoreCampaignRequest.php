@@ -10,7 +10,7 @@ use Illuminate\Validation\Rule;
 
 class StoreCampaignRequest extends FormRequest
 {
-    private const CHANNEL_UNAVAILABLE_MESSAGE = 'Canal indisponível: configure a integração correspondente em Integrações.';
+    private const CHANNEL_UNAVAILABLE_MESSAGE = 'Canal indisponível para campanhas. Ajuste os canais na aba Campanhas.';
 
     public function authorize()
     {

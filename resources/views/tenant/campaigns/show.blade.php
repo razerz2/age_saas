@@ -59,9 +59,9 @@
             ->implode(', ');
 
         $tenantSlug = request()->route('slug') ?? tenant()?->subdomain ?? '';
-        $integrationsUrl = \Illuminate\Support\Facades\Route::has('tenant.integrations.index')
-            ? workspace_route('tenant.integrations.index')
-            : url('/workspace/' . $tenantSlug . '/integrations');
+        $campaignSettingsUrl = \Illuminate\Support\Facades\Route::has('tenant.settings.index')
+            ? workspace_route('tenant.settings.index', ['tab' => 'campanhas'])
+            : url('/workspace/' . $tenantSlug . '/settings?tab=campanhas');
 
         $dispatchActionsEnabled = $moduleEnabled && !$hasUnavailableChannels;
         $sendTestRoute = workspace_route('tenant.campaigns.sendTest', ['campaign' => $campaign->id]);
@@ -169,11 +169,11 @@
                     <div class="flex">
                         <x-icon name="alert-circle-outline" size="text-lg" class="text-amber-600 dark:text-amber-400" />
                         <p class="ml-3 text-sm text-amber-800 dark:text-amber-200">
-                            Esta campanha utiliza canais que não estão configurados para este tenant: {{ $unavailableChannelsLabel ?: '—' }}.
-                            Configure em Integrações ou edite a campanha para remover o canal.
+                            Esta campanha utiliza canais que não estão disponíveis na configuração atual de campanhas: {{ $unavailableChannelsLabel ?: '—' }}.
+                            Ajuste os canais na aba Campanhas ou edite a campanha para remover o canal.
                         </p>
                     </div>
-                    <a href="{{ $integrationsUrl }}" class="btn btn-outline whitespace-nowrap">Configurar Integrações</a>
+                    <a href="{{ $campaignSettingsUrl }}" class="btn btn-outline whitespace-nowrap">Configurar Campanhas</a>
                 </div>
             </div>
         @endif
@@ -205,7 +205,8 @@
                 <div class="flex">
                     <x-icon name="alert-circle-outline" size="text-lg" class="text-amber-600 dark:text-amber-400" />
                     <p class="ml-3 text-sm text-amber-800 dark:text-amber-200">
-                        Campanhas indisponíveis: configure sua API de Email e/ou WhatsApp em Integrações.
+                        Nenhum canal de campanha está configurado.
+                        Configure os canais na aba Campanhas ou reutilize os canais de notificações.
                     </p>
                 </div>
             </div>

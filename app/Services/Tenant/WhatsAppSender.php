@@ -18,15 +18,15 @@ class WhatsAppSender
     ) {
     }
 
-    public function send(string $tenantId, string $to, string $message, array $meta = []): bool
+    public function send(string $tenantId, string $to, string $message, array $meta = [], ?array $providerOverride = null): bool
     {
         $normalizedMessage = str_replace(["\r\n", "\r"], "\n", $message);
         $payloadMeta = $this->sanitizeMeta($meta);
         $key = (string) ($payloadMeta['key'] ?? 'unknown');
-        $provider = $this->resolveProvider();
+        $provider = $this->resolveProvider($providerOverride);
 
         try {
-            $sent = WhatsappTenantService::send($to, $normalizedMessage);
+            $sent = WhatsappTenantService::send($to, $normalizedMessage, $providerOverride);
 
             $logPayload = array_merge($payloadMeta, [
                 'tenant_id' => trim($tenantId) !== '' ? $tenantId : null,
@@ -105,15 +105,16 @@ class WhatsAppSender
         string $to,
         string $mediaUrl,
         ?string $caption = null,
-        array $meta = []
+        array $meta = [],
+        ?array $providerOverride = null
     ): bool {
         $payloadMeta = $this->sanitizeMeta($meta);
         $key = (string) ($payloadMeta['key'] ?? 'unknown');
-        $provider = $this->resolveProvider();
+        $provider = $this->resolveProvider($providerOverride);
         $auditMessage = trim(($caption ? $caption . "\n" : '') . $mediaUrl);
 
         try {
-            $this->applyTenantWhatsAppConfig();
+            $this->applyTenantWhatsAppConfig($providerOverride);
 
             if (!str_contains(strtolower($provider), 'waha')) {
                 throw new RuntimeException('Envio de mídia disponível apenas para o provedor WAHA neste MVP.');
@@ -241,9 +242,11 @@ class WhatsAppSender
         return $sanitized;
     }
 
-    private function resolveProvider(): string
+    private function resolveProvider(?array $providerOverride = null): string
     {
-        $provider = TenantSetting::whatsappProvider();
+        $provider = is_array($providerOverride) && $providerOverride !== []
+            ? $providerOverride
+            : TenantSetting::whatsappProvider();
         $driver = strtolower((string) ($provider['driver'] ?? 'global'));
 
         if ($driver === 'tenancy') {
@@ -267,9 +270,11 @@ class WhatsAppSender
         return 'whatsapp:' . $globalProvider;
     }
 
-    private function applyTenantWhatsAppConfig(): void
+    private function applyTenantWhatsAppConfig(?array $providerOverride = null): void
     {
-        $providerSettings = TenantSetting::whatsappProvider();
+        $providerSettings = is_array($providerOverride) && $providerOverride !== []
+            ? $providerOverride
+            : TenantSetting::whatsappProvider();
         $resolver = new ProviderConfigResolver();
         $driver = strtolower(trim((string) ($providerSettings['driver'] ?? 'global')));
         $globalProvider = $this->resolveTenantGlobalProvider($providerSettings);

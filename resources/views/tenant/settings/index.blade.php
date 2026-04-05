@@ -111,6 +111,15 @@
                     <span>Notificações</span>
                 </button>
 
+                <button @click="tab = 'campanhas'"
+                        :class="tab === 'campanhas' ? 'border-blue-500 text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300'"
+                        class="whitespace-nowrap py-4 px-4 border-b-2 font-medium text-sm flex items-center gap-2 transition-colors duration-200 min-w-fit">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 11V7a1 1 0 112 0v4h3a1 1 0 110 2h-3v4a1 1 0 11-2 0v-4H8a1 1 0 110-2h3zM4 19h16M5 5h14a1 1 0 011 1v12a1 1 0 01-1 1H5a1 1 0 01-1-1V6a1 1 0 011-1z"></path>
+                    </svg>
+                    <span>Campanhas</span>
+                </button>
+
                 @if(($showWahaGlobalTab ?? false) === true)
                 <button @click="tab = 'waha'"
                         :class="tab === 'waha' ? 'border-blue-500 text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300'"
@@ -264,6 +273,10 @@
             <!-- Notificações -->
             <div x-show="tab === 'notificacoes'" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" x-transition:leave="transition ease-in duration-150" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0">
                 @include('tenant.settings.tabs.notificacoes')
+            </div>
+
+            <div x-show="tab === 'campanhas'" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" x-transition:leave="transition ease-in duration-150" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0">
+                @include('tenant.settings.tabs.campanhas')
             </div>
 
             @if(($showWahaGlobalTab ?? false) === true)

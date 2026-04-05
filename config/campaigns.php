@@ -51,6 +51,13 @@ return [
                         'waha_session',
                     ],
                 ],
+                'evolution' => [
+                    'required_settings' => [
+                        'evolution_base_url',
+                        'evolution_api_key',
+                        'evolution_instance',
+                    ],
+                ],
             ],
 
             // Legacy tenant API fallback supported by existing WhatsApp sender.

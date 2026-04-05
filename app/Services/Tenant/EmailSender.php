@@ -28,9 +28,10 @@ class EmailSender
         string $subject,
         string $message,
         array $attachments = [],
-        array $meta = []
+        array $meta = [],
+        ?array $providerOverride = null
     ): bool {
-        return $this->sendInternal($tenantId, $to, $subject, $message, $meta, $attachments);
+        return $this->sendInternal($tenantId, $to, $subject, $message, $meta, $attachments, $providerOverride);
     }
 
     /**
@@ -42,16 +43,17 @@ class EmailSender
         string $subject,
         string $message,
         array $meta = [],
-        array $attachments = []
+        array $attachments = [],
+        ?array $providerOverride = null
     ): bool
     {
         $payloadMeta = $this->sanitizeMeta($meta);
         $normalizedMessage = str_replace(["\r\n", "\r"], "\n", $message);
         $key = (string) ($payloadMeta['key'] ?? 'unknown');
-        $provider = $this->resolveProvider();
+        $provider = $this->resolveProvider($providerOverride);
 
         try {
-            MailTenantService::send($to, $subject, $normalizedMessage, [], $attachments);
+            MailTenantService::send($to, $subject, $normalizedMessage, [], $attachments, $providerOverride);
 
             $logPayload = array_merge($payloadMeta, [
                 'tenant_id' => trim($tenantId) !== '' ? $tenantId : null,
@@ -165,12 +167,14 @@ class EmailSender
         return $sanitized;
     }
 
-    private function resolveProvider(): string
+    private function resolveProvider(?array $providerOverride = null): string
     {
-        $provider = TenantSetting::emailProvider();
+        $provider = is_array($providerOverride) && $providerOverride !== []
+            ? $providerOverride
+            : TenantSetting::emailProvider();
         $driver = strtolower((string) ($provider['driver'] ?? 'global'));
 
-        if ($driver === 'tenancy') {
+        if (in_array($driver, ['tenancy', 'smtp'], true)) {
             return 'mail:tenant_smtp';
         }
 

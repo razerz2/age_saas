@@ -13,9 +13,12 @@ use App\Models\Platform\Estado;
 use App\Models\Platform\Cidade;
 use App\Services\FeatureAccessService;
 use App\Services\Tenant\ProfessionalLabelService;
+use App\Services\Tenant\CampaignChannelGate;
+use App\Services\Tenant\EmailSender;
 use App\Services\Tenant\NotificationContextBuilder;
 use App\Services\Tenant\NotificationTemplateService;
 use App\Services\Tenant\TemplateRenderer;
+use App\Services\Tenant\WhatsAppSender;
 use App\Services\Tenant\WhatsAppBotConfigService;
 use App\Services\WhatsApp\TenantGlobalProviderCatalogService;
 use App\Services\WhatsApp\TenantEvolutionGlobalInstanceService;
@@ -122,6 +125,32 @@ class SettingsController extends Controller
             'EVOLUTION_API_KEY' => TenantSetting::get('whatsapp.evolution.api_key', ''),
             'EVOLUTION_INSTANCE' => TenantSetting::get('whatsapp.evolution.instance', 'default'),
 
+            // Campanhas
+            'campaigns.email.mode' => TenantSetting::get('campaigns.email.mode', 'notifications'),
+            'campaigns.email.driver' => TenantSetting::get('campaigns.email.driver', 'smtp'),
+            'campaigns.email.host' => TenantSetting::get('campaigns.email.host', ''),
+            'campaigns.email.port' => TenantSetting::get('campaigns.email.port', ''),
+            'campaigns.email.username' => TenantSetting::get('campaigns.email.username', ''),
+            'campaigns.email.password' => TenantSetting::get('campaigns.email.password', ''),
+            'campaigns.email.encryption' => TenantSetting::get('campaigns.email.encryption', ''),
+            'campaigns.email.from_name' => TenantSetting::get('campaigns.email.from_name', ''),
+            'campaigns.email.from_address' => TenantSetting::get('campaigns.email.from_address', ''),
+            'campaigns.whatsapp.mode' => TenantSetting::get('campaigns.whatsapp.mode', 'notifications'),
+            'campaigns.whatsapp.driver' => TenantSetting::get('campaigns.whatsapp.driver', 'tenancy'),
+            'campaigns.whatsapp.provider' => TenantSetting::get('campaigns.whatsapp.provider', 'whatsapp_business'),
+            'campaigns.whatsapp.meta_access_token' => TenantSetting::get('campaigns.whatsapp.meta.access_token', ''),
+            'campaigns.whatsapp.meta_phone_number_id' => TenantSetting::get('campaigns.whatsapp.meta.phone_number_id', ''),
+            'campaigns.whatsapp.zapi_api_url' => TenantSetting::get('campaigns.whatsapp.zapi.api_url', ''),
+            'campaigns.whatsapp.zapi_token' => TenantSetting::get('campaigns.whatsapp.zapi.token', ''),
+            'campaigns.whatsapp.zapi_client_token' => TenantSetting::get('campaigns.whatsapp.zapi.client_token', ''),
+            'campaigns.whatsapp.zapi_instance_id' => TenantSetting::get('campaigns.whatsapp.zapi.instance_id', ''),
+            'campaigns.whatsapp.waha_base_url' => TenantSetting::get('campaigns.whatsapp.waha.base_url', ''),
+            'campaigns.whatsapp.waha_api_key' => TenantSetting::get('campaigns.whatsapp.waha.api_key', ''),
+            'campaigns.whatsapp.waha_session' => TenantSetting::get('campaigns.whatsapp.waha.session', 'default'),
+            'campaigns.whatsapp.evolution_base_url' => TenantSetting::get('campaigns.whatsapp.evolution.base_url', ''),
+            'campaigns.whatsapp.evolution_api_key' => TenantSetting::get('campaigns.whatsapp.evolution.api_key', ''),
+            'campaigns.whatsapp.evolution_instance' => TenantSetting::get('campaigns.whatsapp.evolution.instance', 'default'),
+
             // Bot de WhatsApp
             'whatsapp_bot.enabled' => (bool) ($botSettings['enabled'] ?? false),
             'whatsapp_bot.provider_mode' => (string) ($botSettings['provider_mode'] ?? WhatsAppBotConfigService::MODE_SHARED_WITH_NOTIFICATIONS),
@@ -200,6 +229,10 @@ class SettingsController extends Controller
         if (($settings['whatsapp.global_provider'] ?? '') === '') {
             $settings['whatsapp.global_provider'] = $tenantGlobalProviderCatalog->resolveTenantGlobalProvider(null) ?? '';
         }
+
+        $campaignChannelGate = app(CampaignChannelGate::class);
+        $settings['campaigns.status.email_available'] = $campaignChannelGate->hasEmailProvider();
+        $settings['campaigns.status.whatsapp_available'] = $campaignChannelGate->hasWhatsappProvider();
 
         $professionalLabelService = app(ProfessionalLabelService::class);
         $settings['professional.environment_profile'] = $professionalLabelService->sanitizeEnvironmentProfile(
@@ -1051,6 +1084,430 @@ class SettingsController extends Controller
 
         return redirect()->route('tenant.settings.index', ['slug' => tenant()->subdomain])
             ->with('success', 'Configurações de notificações atualizadas com sucesso.');
+    }
+
+    /**
+     * Atualiza as configurações de canais para campanhas.
+     */
+    public function updateCampaigns(Request $request)
+    {
+        $rules = [
+            'campaigns_email_mode' => 'required|string|in:notifications,custom',
+            'campaigns_email_driver' => 'nullable|string|in:smtp',
+            'campaigns_email_host' => 'nullable|string|max:255',
+            'campaigns_email_port' => 'nullable|integer|min:1|max:65535',
+            'campaigns_email_username' => 'nullable|string|max:255',
+            'campaigns_email_password' => 'nullable|string|max:255',
+            'campaigns_email_encryption' => 'nullable|string|in:none,tls,ssl',
+            'campaigns_email_from_name' => 'nullable|string|max:255',
+            'campaigns_email_from_address' => 'nullable|email|max:255',
+
+            'campaigns_whatsapp_mode' => 'required|string|in:notifications,custom',
+            'campaigns_whatsapp_provider' => 'nullable|string|in:whatsapp_business,zapi,waha,evolution',
+            'campaigns_whatsapp_meta_access_token' => 'nullable|string',
+            'campaigns_whatsapp_meta_phone_number_id' => 'nullable|string',
+            'campaigns_whatsapp_zapi_api_url' => 'nullable|url',
+            'campaigns_whatsapp_zapi_token' => 'nullable|string',
+            'campaigns_whatsapp_zapi_client_token' => 'nullable|string',
+            'campaigns_whatsapp_zapi_instance_id' => 'nullable|string',
+            'campaigns_whatsapp_waha_base_url' => 'nullable|url',
+            'campaigns_whatsapp_waha_api_key' => 'nullable|string',
+            'campaigns_whatsapp_waha_session' => 'nullable|string',
+            'campaigns_whatsapp_evolution_base_url' => 'nullable|url',
+            'campaigns_whatsapp_evolution_api_key' => 'nullable|string',
+            'campaigns_whatsapp_evolution_instance' => 'nullable|string',
+        ];
+
+        $messages = [
+            'campaigns_email_mode.required' => 'Selecione como o e-mail de campanhas será configurado.',
+            'campaigns_email_mode.in' => 'Modo de e-mail para campanhas inválido.',
+            'campaigns_email_driver.in' => 'Driver de e-mail para campanhas inválido.',
+            'campaigns_email_port.integer' => 'A porta SMTP deve ser numérica.',
+            'campaigns_email_port.min' => 'A porta SMTP deve ser maior que zero.',
+            'campaigns_email_port.max' => 'A porta SMTP informada é inválida.',
+            'campaigns_email_from_address.email' => 'Informe um e-mail remetente válido para campanhas.',
+            'campaigns_whatsapp_mode.required' => 'Selecione como o WhatsApp de campanhas será configurado.',
+            'campaigns_whatsapp_mode.in' => 'Modo de WhatsApp para campanhas inválido.',
+            'campaigns_whatsapp_provider.in' => 'Selecione um provedor de WhatsApp válido para campanhas.',
+            'campaigns_whatsapp_zapi_api_url.url' => 'A URL da API Z-API é inválida.',
+            'campaigns_whatsapp_waha_base_url.url' => 'A base URL WAHA é inválida.',
+            'campaigns_whatsapp_evolution_base_url.url' => 'A base URL Evolution é inválida.',
+        ];
+
+        $attributes = [
+            'campaigns_email_host' => 'host SMTP',
+            'campaigns_email_port' => 'porta SMTP',
+            'campaigns_email_username' => 'usuário SMTP',
+            'campaigns_email_password' => 'senha SMTP',
+            'campaigns_email_from_name' => 'nome do remetente',
+            'campaigns_email_from_address' => 'e-mail do remetente',
+            'campaigns_whatsapp_provider' => 'provedor de WhatsApp',
+            'campaigns_whatsapp_meta_access_token' => 'access token da Meta',
+            'campaigns_whatsapp_meta_phone_number_id' => 'phone number id da Meta',
+            'campaigns_whatsapp_zapi_api_url' => 'URL da API Z-API',
+            'campaigns_whatsapp_zapi_token' => 'token Z-API',
+            'campaigns_whatsapp_zapi_client_token' => 'client token Z-API',
+            'campaigns_whatsapp_zapi_instance_id' => 'instance id Z-API',
+            'campaigns_whatsapp_waha_base_url' => 'base URL WAHA',
+            'campaigns_whatsapp_waha_api_key' => 'API key WAHA',
+            'campaigns_whatsapp_waha_session' => 'sessão WAHA',
+            'campaigns_whatsapp_evolution_base_url' => 'base URL Evolution',
+            'campaigns_whatsapp_evolution_api_key' => 'API key Evolution',
+            'campaigns_whatsapp_evolution_instance' => 'instância Evolution',
+        ];
+
+        $validator = Validator::make($request->all(), $rules, $messages, $attributes);
+
+        $validator->after(function ($validator) use ($request) {
+            $emailMode = (string) $request->input('campaigns_email_mode', 'notifications');
+            if ($emailMode === 'custom') {
+                if (!$request->filled('campaigns_email_driver')) {
+                    $validator->errors()->add('campaigns_email_driver', 'Selecione o driver de e-mail para campanhas.');
+                }
+                if (!$request->filled('campaigns_email_host')) {
+                    $validator->errors()->add('campaigns_email_host', 'Informe o host SMTP para campanhas.');
+                }
+                if (!$request->filled('campaigns_email_port')) {
+                    $validator->errors()->add('campaigns_email_port', 'Informe a porta SMTP para campanhas.');
+                }
+                if (!$request->filled('campaigns_email_username')) {
+                    $validator->errors()->add('campaigns_email_username', 'Informe o usuário SMTP para campanhas.');
+                }
+                if (!$request->filled('campaigns_email_password')) {
+                    $validator->errors()->add('campaigns_email_password', 'Informe a senha SMTP para campanhas.');
+                }
+                if (!$request->filled('campaigns_email_from_address')) {
+                    $validator->errors()->add('campaigns_email_from_address', 'Informe o e-mail remetente para campanhas.');
+                }
+            }
+
+            $whatsAppMode = (string) $request->input('campaigns_whatsapp_mode', 'notifications');
+            if ($whatsAppMode !== 'custom') {
+                return;
+            }
+
+            $provider = (string) $request->input('campaigns_whatsapp_provider', '');
+            if (!in_array($provider, ['whatsapp_business', 'zapi', 'waha', 'evolution'], true)) {
+                $validator->errors()->add('campaigns_whatsapp_provider', 'Selecione um provedor de WhatsApp válido para campanhas.');
+                return;
+            }
+
+            if ($provider === 'whatsapp_business') {
+                if (!$request->filled('campaigns_whatsapp_meta_access_token')) {
+                    $validator->errors()->add('campaigns_whatsapp_meta_access_token', 'O access token da Meta é obrigatório para campanhas.');
+                }
+                if (!$request->filled('campaigns_whatsapp_meta_phone_number_id')) {
+                    $validator->errors()->add('campaigns_whatsapp_meta_phone_number_id', 'O phone number id da Meta é obrigatório para campanhas.');
+                }
+            }
+
+            if ($provider === 'zapi') {
+                if (!$request->filled('campaigns_whatsapp_zapi_api_url')) {
+                    $validator->errors()->add('campaigns_whatsapp_zapi_api_url', 'A URL da API Z-API é obrigatória para campanhas.');
+                }
+                if (!$request->filled('campaigns_whatsapp_zapi_token')) {
+                    $validator->errors()->add('campaigns_whatsapp_zapi_token', 'O token Z-API é obrigatório para campanhas.');
+                }
+                if (!$request->filled('campaigns_whatsapp_zapi_client_token')) {
+                    $validator->errors()->add('campaigns_whatsapp_zapi_client_token', 'O client token Z-API é obrigatório para campanhas.');
+                }
+                if (!$request->filled('campaigns_whatsapp_zapi_instance_id')) {
+                    $validator->errors()->add('campaigns_whatsapp_zapi_instance_id', 'O instance id Z-API é obrigatório para campanhas.');
+                }
+            }
+
+            if ($provider === 'waha') {
+                if (!$request->filled('campaigns_whatsapp_waha_base_url')) {
+                    $validator->errors()->add('campaigns_whatsapp_waha_base_url', 'A base URL WAHA é obrigatória para campanhas.');
+                }
+                if (!$request->filled('campaigns_whatsapp_waha_api_key')) {
+                    $validator->errors()->add('campaigns_whatsapp_waha_api_key', 'A API key WAHA é obrigatória para campanhas.');
+                }
+                if (!$request->filled('campaigns_whatsapp_waha_session')) {
+                    $validator->errors()->add('campaigns_whatsapp_waha_session', 'A sessão WAHA é obrigatória para campanhas.');
+                }
+            }
+
+            if ($provider === 'evolution') {
+                if (!$request->filled('campaigns_whatsapp_evolution_base_url')) {
+                    $validator->errors()->add('campaigns_whatsapp_evolution_base_url', 'A base URL Evolution é obrigatória para campanhas.');
+                }
+                if (!$request->filled('campaigns_whatsapp_evolution_api_key')) {
+                    $validator->errors()->add('campaigns_whatsapp_evolution_api_key', 'A API key Evolution é obrigatória para campanhas.');
+                }
+                if (!$request->filled('campaigns_whatsapp_evolution_instance')) {
+                    $validator->errors()->add('campaigns_whatsapp_evolution_instance', 'A instância Evolution é obrigatória para campanhas.');
+                }
+            }
+        });
+
+        if ($validator->fails()) {
+            return redirect()->route('tenant.settings.index', [
+                'slug' => tenant()->subdomain,
+                'tab' => 'campanhas',
+            ])->withErrors($validator)->withInput();
+        }
+
+        $validated = $validator->validated();
+
+        $emailMode = (string) ($validated['campaigns_email_mode'] ?? 'notifications');
+        TenantSetting::set('campaigns.email.mode', $emailMode);
+
+        if ($emailMode === 'custom') {
+            TenantSetting::set('campaigns.email.driver', (string) ($validated['campaigns_email_driver'] ?? 'smtp'));
+            TenantSetting::set('campaigns.email.host', (string) ($validated['campaigns_email_host'] ?? ''));
+            TenantSetting::set('campaigns.email.port', (string) ($validated['campaigns_email_port'] ?? ''));
+            TenantSetting::set('campaigns.email.username', (string) ($validated['campaigns_email_username'] ?? ''));
+            TenantSetting::set('campaigns.email.password', (string) ($validated['campaigns_email_password'] ?? ''));
+            TenantSetting::set('campaigns.email.encryption', (string) ($validated['campaigns_email_encryption'] ?? ''));
+            TenantSetting::set('campaigns.email.from_name', (string) ($validated['campaigns_email_from_name'] ?? ''));
+            TenantSetting::set('campaigns.email.from_address', (string) ($validated['campaigns_email_from_address'] ?? ''));
+        } else {
+            TenantSetting::set('campaigns.email.driver', '');
+            TenantSetting::set('campaigns.email.host', '');
+            TenantSetting::set('campaigns.email.port', '');
+            TenantSetting::set('campaigns.email.username', '');
+            TenantSetting::set('campaigns.email.password', '');
+            TenantSetting::set('campaigns.email.encryption', '');
+            TenantSetting::set('campaigns.email.from_name', '');
+            TenantSetting::set('campaigns.email.from_address', '');
+        }
+
+        $whatsAppMode = (string) ($validated['campaigns_whatsapp_mode'] ?? 'notifications');
+        TenantSetting::set('campaigns.whatsapp.mode', $whatsAppMode);
+
+        if ($whatsAppMode === 'custom') {
+            TenantSetting::set('campaigns.whatsapp.driver', 'tenancy');
+            TenantSetting::set('campaigns.whatsapp.provider', (string) ($validated['campaigns_whatsapp_provider'] ?? 'whatsapp_business'));
+            TenantSetting::set('campaigns.whatsapp.meta.access_token', (string) ($validated['campaigns_whatsapp_meta_access_token'] ?? ''));
+            TenantSetting::set('campaigns.whatsapp.meta.phone_number_id', (string) ($validated['campaigns_whatsapp_meta_phone_number_id'] ?? ''));
+            TenantSetting::set('campaigns.whatsapp.zapi.api_url', (string) ($validated['campaigns_whatsapp_zapi_api_url'] ?? ''));
+            TenantSetting::set('campaigns.whatsapp.zapi.token', (string) ($validated['campaigns_whatsapp_zapi_token'] ?? ''));
+            TenantSetting::set('campaigns.whatsapp.zapi.client_token', (string) ($validated['campaigns_whatsapp_zapi_client_token'] ?? ''));
+            TenantSetting::set('campaigns.whatsapp.zapi.instance_id', (string) ($validated['campaigns_whatsapp_zapi_instance_id'] ?? ''));
+            TenantSetting::set('campaigns.whatsapp.waha.base_url', (string) ($validated['campaigns_whatsapp_waha_base_url'] ?? ''));
+            TenantSetting::set('campaigns.whatsapp.waha.api_key', (string) ($validated['campaigns_whatsapp_waha_api_key'] ?? ''));
+            TenantSetting::set('campaigns.whatsapp.waha.session', (string) ($validated['campaigns_whatsapp_waha_session'] ?? 'default'));
+            TenantSetting::set('campaigns.whatsapp.evolution.base_url', (string) ($validated['campaigns_whatsapp_evolution_base_url'] ?? ''));
+            TenantSetting::set('campaigns.whatsapp.evolution.api_key', (string) ($validated['campaigns_whatsapp_evolution_api_key'] ?? ''));
+            TenantSetting::set('campaigns.whatsapp.evolution.instance', (string) ($validated['campaigns_whatsapp_evolution_instance'] ?? 'default'));
+        } else {
+            TenantSetting::set('campaigns.whatsapp.driver', '');
+            TenantSetting::set('campaigns.whatsapp.provider', '');
+            TenantSetting::set('campaigns.whatsapp.meta.access_token', '');
+            TenantSetting::set('campaigns.whatsapp.meta.phone_number_id', '');
+            TenantSetting::set('campaigns.whatsapp.zapi.api_url', '');
+            TenantSetting::set('campaigns.whatsapp.zapi.token', '');
+            TenantSetting::set('campaigns.whatsapp.zapi.client_token', '');
+            TenantSetting::set('campaigns.whatsapp.zapi.instance_id', '');
+            TenantSetting::set('campaigns.whatsapp.waha.base_url', '');
+            TenantSetting::set('campaigns.whatsapp.waha.api_key', '');
+            TenantSetting::set('campaigns.whatsapp.waha.session', '');
+            TenantSetting::set('campaigns.whatsapp.evolution.base_url', '');
+            TenantSetting::set('campaigns.whatsapp.evolution.api_key', '');
+            TenantSetting::set('campaigns.whatsapp.evolution.instance', '');
+        }
+
+        return redirect()->route('tenant.settings.index', [
+            'slug' => tenant()->subdomain,
+            'tab' => 'campanhas',
+        ])->with('success', 'Configurações de campanhas atualizadas com sucesso.');
+    }
+
+    /**
+     * Envia um teste do canal de e-mail configurado para campanhas.
+     */
+    public function testCampaignEmail(Request $request, CampaignChannelGate $campaignChannelGate, EmailSender $emailSender)
+    {
+        $validator = Validator::make(
+            $request->all(),
+            [
+                'destination_email' => 'required|email|max:255',
+            ],
+            [
+                'destination_email.required' => 'Informe um e-mail válido.',
+                'destination_email.email' => 'Informe um e-mail válido.',
+                'destination_email.max' => 'Informe um e-mail válido.',
+            ],
+            [
+                'destination_email' => 'e-mail de destino',
+            ]
+        );
+
+        if ($validator->fails()) {
+            return redirect()->route('tenant.settings.index', [
+                'slug' => tenant()->subdomain,
+                'tab' => 'campanhas',
+            ])->withErrors($validator)->withInput();
+        }
+
+        if (!$campaignChannelGate->hasEmailProvider()) {
+            return redirect()->route('tenant.settings.index', [
+                'slug' => tenant()->subdomain,
+                'tab' => 'campanhas',
+            ])->with('error', 'O canal de e-mail para campanhas não está configurado.');
+        }
+
+        $destinationEmail = trim((string) $request->input('destination_email'));
+        $tenantId = $this->resolveCurrentTenantId();
+        $subject = 'Teste de configuração de e-mail para campanhas';
+        $message = 'Este é um teste de configuração do canal de e-mail usado em campanhas.';
+
+        $sent = $emailSender->sendCampaign(
+            $tenantId,
+            $destinationEmail,
+            $subject,
+            $message,
+            [],
+            [
+                'key' => 'campaign_settings_email_test',
+                'origin' => 'campaign_settings_test',
+                'channel' => 'email',
+                'destination' => $destinationEmail,
+            ],
+            $this->resolveCampaignEmailProviderOverride()
+        );
+
+        return redirect()->route('tenant.settings.index', [
+            'slug' => tenant()->subdomain,
+            'tab' => 'campanhas',
+        ])->with(
+            $sent ? 'success' : 'error',
+            $sent
+                ? 'E-mail de teste enviado com sucesso.'
+                : 'Não foi possível enviar o e-mail de teste.'
+        );
+    }
+
+    /**
+     * Envia um teste do canal de WhatsApp configurado para campanhas.
+     */
+    public function testCampaignWhatsApp(Request $request, CampaignChannelGate $campaignChannelGate, WhatsAppSender $whatsAppSender)
+    {
+        $validator = Validator::make(
+            $request->all(),
+            [
+                'destination_number' => 'required|string|max:30',
+            ],
+            [
+                'destination_number.required' => 'Informe um número de destino válido.',
+                'destination_number.string' => 'Informe um número de destino válido.',
+                'destination_number.max' => 'Informe um número de destino válido.',
+            ],
+            [
+                'destination_number' => 'número de destino',
+            ]
+        );
+
+        if ($validator->fails()) {
+            return redirect()->route('tenant.settings.index', [
+                'slug' => tenant()->subdomain,
+                'tab' => 'campanhas',
+            ])->withErrors($validator)->withInput();
+        }
+
+        if (!$campaignChannelGate->hasWhatsappProvider()) {
+            return redirect()->route('tenant.settings.index', [
+                'slug' => tenant()->subdomain,
+                'tab' => 'campanhas',
+            ])->with('error', 'O canal de WhatsApp para campanhas não está configurado.');
+        }
+
+        $destinationNumber = trim((string) $request->input('destination_number'));
+        $tenantId = $this->resolveCurrentTenantId();
+        $message = 'Teste de configuração do canal de WhatsApp usado em campanhas.';
+
+        $sent = $whatsAppSender->send(
+            $tenantId,
+            $destinationNumber,
+            $message,
+            [
+                'key' => 'campaign_settings_whatsapp_test',
+                'origin' => 'campaign_settings_test',
+                'channel' => 'whatsapp',
+                'destination' => $destinationNumber,
+            ],
+            $this->resolveCampaignWhatsAppProviderOverride()
+        );
+
+        return redirect()->route('tenant.settings.index', [
+            'slug' => tenant()->subdomain,
+            'tab' => 'campanhas',
+        ])->with(
+            $sent ? 'success' : 'error',
+            $sent
+                ? 'Mensagem de teste enviada com sucesso.'
+                : 'Não foi possível enviar a mensagem de teste.'
+        );
+    }
+
+    /**
+     * @return array<string, mixed>|null
+     */
+    private function resolveCampaignEmailProviderOverride(): ?array
+    {
+        $config = TenantSetting::campaignEmailConfig();
+        $mode = strtolower(trim((string) ($config['mode'] ?? 'notifications')));
+
+        if ($mode !== 'custom') {
+            return null;
+        }
+
+        $fromName = trim((string) ($config['from_name'] ?? ''));
+        if ($fromName === '') {
+            $fromName = (string) config('mail.from.name', '');
+        }
+
+        return [
+            'driver' => 'tenancy',
+            'host' => (string) ($config['host'] ?? ''),
+            'port' => (string) ($config['port'] ?? ''),
+            'username' => (string) ($config['username'] ?? ''),
+            'password' => (string) ($config['password'] ?? ''),
+            'encryption' => (string) ($config['encryption'] ?? ''),
+            'from_name' => $fromName,
+            'from_address' => (string) ($config['from_address'] ?? ''),
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>|null
+     */
+    private function resolveCampaignWhatsAppProviderOverride(): ?array
+    {
+        $config = TenantSetting::campaignWhatsAppConfig();
+        $mode = strtolower(trim((string) ($config['mode'] ?? 'notifications')));
+
+        if ($mode !== 'custom') {
+            return null;
+        }
+
+        return [
+            'driver' => 'tenancy',
+            'provider' => (string) ($config['provider'] ?? 'whatsapp_business'),
+            'meta_access_token' => (string) ($config['meta_access_token'] ?? ''),
+            'meta_phone_number_id' => (string) ($config['meta_phone_number_id'] ?? ''),
+            'zapi_api_url' => (string) ($config['zapi_api_url'] ?? ''),
+            'zapi_token' => (string) ($config['zapi_token'] ?? ''),
+            'zapi_client_token' => (string) ($config['zapi_client_token'] ?? ''),
+            'zapi_instance_id' => (string) ($config['zapi_instance_id'] ?? ''),
+            'waha_base_url' => (string) ($config['waha_base_url'] ?? ''),
+            'waha_api_key' => (string) ($config['waha_api_key'] ?? ''),
+            'waha_session' => (string) ($config['waha_session'] ?? 'default'),
+            'evolution_base_url' => (string) ($config['evolution_base_url'] ?? ''),
+            'evolution_api_key' => (string) ($config['evolution_api_key'] ?? ''),
+            'evolution_instance' => (string) ($config['evolution_instance'] ?? 'default'),
+        ];
+    }
+
+    private function resolveCurrentTenantId(): string
+    {
+        $tenantId = tenant()?->id;
+        if (is_string($tenantId) && trim($tenantId) !== '') {
+            return trim($tenantId);
+        }
+
+        return '';
     }
 
     /**

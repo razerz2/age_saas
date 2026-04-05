@@ -867,6 +867,9 @@ Route::prefix('workspace/{slug}')
             Route::post('settings/appointments', [SettingsController::class, 'updateAppointments'])->name('settings.update.appointments');
             Route::post('settings/calendar', [SettingsController::class, 'updateCalendar'])->name('settings.update.calendar');
             Route::post('settings/notifications', [SettingsController::class, 'updateNotifications'])->name('settings.update.notifications');
+            Route::post('settings/campaigns', [SettingsController::class, 'updateCampaigns'])->name('settings.update.campaigns');
+            Route::post('settings/campaigns/test-email', [SettingsController::class, 'testCampaignEmail'])->name('settings.campaigns.test-email');
+            Route::post('settings/campaigns/test-whatsapp', [SettingsController::class, 'testCampaignWhatsApp'])->name('settings.campaigns.test-whatsapp');
             Route::post('settings/whatsapp-bot', [SettingsController::class, 'updateWhatsAppBot'])
                 ->middleware(['feature:' . \App\Services\Tenant\WhatsAppBotConfigService::FEATURE_NAME])
                 ->name('settings.update.whatsapp-bot');

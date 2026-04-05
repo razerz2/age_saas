@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Route;
 
 class EnsureCampaignModuleEnabled
 {
-    private const BLOCKED_MESSAGE = 'Campanhas indisponíveis: configure sua API de Email e/ou WhatsApp em Integrações.';
+    private const BLOCKED_MESSAGE = 'Nenhum canal de campanha está configurado. Configure os canais na aba Campanhas ou reutilize os canais de notificações.';
 
     public function __construct(
         private readonly CampaignChannelGate $campaignChannelGate
@@ -40,4 +40,3 @@ class EnsureCampaignModuleEnabled
             ->with('warning', self::BLOCKED_MESSAGE);
     }
 }
-

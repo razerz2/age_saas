@@ -6,9 +6,9 @@
 @section('content')
     @php
         $tenantSlug = request()->route('slug') ?? tenant()?->subdomain ?? '';
-        $integrationsUrl = \Illuminate\Support\Facades\Route::has('tenant.integrations.index')
-            ? workspace_route('tenant.integrations.index')
-            : url('/workspace/' . $tenantSlug . '/integrations');
+        $campaignSettingsUrl = \Illuminate\Support\Facades\Route::has('tenant.settings.index')
+            ? workspace_route('tenant.settings.index', ['tab' => 'campanhas'])
+            : url('/workspace/' . $tenantSlug . '/settings?tab=campanhas');
     @endphp
 
     <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6">
@@ -81,12 +81,13 @@
                         <x-icon name="alert-circle-outline" size="text-lg" class="text-amber-600 dark:text-amber-400" />
                         <div class="ml-3">
                             <p class="text-sm text-amber-800 dark:text-amber-200">
-                                Campanhas indisponíveis: configure sua API de Email e/ou WhatsApp em Integrações.
+                                Nenhum canal de campanha está configurado.
+                                Configure os canais na aba Campanhas ou reutilize os canais de notificações.
                             </p>
                         </div>
                     </div>
-                    <a href="{{ $integrationsUrl }}" class="btn btn-outline inline-flex items-center whitespace-nowrap">
-                        Configurar Integrações
+                    <a href="{{ $campaignSettingsUrl }}" class="btn btn-outline inline-flex items-center whitespace-nowrap">
+                        Configurar Campanhas
                     </a>
                 </div>
             </div>
