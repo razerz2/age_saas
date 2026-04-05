@@ -165,7 +165,7 @@ class WhatsAppOfficialMessageService
                 'reason' => 'template_provider_incompatible',
                 'provider' => $activeProvider,
             ]));
-            throw new DomainException('Template invalido para teste oficial: provider incompatível.');
+            throw new DomainException('Template inválido para teste oficial: provider incompatível.');
         }
 
         if ($template->status !== WhatsAppOfficialTemplate::STATUS_APPROVED) {
@@ -181,7 +181,7 @@ class WhatsAppOfficialMessageService
                 'reason' => 'missing_recipient_phone',
                 'provider' => $activeProvider,
             ]));
-            throw new DomainException('Informe um numero de destino valido para o teste.');
+            throw new DomainException('Informe um número de destino válido para o teste.');
         }
 
         if (!$this->isOfficialProviderEnabled($activeProvider)) {
@@ -362,7 +362,7 @@ class WhatsAppOfficialMessageService
         }
 
         if ($missing !== []) {
-            throw new DomainException('Variaveis obrigatorias ausentes: ' . implode(', ', $missing));
+            throw new DomainException('Variáveis obrigatórias ausentes: ' . implode(', ', $missing));
         }
 
         return $ordered;

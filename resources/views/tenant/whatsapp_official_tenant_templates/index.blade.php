@@ -18,13 +18,13 @@
         <div>
             <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Templates Oficiais do WhatsApp</h1>
             <p class="text-sm text-gray-600 dark:text-gray-400">
-                Gestao tenant-aware de templates oficiais para eventos clinicos padrao.
+                Gestão tenant-aware de templates oficiais para eventos clínicos padrão.
             </p>
         </div>
         <div class="flex gap-2">
             <a href="{{ workspace_route('tenant.settings.index', ['tab' => 'templates-oficiais']) }}"
                class="inline-flex items-center rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-700">
-                Voltar para Configuracoes
+                Voltar para Configurações
             </a>
             <a href="{{ workspace_route('tenant.settings.whatsapp-official-tenant-templates.create') }}"
                class="inline-flex items-center rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700">
@@ -34,7 +34,7 @@
     </div>
 
     <div class="rounded-xl border border-blue-200 bg-blue-50 p-4 text-sm text-blue-800 dark:border-blue-900/50 dark:bg-blue-900/20 dark:text-blue-200">
-        Este modulo usa as credenciais oficiais do proprio tenant (token, phone number id e WABA ID).
+        Este módulo usa as credenciais oficiais do próprio tenant (token, phone number id e WABA ID).
     </div>
 
     <div class="rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-800">
@@ -74,9 +74,9 @@
                         <th class="px-4 py-3 text-left font-semibold text-gray-600 dark:text-gray-300">Nome Meta</th>
                         <th class="px-4 py-3 text-left font-semibold text-gray-600 dark:text-gray-300">Idioma</th>
                         <th class="px-4 py-3 text-left font-semibold text-gray-600 dark:text-gray-300">Status</th>
-                        <th class="px-4 py-3 text-left font-semibold text-gray-600 dark:text-gray-300">Versao</th>
+                        <th class="px-4 py-3 text-left font-semibold text-gray-600 dark:text-gray-300">Versão</th>
                         <th class="px-4 py-3 text-left font-semibold text-gray-600 dark:text-gray-300">Atualizado</th>
-                        <th class="px-4 py-3 text-right font-semibold text-gray-600 dark:text-gray-300">Acoes</th>
+                        <th class="px-4 py-3 text-right font-semibold text-gray-600 dark:text-gray-300">Ações</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-200 dark:divide-gray-700">

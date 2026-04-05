@@ -49,9 +49,9 @@
                                         <th>Landing</th>
                                         <th>Trial</th>
                                         <th>Periodicidade</th>
-                                        <th>Preco</th>
+                                        <th>Preço</th>
                                         <th>Status</th>
-                                        <th class="text-center">Acoes</th>
+                                        <th class="text-center">Ações</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -98,10 +98,10 @@
                                                     <i class="fa fa-edit"></i>
                                                 </a>
                                                 <form action="{{ route('Platform.plans.destroy', $plan->id) }}" method="POST" class="d-inline"
-                                                    onsubmit="return confirmSubmit(event, 'Deseja realmente excluir este plano? Esta acao nao pode ser desfeita.', 'Confirmar Exclusao')">
+                                                    onsubmit="return confirmSubmit(event, 'Deseja realmente excluir este plano? Esta ação não pode ser desfeita.', 'Confirmar Exclusão')">
                                                     @csrf
                                                     @method('DELETE')
-                                                    <button type="submit" title="Exclusao" class="btn btn-sm btn-danger">
+                                                    <button type="submit" title="Exclusão" class="btn btn-sm btn-danger">
                                                         <i class="fa fa-trash"></i>
                                                     </button>
                                                 </form>

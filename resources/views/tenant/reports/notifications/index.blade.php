@@ -1,6 +1,6 @@
 @extends('layouts.tailadmin.app')
 
-@section('title', 'Relatorio de Notificacoes')
+@section('title', 'Relatório de Notificações')
 @section('page', 'reports')
 
 @section('content')
@@ -13,7 +13,7 @@
 ></div>
 
 <div class="page-header mb-6">
-    <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Relatorio de Notificacoes</h1>
+    <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Relatório de Notificações</h1>
 </div>
 
 <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">

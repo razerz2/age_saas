@@ -127,7 +127,7 @@ class PlanChangeRequestController extends Controller
 
                 return redirect()
                     ->route('Platform.plan-change-requests.index')
-                    ->with('success', 'Solicitacao aprovada: plano de teste aplicado sem cobranca.');
+                    ->with('success', 'Solicitação aprovada: plano de teste aplicado sem cobrança.');
             }
 
             // Atualizar TODAS as faturas pendentes (pending ou overdue) para o novo valor do plano

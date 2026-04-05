@@ -13,8 +13,8 @@
         'invoice.created' => 'Fatura criada',
         'invoice.upcoming_due' => 'Lembrete de vencimento',
         'invoice.overdue' => 'Fatura vencida',
-        'tenant.suspended_due_to_overdue' => 'Suspensao por inadimplencia',
-        'security.2fa_code' => 'Codigo de verificacao (2FA)',
+        'tenant.suspended_due_to_overdue' => 'Suspensão por inadimplência',
+        'security.2fa_code' => 'Código de verificação (2FA)',
         'tenant.welcome' => 'Boas-vindas ao tenant',
         'subscription.created' => 'Assinatura criada',
         'subscription.recovery_started' => 'Recovery de assinatura iniciado',
@@ -169,12 +169,12 @@
         @endif
 
         <div class="alert alert-info">
-            Este modulo e exclusivo para templates oficiais da Platform (Meta Cloud API).
-            Templates operacionais de clinica devem ser gerenciados no Tenant em Settings > Editor.
+            Este módulo é exclusivo para templates oficiais da Platform (Meta Cloud API).
+            Templates operacionais de clínica devem ser gerenciados no Tenant em Settings > Editor.
         </div>
         <div class="alert alert-warning">
             Para envio oficial em runtime, o template precisa estar em <strong>APPROVED</strong> e o provider ativo deve ser
-            <code>whatsapp_business</code>. Status atual diferente de approved gera skip de envio com log tecnico.
+            <code>whatsapp_business</code>. Status atual diferente de approved gera skip de envio com log técnico.
         </div>
 
         <div class="card shadow-sm border-0 mb-3">
@@ -319,12 +319,12 @@
 
                     @if(!$isApprovedForManualTest)
                         <div class="alert alert-warning">
-                            Este template esta em <strong>{{ strtoupper($template->status) }}</strong>.
-                            O teste manual so e permitido para status <strong>APPROVED</strong>.
+                            Este template está em <strong>{{ strtoupper($template->status) }}</strong>.
+                            O teste manual só é permitido para status <strong>APPROVED</strong>.
                         </div>
                     @else
                         <div class="alert alert-info">
-                            Preencha as variaveis e envie o teste para um numero valido.
+                            Preencha as variáveis e envie o teste para um número válido.
                         </div>
                         @if($isAuthenticationTemplate)
                             <div class="alert alert-secondary">
@@ -343,22 +343,22 @@
                                         </div>
                                     @endif
                                 @else
-                                    O remoto nao exige parametros dinamicos de BODY/BUTTONS.
+                                    O remoto não exige parâmetros dinâmicos de BODY/BUTTONS.
                                 @endif
                             </div>
                         @endif
                     @endif
 
                     <div class="mb-3">
-                        <label for="manual-template-test-phone" class="form-label">Numero de destino</label>
+                        <label for="manual-template-test-phone" class="form-label">Número de destino</label>
                         <input type="text" class="form-control" id="manual-template-test-phone" placeholder="Ex: 5511999999999">
                         <small class="text-muted">Use formato internacional com DDI.</small>
                     </div>
 
                     <div class="d-flex justify-content-between align-items-center mb-2">
-                        <h6 class="mb-0">Variaveis do template</h6>
+                        <h6 class="mb-0">Variáveis do template</h6>
                         <button type="button" class="btn btn-sm btn-outline-primary" id="manual-template-fill-fake-btn">
-                            <i class="fas fa-wand-magic-sparkles me-1"></i> Preencher com dados ficticios
+                            <i class="fas fa-wand-magic-sparkles me-1"></i> Preencher com dados fictícios
                         </button>
                     </div>
 
@@ -419,7 +419,7 @@
 
         function renderVariables() {
             if (!Array.isArray(variables) || variables.length === 0) {
-                variablesContainer.innerHTML = '<div class="text-muted">Este template nao possui variaveis mapeadas.</div>';
+                variablesContainer.innerHTML = '<div class="text-muted">Este template não possui variáveis mapeadas.</div>';
                 return;
             }
 
@@ -463,7 +463,7 @@
         function fakeValueFor(name) {
             const key = String(name || '').toLowerCase();
             if (key === 'customer_name') return randomFrom(['Rafael Souza', 'Marina Lima', 'Carlos Pereira', 'Julia Costa']);
-            if (key === 'tenant_name') return randomFrom(['Clinica Boa Vida', 'Instituto Viva', 'Centro Med Prime']);
+            if (key === 'tenant_name') return randomFrom(['Clínica Boa Vida', 'Instituto Viva', 'Centro Med Prime']);
             if (key === 'invoice_amount') return randomMoney(89, 799);
             if (key === 'due_date') return futureDate(7);
             if (key === 'payment_link') return 'https://app.allsync.com.br/faturas/pagar/teste123';
@@ -518,7 +518,7 @@
             const phone = (phoneInput.value || '').trim();
             if (!phone) {
                 phoneInput.classList.add('is-invalid');
-                showFeedback('error', 'Informe o numero de destino.');
+                showFeedback('error', 'Informe o número de destino.');
                 return;
             }
             phoneInput.classList.remove('is-invalid');
@@ -527,12 +527,12 @@
             const payload = collected.payload;
 
             if (!isAuthenticationTemplate && collected.missing.length > 0) {
-                showFeedback('error', 'Preencha todas as variaveis obrigatorias do template.');
+                showFeedback('error', 'Preencha todas as variáveis obrigatórias do template.');
                 return;
             }
 
             if (isAuthenticationTemplate && authRemoteTotalParamsExpected > 0 && Object.keys(payload).length === 0) {
-                showFeedback('error', 'Este template AUTHENTICATION exige parametros dinamicos no schema remoto (BODY/BUTTONS). Preencha ao menos a variavel de codigo.');
+                showFeedback('error', 'Este template AUTHENTICATION exige parâmetros dinâmicos no schema remoto (BODY/BUTTONS). Preencha ao menos a variável de código.');
                 return;
             }
 

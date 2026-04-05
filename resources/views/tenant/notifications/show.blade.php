@@ -73,7 +73,7 @@
                                     @if(is_array($value) || is_object($value))
                                         <pre class="text-xs whitespace-pre-wrap break-words bg-gray-50 dark:bg-gray-900/40 rounded p-2">{{ json_encode($value, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT) }}</pre>
                                     @elseif(is_bool($value))
-                                        {{ $value ? 'Sim' : 'Nao' }}
+                                        {{ $value ? 'Sim' : 'Não' }}
                                     @elseif(is_null($value))
                                         -
                                     @else

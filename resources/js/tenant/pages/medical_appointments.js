@@ -63,7 +63,7 @@ function renderNoSelection(container) {
     `;
 }
 
-function extractApiErrorMessage(payload, fallback = 'Erro ao processar solicitacao.') {
+function extractApiErrorMessage(payload, fallback = 'Erro ao processar solicitação.') {
     if (!payload || typeof payload !== 'object') {
         return fallback;
     }
@@ -379,7 +379,7 @@ export function init() {
         if (manualHelp) {
             manualHelp.textContent = enabled
                 ? 'Modo manual ativo: arraste pelos icones para reordenar a fila.'
-                : 'Ordenacao automatica ativa. Selecione "Ordem manual" para arrastar a fila.';
+                : 'Ordenação automática ativa. Selecione "Ordem manual" para arrastar a fila.';
         }
 
         if (!state.sortable) {
@@ -426,7 +426,7 @@ export function init() {
                     const csrfToken = getCsrfToken();
                     if (!csrfToken || !config.reorderUrl) {
                         restoreOrder(state.previousOrder);
-                        showAlert({ type: 'error', title: 'Erro', message: 'Nao foi possivel salvar a ordem manual.' });
+                        showAlert({ type: 'error', title: 'Erro', message: 'Não foi possível salvar a ordem manual.' });
                         return;
                     }
 
@@ -541,7 +541,7 @@ export function init() {
             <div class="flex items-center justify-center py-12 text-center text-gray-500 dark:text-gray-400">
                 <div>
                     <div class="mx-auto inline-flex h-10 w-10 animate-spin rounded-full border-2 border-gray-200 border-t-blue-500"></div>
-                    <p class="mt-3 text-sm">Carregando formulario...</p>
+                    <p class="mt-3 text-sm">Carregando formulário...</p>
                 </div>
             </div>
         `;
@@ -552,7 +552,7 @@ export function init() {
             return;
         }
         if (!UUID_PATTERN.test(appointmentId)) {
-            renderError(appointmentDetails, 'ID de agendamento invalido. Atualize a pagina e tente novamente.');
+            renderError(appointmentDetails, 'ID de agendamento inválido. Atualize a página e tente novamente.');
             return;
         }
 
@@ -626,7 +626,7 @@ export function init() {
 
         const startsAtTime = appointment.starts_at_time || '--:--';
         const patientName = appointment.patient_name || 'N/A';
-        const typeName = appointment.type_name || 'Tipo nao informado';
+        const typeName = appointment.type_name || 'Tipo não informado';
         const status = String(appointment.status || '').toLowerCase();
 
         item.dataset.startAt = appointment.starts_at_iso || '';
@@ -695,7 +695,7 @@ export function init() {
             return;
         }
         if (!appointmentId || !UUID_PATTERN.test(appointmentId)) {
-            showAlert({ type: 'error', title: 'Erro', message: 'ID de agendamento invalido.' });
+            showAlert({ type: 'error', title: 'Erro', message: 'ID de agendamento inválido.' });
             return;
         }
 
@@ -761,7 +761,7 @@ export function init() {
         const rescheduleAt = String(statusRescheduleAt?.value || '').trim();
 
         if (!UUID_PATTERN.test(appointmentId)) {
-            setStatusModalError('ID de agendamento invalido.');
+            setStatusModalError('ID de agendamento inválido.');
             return;
         }
         if (!status) {
@@ -773,13 +773,13 @@ export function init() {
             return;
         }
         if (statusNeedsReschedule(status) && !rescheduleAt) {
-            setStatusModalError('Informe a nova data e hora para remarcacao.');
+            setStatusModalError('Informe a nova data e hora para remarcação.');
             return;
         }
 
         const csrfToken = getCsrfToken();
         if (!csrfToken) {
-            setStatusModalError('Token CSRF nao encontrado. Recarregue a pagina e tente novamente.');
+            setStatusModalError('Token CSRF não encontrado. Recarregue a página e tente novamente.');
             return;
         }
 
@@ -818,7 +818,7 @@ export function init() {
                 }
 
                 if (response.status === 419) {
-                    throw new Error('Sessao expirada (CSRF). Recarregue a pagina e tente novamente.');
+                    throw new Error('Sessão expirada (CSRF). Recarregue a página e tente novamente.');
                 }
                 throw new Error(extractApiErrorMessage(data, rawText?.trim() || `Erro HTTP ${response.status} ao atualizar status.`));
             }
@@ -862,7 +862,7 @@ export function init() {
             return;
         }
         if (!UUID_PATTERN.test(appointmentId)) {
-            showAlert({ type: 'error', title: 'Erro', message: 'ID de agendamento invalido.' });
+            showAlert({ type: 'error', title: 'Erro', message: 'ID de agendamento inválido.' });
             return;
         }
 
@@ -877,8 +877,8 @@ export function init() {
                 if (!csrfToken) {
                     showAlert({
                         type: 'error',
-                        title: 'Sessao expirada',
-                        message: 'Token CSRF nao encontrado. Recarregue a pagina e tente novamente.',
+                        title: 'Sessão expirada',
+                        message: 'Token CSRF não encontrado. Recarregue a página e tente novamente.',
                     });
                     return;
                 }
@@ -922,7 +922,7 @@ export function init() {
             return;
         }
         if (!UUID_PATTERN.test(appointmentId)) {
-            showAlert({ type: 'error', title: 'Erro', message: 'ID de agendamento invalido.' });
+            showAlert({ type: 'error', title: 'Erro', message: 'ID de agendamento inválido.' });
             return;
         }
         if (!formResponseModalBody) {
@@ -944,7 +944,7 @@ export function init() {
                 const rawText = await response.text();
                 const data = parseJsonSafely(rawText);
                 if (!response.ok) {
-                    throw new Error(extractApiErrorMessage(data, rawText?.trim() || `Erro HTTP ${response.status} ao carregar formulario.`));
+                    throw new Error(extractApiErrorMessage(data, rawText?.trim() || `Erro HTTP ${response.status} ao carregar formulário.`));
                 }
                 return data;
             })
@@ -957,18 +957,18 @@ export function init() {
                 formResponseModalBody.innerHTML = `
                     <div class="rounded-lg border border-red-200 bg-red-50 p-4 dark:border-red-800 dark:bg-red-900/20">
                         <div class="text-sm text-red-700 dark:text-red-300">
-                            ${data.message || 'Erro ao carregar formulario.'}
+                            ${data.message || 'Erro ao carregar formulário.'}
                         </div>
                     </div>
                 `;
             })
             .catch((error) => {
                 // eslint-disable-next-line no-console
-                console.error('Erro ao carregar formulario:', error);
+                console.error('Erro ao carregar formulário:', error);
                 formResponseModalBody.innerHTML = `
                     <div class="rounded-lg border border-red-200 bg-red-50 p-4 dark:border-red-800 dark:bg-red-900/20">
                         <div class="text-sm text-red-700 dark:text-red-300">
-                            ${error?.message?.trim() || 'Erro ao carregar formulario. Tente novamente.'}
+                            ${error?.message?.trim() || 'Erro ao carregar formulário. Tente novamente.'}
                         </div>
                     </div>
                 `;
@@ -990,7 +990,7 @@ export function init() {
             if (wasManual) {
                 showAlert({
                     type: 'info',
-                    title: 'Ordenacao automatica',
+                    title: 'Ordenação automática',
                     message: 'Modo manual desativado. Selecione "Ordem manual" para voltar a arrastar.',
                 });
             }

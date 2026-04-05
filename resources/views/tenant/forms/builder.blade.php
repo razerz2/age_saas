@@ -89,8 +89,14 @@
                                         <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Seções</p>
                                     </div>
                                     <div class="flex items-center gap-2">
-                                        <button type="button" class="btn btn-outline edit-section-btn" data-section-id="{{ $section->id }}" data-section-title="{{ $section->title }}">Editar</button>
-                                        <button type="button" class="btn btn-danger delete-section-btn" data-section-id="{{ $section->id }}">Excluir</button>
+                                        <button type="button" class="btn btn-outline edit-section-btn inline-flex items-center" data-section-id="{{ $section->id }}" data-section-title="{{ $section->title }}">
+                                            <x-icon name="pencil-outline" size="text-sm" class="mr-2" />
+                                            Editar
+                                        </button>
+                                        <button type="button" class="btn btn-danger delete-section-btn inline-flex items-center" data-section-id="{{ $section->id }}">
+                                            <x-icon name="trash-can-outline" size="text-sm" class="mr-2" />
+                                            Excluir
+                                        </button>
                                     </div>
                                 </div>
                                 <div class="p-4">
@@ -122,8 +128,14 @@
                                 <small class="text-xs text-gray-500 dark:text-gray-400">Opcional. Deixe em branco para uma seção sem título.</small>
                             </div>
                             <div class="flex flex-wrap items-center justify-end gap-3">
-                                <button type="button" class="btn btn-outline" data-builder-cancel>Cancelar</button>
-                                <button type="submit" class="btn btn-primary">Adicionar</button>
+                                <button type="button" class="btn btn-outline inline-flex items-center" data-builder-cancel>
+                                    <x-icon name="close" size="text-sm" class="mr-2" />
+                                    Cancelar
+                                </button>
+                                <button type="submit" class="btn btn-primary inline-flex items-center">
+                                    <x-icon name="plus" size="text-sm" class="mr-2" />
+                                    Adicionar
+                                </button>
                             </div>
                         </form>
                     </div>
@@ -139,8 +151,14 @@
                                 <input type="text" class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-brand-500 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white" name="title" id="edit_section_title" placeholder="Ex: Dados Pessoais, Sintomas, etc.">
                             </div>
                             <div class="flex flex-wrap items-center justify-end gap-3">
-                                <button type="button" class="btn btn-outline" data-builder-cancel>Cancelar</button>
-                                <button type="submit" class="btn btn-primary">Salvar</button>
+                                <button type="button" class="btn btn-outline inline-flex items-center" data-builder-cancel>
+                                    <x-icon name="close" size="text-sm" class="mr-2" />
+                                    Cancelar
+                                </button>
+                                <button type="submit" class="btn btn-primary inline-flex items-center">
+                                    <x-icon name="content-save-outline" size="text-sm" class="mr-2" />
+                                    Salvar
+                                </button>
                             </div>
                         </form>
                     </div>
@@ -188,12 +206,21 @@
                             <div id="options-container" class="hidden border-t border-gray-200 dark:border-gray-700 pt-4 mt-4">
                                 <h6 class="text-sm font-semibold text-gray-900 dark:text-white mb-2">Opções</h6>
                                 <div id="options-list" class="space-y-2"></div>
-                                <button type="button" class="btn btn-primary mt-3" id="add-option-btn">Adicionar Opção</button>
+                                <button type="button" class="btn btn-primary mt-3 inline-flex items-center" id="add-option-btn">
+                                    <x-icon name="plus" size="text-sm" class="mr-2" />
+                                    Adicionar Opção
+                                </button>
                             </div>
 
                             <div class="flex flex-wrap items-center justify-end gap-3">
-                                <button type="button" class="btn btn-outline" data-builder-cancel>Cancelar</button>
-                                <button type="submit" class="btn btn-primary">Adicionar</button>
+                                <button type="button" class="btn btn-outline inline-flex items-center" data-builder-cancel>
+                                    <x-icon name="close" size="text-sm" class="mr-2" />
+                                    Cancelar
+                                </button>
+                                <button type="submit" class="btn btn-primary inline-flex items-center">
+                                    <x-icon name="plus" size="text-sm" class="mr-2" />
+                                    Adicionar
+                                </button>
                             </div>
                         </form>
                     </div>
@@ -213,8 +240,14 @@
                                 <input type="text" class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-brand-500 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white" name="value" required placeholder="Ex: sim, nao, etc.">
                             </div>
                             <div class="flex flex-wrap items-center justify-end gap-3">
-                                <button type="button" class="btn btn-outline" data-builder-cancel>Cancelar</button>
-                                <button type="submit" class="btn btn-primary">Adicionar</button>
+                                <button type="button" class="btn btn-outline inline-flex items-center" data-builder-cancel>
+                                    <x-icon name="close" size="text-sm" class="mr-2" />
+                                    Cancelar
+                                </button>
+                                <button type="submit" class="btn btn-primary inline-flex items-center">
+                                    <x-icon name="plus" size="text-sm" class="mr-2" />
+                                    Adicionar
+                                </button>
                             </div>
                         </form>
                     </div>
@@ -263,12 +296,21 @@
                             <div id="edit-options-container" class="hidden mt-6 border-t border-gray-200 dark:border-gray-700 pt-4">
                                 <h6 class="text-sm font-semibold text-gray-900 dark:text-white mb-2">Opções</h6>
                                 <div id="edit-options-list" class="space-y-2"></div>
-                                <button type="button" class="btn btn-primary mt-3" id="add-edit-option-btn">Adicionar Opção</button>
+                                <button type="button" class="btn btn-primary mt-3 inline-flex items-center" id="add-edit-option-btn">
+                                    <x-icon name="plus" size="text-sm" class="mr-2" />
+                                    Adicionar Opção
+                                </button>
                             </div>
 
                             <div class="flex flex-wrap items-center justify-end gap-3">
-                                <button type="button" class="btn btn-outline" data-builder-cancel>Cancelar</button>
-                                <button type="submit" class="btn btn-primary">Salvar</button>
+                                <button type="button" class="btn btn-outline inline-flex items-center" data-builder-cancel>
+                                    <x-icon name="close" size="text-sm" class="mr-2" />
+                                    Cancelar
+                                </button>
+                                <button type="submit" class="btn btn-primary inline-flex items-center">
+                                    <x-icon name="content-save-outline" size="text-sm" class="mr-2" />
+                                    Salvar
+                                </button>
                             </div>
                         </form>
                     </div>
@@ -282,8 +324,14 @@
                         </a>
 
                         <div class="flex flex-wrap items-center justify-end gap-3">
-                            <button type="button" class="btn btn-primary" id="addSectionBtn">Adicionar Seção</button>
-                            <button type="button" class="btn btn-primary" id="addQuestionBtn" disabled>Adicionar Pergunta</button>
+                            <button type="button" class="btn btn-primary inline-flex items-center" id="addSectionBtn">
+                                <x-icon name="plus" size="text-sm" class="mr-2" />
+                                Adicionar Seção
+                            </button>
+                            <button type="button" class="btn btn-primary inline-flex items-center" id="addQuestionBtn" disabled>
+                                <x-icon name="plus" size="text-sm" class="mr-2" />
+                                Adicionar Pergunta
+                            </button>
                         </div>
                     </div>
                 </div>

@@ -120,7 +120,10 @@
     <section class="rounded-xl border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-gray-800">
         <div class="mb-4 flex items-center justify-between">
             <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Horários de atendimento</h2>
-            <button type="button" id="open-business-hour-modal" class="btn btn-outline">Adicionar horário</button>
+            <button type="button" id="open-business-hour-modal" class="btn btn-outline inline-flex items-center">
+                <x-icon name="plus" size="text-sm" class="mr-2" />
+                Adicionar horário
+            </button>
         </div>
 
         <div
@@ -162,7 +165,10 @@
     <section class="rounded-xl border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-gray-800">
         <div class="mb-4 flex items-center justify-between">
             <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Tipos vinculados</h2>
-            <button type="button" id="add-appointment-type-row" class="btn btn-outline">Adicionar tipo</button>
+            <button type="button" id="add-appointment-type-row" class="btn btn-outline inline-flex items-center">
+                <x-icon name="plus" size="text-sm" class="mr-2" />
+                Adicionar tipo
+            </button>
         </div>
 
         <div class="space-y-3" id="appointment-types-rows">
@@ -189,7 +195,10 @@
                             </select>
                         </div>
                         <div class="flex items-end justify-end">
-                            <button type="button" class="btn btn-outline text-red-600 hover:text-red-700 remove-appointment-type-row">Remover</button>
+                            <button type="button" class="btn btn-outline text-red-600 hover:text-red-700 remove-appointment-type-row inline-flex items-center">
+                                <x-icon name="trash-can-outline" size="text-sm" class="mr-2" />
+                                Remover
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -198,8 +207,14 @@
     </section>
 
     <div class="flex items-center justify-end gap-2">
-        <a href="{{ workspace_route('tenant.agenda-settings.index') }}" class="btn btn-outline">Cancelar</a>
-        <button type="submit" class="btn btn-primary">{{ $submitLabel }}</button>
+        <a href="{{ workspace_route('tenant.agenda-settings.index') }}" class="btn btn-outline inline-flex items-center">
+            <x-icon name="close" size="text-sm" class="mr-2" />
+            Cancelar
+        </a>
+        <button type="submit" class="btn btn-primary inline-flex items-center">
+            <x-icon name="content-save-outline" size="text-sm" class="mr-2" />
+            {{ $submitLabel }}
+        </button>
     </div>
 </form>
 
@@ -254,8 +269,14 @@
             </div>
 
             <div class="mt-5 flex items-center justify-end gap-2">
-                <button type="button" class="btn btn-outline" data-business-hour-modal-close>Cancelar</button>
-                <button type="button" id="save-business-hour-modal" class="btn btn-primary">Salvar horário</button>
+                <button type="button" class="btn btn-outline inline-flex items-center" data-business-hour-modal-close>
+                    <x-icon name="close" size="text-sm" class="mr-2" />
+                    Cancelar
+                </button>
+                <button type="button" id="save-business-hour-modal" class="btn btn-primary inline-flex items-center">
+                    <x-icon name="content-save-outline" size="text-sm" class="mr-2" />
+                    Salvar horário
+                </button>
             </div>
         </div>
     </div>
@@ -281,7 +302,10 @@
                 </select>
             </div>
             <div class="flex items-end justify-end">
-                <button type="button" class="btn btn-outline text-red-600 hover:text-red-700 remove-appointment-type-row">Remover</button>
+                <button type="button" class="btn btn-outline text-red-600 hover:text-red-700 remove-appointment-type-row inline-flex items-center">
+                    <x-icon name="trash-can-outline" size="text-sm" class="mr-2" />
+                    Remover
+                </button>
             </div>
         </div>
     </div>

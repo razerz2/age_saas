@@ -25,11 +25,11 @@ class EstadoRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'uf.required' => 'A sigla (UF) e obrigatoria.',
+            'uf.required' => 'A sigla (UF) é obrigatória.',
             'uf.size' => 'A sigla (UF) deve ter exatamente 2 caracteres.',
-            'uf.unique' => 'Ja existe um estado com essa sigla.',
-            'nome_estado.required' => 'O nome do estado e obrigatorio.',
-            'nome_estado.unique' => 'Ja existe um estado com esse nome.',
+            'uf.unique' => 'Já existe um estado com essa sigla.',
+            'nome_estado.required' => 'O nome do estado é obrigatório.',
+            'nome_estado.unique' => 'Já existe um estado com esse nome.',
         ];
     }
 }

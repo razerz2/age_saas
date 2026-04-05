@@ -102,7 +102,7 @@
                             data-test-url="{{ route('Platform.settings.test', ['service' => 'asaas']) }}"
                             class="btn btn-secondary"
                         >
-                            <i class="fas fa-plug me-1"></i> Testar Conexao ASAAS
+                            <i class="fas fa-plug me-1"></i> Testar Conexão ASAAS
                         </button>
                         <span id="asaas-test-badge" class="badge bg-secondary d-none">-</span>
                         <small id="asaas-test-message" class="text-muted"></small>
@@ -112,7 +112,7 @@
 
                     <h5 class="mt-2">Google Calendar</h5>
                     <p class="text-muted mb-3">
-                        Credenciais OAuth globais utilizadas pelas integracoes Google Calendar das tenants.
+                        Credenciais OAuth globais utilizadas pelas integrações Google Calendar das tenants.
                     </p>
 
                     <div class="mb-3">
@@ -139,7 +139,7 @@
                         <input type="url" class="form-control" name="GOOGLE_REDIRECT_URI"
                             value="{{ old('GOOGLE_REDIRECT_URI', $settings['GOOGLE_REDIRECT_URI'] ?? route('google.callback')) }}"
                             placeholder="{{ route('google.callback') }}">
-                        <small class="text-muted">A URI precisa bater com a configuracao do app OAuth no Google Cloud.</small>
+                        <small class="text-muted">A URI precisa bater com a configuração do app OAuth no Google Cloud.</small>
                     </div>
 
                     <div class="d-flex align-items-center flex-wrap gap-2 mb-4">
@@ -147,7 +147,7 @@
                             id="btn-test-google"
                             data-test-url="{{ route('Platform.settings.integrations.google.test') }}"
                             class="btn btn-secondary">
-                            <i class="fas fa-plug me-1"></i> Testar Conexao Google
+                            <i class="fas fa-plug me-1"></i> Testar Conexão Google
                         </button>
                         <span id="google-test-badge" class="badge bg-secondary d-none">-</span>
                         <small id="google-test-message" class="text-muted"></small>
@@ -186,7 +186,7 @@
                         <div class="card-body">
                             <h6 class="mb-2 text-sm font-semibold text-gray-900 dark:text-white">Providers globais para tenants</h6>
                             <p class="text-xs text-gray-500 dark:text-gray-400 mb-3">
-                                Defina quais providers nao oficiais podem ser usados quando o tenant selecionar "Usar servico global do sistema".
+                                Defina quais providers não oficiais podem ser usados quando o tenant selecionar "Usar serviço global do sistema".
                             </p>
 
                             @php
@@ -211,7 +211,7 @@
                                 </label>
                             @empty
                                 <p class="text-sm text-gray-500 dark:text-gray-400 mb-0">
-                                    Nenhum provider nao oficial disponivel para catalogo global no momento.
+                                    Nenhum provider não oficial disponível para catálogo global no momento.
                                 </p>
                             @endforelse
                         </div>
@@ -1944,7 +1944,7 @@
                     });
                 }
 
-                // Toggle formulario de envio Evolution
+                // Toggle formulário de envio Evolution
                 var toggleEvolutionSendBtn = document.getElementById('btn-toggle-evolution-send');
                 var evolutionSendForm = document.getElementById('evolution-send-form');
                 if (toggleEvolutionSendBtn && evolutionSendForm) {
@@ -1976,7 +1976,7 @@
 
                         if (!number || !text) {
                             if (message) {
-                                message.textContent = 'Preencha o numero de destino e a mensagem para enviar o teste.';
+                                message.textContent = 'Preencha o número de destino e a mensagem para enviar o teste.';
                             }
                             return;
                         }
@@ -2012,7 +2012,7 @@
                         })
                             .then(function (response) {
                                 return response.json().catch(function () {
-                                    return { status: 'ERROR', message: 'Resposta invalida do servidor.' };
+                                    return { status: 'ERROR', message: 'Resposta inválida do servidor.' };
                                 });
                             })
                             .then(function (data) {
@@ -2028,7 +2028,7 @@
                                 if (message) {
                                     var friendly = data && data.message ? data.message : (ok
                                         ? 'Mensagem enviada com sucesso.'
-                                        : 'Falha ao enviar mensagem de teste. Verifique as configuracoes.');
+                                        : 'Falha ao enviar mensagem de teste. Verifique as configurações.');
                                     message.textContent = friendly;
                                 }
                             })

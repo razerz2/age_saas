@@ -117,12 +117,12 @@
     </div>
 
     <div class="rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-800">
-        <h2 class="mb-3 text-base font-semibold text-gray-900 dark:text-white">Historico de versoes</h2>
+        <h2 class="mb-3 text-base font-semibold text-gray-900 dark:text-white">Histórico de versões</h2>
         <div class="overflow-x-auto">
             <table class="min-w-full divide-y divide-gray-200 text-sm dark:divide-gray-700">
                 <thead class="bg-gray-50 dark:bg-gray-900/40">
                     <tr>
-                        <th class="px-3 py-2 text-left font-semibold text-gray-600 dark:text-gray-300">Versao</th>
+                        <th class="px-3 py-2 text-left font-semibold text-gray-600 dark:text-gray-300">Versão</th>
                         <th class="px-3 py-2 text-left font-semibold text-gray-600 dark:text-gray-300">Status</th>
                         <th class="px-3 py-2 text-left font-semibold text-gray-600 dark:text-gray-300">Meta Name</th>
                         <th class="px-3 py-2 text-left font-semibold text-gray-600 dark:text-gray-300">Atualizado</th>
@@ -158,7 +158,7 @@
 
         <div class="space-y-3">
             <div>
-                <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">Numero de destino</label>
+                <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">Número de destino</label>
                 <input type="text" id="manual-test-phone" class="w-full rounded-lg border border-gray-300 px-3 py-2 dark:border-gray-600 dark:bg-gray-700 dark:text-white" placeholder="Ex: 5511999999999">
             </div>
 
@@ -174,7 +174,7 @@
                                value="{{ $sampleVariables[(string) $placeholder] ?? '' }}">
                     </div>
                 @empty
-                    <p class="text-sm text-gray-500 dark:text-gray-400">Este template nao possui variaveis mapeadas.</p>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">Este template não possui variáveis mapeadas.</p>
                 @endforelse
             </div>
 
@@ -241,7 +241,7 @@
         sendBtn.addEventListener('click', async () => {
             const phone = (phoneInput.value || '').trim();
             if (!phone) {
-                showFeedback(false, 'Informe o numero de destino.');
+                showFeedback(false, 'Informe o número de destino.');
                 return;
             }
 
@@ -271,7 +271,7 @@
 
                 showFeedback(false, data.message || 'Falha ao enviar teste.');
             } catch (error) {
-                showFeedback(false, 'Erro de comunicacao ao enviar teste.');
+                showFeedback(false, 'Erro de comunicação ao enviar teste.');
             } finally {
                 sendBtn.disabled = false;
                 sendBtn.textContent = oldText;

@@ -162,7 +162,7 @@ class TenantCreatorService
                 'test_plan' => $plan->isTest(),
             ]);
         } catch (\Throwable $e) {
-            Log::error('Erro ao criar assinatura automatica: ' . $e->getMessage());
+            Log::error('Erro ao criar assinatura automática: ' . $e->getMessage());
         }
     }
 

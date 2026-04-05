@@ -1,6 +1,6 @@
-﻿@extends('layouts.tailadmin.app')
+@extends('layouts.tailadmin.app')
 
-@section('title', 'Criar MÃ©dico')
+@section('title', 'Criar Médico')
 @section('page', 'doctors')
 
 @php
@@ -25,7 +25,7 @@
                     </li>
                     <li class="flex items-center gap-2">
                         <x-icon name="chevron-right" size="text-sm" class="text-gray-400" />
-                        <a href="{{ workspace_route('tenant.doctors.index') }}" class="text-gray-700 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white">MÃ©dicos</a>
+                        <a href="{{ workspace_route('tenant.doctors.index') }}" class="text-gray-700 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white">Médicos</a>
                     </li>
                     <li class="flex items-center gap-2">
                         <x-icon name="chevron-right" size="text-sm" class="text-gray-400" />
@@ -45,9 +45,9 @@
                 <div>
                     <h2 class="text-xl font-semibold text-gray-900 dark:text-white flex items-center">
                         <x-icon name="account-plus-outline" size="text-xl" class="mr-2 text-blue-600" />
-                        Novo MÃ©dico
+                        Novo Médico
                     </h2>
-                    <p class="text-gray-600 dark:text-gray-400 mt-1">Preencha os dados abaixo para cadastrar um novo mÃ©dico</p>
+                    <p class="text-gray-600 dark:text-gray-400 mt-1">Preencha os dados abaixo para cadastrar um novo médico</p>
                 </div>
             </div>
         </div>
@@ -56,19 +56,19 @@
             <form class="space-y-8" action="{{ workspace_route('tenant.doctors.store') }}" method="POST">
                 @csrf
 
-                <!-- SeÃ§Ã£o: InformaÃ§Ãµes BÃ¡sicas -->
+                <!-- Seção: Informações Básicas -->
                 <div>
                     <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
                         <x-icon name="information-outline" size="text-lg" class="mr-2 text-blue-600" />
-                        InformaÃ§Ãµes BÃ¡sicas
+                        Informações Básicas
                     </h3>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                             <x-icon name="account-outline" size="text-sm" class="inline mr-1" />
-                            UsuÃ¡rio <span class="text-red-500">*</span>
+                            Usuário <span class="text-red-500">*</span>
                         </label>
                         <select name="user_id" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white @error('user_id') border-red-500 @enderror" required>
-                            <option value="">Selecione um usuÃ¡rio</option>
+                            <option value="">Selecione um usuário</option>
                             @foreach($users as $user)
                                 <option value="{{ $user->id }}" {{ old('user_id', $selectedUserId) == $user->id ? 'selected' : '' }}>{{ $user->name }}</option>
                             @endforeach
@@ -79,7 +79,7 @@
                     </div>
                 </div>
 
-                <!-- SeÃ§Ã£o: Dados Profissionais -->
+                <!-- Seção: Dados Profissionais -->
                 <div>
                     <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
                         <x-icon name="briefcase-outline" size="text-lg" class="mr-2 text-blue-600" />
@@ -89,7 +89,7 @@
                         <div>
                             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                                 <x-icon name="card-account-details-outline" size="text-sm" class="inline mr-1" />
-                                NÃºmero do {{ $professionalRegistration }}
+                                Número do {{ $professionalRegistration }}
                             </label>
                             <input type="text" 
                                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white @error('crm_number') border-red-500 @enderror" 
@@ -138,13 +138,13 @@
                 @endphp
 
                 @if($customizationEnabled)
-                    <!-- SeÃ§Ã£o: PersonalizaÃ§Ã£o do Profissional -->
+                    <!-- Seção: Personalização do Profissional -->
                     <div class="p-4 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg">
                         <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2 flex items-center">
                             <x-icon name="tune-variant" size="text-lg" class="mr-2 text-blue-600" />
-                            PersonalizaÃ§Ã£o visual deste profissional
+                            Personalização visual deste profissional
                         </h3>
-                        <p class="text-xs text-gray-500 dark:text-gray-400 mb-4">Se preenchido, este profissional terÃ¡ prioridade sobre a especialidade e sobre o perfil global do tenant.</p>
+                        <p class="text-xs text-gray-500 dark:text-gray-400 mb-4">Se preenchido, este profissional terá prioridade sobre a especialidade e sobre o perfil global do tenant.</p>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -153,7 +153,7 @@
                                 <input type="text" 
                                        name="label_singular" 
                                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white @error('label_singular') border-red-500 @enderror"
-                                       placeholder="Ex: PsicÃ³logo, Fisioterapeuta"
+                                       placeholder="Ex: Psicólogo, Fisioterapeuta"
                                        value="{{ old('label_singular') }}"
                                        maxlength="60">
                                 @error('label_singular')
@@ -167,7 +167,7 @@
                                 <input type="text" 
                                        name="label_plural" 
                                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white @error('label_plural') border-red-500 @enderror"
-                                       placeholder="Ex: PsicÃ³logos, Fisioterapeutas"
+                                       placeholder="Ex: Psicólogos, Fisioterapeutas"
                                        value="{{ old('label_plural') }}"
                                        maxlength="60">
                                 @error('label_plural')
@@ -176,7 +176,7 @@
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                    Registro Profissional (RÃ³tulo)
+                                    Registro Profissional (Rótulo)
                                 </label>
                                 <input type="text" 
                                        name="registration_label" 
@@ -206,15 +206,15 @@
                     </div>
                 @endif
 
-                <!-- SeÃ§Ã£o: Especialidades MÃ©dicas -->
+                <!-- Seção: Especialidades Médicas -->
                 <div>
                     <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
                         <x-icon name="stethoscope" size="text-lg" class="mr-2 text-blue-600" />
-                        Especialidades MÃ©dicas
+                        Especialidades Médicas
                     </h3>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                            Selecione as especialidades do mÃ©dico <span class="text-red-500">*</span>
+                            Selecione as especialidades do médico <span class="text-red-500">*</span>
                         </label>
                         <div class="grid grid-cols-1 md:grid-cols-12 gap-4 mb-4 items-end">
                             <div class="md:col-span-8">
@@ -239,7 +239,7 @@
                             </div>
                         </div>
                         
-                        <!-- Ãrea para exibir especialidades selecionadas -->
+                        <!-- Área para exibir especialidades selecionadas -->
                         <div id="selected-specialties" class="p-4 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700" style="min-height: 60px;" data-badge-style="tailwind" data-initial-selected='@json(old('specialties', []))'>
                             @if(old('specialties'))
                                 @foreach(old('specialties') as $specialtyId)
@@ -264,7 +264,7 @@
                             @endif
                         </div>
                         
-                        <!-- Campos hidden para enviar os IDs (serÃ£o criados dinamicamente pelo JavaScript) -->
+                        <!-- Campos hidden para enviar os IDs (serão criados dinamicamente pelo JavaScript) -->
                         <div id="specialties-inputs"></div>
                         
                         @error('specialties')
@@ -273,7 +273,7 @@
                     </div>
                 </div>
 
-                <!-- BotÃµes de AÃ§Ã£o -->
+                <!-- Botões de Ação -->
                 <div class="flex flex-col gap-3 pt-6 border-t border-gray-200 dark:border-gray-700 sm:flex-row sm:items-center sm:justify-between">
                     <a href="{{ workspace_route('tenant.doctors.index') }}" class="btn btn-outline inline-flex items-center">
                         <x-icon name="arrow-left" size="text-sm" class="mr-2" />
@@ -281,7 +281,7 @@
                     </a>
                     <button type="submit" class="btn btn-primary inline-flex items-center">
                         <x-icon name="content-save-outline" size="text-sm" class="mr-2" />
-                        Salvar MÃ©dico
+                        Salvar Médico
                     </button>
                 </div>
             </form>

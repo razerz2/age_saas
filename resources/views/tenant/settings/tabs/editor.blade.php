@@ -220,7 +220,7 @@
 
                             <div>
                                 <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                    {{ ($editor['current_channel'] ?? 'email') === 'email' ? 'Body renderizado' : 'Mensagem renderizada' }}
+                                    {{ ($editor['current_channel'] ?? 'email') === 'email' ? 'Corpo renderizado' : 'Mensagem renderizada' }}
                                 </label>
                                 <div class="rounded border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-2 text-sm text-gray-800 dark:text-gray-200 font-mono whitespace-pre-wrap">{{ $editor['preview']['content_rendered'] ?? '' }}</div>
                             </div>

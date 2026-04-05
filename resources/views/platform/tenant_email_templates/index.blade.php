@@ -33,7 +33,7 @@
         @endif
 
         <div class="alert alert-info">
-            Baseline de Templates de Email Tenant (nao tenant-aware por tenant final). Layout permanece separado.
+            Baseline de Templates de E-mail Tenant (não tenant-aware por tenant final). Layout permanece separado.
         </div>
 
         <div class="card shadow-sm border-0 mb-3">
@@ -70,7 +70,7 @@
                             <th>Nome</th>
                             <th>Status</th>
                             <th>Atualizado em</th>
-                            <th class="text-center">Acoes</th>
+                            <th class="text-center">Ações</th>
                         </tr>
                         </thead>
                         <tbody>
@@ -109,7 +109,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="5" class="text-center text-muted">Nenhum template de email tenant encontrado.</td>
+                                <td colspan="5" class="text-center text-muted">Nenhum template de e-mail tenant encontrado.</td>
                             </tr>
                         @endforelse
                         </tbody>

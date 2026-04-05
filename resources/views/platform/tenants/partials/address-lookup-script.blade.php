@@ -19,14 +19,14 @@
             }
 
             if (response.status === 404) {
-                return 'CEP nao encontrado. Voce pode preencher os campos manualmente.';
+                return 'CEP não encontrado. Você pode preencher os campos manualmente.';
             }
 
             if (response.status === 422) {
-                return 'CEP invalido. Informe 8 digitos.';
+                return 'CEP inválido. Informe 8 dígitos.';
             }
 
-            return 'Nao foi possivel consultar o CEP agora. Continue o preenchimento manual.';
+            return 'Não foi possível consultar o CEP agora. Continue o preenchimento manual.';
         }
 
         window.initTenantAddressLookup = function initTenantAddressLookup(config) {
@@ -231,7 +231,7 @@
                         return;
                     }
 
-                    setFeedback('Endereco preenchido pelo CEP.', 'success');
+                    setFeedback('Endereço preenchido pelo CEP.', 'success');
                 } catch (error) {
                     lastLookupCep = '';
                     setFeedback('Falha ao consultar CEP. Continue o preenchimento manual.', 'warning');
@@ -261,7 +261,7 @@
                 }
 
                 if (digits.length !== 8) {
-                    setFeedback('CEP invalido. Informe 8 digitos.', 'warning');
+                    setFeedback('CEP inválido. Informe 8 dígitos.', 'warning');
                     return;
                 }
 

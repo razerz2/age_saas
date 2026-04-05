@@ -45,8 +45,8 @@ class UpdateWhatsAppOfficialTenantTemplateRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'event_key.in' => 'Evento nao suportado para configuracao oficial tenant.',
-            'event_key.unique' => 'Ja existe mapeamento para este tenant, evento e idioma.',
+            'event_key.in' => 'Evento não suportado para configuração oficial do tenant.',
+            'event_key.unique' => 'Já existe mapeamento para este tenant, evento e idioma.',
         ];
     }
 
@@ -64,15 +64,15 @@ class UpdateWhatsAppOfficialTenantTemplateRequest extends FormRequest
             }
 
             if ((string) $template->provider !== WhatsAppOfficialTemplate::PROVIDER) {
-                $validator->errors()->add('whatsapp_official_template_id', 'Template oficial invalido: provider incompativel.');
+                $validator->errors()->add('whatsapp_official_template_id', 'Template oficial inválido: provedor incompatível.');
             }
 
             if ((string) $template->key !== (string) $this->input('event_key')) {
-                $validator->errors()->add('whatsapp_official_template_id', 'Template selecionado nao corresponde ao evento informado.');
+                $validator->errors()->add('whatsapp_official_template_id', 'O template selecionado não corresponde ao evento informado.');
             }
 
             if ((string) $template->language !== (string) $this->input('language')) {
-                $validator->errors()->add('language', 'Idioma deve coincidir com o idioma do template oficial selecionado.');
+                $validator->errors()->add('language', 'O idioma deve coincidir com o idioma do template oficial selecionado.');
             }
         });
     }

@@ -9,7 +9,7 @@
         $screenTitle = $isSelfPasswordChange ? 'Alterar Senha' : 'Redefinir Senha';
         $screenDescription = $isSelfPasswordChange
             ? 'Digite sua senha atual e a nova senha.'
-            : 'Defina a nova senha para o usuario selecionado.';
+            : 'Defina a nova senha para o usuário selecionado.';
     @endphp
     <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6">
         <!-- Page Header -->
@@ -48,7 +48,7 @@
                 <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">{{ $screenDescription }}</p>
                 @unless($isSelfPasswordChange)
                     <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                        Usuario: <span class="font-medium text-gray-700 dark:text-gray-200">{{ $user->name_full ?? $user->name }}</span>
+                        Usuário: <span class="font-medium text-gray-700 dark:text-gray-200">{{ $user->name_full ?? $user->name }}</span>
                     </p>
                 @endunless
             </div>

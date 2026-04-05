@@ -45,7 +45,7 @@
         @endif
 
         <div class="alert alert-info">
-            Escopo atual: Tenant. O teste envia somente assunto e body do template atual, sem uso de modulo WhatsApp e sem layout estrutural.
+            Escopo atual: Tenant. O teste envia somente assunto e body do template atual, sem uso de módulo WhatsApp e sem layout estrutural.
         </div>
 
         <div class="card shadow-sm border-0">
@@ -86,7 +86,7 @@
                 </div>
 
                 <div class="mb-0">
-                    <strong>Body/Conteudo:</strong>
+                    <strong>Body/Conteúdo:</strong>
                     <pre class="border rounded p-3 mt-2 bg-light">{{ $template->body }}</pre>
                 </div>
             </div>
@@ -101,4 +101,3 @@
 
     @include('layouts.freedash.footer')
 @endsection
-

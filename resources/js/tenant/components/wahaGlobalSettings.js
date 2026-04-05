@@ -62,14 +62,14 @@ export function initTenantWahaGlobalSettings() {
         const expectedUrl = String(webhookPayload?.expected_url || '').trim();
         const currentUrl = String(webhookPayload?.current_url || '').trim();
         const configured = Boolean(webhookPayload?.configured);
-        const statusText = configured ? 'Configurado' : (currentUrl ? 'Divergente' : 'Nao configurado');
+        const statusText = configured ? 'Configurado' : (currentUrl ? 'Divergente' : 'Não configurado');
 
         if (dom.webhookExpectedUrl) {
             dom.webhookExpectedUrl.textContent = expectedUrl || '-';
         }
 
         if (dom.webhookCurrentUrl) {
-            dom.webhookCurrentUrl.textContent = currentUrl || 'Nao configurado';
+            dom.webhookCurrentUrl.textContent = currentUrl || 'Não configurado';
         }
 
         if (dom.webhookStatus) {
@@ -195,7 +195,7 @@ export function initTenantWahaGlobalSettings() {
         if (!url) {
             return {
                 ok: false,
-                message: 'Endpoint WAHA nao configurado na tela.',
+                message: 'Endpoint WAHA não configurado na tela.',
             };
         }
 
@@ -228,14 +228,14 @@ export function initTenantWahaGlobalSettings() {
         } catch (error) {
             return {
                 ok: false,
-                message: 'Erro de conexao com o servidor. Tente novamente.',
+                message: 'Erro de conexão com o servidor. Tente novamente.',
             };
         }
     };
 
     const refreshStatus = async ({ silent = false, source = 'manual' } = {}) => {
         if (!silent) {
-            setFeedback('Atualizando status da sessao WAHA...');
+            setFeedback('Atualizando status da sessão WAHA...');
         }
 
         let result;
@@ -287,7 +287,7 @@ export function initTenantWahaGlobalSettings() {
         }
 
         setFeedback(
-            qrPayload?.message || 'QR Code ainda nao disponivel para esta sessao.',
+            qrPayload?.message || 'QR Code ainda não disponível para esta sessão.',
             'neutral'
         );
     };
@@ -300,17 +300,17 @@ export function initTenantWahaGlobalSettings() {
             const endpoint = endpoints[action];
 
             if (!endpoint) {
-                setFeedback('Acao WAHA indisponivel na tela.', 'error');
+                setFeedback('Ação WAHA indisponível na tela.', 'error');
                 return;
             }
 
             button.disabled = true;
-            setFeedback(`Executando acao ${action.toUpperCase()}...`);
+            setFeedback(`Executando ação ${action.toUpperCase()}...`);
 
             try {
                 const result = await request(endpoint, 'POST');
                 if (!result.ok) {
-                    setFeedback(result.message || `Falha ao executar acao ${action.toUpperCase()}.`, 'error');
+                    setFeedback(result.message || `Falha ao executar ação ${action.toUpperCase()}.`, 'error');
                     return;
                 }
 
@@ -321,10 +321,10 @@ export function initTenantWahaGlobalSettings() {
                     await refreshStatus();
                 }
 
-                const successMessage = result.message || `Acao ${action.toUpperCase()} executada com sucesso.`;
+                const successMessage = result.message || `Ação ${action.toUpperCase()} executada com sucesso.`;
                 setFeedback(successMessage, 'success');
             } catch (error) {
-                setFeedback(`Falha ao executar acao ${action.toUpperCase()}.`, 'error');
+                setFeedback(`Falha ao executar ação ${action.toUpperCase()}.`, 'error');
             } finally {
                 button.disabled = false;
             }
@@ -352,7 +352,7 @@ export function initTenantWahaGlobalSettings() {
             event.preventDefault();
 
             if (!endpoints.bindWebhook) {
-                setFeedback('Acao de webhook WAHA indisponivel na tela.', 'error');
+                setFeedback('Ação de webhook WAHA indisponível na tela.', 'error');
                 return;
             }
 

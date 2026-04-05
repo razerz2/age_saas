@@ -94,7 +94,8 @@
                             <div class="flex items-center gap-2">
                                 <input type="hidden" name="patient_id" id="patient_id" value="{{ $selectedPatientId }}" required>
                                 <input type="text" id="patient_name" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-gray-50 dark:bg-gray-700 dark:text-white @error('patient_id') border-red-500 @enderror" value="{{ $selectedPatient?->full_name ?? '' }}" placeholder="Selecione um paciente" readonly>
-                                <button type="button" class="btn btn-outline js-open-entity-search" data-entity-type="patients" data-search-url="{{ workspace_route('tenant.appointments.api.search-patients') }}" data-hidden-input-id="patient_id" data-display-input-id="patient_name" data-modal-title="Buscar paciente">
+                                <button type="button" class="btn btn-outline js-open-entity-search inline-flex items-center" data-entity-type="patients" data-search-url="{{ workspace_route('tenant.appointments.api.search-patients') }}" data-hidden-input-id="patient_id" data-display-input-id="patient_name" data-modal-title="Buscar paciente">
+                                    <x-icon name="magnify" size="text-sm" class="mr-2" />
                                     Buscar
                                 </button>
                             </div>
@@ -116,7 +117,8 @@
                             <div class="flex items-center gap-2 mb-2">
                                 <input type="hidden" name="doctor_id" id="doctor_id" data-initial-value="{{ $selectedDoctorId }}" value="{{ $selectedDoctorId }}" data-selected-name="{{ $selectedDoctorName }}" required>
                                 <input type="text" id="doctor_name" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-gray-50 dark:bg-gray-700 dark:text-white @error('doctor_id') border-red-500 @enderror" value="{{ $selectedDoctorName }}" placeholder="Selecione um {{ $professionalSingularLower }}" readonly>
-                                <button type="button" class="btn btn-outline js-open-entity-search" data-entity-type="doctors" data-search-url="{{ workspace_route('tenant.appointments.api.search-doctors') }}" data-hidden-input-id="doctor_id" data-display-input-id="doctor_name" data-modal-title="Buscar {{ $professionalSingularLower }}">
+                                <button type="button" class="btn btn-outline js-open-entity-search inline-flex items-center" data-entity-type="doctors" data-search-url="{{ workspace_route('tenant.appointments.api.search-doctors') }}" data-hidden-input-id="doctor_id" data-display-input-id="doctor_name" data-modal-title="Buscar {{ $professionalSingularLower }}">
+                                    <x-icon name="magnify" size="text-sm" class="mr-2" />
                                     Buscar
                                 </button>
                             </div>
@@ -273,8 +275,14 @@
                 </div>
             </div>
             <div class="entity-search-modal__footer">
-                <button type="button" class="btn btn-outline js-cancel-entity-search">Cancelar</button>
-                <button type="button" class="btn btn-primary js-confirm-entity-search" data-entity-search-confirm disabled>Selecionar</button>
+                <button type="button" class="btn btn-outline js-cancel-entity-search inline-flex items-center">
+                    <x-icon name="close" size="text-sm" class="mr-2" />
+                    Cancelar
+                </button>
+                <button type="button" class="btn btn-primary js-confirm-entity-search inline-flex items-center" data-entity-search-confirm disabled>
+                    <x-icon name="check-bold" size="text-sm" class="mr-2" />
+                    Selecionar
+                </button>
             </div>
         </div>
     </div>

@@ -118,7 +118,7 @@
                                                 @endphp
 
                                                 <span class="badge {{ $grantsAccess ? 'bg-success' : 'bg-secondary' }}">
-                                                    {{ $grantsAccess ? 'Libera acesso' : 'Nao libera acesso' }}
+                                                    {{ $grantsAccess ? 'Libera acesso' : 'Não libera acesso' }}
                                                 </span>
 
                                                 @if ($tenant)

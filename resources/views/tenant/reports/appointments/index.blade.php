@@ -1,6 +1,6 @@
 @extends('layouts.tailadmin.app')
 
-@section('title', 'Relatorio de Agendamentos')
+@section('title', 'Relatório de Agendamentos')
 @section('page', 'reports')
 
 @section('content')
@@ -14,7 +14,7 @@
 
 <div class="page-header mb-6">
     <div>
-        <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Relatorio de Agendamentos</h1>
+        <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Relatório de Agendamentos</h1>
         <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">Visao consolidada de agendamentos</p>
     </div>
     <nav class="mt-4" aria-label="breadcrumb">
@@ -24,7 +24,7 @@
             </li>
             <li class="flex items-center gap-2">
                 <svg class="h-4 w-4 text-gray-400" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" /></svg>
-                <a href="{{ workspace_route('tenant.reports.index') }}" class="hover:text-blue-600 dark:hover:text-white">Relatorios</a>
+                <a href="{{ workspace_route('tenant.reports.index') }}" class="hover:text-blue-600 dark:hover:text-white">Relatórios</a>
             </li>
             <li class="flex items-center gap-2">
                 <svg class="h-4 w-4 text-gray-400" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" /></svg>
@@ -67,7 +67,7 @@
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
             <div class="p-6 border-b border-gray-200 dark:border-gray-700">
-                <h4 class="text-lg font-semibold text-gray-900 dark:text-white">Evolucao de Agendamentos</h4>
+                <h4 class="text-lg font-semibold text-gray-900 dark:text-white">Evolução de Agendamentos</h4>
             </div>
             <div class="p-6"><div class="h-72"><canvas id="evolutionChart" class="w-full h-full"></canvas></div></div>
         </div>
@@ -82,7 +82,7 @@
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
             <div class="p-6 border-b border-gray-200 dark:border-gray-700">
-                <h4 class="text-lg font-semibold text-gray-900 dark:text-white">Agendamentos por Medico</h4>
+                <h4 class="text-lg font-semibold text-gray-900 dark:text-white">Agendamentos por Médico</h4>
             </div>
             <div class="p-6"><div class="h-72"><canvas id="byDoctorChart" class="w-full h-full"></canvas></div></div>
         </div>

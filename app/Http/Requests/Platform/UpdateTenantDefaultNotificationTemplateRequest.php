@@ -30,8 +30,8 @@ class UpdateTenantDefaultNotificationTemplateRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'key.regex' => 'Formato de key invalido. Use letras minusculas, numeros, ponto e underscore.',
-            'language.regex' => 'Idioma invalido. Use formato xx_YY (ex: pt_BR).',
+            'key.regex' => 'Formato de chave inválido. Use letras minúsculas, números, ponto e underscore.',
+            'language.regex' => 'Idioma inválido. Use o formato xx_YY (ex: pt_BR).',
         ];
     }
 
@@ -67,11 +67,11 @@ class UpdateTenantDefaultNotificationTemplateRequest extends FormRequest
             $subject = trim((string) ($this->input('subject') ?? ''));
 
             if ($channel === 'email' && $subject === '') {
-                $validator->errors()->add('subject', 'O assunto e obrigatorio para o canal email.');
+                $validator->errors()->add('subject', 'O assunto é obrigatório para o canal e-mail.');
             }
 
             if ($channel === 'whatsapp' && $subject !== '') {
-                $validator->errors()->add('subject', 'O assunto deve ficar vazio para o canal whatsapp.');
+                $validator->errors()->add('subject', 'O assunto deve ficar vazio para o canal WhatsApp.');
             }
         });
     }

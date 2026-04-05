@@ -10,7 +10,7 @@
     $webhookConfigured = is_array($webhook) ? ((bool) ($webhook['configured'] ?? false)) : false;
     $webhookStatusText = $webhookConfigured
         ? 'Configurado'
-        : ($webhookCurrentUrl !== '' ? 'Divergente' : 'Nao configurado');
+        : ($webhookCurrentUrl !== '' ? 'Divergente' : 'Não configurado');
 @endphp
 
 <div class="space-y-8" id="tenant-waha-global-panel"
@@ -25,11 +25,11 @@
     <div class="mb-2">
         <div class="inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-700 dark:border-emerald-700/50 dark:bg-emerald-900/20 dark:text-emerald-300">
             <x-icon name="whatsapp" size="text-sm" />
-            Instancia Global WAHA
+            Instância Global WAHA
         </div>
         <h2 class="mt-3 text-xl font-semibold text-gray-900 dark:text-white">WAHA</h2>
         <p class="text-sm text-gray-600 dark:text-gray-400">
-            Instancia global do WhatsApp gerenciada pelo sistema. O nome da instancia e derivado automaticamente da clinica.
+            Instância global do WhatsApp gerenciada pelo sistema. O nome da instância é derivado automaticamente da clínica.
         </p>
     </div>
 
@@ -38,7 +38,7 @@
             <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-900/40">
                 <div class="flex items-center gap-2 text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">
                     <x-icon name="office-building-outline" size="text-sm" />
-                    Instancia WAHA
+                    Instância WAHA
                 </div>
                 <div id="waha-instance-name" class="mt-2 w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 dark:text-white px-3 py-2 text-sm font-semibold">
                     {{ $instanceName !== '' ? $instanceName : '-' }}
@@ -48,12 +48,12 @@
             <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-900/40">
                 <div class="flex items-center gap-2 text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">
                     <x-icon name="signal" size="text-sm" />
-                    Status da Sessao
+                    Status da Sessão
                 </div>
                 <div id="waha-session-status" class="mt-2 w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 dark:text-white px-3 py-2 text-sm font-semibold">
                     {{ $instanceStatus !== '' ? $instanceStatus : 'UNKNOWN' }}
                 </div>
-                <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">Origem: Instancia gerenciada pelo sistema global.</p>
+                <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">Origem: Instância gerenciada pelo sistema global.</p>
             </div>
         </div>
 
@@ -71,9 +71,9 @@
                     </div>
                 </div>
                 <div>
-                    <p class="text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">URL atual na instancia</p>
+                    <p class="text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">URL atual na instância</p>
                     <div id="waha-webhook-current-url" class="mt-1 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 text-xs break-all text-gray-700 dark:text-gray-200">
-                        {{ $webhookCurrentUrl !== '' ? $webhookCurrentUrl : 'Nao configurado' }}
+                        {{ $webhookCurrentUrl !== '' ? $webhookCurrentUrl : 'Não configurado' }}
                     </div>
                 </div>
             </div>
@@ -97,7 +97,7 @@
         <div class="mt-4 rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-900/40">
             <div class="flex items-center gap-2 text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">
                 <x-icon name="alert-circle-outline" size="text-sm" />
-                Ultimo Erro
+                Último Erro
             </div>
             <div id="waha-last-error" class="mt-2 w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 text-sm {{ $lastError !== '' ? 'text-red-600 dark:text-red-400' : 'text-gray-500 dark:text-gray-400' }}">
                 {{ $lastError !== '' ? $lastError : 'Sem erros recentes.' }}
@@ -107,7 +107,7 @@
         <div class="mt-6 rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-900/40">
             <div class="mb-3 flex items-center gap-2 text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">
                 <x-icon name="cog-outline" size="text-sm" />
-                Acoes da Sessao
+                Ações da Sessão
             </div>
 
             <div class="flex flex-wrap md:flex-nowrap md:overflow-x-auto gap-2">
@@ -152,19 +152,20 @@
                 <x-icon name="qrcode" size="text-base" />
                 QR Code
             </h3>
-            <span class="text-xs text-gray-500 dark:text-gray-400">Exibido quando a sessao exigir autenticacao.</span>
+            <span class="text-xs text-gray-500 dark:text-gray-400">Exibido quando a sessão exigir autenticação.</span>
         </div>
 
         <div id="waha-qr-empty" class="rounded-lg border border-dashed border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-900/40 p-8 text-center">
             <x-icon name="qrcode-scan" size="text-4xl" class="text-gray-400 dark:text-gray-500" />
-            <p class="mt-3 text-sm font-medium text-gray-600 dark:text-gray-300">QR Code indisponivel no momento.</p>
+            <p class="mt-3 text-sm font-medium text-gray-600 dark:text-gray-300">QR Code indisponível no momento.</p>
             <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Use "Atualizar QR" para tentar carregar novamente.</p>
         </div>
 
         <div id="waha-qr-wrapper" class="hidden mt-2">
             <div class="inline-flex rounded-xl border border-gray-200 dark:border-gray-700 bg-white p-3 shadow-sm">
-                <img id="waha-qr-image" src="" alt="QR Code da sessao WAHA" class="max-w-xs rounded-lg border border-gray-200 dark:border-gray-700 bg-white p-2" />
+                <img id="waha-qr-image" src="" alt="QR Code da sessão WAHA" class="max-w-xs rounded-lg border border-gray-200 dark:border-gray-700 bg-white p-2" />
             </div>
         </div>
     </div>
 </div>
+

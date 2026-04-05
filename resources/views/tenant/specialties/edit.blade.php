@@ -1,4 +1,4 @@
-﻿@extends('layouts.tailadmin.app')
+@extends('layouts.tailadmin.app')
 
 @section('title', 'Editar Especialidade')
 @section('page', 'specialties')
@@ -48,7 +48,7 @@
                         <x-icon name="pencil-outline" size="text-xl" class="mr-2 text-blue-600" />
                         Editar Especialidade
                     </h2>
-                    <p class="text-gray-600 dark:text-gray-400 mt-1">Atualize as informaÃ§Ãµes da especialidade abaixo</p>
+                    <p class="text-gray-600 dark:text-gray-400 mt-1">Atualize as informações da especialidade abaixo</p>
                 </div>
             </div>
         </div>
@@ -58,11 +58,11 @@
                 @csrf
                 @method('PUT')
 
-                <!-- SeÃ§Ã£o: Dados da Especialidade -->
+                <!-- Seção: Dados da Especialidade -->
                 <div>
                     <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
                         <x-icon name="information-outline" size="text-lg" class="mr-2 text-blue-600" />
-                        InformaÃ§Ãµes da Especialidade
+                        Informações da Especialidade
                     </h3>
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                         <div class="md:col-span-2">
@@ -78,12 +78,12 @@
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                CÃ³digo
+                                Código
                             </label>
                             <input type="text" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white @error('code') border-red-500 @enderror" 
                                    name="code" value="{{ old('code', $specialty->code) }}" 
-                                   maxlength="50" placeholder="CÃ³digo CBO (opcional)">
-                            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">CÃ³digo CBO da especialidade</p>
+                                   maxlength="50" placeholder="Código CBO (opcional)">
+                            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Código CBO da especialidade</p>
                             @error('code')
                                 <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
                             @enderror
@@ -92,17 +92,17 @@
                 </div>
 
                 @if(tenant_setting('professional.customization_enabled'))
-                    <!-- SeÃ§Ã£o: PersonalizaÃ§Ã£o visual do profissional -->
+                    <!-- Seção: Personalização visual do profissional -->
                     <div>
                         <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
                             <x-icon name="tag-outline" size="text-lg" class="mr-2 text-blue-600" />
-                            PersonalizaÃ§Ã£o visual do profissional
+                            Personalização visual do profissional
                         </h3>
                         <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 mb-6">
                             <div class="flex items-start">
                                 <x-icon name="information-outline" size="text-sm" class="mr-3 mt-0.5 text-blue-600 dark:text-blue-400" />
                                 <div class="flex-1">
-                                    <p class="text-blue-800 dark:text-blue-200 text-sm">Se preenchido, esta especialidade usarÃ¡ estes termos no lugar do perfil global do tenant.</p>
+                                    <p class="text-blue-800 dark:text-blue-200 text-sm">Se preenchido, esta especialidade usará estes termos no lugar do perfil global do tenant.</p>
                                 </div>
                             </div>
                         </div>
@@ -113,9 +113,9 @@
                                 </label>
                                 <input type="text" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white @error('label_singular') border-red-500 @enderror" 
                                        name="label_singular" value="{{ old('label_singular', $specialty->label_singular ?? '') }}" 
-                                       placeholder="Ex: PsicÃ³logo, Dentista"
+                                       placeholder="Ex: Psicólogo, Dentista"
                                        maxlength="50">
-                                <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Exemplo: "PsicÃ³logo" ou "Dentista"</p>
+                                <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Exemplo: "Psicólogo" ou "Dentista"</p>
                                 @error('label_singular')
                                     <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
                                 @enderror
@@ -126,9 +126,9 @@
                                 </label>
                                 <input type="text" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white @error('label_plural') border-red-500 @enderror" 
                                        name="label_plural" value="{{ old('label_plural', $specialty->label_plural ?? '') }}" 
-                                       placeholder="Ex: PsicÃ³logos, Dentistas"
+                                       placeholder="Ex: Psicólogos, Dentistas"
                                        maxlength="50">
-                                <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Exemplo: "PsicÃ³logos" ou "Dentistas"</p>
+                                <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Exemplo: "Psicólogos" ou "Dentistas"</p>
                                 @error('label_plural')
                                     <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
                                 @enderror
@@ -150,7 +150,7 @@
                     </div>
                 @endif
 
-                <!-- BotÃµes de AÃ§Ã£o -->
+                <!-- Botões de Ação -->
                 <div class="flex flex-col gap-3 pt-6 border-t border-gray-200 dark:border-gray-700 sm:flex-row sm:items-center sm:justify-between">
                     <a href="{{ workspace_route('tenant.specialties.index') }}" class="btn btn-outline inline-flex items-center">
                         <x-icon name="arrow-left" size="text-sm" class="mr-2" />

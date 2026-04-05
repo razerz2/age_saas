@@ -57,8 +57,8 @@ class UserRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'name.required'        => 'O Apelido é obrigatório.',
-            'name_full.required'   => 'O Nome completo é obrigatório.',
+            'name.required'        => 'O apelido é obrigatório.',
+            'name_full.required'   => 'O nome completo é obrigatório.',
             'email.required'       => 'O e-mail é obrigatório.',
             'email.email'          => 'Informe um e-mail válido.',
             'email.unique'         => 'Este e-mail já está em uso.',

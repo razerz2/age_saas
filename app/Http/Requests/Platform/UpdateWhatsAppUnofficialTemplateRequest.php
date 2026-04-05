@@ -35,7 +35,7 @@ class UpdateWhatsAppUnofficialTemplateRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'key.regex' => 'Formato de key invalido. Use letras minusculas, numeros, ponto e underscore.',
+            'key.regex' => 'Formato de chave inválido. Use letras minúsculas, números, ponto e underscore.',
         ];
     }
 

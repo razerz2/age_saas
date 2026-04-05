@@ -67,7 +67,7 @@ class IbgeLocationSyncService
                 ->get(['id_estado', 'uf', 'nome_estado'])
                 ->toArray();
 
-            Log::warning('Estados sem codigo IBGE apos sincronizacao.', [
+            Log::warning('Estados sem código IBGE após sincronização.', [
                 'total' => $statesWithoutIbge,
                 'sample' => $sampleStates,
             ]);
@@ -82,7 +82,7 @@ class IbgeLocationSyncService
                 ->get(['id_cidade', 'estado_id', 'nome_cidade'])
                 ->toArray();
 
-            Log::warning('Localidades sem correspondencia oficial do IBGE apos sincronizacao.', [
+            Log::warning('Localidades sem correspondência oficial do IBGE após sincronização.', [
                 'total' => $unmatchedCount,
                 'sample' => $sample,
             ]);
@@ -98,7 +98,7 @@ class IbgeLocationSyncService
                 ->get()
                 ->toArray();
 
-            Log::warning('Estados com codigo IBGE duplicado.', [
+            Log::warning('Estados com código IBGE duplicado.', [
                 'total' => $stateDuplicatesCount,
                 'sample' => $stateDuplicates,
             ]);
@@ -114,7 +114,7 @@ class IbgeLocationSyncService
                 ->get()
                 ->toArray();
 
-            Log::warning('Cidades com codigo IBGE duplicado.', [
+            Log::warning('Cidades com código IBGE duplicado.', [
                 'total' => $cityDuplicatesCount,
                 'sample' => $cityDuplicates,
             ]);
@@ -233,7 +233,7 @@ class IbgeLocationSyncService
             $stateId = $stateContext['by_ibge'][$stateIbgeId] ?? null;
             if (! $stateId) {
                 $stats['cities_missing_state']++;
-                Log::warning('Municipio do IBGE ignorado por estado nao mapeado internamente.', [
+                Log::warning('Município do IBGE ignorado por estado não mapeado internamente.', [
                     'city_ibge_id' => $ibgeId,
                     'city_name' => $name,
                     'state_ibge_id' => $stateIbgeId,
@@ -248,7 +248,7 @@ class IbgeLocationSyncService
 
                 if (count($candidates) > 1) {
                     $stats['cities_ambiguous_matches']++;
-                    Log::warning('Multipla correspondencia de cidade detectada durante sincronizacao IBGE.', [
+                    Log::warning('Múltipla correspondência de cidade detectada durante sincronização IBGE.', [
                         'city_ibge_id' => $ibgeId,
                         'city_name' => $name,
                         'state_id' => $stateId,

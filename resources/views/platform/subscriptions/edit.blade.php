@@ -90,12 +90,12 @@
                     </div>
 
                     <div id="test-plan-billing-alert" class="alert alert-info d-none" role="alert">
-                        <strong>Plano de teste:</strong> Plano de teste nao possui cobranca. A renovacao automatica apenas estende a validade do acesso.
+                        <strong>Plano de teste:</strong> Plano de teste não possui cobrança. A renovação automática apenas estende a validade do acesso.
                     </div>
 
                     <div class="row mb-3">
                         <div class="col-md-4">
-                            <label class="form-label">Inicio</label>
+                            <label class="form-label">Início</label>
                             <input type="date" name="starts_at" id="starts_at"
                                 value="{{ old('starts_at', $subscription->starts_at->format('Y-m-d')) }}"
                                 class="form-control" required>
@@ -128,13 +128,13 @@
                         </div>
 
                         <div class="col-md-4" id="payment-method-wrapper">
-                            <label class="form-label">Metodo de Pagamento</label>
+                            <label class="form-label">Método de Pagamento</label>
                             <select name="payment_method" class="form-select @error('payment_method') is-invalid @enderror" required>
                                 <option value="PIX" {{ old('payment_method', $subscription->payment_method) == 'PIX' ? 'selected' : '' }}>
                                     PIX / Boleto
                                 </option>
                                 <option value="CREDIT_CARD" {{ old('payment_method', $subscription->payment_method) == 'CREDIT_CARD' ? 'selected' : '' }}>
-                                    Cartao de Credito / Debito
+                                    Cartão de Crédito / Débito
                                 </option>
                             </select>
                             @error('payment_method')
@@ -143,7 +143,7 @@
                         </div>
 
                         <div class="col-md-4" id="auto-renew-wrapper">
-                            <label class="form-label">Renovacao Automatica</label><br>
+                            <label class="form-label">Renovação Automática</label><br>
                             <div class="form-check form-switch mt-2">
                                 <input type="checkbox" class="form-check-input" name="auto_renew" value="1"
                                     @checked(old('auto_renew', $subscription->auto_renew))>

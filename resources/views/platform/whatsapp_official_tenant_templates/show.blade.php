@@ -125,7 +125,7 @@
     if (!$isApprovedForManualTest) {
         $manualTestBlockedReason = 'Template local precisa estar com status APPROVED para liberar teste manual.';
     } elseif (!$remoteTemplateFound) {
-        $manualTestBlockedReason = 'Template nao localizado no snapshot atual da Meta para o nome/idioma configurados. Execute sincronizacao para confirmar o nome canonico aprovado.';
+        $manualTestBlockedReason = 'Template não localizado no snapshot atual da Meta para o nome/idioma configurados. Execute sincronização para confirmar o nome canônico aprovado.';
     } elseif (!$isMetaApprovedSnapshot) {
         $manualTestBlockedReason = 'Template encontrado na Meta com status ' . $remoteTemplateStatus . '. Aguarde APPROVED.';
     }
@@ -338,7 +338,7 @@
         </div>
         @if($isRepublishCandidate)
             <div class="alert alert-warning">
-                O vinculo remoto anterior nao foi localizado na Meta. Use <strong>Publicar novamente na Meta</strong> para recriar o template remoto com base no cadastro local atual, preservando este registro.
+                O vínculo remoto anterior não foi localizado na Meta. Use <strong>Publicar novamente na Meta</strong> para recriar o template remoto com base no cadastro local atual, preservando este registro.
             </div>
         @endif
 
@@ -349,7 +349,7 @@
                         @csrf
                         <button type="submit"
                             class="btn btn-warning"
-                            onclick="return confirm('Esta acao vai recriar o template na Meta usando o cadastro local atual, sem apagar o registro local. Deseja continuar?');">
+                            onclick="return confirm('Esta ação vai recriar o template na Meta usando o cadastro local atual, sem apagar o registro local. Deseja continuar?');">
                             <i class="fas fa-rotate me-1"></i> Publicar novamente na Meta
                         </button>
                     </form>
@@ -422,7 +422,7 @@
                         <div>v{{ (int) $template->version }}</div>
                     </div>
                     <div class="col-md-4">
-                        <strong>Ultima sincronizacao</strong>
+                        <strong>Última sincronização</strong>
                         <div>{{ $template->last_synced_at?->format('d/m/Y H:i:s') ?? '-' }}</div>
                     </div>
                     <div class="col-md-4">
@@ -435,19 +435,19 @@
                     </div>
                     <div class="col-md-4">
                         <strong>Status remoto Meta</strong>
-                        <div>{{ $remoteTemplateStatus ?: 'NAO ENCONTRADO' }}</div>
+                        <div>{{ $remoteTemplateStatus ?: 'NÃO ENCONTRADO' }}</div>
                     </div>
                     <div class="col-md-4">
                         <strong>Apto para teste</strong>
                         <div>
                             <span class="badge bg-{{ $isReadyForManualTest ? 'success' : 'secondary' }}">
-                                {{ $isReadyForManualTest ? 'SIM' : 'NAO' }}
+                                {{ $isReadyForManualTest ? 'SIM' : 'NÃO' }}
                             </span>
                         </div>
                     </div>
                     <div class="col-md-4">
                         <strong>Disponibilidade remota</strong>
-                        <div>{{ $remoteTemplateFound ? 'Template localizado na Meta' : 'Template nao localizado na Meta' }}</div>
+                        <div>{{ $remoteTemplateFound ? 'Template localizado na Meta' : 'Template não localizado na Meta' }}</div>
                     </div>
                 </div>
             </div>
@@ -475,7 +475,7 @@
         </div>
 
         <div class="card shadow-sm border-0">
-            <div class="card-header bg-light"><strong>Historico de versoes</strong></div>
+            <div class="card-header bg-light"><strong>Histórico de versões</strong></div>
             <div class="card-body">
                 <div class="table-responsive">
                     <table class="table table-sm table-striped table-bordered align-middle mb-0">
@@ -484,7 +484,7 @@
                                 <th>Versao</th>
                                 <th>Status</th>
                                 <th>Meta Name</th>
-                                <th>Ultima sincronizacao</th>
+                                <th>Última sincronização</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -524,7 +524,7 @@
                         </div>
                     @else
                         <div class="alert alert-info">
-                            Preencha as variaveis e envie o teste para um numero valido.
+                            Preencha as variáveis e envie o teste para um número válido.
                         </div>
                         @if($isUtilityTemplate && $remoteTemplateFound && $isRemoteSchemaApplied)
                             <div class="alert alert-secondary">
@@ -561,22 +561,22 @@
                                         </div>
                                     @endif
                                 @else
-                                    O remoto nao exige parametros dinamicos de BODY/BUTTONS.
+                                    O remoto não exige parâmetros dinâmicos de BODY/BUTTONS.
                                 @endif
                             </div>
                         @endif
                     @endif
 
                     <div class="mb-3">
-                        <label for="manual-template-test-phone" class="form-label">Numero de destino</label>
+                        <label for="manual-template-test-phone" class="form-label">Número de destino</label>
                         <input type="text" class="form-control" id="manual-template-test-phone" placeholder="Ex: 5511999999999">
                         <small class="text-muted">Use formato internacional com DDI.</small>
                     </div>
 
                     <div class="d-flex justify-content-between align-items-center mb-2">
-                        <h6 class="mb-0">{{ $isRemoteSchemaApplied ? 'Variaveis efetivas para envio (schema remoto)' : 'Variaveis do template' }}</h6>
+                        <h6 class="mb-0">{{ $isRemoteSchemaApplied ? 'Variáveis efetivas para envio (schema remoto)' : 'Variáveis do template' }}</h6>
                         <button type="button" class="btn btn-sm btn-outline-primary" id="manual-template-fill-fake-btn">
-                            <i class="fas fa-wand-magic-sparkles me-1"></i> Preencher com dados ficticios
+                            <i class="fas fa-wand-magic-sparkles me-1"></i> Preencher com dados fictícios
                         </button>
                     </div>
 
@@ -638,7 +638,7 @@
 
         function renderVariables() {
             if (!Array.isArray(variables) || variables.length === 0) {
-                variablesContainer.innerHTML = '<div class="text-muted">Este template nao possui variaveis mapeadas.</div>';
+                variablesContainer.innerHTML = '<div class="text-muted">Este template não possui variáveis mapeadas.</div>';
                 return;
             }
 
@@ -682,7 +682,7 @@
         function fakeValueFor(name) {
             const key = String(name || '').toLowerCase();
             if (key === 'customer_name') return randomFrom(['Rafael Souza', 'Marina Lima', 'Carlos Pereira', 'Julia Costa']);
-            if (key === 'tenant_name') return randomFrom(['Clinica Boa Vida', 'Instituto Viva', 'Centro Med Prime']);
+            if (key === 'tenant_name') return randomFrom(['Clínica Boa Vida', 'Instituto Viva', 'Centro Med Prime']);
             if (key === 'invoice_amount') return randomMoney(89, 799);
             if (key === 'due_date') return futureDate(7);
             if (key === 'payment_link') return 'https://app.allsync.com.br/faturas/pagar/teste123';
@@ -736,14 +736,14 @@
             clearFeedback();
 
             if (!canManualTest) {
-                showFeedback('error', manualTestBlockedReason || 'Envio bloqueado: template ainda nao esta apto para teste na Meta.');
+                showFeedback('error', manualTestBlockedReason || 'Envio bloqueado: template ainda não está apto para teste na Meta.');
                 return;
             }
 
             const phone = (phoneInput.value || '').trim();
             if (!phone) {
                 phoneInput.classList.add('is-invalid');
-                showFeedback('error', 'Informe o numero de destino.');
+                showFeedback('error', 'Informe o número de destino.');
                 return;
             }
             phoneInput.classList.remove('is-invalid');
@@ -752,12 +752,12 @@
             const payload = collected.payload;
 
             if (!isAuthenticationTemplate && collected.missing.length > 0) {
-                showFeedback('error', 'Preencha todas as variaveis obrigatorias do template.');
+                showFeedback('error', 'Preencha todas as variáveis obrigatórias do template.');
                 return;
             }
 
             if (isAuthenticationTemplate && authRemoteTotalParamsExpected > 0 && Object.keys(payload).length === 0) {
-                showFeedback('error', 'Este template AUTHENTICATION exige parametros dinamicos no schema remoto (BODY/BUTTONS). Preencha ao menos a variavel de codigo.');
+                showFeedback('error', 'Este template AUTHENTICATION exige parâmetros dinâmicos no schema remoto (BODY/BUTTONS). Preencha ao menos a variável de código.');
                 return;
             }
 
@@ -795,7 +795,7 @@
                 }
                 showFeedback('error', message);
             } catch (error) {
-                showFeedback('error', 'Erro de comunicacao ao enviar teste do template.');
+                showFeedback('error', 'Erro de comunicação ao enviar teste do template.');
             } finally {
                 sendBtn.disabled = !canManualTest;
                 sendBtn.innerHTML = originalText;

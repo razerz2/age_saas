@@ -24,7 +24,7 @@ class IbgeLocationApiService
 
         $citiesResponse = Http::timeout(40)->retry(2, 400)->acceptJson()->get(self::IBGE_CITIES_ENDPOINT);
         if (! $citiesResponse->successful()) {
-            throw new RuntimeException('Falha ao consultar municipios na API do IBGE.');
+            throw new RuntimeException('Falha ao consultar municípios na API do IBGE.');
         }
 
         $rawStates = $statesResponse->json();
@@ -66,7 +66,7 @@ class IbgeLocationApiService
             ->all();
 
         if (count($states) !== 27 || count($cities) < 5500) {
-            Log::warning('Quantidade inesperada de registros do IBGE durante sincronizacao.', [
+            Log::warning('Quantidade inesperada de registros do IBGE durante sincronização.', [
                 'states_count' => count($states),
                 'cities_count' => count($cities),
             ]);
@@ -86,7 +86,7 @@ class IbgeLocationApiService
     public function loadDatasetFromFile(string $absolutePath): array
     {
         if (! File::exists($absolutePath)) {
-            throw new RuntimeException('Arquivo local de localidades IBGE nao encontrado.');
+            throw new RuntimeException('Arquivo local de localidades IBGE não encontrado.');
         }
 
         $payload = json_decode((string) File::get($absolutePath), true);
@@ -97,7 +97,7 @@ class IbgeLocationApiService
             || ! is_array($payload['states'])
             || ! is_array($payload['cities'])
         ) {
-            throw new RuntimeException('Arquivo local de localidades IBGE invalido.');
+            throw new RuntimeException('Arquivo local de localidades IBGE inválido.');
         }
 
         return [

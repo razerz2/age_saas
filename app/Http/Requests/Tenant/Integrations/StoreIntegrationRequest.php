@@ -31,7 +31,7 @@ class StoreIntegrationRequest extends FormRequest
                     }
 
                     if (self::normalizeConfig($value) === null) {
-                        $fail('A configuracao deve ser um JSON valido (objeto ou lista).');
+                        $fail('A configuração deve ser um JSON válido (objeto ou lista).');
                     }
                 },
             ],
@@ -78,13 +78,13 @@ class StoreIntegrationRequest extends FormRequest
     public function messages()
     {
         return [
-            'key.required' => 'A chave da integracao e obrigatoria.',
-            'key.string' => 'A chave da integracao deve ser uma string valida.',
-            'key.max' => 'A chave da integracao nao pode ter mais que 255 caracteres.',
-            'key.unique' => 'Esta chave de integracao ja esta cadastrada.',
-            'is_enabled.required' => 'O campo habilitado e obrigatorio.',
-            'is_enabled.boolean' => 'O campo habilitado deve ser verdadeiro ou falso.',
-            'config.string' => 'A configuracao deve ser informada como JSON em texto.',
+            'key.required' => 'A chave da integração é obrigatória.',
+            'key.string' => 'A chave da integração deve ser um texto válido.',
+            'key.max' => 'A chave da integração não pode ter mais de 255 caracteres.',
+            'key.unique' => 'Esta chave de integração já está cadastrada.',
+            'is_enabled.required' => 'O campo de habilitação é obrigatório.',
+            'is_enabled.boolean' => 'O campo de habilitação deve ser verdadeiro ou falso.',
+            'config.string' => 'A configuração deve ser informada como JSON em texto.',
         ];
     }
 }

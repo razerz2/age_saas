@@ -95,7 +95,7 @@ class PlanRequest extends FormRequest
             'features.array' => 'As funcionalidades devem estar no formato de lista (array).',
             'trial_days.required_if' => 'Informe a quantidade de dias do trial quando ele estiver habilitado.',
             'trial_days.min' => 'O trial deve ter pelo menos 1 dia.',
-            'trial_days.max' => 'O trial nao pode ser maior que 365 dias.',
+            'trial_days.max' => 'O trial não pode ser maior que 365 dias.',
         ];
     }
 }

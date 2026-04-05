@@ -1,16 +1,16 @@
 @extends('layouts.freedash.app')
-@section('title', 'WhatsApp Nao Oficial - Templates Padrao Tenant')
+@section('title', 'WhatsApp Não Oficial - Templates Padrão Tenant')
 
 @section('content')
     <div class="page-breadcrumb">
         <div class="row">
             <div class="col-7 align-self-center">
-                <h4 class="page-title text-truncate text-dark font-weight-medium mb-1">WhatsApp Nao Oficial - Templates Padrao Tenant</h4>
+                <h4 class="page-title text-truncate text-dark font-weight-medium mb-1">WhatsApp Não Oficial - Templates Padrão Tenant</h4>
                 <div class="d-flex align-items-center">
                     <nav aria-label="breadcrumb">
                         <ol class="breadcrumb m-0 p-0">
                             <li class="breadcrumb-item"><a href="{{ route('Platform.dashboard') }}" class="text-muted">Dashboard</a></li>
-                            <li class="breadcrumb-item text-muted active" aria-current="page">Templates Padrao Tenant</li>
+                            <li class="breadcrumb-item text-muted active" aria-current="page">Templates Padrão Tenant</li>
                         </ol>
                     </nav>
                 </div>
@@ -33,16 +33,16 @@
         @endif
 
         <div class="alert alert-info">
-            Baseline global para templates operacionais do Tenant no dominio WhatsApp Nao Oficial.
+            Baseline global para templates operacionais do Tenant no domínio WhatsApp Não Oficial.
             Estes registros podem ser copiados para <code>tenant.notification_templates</code> no provisionamento.
             Keys baseline: <code>appointment.pending_confirmation</code>, <code>appointment.confirmed</code>,
             <code>appointment.canceled</code>, <code>appointment.expired</code>, <code>waitlist.joined</code>,
             <code>waitlist.offered</code>.
         </div>
         <div class="alert alert-secondary">
-            Distincao visual:
+            Distinção visual:
             <strong>Templates Internos Platform</strong> cobrem eventos SaaS da Platform;
-            <strong>Templates Padrao Tenant</strong> cobrem eventos clinicos operacionais do tenant.
+            <strong>Templates Padrão Tenant</strong> cobrem eventos clínicos operacionais do tenant.
         </div>
 
         <div class="card shadow-sm border-0 mb-3">
@@ -80,13 +80,13 @@
                         <thead class="bg-light">
                             <tr>
                                 <th>Key</th>
-                                <th>Titulo</th>
+                                <th>Título</th>
                                 <th>Canal</th>
                                 <th>Categoria</th>
                                 <th>Idioma</th>
                                 <th>Ativo</th>
                                 <th>Atualizado</th>
-                                <th class="text-center">Acoes</th>
+                                <th class="text-center">Ações</th>
                             </tr>
                         </thead>
                         <tbody>

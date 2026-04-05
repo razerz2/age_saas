@@ -569,8 +569,14 @@
                             </div>
                         </div>
                         <div class="flex flex-wrap gap-2 mb-4">
-                            <button type="button" class="btn-patient-secondary" data-modules-select-all>Selecionar todos</button>
-                            <button type="button" class="btn-patient-secondary" data-modules-clear>Limpar seleção</button>
+                            <button type="button" class="btn-patient-secondary inline-flex items-center" data-modules-select-all>
+                                <x-icon name="check-bold" size="text-sm" class="mr-2" />
+                                Selecionar todos
+                            </button>
+                            <button type="button" class="btn-patient-secondary inline-flex items-center" data-modules-clear>
+                                <x-icon name="close" size="text-sm" class="mr-2" />
+                                Limpar seleção
+                            </button>
                         </div>
                         @php
                             // Buscar apenas módulos disponíveis (no plano e habilitados na tenant)

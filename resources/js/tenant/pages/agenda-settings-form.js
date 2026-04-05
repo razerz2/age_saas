@@ -329,17 +329,17 @@ function setupBusinessHoursTable() {
 
             const editButton = document.createElement('button');
             editButton.type = 'button';
-            editButton.className = 'btn btn-outline';
+            editButton.className = 'btn btn-outline inline-flex items-center';
             editButton.dataset.action = 'edit-hour';
             editButton.dataset.weekday = String(hour.weekday);
-            editButton.textContent = 'Editar';
+            editButton.innerHTML = '<i class="mdi mdi-pencil-outline mr-1" aria-hidden="true"></i>Editar';
 
             const removeButton = document.createElement('button');
             removeButton.type = 'button';
-            removeButton.className = 'btn btn-outline text-red-600 hover:text-red-700';
+            removeButton.className = 'btn btn-outline text-red-600 hover:text-red-700 inline-flex items-center';
             removeButton.dataset.action = 'remove-hour';
             removeButton.dataset.weekday = String(hour.weekday);
-            removeButton.textContent = 'Remover';
+            removeButton.innerHTML = '<i class="mdi mdi-trash-can-outline mr-1" aria-hidden="true"></i>Remover';
 
             actionsWrap.appendChild(editButton);
             actionsWrap.appendChild(removeButton);

@@ -34,7 +34,7 @@ class WhatsAppUnofficialTemplateFakeDataFactory
 
         return match ($key) {
             'customer_name', 'patient.name' => 'Rafael Souza',
-            'tenant_name', 'clinic.name' => 'Clinica Boa Vida',
+            'tenant_name', 'clinic.name' => 'Clínica Boa Vida',
             'invoice_amount', 'plan_amount' => 'R$ 249,90',
             'due_date', 'appointment.date', 'appointment_date' => $date,
             'appointment.time', 'appointment_time' => $time,

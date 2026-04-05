@@ -71,7 +71,7 @@ class WhatsAppUnofficialTemplateController extends Controller
 
         return redirect()
             ->route('Platform.whatsapp-unofficial-templates.show', $template)
-            ->with('success', 'Template interno nao oficial criado com sucesso.');
+            ->with('success', 'Template interno não oficial criado com sucesso.');
     }
 
     public function show(WhatsAppUnofficialTemplate $whatsappUnofficialTemplate): View
@@ -105,7 +105,7 @@ class WhatsAppUnofficialTemplateController extends Controller
 
         return redirect()
             ->route('Platform.whatsapp-unofficial-templates.show', $whatsappUnofficialTemplate)
-            ->with('success', 'Template interno nao oficial atualizado com sucesso.');
+            ->with('success', 'Template interno não oficial atualizado com sucesso.');
     }
 
     public function toggle(WhatsAppUnofficialTemplate $whatsappUnofficialTemplate): RedirectResponse
@@ -135,7 +135,7 @@ class WhatsAppUnofficialTemplateController extends Controller
             'variables.*' => ['nullable', 'string', 'max:500'],
             'fill_missing_with_fake' => ['nullable', 'boolean'],
         ], [
-            'variables.array' => 'Formato de variaveis invalido para preview.',
+            'variables.array' => 'Formato de variáveis inválido para preview.',
         ]);
 
         if ($validator->fails()) {
@@ -207,9 +207,9 @@ class WhatsAppUnofficialTemplateController extends Controller
             'variables.*' => ['nullable', 'string', 'max:500'],
             'fill_missing_with_fake' => ['nullable', 'boolean'],
         ], [
-            'phone.required' => 'Informe o numero de destino.',
-            'phone.regex' => 'Numero de destino invalido.',
-            'variables.array' => 'Formato de variaveis invalido para envio.',
+            'phone.required' => 'Informe o número de destino.',
+            'phone.regex' => 'Número de destino inválido.',
+            'variables.array' => 'Formato de variáveis inválido para envio.',
         ]);
 
         if ($validator->fails()) {
@@ -238,7 +238,7 @@ class WhatsAppUnofficialTemplateController extends Controller
             if (($preview['missing_variables'] ?? []) !== []) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Variaveis obrigatorias ausentes: ' . implode(', ', (array) $preview['missing_variables']),
+                    'message' => 'Variáveis obrigatórias ausentes: ' . implode(', ', (array) $preview['missing_variables']),
                     'missing_variables' => $preview['missing_variables'],
                     'preview' => $preview['rendered_message'] ?? '',
                 ], 422);

@@ -6,7 +6,7 @@
 <div class="space-y-6">
     <div>
         <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Novo Template Oficial</h1>
-        <p class="text-sm text-gray-600 dark:text-gray-400">Crie um template oficial para um evento clinico do tenant.</p>
+        <p class="text-sm text-gray-600 dark:text-gray-400">Crie um template oficial para um evento clínico do tenant.</p>
     </div>
 
     @if($errors->any())

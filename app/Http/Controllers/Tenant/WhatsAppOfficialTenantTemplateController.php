@@ -155,8 +155,8 @@ class WhatsAppOfficialTenantTemplateController extends Controller
 
         if (!$whatsappOfficialTemplate->isDirectlyEditable()) {
             $warningMessage = $whatsappOfficialTemplate->requiresVersioningForEdit()
-                ? 'Template aprovado na Meta nao pode ser editado diretamente. Crie nova versao.'
-                : 'Template com status atual nao permite edicao direta.';
+                ? 'Template aprovado na Meta não pode ser editado diretamente. Crie nova versão.'
+                : 'Template com status atual não permite edição direta.';
 
             return redirect()
                 ->route('tenant.settings.whatsapp-official-tenant-templates.show', [
@@ -350,8 +350,8 @@ class WhatsAppOfficialTenantTemplateController extends Controller
             'variables' => ['nullable', 'array'],
             'variables.*' => ['nullable', 'string', 'max:500'],
         ], [
-            'phone.required' => 'Informe o numero de destino.',
-            'phone.regex' => 'Numero de destino invalido.',
+            'phone.required' => 'Informe o número de destino.',
+            'phone.regex' => 'Número de destino inválido.',
         ]);
 
         if ($validator->fails()) {
@@ -440,12 +440,12 @@ class WhatsAppOfficialTenantTemplateController extends Controller
     {
         $key = trim((string) ($payload['key'] ?? ''));
         if (!in_array($key, $this->tenantEventKeys(), true)) {
-            throw new DomainException('A key informada nao pertence ao baseline oficial tenant.');
+            throw new DomainException('A key informada não pertence ao baseline oficial tenant.');
         }
 
         $provider = trim((string) ($payload['provider'] ?? ''));
         if ($provider !== WhatsAppOfficialTemplate::PROVIDER) {
-            throw new DomainException('Provider invalido para baseline oficial tenant.');
+            throw new DomainException('Provider inválido para baseline oficial tenant.');
         }
 
         $category = strtoupper(trim((string) ($payload['category'] ?? '')));
@@ -455,12 +455,12 @@ class WhatsAppOfficialTenantTemplateController extends Controller
 
         $language = trim((string) ($payload['language'] ?? ''));
         if ($language !== 'pt_BR') {
-            throw new DomainException('No baseline oficial tenant, o idioma padrao deve ser pt_BR.');
+            throw new DomainException('No baseline oficial tenant, o idioma padrão deve ser pt_BR.');
         }
 
         $payloadTenantId = trim((string) ($payload['tenant_id'] ?? ''));
         if ($payloadTenantId === '') {
-            throw new DomainException('Escopo tenant obrigatorio para templates oficiais do tenant.');
+            throw new DomainException('Escopo tenant obrigatório para templates oficiais do tenant.');
         }
     }
 

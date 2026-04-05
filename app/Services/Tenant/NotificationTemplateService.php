@@ -117,7 +117,7 @@ class NotificationTemplateService
 
         if ($content === '') {
             throw ValidationException::withMessages([
-                'content' => 'O conteudo do template e obrigatorio.',
+                'content' => 'O conteúdo do template e obrigatório.',
             ]);
         }
 
@@ -128,7 +128,7 @@ class NotificationTemplateService
             $defaultHasSubject = $default['subject'] !== null && trim($default['subject']) !== '';
             if ($defaultHasSubject && ($subjectToSave === null || $subjectToSave === '')) {
                 throw ValidationException::withMessages([
-                    'subject' => 'O assunto e obrigatorio para templates de email.',
+                    'subject' => 'O assunto e obrigatório para templates de email.',
                 ]);
             }
         }
@@ -182,7 +182,7 @@ class NotificationTemplateService
         $this->logMissingTableWarning($tenantId, 'write');
 
         throw ValidationException::withMessages([
-            'templates' => 'A tabela notification_templates nao existe neste tenant. Execute as migrations do tenant (database/migrations/tenant).',
+            'templates' => 'A tabela notification_templates não existe neste tenant. Execute as migrations do tenant (database/migrations/tenant).',
         ]);
     }
 
@@ -204,7 +204,7 @@ class NotificationTemplateService
 
         $this->missingTableWarningLogged = true;
 
-        Log::warning('Tabela notification_templates ausente no banco tenant. Usando defaults do catalogo.', [
+        Log::warning('Tabela notification_templates ausente no banco tenant. Usando defaults do catálogo.', [
             'tenant_id' => $tenantId,
             'operation' => $operation,
             'table' => 'notification_templates',
@@ -217,28 +217,28 @@ class NotificationTemplateService
         $supportedChannels = $this->supportedChannels();
         if (!in_array($channel, $supportedChannels, true)) {
             throw ValidationException::withMessages([
-                'channel' => "Canal invalido: {$channel}.",
+                'channel' => "Canal inválido: {$channel}.",
             ]);
         }
 
         $templates = $this->catalogTemplates();
         if (!array_key_exists($key, $templates)) {
             throw ValidationException::withMessages([
-                'key' => "Template '{$key}' nao encontrado no catalogo padrao.",
+                'key' => "Template '{$key}' não encontrado no catálogo padrão.",
             ]);
         }
 
         $template = $templates[$key];
         if (!isset($template[$channel]) || !is_array($template[$channel])) {
             throw ValidationException::withMessages([
-                'channel' => "O template '{$key}' nao suporta o canal '{$channel}'.",
+                'channel' => "O template '{$key}' não suporta o canal '{$channel}'.",
             ]);
         }
 
         $content = trim((string) ($template[$channel]['content'] ?? ''));
         if ($content === '') {
             throw ValidationException::withMessages([
-                'content' => "Template padrao invalido para '{$key}' no canal '{$channel}'.",
+                'content' => "Template padrão inválido para '{$key}' no canal '{$channel}'.",
             ]);
         }
 

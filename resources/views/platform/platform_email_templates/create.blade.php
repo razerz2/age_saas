@@ -33,7 +33,7 @@
                 @endif
 
                 <div class="alert alert-info">
-                    Template de Email Platform contem somente assunto e body. Layout permanece no modulo de Layouts de Email.
+                    Template de E-mail Platform contém somente assunto e body. Layout permanece no módulo de Layouts de E-mail.
                 </div>
 
                 <form method="POST" action="{{ route('Platform.platform-email-templates.store') }}">
@@ -50,4 +50,3 @@
 
     @include('layouts.freedash.footer')
 @endsection
-

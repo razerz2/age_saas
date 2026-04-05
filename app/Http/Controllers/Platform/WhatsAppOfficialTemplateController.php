@@ -314,9 +314,9 @@ class WhatsAppOfficialTemplateController extends Controller
             'variables' => ['nullable', 'array'],
             'variables.*' => ['nullable', 'string', 'max:500'],
         ], [
-            'phone.required' => 'Informe o numero de destino.',
-            'phone.regex' => 'Numero de destino invalido.',
-            'variables.array' => 'Formato de variaveis invalido para o teste.',
+            'phone.required' => 'Informe o número de destino.',
+            'phone.regex' => 'Número de destino inválido.',
+            'variables.array' => 'Formato de variáveis inválido para o teste.',
         ]);
 
         if ($validator->fails()) {

@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
     <meta charset="utf-8">
-    <title>Relatorio de Notificacoes</title>
+    <title>Relatório de Notificações</title>
     <style>
         body { font-family: DejaVu Sans, sans-serif; font-size: 11px; color: #111827; }
         h1 { font-size: 16px; margin: 0 0 8px; }
@@ -16,7 +16,7 @@
     </style>
 </head>
 <body>
-    <h1>Relatorio de Notificacoes</h1>
+    <h1>Relatório de Notificações</h1>
     <div class="meta">Gerado em: {{ $generatedAt->format('d/m/Y H:i') }}</div>
 
     @if(!empty($activeFilters))
@@ -30,7 +30,7 @@
     <table>
         <thead>
             <tr>
-                <th>Titulo</th>
+                <th>Título</th>
                 <th>Tipo</th>
                 <th>Status</th>
                 <th>Lida em</th>
@@ -42,7 +42,7 @@
                 <tr>
                     <td>{{ $row->title ?? 'N/A' }}</td>
                     <td>{{ $row->type ?? '-' }}</td>
-                    <td>{{ $row->read_at ? 'Lida' : 'Nao lida' }}</td>
+                    <td>{{ $row->read_at ? 'Lida' : 'Não lida' }}</td>
                     <td>{{ $row->read_at ? $row->read_at->format('d/m/Y H:i') : '-' }}</td>
                     <td>{{ $row->created_at ? $row->created_at->format('d/m/Y H:i') : '-' }}</td>
                 </tr>
@@ -55,7 +55,7 @@
     </table>
 
     @if($truncated)
-        <p class="warn">Exportacao limitada aos primeiros {{ $pdfMaxRows }} registros para manter performance do PDF.</p>
+        <p class="warn">Exportação limitada aos primeiros {{ $pdfMaxRows }} registros para manter performance do PDF.</p>
     @endif
 </body>
 </html>

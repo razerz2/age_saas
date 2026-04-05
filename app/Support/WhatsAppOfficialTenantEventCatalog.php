@@ -10,11 +10,11 @@ class WhatsAppOfficialTenantEventCatalog
     public static function all(): array
     {
         $events = [
-            ['key' => 'appointment.pending_confirmation', 'label' => 'Agendamento pendente de confirmacao', 'domain' => 'tenant'],
+            ['key' => 'appointment.pending_confirmation', 'label' => 'Agendamento pendente de confirmação', 'domain' => 'tenant'],
             ['key' => 'appointment.confirmed', 'label' => 'Agendamento confirmado', 'domain' => 'tenant'],
             ['key' => 'appointment.canceled', 'label' => 'Agendamento cancelado', 'domain' => 'tenant'],
             ['key' => 'appointment.expired', 'label' => 'Agendamento expirado', 'domain' => 'tenant'],
-            ['key' => 'appointment.form_requested.patient', 'label' => 'Solicitacao de formulario para paciente', 'domain' => 'tenant'],
+            ['key' => 'appointment.form_requested.patient', 'label' => 'Solicitação de formulário para paciente', 'domain' => 'tenant'],
             ['key' => 'appointment.created.doctor', 'label' => 'Novo agendamento para {{labels.professional_singular_lower}}', 'domain' => 'tenant'],
             ['key' => 'appointment.confirmed.doctor', 'label' => 'Agendamento confirmado para {{labels.professional_singular_lower}}', 'domain' => 'tenant'],
             ['key' => 'appointment.canceled.doctor', 'label' => 'Agendamento cancelado para {{labels.professional_singular_lower}}', 'domain' => 'tenant'],
@@ -23,10 +23,10 @@ class WhatsAppOfficialTenantEventCatalog
             ['key' => 'waitlist.offered', 'label' => 'Oferta de vaga na fila de espera', 'domain' => 'tenant'],
             ['key' => 'waitlist.offered.doctor', 'label' => 'Oferta de vaga para {{labels.professional_singular_lower}}', 'domain' => 'tenant'],
             ['key' => 'waitlist.accepted.doctor', 'label' => 'Oferta aceita na fila de espera para {{labels.professional_singular_lower}}', 'domain' => 'tenant'],
-            ['key' => 'form.response_submitted.doctor', 'label' => 'Resposta de formulario para {{labels.professional_singular_lower}}', 'domain' => 'tenant'],
+            ['key' => 'form.response_submitted.doctor', 'label' => 'Resposta de formulário para {{labels.professional_singular_lower}}', 'domain' => 'tenant'],
             ['key' => 'online_appointment.updated.doctor', 'label' => 'Consulta online atualizada para {{labels.professional_singular_lower}}', 'domain' => 'tenant'],
-            ['key' => 'online_appointment.instructions_sent.doctor', 'label' => 'Instrucoes da consulta online enviadas', 'domain' => 'tenant'],
-            ['key' => 'online_appointment.form_response_submitted.doctor', 'label' => 'Resposta de formulario da consulta online', 'domain' => 'tenant'],
+            ['key' => 'online_appointment.instructions_sent.doctor', 'label' => 'Instruções da consulta online enviadas', 'domain' => 'tenant'],
+            ['key' => 'online_appointment.form_response_submitted.doctor', 'label' => 'Resposta de formulário da consulta online', 'domain' => 'tenant'],
 
             ['key' => 'invoice.created', 'label' => 'Fatura criada', 'domain' => 'platform'],
             ['key' => 'invoice.upcoming_due', 'label' => 'Lembrete de fatura a vencer', 'domain' => 'platform'],

@@ -28,7 +28,7 @@
             <div class="col-5 align-self-center text-end">
                 @can('manageBindings', \App\Models\Platform\WhatsAppOfficialTenantTemplate::class)
                     <a href="{{ route('Platform.whatsapp-official-tenant-templates.bindings.index') }}" class="btn btn-outline-primary me-2">
-                        <i class="fas fa-link me-1"></i> Vinculos Ativos
+                        <i class="fas fa-link me-1"></i> Vínculos Ativos
                     </a>
                 @endcan
                 @can('create', \App\Models\Platform\WhatsAppOfficialTenantTemplate::class)

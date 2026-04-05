@@ -13,11 +13,11 @@ class TenantDefaultNotificationTemplateCatalog
             [
                 'channel' => 'whatsapp',
                 'key' => 'appointment.pending_confirmation',
-                'title' => 'Agendamento pendente de confirmacao',
+                'title' => 'Agendamento pendente de confirmação',
                 'category' => 'appointment',
                 'language' => 'pt_BR',
                 'subject' => null,
-                'content' => "Ola {{patient.name}}!\n\nSeu agendamento em {{clinic.name}} esta pendente de confirmacao.\nData: {{appointment.date}}\nHorario: {{appointment.time}}\n{{labels.professional_singular}}: {{professional.name}}\nModalidade: {{appointment.mode}}\n\nConfirmar: {{links.appointment_confirm}}\nCancelar: {{links.appointment_cancel}}",
+                'content' => "Olá {{patient.name}}!\n\nSeu agendamento em {{clinic.name}} está pendente de confirmação.\nData: {{appointment.date}}\nHorário: {{appointment.time}}\n{{labels.professional_singular}}: {{professional.name}}\nModalidade: {{appointment.mode}}\n\nConfirmar: {{links.appointment_confirm}}\nCancelar: {{links.appointment_cancel}}",
                 'variables' => [
                     'patient.name',
                     'clinic.name',
@@ -37,7 +37,7 @@ class TenantDefaultNotificationTemplateCatalog
                 'category' => 'appointment',
                 'language' => 'pt_BR',
                 'subject' => null,
-                'content' => "Ola {{patient.name}}!\n\nSeu agendamento em {{clinic.name}} foi confirmado.\nData: {{appointment.date}}\nHorario: {{appointment.time}}\n{{labels.professional_singular}}: {{professional.name}}\nModalidade: {{appointment.mode}}\n\nDetalhes: {{links.appointment_details}}",
+                'content' => "Olá {{patient.name}}!\n\nSeu agendamento em {{clinic.name}} foi confirmado.\nData: {{appointment.date}}\nHorário: {{appointment.time}}\n{{labels.professional_singular}}: {{professional.name}}\nModalidade: {{appointment.mode}}\n\nDetalhes: {{links.appointment_details}}",
                 'variables' => [
                     'patient.name',
                     'clinic.name',
@@ -56,7 +56,7 @@ class TenantDefaultNotificationTemplateCatalog
                 'category' => 'appointment',
                 'language' => 'pt_BR',
                 'subject' => null,
-                'content' => "Ola {{patient.name}}!\n\nSeu agendamento em {{clinic.name}} foi cancelado.\nData: {{appointment.date}}\nHorario: {{appointment.time}}\n{{labels.professional_singular}}: {{professional.name}}",
+                'content' => "Olá {{patient.name}}!\n\nSeu agendamento em {{clinic.name}} foi cancelado.\nData: {{appointment.date}}\nHorário: {{appointment.time}}\n{{labels.professional_singular}}: {{professional.name}}",
                 'variables' => [
                     'patient.name',
                     'clinic.name',
@@ -73,7 +73,7 @@ class TenantDefaultNotificationTemplateCatalog
                 'category' => 'appointment',
                 'language' => 'pt_BR',
                 'subject' => null,
-                'content' => "Ola {{patient.name}}!\n\nO prazo para confirmar seu agendamento em {{clinic.name}} expirou.\nData: {{appointment.date}}\nHorario: {{appointment.time}}\n{{labels.professional_singular}}: {{professional.name}}",
+                'content' => "Olá {{patient.name}}!\n\nO prazo para confirmar seu agendamento em {{clinic.name}} expirou.\nData: {{appointment.date}}\nHorário: {{appointment.time}}\n{{labels.professional_singular}}: {{professional.name}}",
                 'variables' => [
                     'patient.name',
                     'clinic.name',
@@ -86,11 +86,11 @@ class TenantDefaultNotificationTemplateCatalog
             [
                 'channel' => 'whatsapp',
                 'key' => 'appointment.form_requested.patient',
-                'title' => 'Solicitacao de formulario para paciente',
+                'title' => 'Solicitação de formulário para paciente',
                 'category' => 'appointment',
                 'language' => 'pt_BR',
                 'subject' => null,
-                'content' => "Ola {{patient.name}}!\n\nSeu formulario pre-consulta esta disponivel.\nFormulario: {{form.name}}\nData: {{appointment.date}}\nHorario: {{appointment.time}}\n{{labels.professional_singular}}: {{professional.name}}\n\nPreencher formulario: {{links.form_fill}}",
+                'content' => "Olá {{patient.name}}!\n\nSeu formulário pré-consulta está disponível.\nFormulário: {{form.name}}\nData: {{appointment.date}}\nHorário: {{appointment.time}}\n{{labels.professional_singular}}: {{professional.name}}\n\nPreencher formulário: {{links.form_fill}}",
                 'variables' => [
                     'patient.name',
                     'form.name',
@@ -108,7 +108,7 @@ class TenantDefaultNotificationTemplateCatalog
                 'category' => 'waitlist',
                 'language' => 'pt_BR',
                 'subject' => null,
-                'content' => "Ola {{patient.name}}!\n\nVoce entrou na fila de espera de {{clinic.name}}.\nData: {{appointment.date}}\nHorario: {{appointment.time}}\n{{labels.professional_singular}}: {{professional.name}}",
+                'content' => "Olá {{patient.name}}!\n\nVocê entrou na fila de espera de {{clinic.name}}.\nData: {{appointment.date}}\nHorário: {{appointment.time}}\n{{labels.professional_singular}}: {{professional.name}}",
                 'variables' => [
                     'patient.name',
                     'clinic.name',
@@ -125,7 +125,7 @@ class TenantDefaultNotificationTemplateCatalog
                 'category' => 'waitlist',
                 'language' => 'pt_BR',
                 'subject' => null,
-                'content' => "Ola {{patient.name}}!\n\nUma vaga foi liberada em {{clinic.name}}.\nData: {{appointment.date}}\nHorario: {{appointment.time}}\n{{labels.professional_singular}}: {{professional.name}}\nConfirmar ate: {{waitlist.offer_expires_at}}\nLink: {{links.waitlist_offer}}",
+                'content' => "Olá {{patient.name}}!\n\nUma vaga foi liberada em {{clinic.name}}.\nData: {{appointment.date}}\nHorário: {{appointment.time}}\n{{labels.professional_singular}}: {{professional.name}}\nConfirmar até: {{waitlist.offer_expires_at}}\nLink: {{links.waitlist_offer}}",
                 'variables' => [
                     'patient.name',
                     'clinic.name',
@@ -144,7 +144,7 @@ class TenantDefaultNotificationTemplateCatalog
                 'category' => 'appointment_doctor',
                 'language' => 'pt_BR',
                 'subject' => null,
-                'content' => "Novo agendamento na sua agenda.\nPaciente: {{patient.name}}\nData: {{appointment.date}}\nHorario: {{appointment.time}}\nEspecialidade: {{doctor.specialty}}\nModalidade: {{appointment.mode}}\nStatus: {{appointment.status}}\nDetalhes: {{links.appointment_details}}",
+                'content' => "Novo agendamento na sua agenda.\nPaciente: {{patient.name}}\nData: {{appointment.date}}\nHorário: {{appointment.time}}\nEspecialidade: {{doctor.specialty}}\nModalidade: {{appointment.mode}}\nStatus: {{appointment.status}}\nDetalhes: {{links.appointment_details}}",
                 'variables' => [
                     'patient.name',
                     'appointment.date',
@@ -163,7 +163,7 @@ class TenantDefaultNotificationTemplateCatalog
                 'category' => 'appointment_doctor',
                 'language' => 'pt_BR',
                 'subject' => null,
-                'content' => "Agendamento confirmado na sua agenda.\nPaciente: {{patient.name}}\nData: {{appointment.date}}\nHorario: {{appointment.time}}\nEspecialidade: {{doctor.specialty}}\nModalidade: {{appointment.mode}}\nDetalhes: {{links.appointment_details}}",
+                'content' => "Agendamento confirmado na sua agenda.\nPaciente: {{patient.name}}\nData: {{appointment.date}}\nHorário: {{appointment.time}}\nEspecialidade: {{doctor.specialty}}\nModalidade: {{appointment.mode}}\nDetalhes: {{links.appointment_details}}",
                 'variables' => [
                     'patient.name',
                     'appointment.date',
@@ -181,7 +181,7 @@ class TenantDefaultNotificationTemplateCatalog
                 'category' => 'appointment_doctor',
                 'language' => 'pt_BR',
                 'subject' => null,
-                'content' => "Agendamento cancelado na sua agenda.\nPaciente: {{patient.name}}\nData: {{appointment.date}}\nHorario: {{appointment.time}}\nEspecialidade: {{doctor.specialty}}\nStatus atual: {{appointment.status}}",
+                'content' => "Agendamento cancelado na sua agenda.\nPaciente: {{patient.name}}\nData: {{appointment.date}}\nHorário: {{appointment.time}}\nEspecialidade: {{doctor.specialty}}\nStatus atual: {{appointment.status}}",
                 'variables' => [
                     'patient.name',
                     'appointment.date',
@@ -198,7 +198,7 @@ class TenantDefaultNotificationTemplateCatalog
                 'category' => 'appointment_doctor',
                 'language' => 'pt_BR',
                 'subject' => null,
-                'content' => "Agendamento remarcado na sua agenda.\nPaciente: {{patient.name}}\nNova data: {{appointment.date}}\nNovo horario: {{appointment.time}}\nEspecialidade: {{doctor.specialty}}\nModalidade: {{appointment.mode}}\nDetalhes: {{links.appointment_details}}",
+                'content' => "Agendamento remarcado na sua agenda.\nPaciente: {{patient.name}}\nNova data: {{appointment.date}}\nNovo horário: {{appointment.time}}\nEspecialidade: {{doctor.specialty}}\nModalidade: {{appointment.mode}}\nDetalhes: {{links.appointment_details}}",
                 'variables' => [
                     'patient.name',
                     'appointment.date',
@@ -216,7 +216,7 @@ class TenantDefaultNotificationTemplateCatalog
                 'category' => 'waitlist_doctor',
                 'language' => 'pt_BR',
                 'subject' => null,
-                'content' => "Oferta de vaga enviada ao paciente.\nPaciente: {{patient.name}}\nData: {{appointment.date}}\nHorario: {{appointment.time}}\nEspecialidade: {{doctor.specialty}}\nValidade: {{waitlist.offer_expires_at}}\nLink enviado: {{links.waitlist_offer}}",
+                'content' => "Oferta de vaga enviada ao paciente.\nPaciente: {{patient.name}}\nData: {{appointment.date}}\nHorário: {{appointment.time}}\nEspecialidade: {{doctor.specialty}}\nValidade: {{waitlist.offer_expires_at}}\nLink enviado: {{links.waitlist_offer}}",
                 'variables' => [
                     'patient.name',
                     'appointment.date',
@@ -234,7 +234,7 @@ class TenantDefaultNotificationTemplateCatalog
                 'category' => 'waitlist_doctor',
                 'language' => 'pt_BR',
                 'subject' => null,
-                'content' => "Paciente aceitou oferta da fila de espera.\nPaciente: {{patient.name}}\nData: {{appointment.date}}\nHorario: {{appointment.time}}\nEspecialidade: {{doctor.specialty}}\nStatus: {{appointment.status}}",
+                'content' => "Paciente aceitou oferta da fila de espera.\nPaciente: {{patient.name}}\nData: {{appointment.date}}\nHorário: {{appointment.time}}\nEspecialidade: {{doctor.specialty}}\nStatus: {{appointment.status}}",
                 'variables' => [
                     'patient.name',
                     'appointment.date',
@@ -247,11 +247,11 @@ class TenantDefaultNotificationTemplateCatalog
             [
                 'channel' => 'whatsapp',
                 'key' => 'form.response_submitted.doctor',
-                'title' => 'Resposta de formulario para {{labels.professional_singular_lower}}',
+                'title' => 'Resposta de formulário para {{labels.professional_singular_lower}}',
                 'category' => 'form_doctor',
                 'language' => 'pt_BR',
                 'subject' => null,
-                'content' => "Nova resposta de formulario recebida.\nPaciente: {{patient.name}}\nFormulario: {{form.name}}\nEnviado em: {{response.submitted_at}}\nAbrir resposta: {{links.form_response}}",
+                'content' => "Nova resposta de formulário recebida.\nPaciente: {{patient.name}}\nFormulário: {{form.name}}\nEnviado em: {{response.submitted_at}}\nAbrir resposta: {{links.form_response}}",
                 'variables' => [
                     'patient.name',
                     'form.name',
@@ -267,7 +267,7 @@ class TenantDefaultNotificationTemplateCatalog
                 'category' => 'online_appointment_doctor',
                 'language' => 'pt_BR',
                 'subject' => null,
-                'content' => "Consulta online atualizada.\nPaciente: {{patient.name}}\nData: {{appointment.date}}\nHorario: {{appointment.time}}\nModalidade: {{appointment.mode}}\nAplicativo: {{online.meeting_app}}\nLink da reuniao: {{online.meeting_link}}\nDetalhes: {{links.online_appointment_details}}",
+                'content' => "Consulta online atualizada.\nPaciente: {{patient.name}}\nData: {{appointment.date}}\nHorário: {{appointment.time}}\nModalidade: {{appointment.mode}}\nAplicativo: {{online.meeting_app}}\nLink da reunião: {{online.meeting_link}}\nDetalhes: {{links.online_appointment_details}}",
                 'variables' => [
                     'patient.name',
                     'appointment.date',
@@ -282,11 +282,11 @@ class TenantDefaultNotificationTemplateCatalog
             [
                 'channel' => 'whatsapp',
                 'key' => 'online_appointment.instructions_sent.doctor',
-                'title' => 'Instrucoes da consulta online enviadas',
+                'title' => 'Instruções da consulta online enviadas',
                 'category' => 'online_appointment_doctor',
                 'language' => 'pt_BR',
                 'subject' => null,
-                'content' => "Instrucoes da consulta online enviadas ao paciente.\nPaciente: {{patient.name}}\nData: {{appointment.date}}\nHorario: {{appointment.time}}\nStatus das instrucoes: {{online.instructions_sent}}\nUltimo envio por e-mail: {{online.instructions_sent_email_at}}\nUltimo envio por WhatsApp: {{online.instructions_sent_whatsapp_at}}\nDetalhes: {{links.online_appointment_details}}",
+                'content' => "Instruções da consulta online enviadas ao paciente.\nPaciente: {{patient.name}}\nData: {{appointment.date}}\nHorário: {{appointment.time}}\nStatus das instruções: {{online.instructions_sent}}\nÚltimo envio por e-mail: {{online.instructions_sent_email_at}}\nÚltimo envio por WhatsApp: {{online.instructions_sent_whatsapp_at}}\nDetalhes: {{links.online_appointment_details}}",
                 'variables' => [
                     'patient.name',
                     'appointment.date',
@@ -301,11 +301,11 @@ class TenantDefaultNotificationTemplateCatalog
             [
                 'channel' => 'whatsapp',
                 'key' => 'online_appointment.form_response_submitted.doctor',
-                'title' => 'Resposta de formulario da consulta online',
+                'title' => 'Resposta de formulário da consulta online',
                 'category' => 'online_appointment_doctor',
                 'language' => 'pt_BR',
                 'subject' => null,
-                'content' => "Nova resposta de formulario da consulta online.\nPaciente: {{patient.name}}\nFormulario: {{form.name}}\nData/Hora da consulta: {{appointment.datetime}}\nEnviado em: {{response.submitted_at}}\nAbrir resposta: {{links.form_response}}\nDetalhes da consulta online: {{links.online_appointment_details}}",
+                'content' => "Nova resposta de formulário da consulta online.\nPaciente: {{patient.name}}\nFormulário: {{form.name}}\nData/Hora da consulta: {{appointment.datetime}}\nEnviado em: {{response.submitted_at}}\nAbrir resposta: {{links.form_response}}\nDetalhes da consulta online: {{links.online_appointment_details}}",
                 'variables' => [
                     'patient.name',
                     'form.name',

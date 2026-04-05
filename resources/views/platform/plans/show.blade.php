@@ -34,7 +34,7 @@
 <div class="container-fluid">
     <div class="card shadow-sm border-0">
         <div class="card-body">
-            <h4 class="card-title mb-4">Informacoes do Plano</h4>
+            <h4 class="card-title mb-4">Informações do Plano</h4>
 
             <div class="row mb-3">
                 <div class="col-md-4">
@@ -48,14 +48,14 @@
                 </div>
 
                 <div class="col-md-4">
-                    <label class="fw-bold">Duracao</label>
+                    <label class="fw-bold">Duração</label>
                     <p>{{ $plan->period_months }} {{ $plan->period_months == 1 ? 'mes' : 'meses' }}</p>
                 </div>
             </div>
 
             <div class="row mb-3">
                 <div class="col-md-4">
-                    <label class="fw-bold">Preco</label>
+                    <label class="fw-bold">Preço</label>
                     <p>{{ $plan->formatted_price }}</p>
                 </div>
 

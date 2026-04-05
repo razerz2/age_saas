@@ -1,11 +1,11 @@
 @extends('layouts.freedash.app')
-@section('title', 'WhatsApp Nao Oficial - Templates Internos Platform')
+@section('title', 'WhatsApp Não Oficial - Templates Internos Platform')
 
 @section('content')
     <div class="page-breadcrumb">
         <div class="row">
             <div class="col-7 align-self-center">
-                <h4 class="page-title text-truncate text-dark font-weight-medium mb-1">WhatsApp Nao Oficial - Templates Internos Platform</h4>
+                <h4 class="page-title text-truncate text-dark font-weight-medium mb-1">WhatsApp Não Oficial - Templates Internos Platform</h4>
                 <div class="d-flex align-items-center">
                     <nav aria-label="breadcrumb">
                         <ol class="breadcrumb m-0 p-0">
@@ -33,16 +33,16 @@
         @endif
 
         <div class="alert alert-info">
-            Catalogo interno da Platform para mensagens de <strong>WhatsApp Nao Oficial</strong>.
-            Sem cadastro/aprovacao na Meta. O template e renderizado internamente e enviado pelo provider nao oficial ativo.
+            Catálogo interno da Platform para mensagens de <strong>WhatsApp Não Oficial</strong>.
+            Sem cadastro/aprovação na Meta. O template é renderizado internamente e enviado pelo provider não oficial ativo.
             Baseline inicial: <code>invoice.created</code>, <code>invoice.upcoming_due</code>, <code>invoice.overdue</code>,
             <code>tenant.suspended_due_to_overdue</code>, <code>tenant.welcome</code>, <code>subscription.created</code>,
             <code>subscription.recovery_started</code>, <code>credentials.resent</code> e <code>security.2fa_code</code>.
         </div>
         <div class="alert alert-secondary">
-            Distincao de dominio:
+            Distinção de domínio:
             <strong>WhatsApp Oficial</strong> usa templates Meta aprovados;
-            <strong>WhatsApp Nao Oficial</strong> usa templates internos operacionais.
+            <strong>WhatsApp Não Oficial</strong> usa templates internos operacionais.
         </div>
 
         <div class="card shadow-sm border-0 mb-3">
@@ -80,12 +80,12 @@
                         <thead class="bg-light">
                             <tr>
                                 <th>Key</th>
-                                <th>Nome/Titulo</th>
+                                <th>Nome/Título</th>
                                 <th>Categoria</th>
-                                <th>Variaveis</th>
+                                <th>Variáveis</th>
                                 <th>Status</th>
                                 <th>Atualizado</th>
-                                <th class="text-center">Acoes</th>
+                                <th class="text-center">Ações</th>
                             </tr>
                         </thead>
                         <tbody>

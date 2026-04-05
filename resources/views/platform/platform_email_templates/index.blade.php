@@ -33,7 +33,7 @@
         @endif
 
         <div class="alert alert-info">
-            Catalogo de Templates de Email da Platform. Este modulo nao inclui layout estrutural de email.
+            Catálogo de Templates de E-mail da Platform. Este módulo não inclui layout estrutural de e-mail.
         </div>
 
         <div class="card shadow-sm border-0 mb-3">
@@ -70,7 +70,7 @@
                             <th>Nome</th>
                             <th>Status</th>
                             <th>Atualizado em</th>
-                            <th class="text-center">Acoes</th>
+                            <th class="text-center">Ações</th>
                         </tr>
                         </thead>
                         <tbody>

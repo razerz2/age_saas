@@ -173,7 +173,7 @@ class WhatsAppOfficialTemplateBindingController extends Controller
         }
 
         if ($template->tenant_id !== null) {
-            return back()->withErrors(['template' => 'Template tenant-aware nao pode ser vinculado no baseline global da Platform.']);
+            return back()->withErrors(['template' => 'Template tenant-aware não pode ser vinculado no baseline global da Platform.']);
         }
 
         if ((string) $template->status !== WhatsAppOfficialTemplate::STATUS_APPROVED) {

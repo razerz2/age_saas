@@ -1,5 +1,5 @@
 @extends('layouts.freedash.app')
-@section('title', 'WhatsApp Nao Oficial - Template Interno Platform')
+@section('title', 'WhatsApp Não Oficial - Template Interno Platform')
 
 @php
     $requiredVariables = is_array($requiredVariables ?? null) ? $requiredVariables : [];
@@ -11,13 +11,13 @@
         <div class="row">
             <div class="col-7 align-self-center">
                 <h4 class="page-title text-truncate text-dark font-weight-medium mb-1">
-                    WhatsApp Nao Oficial - Template Interno Platform
+                    WhatsApp Não Oficial - Template Interno Platform
                 </h4>
                 <div class="d-flex align-items-center">
                     <nav aria-label="breadcrumb">
                         <ol class="breadcrumb m-0 p-0">
                             <li class="breadcrumb-item"><a href="{{ route('Platform.dashboard') }}" class="text-muted">Dashboard</a></li>
-                            <li class="breadcrumb-item"><a href="{{ route('Platform.whatsapp-unofficial-templates.index') }}" class="text-muted">WhatsApp Nao Oficial</a></li>
+                            <li class="breadcrumb-item"><a href="{{ route('Platform.whatsapp-unofficial-templates.index') }}" class="text-muted">WhatsApp Não Oficial</a></li>
                             <li class="breadcrumb-item text-muted active" aria-current="page">Template Interno Platform</li>
                         </ol>
                     </nav>
@@ -44,8 +44,8 @@
         @endif
 
         <div class="alert alert-info">
-            Este template pertence ao dominio <strong>WhatsApp Nao Oficial</strong> e nao depende de cadastro/aprovacao na Meta.
-            A mensagem final e renderizada internamente e enviada pelo provider nao oficial ativo (WAHA/Z-API).
+            Este template pertence ao domínio <strong>WhatsApp Não Oficial</strong> e não depende de cadastro/aprovação na Meta.
+            A mensagem final é renderizada internamente e enviada pelo provider não oficial ativo (WAHA/Z-API).
         </div>
 
         <div class="card shadow-sm border-0 mb-3">
@@ -56,7 +56,7 @@
                         <div>{{ $template->key }}</div>
                     </div>
                     <div class="col-md-4">
-                        <strong>Nome/Titulo:</strong>
+                        <strong>Nome/Título:</strong>
                         <div>{{ $template->title }}</div>
                     </div>
                     <div class="col-md-4">
@@ -90,14 +90,14 @@
                 </div>
 
                 <div class="mb-3">
-                    <strong>Variaveis declaradas (JSON):</strong>
+                    <strong>Variáveis declaradas (JSON):</strong>
                     <pre class="border rounded p-3 mt-2">{{ json_encode($template->variables ?? [], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) }}</pre>
                 </div>
 
                 <div class="mb-3">
-                    <strong>Variaveis obrigatorias para teste:</strong>
+                    <strong>Variáveis obrigatórias para teste:</strong>
                     @if($requiredVariables === [])
-                        <div class="text-muted mt-1">Nenhuma variavel obrigatoria detectada neste template.</div>
+                        <div class="text-muted mt-1">Nenhuma variável obrigatória detectada neste template.</div>
                     @else
                         <div class="mt-2 d-flex flex-wrap gap-1">
                             @foreach($requiredVariables as $variable)
@@ -137,7 +137,7 @@
                         <div id="manual-unofficial-feedback" class="alert d-none"></div>
 
                         <div class="alert alert-secondary">
-                            O preview e o envio usam a mesma engine de renderizacao do runtime nao oficial.
+                            O preview e o envio usam a mesma engine de renderização do runtime não oficial.
                         </div>
 
                         <div class="mb-3">
@@ -147,9 +147,9 @@
                         </div>
 
                         <div class="d-flex justify-content-between align-items-center mb-2">
-                            <h6 class="mb-0">Variaveis</h6>
+                            <h6 class="mb-0">Variáveis</h6>
                             <button type="button" class="btn btn-sm btn-outline-primary" id="manual-unofficial-fill-fake-btn">
-                                <i class="fas fa-wand-magic-sparkles me-1"></i> Preencher com dados ficticios
+                                <i class="fas fa-wand-magic-sparkles me-1"></i> Preencher com dados fictícios
                             </button>
                         </div>
                         <div id="manual-unofficial-vars" class="border rounded p-3 bg-light mb-3"></div>
@@ -223,7 +223,7 @@
 
         function renderVariableInputs() {
             if (!Array.isArray(requiredVariables) || requiredVariables.length === 0) {
-                varsContainer.innerHTML = '<div class="text-muted">Este template nao possui variaveis obrigatorias.</div>';
+                varsContainer.innerHTML = '<div class="text-muted">Este template não possui variáveis obrigatórias.</div>';
                 return;
             }
 
@@ -275,7 +275,7 @@
             }
 
             missingEl.classList.remove('d-none');
-            missingEl.textContent = 'Variaveis obrigatorias ausentes: ' + missing.join(', ');
+            missingEl.textContent = 'Variáveis obrigatórias ausentes: ' + missing.join(', ');
 
             const inputs = varsContainer.querySelectorAll('.manual-unofficial-var-input');
             inputs.forEach((input) => {
@@ -319,7 +319,7 @@
                 setMissingVariables(Array.isArray(data.missing_variables) ? data.missing_variables : []);
                 return true;
             } catch (error) {
-                showFeedback('error', 'Erro de comunicacao ao gerar preview.');
+                showFeedback('error', 'Erro de comunicação ao gerar preview.');
                 return false;
             }
         }
@@ -366,7 +366,7 @@
                 setMissingVariables(Array.isArray(data.missing_variables) ? data.missing_variables : []);
                 showFeedback('error', data.message || 'Falha ao enviar teste manual.');
             } catch (error) {
-                showFeedback('error', 'Erro de comunicacao ao enviar teste manual.');
+                showFeedback('error', 'Erro de comunicação ao enviar teste manual.');
             } finally {
                 sendBtn.disabled = false;
                 sendBtn.innerHTML = original;

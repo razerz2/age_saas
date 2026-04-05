@@ -42,7 +42,7 @@ class InvoiceController extends Controller
         if ($subscription?->plan?->isTest()) {
             return back()
                 ->withInput()
-                ->withErrors(['general' => 'Plano de teste nao gera fatura nem cobranca.']);
+                ->withErrors(['general' => 'Plano de teste não gera fatura nem cobrança.']);
         }
 
         $invoice = Invoices::create($data);
@@ -134,13 +134,13 @@ class InvoiceController extends Controller
                     'asaas_last_sync_at' => now(),
                 ]);
 
-                Log::info("Fatura {$invoice->id} ignorada: plano de teste nao participa de cobranca.");
+                Log::info("Fatura {$invoice->id} ignorada: plano de teste não participa de cobrança.");
 
                 if ($silent) {
                     return;
                 }
 
-                return redirect()->back()->with('warning', 'Plano de teste: esta fatura nao e sincronizada com o Asaas.');
+                return redirect()->back()->with('warning', 'Plano de teste: esta fatura não é sincronizada com o Asaas.');
             }
 
             $asaas = new AsaasService();
@@ -154,13 +154,13 @@ class InvoiceController extends Controller
             ]);
 
             if ($invoice->payment_link && str_contains($invoice->payment_link, '/c/')) {
-                Log::info("Fatura {$invoice->id} nao sincronizada: checkout hospedado Asaas (/c/).");
+                Log::info("Fatura {$invoice->id} não sincronizada: checkout hospedado Asaas (/c/).");
 
                 if (! $silent) {
                     return redirect()
                         ->back()
                         ->withErrors([
-                            'general' => 'Esta fatura e um checkout hospedado do Asaas e nao pode ser sincronizada diretamente. Aguarde o pagamento para sincronizar automaticamente via webhook.',
+                            'general' => 'Esta fatura é um checkout hospedado do Asaas e não pode ser sincronizada diretamente. Aguarde o pagamento para sincronizar automaticamente via webhook.',
                         ]);
                 }
 
@@ -168,13 +168,13 @@ class InvoiceController extends Controller
             }
 
             if (in_array($invoice->status, ['paid', 'received', 'confirmed', 'canceled'], true)) {
-                Log::info("Fatura {$invoice->id} nao sincronizada: status '{$invoice->status}' nao permite atualizacao no Asaas.");
+                Log::info("Fatura {$invoice->id} não sincronizada: status '{$invoice->status}' não permite atualização no Asaas.");
 
                 if (! $silent) {
                     return redirect()
                         ->back()
                         ->withErrors([
-                            'general' => 'Esta fatura ja esta finalizada (paga ou cancelada) e nao pode ser sincronizada com o Asaas.',
+                            'general' => 'Esta fatura já está finalizada (paga ou cancelada) e não pode ser sincronizada com o Asaas.',
                         ]);
                 }
 
@@ -200,7 +200,7 @@ class InvoiceController extends Controller
                         Log::warning("Fatura {$invoice->id}: resposta invalida ao criar cliente no Asaas.");
                         if (! $silent) {
                             return redirect()->back()->withErrors([
-                                'general' => 'Nao foi possivel sincronizar com o Asaas no momento. Tente novamente mais tarde.',
+                                'general' => 'Não foi possível sincronizar com o Asaas no momento. Tente novamente mais tarde.',
                             ]);
                         }
                         return;
@@ -253,7 +253,7 @@ class InvoiceController extends Controller
                 if (! $silent) {
                     return redirect()->back()->withErrors([
                         'general' => $response['errors'][0]['description']
-                            ?? 'Nao foi possivel confirmar a sincronizacao da fatura no Asaas.',
+                            ?? 'Não foi possível confirmar a sincronização da fatura no Asaas.',
                     ]);
                 }
 

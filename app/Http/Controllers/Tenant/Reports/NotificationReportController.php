@@ -62,12 +62,12 @@ class NotificationReportController extends Controller
 
         return Excel::download(new ReportQueryExport(
             queryBuilder: $query,
-            headingsRow: ['Titulo', 'Tipo', 'Status', 'Lida em', 'Criada em'],
+            headingsRow: ['Título', 'Tipo', 'Status', 'Lida em', 'Criada em'],
             mapRow: static function (Notification $notification) {
                 return [
                     $notification->title ?? 'N/A',
                     $notification->type ?? '-',
-                    $notification->read_at ? 'Lida' : 'Nao lida',
+                    $notification->read_at ? 'Lida' : 'Não lida',
                     $notification->read_at ? $notification->read_at->format('d/m/Y H:i') : '-',
                     $notification->created_at ? $notification->created_at->format('d/m/Y H:i') : '-',
                 ];

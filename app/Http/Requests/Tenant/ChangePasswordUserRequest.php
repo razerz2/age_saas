@@ -38,13 +38,13 @@ class ChangePasswordUserRequest extends FormRequest
     public function messages()
     {
         return [
-            'current_password.required' => 'A senha atual e obrigatoria para alterar sua propria senha.',
-            'current_password.string' => 'A senha atual deve ser uma string valida.',
+            'current_password.required' => 'A senha atual é obrigatória para alterar a própria senha.',
+            'current_password.string' => 'A senha atual deve ser um texto válido.',
 
-            'new_password.required' => 'A nova senha e obrigatoria.',
-            'new_password.string' => 'A nova senha deve ser uma string valida.',
+            'new_password.required' => 'A nova senha é obrigatória.',
+            'new_password.string' => 'A nova senha deve ser um texto válido.',
             'new_password.min' => 'A nova senha deve ter pelo menos 8 caracteres.',
-            'new_password.confirmed' => 'A confirmacao da nova senha nao coincide.',
+            'new_password.confirmed' => 'A confirmação da nova senha não coincide.',
         ];
     }
 }

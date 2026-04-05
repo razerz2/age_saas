@@ -196,7 +196,7 @@ class WhatsAppOfficialTenantTemplateController extends Controller
             if ($remoteTemplate === null) {
                 return redirect()
                     ->route('Platform.whatsapp-official-tenant-templates.show', $whatsappOfficialTemplate)
-                    ->with('warning', 'Sincronizacao concluida, mas nenhum template remoto foi localizado para os nomes consultados.');
+                    ->with('warning', 'Sincronização concluída, mas nenhum template remoto foi localizado para os nomes consultados.');
             }
 
             return redirect()
@@ -298,7 +298,7 @@ class WhatsAppOfficialTenantTemplateController extends Controller
 
                 return redirect()
                     ->route('Platform.whatsapp-official-tenant-templates.show', $syncedTemplate)
-                    ->with('warning', 'O template remoto ainda existe na Meta (status ' . $remoteStatus . '). Use a sincronizacao normal.');
+                    ->with('warning', 'O template remoto ainda existe na Meta (status ' . $remoteStatus . '). Use a sincronização normal.');
             }
 
             $republishedTemplate = $this->templateService->republishAsNewTemplate(
@@ -356,9 +356,9 @@ class WhatsAppOfficialTenantTemplateController extends Controller
             'variables' => ['nullable', 'array'],
             'variables.*' => ['nullable', 'string', 'max:500'],
         ], [
-            'phone.required' => 'Informe o numero de destino.',
-            'phone.regex' => 'Numero de destino invalido.',
-            'variables.array' => 'Formato de variaveis invalido para o teste.',
+            'phone.required' => 'Informe o número de destino.',
+            'phone.regex' => 'Número de destino inválido.',
+            'variables.array' => 'Formato de variáveis inválido para o teste.',
         ]);
 
         if ($validator->fails()) {
@@ -430,7 +430,7 @@ class WhatsAppOfficialTenantTemplateController extends Controller
         $remoteTemplate = $this->findRemoteTemplateSnapshot($syncedTemplate);
         if ($remoteTemplate === null) {
             throw new DomainException(
-                'Template nao foi localizado na Meta para os nomes consultados '
+                'Template não foi localizado na Meta para os nomes consultados '
                 . '(' . $syncedTemplate->meta_template_name . ', idioma ' . $syncedTemplate->language . '). '
                 . 'Sincronize novamente e confirme o nome canonicamente aprovado na Meta antes de testar.'
             );
@@ -447,7 +447,7 @@ class WhatsAppOfficialTenantTemplateController extends Controller
 
         if ($syncedTemplate->status !== WhatsAppOfficialTemplate::STATUS_APPROVED) {
             throw new DomainException(
-                'Template local nao esta apto para teste apos sincronizacao. '
+                'Template local não está apto para teste após sincronização. '
                 . 'Sincronize novamente e confirme status APPROVED.'
             );
         }
@@ -494,7 +494,7 @@ class WhatsAppOfficialTenantTemplateController extends Controller
 
         $localVariableMap = $this->normalizeVariableMap((array) $template->variables);
         if ($localVariableMap === []) {
-            throw new DomainException('Template sem mapeamento de variaveis local para montar parametros do body remoto.');
+            throw new DomainException('Template sem mapeamento de variáveis local para montar parâmetros do body remoto.');
         }
 
         $localNamesByOrder = array_values(array_unique(array_values($localVariableMap)));
@@ -517,7 +517,7 @@ class WhatsAppOfficialTenantTemplateController extends Controller
 
             if ($variableName === null || trim($variableName) === '') {
                 throw new DomainException(
-                    'Nao foi possivel mapear variavel local para placeholder remoto {{' . $placeholder . '}}.'
+                    'Não foi possível mapear variável local para placeholder remoto {{' . $placeholder . '}}.'
                 );
             }
 

@@ -119,7 +119,7 @@ class TenantEmailTemplateController extends Controller
 
         return redirect()
             ->route('Platform.tenant-email-templates.index')
-            ->with('success', 'Template de Email Tenant restaurado para o padrao.');
+            ->with('success', 'Template de Email Tenant restaurado para o padrão.');
     }
 
     public function toggle(TenantEmailTemplate $tenantEmailTemplate): RedirectResponse
@@ -165,7 +165,7 @@ class TenantEmailTemplateController extends Controller
                 ->route('Platform.tenant-email-templates.show', $tenantEmailTemplate)
                 ->withInput()
                 ->withErrors([
-                    'destination_email' => 'Nao foi possivel enviar o email de teste. Tente novamente.',
+                    'destination_email' => 'Não foi possível enviar o e-mail de teste. Tente novamente.',
                 ]);
         }
     }

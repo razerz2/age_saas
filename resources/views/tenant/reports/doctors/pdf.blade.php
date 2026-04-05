@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
     <meta charset="utf-8">
-    <title>Relatorio de Medicos</title>
+    <title>Relatório de Médicos</title>
     <style>
         body { font-family: DejaVu Sans, sans-serif; font-size: 11px; color: #111827; }
         h1 { font-size: 16px; margin: 0 0 8px; }
@@ -16,7 +16,7 @@
     </style>
 </head>
 <body>
-    <h1>Relatorio de Medicos</h1>
+    <h1>Relatório de Médicos</h1>
     <div class="meta">Gerado em: {{ $generatedAt->format('d/m/Y H:i') }}</div>
 
     @if(!empty($activeFilters))
@@ -53,7 +53,7 @@
     </table>
 
     @if($truncated)
-        <p class="warn">Exportacao limitada aos primeiros {{ $pdfMaxRows }} registros para manter performance do PDF.</p>
+        <p class="warn">Exportação limitada aos primeiros {{ $pdfMaxRows }} registros para manter performance do PDF.</p>
     @endif
 </body>
 </html>

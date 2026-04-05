@@ -218,8 +218,8 @@ export function initTenantWhatsAppSettings() {
                     message.textContent =
                         data?.message ||
                         (ok
-                            ? 'Conexao realizada com sucesso.'
-                            : 'Falha ao testar conexao. Verifique as configuracoes.');
+                            ? 'Conexão realizada com sucesso.'
+                            : 'Falha ao testar conexão. Verifique as configurações.');
                 }
             } catch (error) {
                 updateBadge(badge, 'error', 'Conectado', 'Erro');
@@ -263,7 +263,7 @@ export function initTenantWhatsAppSettings() {
 
             if (!number || !text) {
                 if (messageLabel) {
-                    messageLabel.textContent = 'Preencha o numero de destino e a mensagem para enviar o teste.';
+                    messageLabel.textContent = 'Preencha o número de destino e a mensagem para enviar o teste.';
                 }
                 return;
             }
@@ -297,7 +297,7 @@ export function initTenantWhatsAppSettings() {
                         data?.message ||
                         (ok
                             ? 'Mensagem enviada com sucesso.'
-                            : 'Falha ao enviar mensagem de teste. Verifique as configuracoes.');
+                            : 'Falha ao enviar mensagem de teste. Verifique as configurações.');
                 }
             } catch (error) {
                 updateBadge(badge, 'error', 'Enviado', 'Erro');

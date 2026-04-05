@@ -32,8 +32,8 @@
         'invoice.created' => 'Fatura criada',
         'invoice.upcoming_due' => 'Lembrete de fatura a vencer',
         'invoice.overdue' => 'Fatura vencida',
-        'tenant.suspended_due_to_overdue' => 'Tenant suspenso por inadimplencia',
-        'security.2fa_code' => 'Codigo de verificacao (2FA)',
+        'tenant.suspended_due_to_overdue' => 'Tenant suspenso por inadimplência',
+        'security.2fa_code' => 'Código de verificação (2FA)',
         'tenant.welcome' => 'Boas-vindas ao tenant',
         'subscription.created' => 'Assinatura criada',
         'subscription.recovery_started' => 'Recovery de assinatura iniciado',
@@ -44,12 +44,12 @@
 <input type="hidden" name="provider" value="whatsapp_business">
 
 <div class="alert alert-info">
-    Este modulo e exclusivo para templates oficiais da Platform (Meta Cloud API).
-    Nao use keys operacionais de clinica (appointment.*, waitlist.*) aqui.
+    Este módulo é exclusivo para templates oficiais da Platform (Meta Cloud API).
+    Não use keys operacionais de clínica (appointment.*, waitlist.*) aqui.
 </div>
 <div class="alert alert-warning">
-    Em runtime, somente templates com status <strong>approved</strong> sao enviados.
-    Draft/pending/rejected nao disparam mensagem oficial.
+    Em runtime, somente templates com status <strong>approved</strong> são enviados.
+    Draft/pending/rejected não disparam mensagem oficial.
 </div>
 
 <div class="row">

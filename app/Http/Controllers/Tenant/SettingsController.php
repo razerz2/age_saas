@@ -328,7 +328,7 @@ class SettingsController extends Controller
     }
 
     /**
-     * Salva override do template de notificacao para tenant/canal/key.
+     * Salva override do template de notificação para tenant/canal/key.
      */
     public function updateNotificationTemplate(
         Request $request,
@@ -349,14 +349,14 @@ class SettingsController extends Controller
         if (!$tenant) {
             return redirect()
                 ->route('tenant.settings.index', ['slug' => request()->route('slug')])
-                ->with('error', 'Tenant nao encontrado.');
+                ->with('error', 'Tenant não encontrado.');
         }
 
         $defaultTemplate = $templateService->getDefaultTemplate($validated['channel'], $validated['key']);
         $subject = $validated['subject'] ?? null;
         if ($validated['channel'] === 'email' && !empty($defaultTemplate['subject']) && trim((string) $subject) === '') {
             return back()
-                ->withErrors(['subject' => 'O assunto e obrigatorio para templates de email.'])
+                ->withErrors(['subject' => 'O assunto é obrigatório para templates de e-mail.'])
                 ->withInput();
         }
 
@@ -406,7 +406,7 @@ class SettingsController extends Controller
     }
 
     /**
-     * Remove override para voltar ao template padrao do sistema.
+     * Remove override para voltar ao template padrão do sistema.
      */
     public function restoreNotificationTemplate(Request $request, NotificationTemplateService $templateService)
     {
@@ -420,7 +420,7 @@ class SettingsController extends Controller
         if (!$tenant) {
             return redirect()
                 ->route('tenant.settings.index', ['slug' => request()->route('slug')])
-                ->with('error', 'Tenant nao encontrado.');
+                ->with('error', 'Tenant não encontrado.');
         }
 
         $templateService->restoreDefault((string) $tenant->id, $validated['channel'], $validated['key']);
@@ -454,14 +454,14 @@ class SettingsController extends Controller
         if (!$tenant) {
             return redirect()
                 ->route('tenant.settings.index', ['slug' => request()->route('slug')])
-                ->with('error', 'Tenant nao encontrado.');
+                ->with('error', 'Tenant não encontrado.');
         }
 
         $defaultTemplate = $templateService->getDefaultTemplate($validated['channel'], $validated['key']);
         $subject = $validated['subject'] ?? null;
         if ($validated['channel'] === 'email' && !empty($defaultTemplate['subject']) && trim((string) $subject) === '') {
             return back()
-                ->withErrors(['subject' => 'O assunto e obrigatorio para templates de email.'])
+                ->withErrors(['subject' => 'O assunto é obrigatório para templates de e-mail.'])
                 ->withInput();
         }
 
@@ -487,7 +487,7 @@ class SettingsController extends Controller
                 'channel' => $validated['channel'],
                 'key' => $validated['key'],
                 'context_source' => 'mock',
-                'context_warning' => 'Nao foi possivel montar o contexto de preview. Exibindo texto sem substituicoes adicionais.',
+                'context_warning' => 'Não foi possível montar o contexto de preview. Exibindo texto sem substituições adicionais.',
                 'unknown_placeholders' => [],
                 'subject_input' => $subject,
                 'content_input' => $validated['content'],
@@ -760,7 +760,7 @@ class SettingsController extends Controller
                 if ($enabledGlobalProviders === []) {
                     $validator->errors()->add(
                         'whatsapp_global_provider',
-                        'Nenhum provider global de WhatsApp esta habilitado pela Platform.'
+                        'Nenhum provider global de WhatsApp está habilitado pela Platform.'
                     );
                     return;
                 }
@@ -780,7 +780,7 @@ class SettingsController extends Controller
                 if (!in_array($selectedGlobalProvider, $enabledGlobalProviders, true)) {
                     $validator->errors()->add(
                         'whatsapp_global_provider',
-                        'Provider global invalido para o tenant. Verifique os providers habilitados pela Platform.'
+                        'Provider global inválido para o tenant. Verifique os providers habilitados pela Platform.'
                     );
                 }
 
@@ -793,58 +793,58 @@ class SettingsController extends Controller
 
             $provider = $request->input('whatsapp_provider');
             if (!in_array($provider, ['whatsapp_business', 'zapi', 'waha', 'evolution'], true)) {
-                $validator->errors()->add('whatsapp_provider', 'Selecione um provedor de WhatsApp valido.');
+                $validator->errors()->add('whatsapp_provider', 'Selecione um provedor de WhatsApp válido.');
                 return;
             }
 
             if ($provider === 'whatsapp_business') {
                 if (!$request->filled('META_ACCESS_TOKEN')) {
-                    $validator->errors()->add('META_ACCESS_TOKEN', 'O Access Token e obrigatorio para o provedor Meta.');
+                    $validator->errors()->add('META_ACCESS_TOKEN', 'O Access Token é obrigatório para o provedor Meta.');
                 }
                 if (!$request->filled('META_PHONE_NUMBER_ID')) {
-                    $validator->errors()->add('META_PHONE_NUMBER_ID', 'O Phone Number ID e obrigatorio para o provedor Meta.');
+                    $validator->errors()->add('META_PHONE_NUMBER_ID', 'O Phone Number ID é obrigatório para o provedor Meta.');
                 }
                 if (!$request->filled('META_WABA_ID')) {
-                    $validator->errors()->add('META_WABA_ID', 'O WABA ID e obrigatorio para o provedor Meta.');
+                    $validator->errors()->add('META_WABA_ID', 'O WABA ID é obrigatório para o provedor Meta.');
                 }
             }
 
             if ($provider === 'zapi') {
                 if (!$request->filled('ZAPI_API_URL')) {
-                    $validator->errors()->add('ZAPI_API_URL', 'A API URL e obrigatoria para o provedor Z-API.');
+                    $validator->errors()->add('ZAPI_API_URL', 'A API URL é obrigatória para o provedor Z-API.');
                 }
                 if (!$request->filled('ZAPI_TOKEN')) {
-                    $validator->errors()->add('ZAPI_TOKEN', 'O Token e obrigatorio para o provedor Z-API.');
+                    $validator->errors()->add('ZAPI_TOKEN', 'O Token é obrigatório para o provedor Z-API.');
                 }
                 if (!$request->filled('ZAPI_CLIENT_TOKEN')) {
-                    $validator->errors()->add('ZAPI_CLIENT_TOKEN', 'O Client Token e obrigatorio para o provedor Z-API.');
+                    $validator->errors()->add('ZAPI_CLIENT_TOKEN', 'O Client Token é obrigatório para o provedor Z-API.');
                 }
                 if (!$request->filled('ZAPI_INSTANCE_ID')) {
-                    $validator->errors()->add('ZAPI_INSTANCE_ID', 'O Instance ID e obrigatorio para o provedor Z-API.');
+                    $validator->errors()->add('ZAPI_INSTANCE_ID', 'O Instance ID é obrigatório para o provedor Z-API.');
                 }
             }
 
             if ($provider === 'waha') {
                 if (!$request->filled('WAHA_BASE_URL')) {
-                    $validator->errors()->add('WAHA_BASE_URL', 'A Base URL e obrigatoria para o provedor WAHA.');
+                    $validator->errors()->add('WAHA_BASE_URL', 'A Base URL é obrigatória para o provedor WAHA.');
                 }
                 if (!$request->filled('WAHA_API_KEY')) {
-                    $validator->errors()->add('WAHA_API_KEY', 'A API Key e obrigatoria para o provedor WAHA.');
+                    $validator->errors()->add('WAHA_API_KEY', 'A API Key é obrigatória para o provedor WAHA.');
                 }
                 if (!$request->filled('WAHA_SESSION')) {
-                    $validator->errors()->add('WAHA_SESSION', 'O nome da sessao e obrigatorio para o provedor WAHA.');
+                    $validator->errors()->add('WAHA_SESSION', 'O nome da sessão é obrigatório para o provedor WAHA.');
                 }
             }
 
             if ($provider === 'evolution') {
                 if (!$request->filled('EVOLUTION_BASE_URL')) {
-                    $validator->errors()->add('EVOLUTION_BASE_URL', 'A Base URL e obrigatoria para o provedor Evolution.');
+                    $validator->errors()->add('EVOLUTION_BASE_URL', 'A Base URL é obrigatória para o provedor Evolution.');
                 }
                 if (!$request->filled('EVOLUTION_API_KEY')) {
-                    $validator->errors()->add('EVOLUTION_API_KEY', 'A API Key e obrigatoria para o provedor Evolution.');
+                    $validator->errors()->add('EVOLUTION_API_KEY', 'A API Key é obrigatória para o provedor Evolution.');
                 }
                 if (!$request->filled('EVOLUTION_INSTANCE')) {
-                    $validator->errors()->add('EVOLUTION_INSTANCE', 'O nome da instancia e obrigatorio para o provedor Evolution.');
+                    $validator->errors()->add('EVOLUTION_INSTANCE', 'O nome da instância é obrigatório para o provedor Evolution.');
                 }
             }
 
@@ -855,58 +855,58 @@ class SettingsController extends Controller
 
             $botProvider = (string) $request->input('whatsapp_bot_provider');
             if (!in_array($botProvider, WhatsAppBotConfigService::SUPPORTED_PROVIDERS, true)) {
-                $validator->errors()->add('whatsapp_bot_provider', 'Selecione um provedor de WhatsApp valido para o bot.');
+                $validator->errors()->add('whatsapp_bot_provider', 'Selecione um provedor de WhatsApp válido para o bot.');
                 return;
             }
 
             if ($botProvider === 'whatsapp_business') {
                 if (!$request->filled('bot_meta_access_token')) {
-                    $validator->errors()->add('bot_meta_access_token', 'O Access Token e obrigatorio para o provedor Meta.');
+                    $validator->errors()->add('bot_meta_access_token', 'O Access Token é obrigatório para o provedor Meta.');
                 }
                 if (!$request->filled('bot_meta_phone_number_id')) {
-                    $validator->errors()->add('bot_meta_phone_number_id', 'O Phone Number ID e obrigatorio para o provedor Meta.');
+                    $validator->errors()->add('bot_meta_phone_number_id', 'O Phone Number ID é obrigatório para o provedor Meta.');
                 }
                 if (!$request->filled('bot_meta_waba_id')) {
-                    $validator->errors()->add('bot_meta_waba_id', 'O WABA ID e obrigatorio para o provedor Meta.');
+                    $validator->errors()->add('bot_meta_waba_id', 'O WABA ID é obrigatório para o provedor Meta.');
                 }
             }
 
             if ($botProvider === 'zapi') {
                 if (!$request->filled('bot_zapi_api_url')) {
-                    $validator->errors()->add('bot_zapi_api_url', 'A API URL e obrigatoria para o provedor Z-API.');
+                    $validator->errors()->add('bot_zapi_api_url', 'A API URL é obrigatória para o provedor Z-API.');
                 }
                 if (!$request->filled('bot_zapi_token')) {
-                    $validator->errors()->add('bot_zapi_token', 'O Token e obrigatorio para o provedor Z-API.');
+                    $validator->errors()->add('bot_zapi_token', 'O Token é obrigatório para o provedor Z-API.');
                 }
                 if (!$request->filled('bot_zapi_client_token')) {
-                    $validator->errors()->add('bot_zapi_client_token', 'O Client Token e obrigatorio para o provedor Z-API.');
+                    $validator->errors()->add('bot_zapi_client_token', 'O Client Token é obrigatório para o provedor Z-API.');
                 }
                 if (!$request->filled('bot_zapi_instance_id')) {
-                    $validator->errors()->add('bot_zapi_instance_id', 'O Instance ID e obrigatorio para o provedor Z-API.');
+                    $validator->errors()->add('bot_zapi_instance_id', 'O Instance ID é obrigatório para o provedor Z-API.');
                 }
             }
 
             if ($botProvider === 'waha') {
                 if (!$request->filled('bot_waha_base_url')) {
-                    $validator->errors()->add('bot_waha_base_url', 'A Base URL e obrigatoria para o provedor WAHA.');
+                    $validator->errors()->add('bot_waha_base_url', 'A Base URL é obrigatória para o provedor WAHA.');
                 }
                 if (!$request->filled('bot_waha_api_key')) {
-                    $validator->errors()->add('bot_waha_api_key', 'A API Key e obrigatoria para o provedor WAHA.');
+                    $validator->errors()->add('bot_waha_api_key', 'A API Key é obrigatória para o provedor WAHA.');
                 }
                 if (!$request->filled('bot_waha_session')) {
-                    $validator->errors()->add('bot_waha_session', 'O nome da sessao e obrigatorio para o provedor WAHA.');
+                    $validator->errors()->add('bot_waha_session', 'O nome da sessão é obrigatório para o provedor WAHA.');
                 }
             }
 
             if ($botProvider === 'evolution') {
                 if (!$request->filled('bot_evolution_base_url')) {
-                    $validator->errors()->add('bot_evolution_base_url', 'A Base URL e obrigatoria para o provedor Evolution.');
+                    $validator->errors()->add('bot_evolution_base_url', 'A Base URL é obrigatória para o provedor Evolution.');
                 }
                 if (!$request->filled('bot_evolution_api_key')) {
-                    $validator->errors()->add('bot_evolution_api_key', 'A API Key e obrigatoria para o provedor Evolution.');
+                    $validator->errors()->add('bot_evolution_api_key', 'A API Key é obrigatória para o provedor Evolution.');
                 }
                 if (!$request->filled('bot_evolution_instance')) {
-                    $validator->errors()->add('bot_evolution_instance', 'O nome da instancia e obrigatorio para o provedor Evolution.');
+                    $validator->errors()->add('bot_evolution_instance', 'O nome da instância é obrigatório para o provedor Evolution.');
                 }
             }
         });
@@ -925,7 +925,7 @@ class SettingsController extends Controller
                 if (empty($provisioningResult['ok'])) {
                     return back()
                         ->withErrors([
-                            'whatsapp_global_provider' => (string) ($provisioningResult['message'] ?? 'Nao foi possivel provisionar a sessao WAHA da clinica.'),
+                            'whatsapp_global_provider' => (string) ($provisioningResult['message'] ?? 'Não foi possível provisionar a sessão WAHA da clínica.'),
                         ])
                         ->withInput();
                 }
@@ -937,7 +937,7 @@ class SettingsController extends Controller
                 if (empty($provisioningResult['ok'])) {
                     return back()
                         ->withErrors([
-                            'whatsapp_global_provider' => (string) ($provisioningResult['message'] ?? 'Nao foi possivel provisionar a instancia Evolution da clinica.'),
+                            'whatsapp_global_provider' => (string) ($provisioningResult['message'] ?? 'Não foi possível provisionar a instância Evolution da clínica.'),
                         ])
                         ->withInput();
                 }
@@ -1054,13 +1054,13 @@ class SettingsController extends Controller
     }
 
     /**
-     * Atualiza as configuracoes iniciais do Bot de WhatsApp.
+     * Atualiza as configurações iniciais do Bot de WhatsApp.
      */
     public function updateWhatsAppBot(Request $request)
     {
         $tenant = Tenant::current();
         if (!$this->hasWhatsAppBotFeature($tenant)) {
-            abort(403, "A funcionalidade 'Bot de WhatsApp' nao esta disponivel no seu plano.");
+            abort(403, "A funcionalidade 'Bot de WhatsApp' não está disponível no seu plano.");
         }
 
         $validator = Validator::make($request->all(), [
@@ -1131,58 +1131,58 @@ class SettingsController extends Controller
 
             $provider = (string) $request->input('whatsapp_bot_provider');
             if (!in_array($provider, WhatsAppBotConfigService::SUPPORTED_PROVIDERS, true)) {
-                $validator->errors()->add('whatsapp_bot_provider', 'Selecione um provedor de WhatsApp valido para o bot.');
+                $validator->errors()->add('whatsapp_bot_provider', 'Selecione um provedor de WhatsApp válido para o bot.');
                 return;
             }
 
             if ($provider === 'whatsapp_business') {
                 if (!$request->filled('bot_meta_access_token')) {
-                    $validator->errors()->add('bot_meta_access_token', 'O Access Token e obrigatorio para o provedor Meta.');
+                    $validator->errors()->add('bot_meta_access_token', 'O Access Token é obrigatório para o provedor Meta.');
                 }
                 if (!$request->filled('bot_meta_phone_number_id')) {
-                    $validator->errors()->add('bot_meta_phone_number_id', 'O Phone Number ID e obrigatorio para o provedor Meta.');
+                    $validator->errors()->add('bot_meta_phone_number_id', 'O Phone Number ID é obrigatório para o provedor Meta.');
                 }
                 if (!$request->filled('bot_meta_waba_id')) {
-                    $validator->errors()->add('bot_meta_waba_id', 'O WABA ID e obrigatorio para o provedor Meta.');
+                    $validator->errors()->add('bot_meta_waba_id', 'O WABA ID é obrigatório para o provedor Meta.');
                 }
             }
 
             if ($provider === 'zapi') {
                 if (!$request->filled('bot_zapi_api_url')) {
-                    $validator->errors()->add('bot_zapi_api_url', 'A API URL e obrigatoria para o provedor Z-API.');
+                    $validator->errors()->add('bot_zapi_api_url', 'A API URL é obrigatória para o provedor Z-API.');
                 }
                 if (!$request->filled('bot_zapi_token')) {
-                    $validator->errors()->add('bot_zapi_token', 'O Token e obrigatorio para o provedor Z-API.');
+                    $validator->errors()->add('bot_zapi_token', 'O Token é obrigatório para o provedor Z-API.');
                 }
                 if (!$request->filled('bot_zapi_client_token')) {
-                    $validator->errors()->add('bot_zapi_client_token', 'O Client Token e obrigatorio para o provedor Z-API.');
+                    $validator->errors()->add('bot_zapi_client_token', 'O Client Token é obrigatório para o provedor Z-API.');
                 }
                 if (!$request->filled('bot_zapi_instance_id')) {
-                    $validator->errors()->add('bot_zapi_instance_id', 'O Instance ID e obrigatorio para o provedor Z-API.');
+                    $validator->errors()->add('bot_zapi_instance_id', 'O Instance ID é obrigatório para o provedor Z-API.');
                 }
             }
 
             if ($provider === 'waha') {
                 if (!$request->filled('bot_waha_base_url')) {
-                    $validator->errors()->add('bot_waha_base_url', 'A Base URL e obrigatoria para o provedor WAHA.');
+                    $validator->errors()->add('bot_waha_base_url', 'A Base URL é obrigatória para o provedor WAHA.');
                 }
                 if (!$request->filled('bot_waha_api_key')) {
-                    $validator->errors()->add('bot_waha_api_key', 'A API Key e obrigatoria para o provedor WAHA.');
+                    $validator->errors()->add('bot_waha_api_key', 'A API Key é obrigatória para o provedor WAHA.');
                 }
                 if (!$request->filled('bot_waha_session')) {
-                    $validator->errors()->add('bot_waha_session', 'O nome da sessao e obrigatorio para o provedor WAHA.');
+                    $validator->errors()->add('bot_waha_session', 'O nome da sessão é obrigatório para o provedor WAHA.');
                 }
             }
 
             if ($provider === 'evolution') {
                 if (!$request->filled('bot_evolution_base_url')) {
-                    $validator->errors()->add('bot_evolution_base_url', 'A Base URL e obrigatoria para o provedor Evolution.');
+                    $validator->errors()->add('bot_evolution_base_url', 'A Base URL é obrigatória para o provedor Evolution.');
                 }
                 if (!$request->filled('bot_evolution_api_key')) {
-                    $validator->errors()->add('bot_evolution_api_key', 'A API Key e obrigatoria para o provedor Evolution.');
+                    $validator->errors()->add('bot_evolution_api_key', 'A API Key é obrigatória para o provedor Evolution.');
                 }
                 if (!$request->filled('bot_evolution_instance')) {
-                    $validator->errors()->add('bot_evolution_instance', 'O nome da instancia e obrigatorio para o provedor Evolution.');
+                    $validator->errors()->add('bot_evolution_instance', 'O nome da instância é obrigatório para o provedor Evolution.');
                 }
             }
         });
@@ -1270,7 +1270,7 @@ class SettingsController extends Controller
         return redirect()->route('tenant.settings.index', [
             'slug' => tenant()->subdomain,
             'tab' => 'bot-whatsapp',
-        ])->with('success', 'Configuracoes do Bot de WhatsApp atualizadas com sucesso.');
+        ])->with('success', 'Configurações do Bot de WhatsApp atualizadas com sucesso.');
     }
 
     /**
@@ -1510,12 +1510,12 @@ class SettingsController extends Controller
             } catch (\Throwable $e) {
                 $context = $this->buildMockEditorPreviewContext($tenant);
                 $contextSource = 'mock';
-                $contextWarning = 'Falha ao montar contexto real do ultimo agendamento. Preview usando contexto basico.';
+                $contextWarning = 'Falha ao montar contexto real do último agendamento. Preview usando contexto básico.';
             }
         } else {
             $context = $this->buildMockEditorPreviewContext($tenant);
             $contextSource = 'mock';
-            $contextWarning = 'Nenhum agendamento encontrado. Preview usando contexto basico (dados da clinica + campos vazios).';
+            $contextWarning = 'Nenhum agendamento encontrado. Preview usando contexto básico (dados da clínica + campos vazios).';
         }
 
         if (str_starts_with($key, 'waitlist.')) {

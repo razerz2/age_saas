@@ -81,7 +81,7 @@ class SubscriptionController extends Controller
             $plan = Plan::findOrFail($data['plan_id']);
             if ($conversionFromTrial && ! $plan->isReal()) {
                 return back()->withInput()->withErrors([
-                    'plan_id' => 'A conversao de trial so permite planos reais ativos.',
+                    'plan_id' => 'A conversão de trial só permite planos reais ativos.',
                 ]);
             }
 
@@ -130,13 +130,13 @@ class SubscriptionController extends Controller
             if ($result === false) {
                 return redirect()
                     ->route('Platform.subscriptions.index')
-                    ->with('warning', 'Assinatura criada, mas houve falha na sincronizacao com o Asaas. Verifique os logs.');
+                    ->with('warning', 'Assinatura criada, mas houve falha na sincronização com o Asaas. Verifique os logs.');
             }
 
             $successMessage = $plan->isTest()
-                ? 'Assinatura de teste criada com sucesso. Nenhuma cobranca foi gerada.'
+                ? 'Assinatura de teste criada com sucesso. Nenhuma cobrança foi gerada.'
                 : ($conversionFromTrial
-                    ? 'Conversao de trial iniciada com sucesso. O acesso sera liberado conforme o pagamento.'
+                    ? 'Conversão de trial iniciada com sucesso. O acesso será liberado conforme o pagamento.'
                     : 'Assinatura criada com sucesso e sincronizada com o Asaas!');
 
             return redirect()
@@ -184,7 +184,7 @@ class SubscriptionController extends Controller
             if ((bool) $subscription->is_trial && $targetPlan->isTest()) {
                 return back()
                     ->withInput()
-                    ->withErrors(['plan_id' => 'Nao e permitido manter assinatura de trial em plano de teste.']);
+                    ->withErrors(['plan_id' => 'Não é permitido manter assinatura de trial em plano de teste.']);
             }
 
             $data = $this->normalizeFinancialDataForPlan($data, $targetPlan);
@@ -225,7 +225,7 @@ class SubscriptionController extends Controller
             }
 
             if ($hasCriticalChange) {
-                Log::info("Mudanca critica detectada na assinatura {$subscription->id}. Reenviando sincronismo...");
+                Log::info("Mudança crítica detectada na assinatura {$subscription->id}. Reenviando sincronismo...");
                 $this->syncWithAsaas($subscription, true);
             }
 
@@ -331,7 +331,7 @@ class SubscriptionController extends Controller
                     return false;
                 }
 
-                return back()->withErrors(['general' => 'Nao foi possivel sincronizar: tenant ou plano ausente.']);
+                return back()->withErrors(['general' => 'Não foi possível sincronizar: tenant ou plano ausente.']);
             }
 
             if ($plan->isTest()) {
@@ -339,7 +339,7 @@ class SubscriptionController extends Controller
                     try {
                         $asaas->deleteSubscription($subscription->asaas_subscription_id);
                     } catch (\Throwable $e) {
-                        Log::warning('Nao foi possivel cancelar assinatura Asaas ao migrar para plano teste.', [
+                        Log::warning('Não foi possível cancelar assinatura Asaas ao migrar para plano teste.', [
                             'subscription_id' => $subscription->id,
                             'error' => $e->getMessage(),
                         ]);
@@ -359,7 +359,7 @@ class SubscriptionController extends Controller
                     return true;
                 }
 
-                return redirect()->back()->with('warning', 'Plano de teste: fluxo financeiro ignorado e sem cobranca.');
+                return redirect()->back()->with('warning', 'Plano de teste: fluxo financeiro ignorado e sem cobrança.');
             }
 
             $subscription->update([
@@ -380,16 +380,16 @@ class SubscriptionController extends Controller
                         $subscription->update([
                             'asaas_synced' => false,
                             'asaas_sync_status' => 'pending',
-                            'asaas_last_error' => 'Falha ao criar cliente no Asaas (resposta vazia ou invalida).',
+                            'asaas_last_error' => 'Falha ao criar cliente no Asaas (resposta vazia ou inválida).',
                             'asaas_last_sync_at' => now(),
                         ]);
 
-                        Log::warning("Subscription {$subscription->id}: resposta invalida ao criar cliente no Asaas.");
+                        Log::warning("Subscription {$subscription->id}: resposta inválida ao criar cliente no Asaas.");
                         if ($silent) {
                             return false;
                         }
 
-                        return back()->withErrors(['general' => 'Nao foi possivel sincronizar com o Asaas no momento. Tente novamente.']);
+                        return back()->withErrors(['general' => 'Não foi possível sincronizar com o Asaas no momento. Tente novamente.']);
                     }
 
                     $tenant->update(['asaas_customer_id' => $customerResponse['id']]);
@@ -416,16 +416,16 @@ class SubscriptionController extends Controller
                         $subscription->update([
                             'asaas_synced' => false,
                             'asaas_sync_status' => 'pending',
-                            'asaas_last_error' => 'Falha ao criar assinatura no Asaas (resposta vazia ou invalida).',
+                            'asaas_last_error' => 'Falha ao criar assinatura no Asaas (resposta vazia ou inválida).',
                             'asaas_last_sync_at' => now(),
                         ]);
 
-                        Log::warning("Subscription {$subscription->id}: resposta invalida ao criar assinatura no Asaas.");
+                        Log::warning("Subscription {$subscription->id}: resposta inválida ao criar assinatura no Asaas.");
                         if ($silent) {
                             return false;
                         }
 
-                        return back()->withErrors(['general' => 'Nao foi possivel criar a assinatura no Asaas.']);
+                        return back()->withErrors(['general' => 'Não foi possível criar a assinatura no Asaas.']);
                     }
 
                     $subscription->update(['asaas_subscription_id' => $response['subscription']['id']]);
@@ -489,16 +489,16 @@ class SubscriptionController extends Controller
                     $subscription->update([
                         'asaas_synced' => false,
                         'asaas_sync_status' => 'pending',
-                        'asaas_last_error' => 'Falha ao criar fatura PIX no Asaas (resposta vazia ou invalida).',
+                        'asaas_last_error' => 'Falha ao criar fatura PIX no Asaas (resposta vazia ou inválida).',
                         'asaas_last_sync_at' => now(),
                     ]);
 
-                    Log::warning("Subscription {$subscription->id}: resposta invalida ao criar fatura PIX.");
+                    Log::warning("Subscription {$subscription->id}: resposta inválida ao criar fatura PIX.");
                     if ($silent) {
                         return false;
                     }
 
-                    return back()->withErrors(['general' => 'Nao foi possivel gerar fatura PIX no Asaas.']);
+                    return back()->withErrors(['general' => 'Não foi possível gerar fatura PIX no Asaas.']);
                 }
 
                 $invoice = Invoices::create([
@@ -552,7 +552,7 @@ class SubscriptionController extends Controller
                     'asaas_last_error' => null,
                     'asaas_last_sync_at' => now(),
                 ]);
-                Log::info("Assinatura {$subscription->id} removida no Asaas (mudanca de metodo ou auto_renew desativado).");
+                Log::info("Assinatura {$subscription->id} removida no Asaas (mudança de método ou auto_renew desativado).");
             } else {
                 $subscription->update([
                     'asaas_synced' => false,
@@ -566,7 +566,7 @@ class SubscriptionController extends Controller
                 return true;
             }
 
-            return redirect()->back()->with('success', 'Sincronizacao com Asaas concluida com sucesso!');
+            return redirect()->back()->with('success', 'Sincronização com Asaas concluída com sucesso!');
         } catch (\Throwable $e) {
             Log::error("Erro ao sincronizar assinatura com Asaas: {$e->getMessage()}");
 

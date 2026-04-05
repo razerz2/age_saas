@@ -64,14 +64,14 @@ export function initTenantEvolutionGlobalSettings() {
         const expectedUrl = String(webhookPayload?.expected_url || '').trim();
         const currentUrl = String(webhookPayload?.current_url || '').trim();
         const configured = Boolean(webhookPayload?.configured);
-        const statusText = configured ? 'Configurado' : (currentUrl ? 'Divergente' : 'Nao configurado');
+        const statusText = configured ? 'Configurado' : (currentUrl ? 'Divergente' : 'Não configurado');
 
         if (dom.webhookExpectedUrl) {
             dom.webhookExpectedUrl.textContent = expectedUrl || '-';
         }
 
         if (dom.webhookCurrentUrl) {
-            dom.webhookCurrentUrl.textContent = currentUrl || 'Nao configurado';
+            dom.webhookCurrentUrl.textContent = currentUrl || 'Não configurado';
         }
 
         if (dom.webhookStatus) {
@@ -166,7 +166,7 @@ export function initTenantEvolutionGlobalSettings() {
         }
 
         if (dom.sessionFriendlyStatus) {
-            dom.sessionFriendlyStatus.textContent = session.friendly_status || 'Origem: Instancia gerenciada pelo sistema global.';
+            dom.sessionFriendlyStatus.textContent = session.friendly_status || 'Origem: Instância gerenciada pelo sistema global.';
         }
 
         if (dom.lastError) {
@@ -214,7 +214,7 @@ export function initTenantEvolutionGlobalSettings() {
         if (!url) {
             return {
                 ok: false,
-                message: 'Endpoint Evolution nao configurado na tela.',
+                message: 'Endpoint Evolution não configurado na tela.',
             };
         }
 
@@ -247,14 +247,14 @@ export function initTenantEvolutionGlobalSettings() {
         } catch (error) {
             return {
                 ok: false,
-                message: 'Erro de conexao com o servidor. Tente novamente.',
+                message: 'Erro de conexão com o servidor. Tente novamente.',
             };
         }
     };
 
     const refreshStatus = async ({ silent = false, source = 'manual' } = {}) => {
         if (!silent) {
-            setFeedback('Atualizando status da instancia Evolution...');
+            setFeedback('Atualizando status da instância Evolution...');
         }
 
         let result;
@@ -306,7 +306,7 @@ export function initTenantEvolutionGlobalSettings() {
         }
 
         setFeedback(
-            qrPayload?.message || 'QR Code ainda nao disponivel para esta instancia.',
+            qrPayload?.message || 'QR Code ainda não disponível para esta instância.',
             'neutral'
         );
     };
@@ -319,17 +319,17 @@ export function initTenantEvolutionGlobalSettings() {
             const endpoint = endpoints[action];
 
             if (!endpoint) {
-                setFeedback('Acao Evolution indisponivel na tela.', 'error');
+                setFeedback('Ação Evolution indisponível na tela.', 'error');
                 return;
             }
 
             button.disabled = true;
-            setFeedback(`Executando acao ${action.toUpperCase()}...`);
+            setFeedback(`Executando ação ${action.toUpperCase()}...`);
 
             try {
                 const result = await request(endpoint, 'POST');
                 if (!result.ok) {
-                    setFeedback(result.message || `Falha ao executar acao ${action.toUpperCase()}.`, 'error');
+                    setFeedback(result.message || `Falha ao executar ação ${action.toUpperCase()}.`, 'error');
                     return;
                 }
 
@@ -340,10 +340,10 @@ export function initTenantEvolutionGlobalSettings() {
                     await refreshStatus();
                 }
 
-                const successMessage = result.message || `Acao ${action.toUpperCase()} executada com sucesso.`;
+                const successMessage = result.message || `Ação ${action.toUpperCase()} executada com sucesso.`;
                 setFeedback(successMessage, 'success');
             } catch (error) {
-                setFeedback(`Falha ao executar acao ${action.toUpperCase()}.`, 'error');
+                setFeedback(`Falha ao executar ação ${action.toUpperCase()}.`, 'error');
             } finally {
                 button.disabled = false;
             }
@@ -371,7 +371,7 @@ export function initTenantEvolutionGlobalSettings() {
             event.preventDefault();
 
             if (!endpoints.bindWebhook) {
-                setFeedback('Acao de webhook Evolution indisponivel na tela.', 'error');
+                setFeedback('Ação de webhook Evolution indisponível na tela.', 'error');
                 return;
             }
 

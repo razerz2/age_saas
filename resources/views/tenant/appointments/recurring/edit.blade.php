@@ -218,8 +218,12 @@
                 </div>
 
                 <div class="flex items-center justify-end gap-2">
-                    <a href="{{ workspace_route('tenant.recurring-appointments.index') }}" class="btn btn-outline">Cancelar</a>
-                    <button type="submit" class="btn btn-primary">Atualizar Agendamento Recorrente</button>
+                    <a href="{{ workspace_route('tenant.recurring-appointments.index') }}" class="btn btn-outline inline-flex items-center">
+                        <i class="mdi mdi-arrow-left mr-1"></i> Cancelar
+                    </a>
+                    <button type="submit" class="btn btn-primary inline-flex items-center">
+                        <i class="mdi mdi-content-save mr-1"></i> Atualizar Agendamento Recorrente
+                    </button>
                 </div>
             </form>
         </div>

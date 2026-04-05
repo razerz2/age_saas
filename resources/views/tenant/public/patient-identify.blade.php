@@ -82,7 +82,11 @@
                         @error('identifier')
                             <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
                         @enderror
-                        <p class="mt-2 text-xs text-slate-500">Informe seu CPF ou e-mail cadastrado na clínica.</p>
+                        @if (session('patient_not_found'))
+                            <p class="mt-2 text-xs text-slate-500">Verifique se o CPF ou e-mail está correto, ou realize seu cadastro na clínica.</p>
+                        @else
+                            <p class="mt-2 text-xs text-slate-500">Informe seu CPF ou e-mail cadastrado na clínica.</p>
+                        @endif
                     </div>
 
                     <div class="mt-6 flex justify-center">
@@ -101,7 +105,10 @@
                         <div class="mx-auto max-w-xl rounded-xl border border-amber-100 bg-amber-50 px-4 py-3 text-sm text-amber-900">
                             <div class="flex items-start justify-center gap-2">
                                 <i class="mdi mdi-alert-circle text-base text-amber-600"></i>
-                                <p class="font-semibold">Você ainda não possui cadastro na clínica.</p>
+                                <div class="text-left">
+                                    <p class="font-semibold">Não encontramos um cadastro com os dados informados.</p>
+                                    <p class="mt-1">Verifique se o CPF ou e-mail está correto, ou realize seu cadastro para continuar.</p>
+                                </div>
                             </div>
                         </div>
 

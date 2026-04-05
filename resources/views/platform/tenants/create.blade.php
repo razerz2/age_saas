@@ -23,7 +23,7 @@
                     </div>
 
                     <div class="card-body">
-                        {{-- ✅ Alertas de sucesso --}}
+                        {{-- Alertas de sucesso --}}
                         @if (session('success'))
                             <div class="alert alert-success alert-dismissible fade show" role="alert">
                                 <i class="fas fa-check-circle me-1"></i> {{ session('success') }}
@@ -32,7 +32,7 @@
                             </div>
                         @endif
 
-                        {{-- ⚠️ Alertas de aviso --}}
+                        {{-- Alertas de aviso --}}
                         @if (session('warning'))
                             <div class="alert alert-warning alert-dismissible fade show" role="alert">
                                 <i class="fas fa-exclamation-triangle me-1"></i> {{ session('warning') }}
@@ -41,7 +41,7 @@
                             </div>
                         @endif
 
-                        {{-- 🔹 Exibição de erros de validação --}}
+                        {{-- Exibição de erros de validação --}}
                         @if ($errors->any())
                             <div class="alert alert-danger alert-dismissible fade show shadow-sm" role="alert">
                                 <strong>Ops!</strong> Verifique os erros abaixo:
@@ -57,8 +57,8 @@
 
                         <div class="alert alert-info border-start border-info border-4">
                             <i class="fas fa-info-circle me-2"></i>
-                            O cadastro tecnico pode ser concluido sem plano e assinatura.
-                            Nestes casos, a tenant sera criada, mas ficara com acesso bloqueado ate regularizacao comercial.
+                            O cadastro técnico pode ser concluído sem plano e assinatura.
+                            Nestes casos, a tenant será criada, mas ficará com acesso bloqueado até regularização comercial.
                         </div>
 
                         <form method="POST" action="{{ route('Platform.tenants.store') }}">
@@ -103,7 +103,7 @@
                                 <div class="col-md-6">
                                     <label class="form-label">Plano (opcional)</label>
                                     <select name="plan_id" id="plan_id" class="form-select">
-                                        <option value="">Sem plano no momento (ficara bloqueada)</option>
+                                        <option value="">Sem plano no momento (ficará bloqueada)</option>
                                         @foreach($plans as $plan)
                                             <option value="{{ $plan->id }}" data-category="{{ $plan->category }}"
                                                 @selected(old('plan_id') == $plan->id)>
@@ -111,7 +111,7 @@
                                             </option>
                                         @endforeach
                                     </select>
-                                    <small class="text-muted" id="plan_help">Opcional: selecione um plano para criar assinatura automaticamente quando aplicavel.</small>
+                                    <small class="text-muted" id="plan_help">Opcional: selecione um plano para criar assinatura automaticamente quando aplicável.</small>
                                 </div>
 
                                 <div class="col-md-6">
@@ -217,7 +217,7 @@
             });
 
             // -----------------------------
-            // 🧾 CPF / CNPJ - select e busca
+            // CPF / CNPJ - select e busca
             // -----------------------------
             $(document).ready(function() {
                 const $tipo = $('#tipoDocumento');
@@ -274,5 +274,4 @@
     @endpush
     @include('layouts.freedash.footer')
 @endsection
-
 

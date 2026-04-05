@@ -7,14 +7,14 @@ const REPORT_DEFINITIONS = {
     appointments: {
         columns: [
             { id: 'patient', name: 'Paciente' },
-            { id: 'doctor', name: 'Medico' },
+            { id: 'doctor', name: 'Médico' },
             { id: 'specialty', name: 'Especialidade' },
             { id: 'type', name: 'Tipo' },
             { id: 'date', name: 'Data' },
             { id: 'time', name: 'Hora' },
             { id: 'mode_badge', name: 'Modo', html: true },
             { id: 'status_badge', name: 'Status', html: true },
-            { id: 'actions', name: 'Acoes', html: true },
+            { id: 'actions', name: 'Ações', html: true },
         ],
         onPayload: (payload) => {
             updateAppointmentsSummary(payload?.summary || {});
@@ -28,7 +28,7 @@ const REPORT_DEFINITIONS = {
             { id: 'phone', name: 'Telefone' },
             { id: 'appointments_count', name: 'Agendamentos' },
             { id: 'created_at', name: 'Cadastrado em' },
-            { id: 'actions', name: 'Acoes', html: true },
+            { id: 'actions', name: 'Ações', html: true },
         ],
         onPayload: (payload) => {
             updatePatientsSummary(payload?.summary || {});
@@ -40,7 +40,7 @@ const REPORT_DEFINITIONS = {
             { id: 'specialties', name: 'Especialidades' },
             { id: 'appointments_count', name: 'Agendamentos' },
             { id: 'status_badge', name: 'Status', html: true },
-            { id: 'actions', name: 'Acoes', html: true },
+            { id: 'actions', name: 'Ações', html: true },
         ],
     },
     forms: {
@@ -49,16 +49,16 @@ const REPORT_DEFINITIONS = {
             { id: 'responses_count', name: 'Respostas' },
             { id: 'status_badge', name: 'Status', html: true },
             { id: 'created_at', name: 'Criado em' },
-            { id: 'actions', name: 'Acoes', html: true },
+            { id: 'actions', name: 'Ações', html: true },
         ],
     },
     notifications: {
         columns: [
-            { id: 'title', name: 'Titulo' },
+            { id: 'title', name: 'Título' },
             { id: 'type', name: 'Tipo' },
             { id: 'status_badge', name: 'Status', html: true },
             { id: 'created_at', name: 'Criada em' },
-            { id: 'actions', name: 'Acoes', html: true },
+            { id: 'actions', name: 'Ações', html: true },
         ],
     },
     portal: {
@@ -67,18 +67,18 @@ const REPORT_DEFINITIONS = {
             { id: 'email', name: 'E-mail' },
             { id: 'status_badge', name: 'Status', html: true },
             { id: 'created_at', name: 'Criado em' },
-            { id: 'actions', name: 'Acoes', html: true },
+            { id: 'actions', name: 'Ações', html: true },
         ],
     },
     recurring: {
         columns: [
-            { id: 'doctor', name: 'Medico' },
+            { id: 'doctor', name: 'Médico' },
             { id: 'patient', name: 'Paciente' },
             { id: 'appointment_type', name: 'Tipo de consulta' },
             { id: 'start_date', name: 'Data inicial' },
             { id: 'status_badge', name: 'Status', html: true },
             { id: 'created_at', name: 'Criado em' },
-            { id: 'actions', name: 'Acoes', html: true },
+            { id: 'actions', name: 'Ações', html: true },
         ],
     },
 };
@@ -244,7 +244,7 @@ export function init() {
             },
             language: {
                 search: { placeholder: 'Pesquisar...' },
-                pagination: { previous: 'Anterior', next: 'Proxima' },
+                pagination: { previous: 'Anterior', next: 'Próxima' },
                 loading: 'Carregando...',
                 noRecordsFound: 'Nenhum registro encontrado',
                 error: 'Erro ao carregar dados',
@@ -438,7 +438,7 @@ function updateHeatmap(heatmapData) {
         return;
     }
 
-    const days = ['Domingo', 'Segunda', 'Terca', 'Quarta', 'Quinta', 'Sexta', 'Sabado'];
+    const days = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
     const hours = [8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18];
 
     let maxValue = 0;

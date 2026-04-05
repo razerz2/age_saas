@@ -36,7 +36,7 @@ class StorePlatformEmailTemplateRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'name.regex' => 'Formato de key invalido. Use letras minusculas, numeros, ponto e underscore.',
+            'name.regex' => 'Formato de chave inválido. Use letras minúsculas, números, ponto e underscore.',
         ];
     }
 
@@ -61,4 +61,3 @@ class StorePlatformEmailTemplateRequest extends FormRequest
         ]);
     }
 }
-

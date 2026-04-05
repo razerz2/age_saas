@@ -21,7 +21,7 @@ use Illuminate\Support\Str;
 
 class TenantController extends Controller
 {
-    public const CREATED_PENDING_COMMERCIAL_MESSAGE = 'Tenant criada com sucesso, porem o acesso esta bloqueado ate que um plano e uma assinatura validos sejam definidos.';
+    public const CREATED_PENDING_COMMERCIAL_MESSAGE = 'Tenant criada com sucesso, porém o acesso está bloqueado até que um plano e uma assinatura válidos sejam definidos.';
     public const CREATED_ELIGIBLE_MESSAGE = 'Tenant criada com sucesso e apta para acesso.';
     private const BRAZIL_COUNTRY_ID = 31;
 
@@ -93,7 +93,7 @@ class TenantController extends Controller
                 ->orWhere('name', 'Administrador')
                 ->first();
         } catch (\Throwable $e) {
-            Log::warning('Nao foi possivel buscar usuario admin do tenant', [
+            Log::warning('Não foi possível buscar usuário admin do tenant', [
                 'tenant_id' => $tenant->id,
                 'error' => $e->getMessage(),
             ]);
@@ -272,12 +272,12 @@ class TenantController extends Controller
                             'asaas_synced' => false,
                             'asaas_sync_status' => 'pending',
                             'asaas_last_sync_at' => now(),
-                            'asaas_last_error' => 'Nao foi possivel criar cliente (resposta vazia ou invalida do Asaas).',
+                            'asaas_last_error' => 'Não foi possível criar cliente (resposta vazia ou inválida do Asaas).',
                         ]);
 
                         Log::warning("Tenant {$tenant->trade_name}: resposta invalida ao criar cliente Asaas.");
 
-                        return back()->withErrors(['general' => 'Nao foi possivel sincronizar com o Asaas no momento. Tente novamente.']);
+                        return back()->withErrors(['general' => 'Não foi possível sincronizar com o Asaas no momento. Tente novamente.']);
                     }
 
                     $tenant->update(['asaas_customer_id' => $createResponse['id']]);
@@ -319,11 +319,11 @@ class TenantController extends Controller
             $tenantAdmin = $tenant->admin;
 
             if (! $tenantAdmin) {
-                return back()->withErrors(['general' => 'Credenciais do admin nao encontradas para este tenant.']);
+                return back()->withErrors(['general' => 'Credenciais do admin não encontradas para este tenant.']);
             }
 
             if (! $tenant->email) {
-                return back()->withErrors(['general' => 'Email do tenant nao esta configurado.']);
+                return back()->withErrors(['general' => 'E-mail do tenant não está configurado.']);
             }
 
             $adminEmail = $tenantAdmin->email;
@@ -332,7 +332,7 @@ class TenantController extends Controller
 
             $systemSettingsService = new SystemSettingsService();
             if (! $systemSettingsService->emailIsConfigured()) {
-                return back()->withErrors(['general' => 'SMTP nao esta configurado. Configure o email antes de enviar credenciais.']);
+                return back()->withErrors(['general' => 'SMTP não está configurado. Configure o e-mail antes de enviar credenciais.']);
             }
 
             Mail::to($tenant->email)->send(

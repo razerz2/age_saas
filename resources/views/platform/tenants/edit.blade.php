@@ -65,7 +65,7 @@
 
                         <div class="alert {{ $tenant->isEligibleForAccess() ? 'alert-success' : 'alert-warning' }}">
                             <div class="d-flex flex-column">
-                                <strong>SituaÃ§Ã£o comercial: {{ $tenant->commercialAccessSummaryLabel() }}</strong>
+                                <strong>Situação comercial: {{ $tenant->commercialAccessSummaryLabel() }}</strong>
                                 <span class="small mt-1">
                                     Motivo atual: {{ $tenant->commercialAccessStatusLabel() }}
                                 </span>

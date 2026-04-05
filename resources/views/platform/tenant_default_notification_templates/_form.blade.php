@@ -11,16 +11,16 @@
 @endphp
 
 <div class="alert alert-info">
-    Este modulo define o baseline padrao de templates operacionais do Tenant.
-    Ele pertence ao dominio WhatsApp Nao Oficial e e separado do modulo de Templates WhatsApp Oficial da Platform.
+    Este módulo define o baseline padrão de templates operacionais do Tenant.
+    Ele pertence ao domínio WhatsApp Não Oficial e é separado do módulo de Templates WhatsApp Oficial da Platform.
 </div>
 <div class="alert alert-secondary">
-    Padrao recomendado de variaveis Tenant: <code>patient.name</code>, <code>clinic.name</code>,
+    Padrão recomendado de variáveis Tenant: <code>patient.name</code>, <code>clinic.name</code>,
     <code>appointment.date</code>, <code>appointment.time</code>, <code>professional.name</code>,
     <code>links.appointment_confirm</code>, <code>links.appointment_cancel</code>, <code>links.waitlist_offer</code>.
 </div>
 <div class="alert alert-light border">
-    Observacao: estes templates sao baseline operacional para provisionamento tenant e nao dependem de cadastro na Meta.
+    Observação: estes templates são baseline operacional para provisionamento tenant e não dependem de cadastro na Meta.
 </div>
 
 <div class="row">
@@ -48,7 +48,7 @@
         <small class="text-muted">Exemplo: appointment.pending_confirmation</small>
     </div>
     <div class="col-md-6 mb-3">
-        <label class="form-label">Titulo <span class="text-danger">*</span></label>
+        <label class="form-label">Título <span class="text-danger">*</span></label>
         <input type="text" name="title" class="form-control" value="{{ old('title', $template->title) }}" required>
     </div>
 </div>
@@ -59,12 +59,12 @@
 </div>
 
 <div class="mb-3">
-    <label class="form-label">Conteudo padrao <span class="text-danger">*</span></label>
+    <label class="form-label">Conteúdo padrão <span class="text-danger">*</span></label>
     <textarea id="content" name="content" class="form-control" rows="10" required>{{ old('content', $template->content) }}</textarea>
 </div>
 
 <div class="mb-3">
-    <label class="form-label">Variaveis (JSON)</label>
+    <label class="form-label">Variáveis (JSON)</label>
     <textarea name="variables" class="form-control" rows="6">{{ $variablesValue }}</textarea>
     <small class="text-muted">Exemplo: ["patient.name", "appointment.date"]</small>
 </div>
@@ -86,7 +86,7 @@
 
 <div class="text-end mt-4">
     <button type="submit" class="btn btn-success">
-        <i class="fas fa-save me-1"></i> {{ $isEdit ? 'Salvar Alteracoes' : 'Criar Template' }}
+        <i class="fas fa-save me-1"></i> {{ $isEdit ? 'Salvar Alterações' : 'Criar Template' }}
     </button>
     <a href="{{ route('Platform.tenant-default-notification-templates.index') }}" class="btn btn-secondary">Cancelar</a>
 </div>

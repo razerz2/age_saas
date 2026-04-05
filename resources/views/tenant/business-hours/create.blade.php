@@ -77,10 +77,12 @@
                                 <option value="6" data-name="Sábado">Sábado</option>
                             </select>
                             <div class="flex flex-wrap gap-2">
-                                <button type="button" id="add-weekday-btn" class="btn btn-primary">
+                                <button type="button" id="add-weekday-btn" class="btn btn-primary inline-flex items-center">
+                                    <x-icon name="plus" class="w-4 h-4 mr-2" />
                                     Adicionar
                                 </button>
                                 <button type="button" id="clear-weekdays-btn" class="inline-flex items-center justify-center rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700 transition-colors">
+                                    <x-icon name="close" class="w-4 h-4 mr-2" />
                                     Limpar
                                 </button>
                             </div>

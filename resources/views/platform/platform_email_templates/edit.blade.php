@@ -37,7 +37,7 @@
                 @endif
 
                 <div class="alert alert-info">
-                    Escopo atual: Platform. Este cadastro nao incorpora estrutura de layout.
+                    Escopo atual: Platform. Este cadastro não incorpora estrutura de layout.
                 </div>
 
                 <form method="POST" action="{{ route('Platform.platform-email-templates.update', $template) }}">
@@ -55,4 +55,3 @@
 
     @include('layouts.freedash.footer')
 @endsection
-

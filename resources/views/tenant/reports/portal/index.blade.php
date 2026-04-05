@@ -1,6 +1,6 @@
 @extends('layouts.tailadmin.app')
 
-@section('title', 'Relatorio do Portal do Paciente')
+@section('title', 'Relatório do Portal do Paciente')
 @section('page', 'reports')
 
 @section('content')
@@ -13,12 +13,12 @@
 ></div>
 
 <div class="page-header mb-6">
-    <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Relatorio do Portal do Paciente</h1>
+    <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Relatório do Portal do Paciente</h1>
 </div>
 
 @if(empty($loginTableExists))
     <div class="mb-6 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:border-amber-900/60 dark:bg-amber-900/20 dark:text-amber-200">
-        A tabela <code>patient_logins</code> nao existe neste tenant. O relatorio foi carregado sem dados.
+        A tabela <code>patient_logins</code> não existe neste tenant. O relatório foi carregado sem dados.
     </div>
 @endif
 

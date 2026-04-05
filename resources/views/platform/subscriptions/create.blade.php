@@ -70,10 +70,10 @@
                 @if (!empty($regularizationTenant) && ! $regularizationTenant->isEligibleForAccess())
                     <div class="alert alert-warning border-start border-warning border-4">
                         <i class="fas fa-exclamation-triangle me-2"></i>
-                        <strong>Regularizacao comercial da tenant:</strong>
+                        <strong>Regularização comercial da tenant:</strong>
                         {{ $regularizationTenant->trade_name ?? $regularizationTenant->legal_name }}
                         <div class="mt-1">
-                            Esta tenant esta bloqueada para acesso ate possuir assinatura ativa com plano valido.
+                            Esta tenant está bloqueada para acesso até possuir assinatura ativa com plano válido.
                         </div>
                     </div>
                 @endif
@@ -81,10 +81,10 @@
                 @if (!empty($conversionFromTrial))
                     <div class="alert alert-info border-start border-info border-4">
                         <i class="fas fa-hourglass-half me-2"></i>
-                        <strong>Conversao de periodo de teste:</strong>
-                        ao confirmar, sera criada uma assinatura paga para continuidade do acesso.
+                        <strong>Conversão de período de teste:</strong>
+                        ao confirmar, será criada uma assinatura paga para continuidade do acesso.
                         <div class="mt-1">
-                            O acesso sera liberado conforme pagamento, sem cobranca automatica de trial.
+                            O acesso será liberado conforme pagamento, sem cobrança automática de trial.
                         </div>
                     </div>
                 @endif
@@ -124,12 +124,12 @@
                     </div>
 
                     <div id="test-plan-billing-alert" class="alert alert-info d-none" role="alert">
-                        <strong>Plano de teste:</strong> Plano de teste nao possui cobranca. A renovacao automatica apenas estende a validade do acesso.
+                        <strong>Plano de teste:</strong> Plano de teste não possui cobrança. A renovação automática apenas estende a validade do acesso.
                     </div>
 
                     <div class="row mb-3">
                         <div class="col-md-4">
-                            <label class="form-label">Inicio</label>
+                            <label class="form-label">Início</label>
                             <input type="date" name="starts_at" id="starts_at"
                                 value="{{ old('starts_at', now()->format('Y-m-d')) }}" class="form-control" required>
                         </div>
@@ -162,12 +162,12 @@
                         </div>
 
                         <div class="col-md-4" id="payment-method-wrapper">
-                            <label class="form-label">Metodo de Pagamento</label>
+                            <label class="form-label">Método de Pagamento</label>
                             <select name="payment_method" class="form-select @error('payment_method') is-invalid @enderror" required>
                                 <option value="">Selecione...</option>
                                 <option value="PIX" {{ old('payment_method') == 'PIX' ? 'selected' : '' }}>PIX/BOLETO</option>
                                 <option value="CREDIT_CARD" {{ old('payment_method') == 'CREDIT_CARD' ? 'selected' : '' }}>
-                                    Cartao de Credito / Debito
+                                    Cartão de Crédito / Débito
                                 </option>
                             </select>
                             @error('payment_method')
@@ -176,7 +176,7 @@
                         </div>
 
                         <div class="col-md-4" id="auto-renew-wrapper">
-                            <label class="form-label">Renovacao Automatica</label><br>
+                            <label class="form-label">Renovação Automática</label><br>
                             <div class="form-check form-switch mt-2">
                                 <input type="checkbox" class="form-check-input" name="auto_renew" value="1"
                                     @checked(old('auto_renew', true))>

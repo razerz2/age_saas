@@ -119,7 +119,7 @@ class PlatformEmailTemplateController extends Controller
 
         return redirect()
             ->route('Platform.platform-email-templates.index')
-            ->with('success', 'Template de Email Platform restaurado para o padrao.');
+            ->with('success', 'Template de Email Platform restaurado para o padrão.');
     }
 
     public function toggle(PlatformEmailTemplate $platformEmailTemplate): RedirectResponse
@@ -165,7 +165,7 @@ class PlatformEmailTemplateController extends Controller
                 ->route('Platform.platform-email-templates.show', $platformEmailTemplate)
                 ->withInput()
                 ->withErrors([
-                    'destination_email' => 'Nao foi possivel enviar o email de teste. Tente novamente.',
+                    'destination_email' => 'Não foi possível enviar o e-mail de teste. Tente novamente.',
                 ]);
         }
     }

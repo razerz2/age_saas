@@ -13,8 +13,8 @@
         'invoice.created' => 'Fatura criada',
         'invoice.upcoming_due' => 'Lembrete de vencimento',
         'invoice.overdue' => 'Fatura vencida',
-        'tenant.suspended_due_to_overdue' => 'Suspensao por inadimplencia',
-        'security.2fa_code' => 'Codigo de verificacao (2FA)',
+        'tenant.suspended_due_to_overdue' => 'Suspensão por inadimplência',
+        'security.2fa_code' => 'Código de verificação (2FA)',
         'tenant.welcome' => 'Boas-vindas ao tenant',
         'subscription.created' => 'Assinatura criada',
         'subscription.recovery_started' => 'Recovery de assinatura iniciado',
@@ -39,7 +39,7 @@
             <div class="col-5 align-self-center">
                 <div class="customize-input float-end d-flex gap-2">
                     <a href="{{ route('Platform.whatsapp-official-templates.bindings.index') }}" class="btn btn-outline-primary shadow-sm">
-                        <i class="fas fa-link me-1"></i> Vinculos Ativos
+                        <i class="fas fa-link me-1"></i> Vínculos Ativos
                     </a>
                     <a href="{{ route('Platform.whatsapp-official-templates.create') }}" class="btn btn-primary shadow-sm">
                         <i class="fa fa-plus me-1"></i> Novo Template
@@ -61,13 +61,13 @@
         @endif
 
         <div class="alert alert-info">
-            Este modulo gerencia apenas templates oficiais da Platform para a Meta Cloud API.
-            Templates operacionais de clinica (appointment.*, waitlist.*) pertencem ao Tenant em Settings > Editor.
+            Este módulo gerencia apenas templates oficiais da Platform para a Meta Cloud API.
+            Templates operacionais de clínica (appointment.*, waitlist.*) pertencem ao Tenant em Settings > Editor.
         </div>
         <div class="alert alert-warning">
-            Envio oficial de WhatsApp so ocorre quando o template estiver em <strong>APPROVED</strong> e o provider ativo for
+            Envio oficial de WhatsApp só ocorre quando o template estiver em <strong>APPROVED</strong> e o provider ativo for
             <code>whatsapp_business</code>. Templates em <strong>DRAFT</strong>, <strong>PENDING</strong> ou
-            <strong>REJECTED</strong> nao sao usados no runtime.
+            <strong>REJECTED</strong> não são usados no runtime.
         </div>
 
         <div class="card shadow-sm border-0 mb-3">

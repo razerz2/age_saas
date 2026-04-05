@@ -243,6 +243,7 @@
                                                             data-end-time="{{ $hour->end_time }}"
                                                             data-break-start="{{ $hour->break_start_time }}"
                                                             data-break-end="{{ $hour->break_end_time }}">
+                                                        <x-icon name="pencil-outline" size="text-sm" class="mr-1" />
                                                         Editar
                                                     </button>
                                                     <form action="{{ workspace_route('tenant.doctor-settings.destroy-business-hour', $hour->id) }}"
@@ -255,6 +256,7 @@
                                                             data-delete-form="#doctor-settings-hours-delete-form-{{ $hour->id }}"
                                                             data-delete-title="Remover horário"
                                                             data-delete-message="Tem certeza que deseja remover este horário?">
+                                                            <x-icon name="trash-can-outline" size="text-sm" class="mr-1" />
                                                             Excluir
                                                         </button>
                                                     </form>
@@ -319,6 +321,7 @@
                                                             data-type-name="{{ $type->name }}"
                                                             data-type-duration="{{ $type->duration_min }}"
                                                             data-type-active="{{ $type->is_active }}">
+                                                        <x-icon name="pencil-outline" size="text-sm" class="mr-1" />
                                                         Editar
                                                     </button>
                                                     <form action="{{ workspace_route('tenant.doctor-settings.destroy-appointment-type', $type->id) }}"
@@ -331,6 +334,7 @@
                                                             data-delete-form="#doctor-settings-types-delete-form-{{ $type->id }}"
                                                             data-delete-title="Remover tipo"
                                                             data-delete-message="Tem certeza que deseja remover este tipo de atendimento?">
+                                                            <x-icon name="trash-can-outline" size="text-sm" class="mr-1" />
                                                             Excluir
                                                         </button>
                                                     </form>
@@ -380,10 +384,12 @@
                                 <option value="6" data-name="Sábado">Sábado</option>
                             </select>
                             <div class="mt-3 flex gap-2">
-                                <button type="button" id="add-weekday-btn" class="btn btn-primary">
+                                <button type="button" id="add-weekday-btn" class="btn btn-primary inline-flex items-center">
+                                    <x-icon name="plus" size="text-sm" class="mr-2" />
                                     Adicionar Dia
                                 </button>
-                                <button type="button" id="clear-weekdays-btn" class="btn btn-outline">
+                                <button type="button" id="clear-weekdays-btn" class="btn btn-outline inline-flex items-center">
+                                    <x-icon name="close" size="text-sm" class="mr-2" />
                                     Limpar
                                 </button>
                             </div>
@@ -447,8 +453,14 @@
                         </div>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-outline" data-bs-dismiss="modal">Cancelar</button>
-                        <button type="submit" class="btn btn-primary">Salvar</button>
+                        <button type="button" class="btn btn-outline inline-flex items-center" data-bs-dismiss="modal">
+                            <x-icon name="close" size="text-sm" class="mr-2" />
+                            Cancelar
+                        </button>
+                        <button type="submit" class="btn btn-primary inline-flex items-center">
+                            <x-icon name="content-save-outline" size="text-sm" class="mr-2" />
+                            Salvar
+                        </button>
                     </div>
                 </form>
             </div>
@@ -517,8 +529,14 @@
                         </div>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-outline" data-bs-dismiss="modal">Cancelar</button>
-                        <button type="submit" class="btn btn-primary">Salvar</button>
+                        <button type="button" class="btn btn-outline inline-flex items-center" data-bs-dismiss="modal">
+                            <x-icon name="close" size="text-sm" class="mr-2" />
+                            Cancelar
+                        </button>
+                        <button type="submit" class="btn btn-primary inline-flex items-center">
+                            <x-icon name="content-save-outline" size="text-sm" class="mr-2" />
+                            Salvar
+                        </button>
                     </div>
                 </form>
             </div>
@@ -574,8 +592,14 @@
                         </div>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-outline" data-bs-dismiss="modal">Cancelar</button>
-                        <button type="submit" class="btn btn-primary">Salvar</button>
+                        <button type="button" class="btn btn-outline inline-flex items-center" data-bs-dismiss="modal">
+                            <x-icon name="close" size="text-sm" class="mr-2" />
+                            Cancelar
+                        </button>
+                        <button type="submit" class="btn btn-primary inline-flex items-center">
+                            <x-icon name="content-save-outline" size="text-sm" class="mr-2" />
+                            Salvar
+                        </button>
                     </div>
                 </form>
             </div>
@@ -619,8 +643,14 @@
                         </div>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-outline" data-bs-dismiss="modal">Cancelar</button>
-                        <button type="submit" class="btn btn-primary">Salvar</button>
+                        <button type="button" class="btn btn-outline inline-flex items-center" data-bs-dismiss="modal">
+                            <x-icon name="close" size="text-sm" class="mr-2" />
+                            Cancelar
+                        </button>
+                        <button type="submit" class="btn btn-primary inline-flex items-center">
+                            <x-icon name="content-save-outline" size="text-sm" class="mr-2" />
+                            Salvar
+                        </button>
                     </div>
                 </form>
             </div>

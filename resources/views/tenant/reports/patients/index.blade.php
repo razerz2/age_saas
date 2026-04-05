@@ -1,6 +1,6 @@
 @extends('layouts.tailadmin.app')
 
-@section('title', 'Relatorio de Pacientes')
+@section('title', 'Relatório de Pacientes')
 @section('page', 'reports')
 
 @section('content')
@@ -14,7 +14,7 @@
 
 <div class="page-header mb-6">
     <div>
-        <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Relatorio de Pacientes</h1>
+        <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Relatório de Pacientes</h1>
         <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">Visao de base de pacientes</p>
     </div>
 </div>

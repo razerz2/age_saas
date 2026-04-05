@@ -40,23 +40,23 @@ class SubscriptionRequest extends FormRequest
     {
         return [
             'tenant_id.required' => 'Selecione um tenant.',
-            'tenant_id.exists' => 'O tenant selecionado e invalido.',
+            'tenant_id.exists' => 'O tenant selecionado é inválido.',
 
             'plan_id.required' => 'Selecione um plano.',
-            'plan_id.exists' => 'O plano selecionado e invalido.',
+            'plan_id.exists' => 'O plano selecionado é inválido.',
 
-            'starts_at.required' => 'A data de inicio e obrigatoria.',
-            'ends_at.after_or_equal' => 'A data de termino deve ser igual ou posterior a data de inicio.',
+            'starts_at.required' => 'A data de início é obrigatória.',
+            'ends_at.after_or_equal' => 'A data de término deve ser igual ou posterior à data de início.',
 
-            'due_day.required' => 'O dia de vencimento e obrigatorio.',
-            'due_day.min' => 'O dia de vencimento deve ser no minimo 1.',
-            'due_day.max' => 'O dia de vencimento deve ser no maximo 31.',
+            'due_day.required' => 'O dia de vencimento é obrigatório.',
+            'due_day.min' => 'O dia de vencimento deve ser, no mínimo, 1.',
+            'due_day.max' => 'O dia de vencimento deve ser, no máximo, 31.',
 
-            'status.required' => 'O status e obrigatorio.',
-            'status.in' => 'O status informado e invalido.',
+            'status.required' => 'O status é obrigatório.',
+            'status.in' => 'O status informado é inválido.',
 
-            'payment_method.required' => 'Selecione o metodo de pagamento.',
-            'payment_method.in' => 'O metodo de pagamento informado e invalido.',
+            'payment_method.required' => 'Selecione o método de pagamento.',
+            'payment_method.in' => 'O método de pagamento informado é inválido.',
         ];
     }
 
@@ -76,7 +76,7 @@ class SubscriptionRequest extends FormRequest
             if ($conversionFromTrial && $selectedPlan?->isTest()) {
                 $validator->errors()->add(
                     'plan_id',
-                    'A conversao de trial nao permite planos de teste.'
+                    'A conversão de trial não permite planos de teste.'
                 );
 
                 return;
@@ -102,7 +102,7 @@ class SubscriptionRequest extends FormRequest
                 if ($alreadyHasActive) {
                     $validator->errors()->add(
                         'tenant_id',
-                        'Este tenant ja possui uma assinatura ativa ou em teste.'
+                        'Este tenant já possui uma assinatura ativa ou em teste.'
                     );
                     return;
                 }
@@ -115,7 +115,7 @@ class SubscriptionRequest extends FormRequest
                 ) {
                     $validator->errors()->add(
                         'tenant_id',
-                        'Nao e possivel criar a assinatura: o tenant esta pendente ou com erro de sincronizacao no Asaas. Corrija o sincronismo antes de prosseguir.'
+                        'Não é possível criar a assinatura: o tenant está pendente ou com erro de sincronização no Asaas. Corrija a sincronização antes de prosseguir.'
                     );
                 }
             }

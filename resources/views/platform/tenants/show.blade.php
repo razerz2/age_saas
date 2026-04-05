@@ -37,10 +37,10 @@
                     @endphp
                     <div class="alert alert-warning border-start border-warning border-4 shadow-sm">
                         <i class="fas fa-exclamation-triangle me-2"></i>
-                        <strong>Tenant criada com pendencia comercial.</strong>
+                        <strong>Tenant criada com pendência comercial.</strong>
                         <div class="mt-2">
-                            O ambiente tecnico foi provisionado, mas o acesso segue bloqueado.
-                            Proximo passo: vincular plano e criar/ativar assinatura para liberar o acesso.
+                            O ambiente técnico foi provisionado, mas o acesso segue bloqueado.
+                            Próximo passo: vincular plano e criar/ativar assinatura para liberar o acesso.
                         </div>
                         @if (in_array('subscriptions', auth()->user()->modules ?? []))
                             <a href="{{ route('Platform.subscriptions.create', $creationRegularizationQuery) }}"
@@ -190,15 +190,15 @@
                                     <strong>
                                         {{ $tenant->commercialAccessStatusKey() === 'trial_expired'
                                             ? 'Trial expirado: conversao para plano pago pendente.'
-                                            : 'Acesso bloqueado ate ativacao comercial.' }}
+                                            : 'Acesso bloqueado até ativação comercial.' }}
                                     </strong>
                                     <div class="mt-2">
                                         @if ($tenant->commercialAccessStatusKey() === 'trial_expired')
-                                            O periodo de teste terminou e o acesso foi pausado.
-                                            Proximo passo: criar assinatura paga e aguardar confirmacao de pagamento.
+                                            O período de teste terminou e o acesso foi pausado.
+                                            Próximo passo: criar assinatura paga e aguardar confirmação de pagamento.
                                         @else
                                             Ambiente provisionado com sucesso, porem ainda sem elegibilidade comercial.
-                                            Proximo passo: vincular um plano e criar/ativar uma assinatura valida.
+                                            Próximo passo: vincular um plano e criar/ativar uma assinatura válida.
                                         @endif
                                     </div>
                                     @if (in_array('subscriptions', auth()->user()->modules ?? []))

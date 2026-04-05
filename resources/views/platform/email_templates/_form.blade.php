@@ -37,7 +37,7 @@
 </div>
 
 <div class="mb-3">
-    <label class="form-label">Body/Conteudo <span class="text-danger">*</span></label>
+    <label class="form-label">Body/Conteúdo <span class="text-danger">*</span></label>
     <textarea
         name="body"
         class="form-control"
@@ -62,7 +62,7 @@
 @if($isEdit)
     <div class="alert alert-light border">
         <small class="text-muted">
-            Restaurar padrao volta para os valores iniciais de assunto e body deste registro.
+            Restaurar padrão volta para os valores iniciais de assunto e body deste registro.
         </small>
     </div>
 @endif
@@ -72,13 +72,12 @@
         <form method="POST" action="{{ route($restoreRouteName, $template) }}" class="d-inline">
             @csrf
             <button type="submit" class="btn btn-outline-warning">
-                <i class="fas fa-undo me-1"></i> Restaurar Padrao
+                <i class="fas fa-undo me-1"></i> Restaurar Padrão
             </button>
         </form>
     @endif
     <button type="submit" class="btn btn-success">
-        <i class="fas fa-save me-1"></i> {{ $isEdit ? 'Salvar Alteracoes' : 'Criar Template' }}
+        <i class="fas fa-save me-1"></i> {{ $isEdit ? 'Salvar Alterações' : 'Criar Template' }}
     </button>
     <a href="{{ route($indexRouteName) }}" class="btn btn-secondary">Cancelar</a>
 </div>
-

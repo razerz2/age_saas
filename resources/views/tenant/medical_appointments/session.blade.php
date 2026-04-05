@@ -135,7 +135,7 @@
                                     $doctorName = optional(optional($appointment->calendar)->doctor)->user->name_full
                                         ?? optional(optional($appointment->calendar)->doctor)->user->name
                                         ?? 'N/A';
-                                    $typeName = $appointment->type->name ?? 'Tipo nao informado';
+                                    $typeName = $appointment->type->name ?? 'Tipo não informado';
                                     $statusClasses = [
                                         'scheduled' => 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300',
                                         'rescheduled' => 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300',
@@ -226,7 +226,7 @@
                 <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 h-full flex flex-col">
                     <div class="px-5 py-4 border-b border-gray-200 dark:border-gray-700">
                         <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Detalhes do Atendimento</h2>
-                        <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Dados clinicos e acoes do agendamento.</p>
+                        <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Dados clínicos e ações do agendamento.</p>
                     </div>
 
                     <div id="appointment-details" dusk="medical-appointment-details" class="flex-1 overflow-y-auto max-h-[65vh] p-5">
@@ -272,7 +272,7 @@
                         Alterar Status
                     </h5>
                     <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                        Escolha o novo status e informe os dados obrigatorios quando necessario.
+                        Escolha o novo status e informe os dados obrigatórios quando necessário.
                     </p>
                 </div>
 
@@ -291,7 +291,7 @@
                     </div>
 
                     <div id="medical-status-note-wrapper" class="hidden">
-                        <label for="medical-status-note" class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-200">Observacao / Motivo</label>
+                        <label for="medical-status-note" class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-200">Observação / Motivo</label>
                         <textarea id="medical-status-note" dusk="medical-status-note" rows="3" class="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 focus:border-brand-500 focus:outline-none dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200" placeholder="Descreva o motivo"></textarea>
                     </div>
 
@@ -344,7 +344,7 @@
 
             <div class="shrink-0 border-b border-gray-200 p-5 dark:border-gray-800">
                 <h5 id="form-response-modal-label" class="text-lg font-semibold text-gray-900 dark:text-gray-100">
-                    Formulario Respondido
+                    Formulário Respondido
                 </h5>
                 <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
                     Visualizacao das respostas enviadas pelo paciente.
@@ -355,7 +355,7 @@
                 <div class="flex items-center justify-center py-12 text-center text-gray-500 dark:text-gray-400">
                     <div>
                         <div class="mx-auto inline-flex h-10 w-10 animate-spin rounded-full border-2 border-gray-200 border-t-blue-500"></div>
-                        <p class="mt-3 text-sm">Carregando formulario...</p>
+                        <p class="mt-3 text-sm">Carregando formulário...</p>
                     </div>
                 </div>
             </div>

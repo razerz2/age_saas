@@ -52,7 +52,7 @@
         </div>
         @if(!$bindingsStorageReady)
             <div class="alert alert-danger">
-                Estrutura de vinculos oficiais ainda nao foi criada neste ambiente. Execute as migrations pendentes.
+                Estrutura de vínculos oficiais ainda não foi criada neste ambiente. Execute as migrations pendentes.
             </div>
         @endif
         <div class="alert alert-warning">

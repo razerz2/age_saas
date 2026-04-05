@@ -1,11 +1,11 @@
 @extends('layouts.freedash.app')
-@section('title', 'WhatsApp Nao Oficial - Novo Template Interno Platform')
+@section('title', 'WhatsApp Não Oficial - Novo Template Interno Platform')
 
 @section('content')
     <div class="page-breadcrumb">
         <div class="row">
             <div class="col-7 align-self-center">
-                <h4 class="page-title text-truncate text-dark font-weight-medium mb-1">WhatsApp Nao Oficial - Novo Template Interno Platform</h4>
+                <h4 class="page-title text-truncate text-dark font-weight-medium mb-1">WhatsApp Não Oficial - Novo Template Interno Platform</h4>
                 <div class="d-flex align-items-center">
                     <nav aria-label="breadcrumb">
                         <ol class="breadcrumb m-0 p-0">

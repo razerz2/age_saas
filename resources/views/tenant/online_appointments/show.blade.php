@@ -132,6 +132,7 @@
                                     @csrf
                                     <button type="submit" class="w-full inline-flex items-center justify-center px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-md transition-colors"
                                             @if(!$appointment->patient->email) disabled title="Paciente não possui email cadastrado" @endif>
+                                        <x-icon name="email-outline" class="w-4 h-4 mr-2" />
                                         Enviar por Email
                                     </button>
                                 </form>
@@ -149,6 +150,7 @@
                                     @csrf
                                     <button type="submit" class="w-full inline-flex items-center justify-center px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-md transition-colors"
                                             @if(!$appointment->patient->phone) disabled title="Paciente não possui telefone cadastrado" @endif>
+                                        <x-icon name="whatsapp" class="w-4 h-4 mr-2" />
                                         Enviar por WhatsApp
                                     </button>
                                 </form>

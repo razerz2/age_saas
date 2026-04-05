@@ -186,7 +186,7 @@ class WhatsAppOfficialTemplateService
         $actorId = $this->normalizeActorId($actorId);
 
         if ($template->status === WhatsAppOfficialTemplate::STATUS_ARCHIVED) {
-            throw new DomainException('Template arquivado nÃ£o pode ser republicado na Meta.');
+            throw new DomainException('Template arquivado não pode ser republicado na Meta.');
         }
 
         $this->assertTemplateReadyForMetaSubmission($template);
@@ -405,7 +405,7 @@ class WhatsAppOfficialTemplateService
         $metaTemplateName = strtolower(trim((string) $template->meta_template_name));
         if ($metaTemplateName === '' || preg_match('/^[a-z0-9_]+$/', $metaTemplateName) !== 1) {
             throw new DomainException(
-                'Template incompleto para envio: Nome Meta invalido. Use apenas letras minusculas, numeros e underscore.'
+                'Template incompleto para envio: Nome Meta inválido. Use apenas letras minúsculas, números e underscore.'
             );
         }
 

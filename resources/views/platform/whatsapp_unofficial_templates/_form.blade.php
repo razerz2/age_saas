@@ -11,11 +11,11 @@
 @endphp
 
 <div class="alert alert-info">
-    Template interno da Platform para o dominio WhatsApp Nao Oficial.
-    Nao sao enviados para Meta e nao exigem aprovacao externa.
+    Template interno da Platform para o domínio WhatsApp Não Oficial.
+    Não são enviados para Meta e não exigem aprovação externa.
 </div>
 <div class="alert alert-secondary">
-    Padrao recomendado de variaveis Platform nao oficial: <code>customer_name</code>, <code>tenant_name</code>,
+    Padrão recomendado de variáveis Platform não oficial: <code>customer_name</code>, <code>tenant_name</code>,
     <code>invoice_amount</code>, <code>due_date</code>, <code>payment_link</code>, <code>plan_name</code>,
     <code>plan_amount</code>, <code>login_url</code>, <code>code</code>, <code>expires_in_minutes</code>.
 </div>
@@ -27,7 +27,7 @@
         <small class="text-muted">Exemplo: invoice.overdue</small>
     </div>
     <div class="col-md-6 mb-3">
-        <label class="form-label">Nome/Titulo <span class="text-danger">*</span></label>
+        <label class="form-label">Nome/Título <span class="text-danger">*</span></label>
         <input type="text" name="title" class="form-control" value="{{ old('title', $template->title) }}" required>
     </div>
 </div>
@@ -54,7 +54,7 @@
 </div>
 
 <div class="mb-3">
-    <label class="form-label">Variaveis (JSON)</label>
+    <label class="form-label">Variáveis (JSON)</label>
     <textarea name="variables" class="form-control" rows="6">{{ $variablesValue }}</textarea>
     <small class="text-muted">Exemplo: ["patient.name", "appointment.date"]</small>
 </div>
@@ -68,7 +68,7 @@
 
 <div class="text-end mt-4">
     <button type="submit" class="btn btn-success">
-        <i class="fas fa-save me-1"></i> {{ $isEdit ? 'Salvar Alteracoes' : 'Criar Template' }}
+        <i class="fas fa-save me-1"></i> {{ $isEdit ? 'Salvar Alterações' : 'Criar Template' }}
     </button>
     <a href="{{ route('Platform.whatsapp-unofficial-templates.index') }}" class="btn btn-secondary">Cancelar</a>
 </div>

@@ -63,11 +63,11 @@
                         </div>
 
                         <div class="col-md-3">
-                            <label class="form-label">Duracao (em meses)</label>
+                            <label class="form-label">Duração (em meses)</label>
                             <select name="period_months" class="form-select" required>
                                 @for ($i = 1; $i <= 12; $i++)
                                     <option value="{{ $i }}" {{ old('period_months') == $i ? 'selected' : '' }}>
-                                        {{ $i }} {{ $i == 1 ? 'mes' : 'meses' }}
+                                        {{ $i }} {{ $i == 1 ? 'mês' : 'meses' }}
                                     </option>
                                 @endfor
                             </select>
@@ -76,9 +76,9 @@
 
                     <div class="row mb-3">
                         <div class="col-12">
-                            <label class="form-label">Resumo do Plano (para exibicao na landing page)</label>
+                            <label class="form-label">Resumo do Plano (para exibição na landing page)</label>
                             <textarea name="description" class="form-control" rows="2"
-                                placeholder="Breve descricao do plano para exibir na landing">{{ old('description') }}</textarea>
+                                placeholder="Breve descrição do plano para exibir na landing">{{ old('description') }}</textarea>
                             <small class="text-muted">Este texto aparece antes da lista de recursos no card da landing.</small>
                         </div>
                     </div>
@@ -94,7 +94,7 @@
                         </div>
 
                         <div class="col-md-4">
-                            <label class="form-label">Preco (R$)</label>
+                            <label class="form-label">Preço (R$)</label>
                             <input type="number" step="0.01" name="price_cents" value="{{ old('price_cents') }}"
                                 class="form-control" required>
                         </div>
@@ -111,13 +111,13 @@
                         <div class="col-md-6">
                             <label class="form-label">Tipo *</label>
                             <select name="plan_type" id="plan_type" class="form-select" required>
-                                <option value="real" @selected(old('plan_type', 'real') == 'real')>Producao</option>
+                                <option value="real" @selected(old('plan_type', 'real') == 'real')>Produção</option>
                                 <option value="test" @selected(old('plan_type', 'real') == 'test')>Teste</option>
                             </select>
                         </div>
 
                         <div class="col-md-6">
-                            <label class="form-label">Visivel na Landing Page</label><br>
+                            <label class="form-label">Visível na Landing Page</label><br>
                             <div class="form-check form-switch mt-2">
                                 <input class="form-check-input" type="checkbox" name="show_on_landing_page" value="1"
                                     @checked(old('show_on_landing_page', true))>
@@ -126,7 +126,7 @@
                     </div>
 
                     <div id="trial-disabled-info" class="alert alert-warning d-none">
-                        Planos de teste nao podem oferecer trial comercial na landing.
+                        Planos de teste não podem oferecer trial comercial na landing.
                     </div>
 
                     <div class="row mb-3" id="trial-settings-wrapper">
@@ -136,7 +136,7 @@
                                 <input class="form-check-input" type="checkbox" id="trial_enabled" name="trial_enabled" value="1"
                                     @checked(old('trial_enabled', false))>
                             </div>
-                            <small class="text-muted">Disponivel apenas para planos de producao.</small>
+                            <small class="text-muted">Disponível apenas para planos de produção.</small>
                         </div>
 
                         <div class="col-md-6">
@@ -150,7 +150,7 @@
                     <div class="mb-3">
                         <label class="form-label">Recursos (um por linha)</label>
                         <textarea name="features_json" class="form-control" rows="4"
-                            placeholder="Agendamentos ilimitados&#10;Relatorios personalizados">{{ old('features_json') }}</textarea>
+                            placeholder="Agendamentos ilimitados&#10;Relatórios personalizados">{{ old('features_json') }}</textarea>
                     </div>
 
                     <div class="text-end">

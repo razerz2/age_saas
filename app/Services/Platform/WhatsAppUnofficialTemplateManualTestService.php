@@ -84,10 +84,10 @@ class WhatsAppUnofficialTemplateManualTestService
                 'provider' => $provider,
                 'to_masked' => $this->maskPhone($phone),
                 'result' => 'error',
-                'error' => (string) ($readiness['message'] ?? 'Provider nao oficial indisponivel.'),
+                'error' => (string) ($readiness['message'] ?? 'Provider não oficial indisponível.'),
             ]);
 
-            throw new DomainException((string) ($readiness['message'] ?? 'Provider nao oficial indisponivel.'));
+            throw new DomainException((string) ($readiness['message'] ?? 'Provider não oficial indisponível.'));
         }
 
         $preview = $this->preview($template, $variables, false);
@@ -100,11 +100,11 @@ class WhatsAppUnofficialTemplateManualTestService
                 'preview_source' => $preview['preview_source'] ?? 'tenant_template_renderer',
                 'missing_variables' => $preview['missing_variables'] ?? [],
                 'result' => 'error',
-                'error' => 'Variaveis obrigatorias ausentes.',
+                'error' => 'Variáveis obrigatórias ausentes.',
             ]);
 
             throw new DomainException(
-                'Variaveis obrigatorias ausentes: ' . implode(', ', (array) $preview['missing_variables'])
+                'Variáveis obrigatórias ausentes: ' . implode(', ', (array) $preview['missing_variables'])
             );
         }
 
@@ -120,10 +120,10 @@ class WhatsAppUnofficialTemplateManualTestService
                 'to_masked' => $this->maskPhone($phone),
                 'preview_source' => $preview['preview_source'] ?? 'tenant_template_renderer',
                 'result' => 'error',
-                'error' => 'Falha ao enviar mensagem no provider nao oficial ativo.',
+                'error' => 'Falha ao enviar mensagem no provider não oficial ativo.',
             ]);
 
-            throw new DomainException('Falha ao enviar mensagem no provider nao oficial ativo.');
+            throw new DomainException('Falha ao enviar mensagem no provider não oficial ativo.');
         }
 
         Log::info('wa_unofficial_manual_test_sent', [
@@ -279,7 +279,7 @@ class WhatsAppUnofficialTemplateManualTestService
         if (!in_array($provider, ['waha', 'zapi'], true)) {
             return [
                 'ok' => false,
-                'message' => 'Provider ativo nao e nao oficial. Configure WAHA ou Z-API para este teste.',
+                'message' => 'Provider ativo não é não oficial. Configure WAHA ou Z-API para este teste.',
             ];
         }
 
@@ -297,7 +297,7 @@ class WhatsAppUnofficialTemplateManualTestService
             if ($baseUrl === '' || $apiKey === '' || $session === '') {
                 return [
                     'ok' => false,
-                    'message' => 'Provider WAHA nao esta apto: configure base_url, api_key e session.',
+                    'message' => 'Provider WAHA não está apto: configure base_url, api_key e session.',
                 ];
             }
 
@@ -320,7 +320,7 @@ class WhatsAppUnofficialTemplateManualTestService
         if ($apiUrl === '' || $token === '' || $instanceId === '') {
             return [
                 'ok' => false,
-                'message' => 'Provider Z-API nao esta apto: configure api_url, token e instance_id.',
+                'message' => 'Provider Z-API não está apto: configure api_url, token e instance_id.',
             ];
         }
 

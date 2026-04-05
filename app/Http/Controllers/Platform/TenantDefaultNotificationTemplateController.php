@@ -72,7 +72,7 @@ class TenantDefaultNotificationTemplateController extends Controller
 
         return redirect()
             ->route('Platform.tenant-default-notification-templates.edit', $template)
-            ->with('success', 'Template padrao do Tenant criado com sucesso.');
+            ->with('success', 'Template padrão do Tenant criado com sucesso.');
     }
 
     public function edit(TenantDefaultNotificationTemplate $tenantDefaultTemplate): View
@@ -104,6 +104,6 @@ class TenantDefaultNotificationTemplateController extends Controller
 
         return redirect()
             ->route('Platform.tenant-default-notification-templates.index')
-            ->with('success', 'Template padrao do Tenant atualizado com sucesso.');
+            ->with('success', 'Template padrão do Tenant atualizado com sucesso.');
     }
 }

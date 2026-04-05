@@ -283,7 +283,10 @@
                         Campanhas indisponíveis: configure sua API de Email e/ou WhatsApp em Integrações.
                     </p>
                 </div>
-                <a href="{{ $integrationsUrl }}" class="btn btn-outline whitespace-nowrap">Configurar Integrações</a>
+                <a href="{{ $integrationsUrl }}" class="btn btn-outline whitespace-nowrap inline-flex items-center gap-2">
+                    <i class="mdi mdi-cog-outline text-sm" aria-hidden="true"></i>
+                    <span>Configurar Integrações</span>
+                </a>
             </div>
         </div>
     @endif
@@ -442,9 +445,10 @@
                                 type="button"
                                 id="email-attachments-upload-btn"
                                 {{ $emailSelected ? '' : 'disabled' }}
-                                class="btn btn-outline whitespace-nowrap"
+                                class="btn btn-outline whitespace-nowrap inline-flex items-center gap-2"
                             >
-                                Enviar anexos
+                                <i class="mdi mdi-upload text-sm" aria-hidden="true"></i>
+                                <span>Enviar anexos</span>
                             </button>
                         </div>
 
@@ -468,8 +472,9 @@
                                                 @endif
                                             </p>
                                         </div>
-                                        <button type="button" class="js-remove-email-attachment text-xs text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300">
-                                            Remover
+                                        <button type="button" class="js-remove-email-attachment inline-flex items-center gap-1 text-xs text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300">
+                                            <i class="mdi mdi-delete-outline text-sm" aria-hidden="true"></i>
+                                            <span>Remover</span>
                                         </button>
                                     </div>
                                     <input type="hidden" name="content_json[email][attachments][{{ $index }}][source]" value="upload">
@@ -595,9 +600,10 @@
                                     type="button"
                                     id="whatsapp-media-upload-btn"
                                     {{ $whatsappSelected && $whatsappMessageType === 'media' && $whatsappMediaSource === 'upload' ? '' : 'disabled' }}
-                                    class="btn btn-outline whitespace-nowrap"
+                                    class="btn btn-outline whitespace-nowrap inline-flex items-center gap-2"
                                 >
-                                    Enviar arquivo
+                                    <i class="mdi mdi-upload text-sm" aria-hidden="true"></i>
+                                    <span>Enviar arquivo</span>
                                 </button>
                             </div>
                             <p id="whatsapp-media-upload-feedback" class="mt-2 text-xs text-gray-500 dark:text-gray-400">
@@ -751,10 +757,11 @@
                         <button
                             type="button"
                             id="campaign-add-time"
-                            class="btn btn-outline btn-sm"
+                            class="btn btn-outline btn-sm inline-flex items-center gap-2"
                             {{ $automationEnabled ? '' : 'disabled' }}
                         >
-                            Adicionar horário
+                            <i class="mdi mdi-plus text-sm" aria-hidden="true"></i>
+                            <span>Adicionar horário</span>
                         </button>
                     </div>
 
@@ -770,10 +777,11 @@
                                 >
                                 <button
                                     type="button"
-                                    class="js-remove-schedule-time btn btn-outline btn-sm whitespace-nowrap"
+                                    class="js-remove-schedule-time btn btn-outline btn-sm whitespace-nowrap inline-flex items-center gap-2"
                                     {{ $automationEnabled ? '' : 'disabled' }}
                                 >
-                                    Remover
+                                    <i class="mdi mdi-delete-outline text-sm" aria-hidden="true"></i>
+                                    <span>Remover</span>
                                 </button>
                             </li>
                         @endforeach
@@ -815,9 +823,10 @@
                         <button
                             type="button"
                             id="campaign-rules-add"
-                            class="btn btn-outline btn-sm whitespace-nowrap"
+                            class="btn btn-outline btn-sm whitespace-nowrap inline-flex items-center gap-2"
                         >
-                            Adicionar condição
+                            <i class="mdi mdi-plus text-sm" aria-hidden="true"></i>
+                            <span>Adicionar condição</span>
                         </button>
                     </div>
 
@@ -908,9 +917,10 @@
                                     <div class="flex items-end lg:col-span-1">
                                         <button
                                             type="button"
-                                            class="js-campaign-rule-remove btn btn-outline btn-sm w-full"
+                                            class="js-campaign-rule-remove btn btn-outline btn-sm w-full inline-flex items-center justify-center gap-2"
                                         >
-                                            Remover
+                                            <i class="mdi mdi-delete-outline text-sm" aria-hidden="true"></i>
+                                            <span>Remover</span>
                                         </button>
                                     </div>
                                 </div>
@@ -954,7 +964,10 @@
                                     </div>
                                 </div>
                                 <div class="flex items-end lg:col-span-1">
-                                    <button type="button" class="js-campaign-rule-remove btn btn-outline btn-sm w-full">Remover</button>
+                                    <button type="button" class="js-campaign-rule-remove btn btn-outline btn-sm w-full inline-flex items-center justify-center gap-2">
+                                        <i class="mdi mdi-delete-outline text-sm" aria-hidden="true"></i>
+                                        <span>Remover</span>
+                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -978,9 +991,13 @@
                 </div>
 
             <div class="flex flex-col gap-3 border-t border-gray-200 pt-6 dark:border-gray-700 sm:flex-row sm:items-center sm:justify-between">
-                <a href="{{ $cancelUrl ?? workspace_route('tenant.campaigns.index') }}" class="btn btn-outline">Cancelar</a>
-                <button type="submit" class="btn btn-primary" {{ $hasAvailableChannels ? '' : 'disabled' }}>
-                    {{ $submitLabel ?? 'Salvar Campanha' }}
+                <a href="{{ $cancelUrl ?? workspace_route('tenant.campaigns.index') }}" class="btn btn-outline inline-flex items-center gap-2">
+                    <i class="mdi mdi-close text-sm" aria-hidden="true"></i>
+                    <span>Cancelar</span>
+                </a>
+                <button type="submit" class="btn btn-primary inline-flex items-center gap-2" {{ $hasAvailableChannels ? '' : 'disabled' }}>
+                    <i class="mdi mdi-content-save text-sm" aria-hidden="true"></i>
+                    <span>{{ $submitLabel ?? 'Salvar Campanha' }}</span>
                 </button>
             </div>
         </form>

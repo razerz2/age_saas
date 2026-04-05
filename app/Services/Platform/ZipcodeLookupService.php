@@ -19,7 +19,7 @@ class ZipcodeLookupService
     {
         $digits = preg_replace('/\D+/', '', $zipcode);
         if (strlen((string) $digits) !== 8) {
-            throw new ZipcodeLookupException('CEP invalido. Informe 8 digitos.', 422, 'invalid_zipcode');
+            throw new ZipcodeLookupException('CEP inválido. Informe 8 dígitos.', 422, 'invalid_zipcode');
         }
 
         $cacheKey = 'zipcode_lookup:v1:' . $digits;
@@ -41,7 +41,7 @@ class ZipcodeLookupService
                 if ($city) {
                     $state = $city->estado;
                 } else {
-                    $warnings[] = 'Municipio retornado pelo ViaCEP nao foi encontrado na base interna por codigo IBGE.';
+                    $warnings[] = 'Município retornado pelo ViaCEP não foi encontrado na base interna por código IBGE.';
                     Log::warning('CEP retornou municipio sem correspondencia local por IBGE.', [
                         'zipcode' => $digits,
                         'city_ibge_id' => $cityIbgeId,
@@ -50,8 +50,8 @@ class ZipcodeLookupService
                     ]);
                 }
             } else {
-                $warnings[] = 'ViaCEP nao retornou codigo IBGE do municipio.';
-                Log::warning('ViaCEP retornou CEP sem codigo IBGE do municipio.', [
+                $warnings[] = 'ViaCEP não retornou código IBGE do município.';
+                Log::warning('ViaCEP retornou CEP sem código IBGE do município.', [
                     'zipcode' => $digits,
                     'response' => $viacep,
                 ]);
@@ -94,20 +94,20 @@ class ZipcodeLookupService
                 ->acceptJson()
                 ->get(sprintf('https://viacep.com.br/ws/%s/json/', $digits));
         } catch (\Throwable $exception) {
-            throw new ZipcodeLookupException('Falha ao consultar o servico de CEP externo.', 502, 'zipcode_service_unavailable');
+            throw new ZipcodeLookupException('Falha ao consultar o serviço de CEP externo.', 502, 'zipcode_service_unavailable');
         }
 
         if (! $response->successful()) {
-            throw new ZipcodeLookupException('Servico de CEP externo indisponivel.', 502, 'zipcode_service_unavailable');
+            throw new ZipcodeLookupException('Serviço de CEP externo indisponível.', 502, 'zipcode_service_unavailable');
         }
 
         $payload = $response->json();
         if (! is_array($payload)) {
-            throw new ZipcodeLookupException('Resposta invalida recebida do servico de CEP.', 502, 'invalid_zipcode_response');
+            throw new ZipcodeLookupException('Resposta inválida recebida do serviço de CEP.', 502, 'invalid_zipcode_response');
         }
 
         if (! empty($payload['erro'])) {
-            throw new ZipcodeLookupException('CEP nao encontrado.', 404, 'zipcode_not_found');
+            throw new ZipcodeLookupException('CEP não encontrado.', 404, 'zipcode_not_found');
         }
 
         return $payload;
