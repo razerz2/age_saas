@@ -38,6 +38,20 @@
                     </div>
                 @endif
 
+                @if (session('patient_not_found'))
+                    <div class="border-b border-slate-200 px-6 py-4">
+                        <div class="rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-900">
+                            <div class="flex items-start gap-2">
+                                <i class="mdi mdi-alert-circle text-base text-red-600"></i>
+                                <div>
+                                    <p class="font-semibold">Não encontramos um cadastro com os dados informados.</p>
+                                    <p class="mt-1">Verifique se o CPF ou e-mail está correto, ou realize seu cadastro para continuar.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                @endif
+
                 @if ($errors->any())
                     <div class="border-b border-slate-200 px-6 py-4">
                         <div class="rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-900">
@@ -82,14 +96,10 @@
                         @error('identifier')
                             <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
                         @enderror
-                        @if (session('patient_not_found'))
-                            <p class="mt-2 text-xs text-slate-500">Verifique se o CPF ou e-mail está correto, ou realize seu cadastro na clínica.</p>
-                        @else
-                            <p class="mt-2 text-xs text-slate-500">Informe seu CPF ou e-mail cadastrado na clínica.</p>
-                        @endif
+                        <p class="mt-2 text-xs text-slate-500">Informe seu CPF ou e-mail cadastrado na clínica.</p>
                     </div>
 
-                    <div class="mt-6 flex justify-center">
+                    <div class="mt-6 flex flex-col items-center justify-center gap-3 sm:flex-row">
                         <button
                             type="submit"
                             class="btn btn-primary"
@@ -97,22 +107,7 @@
                             <i class="mdi mdi-arrow-right text-lg text-white"></i>
                             Continuar
                         </button>
-                    </div>
-                </form>
-
-                @if (session('patient_not_found') || ($errors->has('identifier') && old('identifier')))
-                    <div class="border-t border-slate-200 px-6 py-6 text-center">
-                        <div class="mx-auto max-w-xl rounded-xl border border-amber-100 bg-amber-50 px-4 py-3 text-sm text-amber-900">
-                            <div class="flex items-start justify-center gap-2">
-                                <i class="mdi mdi-alert-circle text-base text-amber-600"></i>
-                                <div class="text-left">
-                                    <p class="font-semibold">Não encontramos um cadastro com os dados informados.</p>
-                                    <p class="mt-1">Verifique se o CPF ou e-mail está correto, ou realize seu cadastro para continuar.</p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="mt-4 flex justify-center">
+                        @if (session('patient_not_found'))
                             <a
                                 href="{{ route('public.patient.register', ['slug' => $tenant->subdomain]) }}"
                                 class="btn btn-primary"
@@ -120,9 +115,9 @@
                                 <i class="mdi mdi-account-plus text-lg text-white"></i>
                                 Criar Cadastro
                             </a>
-                        </div>
+                        @endif
                     </div>
-                @endif
+                </form>
             </div>
 
             <div class="pt-8 text-center">

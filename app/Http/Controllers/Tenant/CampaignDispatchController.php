@@ -5,10 +5,12 @@ namespace App\Http\Controllers\Tenant;
 use App\Http\Controllers\Controller;
 use App\Jobs\Tenant\StartCampaignJob;
 use App\Models\Tenant\Campaign;
+use App\Models\Tenant\Patient;
 use App\Services\Tenant\CampaignChannelGate;
 use App\Services\Tenant\CampaignDeliveryService;
 use App\Services\Tenant\CampaignStarter;
 use DomainException;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -25,43 +27,71 @@ class CampaignDispatchController extends Controller
     public function sendTest(string $slug, Campaign $campaign, Request $request, CampaignChannelGate $gate): RedirectResponse
     {
         $campaignChannels = $this->normalizeChannels($campaign->channels_json);
+        $selectedPatient = null;
 
         $validator = Validator::make($request->all(), [
             'channel' => ['nullable', 'in:email,whatsapp'],
-            'destination' => ['required', 'string', 'max:255'],
+            'destination' => ['nullable', 'string', 'max:255'],
+            'patient_id' => ['nullable', 'uuid'],
             'overrides' => ['nullable', 'array'],
         ], [
-            'destination.required' => 'Informe o destino do teste.',
-            'channel.in' => 'Canal de teste inválido.',
+            'channel.in' => 'Canal de teste invalido.',
+            'patient_id.uuid' => 'Paciente de teste invalido.',
         ]);
 
-        $validator->after(function ($validator) use ($request, $campaignChannels) {
+        $validator->after(function ($validator) use ($request, $campaignChannels, &$selectedPatient) {
             if ($campaignChannels === []) {
-                $validator->errors()->add('channel', 'Esta campanha não possui canais configurados para envio.');
+                $validator->errors()->add('channel', 'Esta campanha nao possui canais configurados para envio.');
                 return;
             }
 
             $selectedChannel = strtolower(trim((string) $request->input('channel', '')));
-
             if (count($campaignChannels) > 1 && $selectedChannel === '') {
                 $validator->errors()->add('channel', 'Selecione o canal para enviar o teste.');
             }
 
             if ($selectedChannel !== '' && !in_array($selectedChannel, $campaignChannels, true)) {
-                $validator->errors()->add('channel', 'Canal não configurado nesta campanha.');
+                $validator->errors()->add('channel', 'Canal nao configurado nesta campanha.');
             }
 
-            $destination = trim((string) $request->input('destination', ''));
             $channelForValidation = $selectedChannel !== ''
                 ? $selectedChannel
                 : ($campaignChannels[0] ?? null);
 
+            $selectedPatientId = trim((string) $request->input('patient_id', ''));
+            if ($selectedPatientId !== '') {
+                $selectedPatient = Patient::query()
+                    ->where('id', $selectedPatientId)
+                    ->first(['id', 'full_name', 'cpf', 'email', 'phone']);
+
+                if (!$selectedPatient) {
+                    $validator->errors()->add('patient_id', 'Paciente selecionado nao foi encontrado.');
+                    return;
+                }
+
+                if ($channelForValidation === 'email' && !$this->isValidEmail($selectedPatient->email ?? null)) {
+                    $validator->errors()->add('patient_id', 'O paciente selecionado nao possui e-mail cadastrado.');
+                }
+
+                if ($channelForValidation === 'whatsapp' && !$this->hasPhone($selectedPatient->phone ?? null)) {
+                    $validator->errors()->add('patient_id', 'O paciente selecionado nao possui telefone/WhatsApp cadastrado.');
+                }
+
+                return;
+            }
+
+            $destination = trim((string) $request->input('destination', ''));
+            if ($destination === '') {
+                $validator->errors()->add('destination', 'Informe o destino do teste.');
+                return;
+            }
+
             if ($channelForValidation === 'email' && filter_var($destination, FILTER_VALIDATE_EMAIL) === false) {
-                $validator->errors()->add('destination', 'Informe um email válido para o teste.');
+                $validator->errors()->add('destination', 'Informe um email valido para o teste.');
             }
 
             if ($channelForValidation === 'whatsapp' && $destination === '') {
-                $validator->errors()->add('destination', 'Informe um telefone válido para o teste.');
+                $validator->errors()->add('destination', 'Informe um telefone valido para o teste.');
             }
         });
 
@@ -80,15 +110,39 @@ class CampaignDispatchController extends Controller
             return back()->with('warning', $exception->getMessage());
         }
 
-        $destination = trim((string) $request->input('destination'));
         $overrides = $request->input('overrides', []);
         $overrides = is_array($overrides) ? $overrides : [];
+        $destination = trim((string) $request->input('destination', ''));
+        $vars = $overrides;
+        $meta = [];
+
+        $selectedPatientId = trim((string) $request->input('patient_id', ''));
+        if ($selectedPatientId !== '') {
+            $selectedPatient = $selectedPatient instanceof Patient
+                ? $selectedPatient
+                : Patient::query()->where('id', $selectedPatientId)->first(['id', 'full_name', 'cpf', 'email', 'phone']);
+
+            if ($selectedPatient) {
+                $destination = $channel === 'email'
+                    ? (string) $this->normalizeEmail($selectedPatient->email ?? null)
+                    : (string) $this->normalizePhone($selectedPatient->phone ?? null);
+
+                $patientVars = $this->buildTestVarsFromPatient($selectedPatient);
+                $vars = array_replace_recursive($patientVars, $overrides);
+                $meta['test_recipient_mode'] = 'patient';
+                $meta['test_patient_id'] = (string) $selectedPatient->id;
+                $meta['test_patient_name'] = trim((string) ($selectedPatient->full_name ?? ''));
+            }
+        } else {
+            $meta['test_recipient_mode'] = 'manual';
+        }
 
         $result = $this->deliveryService->sendTest(
             $campaign,
             $channel,
             $destination,
-            $overrides
+            $vars,
+            $meta
         );
 
         if ($result['success']) {
@@ -98,8 +152,56 @@ class CampaignDispatchController extends Controller
         return back()->with('warning', $result['error_message'] ?? 'Falha ao enviar teste da campanha.');
     }
 
+    public function searchTestPatients(string $slug, Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'q' => ['nullable', 'string', 'max:100'],
+            'limit' => ['nullable', 'integer', 'min:1', 'max:20'],
+        ]);
+
+        $queryText = trim((string) ($validated['q'] ?? ''));
+        $limit = (int) ($validated['limit'] ?? 10);
+
+        $query = Patient::query()->orderBy('full_name');
+
+        if ($queryText !== '') {
+            $pattern = '%' . mb_strtolower($queryText) . '%';
+
+            $query->where(function ($builder) use ($pattern) {
+                $builder
+                    ->whereRaw('LOWER(full_name) LIKE ?', [$pattern])
+                    ->orWhereRaw('LOWER(cpf) LIKE ?', [$pattern])
+                    ->orWhereRaw('LOWER(phone) LIKE ?', [$pattern])
+                    ->orWhereRaw('LOWER(email) LIKE ?', [$pattern]);
+            });
+        }
+
+        $patients = $query
+            ->limit($limit)
+            ->get(['id', 'full_name', 'cpf', 'email', 'phone'])
+            ->map(function (Patient $patient): array {
+                return [
+                    'id' => (string) $patient->id,
+                    'name' => trim((string) ($patient->full_name ?? '')),
+                    'cpf' => trim((string) ($patient->cpf ?? '')),
+                    'email' => trim((string) ($patient->email ?? '')),
+                    'phone' => trim((string) ($patient->phone ?? '')),
+                ];
+            })
+            ->values()
+            ->all();
+
+        return response()->json([
+            'data' => $patients,
+        ]);
+    }
+
     public function start(string $slug, Campaign $campaign, Request $request, CampaignChannelGate $gate): RedirectResponse
     {
+        if (!$this->isManualCampaign($campaign)) {
+            return back()->with('warning', 'Esta acao esta disponivel apenas para campanhas manuais.');
+        }
+
         try {
             $gate->assertChannelsEnabled($this->normalizeChannels($campaign->channels_json));
         } catch (DomainException $exception) {
@@ -125,11 +227,15 @@ class CampaignDispatchController extends Controller
 
     public function schedule(string $slug, Campaign $campaign, Request $request, CampaignChannelGate $gate): RedirectResponse
     {
+        if (!$this->isManualCampaign($campaign)) {
+            return back()->with('warning', 'Esta acao esta disponivel apenas para campanhas manuais.');
+        }
+
         $validator = Validator::make($request->all(), [
             'scheduled_at' => ['required', 'date'],
         ], [
-            'scheduled_at.required' => 'Informe data e horário para agendamento.',
-            'scheduled_at.date' => 'Data/hora de agendamento inválida.',
+            'scheduled_at.required' => 'Informe data e horario para agendamento.',
+            'scheduled_at.date' => 'Data/hora de agendamento invalida.',
         ]);
 
         $validator->after(function ($validator) use ($request) {
@@ -140,7 +246,7 @@ class CampaignDispatchController extends Controller
                     $validator->errors()->add('scheduled_at', 'O agendamento deve ser no presente ou futuro.');
                 }
             } catch (\Throwable) {
-                $validator->errors()->add('scheduled_at', 'Data/hora de agendamento inválida.');
+                $validator->errors()->add('scheduled_at', 'Data/hora de agendamento invalida.');
             }
         });
 
@@ -191,6 +297,102 @@ class CampaignDispatchController extends Controller
         $campaign->save();
 
         return back()->with('success', 'Campanha retomada.');
+    }
+
+    private function isManualCampaign(Campaign $campaign): bool
+    {
+        return strtolower(trim((string) $campaign->type)) === 'manual';
+    }
+
+    private function isValidEmail(mixed $value): bool
+    {
+        return $this->normalizeEmail($value) !== null;
+    }
+
+    private function hasPhone(mixed $value): bool
+    {
+        return $this->normalizePhone($value) !== null;
+    }
+
+    private function normalizeEmail(mixed $value): ?string
+    {
+        if ($value === null) {
+            return null;
+        }
+
+        $email = trim((string) $value);
+        if ($email === '' || filter_var($email, FILTER_VALIDATE_EMAIL) === false) {
+            return null;
+        }
+
+        return $email;
+    }
+
+    private function normalizePhone(mixed $value): ?string
+    {
+        if ($value === null) {
+            return null;
+        }
+
+        $phone = trim((string) $value);
+        return $phone !== '' ? $phone : null;
+    }
+
+    /**
+     * @return array<string,mixed>
+     */
+    private function buildTestVarsFromPatient(Patient $patient): array
+    {
+        $fullName = trim((string) ($patient->full_name ?? ''));
+        $firstName = $this->extractFirstName($fullName);
+        $email = $this->normalizeEmail($patient->email ?? null);
+        $phone = $this->normalizePhone($patient->phone ?? null);
+        $tenant = tenant();
+        $clinicName = trim((string) ($tenant?->trade_name ?? $tenant?->legal_name ?? ''));
+        $clinicPhone = trim((string) ($tenant?->phone ?? ''));
+        $clinicEmail = trim((string) ($tenant?->email ?? ''));
+        $clinicAddress = trim((string) ($tenant?->address ?? ''));
+        $slug = trim((string) ($tenant?->subdomain ?? ''));
+        $publicBookingUrl = $slug !== '' ? url('/workspace/' . $slug . '/agendamento/identificar') : null;
+
+        return [
+            'patient' => [
+                'id' => (string) $patient->id,
+                'name' => $fullName !== '' ? $fullName : null,
+                'full_name' => $fullName !== '' ? $fullName : null,
+                'first_name' => $firstName,
+                'cpf' => trim((string) ($patient->cpf ?? '')) ?: null,
+                'email' => $email,
+                'phone' => $phone,
+            ],
+            'clinic' => [
+                'name' => $clinicName !== '' ? $clinicName : null,
+                'phone' => $clinicPhone !== '' ? $clinicPhone : null,
+                'email' => $clinicEmail !== '' ? $clinicEmail : null,
+                'address' => $clinicAddress !== '' ? $clinicAddress : null,
+            ],
+            'links' => [
+                'public_booking' => $publicBookingUrl,
+                'portal' => null,
+                'whatsapp' => null,
+            ],
+            'now' => [
+                'date' => now()->toDateString(),
+            ],
+        ];
+    }
+
+    private function extractFirstName(string $fullName): ?string
+    {
+        $normalized = trim($fullName);
+        if ($normalized === '') {
+            return null;
+        }
+
+        $parts = preg_split('/\s+/', $normalized);
+        $first = is_array($parts) ? trim((string) ($parts[0] ?? '')) : '';
+
+        return $first !== '' ? $first : null;
     }
 
     /**

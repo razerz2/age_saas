@@ -13,6 +13,9 @@
     $defaultMode = $settings['appointments.default_appointment_mode'] ?? 'user_choice';
     $hasOnlineAccess = ($user && $user->role === 'admin') || in_array('online_appointments', $userModules);
     $hasCampaignsAccess = ($user && $user->role === 'admin') || in_array('campaigns', $userModules);
+    $campaignsMenuActive = request()->routeIs('tenant.campaigns.*') || request()->routeIs('tenant.campaign-templates.*');
+    $campaignsListActive = request()->routeIs('tenant.campaigns.*');
+    $campaignTemplatesActive = request()->routeIs('tenant.campaign-templates.*');
     $financeEnabled = tenant_setting('finance.enabled') === 'true';
     $hasFinanceAccess = $financeEnabled && (($user && $user->role === 'admin') || in_array('finance', $userModules));
     $hasSettingsAccess = ($user && $user->role === 'admin') || in_array('settings', $userModules);
@@ -166,14 +169,28 @@
                     @endif
 
                     @if($hasCampaignsAccess)
-                        <li>
-                            <a
-                                href="{{ workspace_route('tenant.campaigns.index') }}"
-                                class="menu-item group {{ request()->routeIs('tenant.campaigns.*') ? 'menu-item-active' : 'menu-item-inactive' }}"
-                            >
-                                <i class="mdi mdi-bullhorn-outline text-sm {{ request()->routeIs('tenant.campaigns.*') ? 'menu-item-icon-active' : 'menu-item-icon-inactive' }}"></i>
+                        <li x-data="{ open: {{ $campaignsMenuActive ? 'true' : 'false' }} }">
+                            <a href="#" @click.prevent="open = !open" class="menu-item group {{ $campaignsMenuActive ? 'menu-item-active' : 'menu-item-inactive' }}">
+                                <i class="mdi mdi-bullhorn-outline text-sm {{ $campaignsMenuActive ? 'menu-item-icon-active' : 'menu-item-icon-inactive' }}"></i>
                                 <span class="menu-item-text truncate min-w-0" :class="sidebarToggle ? 'xl:hidden' : ''">Campanhas</span>
+                                <svg class="menu-item-arrow" :class="[open ? 'menu-item-arrow-active' : 'menu-item-arrow-inactive', sidebarToggle ? 'xl:hidden' : '' ]" width="20" height="20" viewBox="0 0 20 20" fill="none">
+                                    <path d="M4.79175 7.39584L10.0001 12.6042L15.2084 7.39585" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                </svg>
                             </a>
+                            <div class="translate transform overflow-hidden" x-show="open">
+                                <ul :class="sidebarToggle ? 'xl:hidden' : 'flex'" class="menu-dropdown mt-2 flex flex-col gap-1 pl-9">
+                                    <li>
+                                        <a href="{{ workspace_route('tenant.campaigns.index') }}" class="menu-dropdown-item group flex items-center gap-2 {{ $campaignsListActive ? 'menu-dropdown-item-active' : 'menu-dropdown-item-inactive' }}">
+                                            <i class="mdi mdi-bullhorn-outline text-[14px] text-gray-500 dark:text-gray-400"></i>Campanhas
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="{{ workspace_route('tenant.campaign-templates.index') }}" class="menu-dropdown-item group flex items-center gap-2 {{ $campaignTemplatesActive ? 'menu-dropdown-item-active' : 'menu-dropdown-item-inactive' }}">
+                                            <i class="mdi mdi-file-document-outline text-[14px] text-gray-500 dark:text-gray-400"></i>Templates
+                                        </a>
+                                    </li>
+                                </ul>
+                            </div>
                         </li>
                     @endif
 

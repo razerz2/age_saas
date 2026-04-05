@@ -47,8 +47,6 @@
     $whatsappSelected = in_array('whatsapp', $selectedChannels, true);
 
     $typeValue = old('type', $campaign?->type ?? 'manual');
-    $scheduledAtFallback = $campaign?->scheduled_at ? $campaign->scheduled_at->format('Y-m-d\TH:i') : null;
-    $scheduledAtValue = old('scheduled_at', $scheduledAtFallback);
 
     $contentData = is_array($campaign?->content_json) ? $campaign->content_json : [];
     $emailSubject = old('content_json.email.subject', data_get($contentData, 'email.subject'));
@@ -78,6 +76,49 @@
             'size' => (int) ($attachment['size'] ?? 0),
         ];
     }
+
+    $whatsappCampaignProvider = strtolower(trim((string) ($whatsappCampaignProvider ?? data_get($contentData, 'whatsapp.provider', 'waha'))));
+    if (!in_array($whatsappCampaignProvider, ['whatsapp_business', 'zapi', 'waha', 'evolution'], true)) {
+        $whatsappCampaignProvider = 'waha';
+    }
+
+    $whatsappProviderType = strtolower(trim((string) ($whatsappProviderType ?? ($whatsappCampaignProvider === 'whatsapp_business' ? 'official' : 'unofficial'))));
+    if (!in_array($whatsappProviderType, ['official', 'unofficial'], true)) {
+        $whatsappProviderType = $whatsappCampaignProvider === 'whatsapp_business' ? 'official' : 'unofficial';
+    }
+    $whatsappIsOfficialProvider = $whatsappProviderType === 'official';
+
+    $whatsappCompositionMode = old('content_json.whatsapp.composition_mode', data_get($contentData, 'whatsapp.composition_mode', ''));
+    $whatsappCompositionMode = strtolower(trim((string) $whatsappCompositionMode));
+    if (!in_array($whatsappCompositionMode, ['manual', 'template'], true)) {
+        $whatsappCompositionMode = $whatsappIsOfficialProvider ? 'template' : 'manual';
+    }
+    if ($whatsappIsOfficialProvider) {
+        $whatsappCompositionMode = 'template';
+    }
+
+    $whatsappTemplateType = old('content_json.whatsapp.template_type', data_get($contentData, 'whatsapp.template_type', $whatsappIsOfficialProvider ? 'official' : 'unofficial'));
+    $whatsappTemplateType = strtolower(trim((string) $whatsappTemplateType));
+    if (!in_array($whatsappTemplateType, ['official', 'unofficial'], true)) {
+        $whatsappTemplateType = $whatsappIsOfficialProvider ? 'official' : 'unofficial';
+    }
+    if ($whatsappIsOfficialProvider) {
+        $whatsappTemplateType = 'official';
+    }
+
+    $whatsappOfficialTemplateId = old('content_json.whatsapp.official_template_id', data_get($contentData, 'whatsapp.official_template_id'));
+    $whatsappUnofficialTemplateId = old('content_json.whatsapp.template_id', data_get($contentData, 'whatsapp.template_id'));
+    $officialCampaignTemplates = is_array($officialCampaignTemplates ?? null) ? array_values($officialCampaignTemplates) : [];
+    $unofficialCampaignTemplates = is_array($unofficialCampaignTemplates ?? null) ? array_values($unofficialCampaignTemplates) : [];
+    $showLegacyOfficialTemplateWarning = (bool) ($showLegacyOfficialTemplateWarning ?? false);
+    $whatsappTemplateWarnings = is_array($whatsappTemplateWarnings ?? null) ? array_values($whatsappTemplateWarnings) : [];
+    $whatsappProviderLabel = match ($whatsappCampaignProvider) {
+        'whatsapp_business' => 'WhatsApp Oficial',
+        'zapi' => 'Z-API',
+        'waha' => 'WAHA',
+        'evolution' => 'Evolution',
+        default => strtoupper($whatsappCampaignProvider),
+    };
 
     $whatsappMessageType = old('content_json.whatsapp.message_type', data_get($contentData, 'whatsapp.message_type', 'text'));
     $whatsappText = old('content_json.whatsapp.text', data_get($contentData, 'whatsapp.text'));
@@ -339,14 +380,6 @@
                         <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
                     @enderror
                 </div>
-                <div>
-                    <label for="campaign-scheduled-at" class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">Agendado para</label>
-                    <input id="campaign-scheduled-at" type="datetime-local" name="scheduled_at" value="{{ $scheduledAtValue }}"
-                        class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white @error('scheduled_at') border-red-500 @enderror">
-                    @error('scheduled_at')
-                        <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
-                    @enderror
-                </div>
             </div>
 
             <div>
@@ -397,6 +430,16 @@
 
             <div id="campaign-email-section" data-channel-section="email" class="{{ $emailSelected ? '' : 'hidden' }}">
                 <h3 class="mb-3 text-base font-semibold text-gray-900 dark:text-white">Conteúdo de Email</h3>
+                @if (count($whatsappTemplateWarnings) > 0)
+                    <div class="mb-4 rounded-lg border border-amber-200 bg-amber-50 p-4 dark:border-amber-800 dark:bg-amber-900/20">
+                        <ul class="space-y-1 text-sm text-amber-800 dark:text-amber-200">
+                            @foreach ($whatsappTemplateWarnings as $templateWarning)
+                                <li>{{ $templateWarning }}</li>
+                            @endforeach
+                        </ul>
+                    </div>
+                @endif
+
                 <div class="grid grid-cols-1 gap-4">
                     <div>
                         <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">Assunto <span class="text-red-500">*</span></label>
@@ -497,134 +540,254 @@
                 </div>
             </div>
 
-            <div id="campaign-whatsapp-section" data-channel-section="whatsapp" class="{{ $whatsappSelected ? '' : 'hidden' }}">
+            <div
+                id="campaign-whatsapp-section"
+                data-channel-section="whatsapp"
+                data-whatsapp-provider-type="{{ $whatsappProviderType }}"
+                class="{{ $whatsappSelected ? '' : 'hidden' }}"
+            >
                 <h3 class="mb-3 text-base font-semibold text-gray-900 dark:text-white">Conteúdo de WhatsApp</h3>
-                <input type="hidden" name="content_json[whatsapp][provider]" value="waha" {{ $whatsappSelected ? '' : 'disabled' }}>
+                <input type="hidden" name="content_json[whatsapp][provider]" value="{{ $whatsappCampaignProvider }}" {{ $whatsappSelected ? '' : 'disabled' }}>
+
+                <div class="mb-4 rounded-lg border border-blue-200 bg-blue-50 p-4 dark:border-blue-900/40 dark:bg-blue-900/20">
+                    <p class="text-sm font-medium text-blue-800 dark:text-blue-200">
+                        O provider atual de campanhas está configurado como {{ $whatsappProviderLabel }}.
+                    </p>
+                    @if ($whatsappIsOfficialProvider)
+                        <p class="mt-1 text-xs text-blue-700 dark:text-blue-300">
+                            Campanhas com WhatsApp Oficial exigem template aprovado pela Meta.
+                        </p>
+                    @else
+                        <p class="mt-1 text-xs text-blue-700 dark:text-blue-300">
+                            Campanhas legadas em mensagem manual continuam compatíveis com provedores não oficiais.
+                        </p>
+                    @endif
+                </div>
+
+                @if ($showLegacyOfficialTemplateWarning)
+                    <div class="mb-4 rounded-lg border border-amber-200 bg-amber-50 p-4 dark:border-amber-800 dark:bg-amber-900/20">
+                        <p class="text-sm text-amber-800 dark:text-amber-200">
+                            Esta campanha foi criada em modo manual legado. Como o provider atual está em WhatsApp Oficial, selecione um template oficial aprovado antes de salvar.
+                        </p>
+                    </div>
+                @endif
+
                 <div class="grid grid-cols-1 gap-4">
                     <div>
-                        <label for="whatsapp-message-type" class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">Tipo da mensagem <span class="text-red-500">*</span></label>
-                        <select id="whatsapp-message-type" name="content_json[whatsapp][message_type]" {{ $whatsappSelected ? '' : 'disabled' }}
-                            class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white @error('content_json.whatsapp.message_type') border-red-500 @enderror">
-                            <option value="text" @selected($whatsappMessageType === 'text')>Texto</option>
-                            <option value="media" @selected($whatsappMessageType === 'media')>Mídia</option>
+                        <label for="whatsapp-composition-mode" class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">Composição da mensagem <span class="text-red-500">*</span></label>
+                        <select
+                            id="whatsapp-composition-mode"
+                            name="content_json[whatsapp][composition_mode]"
+                            {{ $whatsappSelected ? '' : 'disabled' }}
+                            class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white @error('content_json.whatsapp.composition_mode') border-red-500 @enderror"
+                        >
+                            @if (!$whatsappIsOfficialProvider)
+                                <option value="manual" @selected($whatsappCompositionMode === 'manual')>Mensagem manual</option>
+                            @endif
+                            <option value="template" @selected($whatsappCompositionMode === 'template')>Usar template</option>
                         </select>
-                        @error('content_json.whatsapp.message_type')
+                        @if ($whatsappIsOfficialProvider)
+                            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Mensagem manual indisponível para WhatsApp Oficial.</p>
+                        @endif
+                        @error('content_json.whatsapp.composition_mode')
                             <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
                         @enderror
                     </div>
-                    <div id="whatsapp-text-wrapper" class="{{ $whatsappMessageType === 'text' ? '' : 'hidden' }}">
-                        <div class="mb-2 flex items-center justify-between gap-3">
-                            <label for="campaign-whatsapp-text" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Texto <span class="text-red-500">*</span></label>
-                            <div class="relative" data-emoji-picker="whatsapp">
-                                <button
-                                    type="button"
-                                    class="btn btn-outline btn-sm inline-flex items-center gap-2 whitespace-nowrap"
-                                    data-emoji-toggle="1"
-                                    aria-label="Abrir seletor de emojis"
-                                    aria-haspopup="dialog"
-                                    aria-expanded="false"
-                                    aria-controls="campaign-whatsapp-emoji-popover"
-                                >
-                                    <i class="mdi mdi-emoticon-happy-outline text-base" aria-hidden="true"></i>
-                                    <span>Emojis</span>
-                                </button>
-                                <div
-                                    id="campaign-whatsapp-emoji-popover"
-                                    class="absolute right-0 top-full z-50 mt-2 hidden w-[360px] max-w-[92vw] overflow-hidden rounded-xl border border-stroke bg-white p-2 shadow-lg dark:border-strokedark dark:bg-boxdark"
-                                    data-emoji-popover="1"
-                                    role="dialog"
-                                    aria-modal="false"
-                                    aria-label="Seletor de emojis"
-                                >
-                                    <div class="mb-2 flex gap-2 overflow-x-auto pb-2">
-                                        <button type="button" data-emoji-tab="recent" class="whitespace-nowrap rounded-md border border-transparent px-2 py-1 text-xs font-medium text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-boxdark-2" aria-pressed="false">Recentes</button>
-                                        <button type="button" data-emoji-tab="faces" class="whitespace-nowrap rounded-md border border-transparent px-2 py-1 text-xs font-medium text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-boxdark-2" aria-pressed="true">Carinhas</button>
-                                        <button type="button" data-emoji-tab="gestures" class="whitespace-nowrap rounded-md border border-transparent px-2 py-1 text-xs font-medium text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-boxdark-2" aria-pressed="false">Gestos</button>
-                                        <button type="button" data-emoji-tab="objects" class="whitespace-nowrap rounded-md border border-transparent px-2 py-1 text-xs font-medium text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-boxdark-2" aria-pressed="false">Objetos</button>
-                                        <button type="button" data-emoji-tab="symbols" class="whitespace-nowrap rounded-md border border-transparent px-2 py-1 text-xs font-medium text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-boxdark-2" aria-pressed="false">Simbolos</button>
-                                    </div>
-                                    <div class="max-h-[300px] overflow-y-auto pr-1">
-                                        <div data-emoji-grid="1" class="grid grid-cols-10 gap-1 sm:grid-cols-12"></div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <textarea id="campaign-whatsapp-text" name="content_json[whatsapp][text]" rows="4" {{ $whatsappSelected && $whatsappMessageType === 'text' ? '' : 'disabled' }}
-                            class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white @error('content_json.whatsapp.text') border-red-500 @enderror">{{ $whatsappText }}</textarea>
-                        @error('content_json.whatsapp.text')
-                            <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
-                        @enderror
-                    </div>
-                    <div id="whatsapp-media-wrapper" class="{{ $whatsappMessageType === 'media' ? '' : 'hidden' }}">
-                        <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
-                            <div>
-                                <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">Tipo de mídia <span class="text-red-500">*</span></label>
-                                <select name="content_json[whatsapp][media][kind]" {{ $whatsappSelected && $whatsappMessageType === 'media' ? '' : 'disabled' }}
-                                    class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white @error('content_json.whatsapp.media.kind') border-red-500 @enderror">
-                                    <option value="image" @selected($whatsappMediaKind === 'image')>Imagem</option>
-                                    <option value="video" @selected($whatsappMediaKind === 'video')>Vídeo</option>
-                                    <option value="document" @selected($whatsappMediaKind === 'document')>Documento</option>
-                                    <option value="audio" @selected($whatsappMediaKind === 'audio')>Áudio</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label for="whatsapp-media-source" class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">Origem da mídia <span class="text-red-500">*</span></label>
-                                <select id="whatsapp-media-source" name="content_json[whatsapp][media][source]" {{ $whatsappSelected && $whatsappMessageType === 'media' ? '' : 'disabled' }}
-                                    class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white @error('content_json.whatsapp.media.source') border-red-500 @enderror">
-                                    <option value="url" @selected($whatsappMediaSource === 'url')>URL</option>
-                                    <option value="upload" @selected($whatsappMediaSource === 'upload')>Upload</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div id="whatsapp-media-url-wrapper" class="mt-4 {{ $whatsappMediaSource === 'url' ? '' : 'hidden' }}">
-                            <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">URL da mídia <span class="text-red-500">*</span></label>
-                            <input type="url" name="content_json[whatsapp][media][url]" value="{{ $whatsappMediaUrl }}" {{ $whatsappSelected && $whatsappMessageType === 'media' && $whatsappMediaSource === 'url' ? '' : 'disabled' }}
-                                class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white @error('content_json.whatsapp.media.url') border-red-500 @enderror">
-                        </div>
-                        <div id="whatsapp-media-asset-wrapper" class="mt-4 {{ $whatsappMediaSource === 'upload' ? '' : 'hidden' }}">
-                            <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">Arquivo (upload) <span class="text-red-500">*</span></label>
-                            <input
-                                id="whatsapp-media-asset-id"
-                                type="hidden"
-                                name="content_json[whatsapp][media][asset_id]"
-                                value="{{ $whatsappMediaAssetId }}"
-                                {{ $whatsappSelected && $whatsappMessageType === 'media' && $whatsappMediaSource === 'upload' ? '' : 'disabled' }}
+
+                    <div id="whatsapp-template-wrapper" class="{{ $whatsappCompositionMode === 'template' ? '' : 'hidden' }}">
+                        @if ($whatsappIsOfficialProvider)
+                            <input type="hidden" name="content_json[whatsapp][template_type]" value="official" {{ $whatsappSelected && $whatsappCompositionMode === 'template' ? '' : 'disabled' }}>
+                            <label for="whatsapp-official-template-id" class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">Template oficial aprovado <span class="text-red-500">*</span></label>
+                            <select
+                                id="whatsapp-official-template-id"
+                                name="content_json[whatsapp][official_template_id]"
+                                {{ $whatsappSelected && $whatsappCompositionMode === 'template' ? '' : 'disabled' }}
+                                class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white @error('content_json.whatsapp.official_template_id') border-red-500 @enderror"
                             >
-                            <div class="flex flex-col gap-3 sm:flex-row sm:items-center">
-                                <input
-                                    id="whatsapp-media-upload-file"
-                                    type="file"
-                                    {{ $whatsappSelected && $whatsappMessageType === 'media' && $whatsappMediaSource === 'upload' ? '' : 'disabled' }}
-                                    class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white @error('content_json.whatsapp.media.asset_id') border-red-500 @enderror"
-                                >
-                                <button
-                                    type="button"
-                                    id="whatsapp-media-upload-btn"
-                                    {{ $whatsappSelected && $whatsappMessageType === 'media' && $whatsappMediaSource === 'upload' ? '' : 'disabled' }}
-                                    class="btn btn-outline whitespace-nowrap inline-flex items-center gap-2"
-                                >
-                                    <i class="mdi mdi-upload text-sm" aria-hidden="true"></i>
-                                    <span>Enviar arquivo</span>
-                                </button>
-                            </div>
-                            <p id="whatsapp-media-upload-feedback" class="mt-2 text-xs text-gray-500 dark:text-gray-400">
-                                @if ($whatsappMediaAssetId)
-                                    Arquivo vinculado (asset_id: {{ $whatsappMediaAssetId }}).
-                                @endif
-                            </p>
-                            @error('content_json.whatsapp.media.asset_id')
+                                <option value="">Selecione um template oficial aprovado</option>
+                                @foreach ($officialCampaignTemplates as $officialTemplate)
+                                    @php
+                                        $officialTemplateId = (string) ($officialTemplate['id'] ?? '');
+                                        $officialTemplateName = (string) ($officialTemplate['name'] ?? 'template');
+                                        $officialTemplateLanguage = (string) ($officialTemplate['language'] ?? 'pt_BR');
+                                        $officialTemplateCategory = (string) ($officialTemplate['category'] ?? '-');
+                                        $officialTemplateVersion = (int) ($officialTemplate['version'] ?? 1);
+                                    @endphp
+                                    <option value="{{ $officialTemplateId }}" @selected((string) $whatsappOfficialTemplateId === $officialTemplateId)>
+                                        {{ $officialTemplateName }} · {{ $officialTemplateLanguage }} · {{ $officialTemplateCategory }} · v{{ $officialTemplateVersion }}
+                                    </option>
+                                @endforeach
+                            </select>
+                            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Templates oficiais são sincronizados com a Meta.</p>
+                            @if (count($officialCampaignTemplates) === 0)
+                                <p class="mt-2 text-xs text-amber-700 dark:text-amber-300">Nenhum template oficial aprovado disponível para este tenant.</p>
+                            @endif
+                            @error('content_json.whatsapp.official_template_id')
+                                <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+                            @enderror
+                        @else
+                            <input type="hidden" name="content_json[whatsapp][template_type]" value="unofficial" {{ $whatsappSelected && $whatsappCompositionMode === 'template' ? '' : 'disabled' }}>
+                            <label for="whatsapp-unofficial-template-id" class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">Template não oficial <span class="text-red-500">*</span></label>
+                            <select
+                                id="whatsapp-unofficial-template-id"
+                                name="content_json[whatsapp][template_id]"
+                                {{ $whatsappSelected && $whatsappCompositionMode === 'template' ? '' : 'disabled' }}
+                                class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white @error('content_json.whatsapp.template_id') border-red-500 @enderror"
+                            >
+                                <option value="">Selecione um template não oficial</option>
+                                @foreach ($unofficialCampaignTemplates as $unofficialTemplate)
+                                    @php
+                                        $unofficialTemplateId = (string) ($unofficialTemplate['id'] ?? '');
+                                        $unofficialTemplateName = (string) ($unofficialTemplate['name'] ?? 'template');
+                                    @endphp
+                                    <option value="{{ $unofficialTemplateId }}" @selected((string) $whatsappUnofficialTemplateId === $unofficialTemplateId)>
+                                        {{ $unofficialTemplateName }}
+                                    </option>
+                                @endforeach
+                            </select>
+                            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Selecione um template não oficial ativo cadastrado em Campanhas &gt; Templates.</p>
+                            @if (count($unofficialCampaignTemplates) === 0)
+                                <p class="mt-2 text-xs text-amber-700 dark:text-amber-300">
+                                    Nenhum template não oficial ativo disponível.
+                                    @if (\Illuminate\Support\Facades\Route::has('tenant.campaign-templates.create'))
+                                        <a href="{{ workspace_route('tenant.campaign-templates.create') }}" class="font-medium underline">Criar template</a>
+                                    @endif
+                                </p>
+                            @endif
+                            @error('content_json.whatsapp.template_id')
+                                <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+                            @enderror
+                        @endif
+                        <p id="whatsapp-template-feedback" class="mt-2 text-xs text-gray-500 dark:text-gray-400"></p>
+                    </div>
+
+                    <div id="whatsapp-manual-wrapper" class="{{ !$whatsappIsOfficialProvider && $whatsappCompositionMode === 'manual' ? '' : 'hidden' }}">
+                        <div>
+                            <label for="whatsapp-message-type" class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">Tipo da mensagem <span class="text-red-500">*</span></label>
+                            <select id="whatsapp-message-type" name="content_json[whatsapp][message_type]" {{ $whatsappSelected && !$whatsappIsOfficialProvider && $whatsappCompositionMode === 'manual' ? '' : 'disabled' }}
+                                class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white @error('content_json.whatsapp.message_type') border-red-500 @enderror">
+                                <option value="text" @selected($whatsappMessageType === 'text')>Texto</option>
+                                <option value="media" @selected($whatsappMessageType === 'media')>Mídia</option>
+                            </select>
+                            @error('content_json.whatsapp.message_type')
                                 <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
                             @enderror
                         </div>
-                        <div class="mt-4">
-                            <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">Legenda</label>
-                            <textarea name="content_json[whatsapp][media][caption]" rows="3" {{ $whatsappSelected && $whatsappMessageType === 'media' ? '' : 'disabled' }}
-                                class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white">{{ $whatsappMediaCaption }}</textarea>
+
+                        <div id="whatsapp-text-wrapper" class="mt-4 {{ $whatsappMessageType === 'text' ? '' : 'hidden' }}">
+                            <div class="mb-2 flex items-center justify-between gap-3">
+                                <label for="campaign-whatsapp-text" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Texto <span class="text-red-500">*</span></label>
+                                <div class="relative" data-emoji-picker="whatsapp">
+                                    <button
+                                        type="button"
+                                        class="btn btn-outline btn-sm inline-flex items-center gap-2 whitespace-nowrap"
+                                        data-emoji-toggle="1"
+                                        aria-label="Abrir seletor de emojis"
+                                        aria-haspopup="dialog"
+                                        aria-expanded="false"
+                                        aria-controls="campaign-whatsapp-emoji-popover"
+                                    >
+                                        <i class="mdi mdi-emoticon-happy-outline text-base" aria-hidden="true"></i>
+                                        <span>Emojis</span>
+                                    </button>
+                                    <div
+                                        id="campaign-whatsapp-emoji-popover"
+                                        class="absolute right-0 top-full z-50 mt-2 hidden w-[360px] max-w-[92vw] overflow-hidden rounded-xl border border-stroke bg-white p-2 shadow-lg dark:border-strokedark dark:bg-boxdark"
+                                        data-emoji-popover="1"
+                                        role="dialog"
+                                        aria-modal="false"
+                                        aria-label="Seletor de emojis"
+                                    >
+                                        <div class="mb-2 flex gap-2 overflow-x-auto pb-2">
+                                            <button type="button" data-emoji-tab="recent" class="whitespace-nowrap rounded-md border border-transparent px-2 py-1 text-xs font-medium text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-boxdark-2" aria-pressed="false">Recentes</button>
+                                            <button type="button" data-emoji-tab="faces" class="whitespace-nowrap rounded-md border border-transparent px-2 py-1 text-xs font-medium text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-boxdark-2" aria-pressed="true">Carinhas</button>
+                                            <button type="button" data-emoji-tab="gestures" class="whitespace-nowrap rounded-md border border-transparent px-2 py-1 text-xs font-medium text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-boxdark-2" aria-pressed="false">Gestos</button>
+                                            <button type="button" data-emoji-tab="objects" class="whitespace-nowrap rounded-md border border-transparent px-2 py-1 text-xs font-medium text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-boxdark-2" aria-pressed="false">Objetos</button>
+                                            <button type="button" data-emoji-tab="symbols" class="whitespace-nowrap rounded-md border border-transparent px-2 py-1 text-xs font-medium text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-boxdark-2" aria-pressed="false">Símbolos</button>
+                                        </div>
+                                        <div class="max-h-[300px] overflow-y-auto pr-1">
+                                            <div data-emoji-grid="1" class="grid grid-cols-10 gap-1 sm:grid-cols-12"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <textarea id="campaign-whatsapp-text" name="content_json[whatsapp][text]" rows="4" {{ $whatsappSelected && !$whatsappIsOfficialProvider && $whatsappCompositionMode === 'manual' && $whatsappMessageType === 'text' ? '' : 'disabled' }}
+                                class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white @error('content_json.whatsapp.text') border-red-500 @enderror">{{ $whatsappText }}</textarea>
+                            @error('content_json.whatsapp.text')
+                                <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+                            @enderror
+                        </div>
+
+                        <div id="whatsapp-media-wrapper" class="mt-4 {{ $whatsappMessageType === 'media' ? '' : 'hidden' }}">
+                            <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
+                                <div>
+                                    <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">Tipo de mídia <span class="text-red-500">*</span></label>
+                                    <select name="content_json[whatsapp][media][kind]" {{ $whatsappSelected && !$whatsappIsOfficialProvider && $whatsappCompositionMode === 'manual' && $whatsappMessageType === 'media' ? '' : 'disabled' }}
+                                        class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white @error('content_json.whatsapp.media.kind') border-red-500 @enderror">
+                                        <option value="image" @selected($whatsappMediaKind === 'image')>Imagem</option>
+                                        <option value="video" @selected($whatsappMediaKind === 'video')>Vídeo</option>
+                                        <option value="document" @selected($whatsappMediaKind === 'document')>Documento</option>
+                                        <option value="audio" @selected($whatsappMediaKind === 'audio')>Áudio</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label for="whatsapp-media-source" class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">Origem da mídia <span class="text-red-500">*</span></label>
+                                    <select id="whatsapp-media-source" name="content_json[whatsapp][media][source]" {{ $whatsappSelected && !$whatsappIsOfficialProvider && $whatsappCompositionMode === 'manual' && $whatsappMessageType === 'media' ? '' : 'disabled' }}
+                                        class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white @error('content_json.whatsapp.media.source') border-red-500 @enderror">
+                                        <option value="url" @selected($whatsappMediaSource === 'url')>URL</option>
+                                        <option value="upload" @selected($whatsappMediaSource === 'upload')>Upload</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div id="whatsapp-media-url-wrapper" class="mt-4 {{ $whatsappMediaSource === 'url' ? '' : 'hidden' }}">
+                                <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">URL da mídia <span class="text-red-500">*</span></label>
+                                <input type="url" name="content_json[whatsapp][media][url]" value="{{ $whatsappMediaUrl }}" {{ $whatsappSelected && !$whatsappIsOfficialProvider && $whatsappCompositionMode === 'manual' && $whatsappMessageType === 'media' && $whatsappMediaSource === 'url' ? '' : 'disabled' }}
+                                    class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white @error('content_json.whatsapp.media.url') border-red-500 @enderror">
+                            </div>
+                            <div id="whatsapp-media-asset-wrapper" class="mt-4 {{ $whatsappMediaSource === 'upload' ? '' : 'hidden' }}">
+                                <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">Arquivo (upload) <span class="text-red-500">*</span></label>
+                                <input
+                                    id="whatsapp-media-asset-id"
+                                    type="hidden"
+                                    name="content_json[whatsapp][media][asset_id]"
+                                    value="{{ $whatsappMediaAssetId }}"
+                                    {{ $whatsappSelected && !$whatsappIsOfficialProvider && $whatsappCompositionMode === 'manual' && $whatsappMessageType === 'media' && $whatsappMediaSource === 'upload' ? '' : 'disabled' }}
+                                >
+                                <div class="flex flex-col gap-3 sm:flex-row sm:items-center">
+                                    <input
+                                        id="whatsapp-media-upload-file"
+                                        type="file"
+                                        {{ $whatsappSelected && !$whatsappIsOfficialProvider && $whatsappCompositionMode === 'manual' && $whatsappMessageType === 'media' && $whatsappMediaSource === 'upload' ? '' : 'disabled' }}
+                                        class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white @error('content_json.whatsapp.media.asset_id') border-red-500 @enderror"
+                                    >
+                                    <button
+                                        type="button"
+                                        id="whatsapp-media-upload-btn"
+                                        {{ $whatsappSelected && !$whatsappIsOfficialProvider && $whatsappCompositionMode === 'manual' && $whatsappMessageType === 'media' && $whatsappMediaSource === 'upload' ? '' : 'disabled' }}
+                                        class="btn btn-outline whitespace-nowrap inline-flex items-center gap-2"
+                                    >
+                                        <i class="mdi mdi-upload text-sm" aria-hidden="true"></i>
+                                        <span>Enviar arquivo</span>
+                                    </button>
+                                </div>
+                                <p id="whatsapp-media-upload-feedback" class="mt-2 text-xs text-gray-500 dark:text-gray-400">
+                                    @if ($whatsappMediaAssetId)
+                                        Arquivo vinculado (asset_id: {{ $whatsappMediaAssetId }}).
+                                    @endif
+                                </p>
+                                @error('content_json.whatsapp.media.asset_id')
+                                    <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+                                @enderror
+                            </div>
+                            <div class="mt-4">
+                                <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">Legenda</label>
+                                <textarea name="content_json[whatsapp][media][caption]" rows="3" {{ $whatsappSelected && !$whatsappIsOfficialProvider && $whatsappCompositionMode === 'manual' && $whatsappMessageType === 'media' ? '' : 'disabled' }}
+                                    class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white">{{ $whatsappMediaCaption }}</textarea>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
-
             <div>
                 <h3 class="mb-3 text-base font-semibold text-gray-900 dark:text-white">Audiência</h3>
                 <div class="rounded-lg border border-gray-200 p-4 dark:border-gray-700">
@@ -1065,5 +1228,4 @@
         </style>
     @endpush
 @endonce
-
 

@@ -6,12 +6,16 @@ use App\Http\Controllers\Controller;
 use App\Http\Controllers\Tenant\Concerns\HandlesGridRequests;
 use App\Http\Requests\Tenant\StoreCampaignRequest;
 use App\Http\Requests\Tenant\UpdateCampaignRequest;
+use App\Models\Platform\WhatsAppOfficialTemplate;
 use App\Models\Tenant\Campaign;
+use App\Models\Tenant\CampaignTemplate;
 use App\Models\Tenant\CampaignRun;
 use App\Models\Tenant\Gender;
 use App\Models\Tenant\User;
 use App\Services\Tenant\CampaignChannelGate;
+use App\Services\Tenant\CampaignTemplateProviderResolver;
 use App\Support\Tenant\CampaignPatientRules;
+use App\Support\Tenant\CampaignTemplateVariableCatalog;
 use Illuminate\Support\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Schema;
@@ -81,7 +85,7 @@ class CampaignController extends Controller
         ]);
     }
 
-    public function create(CampaignChannelGate $gate)
+    public function create(CampaignChannelGate $gate, CampaignTemplateProviderResolver $providerResolver)
     {
         return view('tenant.campaigns.create', [
             'availableChannels' => $gate->availableChannels(),
@@ -91,6 +95,7 @@ class CampaignController extends Controller
             'ruleOperatorOptions' => CampaignPatientRules::operatorOptions(),
             'ruleFieldOperators' => CampaignPatientRules::fieldOperators(),
             'ruleValueOptions' => $this->campaignRuleValueOptions(),
+            ...$this->campaignWhatsAppTemplateFormContext($providerResolver, null),
         ]);
     }
 
@@ -99,13 +104,14 @@ class CampaignController extends Controller
         $validated = $request->validated();
 
         $channels = $this->extractChannels($request);
-        $type = (string) ($validated['type'] ?? $request->input('type', 'manual'));
+        $type = $this->normalizeCampaignType((string) ($validated['type'] ?? $request->input('type', 'manual')));
         $createdBy = auth('tenant')->id() ?? auth()->id();
+        $status = $this->normalizeCampaignStatusForType($type);
 
         $campaign = Campaign::create($this->onlyExistingCampaignColumns([
             'name' => $validated['name'],
             'type' => $type,
-            'status' => $type === 'automated' ? 'active' : 'draft',
+            'status' => $status,
             'channels_json' => $channels,
             'content_json' => $this->extractJsonPayload($request, $validated, 'content_json'),
             'audience_json' => $this->extractJsonPayload($request, $validated, 'audience_json'),
@@ -117,7 +123,7 @@ class CampaignController extends Controller
             'schedule_weekdays' => $this->extractScheduleWeekdays($request, $type),
             'schedule_times' => $this->extractScheduleTimes($request, $type),
             'timezone' => $this->extractScheduleTimezone($request, $type),
-            'scheduled_at' => $request->input('scheduled_at') ?: null,
+            'scheduled_at' => $this->resolveScheduledAtForPersistence($type),
             'created_by' => $createdBy,
         ]));
 
@@ -175,7 +181,12 @@ class CampaignController extends Controller
         ]);
     }
 
-    public function edit(string $slug, Campaign $campaign, CampaignChannelGate $gate)
+    public function edit(
+        string $slug,
+        Campaign $campaign,
+        CampaignChannelGate $gate,
+        CampaignTemplateProviderResolver $providerResolver
+    )
     {
         return view('tenant.campaigns.edit', [
             'campaign' => $campaign,
@@ -186,17 +197,20 @@ class CampaignController extends Controller
             'ruleOperatorOptions' => CampaignPatientRules::operatorOptions(),
             'ruleFieldOperators' => CampaignPatientRules::fieldOperators(),
             'ruleValueOptions' => $this->campaignRuleValueOptions(),
+            ...$this->campaignWhatsAppTemplateFormContext($providerResolver, $campaign),
         ]);
     }
 
     public function update(UpdateCampaignRequest $request, string $slug, Campaign $campaign)
     {
         $validated = $request->validated();
-        $type = (string) ($validated['type'] ?? $request->input('type', 'manual'));
+        $type = $this->normalizeCampaignType((string) ($validated['type'] ?? $request->input('type', 'manual')));
+        $status = $this->normalizeCampaignStatusForType($type, (string) $campaign->status);
 
         $campaign->update($this->onlyExistingCampaignColumns([
             'name' => $validated['name'],
             'type' => $type,
+            'status' => $status,
             'channels_json' => $this->extractChannels($request),
             'content_json' => $this->extractJsonPayload($request, $validated, 'content_json'),
             'audience_json' => $this->extractJsonPayload($request, $validated, 'audience_json'),
@@ -209,7 +223,7 @@ class CampaignController extends Controller
             'schedule_weekdays' => $this->extractScheduleWeekdays($request, $type),
             'schedule_times' => $this->extractScheduleTimes($request, $type),
             'timezone' => $this->extractScheduleTimezone($request, $type),
-            'scheduled_at' => $request->input('scheduled_at') ?: null,
+            'scheduled_at' => $this->resolveScheduledAtForPersistence($type, $campaign),
         ]));
 
         return redirect()
@@ -270,6 +284,51 @@ class CampaignController extends Controller
         if ($sort['column'] !== 'created_at') {
             $query->orderByDesc('created_at');
         }
+    }
+
+    private function normalizeCampaignType(string $type): string
+    {
+        $normalized = strtolower(trim($type));
+
+        return in_array($normalized, ['manual', 'automated'], true)
+            ? $normalized
+            : 'manual';
+    }
+
+    private function normalizeCampaignStatusForType(string $type, ?string $currentStatus = null): string
+    {
+        $normalizedType = $this->normalizeCampaignType($type);
+        $normalizedStatus = strtolower(trim((string) $currentStatus));
+        $allowedStatuses = ['draft', 'active', 'paused', 'archived', 'blocked'];
+
+        if (!in_array($normalizedStatus, $allowedStatuses, true)) {
+            return $normalizedType === 'automated' ? 'active' : 'draft';
+        }
+
+        if ($normalizedType === 'automated' && $normalizedStatus === 'draft') {
+            return 'active';
+        }
+
+        return $normalizedStatus;
+    }
+
+    private function resolveScheduledAtForPersistence(string $type, ?Campaign $campaign = null): ?Carbon
+    {
+        $normalizedType = $this->normalizeCampaignType($type);
+
+        if ($normalizedType === 'manual') {
+            if ($campaign && $this->normalizeCampaignType((string) $campaign->type) !== 'manual') {
+                return null;
+            }
+
+            return $campaign?->scheduled_at;
+        }
+
+        if ($campaign && $this->normalizeCampaignType((string) $campaign->type) === 'automated') {
+            return $campaign->scheduled_at;
+        }
+
+        return null;
     }
 
     private function formatType(string $type): string
@@ -384,7 +443,7 @@ class CampaignController extends Controller
     private function extractScheduleMode(Request $request, string $type): ?string
     {
         if ($type !== 'automated') {
-            return null;
+            return 'period';
         }
 
         $mode = strtolower(trim((string) $request->input('schedule_mode', 'period')));
@@ -703,23 +762,252 @@ class CampaignController extends Controller
 
     private function campaignTemplateVariables(): array
     {
+        return app(CampaignTemplateVariableCatalog::class)->all();
+    }
+
+    /**
+     * @return array{
+     *     whatsappCampaignProvider:string,
+     *     whatsappProviderType:string,
+     *     officialCampaignTemplates:array<int,array<string,mixed>>,
+     *     unofficialCampaignTemplates:array<int,array<string,mixed>>,
+     *     showLegacyOfficialTemplateWarning:bool,
+     *     whatsappTemplateWarnings:array<int,string>
+     * }
+     */
+    private function campaignWhatsAppTemplateFormContext(
+        CampaignTemplateProviderResolver $providerResolver,
+        ?Campaign $campaign
+    ): array {
+        $provider = $providerResolver->resolveWhatsAppProvider();
+        $isOfficialProvider = $providerResolver->isOfficialWhatsApp();
+
         return [
-            'CLÍNICA' => [
-                ['key' => '{{clinic.name}}', 'description' => 'Nome da clínica'],
-                ['key' => '{{clinic.phone}}', 'description' => 'Telefone da clínica'],
-                ['key' => '{{clinic.email}}', 'description' => 'E-mail da clínica'],
-                ['key' => '{{clinic.address}}', 'description' => 'Endereço da clínica'],
-            ],
-            'PACIENTE / CONTATO' => [
-                ['key' => '{{patient.name}}', 'description' => 'Nome do paciente'],
-                ['key' => '{{patient.phone}}', 'description' => 'Telefone do paciente'],
-                ['key' => '{{patient.email}}', 'description' => 'E-mail do paciente'],
-            ],
-            'LINKS' => [
-                ['key' => '{{links.public_booking}}', 'description' => 'Link para o agendamento público da clínica'],
-                ['key' => '{{links.portal}}', 'description' => 'Link do portal do cliente (se existir)'],
-                ['key' => '{{links.whatsapp}}', 'description' => 'Link de WhatsApp da clínica (se existir)'],
-            ],
+            'whatsappCampaignProvider' => $provider,
+            'whatsappProviderType' => $isOfficialProvider ? 'official' : 'unofficial',
+            'officialCampaignTemplates' => $this->resolveOfficialCampaignTemplates(),
+            'unofficialCampaignTemplates' => $this->resolveUnofficialCampaignTemplates(),
+            'showLegacyOfficialTemplateWarning' => $this->shouldShowLegacyOfficialTemplateWarning($campaign, $isOfficialProvider),
+            'whatsappTemplateWarnings' => $this->resolveCampaignTemplateWarnings($campaign, $isOfficialProvider),
         ];
+    }
+
+    /**
+     * @return array<int,array<string,mixed>>
+     */
+    private function resolveOfficialCampaignTemplates(): array
+    {
+        $tenantId = trim((string) (tenant()?->id ?? ''));
+        if ($tenantId === '') {
+            return [];
+        }
+
+        return WhatsAppOfficialTemplate::query()
+            ->officialProvider()
+            ->forTenant($tenantId)
+            ->approved()
+            ->orderBy('key')
+            ->orderBy('language')
+            ->orderByDesc('version')
+            ->get([
+                'id',
+                'key',
+                'language',
+                'category',
+                'version',
+                'status',
+                'meta_template_name',
+            ])
+            ->map(static fn (WhatsAppOfficialTemplate $template): array => [
+                'id' => (string) $template->id,
+                'name' => (string) $template->key,
+                'language' => (string) $template->language,
+                'category' => (string) $template->category,
+                'status' => (string) $template->status,
+                'version' => (int) $template->version,
+                'meta_template_name' => (string) $template->meta_template_name,
+            ])
+            ->values()
+            ->all();
+    }
+
+    /**
+     * @return array<int,array<string,mixed>>
+     */
+    private function resolveUnofficialCampaignTemplates(): array
+    {
+        return CampaignTemplate::query()
+            ->forWhatsApp()
+            ->unofficial()
+            ->where('is_active', true)
+            ->orderBy('name')
+            ->get(['id', 'name', 'content', 'is_active', 'updated_at'])
+            ->map(static fn (CampaignTemplate $template): array => [
+                'id' => (int) $template->id,
+                'name' => (string) $template->name,
+                'content' => (string) $template->content,
+                'is_active' => (bool) $template->is_active,
+                'updated_at' => $template->updated_at?->toIso8601String(),
+            ])
+            ->values()
+            ->all();
+    }
+
+    private function shouldShowLegacyOfficialTemplateWarning(?Campaign $campaign, bool $isOfficialProvider): bool
+    {
+        if (!$campaign || !$isOfficialProvider) {
+            return false;
+        }
+
+        $channels = $this->normalizeChannelsArray($campaign->channels_json);
+        if (!in_array('whatsapp', $channels, true)) {
+            return false;
+        }
+
+        $whatsapp = data_get($campaign->content_json, 'whatsapp');
+        if (!is_array($whatsapp)) {
+            return false;
+        }
+
+        $compositionMode = strtolower(trim((string) ($whatsapp['composition_mode'] ?? '')));
+        if ($compositionMode === 'template') {
+            return false;
+        }
+
+        $hasLegacyText = trim((string) ($whatsapp['text'] ?? '')) !== '';
+        $hasLegacyMessageType = trim((string) ($whatsapp['message_type'] ?? '')) !== '';
+        $hasLegacyMedia = is_array($whatsapp['media'] ?? null) && (array) ($whatsapp['media'] ?? []) !== [];
+
+        return $hasLegacyText || $hasLegacyMessageType || $hasLegacyMedia;
+    }
+
+    /**
+     * @return array<int,string>
+     */
+    private function resolveCampaignTemplateWarnings(?Campaign $campaign, bool $isOfficialProvider): array
+    {
+        if (!$campaign) {
+            return [];
+        }
+
+        $channels = $this->normalizeChannelsArray($campaign->channels_json);
+        if (!in_array('whatsapp', $channels, true)) {
+            return [];
+        }
+
+        $whatsapp = data_get($campaign->content_json, 'whatsapp');
+        if (!is_array($whatsapp)) {
+            return [];
+        }
+
+        $compositionMode = $this->resolveCampaignWhatsappCompositionMode($whatsapp, $isOfficialProvider);
+        if ($compositionMode !== 'template') {
+            return [];
+        }
+
+        if ($isOfficialProvider) {
+            return $this->resolveOfficialTemplateWarnings($whatsapp);
+        }
+
+        return $this->resolveUnofficialTemplateWarnings($whatsapp);
+    }
+
+    /**
+     * @param array<string,mixed> $whatsapp
+     * @return array<int,string>
+     */
+    private function resolveOfficialTemplateWarnings(array $whatsapp): array
+    {
+        $officialTemplateId = trim((string) ($whatsapp['official_template_id'] ?? ''));
+        if ($officialTemplateId === '') {
+            return ['Selecione um template oficial aprovado para continuar.'];
+        }
+
+        $tenantId = trim((string) (tenant()?->id ?? ''));
+        if ($tenantId === '') {
+            return ['Nao foi possivel validar o template oficial para o tenant atual.'];
+        }
+
+        $template = WhatsAppOfficialTemplate::query()
+            ->officialProvider()
+            ->forTenant($tenantId)
+            ->find($officialTemplateId);
+
+        if (!$template) {
+            return ['O template oficial salvo nesta campanha nao esta mais disponivel para este tenant. Selecione outro template aprovado.'];
+        }
+
+        if (strtolower((string) $template->status) !== WhatsAppOfficialTemplate::STATUS_APPROVED) {
+            return ['O template oficial salvo nesta campanha nao esta aprovado no momento. Selecione outro template aprovado.'];
+        }
+
+        return [];
+    }
+
+    /**
+     * @param array<string,mixed> $whatsapp
+     * @return array<int,string>
+     */
+    private function resolveUnofficialTemplateWarnings(array $whatsapp): array
+    {
+        $templateId = $this->normalizeNullableInt($whatsapp['template_id'] ?? null);
+        if (!$templateId) {
+            return ['Selecione um template nao oficial ativo para continuar.'];
+        }
+
+        $template = CampaignTemplate::query()
+            ->forWhatsApp()
+            ->unofficial()
+            ->find($templateId);
+
+        if (!$template) {
+            return ['O template nao oficial salvo nesta campanha foi removido. Selecione outro template ativo.'];
+        }
+
+        if (!$template->is_active) {
+            return ['O template nao oficial salvo nesta campanha esta inativo. Selecione outro template ativo.'];
+        }
+
+        return [];
+    }
+
+    /**
+     * @param array<string,mixed> $whatsapp
+     */
+    private function resolveCampaignWhatsappCompositionMode(array $whatsapp, bool $isOfficialProvider): string
+    {
+        $mode = strtolower(trim((string) ($whatsapp['composition_mode'] ?? '')));
+        if (in_array($mode, ['manual', 'template'], true)) {
+            return $mode;
+        }
+
+        $hasLegacyText = trim((string) ($whatsapp['text'] ?? '')) !== '';
+        $hasLegacyMessageType = trim((string) ($whatsapp['message_type'] ?? '')) !== '';
+        $hasLegacyMedia = is_array($whatsapp['media'] ?? null) && (array) ($whatsapp['media'] ?? []) !== [];
+
+        if ($hasLegacyText || $hasLegacyMessageType || $hasLegacyMedia) {
+            return 'manual';
+        }
+
+        return $isOfficialProvider ? 'template' : 'manual';
+    }
+
+    private function normalizeNullableInt(mixed $value): ?int
+    {
+        if ($value === null) {
+            return null;
+        }
+
+        if (is_int($value)) {
+            return $value > 0 ? $value : null;
+        }
+
+        $raw = trim((string) $value);
+        if ($raw === '' || !ctype_digit($raw)) {
+            return null;
+        }
+
+        $normalized = (int) $raw;
+        return $normalized > 0 ? $normalized : null;
     }
 }

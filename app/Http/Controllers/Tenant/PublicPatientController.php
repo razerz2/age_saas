@@ -125,9 +125,6 @@ class PublicPatientController extends Controller
             ]);
             
             return back()
-                ->withErrors([
-                    'identifier' => 'Você ainda não possui cadastro na clínica.'
-                ])
                 ->with('patient_not_found', true)
                 ->withInput();
         }
@@ -148,4 +145,3 @@ class PublicPatientController extends Controller
             ->with('success', 'Paciente identificado com sucesso!');
     }
 }
-

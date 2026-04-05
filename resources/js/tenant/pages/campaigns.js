@@ -32,7 +32,274 @@ export function init() {
     initCampaignRunsGrid();
     initCampaignRecipientsGrid();
     initCampaignForm();
+    initCampaignTestRecipientPicker();
     initTemplateVariablesUi();
+}
+
+function initCampaignTestRecipientPicker() {
+    const form = document.querySelector('form[data-campaign-test-form="1"]');
+    if (!form) {
+        return;
+    }
+
+    const searchUrl = String(form.dataset.patientSearchUrl || '').trim();
+    if (!searchUrl) {
+        return;
+    }
+
+    const channelField = form.querySelector('#test-channel');
+    const fallbackChannelInput = form.querySelector('input[name="channel"]');
+    const destinationInput = form.querySelector('#test-destination');
+    const searchInput = form.querySelector('[data-patient-search-input="1"]');
+    const resultsWrapper = form.querySelector('[data-patient-search-results="1"]');
+    const clearButton = form.querySelector('[data-patient-clear="1"]');
+    const selectedCard = form.querySelector('[data-patient-selected-card="1"]');
+
+    const patientIdInput = form.querySelector('[data-patient-id="1"]');
+    const patientNameInput = form.querySelector('[data-patient-name="1"]');
+    const patientCpfInput = form.querySelector('[data-patient-cpf="1"]');
+    const patientPhoneInput = form.querySelector('[data-patient-phone="1"]');
+    const patientEmailInput = form.querySelector('[data-patient-email="1"]');
+
+    const selectedName = form.querySelector('[data-patient-selected-name="1"]');
+    const selectedCpf = form.querySelector('[data-patient-selected-cpf="1"]');
+    const selectedPhone = form.querySelector('[data-patient-selected-phone="1"]');
+    const selectedEmail = form.querySelector('[data-patient-selected-email="1"]');
+
+    if (
+        !searchInput
+        || !resultsWrapper
+        || !clearButton
+        || !selectedCard
+        || !patientIdInput
+        || !patientNameInput
+        || !patientCpfInput
+        || !patientPhoneInput
+        || !patientEmailInput
+        || !destinationInput
+        || !selectedName
+        || !selectedCpf
+        || !selectedPhone
+        || !selectedEmail
+    ) {
+        return;
+    }
+
+    let debounceTimer = null;
+    let requestToken = 0;
+    let currentResults = [];
+
+    const resolveSelectedChannel = () => {
+        if (channelField) {
+            return String(channelField.value || '').trim().toLowerCase();
+        }
+
+        if (fallbackChannelInput) {
+            return String(fallbackChannelInput.value || '').trim().toLowerCase();
+        }
+
+        return '';
+    };
+
+    const normalizePatient = (patient) => ({
+        id: String(patient?.id || '').trim(),
+        name: String(patient?.name || '').trim(),
+        cpf: String(patient?.cpf || '').trim(),
+        phone: String(patient?.phone || '').trim(),
+        email: String(patient?.email || '').trim(),
+    });
+
+    const updateDestinationFromPatient = () => {
+        const patientId = String(patientIdInput.value || '').trim();
+        if (!patientId) {
+            return;
+        }
+
+        const channel = resolveSelectedChannel();
+        if (channel === 'email') {
+            destinationInput.value = String(patientEmailInput.value || '').trim();
+            return;
+        }
+
+        if (channel === 'whatsapp') {
+            destinationInput.value = String(patientPhoneInput.value || '').trim();
+        }
+    };
+
+    const renderSelectedPatientCard = () => {
+        const patientId = String(patientIdInput.value || '').trim();
+        if (!patientId) {
+            selectedCard.classList.add('hidden');
+            return;
+        }
+
+        selectedCard.classList.remove('hidden');
+        selectedName.textContent = patientNameInput.value || '-';
+        selectedCpf.textContent = `CPF: ${patientCpfInput.value || '-'}`;
+        selectedPhone.textContent = `WhatsApp: ${patientPhoneInput.value || '-'}`;
+        selectedEmail.textContent = `E-mail: ${patientEmailInput.value || '-'}`;
+        updateDestinationFromPatient();
+    };
+
+    const clearResults = () => {
+        currentResults = [];
+        resultsWrapper.innerHTML = '';
+        resultsWrapper.classList.add('hidden');
+    };
+
+    const clearSelectedPatient = ({ clearDestination } = { clearDestination: false }) => {
+        patientIdInput.value = '';
+        patientNameInput.value = '';
+        patientCpfInput.value = '';
+        patientPhoneInput.value = '';
+        patientEmailInput.value = '';
+        renderSelectedPatientCard();
+
+        if (clearDestination) {
+            destinationInput.value = '';
+        }
+    };
+
+    const selectPatient = (rawPatient) => {
+        const patient = normalizePatient(rawPatient);
+        if (!patient.id) {
+            return;
+        }
+
+        patientIdInput.value = patient.id;
+        patientNameInput.value = patient.name;
+        patientCpfInput.value = patient.cpf;
+        patientPhoneInput.value = patient.phone;
+        patientEmailInput.value = patient.email;
+
+        searchInput.value = patient.name || '';
+        clearResults();
+        renderSelectedPatientCard();
+    };
+
+    const renderResults = () => {
+        if (currentResults.length === 0) {
+            resultsWrapper.innerHTML = '<p class="px-3 py-2 text-xs text-gray-500 dark:text-gray-300">Nenhum paciente encontrado.</p>';
+            resultsWrapper.classList.remove('hidden');
+            return;
+        }
+
+        resultsWrapper.innerHTML = '';
+        currentResults.forEach((patient, index) => {
+            const subtitle = [patient.cpf, patient.phone, patient.email]
+                .filter((value) => String(value || '').trim() !== '')
+                .join(' · ');
+
+            const button = document.createElement('button');
+            button.type = 'button';
+            button.className = 'w-full border-b border-gray-200 px-3 py-2 text-left last:border-b-0 hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-700/40';
+            button.setAttribute('data-patient-result-index', String(index));
+
+            const title = document.createElement('span');
+            title.className = 'block text-sm font-medium text-gray-900 dark:text-white';
+            title.textContent = patient.name || '-';
+
+            const subtitleElement = document.createElement('span');
+            subtitleElement.className = 'block text-xs text-gray-500 dark:text-gray-300';
+            subtitleElement.textContent = subtitle || '-';
+
+            button.appendChild(title);
+            button.appendChild(subtitleElement);
+            resultsWrapper.appendChild(button);
+        });
+
+        resultsWrapper.classList.remove('hidden');
+    };
+
+    const fetchPatients = async (query) => {
+        const token = ++requestToken;
+        const url = new URL(searchUrl, window.location.origin);
+        url.searchParams.set('q', query);
+        url.searchParams.set('limit', '8');
+
+        const response = await fetch(url.toString(), {
+            method: 'GET',
+            headers: {
+                Accept: 'application/json',
+                'X-Requested-With': 'XMLHttpRequest',
+            },
+            credentials: 'same-origin',
+        });
+
+        if (!response.ok) {
+            throw new Error('Falha ao buscar pacientes.');
+        }
+
+        const payload = await response.json();
+        if (token !== requestToken) {
+            return;
+        }
+
+        const items = Array.isArray(payload?.data) ? payload.data : [];
+        currentResults = items.map((item) => normalizePatient(item)).filter((item) => item.id !== '');
+        renderResults();
+    };
+
+    searchInput.addEventListener('input', () => {
+        const query = String(searchInput.value || '').trim();
+
+        if (debounceTimer) {
+            window.clearTimeout(debounceTimer);
+        }
+
+        if (query.length < 2) {
+            clearResults();
+            return;
+        }
+
+        debounceTimer = window.setTimeout(async () => {
+            try {
+                await fetchPatients(query);
+            } catch (error) {
+                currentResults = [];
+                resultsWrapper.innerHTML = '<p class="px-3 py-2 text-xs text-red-600 dark:text-red-400">Erro ao buscar pacientes.</p>';
+                resultsWrapper.classList.remove('hidden');
+            }
+        }, 250);
+    });
+
+    resultsWrapper.addEventListener('click', (event) => {
+        const button = event.target.closest('[data-patient-result-index]');
+        if (!button) {
+            return;
+        }
+
+        const index = Number.parseInt(button.getAttribute('data-patient-result-index') || '', 10);
+        if (Number.isNaN(index) || !currentResults[index]) {
+            return;
+        }
+
+        selectPatient(currentResults[index]);
+    });
+
+    document.addEventListener('click', (event) => {
+        if (resultsWrapper.classList.contains('hidden')) {
+            return;
+        }
+
+        if (resultsWrapper.contains(event.target) || searchInput.contains(event.target)) {
+            return;
+        }
+
+        clearResults();
+    });
+
+    clearButton.addEventListener('click', () => {
+        clearSelectedPatient({ clearDestination: false });
+        searchInput.value = '';
+        clearResults();
+    });
+
+    if (channelField) {
+        channelField.addEventListener('change', updateDestinationFromPatient);
+    }
+
+    renderSelectedPatientCard();
 }
 
 function initCampaignsGrid() {
@@ -687,6 +954,12 @@ function initCampaignForm() {
 
     const emailSection = form.querySelector('#campaign-email-section');
     const whatsappSection = form.querySelector('#campaign-whatsapp-section');
+    const whatsappCompositionModeSelect = form.querySelector('#whatsapp-composition-mode');
+    const whatsappManualWrapper = form.querySelector('#whatsapp-manual-wrapper');
+    const whatsappTemplateWrapper = form.querySelector('#whatsapp-template-wrapper');
+    const whatsappTemplateFeedback = form.querySelector('#whatsapp-template-feedback');
+    const whatsappOfficialTemplateSelect = form.querySelector('#whatsapp-official-template-id');
+    const whatsappUnofficialTemplateSelect = form.querySelector('#whatsapp-unofficial-template-id');
     const whatsappMessageTypeSelect = form.querySelector('#whatsapp-message-type');
     const whatsappMediaSourceSelect = form.querySelector('#whatsapp-media-source');
     const whatsappTextWrapper = form.querySelector('#whatsapp-text-wrapper');
@@ -725,6 +998,8 @@ function initCampaignForm() {
     const assetUploadUrl = form.dataset.assetUploadUrl || '';
     const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
     const emojiPickerController = initWhatsappEmojiPicker(form, whatsappTextArea);
+    const whatsappProviderType = (whatsappSection?.dataset?.whatsappProviderType || 'unofficial').toLowerCase();
+    const whatsappIsOfficialProvider = whatsappProviderType === 'official';
     const ruleFieldOperatorsMap = parseDataJson(form.dataset.ruleFieldOperators);
     const ruleValueOptionsMap = parseDataJson(form.dataset.ruleValueOptions);
 
@@ -879,23 +1154,44 @@ function initCampaignForm() {
     };
 
     const updateWhatsappMode = (isWhatsappEnabled) => {
+        const compositionModeInput = (whatsappCompositionModeSelect?.value || '').toLowerCase();
+        const compositionMode = whatsappIsOfficialProvider
+            ? 'template'
+            : (compositionModeInput === 'template' ? 'template' : 'manual');
+
+        if (whatsappCompositionModeSelect) {
+            if (whatsappIsOfficialProvider && whatsappCompositionModeSelect.value !== 'template') {
+                whatsappCompositionModeSelect.value = 'template';
+            }
+
+            whatsappCompositionModeSelect.disabled = !isWhatsappEnabled || whatsappIsOfficialProvider;
+        }
+
+        const manualModeEnabled = isWhatsappEnabled && !whatsappIsOfficialProvider && compositionMode === 'manual';
+        const templateModeEnabled = isWhatsappEnabled && compositionMode === 'template';
         const messageType = (whatsappMessageTypeSelect?.value || '').toLowerCase();
         const mediaSource = (whatsappMediaSourceSelect?.value || '').toLowerCase();
-        const isTextModeEnabled = isWhatsappEnabled && messageType === 'text';
+        const isTextModeEnabled = manualModeEnabled && messageType === 'text';
 
+        toggleContainerState(whatsappManualWrapper, manualModeEnabled);
+        toggleContainerState(whatsappTemplateWrapper, templateModeEnabled);
         toggleContainerState(whatsappTextWrapper, isTextModeEnabled);
-        toggleContainerState(whatsappMediaWrapper, isWhatsappEnabled && messageType === 'media');
+        toggleContainerState(whatsappMediaWrapper, manualModeEnabled && messageType === 'media');
         toggleContainerState(
             whatsappMediaUrlWrapper,
-            isWhatsappEnabled && messageType === 'media' && mediaSource === 'url',
+            manualModeEnabled && messageType === 'media' && mediaSource === 'url',
         );
         toggleContainerState(
             whatsappMediaAssetWrapper,
-            isWhatsappEnabled && messageType === 'media' && mediaSource === 'upload',
+            manualModeEnabled && messageType === 'media' && mediaSource === 'upload',
         );
 
         if (!isTextModeEnabled) {
             emojiPickerController?.close();
+        }
+
+        if (!templateModeEnabled) {
+            setFeedback(whatsappTemplateFeedback, '', 'muted');
         }
     };
 
@@ -1345,6 +1641,12 @@ function initCampaignForm() {
         });
     }
 
+    if (whatsappCompositionModeSelect) {
+        whatsappCompositionModeSelect.addEventListener('change', () => {
+            updateWhatsappMode(selectedChannels().includes('whatsapp'));
+        });
+    }
+
     if (whatsappMediaSourceSelect) {
         whatsappMediaSourceSelect.addEventListener('change', () => {
             updateWhatsappMode(selectedChannels().includes('whatsapp'));
@@ -1477,6 +1779,31 @@ function initCampaignForm() {
     form.addEventListener('submit', (event) => {
         const channels = selectedChannels();
         if (!channels.includes('whatsapp')) {
+            return;
+        }
+
+        const compositionModeInput = (whatsappCompositionModeSelect?.value || '').toLowerCase();
+        const compositionMode = whatsappIsOfficialProvider
+            ? 'template'
+            : (compositionModeInput === 'template' ? 'template' : 'manual');
+
+        setFeedback(whatsappTemplateFeedback, '', 'muted');
+
+        if (compositionMode === 'template') {
+            if (whatsappIsOfficialProvider) {
+                const officialTemplateId = String(whatsappOfficialTemplateSelect?.value || '').trim();
+                if (officialTemplateId === '') {
+                    event.preventDefault();
+                    setFeedback(whatsappTemplateFeedback, 'Selecione um template oficial aprovado para salvar a campanha.', 'error');
+                }
+                return;
+            }
+
+            const unofficialTemplateId = String(whatsappUnofficialTemplateSelect?.value || '').trim();
+            if (unofficialTemplateId === '') {
+                event.preventDefault();
+                setFeedback(whatsappTemplateFeedback, 'Selecione um template não oficial para salvar a campanha.', 'error');
+            }
             return;
         }
 

@@ -65,6 +65,7 @@
 
         $dispatchActionsEnabled = $moduleEnabled && !$hasUnavailableChannels;
         $sendTestRoute = workspace_route('tenant.campaigns.sendTest', ['campaign' => $campaign->id]);
+        $testRecipientPatientsSearchRoute = workspace_route('tenant.campaigns.test-recipients.patients');
         $startRoute = workspace_route('tenant.campaigns.start', ['campaign' => $campaign->id]);
         $scheduleRoute = workspace_route('tenant.campaigns.schedule', ['campaign' => $campaign->id]);
         $pauseRoute = workspace_route('tenant.campaigns.pause', ['campaign' => $campaign->id]);
@@ -75,6 +76,13 @@
         $lastAutomationRun = $lastAutomationRun ?? null;
         $nextAutomationRun = $nextAutomationRun ?? null;
         $automationTimezone = $automationTimezone ?? null;
+        $testPatientOld = [
+            'id' => old('patient_id'),
+            'name' => old('patient_name'),
+            'cpf' => old('patient_cpf'),
+            'phone' => old('patient_phone'),
+            'email' => old('patient_email'),
+        ];
     @endphp
 
     <div class="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
@@ -223,7 +231,13 @@
                     </div>
                 @endif
 
-                <form action="{{ $sendTestRoute }}" method="POST" class="rounded-lg border border-gray-200 p-4 dark:border-gray-700">
+                <form
+                    action="{{ $sendTestRoute }}"
+                    method="POST"
+                    class="rounded-lg border border-gray-200 p-4 dark:border-gray-700"
+                    data-campaign-test-form="1"
+                    data-patient-search-url="{{ $testRecipientPatientsSearchRoute }}"
+                >
                     @csrf
                     <h3 class="mb-3 text-sm font-semibold text-gray-900 dark:text-white">Enviar teste</h3>
                     <div class="grid grid-cols-1 gap-3 lg:grid-cols-3">
@@ -254,7 +268,62 @@
                                 class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
                                 {{ $dispatchActionsEnabled ? '' : 'disabled' }}
                             >
+                            @error('destination')
+                                <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+                            @enderror
                         </div>
+                    </div>
+
+                    <div class="mt-4 rounded-lg border border-gray-200 p-3 dark:border-gray-700">
+                        <div class="mb-2 flex items-center justify-between gap-2">
+                            <p class="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">Selecionar paciente</p>
+                            <button
+                                type="button"
+                                class="btn btn-outline btn-sm"
+                                data-patient-clear="1"
+                                {{ $dispatchActionsEnabled ? '' : 'disabled' }}
+                            >
+                                Limpar paciente
+                            </button>
+                        </div>
+
+                        <input type="hidden" name="patient_id" value="{{ $testPatientOld['id'] }}" data-patient-id="1">
+                        <input type="hidden" name="patient_name" value="{{ $testPatientOld['name'] }}" data-patient-name="1">
+                        <input type="hidden" name="patient_cpf" value="{{ $testPatientOld['cpf'] }}" data-patient-cpf="1">
+                        <input type="hidden" name="patient_phone" value="{{ $testPatientOld['phone'] }}" data-patient-phone="1">
+                        <input type="hidden" name="patient_email" value="{{ $testPatientOld['email'] }}" data-patient-email="1">
+
+                        <label for="test-patient-search" class="mb-1 block text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">
+                            Buscar por nome, CPF, telefone ou e-mail
+                        </label>
+                        <input
+                            id="test-patient-search"
+                            type="text"
+                            value=""
+                            placeholder="Digite para buscar paciente..."
+                            class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                            data-patient-search-input="1"
+                            autocomplete="off"
+                            {{ $dispatchActionsEnabled ? '' : 'disabled' }}
+                        >
+                        <div class="mt-1 hidden rounded-md border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800" data-patient-search-results="1"></div>
+
+                        <div class="mt-3 {{ $testPatientOld['id'] ? '' : 'hidden' }}" data-patient-selected-card="1">
+                            <p class="text-sm font-medium text-gray-900 dark:text-white" data-patient-selected-name="1">{{ $testPatientOld['name'] }}</p>
+                            <p class="text-xs text-gray-600 dark:text-gray-300" data-patient-selected-cpf="1">
+                                CPF: {{ $testPatientOld['cpf'] ?: '-' }}
+                            </p>
+                            <p class="text-xs text-gray-600 dark:text-gray-300" data-patient-selected-phone="1">
+                                WhatsApp: {{ $testPatientOld['phone'] ?: '-' }}
+                            </p>
+                            <p class="text-xs text-gray-600 dark:text-gray-300" data-patient-selected-email="1">
+                                E-mail: {{ $testPatientOld['email'] ?: '-' }}
+                            </p>
+                        </div>
+
+                        @error('patient_id')
+                            <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+                        @enderror
                     </div>
 
                     <div class="mt-3">

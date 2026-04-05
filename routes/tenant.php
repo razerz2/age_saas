@@ -56,6 +56,7 @@ use App\Http\Controllers\Tenant\CampaignAssetController;
 use App\Http\Controllers\Tenant\CampaignDispatchController;
 use App\Http\Controllers\Tenant\CampaignRunController;
 use App\Http\Controllers\Tenant\CampaignRecipientController;
+use App\Http\Controllers\Tenant\CampaignTemplateController;
 
 // Settings
 use App\Http\Controllers\Tenant\SettingsController;
@@ -765,6 +766,11 @@ Route::prefix('workspace/{slug}')
         // =====================================================================
         Route::get('campaigns', [CampaignController::class, 'index'])->name('campaigns.index');
         Route::get('campaigns/grid-data', [CampaignController::class, 'gridData'])->name('campaigns.grid');
+        Route::get('campaign-templates', [CampaignTemplateController::class, 'index'])->name('campaign-templates.index');
+        Route::get('campaign-templates/create', [CampaignTemplateController::class, 'create'])->name('campaign-templates.create');
+        Route::post('campaign-templates', [CampaignTemplateController::class, 'store'])->name('campaign-templates.store');
+        Route::get('campaign-templates/{campaignTemplate}/edit', [CampaignTemplateController::class, 'edit'])->name('campaign-templates.edit');
+        Route::put('campaign-templates/{campaignTemplate}', [CampaignTemplateController::class, 'update'])->name('campaign-templates.update');
         Route::get('campaigns/create', [CampaignController::class, 'create'])
             ->middleware(['campaign.module.enabled'])
             ->name('campaigns.create');
@@ -777,6 +783,9 @@ Route::prefix('workspace/{slug}')
         Route::post('campaigns/{campaign}/send-test', [CampaignDispatchController::class, 'sendTest'])
             ->middleware(['campaign.module.enabled'])
             ->name('campaigns.sendTest');
+        Route::get('campaigns/test-recipients/patients', [CampaignDispatchController::class, 'searchTestPatients'])
+            ->middleware(['campaign.module.enabled'])
+            ->name('campaigns.test-recipients.patients');
         Route::post('campaigns/{campaign}/start', [CampaignDispatchController::class, 'start'])
             ->middleware(['campaign.module.enabled'])
             ->name('campaigns.start');
