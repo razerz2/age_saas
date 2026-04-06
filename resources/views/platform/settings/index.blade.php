@@ -440,7 +440,7 @@
                     <div class="row mb-4">
                         <div class="col-md-4">
                             <div class="mb-3">
-                                <label>Logo Padrão para Tenants</label>
+                                <label>Logo Padrão Light para Tenants</label>
                                 @php
                                     $tenantLogo = sysconfig('tenant.default_logo');
                                     $systemDefaultLogo = sysconfig('system.default_logo');
@@ -462,7 +462,7 @@
                                 </div>
                                 <input type="file" class="form-control" name="tenant_default_logo" id="tenant-default-logo-input" 
                                        accept="image/*" onchange="previewImage(this, 'tenant-default-logo-preview')">
-                                <small class="text-muted">Logo usada quando o tenant não tem logo própria</small>
+                                <small class="text-muted">Logo light usada quando o tenant não tem override própria</small>
                             </div>
                             @if($tenantLogo)
                             <div class="mb-3">
@@ -473,10 +473,49 @@
                             </div>
                             @endif
                         </div>
+
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label>Logo Padrão Dark para Tenants</label>
+                                @php
+                                    $tenantLogoDark = sysconfig('tenant.default_logo_dark');
+                                    $tenantLogoLight = sysconfig('tenant.default_logo_light');
+                                    $tenantLogoLegacy = sysconfig('tenant.default_logo');
+                                    $systemDefaultLogo = sysconfig('system.default_logo');
+                                    $systemDefaultLogoUrl = $systemDefaultLogo ? asset('storage/' . $systemDefaultLogo) : asset('connect_plus/assets/images/logos/AllSync-Logo-A.png');
+                                    $tenantLogoDarkCandidate = $tenantLogoDark ?: ($tenantLogoLight ?: $tenantLogoLegacy);
+                                    if ($tenantLogoDarkCandidate) {
+                                        $logoPath = storage_path('app/public/' . $tenantLogoDarkCandidate);
+                                        if (file_exists($logoPath)) {
+                                            $tenantLogoDarkUrl = asset('storage/' . $tenantLogoDarkCandidate) . '?v=' . filemtime($logoPath);
+                                        } else {
+                                            $tenantLogoDarkUrl = $systemDefaultLogoUrl;
+                                        }
+                                    } else {
+                                        $tenantLogoDarkUrl = $systemDefaultLogoUrl;
+                                    }
+                                @endphp
+                                <div class="mb-2">
+                                    <img src="{{ $tenantLogoDarkUrl }}" alt="Logo Tenant Padrão Dark" id="tenant-default-logo-dark-preview" 
+                                         style="max-width: 200px; max-height: 80px; object-fit: contain; border: 1px solid #ddd; padding: 10px; border-radius: 4px;">
+                                </div>
+                                <input type="file" class="form-control" name="tenant_default_logo_dark" id="tenant-default-logo-dark-input" 
+                                       accept="image/*" onchange="previewImage(this, 'tenant-default-logo-dark-preview')">
+                                <small class="text-muted">Logo dark usada no modo escuro quando o tenant não tem override própria</small>
+                            </div>
+                            @if($tenantLogoDark)
+                            <div class="mb-3">
+                                <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeImage('tenant_default_logo_dark')">
+                                    <i class="fas fa-trash me-1"></i> Remover Logo Dark
+                                </button>
+                                <input type="hidden" name="remove_tenant_default_logo_dark" id="remove-tenant-default-logo-dark" value="0">
+                            </div>
+                            @endif
+                        </div>
                         
                         <div class="col-md-4">
                             <div class="mb-3">
-                                <label>Logo Retrátil Padrão para Tenants</label>
+                                <label>Logo Retrátil Padrão Light para Tenants</label>
                                 @php
                                     $tenantLogoMini = sysconfig('tenant.default_logo_mini');
                                     $systemDefaultLogo = sysconfig('system.default_logo');
@@ -505,7 +544,7 @@
                                 </div>
                                 <input type="file" class="form-control" name="tenant_default_logo_mini" id="tenant-default-logo-mini-input" 
                                        accept="image/*" onchange="previewImage(this, 'tenant-default-logo-mini-preview')">
-                                <small class="text-muted">Logo usada no menu retrátil quando o tenant não tem logo_mini própria</small>
+                                <small class="text-muted">Logo retrátil light usada quando o tenant não tem override própria</small>
                             </div>
                             @if($tenantLogoMini)
                             <div class="mb-3">
@@ -513,6 +552,45 @@
                                     <i class="fas fa-trash me-1"></i> Remover Logo Retrátil
                                 </button>
                                 <input type="hidden" name="remove_tenant_default_logo_mini" id="remove-tenant-default-logo-mini" value="0">
+                            </div>
+                            @endif
+                        </div>
+
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label>Logo Retrátil Padrão Dark para Tenants</label>
+                                @php
+                                    $tenantLogoMiniDark = sysconfig('tenant.default_logo_mini_dark');
+                                    $tenantLogoMiniLight = sysconfig('tenant.default_logo_mini_light');
+                                    $tenantLogoMiniLegacy = sysconfig('tenant.default_logo_mini');
+                                    $systemDefaultLogo = sysconfig('system.default_logo');
+                                    $systemDefaultLogoUrl = $systemDefaultLogo ? asset('storage/' . $systemDefaultLogo) : asset('connect_plus/assets/images/logos/AllSync-Logo-A.png');
+                                    $tenantLogoMiniDarkCandidate = $tenantLogoMiniDark ?: ($tenantLogoMiniLight ?: $tenantLogoMiniLegacy);
+                                    if ($tenantLogoMiniDarkCandidate) {
+                                        $logoMiniPath = storage_path('app/public/' . $tenantLogoMiniDarkCandidate);
+                                        if (file_exists($logoMiniPath)) {
+                                            $tenantLogoMiniDarkUrl = asset('storage/' . $tenantLogoMiniDarkCandidate) . '?v=' . filemtime($logoMiniPath);
+                                        } else {
+                                            $tenantLogoMiniDarkUrl = $systemDefaultLogoUrl;
+                                        }
+                                    } else {
+                                        $tenantLogoMiniDarkUrl = $systemDefaultLogoUrl;
+                                    }
+                                @endphp
+                                <div class="mb-2">
+                                    <img src="{{ $tenantLogoMiniDarkUrl }}" alt="Logo Retrátil Tenant Padrão Dark" id="tenant-default-logo-mini-dark-preview" 
+                                         style="max-width: 80px; max-height: 80px; object-fit: contain; border: 1px solid #ddd; padding: 10px; border-radius: 4px;">
+                                </div>
+                                <input type="file" class="form-control" name="tenant_default_logo_mini_dark" id="tenant-default-logo-mini-dark-input" 
+                                       accept="image/*" onchange="previewImage(this, 'tenant-default-logo-mini-dark-preview')">
+                                <small class="text-muted">Logo retrátil dark usada no modo escuro quando o tenant não tem override própria</small>
+                            </div>
+                            @if($tenantLogoMiniDark)
+                            <div class="mb-3">
+                                <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeImage('tenant_default_logo_mini_dark')">
+                                    <i class="fas fa-trash me-1"></i> Remover Logo Retrátil Dark
+                                </button>
+                                <input type="hidden" name="remove_tenant_default_logo_mini_dark" id="remove-tenant-default-logo-mini-dark" value="0">
                             </div>
                             @endif
                         </div>
@@ -1420,9 +1498,10 @@
         }
 
         function removeImage(type) {
-            const removeInput = document.getElementById('remove-' + type);
-            const fileInput = document.getElementById(type.replace('_', '-') + '-input');
-            const previewId = type.replace('_', '-') + '-preview';
+            const normalizedType = type.replace(/_/g, '-');
+            const removeInput = document.getElementById('remove-' + normalizedType);
+            const fileInput = document.getElementById(normalizedType + '-input');
+            const previewId = normalizedType + '-preview';
             const preview = document.getElementById(previewId);
             
             if (removeInput) {
@@ -1443,11 +1522,13 @@
                     'landing-logo': '{{ asset("connect_plus/assets/images/logos/landing-page/AllSync-Logo-LP.png") }}',
                     'landing-favicon': '{{ asset("connect_plus/assets/images/favicon.png") }}',
                     'tenant-default-logo': '{{ asset("connect_plus/assets/images/logos/AllSync-Logo-A.png") }}',
+                    'tenant-default-logo-dark': '{{ asset("connect_plus/assets/images/logos/AllSync-Logo-A.png") }}',
                     'tenant-default-logo-mini': '{{ asset("connect_plus/assets/images/logos/AllSync-Logo-A.png") }}',
+                    'tenant-default-logo-mini-dark': '{{ asset("connect_plus/assets/images/logos/AllSync-Logo-A.png") }}',
                     'tenant-default-favicon': '{{ asset("connect_plus/assets/images/favicon.png") }}'
                 };
                 
-                const key = type.replace('_', '-');
+                const key = normalizedType;
                 if (defaultImages[key]) {
                     preview.src = defaultImages[key];
                 }

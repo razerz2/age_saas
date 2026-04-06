@@ -72,7 +72,11 @@ class SystemSettingsController extends Controller
             'landing.logo' => sysconfig('landing.logo'),
             'landing.favicon' => sysconfig('landing.favicon'),
             'tenant.default_logo' => sysconfig('tenant.default_logo'),
+            'tenant.default_logo_light' => sysconfig('tenant.default_logo_light'),
+            'tenant.default_logo_dark' => sysconfig('tenant.default_logo_dark'),
             'tenant.default_logo_mini' => sysconfig('tenant.default_logo_mini'),
+            'tenant.default_logo_mini_light' => sysconfig('tenant.default_logo_mini_light'),
+            'tenant.default_logo_mini_dark' => sysconfig('tenant.default_logo_mini_dark'),
             'tenant.default_favicon' => sysconfig('tenant.default_favicon'),
             // Configurações de Billing
             'billing.invoice_days_before_due' => sysconfig('billing.invoice_days_before_due', 10),
@@ -252,7 +256,11 @@ class SystemSettingsController extends Controller
             'landing_logo' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:5120',
             'landing_favicon' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg,ico|max:1024',
             'tenant_default_logo' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:5120',
+            'tenant_default_logo_light' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:5120',
+            'tenant_default_logo_dark' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:5120',
             'tenant_default_logo_mini' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:5120',
+            'tenant_default_logo_mini_light' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:5120',
+            'tenant_default_logo_mini_dark' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:5120',
             'tenant_default_favicon' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg,ico|max:1024',
             'remove_system_default_logo' => 'nullable|boolean',
             'remove_system_default_favicon' => 'nullable|boolean',
@@ -261,7 +269,11 @@ class SystemSettingsController extends Controller
             'remove_landing_logo' => 'nullable|boolean',
             'remove_landing_favicon' => 'nullable|boolean',
             'remove_tenant_default_logo' => 'nullable|boolean',
+            'remove_tenant_default_logo_light' => 'nullable|boolean',
+            'remove_tenant_default_logo_dark' => 'nullable|boolean',
             'remove_tenant_default_logo_mini' => 'nullable|boolean',
+            'remove_tenant_default_logo_mini_light' => 'nullable|boolean',
+            'remove_tenant_default_logo_mini_dark' => 'nullable|boolean',
             'remove_tenant_default_favicon' => 'nullable|boolean',
         ]);
 
@@ -354,6 +366,30 @@ class SystemSettingsController extends Controller
                 set_sysconfig('tenant.default_logo', null);
             }
 
+            // Processar logo padrão light para tenants
+            if ($request->hasFile('tenant_default_logo_light')) {
+                $path = $request->file('tenant_default_logo_light')->store('platform/tenant-logos', 'public');
+                set_sysconfig('tenant.default_logo_light', $path);
+            } elseif ($request->input('remove_tenant_default_logo_light') == '1') {
+                $oldLogo = sysconfig('tenant.default_logo_light');
+                if ($oldLogo && Storage::disk('public')->exists($oldLogo)) {
+                    Storage::disk('public')->delete($oldLogo);
+                }
+                set_sysconfig('tenant.default_logo_light', null);
+            }
+
+            // Processar logo padrão dark para tenants
+            if ($request->hasFile('tenant_default_logo_dark')) {
+                $path = $request->file('tenant_default_logo_dark')->store('platform/tenant-logos', 'public');
+                set_sysconfig('tenant.default_logo_dark', $path);
+            } elseif ($request->input('remove_tenant_default_logo_dark') == '1') {
+                $oldLogo = sysconfig('tenant.default_logo_dark');
+                if ($oldLogo && Storage::disk('public')->exists($oldLogo)) {
+                    Storage::disk('public')->delete($oldLogo);
+                }
+                set_sysconfig('tenant.default_logo_dark', null);
+            }
+
             // Processar logo retrátil padrão para tenants
             if ($request->hasFile('tenant_default_logo_mini')) {
                 $path = $request->file('tenant_default_logo_mini')->store('platform/tenant-logos', 'public');
@@ -364,6 +400,30 @@ class SystemSettingsController extends Controller
                     Storage::disk('public')->delete($oldLogoMini);
                 }
                 set_sysconfig('tenant.default_logo_mini', null);
+            }
+
+            // Processar logo retrátil padrão light para tenants
+            if ($request->hasFile('tenant_default_logo_mini_light')) {
+                $path = $request->file('tenant_default_logo_mini_light')->store('platform/tenant-logos', 'public');
+                set_sysconfig('tenant.default_logo_mini_light', $path);
+            } elseif ($request->input('remove_tenant_default_logo_mini_light') == '1') {
+                $oldLogoMini = sysconfig('tenant.default_logo_mini_light');
+                if ($oldLogoMini && Storage::disk('public')->exists($oldLogoMini)) {
+                    Storage::disk('public')->delete($oldLogoMini);
+                }
+                set_sysconfig('tenant.default_logo_mini_light', null);
+            }
+
+            // Processar logo retrátil padrão dark para tenants
+            if ($request->hasFile('tenant_default_logo_mini_dark')) {
+                $path = $request->file('tenant_default_logo_mini_dark')->store('platform/tenant-logos', 'public');
+                set_sysconfig('tenant.default_logo_mini_dark', $path);
+            } elseif ($request->input('remove_tenant_default_logo_mini_dark') == '1') {
+                $oldLogoMini = sysconfig('tenant.default_logo_mini_dark');
+                if ($oldLogoMini && Storage::disk('public')->exists($oldLogoMini)) {
+                    Storage::disk('public')->delete($oldLogoMini);
+                }
+                set_sysconfig('tenant.default_logo_mini_dark', null);
             }
 
             // Processar favicon padrão para tenants

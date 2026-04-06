@@ -20,44 +20,33 @@ class TenantBranding
         $tenantLogoMiniDark = (string) self::tenantSetting('appearance.logo_mini_dark', '');
         $tenantFavicon = (string) self::tenantSetting('appearance.favicon', '');
 
-        $platformLogoLight = (string) self::sysConfig(
-            'platform.default_logo_light',
-            self::sysConfig('tenant.default_logo_light', self::sysConfig('tenant.default_logo', ''))
-        );
-        $platformLogoDark = (string) self::sysConfig(
-            'platform.default_logo_dark',
-            self::sysConfig('tenant.default_logo_dark', '')
-        );
-        $platformLogoMiniLight = (string) self::sysConfig(
-            'platform.default_logo_mini_light',
-            self::sysConfig('tenant.default_logo_mini_light', self::sysConfig('tenant.default_logo_mini', ''))
-        );
-        $platformLogoMiniDark = (string) self::sysConfig(
-            'platform.default_logo_mini_dark',
-            self::sysConfig('tenant.default_logo_mini_dark', '')
-        );
-        $platformFavicon = (string) self::sysConfig(
-            'platform.default_favicon',
-            self::sysConfig('tenant.default_favicon', '')
-        );
+        $platformLogoLegacy = (string) self::sysConfig('tenant.default_logo', self::sysConfig('platform.default_logo', ''));
+        $platformLogoLight = (string) self::sysConfig('tenant.default_logo_light', self::sysConfig('platform.default_logo_light', ''));
+        $platformLogoDark = (string) self::sysConfig('tenant.default_logo_dark', self::sysConfig('platform.default_logo_dark', ''));
+
+        $platformLogoMiniLegacy = (string) self::sysConfig('tenant.default_logo_mini', self::sysConfig('platform.default_logo_mini', ''));
+        $platformLogoMiniLight = (string) self::sysConfig('tenant.default_logo_mini_light', self::sysConfig('platform.default_logo_mini_light', ''));
+        $platformLogoMiniDark = (string) self::sysConfig('tenant.default_logo_mini_dark', self::sysConfig('platform.default_logo_mini_dark', ''));
+
+        $platformFavicon = (string) self::sysConfig('tenant.default_favicon', self::sysConfig('platform.default_favicon', ''));
 
         $logoLightUrl = self::firstAvailableUrl(
-            [$tenantLogoLight, $platformLogoLight],
+            [$tenantLogoLight, $platformLogoLight, $platformLogoLegacy],
             asset('tailadmin/assets/images/logo/logo.svg')
         );
 
         $logoDarkUrl = self::firstAvailableUrl(
-            [$tenantLogoDark, $tenantLogoLight, $platformLogoDark, $platformLogoLight],
+            [$tenantLogoDark, $platformLogoDark, $platformLogoLight, $platformLogoLegacy],
             asset('tailadmin/assets/images/logo/logo-dark.svg')
         );
 
         $logoMiniLightUrl = self::firstAvailableUrl(
-            [$tenantLogoMiniLight, $platformLogoMiniLight, $platformLogoLight],
+            [$tenantLogoMiniLight, $platformLogoMiniLight, $platformLogoMiniLegacy],
             asset('tailadmin/assets/images/logo/logo-icon.svg')
         );
 
         $logoMiniDarkUrl = self::firstAvailableUrl(
-            [$tenantLogoMiniDark, $tenantLogoMiniLight, $platformLogoMiniDark, $platformLogoMiniLight, $platformLogoDark, $platformLogoLight],
+            [$tenantLogoMiniDark, $platformLogoMiniDark, $platformLogoMiniLight, $platformLogoMiniLegacy],
             asset('tailadmin/assets/images/logo/logo-icon.svg')
         );
 
