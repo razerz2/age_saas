@@ -13,8 +13,9 @@
         :root { color-scheme: light; }
         html, body { color-scheme: light; }
     </style>
+    @php($branding = tenant_branding())
     <title>@yield('title', 'Agendamento | ' . ($tenant->trade_name ?? $tenant->legal_name ?? 'Sistema'))</title>
-    <link rel="icon" href="{{ asset('tailadmin/src/favicon.ico') }}">
+    <link rel="icon" href="{{ $branding['favicon_url'] }}">
     <link href="{{ asset('tailadmin/assets/css/style.css') }}" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@mdi/font@7.4.47/css/materialdesignicons.min.css">
     @vite([

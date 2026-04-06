@@ -49,34 +49,11 @@
         $professionalLabelSingular = 'Profissional';
     }
 
-    $logoLightPath = tenant_setting('appearance.logo_light', tenant_setting('appearance.logo', ''));
-    $logoDarkPath = tenant_setting('appearance.logo_dark', '');
-    $logoMiniLightPath = tenant_setting('appearance.logo_mini_light', tenant_setting('appearance.logo_mini', ''));
-    $logoMiniDarkPath = tenant_setting('appearance.logo_mini_dark', '');
-
-    $logoVersion = function (?string $path): string {
-        if (empty($path)) {
-            return '';
-        }
-        try {
-            return '?v=' . Storage::disk('public')->lastModified($path);
-        } catch (\Throwable $e) {
-            return '';
-        }
-    };
-
-    $logoLightUrl = $logoLightPath
-        ? Storage::url($logoLightPath) . $logoVersion($logoLightPath)
-        : asset('tailadmin/assets/images/logo/logo.svg');
-    $logoDarkUrl = $logoDarkPath
-        ? Storage::url($logoDarkPath) . $logoVersion($logoDarkPath)
-        : $logoLightUrl;
-    $logoMiniLightUrl = $logoMiniLightPath
-        ? Storage::url($logoMiniLightPath) . $logoVersion($logoMiniLightPath)
-        : asset('tailadmin/assets/images/logo/logo-icon.svg');
-    $logoMiniDarkUrl = $logoMiniDarkPath
-        ? Storage::url($logoMiniDarkPath) . $logoVersion($logoMiniDarkPath)
-        : $logoMiniLightUrl;
+    $branding = tenant_branding();
+    $logoLightUrl = $branding['logo_light_url'];
+    $logoDarkUrl = $branding['logo_dark_url'];
+    $logoMiniLightUrl = $branding['logo_mini_light_url'];
+    $logoMiniDarkUrl = $branding['logo_mini_dark_url'];
 @endphp
 
 <aside

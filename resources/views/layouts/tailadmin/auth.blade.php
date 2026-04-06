@@ -7,7 +7,9 @@
       content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0"
     />
     <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    @php($branding = tenant_branding())
     <title>@yield('title', 'Login | TailAdmin')</title>
+    <link rel="icon" href="{{ $branding['favicon_url'] }}">
     <link href="{{ asset('tailadmin/assets/css/style.css') }}" rel="stylesheet">
     @vite([
         'resources/css/tenant/app.css',

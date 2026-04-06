@@ -1,9 +1,10 @@
+@php($branding = tenant_branding())
 <aside
     class="z-50 flex w-64 flex-col bg-white shadow-lg dark:bg-gray-900"
 >
     <div class="flex items-center gap-2 px-6 py-4 border-b border-gray-200 dark:border-gray-700">
         <a href="{{ route('patient.dashboard', ['slug' => request()->route('slug')]) }}" class="flex items-center gap-2">
-            <img src="{{ asset('tailadmin/assets/images/logo/logo.svg') }}" alt="Logo" class="h-8 w-auto">
+            <img src="{{ $branding['logo_light_url'] }}" alt="Logo" class="h-8 w-auto">
             <span class="text-sm font-semibold text-gray-900 dark:text-white">Portal do Paciente</span>
         </a>
     </div>

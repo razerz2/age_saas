@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\Tenant\TenantSetting;
+use App\Support\TenantBranding;
 use App\Services\Tenant\ProfessionalLabelService;
 
 if (!function_exists('professional_label_singular')) {
@@ -90,6 +91,19 @@ if (!function_exists('tenant_setting')) {
     function tenant_setting(string $key, $default = null)
     {
         return TenantSetting::get($key, $default);
+    }
+}
+
+if (!function_exists('tenant_branding')) {
+    function tenant_branding(?string $key = null, $default = null)
+    {
+        $branding = TenantBranding::resolve();
+
+        if ($key === null) {
+            return $branding;
+        }
+
+        return $branding[$key] ?? $default;
     }
 }
 

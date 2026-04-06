@@ -3,10 +3,11 @@
 @section('title', 'Login - Portal do Paciente')
 
 @section('content')
+    @php($branding = tenant_branding())
     <div class="min-h-screen flex items-center justify-center px-4 py-8 bg-gray-50">
         <div class="w-full max-w-md">
             <div class="mb-8 text-center">
-                <img src="{{ asset('tailadmin/assets/images/logo/logo.svg') }}" alt="Logo" class="mx-auto h-10 w-auto mb-4">
+                <img src="{{ $branding['logo_light_url'] }}" alt="Logo" class="mx-auto h-10 w-auto mb-4">
                 <h1 class="text-2xl font-bold text-gray-900">Portal do Paciente</h1>
                 <p class="mt-1 text-sm text-gray-600">Entre para acessar seus agendamentos e notificações.</p>
             </div>
@@ -72,4 +73,3 @@
         </div>
     </div>
 @endsection
-

@@ -4,11 +4,12 @@
 @section('page', 'auth')
 
 @section('content')
+@php($branding = tenant_branding())
 <div class="min-h-screen flex items-center justify-center px-4">
     <div class="max-w-md w-full">
         <!-- Logo -->
         <div class="text-center mb-8">
-            <img src="{{ asset('tailadmin/assets/images/logo/logo.svg') }}" alt="Logo" class="mx-auto h-12 w-auto">
+            <img src="{{ $branding['logo_light_url'] }}" alt="Logo" class="mx-auto h-12 w-auto">
         </div>
 
         @if (!$tenant)

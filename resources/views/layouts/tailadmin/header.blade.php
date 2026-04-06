@@ -1,22 +1,7 @@
 @php
-    $headerLogoLightPath = tenant_setting('appearance.logo_light', tenant_setting('appearance.logo', ''));
-    $headerLogoDarkPath = tenant_setting('appearance.logo_dark', '');
-    $headerLogoVersion = function (?string $path): string {
-        if (empty($path)) {
-            return '';
-        }
-        try {
-            return '?v=' . Storage::disk('public')->lastModified($path);
-        } catch (\Throwable $e) {
-            return '';
-        }
-    };
-    $headerLogoLightUrl = $headerLogoLightPath
-        ? Storage::url($headerLogoLightPath) . $headerLogoVersion($headerLogoLightPath)
-        : asset('tailadmin/assets/images/logo/logo.svg');
-    $headerLogoDarkUrl = $headerLogoDarkPath
-        ? Storage::url($headerLogoDarkPath) . $headerLogoVersion($headerLogoDarkPath)
-        : $headerLogoLightUrl;
+    $branding = tenant_branding();
+    $headerLogoLightUrl = $branding['logo_light_url'];
+    $headerLogoDarkUrl = $branding['logo_dark_url'];
     $headerTenant = tenant();
     $headerTenantSlug = request()->route('slug')
         ?? session('tenant_slug')

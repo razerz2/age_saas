@@ -7,6 +7,7 @@
 @endpush
 
 @section('content')
+    @php($branding = tenant_branding())
     <div class="container-scroller">
         <div class="container-fluid page-body-wrapper full-page-wrapper">
             <div class="content-wrapper d-flex align-items-center auth">
@@ -16,7 +17,7 @@
 
                             {{-- LOGO --}}
                             <div class="brand-logo text-center mb-4">
-                                <img src="{{ asset('tailadmin/assets/images/logo/logo.svg') }}" alt="Logo">
+                                <img src="{{ $branding['logo_light_url'] }}" alt="Logo">
                             </div>
 
                             {{-- CONTEÚDO DAS PÁGINAS --}}
@@ -29,4 +30,3 @@
         </div>
     </div>
 @endsection
-
