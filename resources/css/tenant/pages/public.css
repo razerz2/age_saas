@@ -136,3 +136,51 @@
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
     padding: 2rem;
 }
+
+/* iOS Safari only: public booking flow typography/readability tuning */
+html.ios-safari body[data-public-flow="booking"][data-page="public"] {
+    -webkit-text-size-adjust: 100%;
+    text-rendering: optimizeLegibility;
+    font-family: "Outfit", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+html.ios-safari body[data-public-flow="booking"][data-page="public"] h1,
+html.ios-safari body[data-public-flow="booking"][data-page="public"] h2,
+html.ios-safari body[data-public-flow="booking"][data-page="public"] h3 {
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    color: #0f172a;
+}
+
+html.ios-safari body[data-public-flow="booking"][data-page="public"] label {
+    font-weight: 600;
+    color: #1e293b;
+}
+
+html.ios-safari body[data-public-flow="booking"][data-page="public"] .text-sm.font-semibold,
+html.ios-safari body[data-public-flow="booking"][data-page="public"] .text-xs.font-semibold {
+    font-weight: 700;
+}
+
+html.ios-safari body[data-public-flow="booking"][data-page="public"] .text-slate-500 {
+    color: #475569;
+}
+
+html.ios-safari body[data-public-flow="booking"][data-page="public"] .text-slate-600,
+html.ios-safari body[data-public-flow="booking"][data-page="public"] .text-slate-700 {
+    color: #334155;
+}
+
+html.ios-safari body[data-public-flow="booking"][data-page="public"] input,
+html.ios-safari body[data-public-flow="booking"][data-page="public"] select,
+html.ios-safari body[data-public-flow="booking"][data-page="public"] textarea {
+    font-size: 16px;
+    line-height: 1.4;
+    font-weight: 500;
+    color: #0f172a;
+}
+
+html.ios-safari body[data-public-flow="booking"][data-page="public"] .btn,
+html.ios-safari body[data-public-flow="booking"][data-page="public"] button {
+    font-weight: 600;
+}

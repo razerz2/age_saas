@@ -13,7 +13,30 @@
         :root { color-scheme: light; }
         html, body { color-scheme: light; }
     </style>
+    <script>
+        (function () {
+            var ua = window.navigator.userAgent || '';
+            var vendor = window.navigator.vendor || '';
+            var platform = window.navigator.platform || '';
+            var maxTouchPoints = window.navigator.maxTouchPoints || 0;
+            var isIOSDevice = /iP(hone|ad|od)/.test(ua) || (platform === 'MacIntel' && maxTouchPoints > 1);
+            var hasSafariVersionToken = /Version\/[\d.]+.*Safari/i.test(ua);
+            var isExcludedIOSBrowser = /CriOS|FxiOS|EdgiOS|OPiOS|DuckDuckGo|YaBrowser|GSA|OPT|Vivaldi|Focus/i.test(ua);
+            var isSafari = /Apple/i.test(vendor) && hasSafariVersionToken && !isExcludedIOSBrowser;
+
+            if (isIOSDevice && isSafari) {
+                document.documentElement.classList.add('ios-safari');
+            }
+        })();
+    </script>
     @php($branding = tenant_branding())
+    @php($isPublicBookingFlow = request()->routeIs(
+        'public.patient.identify',
+        'public.patient.register',
+        'public.appointment.create',
+        'public.appointment.show',
+        'public.appointment.success'
+    ))
     <title>@yield('title', 'Agendamento | ' . ($tenant->trade_name ?? $tenant->legal_name ?? 'Sistema'))</title>
     <link rel="icon" href="{{ $branding['favicon_url'] }}">
     <link href="{{ asset('tailadmin/assets/css/style.css') }}" rel="stylesheet">
@@ -27,7 +50,11 @@
         [x-cloak] { display: none !important; }
     </style>
 </head>
-<body class="bg-gray-50" data-page="@yield('page', 'public')">
+<body
+    class="bg-gray-50"
+    data-page="@yield('page', 'public')"
+    data-public-flow="{{ $isPublicBookingFlow ? 'booking' : 'generic' }}"
+>
     <!-- ===== Preloader Start ===== -->
     <div
         x-data="{ loaded: true }"
