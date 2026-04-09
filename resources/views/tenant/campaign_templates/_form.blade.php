@@ -80,10 +80,10 @@
             id="campaign-template-variables-json-text"
             name="variables_json_text"
             rows="4"
-            placeholder="{{ '{{patient.name}}' }}&#10;{{ '{{clinic.name}}' }}"
+            placeholder="@{{patient.name}}&#10;@{{clinic.name}}"
             class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white @error('variables_json') border-red-500 @enderror"
         >{{ $variablesTextValue }}</textarea>
-        <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Informe uma variável por linha. Exemplo: <code>{{ '{{patient.name}}' }}</code></p>
+        <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Informe uma variável por linha. Exemplo: <code>@{{patient.name}}</code></p>
         @error('variables_json')
             <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
         @enderror
