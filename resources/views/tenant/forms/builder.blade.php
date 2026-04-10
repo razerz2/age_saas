@@ -38,6 +38,9 @@
                         </ol>
                     </nav>
                 </div>
+                <div class="flex-shrink-0">
+                    <x-help-button module="forms" />
+                </div>
             </div>
         </div>
 

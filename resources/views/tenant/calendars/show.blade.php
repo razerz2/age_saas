@@ -12,7 +12,7 @@
 
     <!-- Page Header -->
     <div class="page-header mb-6">
-        <div class="flex items-center justify-between">
+        <div class="flex items-center justify-between gap-3">
             <div>
                 <h1 class="text-2xl font-semibold text-gray-900 dark:text-white mb-2 flex items-center">
                     <x-icon name="calendar-outline" class="w-6 h-6 mr-2 text-blue-600" />
@@ -40,6 +40,9 @@
                         </li>
                     </ol>
                 </nav>
+            </div>
+            <div class="flex-shrink-0">
+                <x-help-button module="calendars" />
             </div>
         </div>
     </div>

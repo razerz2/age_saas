@@ -3,19 +3,36 @@
 @php
     // Mapeamento de módulos para seções do manual
     $manualSections = [
-        'users' => 'estrutura-local',
-        'doctors' => 'medicos',
-        'specialties' => 'medicos',
+        'users' => 'usuarios-e-permissoes',
+        'doctors' => 'usuarios-e-permissoes',
+        'specialties' => 'especialidades',
         'patients' => 'pacientes',
-        'calendars' => 'calendarios',
-        'business-hours' => 'calendarios',
-        'appointment-types' => 'calendarios',
+        'calendars' => 'agenda-profissional',
+        'business-hours' => 'agenda-profissional',
+        'appointment-types' => 'agenda-profissional',
+        'agenda-settings' => 'agenda-profissional',
+        'agenda_settings' => 'agenda-profissional',
+        'doctor-settings' => 'agenda-profissional',
+        'doctor_settings' => 'agenda-profissional',
         'appointments' => 'agendamentos',
+        'recurring-appointments' => 'agendamentos-recorrentes',
+        'recurring_appointments' => 'agendamentos-recorrentes',
+        'medical-appointments' => 'atendimento',
+        'medical_appointments' => 'atendimento',
+        'online-appointments' => 'consultas-online',
+        'online_appointments' => 'consultas-online',
+        'campaigns' => 'campanhas',
+        'campaign-templates' => 'templates-campanhas',
+        'campaign_templates' => 'templates-campanhas',
         'forms' => 'formularios',
-        'integrations' => 'integracao',
-        'settings' => 'configuracao-inicial',
+        'responses' => 'respostas',
+        'integrations' => 'integracoes-e-sincronizacao',
+        'calendar-sync' => 'integracoes-e-sincronizacao',
+        'calendar_sync' => 'integracoes-e-sincronizacao',
+        'reports' => 'relatorios',
+        'settings' => 'configuracoes',
     ];
-    
+
     $section = $manualSections[$module] ?? null;
     $manualUrl = route('landing.manual') . ($section ? '#' . $section : '');
 @endphp
@@ -30,4 +47,3 @@
         Ajuda
     </a>
 @endif
-

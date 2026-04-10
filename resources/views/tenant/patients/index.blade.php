@@ -7,7 +7,7 @@
 <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6">
     <!-- Page Header -->
     <div class="mb-6">
-        <div class="flex items-center justify-between">
+        <div class="flex items-center justify-between gap-3">
             <div>
                 <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Pacientes</h1>
                 <nav class="flex mt-2" aria-label="Breadcrumb">
@@ -27,10 +27,13 @@
                     </ol>
                 </nav>
             </div>
-            <a href="{{ workspace_route('tenant.patients.create') }}" dusk="patients-new-button" class="btn btn-primary inline-flex items-center">
-                <x-icon name="plus" size="text-sm" class="mr-2" />
-                Novo Paciente
-            </a>
+            <div class="flex items-center gap-2">
+                <x-help-button module="patients" />
+                <a href="{{ workspace_route('tenant.patients.create') }}" dusk="patients-new-button" class="btn btn-primary inline-flex items-center">
+                    <x-icon name="plus" size="text-sm" class="mr-2" />
+                    Novo Paciente
+                </a>
+            </div>
         </div>
     </div>
 

@@ -29,7 +29,7 @@
 
 <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6">
     <div class="mb-6">
-        <div class="flex items-center justify-between">
+        <div class="flex items-center justify-between gap-3">
             <div>
                 <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Editar Agenda do Profissional</h1>
                 <nav class="flex mt-2" aria-label="Breadcrumb">
@@ -56,10 +56,13 @@
                 </nav>
                 <p class="text-sm text-gray-600 dark:text-gray-400 mt-2">Profissional: {{ $doctorName }}</p>
             </div>
-            <a href="{{ workspace_route('tenant.agenda-settings.show', $calendar->id) }}" class="btn btn-outline inline-flex items-center">
-                <x-icon name="eye-outline" class="w-4 h-4 mr-2" />
-                Visualizar
-            </a>
+            <div class="flex items-center gap-2">
+                <x-help-button module="agenda-settings" />
+                <a href="{{ workspace_route('tenant.agenda-settings.show', $calendar->id) }}" class="btn btn-outline inline-flex items-center">
+                    <x-icon name="eye-outline" class="w-4 h-4 mr-2" />
+                    Visualizar
+                </a>
+            </div>
         </div>
     </div>
 

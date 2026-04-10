@@ -5,7 +5,7 @@
 
 @section('content')
     <div class="mb-6">
-        <div class="flex items-center justify-between">
+        <div class="flex items-center justify-between gap-3">
             <div>
                 <h1 class="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
                     <x-icon name="stethoscope" size="text-xl" class="text-blue-600" />
@@ -32,6 +32,9 @@
                         </li>
                     </ol>
                 </nav>
+            </div>
+            <div class="flex-shrink-0">
+                <x-help-button module="doctors" />
             </div>
         </div>
     </div>

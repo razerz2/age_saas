@@ -15,7 +15,7 @@
 
     <!-- Page Header -->
     <div class="mb-6">
-        <div class="flex items-center justify-between">
+        <div class="flex items-center justify-between gap-3">
             <div>
                 <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Tipos de Consulta</h1>
                 <nav class="flex mt-2" aria-label="Breadcrumb">
@@ -35,10 +35,13 @@
                     </ol>
                 </nav>
             </div>
-            <a href="{{ workspace_route('tenant.appointment-types.create') }}" class="btn btn-primary">
-                <x-icon name="plus" class="w-4 h-4 mr-2" />
-                Novo
-            </a>
+            <div class="flex items-center gap-2">
+                <x-help-button module="appointment-types" />
+                <a href="{{ workspace_route('tenant.appointment-types.create') }}" class="btn btn-primary">
+                    <x-icon name="plus" class="w-4 h-4 mr-2" />
+                    Novo
+                </a>
+            </div>
         </div>
     </div>
 

@@ -33,6 +33,9 @@
                         </ol>
                     </nav>
                 </div>
+                <div class="flex-shrink-0">
+                    <x-help-button module="responses" />
+                </div>
             </div>
         </div>
 

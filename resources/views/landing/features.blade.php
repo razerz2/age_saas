@@ -1,7 +1,7 @@
 @extends('landing.layout')
 
 @section('title', 'Funcionalidades Completas - Sistema de Agendamentos')
-@section('description', 'Conheça todas as funcionalidades do sistema completo de agendamentos para clínicas e profissionais de saúde.')
+@section('description', 'Conheça as funcionalidades do sistema de agendamentos para clínicas e profissionais de saúde, com operação, comunicação e agenda em um só lugar.')
 
 @section('content')
     <!-- Hero Section -->
@@ -12,8 +12,8 @@
                     Funcionalidades <span class="text-blue-600">Completas</span>
                 </h1>
                 <p class="text-xl text-gray-600 mb-8 max-w-3xl mx-auto">
-                    Conheça todas as funcionalidades do sistema completo de agendamentos para clínicas, 
-                    psicólogos, odontologias e profissionais de saúde.
+                    Conheça as funcionalidades do sistema para clínicas, consultórios e profissionais de saúde,
+                    com agenda, atendimento, formulários, campanhas e relatórios em um único ambiente.
                 </p>
             </div>
         </div>
@@ -23,8 +23,7 @@
     <section class="py-16 lg:py-24 bg-white">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                
-                <!-- Dashboard -->
+
                 <div class="bg-gray-50 rounded-lg p-8 hover:shadow-lg transition-shadow">
                     <div class="w-14 h-14 bg-blue-100 rounded-lg flex items-center justify-center mb-6">
                         <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -33,52 +32,43 @@
                     </div>
                     <h3 class="text-xl font-bold text-gray-900 mb-3">Dashboard</h3>
                     <p class="text-gray-600 mb-4">
-                        <strong>Visão geral completa:</strong> Visualize estatísticas em tempo real sobre agendamentos, 
-                        pacientes, médicos e receita da clínica.
+                        <strong>Visão operacional do Tenant:</strong> acompanhe indicadores de uso, rotina de agendamentos e acessos rápidos aos módulos principais.
                     </p>
                     <p class="text-sm text-gray-500">
-                        Métricas importantes, gráficos de desempenho e indicadores-chave de performance (KPIs) 
-                        para tomar decisões baseadas em dados.
+                        Um ponto central para abrir o dia de trabalho, navegar pelo menu e acompanhar o que precisa de ação.
                     </p>
                 </div>
 
-                <!-- Gerenciamento de Usuários -->
                 <div class="bg-gray-50 rounded-lg p-8 hover:shadow-lg transition-shadow">
                     <div class="w-14 h-14 bg-blue-100 rounded-lg flex items-center justify-center mb-6">
                         <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
                         </svg>
                     </div>
-                    <h3 class="text-xl font-bold text-gray-900 mb-3">Gerenciamento de Usuários</h3>
+                    <h3 class="text-xl font-bold text-gray-900 mb-3">Usuários e Permissões</h3>
                     <p class="text-gray-600 mb-4">
-                        <strong>Controle total:</strong> Gerencie usuários do sistema com diferentes níveis de acesso 
-                        e permissões por módulo.
+                        <strong>Controle de acesso por papel:</strong> organize administradores, profissionais e usuários operacionais com permissões por módulo.
                     </p>
                     <p class="text-sm text-gray-500">
-                        Sistema de roles (admin, doctor, user) com filtros automáticos e permissões granulares 
-                        para garantir segurança e organização.
+                        O sistema trabalha com roles e filtros de acesso para manter cada pessoa focada apenas no que precisa operar.
                     </p>
                 </div>
 
-                <!-- Médicos e Especialidades -->
                 <div class="bg-gray-50 rounded-lg p-8 hover:shadow-lg transition-shadow">
                     <div class="w-14 h-14 bg-blue-100 rounded-lg flex items-center justify-center mb-6">
                         <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                         </svg>
                     </div>
-                    <h3 class="text-xl font-bold text-gray-900 mb-3">Médicos e Especialidades</h3>
+                    <h3 class="text-xl font-bold text-gray-900 mb-3">Profissionais e Especialidades</h3>
                     <p class="text-gray-600 mb-4">
-                        <strong>Cadastro completo:</strong> Gerencie profissionais de saúde com personalização de labels, 
-                        assinatura digital e campos de registro personalizados.
+                        <strong>Cadastros clínicos organizados:</strong> vincule profissionais, especialidades e dados necessários para atendimento e agenda.
                     </p>
                     <p class="text-sm text-gray-500">
-                        Suporte para diferentes tipos de profissionais (médicos, dentistas, psicólogos) com 
-                        personalização de terminologia e múltiplas especialidades por profissional.
+                        O produto suporta terminologia personalizada para diferentes áreas da saúde e organização por especialidade.
                     </p>
                 </div>
 
-                <!-- Pacientes -->
                 <div class="bg-gray-50 rounded-lg p-8 hover:shadow-lg transition-shadow">
                     <div class="w-14 h-14 bg-blue-100 rounded-lg flex items-center justify-center mb-6">
                         <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -87,16 +77,13 @@
                     </div>
                     <h3 class="text-xl font-bold text-gray-900 mb-3">Pacientes</h3>
                     <p class="text-gray-600 mb-4">
-                        <strong>Cadastro completo:</strong> Gerencie pacientes com dados completos, histórico de atendimentos 
-                        e possibilidade de acesso ao portal.
+                        <strong>Cadastro completo:</strong> mantenha dados pessoais, contatos e vínculo com agendamentos, formulários e portal do paciente.
                     </p>
                     <p class="text-sm text-gray-500">
-                        Cadastro com CPF, dados pessoais, contatos e habilitação de login no portal do paciente 
-                        com credenciais enviadas automaticamente.
+                        Uma base organizada para atendimento, comunicação e acompanhamento da jornada do paciente.
                     </p>
                 </div>
 
-                <!-- Calendários -->
                 <div class="bg-gray-50 rounded-lg p-8 hover:shadow-lg transition-shadow">
                     <div class="w-14 h-14 bg-blue-100 rounded-lg flex items-center justify-center mb-6">
                         <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -105,16 +92,28 @@
                     </div>
                     <h3 class="text-xl font-bold text-gray-900 mb-3">Calendários</h3>
                     <p class="text-gray-600 mb-4">
-                        <strong>Múltiplos calendários:</strong> Crie calendários individuais para cada médico com 
-                        visualização em formato de agenda ou calendário mensal.
+                        <strong>Visualização da agenda:</strong> acompanhe os compromissos por profissional e navegue pelos registros do calendário de atendimento.
                     </p>
                     <p class="text-sm text-gray-500">
-                        Visualização FullCalendar com eventos, arrastar e soltar, e sincronização automática 
-                        com Google Calendar.
+                        Uma visão prática para consultar a agenda, revisar eventos e apoiar a operação diária da clínica.
                     </p>
                 </div>
 
-                <!-- Horários Comerciais -->
+                <div class="bg-gray-50 rounded-lg p-8 hover:shadow-lg transition-shadow">
+                    <div class="w-14 h-14 bg-blue-100 rounded-lg flex items-center justify-center mb-6">
+                        <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-900 mb-3">Agenda do Profissional</h3>
+                    <p class="text-gray-600 mb-4">
+                        <strong>Configuração central da disponibilidade:</strong> monte a agenda do profissional com horários, tipos de consulta e status da agenda.
+                    </p>
+                    <p class="text-sm text-gray-500">
+                        O fluxo atual concentra a estrutura que sustenta agendamentos presenciais, online e recorrentes.
+                    </p>
+                </div>
+
                 <div class="bg-gray-50 rounded-lg p-8 hover:shadow-lg transition-shadow">
                     <div class="w-14 h-14 bg-blue-100 rounded-lg flex items-center justify-center mb-6">
                         <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -123,16 +122,13 @@
                     </div>
                     <h3 class="text-xl font-bold text-gray-900 mb-3">Horários Comerciais</h3>
                     <p class="text-gray-600 mb-4">
-                        <strong>Configuração flexível:</strong> Defina horários de atendimento por dia da semana 
-                        com intervalos personalizados.
+                        <strong>Disponibilidade por dia da semana:</strong> defina faixas de atendimento e intervalos conforme a rotina de cada profissional.
                     </p>
                     <p class="text-sm text-gray-500">
-                        Configure horários de abertura, fechamento e intervalos entre consultas para cada médico, 
-                        garantindo disponibilidade correta para agendamentos.
+                        Ideal para padronizar a oferta de horários e reduzir conflitos na marcação de consultas.
                     </p>
                 </div>
 
-                <!-- Tipos de Consulta -->
                 <div class="bg-gray-50 rounded-lg p-8 hover:shadow-lg transition-shadow">
                     <div class="w-14 h-14 bg-blue-100 rounded-lg flex items-center justify-center mb-6">
                         <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -141,16 +137,13 @@
                     </div>
                     <h3 class="text-xl font-bold text-gray-900 mb-3">Tipos de Consulta</h3>
                     <p class="text-gray-600 mb-4">
-                        <strong>Diversos tipos:</strong> Crie diferentes tipos de consulta com durações variadas 
-                        e descrições personalizadas.
+                        <strong>Duração e regras por atendimento:</strong> cadastre tipos de consulta com tempo previsto e uso por profissional.
                     </p>
                     <p class="text-sm text-gray-500">
-                        Configure tipos como consulta inicial, retorno, procedimento, etc., cada um com duração 
-                        específica e vinculação a médicos e especialidades.
+                        Uma forma simples de padronizar agendas, organizar encaixes e refletir a rotina real do serviço.
                     </p>
                 </div>
 
-                <!-- Agendamentos Presenciais -->
                 <div class="bg-gray-50 rounded-lg p-8 hover:shadow-lg transition-shadow">
                     <div class="w-14 h-14 bg-blue-100 rounded-lg flex items-center justify-center mb-6">
                         <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -158,36 +151,15 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                         </svg>
                     </div>
-                    <h3 class="text-xl font-bold text-gray-900 mb-3">Agendamentos Presenciais</h3>
+                    <h3 class="text-xl font-bold text-gray-900 mb-3">Agendamentos</h3>
                     <p class="text-gray-600 mb-4">
-                        <strong>Agendamento completo:</strong> Gerencie consultas presenciais com seleção de paciente, 
-                        médico, tipo de consulta, data e horário.
-                    </p>
-                    <p class="text-sm text-gray-600">
-                        Sistema completo de agendamento com verificação de disponibilidade, bloqueio de horários, 
-                        status de atendimento e histórico completo.
-                    </p>
-                </div>
-
-                <!-- Agendamentos Online -->
-                <div class="bg-gray-50 rounded-lg p-8 hover:shadow-lg transition-shadow">
-                    <div class="w-14 h-14 bg-blue-100 rounded-lg flex items-center justify-center mb-6">
-                        <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                        </svg>
-                    </div>
-                    <h3 class="text-xl font-bold text-gray-900 mb-3">Agendamentos Online</h3>
-                    <p class="text-gray-600 mb-4">
-                        <strong>Consultas virtuais:</strong> Gerencie consultas online com links de videoconferência, 
-                        instruções personalizadas e envio automático.
+                        <strong>Fluxo operacional completo:</strong> registre consultas com paciente, profissional, especialidade, tipo, data, horário e modo de atendimento.
                     </p>
                     <p class="text-sm text-gray-500">
-                        Configure links de reunião (Zoom, Google Meet, etc.), adicione instruções e envie 
-                        automaticamente por email ou WhatsApp para os pacientes.
+                        O sistema apoia a rotina da recepção e da equipe com status, detalhes do agendamento e histórico de acompanhamento.
                     </p>
                 </div>
 
-                <!-- Agendamentos Recorrentes -->
                 <div class="bg-gray-50 rounded-lg p-8 hover:shadow-lg transition-shadow">
                     <div class="w-14 h-14 bg-blue-100 rounded-lg flex items-center justify-center mb-6">
                         <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -196,88 +168,133 @@
                     </div>
                     <h3 class="text-xl font-bold text-gray-900 mb-3">Agendamentos Recorrentes</h3>
                     <p class="text-gray-600 mb-4">
-                        <strong>Recorrência avançada:</strong> Crie agendamentos recorrentes com regras personalizadas 
-                        de frequência e término.
+                        <strong>Repetição com controle:</strong> crie séries de atendimentos com regras de frequência, data inicial e critérios de término.
                     </p>
                     <p class="text-sm text-gray-500">
-                        Configure recorrências diárias, semanais ou mensais com múltiplas regras, término por data 
-                        ou número de sessões, e geração automática de agendamentos.
+                        Indicado para acompanhamentos periódicos, sessões contínuas e rotinas que exigem previsibilidade na agenda.
                     </p>
                 </div>
 
-                <!-- Atendimento Médico -->
+                <div class="bg-gray-50 rounded-lg p-8 hover:shadow-lg transition-shadow">
+                    <div class="w-14 h-14 bg-blue-100 rounded-lg flex items-center justify-center mb-6">
+                        <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                        </svg>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-900 mb-3">Consultas Online</h3>
+                    <p class="text-gray-600 mb-4">
+                        <strong>Atendimento remoto com instruções:</strong> organize links, aplicativo de videoconferência e orientações para o paciente.
+                    </p>
+                    <p class="text-sm text-gray-500">
+                        O fluxo inclui registro das instruções e envio por canais de comunicação quando habilitados no Tenant.
+                    </p>
+                </div>
+
                 <div class="bg-gray-50 rounded-lg p-8 hover:shadow-lg transition-shadow">
                     <div class="w-14 h-14 bg-blue-100 rounded-lg flex items-center justify-center mb-6">
                         <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
                         </svg>
                     </div>
-                    <h3 class="text-xl font-bold text-gray-900 mb-3">Atendimento Médico</h3>
+                    <h3 class="text-xl font-bold text-gray-900 mb-3">Atendimento</h3>
                     <p class="text-gray-600 mb-4">
-                        <strong>Sessão diária:</strong> Módulo completo para gerenciar a sessão de atendimentos do dia 
-                        com atualização de status em tempo real.
+                        <strong>Sessão do dia organizada:</strong> acompanhe a fila de atendimentos, atualize status e visualize informações do agendamento em contexto.
                     </p>
                     <p class="text-sm text-gray-500">
-                        Visualize todos os agendamentos do dia, atualize status (agendado, chegou, em atendimento, 
-                        concluído), veja formulários respondidos e navegue entre atendimentos.
+                        O módulo foi pensado para apoiar a rotina operacional de quem conduz o dia de atendimento.
                     </p>
                 </div>
 
-                <!-- Formulários Personalizados -->
                 <div class="bg-gray-50 rounded-lg p-8 hover:shadow-lg transition-shadow">
                     <div class="w-14 h-14 bg-blue-100 rounded-lg flex items-center justify-center mb-6">
                         <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                         </svg>
                     </div>
-                    <h3 class="text-xl font-bold text-gray-900 mb-3">Formulários Personalizados</h3>
+                    <h3 class="text-xl font-bold text-gray-900 mb-3">Formulários</h3>
                     <p class="text-gray-600 mb-4">
-                        <strong>Criador visual:</strong> Crie formulários completos com seções, perguntas e múltiplos 
-                        tipos de resposta.
+                        <strong>Coleta estruturada de informações:</strong> crie formulários com seções, perguntas e múltiplos tipos de resposta.
                     </p>
                     <p class="text-sm text-gray-500">
-                        Construtor visual de formulários com seções organizadas, perguntas de múltiplos tipos 
-                        (texto, múltipla escolha, checkbox, etc.) e envio automático após agendamento.
+                        Um recurso útil para pré-atendimento, triagem, coleta de dados e padronização de processos internos.
                     </p>
                 </div>
 
-                <!-- Respostas de Formulários -->
                 <div class="bg-gray-50 rounded-lg p-8 hover:shadow-lg transition-shadow">
                     <div class="w-14 h-14 bg-blue-100 rounded-lg flex items-center justify-center mb-6">
                         <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
                         </svg>
                     </div>
-                    <h3 class="text-xl font-bold text-gray-900 mb-3">Respostas de Formulários</h3>
+                    <h3 class="text-xl font-bold text-gray-900 mb-3">Respostas</h3>
                     <p class="text-gray-600 mb-4">
-                        <strong>Gerenciamento completo:</strong> Visualize e gerencie todas as respostas de formulários 
-                        com filtros avançados.
+                        <strong>Acompanhamento do que foi preenchido:</strong> visualize respostas recebidas, status e vínculos com pacientes e agendamentos.
                     </p>
                     <p class="text-sm text-gray-500">
-                        Acompanhe respostas de formulários, visualize dados coletados, relacione com agendamentos 
-                        e exporte dados quando necessário.
+                        Um ponto central para consulta rápida dos dados coletados antes ou durante o atendimento.
                     </p>
                 </div>
 
-                <!-- Sincronização Google Calendar -->
+                <div class="bg-gray-50 rounded-lg p-8 hover:shadow-lg transition-shadow">
+                    <div class="w-14 h-14 bg-blue-100 rounded-lg flex items-center justify-center mb-6">
+                        <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5.882l-2 .756A2 2 0 007 8.507V17a2 2 0 002 2h8a2 2 0 002-2v-8.493a2 2 0 00-1.999-1.869l-2-.756M11 5.882A2 2 0 0112 5a2 2 0 011 .882M11 5.882V4a1 1 0 112 0v1.882" />
+                        </svg>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-900 mb-3">Campanhas</h3>
+                    <p class="text-gray-600 mb-4">
+                        <strong>Comunicação ativa com a base:</strong> crie campanhas, faça envio de teste e acompanhe o público alcançado.
+                    </p>
+                    <p class="text-sm text-gray-500">
+                        O sistema já contempla fluxo de criação, agendamento, início, pausa, retomada e acompanhamento de execuções e destinatários.
+                    </p>
+                </div>
+
+                <div class="bg-gray-50 rounded-lg p-8 hover:shadow-lg transition-shadow">
+                    <div class="w-14 h-14 bg-blue-100 rounded-lg flex items-center justify-center mb-6">
+                        <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-900 mb-3">Templates de Campanha</h3>
+                    <p class="text-gray-600 mb-4">
+                        <strong>Mensagens reaproveitáveis:</strong> organize templates usados nas campanhas para acelerar a comunicação e manter consistência.
+                    </p>
+                    <p class="text-sm text-gray-500">
+                        O fluxo se adapta ao provedor configurado e ajuda a padronizar o conteúdo usado nas campanhas do Tenant.
+                    </p>
+                </div>
+
                 <div class="bg-gray-50 rounded-lg p-8 hover:shadow-lg transition-shadow">
                     <div class="w-14 h-14 bg-blue-100 rounded-lg flex items-center justify-center mb-6">
                         <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                         </svg>
                     </div>
-                    <h3 class="text-xl font-bold text-gray-900 mb-3">Sincronização Google Calendar</h3>
+                    <h3 class="text-xl font-bold text-gray-900 mb-3">Sincronização de Agenda</h3>
                     <p class="text-gray-600 mb-4">
-                        <strong>Sincronização automática:</strong> Sincronize agendamentos automaticamente com o 
-                        Google Calendar de cada médico.
+                        <strong>Fluxo próprio para integrações de calendário:</strong> conecte a agenda do profissional e acompanhe o status de sincronização.
                     </p>
                     <p class="text-sm text-gray-500">
-                        Cada médico conecta sua própria conta Google, e os agendamentos são sincronizados 
-                        automaticamente (criação, edição, cancelamento). Suporte para eventos recorrentes com RRULE.
+                        O produto já organiza esse processo em uma área específica, com suporte ao fluxo de conexão e revisão da última sincronização.
                     </p>
                 </div>
 
-                <!-- Portal do Paciente -->
+                <div class="bg-gray-50 rounded-lg p-8 hover:shadow-lg transition-shadow">
+                    <div class="w-14 h-14 bg-blue-100 rounded-lg flex items-center justify-center mb-6">
+                        <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                        </svg>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-900 mb-3">Notificações e Comunicação</h3>
+                    <p class="text-gray-600 mb-4">
+                        <strong>Email e WhatsApp na operação:</strong> trabalhe com notificações, lembretes e testes de comunicação a partir das configurações do Tenant.
+                    </p>
+                    <p class="text-sm text-gray-500">
+                        A estrutura atual contempla canais e provedores configuráveis para suportar a comunicação com pacientes e equipe.
+                    </p>
+                </div>
+
                 <div class="bg-gray-50 rounded-lg p-8 hover:shadow-lg transition-shadow">
                     <div class="w-14 h-14 bg-blue-100 rounded-lg flex items-center justify-center mb-6">
                         <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -286,16 +303,13 @@
                     </div>
                     <h3 class="text-xl font-bold text-gray-900 mb-3">Portal do Paciente</h3>
                     <p class="text-gray-600 mb-4">
-                        <strong>Acesso completo:</strong> Portal personalizado para pacientes visualizarem agendamentos, 
-                        histórico e perfil.
+                        <strong>Autonomia para o paciente:</strong> ofereça uma área própria para acompanhar agendamentos e acessar a experiência digital do serviço.
                     </p>
                     <p class="text-sm text-gray-500">
-                        Dashboard do paciente, lista de agendamentos, criação e edição de agendamentos, 
-                        notificações e gerenciamento de perfil com recuperação de senha.
+                        O portal complementa a operação da clínica e amplia o relacionamento digital com o paciente.
                     </p>
                 </div>
 
-                <!-- Área Pública de Agendamento -->
                 <div class="bg-gray-50 rounded-lg p-8 hover:shadow-lg transition-shadow">
                     <div class="w-14 h-14 bg-blue-100 rounded-lg flex items-center justify-center mb-6">
                         <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -304,70 +318,28 @@
                     </div>
                     <h3 class="text-xl font-bold text-gray-900 mb-3">Área Pública de Agendamento</h3>
                     <p class="text-gray-600 mb-4">
-                        <strong>Agendamento sem login:</strong> Pacientes podem agendar consultas sem precisar estar 
-                        logados no sistema.
+                        <strong>Agendamento sem login:</strong> permita que novos pacientes ou pacientes identificados avancem no fluxo público de marcação.
                     </p>
                     <p class="text-sm text-gray-500">
-                        Fluxo completo de identificação, cadastro (se necessário), seleção de médico, tipo de consulta, 
-                        data e horário disponível, tudo sem necessidade de autenticação.
+                        Um recurso útil para facilitar a captação e reduzir barreiras na marcação inicial.
                     </p>
                 </div>
 
-                <!-- Relatórios Completos -->
                 <div class="bg-gray-50 rounded-lg p-8 hover:shadow-lg transition-shadow">
                     <div class="w-14 h-14 bg-blue-100 rounded-lg flex items-center justify-center mb-6">
                         <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                         </svg>
                     </div>
-                    <h3 class="text-xl font-bold text-gray-900 mb-3">Relatórios Completos</h3>
+                    <h3 class="text-xl font-bold text-gray-900 mb-3">Relatórios</h3>
                     <p class="text-gray-600 mb-4">
-                        <strong>Análise completa:</strong> Gere relatórios detalhados de agendamentos, pacientes, 
-                        médicos, formulários e muito mais.
+                        <strong>Análise por área:</strong> acompanhe relatórios de agendamentos, pacientes, profissionais, recorrências, formulários e notificações.
                     </p>
                     <p class="text-sm text-gray-500">
-                        Relatórios com filtros avançados e exportação em múltiplos formatos (Excel, PDF, CSV) 
-                        para análises externas e apresentações.
+                        O sistema também conta com exportação em formatos usados na rotina administrativa e gerencial.
                     </p>
                 </div>
 
-                <!-- Sistema de Roles & Permissões -->
-                <div class="bg-gray-50 rounded-lg p-8 hover:shadow-lg transition-shadow">
-                    <div class="w-14 h-14 bg-blue-100 rounded-lg flex items-center justify-center mb-6">
-                        <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                        </svg>
-                    </div>
-                    <h3 class="text-xl font-bold text-gray-900 mb-3">Sistema de Roles & Permissões</h3>
-                    <p class="text-gray-600 mb-4">
-                        <strong>Controle granular:</strong> Sistema completo de roles (admin, doctor, user) com 
-                        permissões por módulo e filtros automáticos.
-                    </p>
-                    <p class="text-sm text-gray-500">
-                        Controle de acesso baseado em papéis com filtros automáticos de dados, permissões por 
-                        módulo e controle de médicos permitidos para usuários comuns.
-                    </p>
-                </div>
-
-                <!-- Notificações -->
-                <div class="bg-gray-50 rounded-lg p-8 hover:shadow-lg transition-shadow">
-                    <div class="w-14 h-14 bg-blue-100 rounded-lg flex items-center justify-center mb-6">
-                        <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-                        </svg>
-                    </div>
-                    <h3 class="text-xl font-bold text-gray-900 mb-3">Notificações</h3>
-                    <p class="text-gray-600 mb-4">
-                        <strong>Comunicação automática:</strong> Sistema completo de notificações por email e WhatsApp 
-                        para pacientes e médicos.
-                    </p>
-                    <p class="text-sm text-gray-500">
-                        Notificações automáticas de agendamentos, lembretes, formulários e instruções de consultas online 
-                        com configurações flexíveis por clínica.
-                    </p>
-                </div>
-
-                <!-- Configurações Avançadas -->
                 <div class="bg-gray-50 rounded-lg p-8 hover:shadow-lg transition-shadow">
                     <div class="w-14 h-14 bg-blue-100 rounded-lg flex items-center justify-center mb-6">
                         <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -375,18 +347,30 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                         </svg>
                     </div>
-                    <h3 class="text-xl font-bold text-gray-900 mb-3">Configurações Avançadas</h3>
+                    <h3 class="text-xl font-bold text-gray-900 mb-3">Configurações</h3>
                     <p class="text-gray-600 mb-4">
-                        <strong>Personalização completa:</strong> Configure modo de atendimento, notificações, 
-                        profissionais e integrações.
+                        <strong>Parâmetros do Tenant em um só lugar:</strong> ajuste preferências operacionais, comunicação, integrações e regras do ambiente.
                     </p>
                     <p class="text-sm text-gray-500">
-                        Configurações de agendamentos, notificações, profissionais personalizados, integrações 
-                        (Google Calendar, WhatsApp, Email) e muito mais.
+                        Uma área essencial para adaptar o produto ao modelo de atendimento e à estrutura de cada operação.
                     </p>
                 </div>
 
-                <!-- Banco de Dados Isolado -->
+                <div class="bg-gray-50 rounded-lg p-8 hover:shadow-lg transition-shadow">
+                    <div class="w-14 h-14 bg-blue-100 rounded-lg flex items-center justify-center mb-6">
+                        <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-2.21 0-4 .895-4 2s1.79 2 4 2 4 .895 4 2-1.79 2-4 2m0-10V6m0 12v-2m9-4a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-900 mb-3">Financeiro</h3>
+                    <p class="text-gray-600 mb-4">
+                        <strong>Módulo opcional para gestão financeira:</strong> quando habilitado no Tenant, apoia contas, categorias, transações e relatórios financeiros.
+                    </p>
+                    <p class="text-sm text-gray-500">
+                        Um complemento comercial relevante para operações que desejam concentrar agenda e gestão em um mesmo sistema.
+                    </p>
+                </div>
+
                 <div class="bg-gray-50 rounded-lg p-8 hover:shadow-lg transition-shadow">
                     <div class="w-14 h-14 bg-blue-100 rounded-lg flex items-center justify-center mb-6">
                         <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -395,12 +379,10 @@
                     </div>
                     <h3 class="text-xl font-bold text-gray-900 mb-3">Ambiente de Dados Isolado</h3>
                     <p class="text-gray-600 mb-4">
-                        <strong>Segurança total:</strong> Cada clínica possui seu próprio ambiente isolado 
-                        garantindo privacidade e segurança.
+                        <strong>Estrutura multi-tenant:</strong> cada operação trabalha em um ambiente próprio, com separação lógica e organização independente.
                     </p>
                     <p class="text-sm text-gray-500">
-                        Ambiente completamente isolado por clínica, criado automaticamente após 
-                        o pagamento, garantindo total separação e segurança dos dados.
+                        Isso ajuda a sustentar privacidade, segurança e autonomia por clínica ou unidade.
                     </p>
                 </div>
 

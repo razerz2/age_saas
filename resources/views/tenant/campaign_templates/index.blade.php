@@ -52,17 +52,20 @@
                     </nav>
                 </div>
 
-                @if (!$isOfficialMode)
-                    <a href="{{ workspace_route('tenant.campaign-templates.create') }}" class="btn btn-primary inline-flex items-center">
-                        <x-icon name="plus" size="text-sm" class="mr-2" />
-                        Novo template
-                    </a>
-                @elseif ($officialManagementUrl)
-                    <a href="{{ $officialManagementUrl }}" class="btn btn-primary inline-flex items-center">
-                        <x-icon name="open-in-new" size="text-sm" class="mr-2" />
-                        Abrir módulo oficial
-                    </a>
-                @endif
+                <div class="flex items-center gap-2">
+                    <x-help-button module="campaign-templates" />
+                    @if (!$isOfficialMode)
+                        <a href="{{ workspace_route('tenant.campaign-templates.create') }}" class="btn btn-primary inline-flex items-center">
+                            <x-icon name="plus" size="text-sm" class="mr-2" />
+                            Novo template
+                        </a>
+                    @elseif ($officialManagementUrl)
+                        <a href="{{ $officialManagementUrl }}" class="btn btn-primary inline-flex items-center">
+                            <x-icon name="open-in-new" size="text-sm" class="mr-2" />
+                            Abrir módulo oficial
+                        </a>
+                    @endif
+                </div>
             </div>
         </div>
 
@@ -211,4 +214,3 @@
         @endif
     </div>
 @endsection
-

@@ -42,7 +42,7 @@
                 </ol>
             </nav>
             <div class="flex-shrink-0">
-                <x-help-button module="appointments" />
+                <x-help-button module="recurring-appointments" />
             </div>
         </div>
     </div>

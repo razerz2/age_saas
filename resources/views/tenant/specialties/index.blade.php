@@ -5,7 +5,7 @@
 
 @section('content')
     <div class="mb-6">
-        <div class="flex items-center justify-between">
+        <div class="flex items-center justify-between gap-3">
             <div>
                 <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Especialidades</h1>
                 <nav class="flex mt-2" aria-label="Breadcrumb">
@@ -25,10 +25,13 @@
                     </ol>
                 </nav>
             </div>
-            <a href="{{ workspace_route('tenant.specialties.create') }}" class="btn btn-primary inline-flex items-center">
-                <x-icon name="plus" size="text-sm" class="mr-2" />
-                Nova Especialidade
-            </a>
+            <div class="flex items-center gap-2">
+                <x-help-button module="specialties" />
+                <a href="{{ workspace_route('tenant.specialties.create') }}" class="btn btn-primary inline-flex items-center">
+                    <x-icon name="plus" size="text-sm" class="mr-2" />
+                    Nova Especialidade
+                </a>
+            </div>
         </div>
     </div>
 

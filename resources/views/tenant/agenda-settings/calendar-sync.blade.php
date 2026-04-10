@@ -14,29 +14,36 @@
 
 <div class="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
     <div class="mb-6">
-        <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Sincronização de Calendário</h1>
-        <nav class="mt-2 flex" aria-label="Breadcrumb">
-            <ol class="inline-flex items-center space-x-1 md:space-x-3">
-                <li class="inline-flex items-center">
-                    <a href="{{ workspace_route('tenant.dashboard') }}" class="inline-flex items-center text-gray-700 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white">
-                        <x-icon name="home-outline" size="text-base" class="mr-2" />
-                        Dashboard
-                    </a>
-                </li>
-                <li>
-                    <div class="flex items-center">
-                        <x-icon name="chevron-right" size="text-sm" class="text-gray-400" />
-                        <a href="{{ workspace_route('tenant.agenda-settings.index') }}" class="ml-1 text-gray-700 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white">Agenda do Profissional</a>
-                    </div>
-                </li>
-                <li>
-                    <div class="flex items-center">
-                        <x-icon name="chevron-right" size="text-sm" class="text-gray-400" />
-                        <span class="ml-1 text-gray-500 dark:text-gray-400">Sincronização</span>
-                    </div>
-                </li>
-            </ol>
-        </nav>
+        <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+            <div>
+                <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Sincronização de Calendário</h1>
+                <nav class="mt-2 flex" aria-label="Breadcrumb">
+                    <ol class="inline-flex items-center space-x-1 md:space-x-3">
+                        <li class="inline-flex items-center">
+                            <a href="{{ workspace_route('tenant.dashboard') }}" class="inline-flex items-center text-gray-700 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white">
+                                <x-icon name="home-outline" size="text-base" class="mr-2" />
+                                Dashboard
+                            </a>
+                        </li>
+                        <li>
+                            <div class="flex items-center">
+                                <x-icon name="chevron-right" size="text-sm" class="text-gray-400" />
+                                <a href="{{ workspace_route('tenant.agenda-settings.index') }}" class="ml-1 text-gray-700 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white">Agenda do Profissional</a>
+                            </div>
+                        </li>
+                        <li>
+                            <div class="flex items-center">
+                                <x-icon name="chevron-right" size="text-sm" class="text-gray-400" />
+                                <span class="ml-1 text-gray-500 dark:text-gray-400">Sincronização</span>
+                            </div>
+                        </li>
+                    </ol>
+                </nav>
+            </div>
+            <div class="flex-shrink-0">
+                <x-help-button module="calendar-sync" />
+            </div>
+        </div>
     </div>
 
     @if (session('success'))

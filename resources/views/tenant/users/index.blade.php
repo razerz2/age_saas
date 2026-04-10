@@ -5,9 +5,9 @@
     $professionalLabels = $professionalLabels ?? [];
     $professionalSingular = $professionalLabels['singular'] ?? app(\App\Services\Tenant\ProfessionalLabelService::class)->singular();
     $professionalPlural = $professionalLabels['plural'] ?? app(\App\Services\Tenant\ProfessionalLabelService::class)->plural();
-    $pageTitle = $isDoctorsOnly ? 'Todos os ' . $professionalPlural : 'Usu·rios';
-    $cardTitle = $isDoctorsOnly ? 'Lista de ' . $professionalPlural : 'Lista de Usu·rios';
-    $createButtonLabel = $isDoctorsOnly ? 'Novo ' . $professionalSingular : 'Novo Usu·rio';
+    $pageTitle = $isDoctorsOnly ? 'Todos os ' . $professionalPlural : 'Usu√°rios';
+    $cardTitle = $isDoctorsOnly ? 'Lista de ' . $professionalPlural : 'Lista de Usu√°rios';
+    $createButtonLabel = $isDoctorsOnly ? 'Novo ' . $professionalSingular : 'Novo Usu√°rio';
     $gridAjaxUrl = $isDoctorsOnly
         ? workspace_route('tenant.users.grid-data') . '?role=doctor'
         : workspace_route('tenant.users.grid-data');
@@ -18,9 +18,8 @@
 
 @section('content')
     <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6">
-        <!-- Page Header -->
         <div class="mb-6">
-            <div class="flex items-center justify-between">
+            <div class="flex items-center justify-between gap-3">
                 <div>
                     <h1 class="text-2xl font-bold text-gray-900 dark:text-white">{{ $pageTitle }}</h1>
                     <nav class="flex mt-2" aria-label="Breadcrumb">
@@ -59,14 +58,16 @@
                         </ol>
                     </nav>
                 </div>
-                <a href="{{ workspace_route('tenant.users.create') }}" class="btn btn-primary">
-                    <x-icon name="plus" size="text-sm" />
-                    {{ $createButtonLabel }}
-                </a>
+                <div class="flex items-center gap-2">
+                    <x-help-button module="{{ $isDoctorsOnly ? 'doctors' : 'users' }}" />
+                    <a href="{{ workspace_route('tenant.users.create') }}" class="btn btn-primary">
+                        <x-icon name="plus" size="text-sm" />
+                        {{ $createButtonLabel }}
+                    </a>
+                </div>
             </div>
         </div>
 
-        <!-- Alerts -->
         @if (session('success'))
             <div class="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg dark:bg-green-900/20 dark:border-green-800">
                 <div class="flex">
@@ -93,7 +94,6 @@
             </div>
         @endif
 
-        <!-- Card Principal -->
         <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
             <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
                 <h2 class="text-lg font-semibold text-gray-900 dark:text-white">{{ $cardTitle }}</h2>
@@ -110,7 +110,6 @@
                 </div>
                 --}}
 
-                {{-- Nova tabela baseada em Grid.js --}}
                 <div
                     id="users-grid-wrapper"
                     data-show-url-template="{{ workspace_route('tenant.users.show', '__USER_ID__') }}"
@@ -135,4 +134,3 @@
         </div>
     </div>
 @endsection
-

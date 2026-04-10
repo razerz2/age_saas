@@ -35,20 +35,23 @@
                     </nav>
                 </div>
 
-                @if ($moduleEnabled)
-                    <a href="{{ workspace_route('tenant.campaigns.create') }}" class="btn btn-primary inline-flex items-center">
-                        <x-icon name="plus" size="text-sm" class="mr-2" />
-                        Nova Campanha
-                    </a>
-                @else
-                    <button type="button"
-                        class="btn btn-primary inline-flex items-center opacity-60 cursor-not-allowed"
-                        disabled
-                        aria-disabled="true">
-                        <x-icon name="plus" size="text-sm" class="mr-2" />
-                        Nova Campanha
-                    </button>
-                @endif
+                <div class="flex items-center gap-2">
+                    <x-help-button module="campaigns" />
+                    @if ($moduleEnabled)
+                        <a href="{{ workspace_route('tenant.campaigns.create') }}" class="btn btn-primary inline-flex items-center">
+                            <x-icon name="plus" size="text-sm" class="mr-2" />
+                            Nova Campanha
+                        </a>
+                    @else
+                        <button type="button"
+                            class="btn btn-primary inline-flex items-center opacity-60 cursor-not-allowed"
+                            disabled
+                            aria-disabled="true">
+                            <x-icon name="plus" size="text-sm" class="mr-2" />
+                            Nova Campanha
+                        </button>
+                    @endif
+                </div>
             </div>
         </div>
 

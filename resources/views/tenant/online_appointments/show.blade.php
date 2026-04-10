@@ -6,7 +6,7 @@
 @section('content')
     <!-- Page Header -->
     <div class="page-header mb-6">
-        <div class="flex items-center justify-between">
+        <div class="flex items-center justify-between gap-3">
             <div>
                 <h1 class="text-2xl font-semibold text-gray-900 dark:text-white mb-2">Instruções de Consulta Online</h1>
                 <nav class="flex" aria-label="Breadcrumb">
@@ -31,6 +31,9 @@
                         </li>
                     </ol>
                 </nav>
+            </div>
+            <div class="flex-shrink-0">
+                <x-help-button module="online-appointments" />
             </div>
         </div>
     </div>

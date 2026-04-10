@@ -6,19 +6,26 @@
 @section('content')
 
     <div class="page-header">
-        <h3 class="page-title"> Editar Resposta </h3>
+        <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+            <div>
+                <h3 class="page-title"> Editar Resposta </h3>
 
-        <nav aria-label="breadcrumb">
-            <ol class="breadcrumb">
-                <li class="breadcrumb-item">
-                    <a href="{{ workspace_route('tenant.dashboard') }}">Dashboard</a>
-                </li>
-                <li class="breadcrumb-item">
-                    <a href="{{ workspace_route('tenant.responses.index') }}">Respostas</a>
-                </li>
-                <li class="breadcrumb-item active" aria-current="page">Editar</li>
-            </ol>
-        </nav>
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb">
+                        <li class="breadcrumb-item">
+                            <a href="{{ workspace_route('tenant.dashboard') }}">Dashboard</a>
+                        </li>
+                        <li class="breadcrumb-item">
+                            <a href="{{ workspace_route('tenant.responses.index') }}">Respostas</a>
+                        </li>
+                        <li class="breadcrumb-item active" aria-current="page">Editar</li>
+                    </ol>
+                </nav>
+            </div>
+            <div class="flex-shrink-0">
+                <x-help-button module="responses" />
+            </div>
+        </div>
     </div>
 
     <div class="row">
