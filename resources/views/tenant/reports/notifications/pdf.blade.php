@@ -41,7 +41,7 @@
             @forelse($rows as $row)
                 <tr>
                     <td>{{ $row->title ?? 'N/A' }}</td>
-                    <td>{{ $row->type ?? '-' }}</td>
+                    <td>{{ $row->type_label }}</td>
                     <td>{{ $row->read_at ? 'Lida' : 'Não lida' }}</td>
                     <td>{{ $row->read_at ? $row->read_at->format('d/m/Y H:i') : '-' }}</td>
                     <td>{{ $row->created_at ? $row->created_at->format('d/m/Y H:i') : '-' }}</td>

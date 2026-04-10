@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use Carbon\Carbon;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\Facades\Route;
@@ -48,6 +49,10 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        app()->setLocale('pt_BR');
+        Carbon::setLocale('pt_BR');
+        setlocale(LC_TIME, 'pt_BR.UTF-8', 'pt_BR.utf8', 'pt_BR', 'Portuguese_Brazil.1252', 'portuguese');
+
         // Configura o contexto SSL para SMTP quando necessário
         $this->configureMailSsl();
 

@@ -52,20 +52,20 @@
                                     <tr class="{{ $notification->status === 'new' ? 'table-light' : '' }}">
                                         <td>{{ $loop->iteration }}</td>
                                         <td>{{ $notification->title }}</td>
-                                        <td>{{ ucfirst($notification->context ?? '-') }}</td>
+                                        <td>{{ $notification->context_label }}</td>
                                         <td>
                                             <span class="badge 
                                                 @if ($notification->level == 'error') bg-danger
                                                 @elseif ($notification->level == 'warning') bg-warning
                                                 @else bg-info text-dark @endif">
-                                                {{ ucfirst($notification->level) }}
+                                                {{ $notification->level_label }}
                                             </span>
                                         </td>
                                         <td>
                                             <span class="badge 
                                                 @if ($notification->status == 'read') bg-success
                                                 @else bg-primary @endif">
-                                                {{ $notification->status == 'read' ? 'Lida' : 'Nova' }}
+                                                {{ $notification->status_label }}
                                             </span>
                                         </td>
                                         <td>{{ \Carbon\Carbon::parse($notification->created_at)->format('d/m/Y H:i') }}</td>

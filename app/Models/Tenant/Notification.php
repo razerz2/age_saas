@@ -38,6 +38,13 @@ class Notification extends Model
         'created_at' => 'datetime',
     ];
 
+    protected $appends = [
+        'type_label',
+        'status_label',
+        'created_at_human',
+        'meta_label',
+    ];
+
     protected static function booted()
     {
         static::creating(function ($model) {
@@ -89,5 +96,42 @@ class Notification extends Model
     {
         return $query->where('type', $type);
     }
-}
 
+    public function getTypeLabelAttribute(): string
+    {
+        return match ($this->type) {
+            'appointment' => 'Agendamento',
+            'form_response' => 'Resposta de formulário',
+            default => 'Geral',
+        };
+    }
+
+    public function getStatusLabelAttribute(): string
+    {
+        return match ($this->status) {
+            'new' => 'Nova',
+            'read' => 'Lida',
+            default => $this->read_at ? 'Lida' : 'Nova',
+        };
+    }
+
+    public function getCreatedAtHumanAttribute(): string
+    {
+        if (!$this->created_at) {
+            return '';
+        }
+
+        return $this->created_at->copy()->locale('pt_BR')->diffForHumans();
+    }
+
+    public function getMetaLabelAttribute(): string
+    {
+        $parts = array_filter([
+            $this->type_label,
+            $this->status_label,
+            $this->created_at_human,
+        ], static fn ($value) => $value !== null && $value !== '');
+
+        return implode(' - ', $parts);
+    }
+}

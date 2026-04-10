@@ -53,12 +53,12 @@
                                 {{ $notification->title }}
                             </a>
                             @if($notification->status === 'new')
-                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-200">Nova</span>
+                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-200">{{ $notification->status_label }}</span>
                             @endif
                         </div>
                         <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">{{ $notification->message }}</p>
                         <p class="text-xs text-gray-500 dark:text-gray-400 mt-2">
-                            {{ $notification->created_at->diffForHumans() }}
+                            {{ $notification->meta_label }}
                         </p>
                     </div>
                 </div>

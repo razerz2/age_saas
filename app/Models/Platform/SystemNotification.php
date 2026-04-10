@@ -34,6 +34,13 @@ class SystemNotification extends Model
         'created_at' => 'datetime',
     ];
 
+    protected $appends = [
+        'status_label',
+        'level_label',
+        'context_label',
+        'created_at_human',
+    ];
+
     protected static function booted()
     {
         static::creating(function ($model) {
@@ -44,6 +51,49 @@ class SystemNotification extends Model
     public function markAsRead()
     {
         $this->update(['status' => 'read']);
+    }
+
+    public function getStatusLabelAttribute(): string
+    {
+        return match ($this->status) {
+            'new' => 'Nova',
+            'read' => 'Lida',
+            default => ucfirst((string) $this->status),
+        };
+    }
+
+    public function getLevelLabelAttribute(): string
+    {
+        return match ($this->level) {
+            'error' => 'Erro',
+            'warning' => 'Aviso',
+            'info' => 'Informação',
+            'success' => 'Sucesso',
+            default => ucfirst((string) $this->level),
+        };
+    }
+
+    public function getContextLabelAttribute(): string
+    {
+        return match ($this->context) {
+            null, '' => 'Não informado',
+            'invoice' => 'Fatura',
+            'payment' => 'Pagamento',
+            'subscription' => 'Assinatura',
+            'tenant' => 'Tenant',
+            'customer' => 'Cliente',
+            'webhook' => 'Webhook',
+            default => ucfirst((string) $this->context),
+        };
+    }
+
+    public function getCreatedAtHumanAttribute(): string
+    {
+        if (!$this->created_at) {
+            return '';
+        }
+
+        return $this->created_at->copy()->locale('pt_BR')->diffForHumans();
     }
 
     public static function unreadCount()

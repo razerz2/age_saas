@@ -82,9 +82,7 @@
                         </span>
 
                         <span class="text-theme-xs flex items-center gap-2 text-gray-500 dark:text-gray-400">
-                            <span>{{ $notification->type ?? 'Geral' }}</span>
-                            <span class="h-1 w-1 rounded-full bg-gray-400"></span>
-                            <span>{{ $notification->created_at->diffForHumans() }}</span>
+                            <span>{{ $notification->meta_label }}</span>
                         </span>
                     </span>
                 </a>

@@ -51,7 +51,7 @@
                                     {{ $n->message }}
                                 </span>
                                 <span class="font-12 text-muted d-block">
-                                    {{ \Carbon\Carbon::parse($n->created_at)->diffForHumans() }}
+                                    {{ $n->created_at_human }}
                                 </span>
                             </div>
                         </a>
@@ -144,8 +144,8 @@ $(document).ready(function() {
                 n.level === 'error' ? 'danger' :
                 (n.level === 'warning' ? 'warning' : 'info');
 
-            // Formata a data de forma mais amigável
-            var timeAgo = getTimeAgo(new Date(n.created_at));
+            // Usa a versão já padronizada do backend (com fallback local)
+            var timeAgo = n.created_at_human || getTimeAgo(new Date(n.created_at));
 
             var item =
                 '<a href="/Platform/system_notifications/' + n.id + '" ' +

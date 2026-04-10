@@ -40,7 +40,7 @@ class NotificationReportController extends Controller
         $rows = $paginator->getCollection()->map(function (Notification $notification) {
             return [
                 'title' => e($notification->title ?? 'N/A'),
-                'type' => e($notification->type ?? '-'),
+                'type' => e($notification->type_label),
                 'status_badge' => view('tenant.reports.notifications.partials.status_badge', [
                     'isRead' => !is_null($notification->read_at),
                 ])->render(),
@@ -66,7 +66,7 @@ class NotificationReportController extends Controller
             mapRow: static function (Notification $notification) {
                 return [
                     $notification->title ?? 'N/A',
-                    $notification->type ?? '-',
+                    $notification->type_label,
                     $notification->read_at ? 'Lida' : 'Não lida',
                     $notification->read_at ? $notification->read_at->format('d/m/Y H:i') : '-',
                     $notification->created_at ? $notification->created_at->format('d/m/Y H:i') : '-',

@@ -55,7 +55,7 @@
                     <h2 class="text-xl font-semibold text-gray-900 dark:text-white">{{ $notification->title }}</h2>
                     <p class="text-sm text-gray-600 dark:text-gray-400 mt-2">{{ $notification->message }}</p>
                     <p class="text-xs text-gray-500 dark:text-gray-400 mt-3">
-                        {{ $notification->created_at->format('d/m/Y H:i:s') }} ({{ $notification->created_at->diffForHumans() }})
+                        {{ $notification->created_at->format('d/m/Y H:i:s') }} - {{ $notification->meta_label }}
                     </p>
                 </div>
             </div>
@@ -92,7 +92,7 @@
                         <a href="@if($notification->type === 'appointment') {{ workspace_route('tenant.appointments.show', ['id' => $notification->related_id]) }} @elseif($notification->type === 'form_response') {{ workspace_route('tenant.responses.show', ['id' => $notification->related_id]) }} @endif"
                            class="btn btn-primary">
                             <x-icon name="eye-outline" class="w-4 h-4 mr-2" />
-                            Ver {{ $notification->type === 'appointment' ? 'Agendamento' : 'Resposta' }}
+                            Ver {{ $notification->type_label }}
                         </a>
                     </div>
                 </div>

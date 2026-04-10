@@ -37,7 +37,7 @@
                             @if ($notification->level == 'error') bg-danger
                             @elseif ($notification->level == 'warning') bg-warning
                             @else bg-info text-dark @endif ms-2">
-                            {{ ucfirst($notification->level) }}
+                            {{ $notification->level_label }}
                         </span>
                     </h4>
 
@@ -48,7 +48,7 @@
 
                     <p class="text-muted mb-3">
                         <i class="fa fa-tag me-1"></i>
-                        Contexto: {{ $notification->context ?? 'Não informado' }}
+                        Contexto: {{ $notification->context_label }}
                     </p>
 
                     <hr>
