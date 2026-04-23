@@ -14,6 +14,11 @@ use Throwable;
 
 class CampaignAudienceBuilder
 {
+    public function __construct(
+        private readonly CampaignRecipientContextBuilder $recipientContextBuilder
+    ) {
+    }
+
     /**
      * @return array<int, array{
      *     target_type:string,
@@ -70,6 +75,7 @@ class CampaignAudienceBuilder
         $selectColumns = [
             'patients.id',
             'patients.full_name',
+            'patients.cpf',
             'patients.email',
             'patients.phone',
             'patients.is_active',
@@ -96,10 +102,9 @@ class CampaignAudienceBuilder
 
         foreach ($patients as $patient) {
             $fullName = trim((string) ($patient->full_name ?? ''));
-            $firstName = $this->extractFirstName($fullName);
-
             $email = $this->normalizeNullableString($patient->email ?? null);
             $phone = $this->normalizeNullableString($patient->phone ?? null);
+            $cpf = $this->normalizeNullableString($patient->cpf ?? null);
 
             if ($requireEmail && $email === null) {
                 continue;
@@ -117,31 +122,33 @@ class CampaignAudienceBuilder
                 ? max(0, $lastAppointmentAt->diffInDays($localNow, false))
                 : $inactivityDays;
 
-            $varsPatient = [
-                'id' => $patientIdRaw !== '' ? $patientIdRaw : null,
-                'full_name' => $fullName !== '' ? $fullName : null,
-                'first_name' => $firstName,
-                'email' => $email,
-                'phone' => $phone,
-                'is_active' => (bool) $patient->is_active,
-            ];
+            $varsJson = $this->recipientContextBuilder->buildFromPatientData(
+                patientId: $patientIdRaw !== '' ? $patientIdRaw : null,
+                fullName: $fullName !== '' ? $fullName : null,
+                cpf: $cpf,
+                email: $email,
+                phone: $phone,
+                date: $localNow->format('Y-m-d')
+            );
+
+            $varsPatient = is_array($varsJson['patient'] ?? null)
+                ? $varsJson['patient']
+                : [];
+            $varsPatient['is_active'] = (bool) $patient->is_active;
 
             if ($birthDate) {
                 $varsPatient['birthdate_day_month'] = $birthDate->format('d/m');
             }
+
+            $varsJson['patient'] = $varsPatient;
+            $varsJson['inactivity_days'] = $resolvedInactivityDays;
 
             $items[] = [
                 'target_type' => 'patient',
                 'target_id' => $targetId,
                 'email' => $email,
                 'phone' => $phone,
-                'vars_json' => [
-                    'patient' => $varsPatient,
-                    'now' => [
-                        'date' => $localNow->format('Y-m-d'),
-                    ],
-                    'inactivity_days' => $resolvedInactivityDays,
-                ],
+                'vars_json' => $varsJson,
             ];
         }
 
@@ -178,19 +185,6 @@ class CampaignAudienceBuilder
         }
 
         return null;
-    }
-
-    private function extractFirstName(string $fullName): ?string
-    {
-        $normalized = trim($fullName);
-        if ($normalized === '') {
-            return null;
-        }
-
-        $parts = preg_split('/\s+/', $normalized);
-        $first = is_array($parts) ? trim((string) ($parts[0] ?? '')) : '';
-
-        return $first !== '' ? $first : null;
     }
 
     /**

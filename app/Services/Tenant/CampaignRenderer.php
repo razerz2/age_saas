@@ -5,6 +5,7 @@ namespace App\Services\Tenant;
 use App\Models\Platform\WhatsAppOfficialTemplate;
 use App\Models\Tenant\Campaign;
 use App\Models\Tenant\CampaignTemplate;
+use DateTimeInterface;
 use Illuminate\Support\Arr;
 
 class CampaignRenderer
@@ -41,14 +42,23 @@ class CampaignRenderer
         $emailContent = data_get($content, 'email');
         $emailContent = is_array($emailContent) ? $emailContent : [];
 
-        $subject = $this->renderText((string) ($emailContent['subject'] ?? ''), $vars);
-        $bodyHtml = $this->renderText((string) ($emailContent['body_html'] ?? ''), $vars);
-        $bodyText = $this->renderText((string) ($emailContent['body_text'] ?? ''), $vars);
+        $subjectUnknown = [];
+        $bodyHtmlUnknown = [];
+        $bodyTextUnknown = [];
+        $subject = $this->renderText((string) ($emailContent['subject'] ?? ''), $vars, $subjectUnknown);
+        $bodyHtml = $this->renderText((string) ($emailContent['body_html'] ?? ''), $vars, $bodyHtmlUnknown);
+        $bodyText = $this->renderText((string) ($emailContent['body_text'] ?? ''), $vars, $bodyTextUnknown);
 
         $attachments = $emailContent['attachments'] ?? [];
         if (!is_array($attachments)) {
             $attachments = [];
         }
+
+        $unknownPlaceholders = array_values(array_unique(array_merge(
+            $subjectUnknown,
+            $bodyHtmlUnknown,
+            $bodyTextUnknown
+        )));
 
         return [
             'subject' => $subject,
@@ -56,6 +66,7 @@ class CampaignRenderer
             'body_text' => $bodyText,
             'message' => $bodyHtml !== '' ? $bodyHtml : $bodyText,
             'attachments' => $attachments,
+            'unknown_placeholders' => $unknownPlaceholders,
         ];
     }
 
@@ -98,6 +109,17 @@ class CampaignRenderer
         $messageType = strtolower(trim((string) ($whatsappContent['message_type'] ?? 'text')));
         $media = $whatsappContent['media'] ?? [];
         $media = is_array($media) ? $media : [];
+        $textUnknown = [];
+        $mediaUrlUnknown = [];
+        $mediaCaptionUnknown = [];
+        $text = $this->renderText((string) ($whatsappContent['text'] ?? ''), $vars, $textUnknown);
+        $mediaUrl = $this->renderText((string) ($media['url'] ?? ''), $vars, $mediaUrlUnknown);
+        $mediaCaption = $this->renderText((string) ($media['caption'] ?? ''), $vars, $mediaCaptionUnknown);
+        $unknownPlaceholders = array_values(array_unique(array_merge(
+            $textUnknown,
+            $mediaUrlUnknown,
+            $mediaCaptionUnknown
+        )));
 
         return [
             'provider' => $provider,
@@ -106,14 +128,15 @@ class CampaignRenderer
             'template_resolution_status' => 'legacy_manual',
             'render_error' => null,
             'message_type' => in_array($messageType, ['text', 'media'], true) ? $messageType : 'text',
-            'text' => $this->renderText((string) ($whatsappContent['text'] ?? ''), $vars),
+            'text' => $text,
             'media' => [
                 'kind' => strtolower(trim((string) ($media['kind'] ?? 'document'))),
                 'source' => strtolower(trim((string) ($media['source'] ?? 'url'))),
-                'url' => $this->renderText((string) ($media['url'] ?? ''), $vars),
+                'url' => $mediaUrl,
                 'asset_id' => $media['asset_id'] ?? null,
-                'caption' => $this->renderText((string) ($media['caption'] ?? ''), $vars),
+                'caption' => $mediaCaption,
             ],
+            'unknown_placeholders' => $unknownPlaceholders,
         ];
     }
 
@@ -128,6 +151,7 @@ class CampaignRenderer
         $template = null;
         $resolutionStatus = 'resolved';
         $renderError = null;
+        $unknownPlaceholders = [];
 
         if ($templateId !== null) {
             $template = CampaignTemplate::query()
@@ -148,7 +172,7 @@ class CampaignRenderer
         }
 
         $renderedContent = $template
-            ? $this->renderText((string) $template->content, $vars)
+            ? $this->renderText((string) $template->content, $vars, $unknownPlaceholders)
             : '';
 
         if ($renderError === null && trim($renderedContent) === '') {
@@ -169,6 +193,7 @@ class CampaignRenderer
             'message_type' => 'text',
             'text' => $renderedContent,
             'media' => [],
+            'unknown_placeholders' => $unknownPlaceholders,
         ];
     }
 
@@ -234,12 +259,45 @@ class CampaignRenderer
      *
      * @param array<string,mixed> $vars
      */
-    private function renderText(string $template, array $vars): string
+    private function renderText(string $template, array $vars, ?array &$unknownPlaceholders = null): string
     {
+        $unknownPlaceholders = $this->extractUnknownPlaceholders($template, $vars);
         $rendered = $this->templateRenderer->render($template, $vars);
         $rendered = preg_replace('/\{\{\s*([A-Za-z0-9_.-]+)\s*\}\}/', '', $rendered);
 
         return trim((string) ($rendered ?? ''));
+    }
+
+    /**
+     * @param array<string,mixed> $vars
+     * @return array<int,string>
+     */
+    private function extractUnknownPlaceholders(string $template, array $vars): array
+    {
+        $missing = new \stdClass();
+        $unknown = [];
+
+        foreach ($this->templateRenderer->extractPlaceholders($template) as $placeholder) {
+            $value = data_get($vars, $placeholder, $missing);
+            if ($value === $missing || !$this->isRenderableValue($value)) {
+                $unknown[] = $placeholder;
+            }
+        }
+
+        return array_values(array_unique($unknown));
+    }
+
+    private function isRenderableValue(mixed $value): bool
+    {
+        if ($value === null) {
+            return false;
+        }
+
+        if ($value instanceof DateTimeInterface) {
+            return true;
+        }
+
+        return is_scalar($value);
     }
 
     private function normalizeProvider(string $provider): string

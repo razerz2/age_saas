@@ -387,6 +387,57 @@ it('delivers manual whatsapp branch for unofficial provider', function () {
         ->and($result['error_message'])->toBeNull();
 });
 
+it('propagates unresolved placeholders metadata to whatsapp sender', function () {
+    $renderer = \Mockery::mock(CampaignRenderer::class);
+    $renderer->shouldReceive('renderChannel')->once()->andReturn([
+        'composition_mode' => 'manual',
+        'message_type' => 'text',
+        'text' => 'Mensagem manual',
+        'unknown_placeholders' => ['patient.name', 'links.portal'],
+    ]);
+
+    $emailSender = \Mockery::mock(EmailSender::class);
+    $whatsAppSender = \Mockery::mock(WhatsAppSender::class);
+    $whatsAppSender->shouldReceive('send')
+        ->once()
+        ->withArgs(function (
+            string $tenantId,
+            string $destination,
+            string $text,
+            array $meta,
+            mixed $providerOverride
+        ): bool {
+            return $tenantId === 'tenant-hardening'
+                && $destination === '5567999999999'
+                && $text === 'Mensagem manual'
+                && ($meta['unknown_placeholders'] ?? null) === ['patient.name', 'links.portal']
+                && $providerOverride === null;
+        })
+        ->andReturn(true);
+    $logger = \Mockery::mock(NotificationDeliveryLogger::class);
+    $officialService = \Mockery::mock(WhatsAppOfficialMessageService::class);
+    $providerConfigResolver = \Mockery::mock(ProviderConfigResolver::class);
+    $tenantWhatsAppConfigService = \Mockery::mock(TenantWhatsAppConfigService::class);
+    $providerResolver = \Mockery::mock(CampaignTemplateProviderResolver::class);
+    $providerResolver->shouldReceive('isOfficialWhatsApp')->andReturn(false);
+
+    $service = new CampaignDeliveryService(
+        $renderer,
+        $emailSender,
+        $whatsAppSender,
+        $logger,
+        $officialService,
+        $providerConfigResolver,
+        $tenantWhatsAppConfigService,
+        $providerResolver
+    );
+
+    $result = $service->sendTest(new Campaign(), 'whatsapp', '5567999999999', [], []);
+
+    expect($result['success'])->toBeTrue()
+        ->and($result['error_message'])->toBeNull();
+});
+
 it('delivers unofficial template whatsapp branch', function () {
     $renderer = \Mockery::mock(CampaignRenderer::class);
     $renderer->shouldReceive('renderChannel')->once()->andReturn([

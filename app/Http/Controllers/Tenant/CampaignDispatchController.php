@@ -8,6 +8,7 @@ use App\Models\Tenant\Campaign;
 use App\Models\Tenant\Patient;
 use App\Services\Tenant\CampaignChannelGate;
 use App\Services\Tenant\CampaignDeliveryService;
+use App\Services\Tenant\CampaignRecipientContextBuilder;
 use App\Services\Tenant\CampaignStarter;
 use DomainException;
 use Illuminate\Http\JsonResponse;
@@ -20,7 +21,8 @@ class CampaignDispatchController extends Controller
 {
     public function __construct(
         private readonly CampaignStarter $starter,
-        private readonly CampaignDeliveryService $deliveryService
+        private readonly CampaignDeliveryService $deliveryService,
+        private readonly CampaignRecipientContextBuilder $recipientContextBuilder
     ) {
     }
 
@@ -113,7 +115,10 @@ class CampaignDispatchController extends Controller
         $overrides = $request->input('overrides', []);
         $overrides = is_array($overrides) ? $overrides : [];
         $destination = trim((string) $request->input('destination', ''));
-        $vars = $overrides;
+        $vars = array_replace_recursive(
+            $this->recipientContextBuilder->buildBaseContext(),
+            $overrides
+        );
         $meta = [];
 
         $selectedPatientId = trim((string) $request->input('patient_id', ''));
@@ -127,7 +132,7 @@ class CampaignDispatchController extends Controller
                     ? (string) $this->normalizeEmail($selectedPatient->email ?? null)
                     : (string) $this->normalizePhone($selectedPatient->phone ?? null);
 
-                $patientVars = $this->buildTestVarsFromPatient($selectedPatient);
+                $patientVars = $this->recipientContextBuilder->buildFromPatient($selectedPatient);
                 $vars = array_replace_recursive($patientVars, $overrides);
                 $meta['test_recipient_mode'] = 'patient';
                 $meta['test_patient_id'] = (string) $selectedPatient->id;
@@ -336,63 +341,6 @@ class CampaignDispatchController extends Controller
 
         $phone = trim((string) $value);
         return $phone !== '' ? $phone : null;
-    }
-
-    /**
-     * @return array<string,mixed>
-     */
-    private function buildTestVarsFromPatient(Patient $patient): array
-    {
-        $fullName = trim((string) ($patient->full_name ?? ''));
-        $firstName = $this->extractFirstName($fullName);
-        $email = $this->normalizeEmail($patient->email ?? null);
-        $phone = $this->normalizePhone($patient->phone ?? null);
-        $tenant = tenant();
-        $clinicName = trim((string) ($tenant?->trade_name ?? $tenant?->legal_name ?? ''));
-        $clinicPhone = trim((string) ($tenant?->phone ?? ''));
-        $clinicEmail = trim((string) ($tenant?->email ?? ''));
-        $clinicAddress = trim((string) ($tenant?->address ?? ''));
-        $slug = trim((string) ($tenant?->subdomain ?? ''));
-        $publicBookingUrl = $slug !== '' ? url('/workspace/' . $slug . '/agendamento/identificar') : null;
-
-        return [
-            'patient' => [
-                'id' => (string) $patient->id,
-                'name' => $fullName !== '' ? $fullName : null,
-                'full_name' => $fullName !== '' ? $fullName : null,
-                'first_name' => $firstName,
-                'cpf' => trim((string) ($patient->cpf ?? '')) ?: null,
-                'email' => $email,
-                'phone' => $phone,
-            ],
-            'clinic' => [
-                'name' => $clinicName !== '' ? $clinicName : null,
-                'phone' => $clinicPhone !== '' ? $clinicPhone : null,
-                'email' => $clinicEmail !== '' ? $clinicEmail : null,
-                'address' => $clinicAddress !== '' ? $clinicAddress : null,
-            ],
-            'links' => [
-                'public_booking' => $publicBookingUrl,
-                'portal' => null,
-                'whatsapp' => null,
-            ],
-            'now' => [
-                'date' => now()->toDateString(),
-            ],
-        ];
-    }
-
-    private function extractFirstName(string $fullName): ?string
-    {
-        $normalized = trim($fullName);
-        if ($normalized === '') {
-            return null;
-        }
-
-        $parts = preg_split('/\s+/', $normalized);
-        $first = is_array($parts) ? trim((string) ($parts[0] ?? '')) : '';
-
-        return $first !== '' ? $first : null;
     }
 
     /**

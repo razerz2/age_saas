@@ -7,6 +7,7 @@ use App\Models\Tenant\Asset;
 use App\Models\Tenant\Campaign;
 use App\Models\Tenant\CampaignRecipient;
 use App\Models\Tenant\CampaignRun;
+use App\Models\Tenant\Patient;
 use App\Models\Tenant\TenantSetting;
 use App\Services\Platform\WhatsAppOfficialMessageService;
 use App\Services\Providers\ProviderConfigResolver;
@@ -24,7 +25,8 @@ class CampaignDeliveryService
         private readonly WhatsAppOfficialMessageService $officialWhatsAppMessageService,
         private readonly ProviderConfigResolver $providerConfigResolver,
         private readonly TenantWhatsAppConfigService $tenantWhatsAppConfigService,
-        private readonly CampaignTemplateProviderResolver $campaignTemplateProviderResolver
+        private readonly CampaignTemplateProviderResolver $campaignTemplateProviderResolver,
+        private readonly ?CampaignRecipientContextBuilder $recipientContextBuilder = null
     ) {
     }
 
@@ -62,7 +64,7 @@ class CampaignDeliveryService
     ): array {
         $channel = strtolower(trim((string) $recipient->channel));
         $destination = trim((string) $recipient->destination);
-        $vars = is_array($recipient->vars_json) ? $recipient->vars_json : [];
+        $vars = $this->resolveRecipientVars($recipient, $channel, $destination);
 
         $meta = [
             'key' => 'campaign:' . (int) $campaign->id,
@@ -76,6 +78,189 @@ class CampaignDeliveryService
         ];
 
         return $this->sendByChannel($campaign, $channel, $destination, $vars, $meta);
+    }
+
+    /**
+     * @return array<string,mixed>
+     */
+    private function resolveRecipientVars(
+        CampaignRecipient $recipient,
+        string $channel,
+        string $destination
+    ): array {
+        $persistedVars = is_array($recipient->vars_json) ? $recipient->vars_json : [];
+        $builder = $this->recipientContextBuilder ?? app(CampaignRecipientContextBuilder::class);
+
+        $resolved = $this->mergeMissingRecursively(
+            $persistedVars,
+            $builder->buildBaseContext()
+        );
+
+        $patientContext = $this->resolvePatientContextForRecipient(
+            $recipient,
+            $persistedVars,
+            $channel,
+            $destination,
+            $builder
+        );
+
+        if ($patientContext !== []) {
+            $resolved = $this->mergeMissingRecursively($resolved, $patientContext);
+        }
+
+        if ($resolved !== $persistedVars) {
+            $recipient->vars_json = $resolved;
+            $recipient->save();
+        }
+
+        return $resolved;
+    }
+
+    /**
+     * @param array<string,mixed> $persistedVars
+     * @return array<string,mixed>
+     */
+    private function resolvePatientContextForRecipient(
+        CampaignRecipient $recipient,
+        array $persistedVars,
+        string $channel,
+        string $destination,
+        CampaignRecipientContextBuilder $builder
+    ): array {
+        $targetType = strtolower(trim((string) ($recipient->target_type ?? '')));
+        $hasPatientVars = is_array(data_get($persistedVars, 'patient'));
+
+        if ($targetType !== 'patient' && !$hasPatientVars) {
+            return [];
+        }
+
+        $patient = $this->findPatientForRecipient($recipient, $persistedVars, $channel, $destination);
+        if ($patient) {
+            return $builder->buildFromPatient($patient);
+        }
+
+        $patientId = $this->normalizeNullableString((string) data_get($persistedVars, 'patient.id', ''));
+        $fullName = $this->normalizeNullableString((string) (
+            data_get($persistedVars, 'patient.name', '')
+            ?: data_get($persistedVars, 'patient.full_name', '')
+        ));
+        $cpf = $this->normalizeNullableString((string) data_get($persistedVars, 'patient.cpf', ''));
+        $email = $this->normalizeNullableString((string) data_get($persistedVars, 'patient.email', ''));
+        $phone = $this->normalizeNullableString((string) data_get($persistedVars, 'patient.phone', ''));
+
+        if ($patientId === null && $fullName === null && $cpf === null && $email === null && $phone === null) {
+            return [];
+        }
+
+        return $builder->buildFromPatientData(
+            patientId: $patientId,
+            fullName: $fullName,
+            cpf: $cpf,
+            email: $email,
+            phone: $phone
+        );
+    }
+
+    /**
+     * @param array<string,mixed> $persistedVars
+     */
+    private function findPatientForRecipient(
+        CampaignRecipient $recipient,
+        array $persistedVars,
+        string $channel,
+        string $destination
+    ): ?Patient {
+        try {
+            $candidateIds = [];
+            $targetType = strtolower(trim((string) ($recipient->target_type ?? '')));
+            if ($targetType === 'patient') {
+                $targetId = $this->normalizeNullableString((string) ($recipient->target_id ?? ''));
+                if ($targetId !== null) {
+                    $candidateIds[] = $targetId;
+                }
+            }
+
+            $varsPatientId = $this->normalizeNullableString((string) data_get($persistedVars, 'patient.id', ''));
+            if ($varsPatientId !== null) {
+                $candidateIds[] = $varsPatientId;
+            }
+
+            foreach (array_values(array_unique($candidateIds)) as $candidateId) {
+                $patient = Patient::query()
+                    ->where('id', $candidateId)
+                    ->first(['id', 'full_name', 'cpf', 'email', 'phone']);
+
+                if ($patient) {
+                    return $patient;
+                }
+            }
+
+            if ($targetType !== 'patient') {
+                return null;
+            }
+
+            if ($destination === '') {
+                return null;
+            }
+
+            if ($channel === 'email') {
+                return Patient::query()
+                    ->where('email', $destination)
+                    ->first(['id', 'full_name', 'cpf', 'email', 'phone']);
+            }
+
+            if ($channel === 'whatsapp') {
+                return Patient::query()
+                    ->where('phone', $destination)
+                    ->first(['id', 'full_name', 'cpf', 'email', 'phone']);
+            }
+        } catch (Throwable) {
+            return null;
+        }
+
+        return null;
+    }
+
+    /**
+     * @param array<string,mixed> $current
+     * @param array<string,mixed> $fallback
+     * @return array<string,mixed>
+     */
+    private function mergeMissingRecursively(array $current, array $fallback): array
+    {
+        foreach ($fallback as $key => $fallbackValue) {
+            if (!array_key_exists($key, $current)) {
+                $current[$key] = $fallbackValue;
+                continue;
+            }
+
+            $currentValue = $current[$key];
+            if (is_array($currentValue) && is_array($fallbackValue)) {
+                $current[$key] = $this->mergeMissingRecursively($currentValue, $fallbackValue);
+                continue;
+            }
+
+            if ($currentValue === null) {
+                $current[$key] = $fallbackValue;
+                continue;
+            }
+
+            if (is_string($currentValue) && trim($currentValue) === '') {
+                $current[$key] = $fallbackValue;
+            }
+        }
+
+        return $current;
+    }
+
+    private function normalizeNullableString(?string $value): ?string
+    {
+        if ($value === null) {
+            return null;
+        }
+
+        $normalized = trim($value);
+        return $normalized !== '' ? $normalized : null;
     }
 
     /**
@@ -118,6 +303,11 @@ class CampaignDeliveryService
     private function sendEmail(Campaign $campaign, string $destination, array $vars, array $meta): array
     {
         $payload = $this->renderer->renderChannel($campaign, 'email', $vars);
+        $unknownPlaceholders = $this->normalizeUnknownPlaceholders($payload['unknown_placeholders'] ?? []);
+        if ($unknownPlaceholders !== []) {
+            $meta['unknown_placeholders'] = $unknownPlaceholders;
+        }
+
         $subject = trim((string) ($payload['subject'] ?? ''));
         $message = trim((string) ($payload['message'] ?? ''));
 
@@ -157,6 +347,11 @@ class CampaignDeliveryService
     private function sendWhatsApp(Campaign $campaign, string $destination, array $vars, array $meta): array
     {
         $payload = $this->renderer->renderChannel($campaign, 'whatsapp', $vars);
+        $unknownPlaceholders = $this->normalizeUnknownPlaceholders($payload['unknown_placeholders'] ?? []);
+        if ($unknownPlaceholders !== []) {
+            $meta['unknown_placeholders'] = $unknownPlaceholders;
+        }
+
         $compositionMode = strtolower(trim((string) ($payload['composition_mode'] ?? 'manual')));
         $templateType = strtolower(trim((string) ($payload['template_type'] ?? '')));
         $messageType = strtolower(trim((string) ($payload['message_type'] ?? 'text')));
@@ -657,6 +852,29 @@ class CampaignDeliveryService
                 ? $provider
                 : 'whatsapp_business',
         };
+    }
+
+    /**
+     * @param mixed $placeholders
+     * @return array<int,string>
+     */
+    private function normalizeUnknownPlaceholders(mixed $placeholders): array
+    {
+        if (!is_array($placeholders)) {
+            return [];
+        }
+
+        $normalized = [];
+        foreach ($placeholders as $placeholder) {
+            $value = trim((string) $placeholder);
+            if ($value === '' || in_array($value, $normalized, true)) {
+                continue;
+            }
+
+            $normalized[] = $value;
+        }
+
+        return $normalized;
     }
 }
 
