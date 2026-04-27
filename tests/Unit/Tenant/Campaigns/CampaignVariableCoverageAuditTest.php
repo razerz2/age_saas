@@ -208,7 +208,7 @@ it('hydrates all documented campaign placeholders across manual test, patient te
 
     expect($runPayload['unknown_placeholders'] ?? [])->toBe([])
         ->and((string) ($runPayload['text'] ?? ''))->toContain('Rafael Flores')
-        ->and((string) ($runPayload['text'] ?? ''))->toContain('/workspace/clinica-auditoria/agendamento/identificar');
+        ->and((string) ($runPayload['text'] ?? ''))->toContain('/customer/clinica-auditoria/agendamento/identificar');
 });
 
 it('supports legacy and undocumented placeholders in real campaign run context', function () {
@@ -333,4 +333,3 @@ it('keeps dotted and underscore aliases in official template variables payload',
         ->and($officialVariables)->toHaveKey('now.date')
         ->and($officialVariables)->toHaveKey('now_date');
 });
-

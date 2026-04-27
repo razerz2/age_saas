@@ -8,12 +8,14 @@ use App\Services\Tenant\CampaignRecipientContextBuilder;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\URL;
 use Tests\TestCase;
 
 uses(TestCase::class);
 
 beforeEach(function (): void {
     config([
+        'app.url' => 'https://allsync.com.br',
         'database.default' => 'sqlite',
         'database.connections.sqlite' => [
             'driver' => 'sqlite',
@@ -75,8 +77,8 @@ it('builds the same patient and clinic context used by campaign test send', func
         ->and(data_get($context, 'patient.full_name'))->toBe('Rafael Flores')
         ->and(data_get($context, 'patient.first_name'))->toBe('Rafael')
         ->and(data_get($context, 'clinic.name'))->toBe('Clinica Contexto')
-        ->and(data_get($context, 'links.public_booking'))->toContain('/workspace/clinica-contexto/agendamento/identificar')
-        ->and(data_get($context, 'links.portal'))->toContain('/workspace/clinica-contexto/agendamento/identificar')
+        ->and(data_get($context, 'links.public_booking'))->toContain('/customer/clinica-contexto/agendamento/identificar')
+        ->and(data_get($context, 'links.portal'))->toContain('/customer/clinica-contexto/agendamento/identificar')
         ->and(data_get($context, 'links.whatsapp'))->toBe('https://wa.me/67999990000')
         ->and(data_get($context, 'now.date'))->toBe('21/04/2026');
 });
@@ -123,8 +125,29 @@ it('hydrates campaign run audience recipients with patient.name and public link'
         ->and(data_get($vars, 'patient.first_name'))->toBe('Rafael')
         ->and(data_get($vars, 'patient.phone'))->toBe('556793087866')
         ->and(data_get($vars, 'clinic.name'))->toBe('Clinica Contexto')
-        ->and(data_get($vars, 'links.public_booking'))->toContain('/workspace/clinica-contexto/agendamento/identificar')
-        ->and(data_get($vars, 'links.portal'))->toContain('/workspace/clinica-contexto/agendamento/identificar')
+        ->and(data_get($vars, 'links.public_booking'))->toContain('/customer/clinica-contexto/agendamento/identificar')
+        ->and(data_get($vars, 'links.portal'))->toContain('/customer/clinica-contexto/agendamento/identificar')
         ->and(data_get($vars, 'links.whatsapp'))->toBe('https://wa.me/67999990000')
         ->and(data_get($vars, 'now.date'))->toBe('21/04/2026');
+});
+
+it('builds links.public_booking with public customer route for clinica-teste', function () {
+    URL::forceRootUrl('https://allsync.com.br');
+    URL::forceScheme('https');
+
+    $tenant = new Tenant();
+    $tenant->id = 'tenant-campaign-context-clinica-teste';
+    $tenant->subdomain = 'clinica-teste';
+    $tenant->trade_name = 'Clinica Teste';
+    $tenant->phone = '67999990000';
+    $tenant->email = 'contato@clinica-teste.test';
+    $tenant->address = 'Rua Central, 123';
+
+    app()->instance(config('multitenancy.current_tenant_container_key', 'currentTenant'), $tenant);
+
+    $context = app(CampaignRecipientContextBuilder::class)->buildBaseContext('2026-04-21');
+    $publicBooking = (string) data_get($context, 'links.public_booking');
+
+    expect($publicBooking)->toBe('https://allsync.com.br/customer/clinica-teste/agendamento/identificar')
+        ->and($publicBooking)->not->toContain('/workspace/clinica-teste/agendamento/identificar');
 });

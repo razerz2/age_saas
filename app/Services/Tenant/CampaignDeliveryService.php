@@ -90,11 +90,13 @@ class CampaignDeliveryService
     ): array {
         $persistedVars = is_array($recipient->vars_json) ? $recipient->vars_json : [];
         $builder = $this->recipientContextBuilder ?? app(CampaignRecipientContextBuilder::class);
+        $baseContext = $builder->buildBaseContext();
 
         $resolved = $this->mergeMissingRecursively(
             $persistedVars,
-            $builder->buildBaseContext()
+            $baseContext
         );
+        $resolved = $this->refreshPublicLinks($resolved, $baseContext);
 
         $patientContext = $this->resolvePatientContextForRecipient(
             $recipient,
@@ -261,6 +263,21 @@ class CampaignDeliveryService
 
         $normalized = trim($value);
         return $normalized !== '' ? $normalized : null;
+    }
+
+    /**
+     * @param array<string,mixed> $vars
+     * @param array<string,mixed> $baseContext
+     * @return array<string,mixed>
+     */
+    private function refreshPublicLinks(array $vars, array $baseContext): array
+    {
+        $publicBooking = trim((string) data_get($baseContext, 'links.public_booking', ''));
+        if ($publicBooking !== '') {
+            data_set($vars, 'links.public_booking', $publicBooking);
+        }
+
+        return $vars;
     }
 
     /**

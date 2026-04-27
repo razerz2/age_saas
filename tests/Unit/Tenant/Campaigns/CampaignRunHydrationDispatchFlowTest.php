@@ -172,7 +172,7 @@ it('persists recipient vars_json and hydrates whatsapp message in real run dispa
     $vars = is_array($recipient?->vars_json) ? $recipient->vars_json : [];
 
     expect(data_get($vars, 'patient.name'))->toBe('Rafael Flores')
-        ->and(data_get($vars, 'links.public_booking'))->toContain('/workspace/clinica-run-flow/agendamento/identificar');
+        ->and(data_get($vars, 'links.public_booking'))->toContain('/customer/clinica-run-flow/agendamento/identificar');
 
     $providerResolver = \Mockery::mock(CampaignTemplateProviderResolver::class);
     $providerResolver->shouldReceive('resolveWhatsAppProvider')->andReturn('waha');
@@ -231,7 +231,8 @@ it('persists recipient vars_json and hydrates whatsapp message in real run dispa
         ->and($capturedSendArgs['tenant_id'] ?? null)->toBe('tenant-campaign-run-flow')
         ->and($capturedSendArgs['destination'] ?? null)->toBe('556793087866')
         ->and((string) ($capturedSendArgs['text'] ?? ''))->toContain('Rafael Flores')
-        ->and((string) ($capturedSendArgs['text'] ?? ''))->toContain('/workspace/clinica-run-flow/agendamento/identificar')
+        ->and((string) ($capturedSendArgs['text'] ?? ''))->toContain('/customer/clinica-run-flow/agendamento/identificar')
+        ->and((string) ($capturedSendArgs['text'] ?? ''))->not->toContain('/workspace/clinica-run-flow/agendamento/identificar')
         ->and(($capturedSendArgs['meta']['origin'] ?? null))->toBe('campaign_run')
         ->and(array_key_exists('unknown_placeholders', $capturedSendArgs['meta'] ?? []))->toBeFalse()
         ->and(array_key_exists('provider_override', $capturedSendArgs))->toBeTrue();
@@ -285,7 +286,7 @@ it('hydrates vars correctly for a newly created scheduled run', function () {
 
     $vars = is_array($recipient->vars_json) ? $recipient->vars_json : [];
     expect(data_get($vars, 'patient.name'))->toBe('Julia Prado')
-        ->and(data_get($vars, 'links.public_booking'))->toContain('/workspace/clinica-run-flow/agendamento/identificar');
+        ->and(data_get($vars, 'links.public_booking'))->toContain('/customer/clinica-run-flow/agendamento/identificar');
 
     $providerResolver = \Mockery::mock(CampaignTemplateProviderResolver::class);
     $providerResolver->shouldReceive('resolveWhatsAppProvider')->andReturn('waha');
@@ -305,7 +306,7 @@ it('hydrates vars correctly for a newly created scheduled run', function () {
             return $tenantId === 'tenant-campaign-run-flow'
                 && $destination === '556791234567'
                 && str_contains($text, 'Julia Prado')
-                && str_contains($text, '/workspace/clinica-run-flow/agendamento/identificar')
+                && str_contains($text, '/customer/clinica-run-flow/agendamento/identificar')
                 && ($meta['origin'] ?? null) === 'campaign_run';
         })
         ->andReturn(true);
@@ -390,6 +391,9 @@ it('rehydrates legacy scheduled recipient vars before dispatch', function () {
             'full_name' => 'Rafael Flores',
             'phone' => '556793087866',
         ],
+        'links' => [
+            'public_booking' => 'https://allsync.com.br/workspace/clinica-run-flow/agendamento/identificar',
+        ],
         'now' => [
             'date' => '2026-04-21',
         ],
@@ -464,12 +468,14 @@ it('rehydrates legacy scheduled recipient vars before dispatch', function () {
     expect($result['success'])->toBeTrue()
         ->and($result['error_message'])->toBeNull()
         ->and((string) ($capturedSendArgs['text'] ?? ''))->toContain('Rafael Flores')
-        ->and((string) ($capturedSendArgs['text'] ?? ''))->toContain('/workspace/clinica-run-flow/agendamento/identificar');
+        ->and((string) ($capturedSendArgs['text'] ?? ''))->toContain('/customer/clinica-run-flow/agendamento/identificar')
+        ->and((string) ($capturedSendArgs['text'] ?? ''))->not->toContain('/workspace/clinica-run-flow/agendamento/identificar');
 
     $recipient->refresh();
     $updatedVars = is_array($recipient->vars_json) ? $recipient->vars_json : [];
 
     expect(data_get($updatedVars, 'patient.name'))->toBe('Rafael Flores')
-        ->and(data_get($updatedVars, 'links.public_booking'))->toContain('/workspace/clinica-run-flow/agendamento/identificar')
+        ->and(data_get($updatedVars, 'links.public_booking'))->toContain('/customer/clinica-run-flow/agendamento/identificar')
+        ->and((string) data_get($updatedVars, 'links.public_booking'))->not->toContain('/workspace/clinica-run-flow/agendamento/identificar')
         ->and(data_get($updatedVars, 'clinic.name'))->toBe('Clinica Run Flow');
 });

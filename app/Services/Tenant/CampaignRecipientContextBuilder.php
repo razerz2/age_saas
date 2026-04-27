@@ -4,6 +4,8 @@ namespace App\Services\Tenant;
 
 use App\Models\Tenant\Patient;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Route;
+use Throwable;
 
 class CampaignRecipientContextBuilder
 {
@@ -18,7 +20,7 @@ class CampaignRecipientContextBuilder
         $clinicEmail = trim((string) ($tenant?->email ?? ''));
         $clinicAddress = trim((string) ($tenant?->address ?? ''));
         $slug = trim((string) ($tenant?->subdomain ?? ''));
-        $publicBookingUrl = $slug !== '' ? url('/workspace/' . $slug . '/agendamento/identificar') : null;
+        $publicBookingUrl = $slug !== '' ? $this->buildPublicBookingUrl($slug) : null;
         $portalUrl = $publicBookingUrl;
         $whatsAppLink = $this->buildWhatsAppLink($clinicPhone);
 
@@ -136,5 +138,20 @@ class CampaignRecipientContextBuilder
         }
 
         return 'https://wa.me/' . $digits;
+    }
+
+    private function buildPublicBookingUrl(string $slug): string
+    {
+        $slug = trim($slug, '/');
+
+        try {
+            if (Route::has('public.patient.identify')) {
+                return route('public.patient.identify', ['slug' => $slug]);
+            }
+        } catch (Throwable) {
+            // Fallback para URL pública canônica.
+        }
+
+        return url('/customer/' . $slug . '/agendamento/identificar');
     }
 }
