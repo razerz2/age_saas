@@ -4,6 +4,12 @@
 @section('description', 'Sistema completo de agendamentos para clínicas, psicólogos, odontologias e profissionais de saúde. Agende consultas presenciais e online, gerencie pacientes, médicos e muito mais.')
 
 @section('content')
+    @php
+        $landingScreenshotMedicalAttendance = sysconfig('landing.screenshot_medical_attendance');
+        $landingScreenshotOnlineScheduling = sysconfig('landing.screenshot_online_scheduling');
+        $landingScreenshotPatientPortal = sysconfig('landing.screenshot_patient_portal');
+    @endphp
+
     <!-- Hero Section -->
     <section class="relative bg-gradient-to-br from-blue-50 via-white to-blue-50 py-20 lg:py-32">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -271,8 +277,16 @@
                         </li>
                     </ul>
                 </div>
-                <div class="bg-gray-100 rounded-lg p-8 flex items-center justify-center">
-                    <p class="text-gray-500 text-center">Screenshot do módulo de atendimento médico</p>
+                <div class="w-full h-72 md:h-80 lg:h-96 rounded-lg overflow-hidden bg-gray-100 border border-gray-200 shadow-sm flex items-center justify-center">
+                    @if($landingScreenshotMedicalAttendance)
+                        <img
+                            src="{{ asset('storage/' . $landingScreenshotMedicalAttendance) }}"
+                            alt="Screenshot do módulo de atendimento médico"
+                            class="w-full h-full object-cover object-top"
+                        >
+                    @else
+                        <p class="text-gray-500 text-center px-4">Screenshot do módulo de atendimento médico</p>
+                    @endif
                 </div>
             </div>
         </div>
@@ -282,8 +296,16 @@
     <section class="py-16 lg:py-24 bg-gray-50">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-                <div class="order-2 lg:order-1 bg-gray-100 rounded-lg p-8 flex items-center justify-center">
-                    <p class="text-gray-500 text-center">Screenshot de agendamento online</p>
+                <div class="order-2 lg:order-1 w-full h-72 md:h-80 lg:h-96 rounded-lg overflow-hidden bg-gray-100 border border-gray-200 shadow-sm flex items-center justify-center">
+                    @if($landingScreenshotOnlineScheduling)
+                        <img
+                            src="{{ asset('storage/' . $landingScreenshotOnlineScheduling) }}"
+                            alt="Screenshot de agendamento online"
+                            class="w-full h-full object-cover object-top"
+                        >
+                    @else
+                        <p class="text-gray-500 text-center px-4">Screenshot de agendamento online</p>
+                    @endif
                 </div>
                 <div class="order-1 lg:order-2">
                     <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-4">Agendamentos Online</h2>
@@ -329,6 +351,18 @@
                 <p class="text-xl text-gray-600 max-w-2xl mx-auto">
                     Ofereça uma experiência completa aos seus pacientes com acesso personalizado
                 </p>
+            </div>
+
+            <div class="mb-10 w-full h-72 md:h-80 lg:h-96 rounded-lg overflow-hidden bg-gray-100 border border-gray-200 shadow-sm flex items-center justify-center">
+                @if($landingScreenshotPatientPortal)
+                    <img
+                        src="{{ asset('storage/' . $landingScreenshotPatientPortal) }}"
+                        alt="Screenshot do portal do paciente"
+                        class="w-full h-full object-cover object-top"
+                    >
+                @else
+                    <p class="text-gray-500 text-center px-4">Screenshot do portal do paciente</p>
+                @endif
             </div>
             
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">

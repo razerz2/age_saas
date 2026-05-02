@@ -447,6 +447,7 @@ Route::middleware(['auth'])->prefix('Platform')->name('Platform.')->group(functi
         })->name('settings.update.integrations.get');
         Route::post('settings/update/integrations', [SystemSettingsController::class, 'updateIntegrations'])->name('settings.update.integrations');
         Route::post('settings/update/logos', [SystemSettingsController::class, 'updateLogos'])->name('settings.update.logos');
+        Route::post('settings/update/landing', [SystemSettingsController::class, 'updateLandingPage'])->name('settings.update.landing');
         Route::post('settings/update/billing', [SystemSettingsController::class, 'updateBilling'])->name('settings.update.billing');
         Route::post('settings/update/notifications', [SystemSettingsController::class, 'updateNotifications'])->name('settings.update.notifications');
         Route::post('settings/update/commands', [SystemSettingsController::class, 'updateScheduledCommands'])->name('settings.update.commands');

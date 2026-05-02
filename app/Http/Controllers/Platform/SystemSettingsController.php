@@ -71,6 +71,9 @@ class SystemSettingsController extends Controller
             'platform.favicon' => sysconfig('platform.favicon'),
             'landing.logo' => sysconfig('landing.logo'),
             'landing.favicon' => sysconfig('landing.favicon'),
+            'landing.screenshot_medical_attendance' => sysconfig('landing.screenshot_medical_attendance'),
+            'landing.screenshot_online_scheduling' => sysconfig('landing.screenshot_online_scheduling'),
+            'landing.screenshot_patient_portal' => sysconfig('landing.screenshot_patient_portal'),
             'tenant.default_logo' => sysconfig('tenant.default_logo'),
             'tenant.default_logo_light' => sysconfig('tenant.default_logo_light'),
             'tenant.default_logo_dark' => sysconfig('tenant.default_logo_dark'),
@@ -447,6 +450,78 @@ class SystemSettingsController extends Controller
         } catch (\Exception $e) {
             Log::error('Erro ao atualizar logos e favicons', ['error' => $e->getMessage()]);
             return back()->with('error', 'Erro ao atualizar logos e favicons: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Atualiza screenshots da landing page
+     */
+    public function updateLandingPage(Request $request)
+    {
+        $request->validate([
+            'landing_screenshot_medical_attendance' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:5120',
+            'landing_screenshot_online_scheduling' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:5120',
+            'landing_screenshot_patient_portal' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:5120',
+            'remove_landing_screenshot_medical_attendance' => 'nullable|boolean',
+            'remove_landing_screenshot_online_scheduling' => 'nullable|boolean',
+            'remove_landing_screenshot_patient_portal' => 'nullable|boolean',
+        ]);
+
+        try {
+            $screenshots = [
+                [
+                    'input' => 'landing_screenshot_medical_attendance',
+                    'remove' => 'remove_landing_screenshot_medical_attendance',
+                    'config_key' => 'landing.screenshot_medical_attendance',
+                ],
+                [
+                    'input' => 'landing_screenshot_online_scheduling',
+                    'remove' => 'remove_landing_screenshot_online_scheduling',
+                    'config_key' => 'landing.screenshot_online_scheduling',
+                ],
+                [
+                    'input' => 'landing_screenshot_patient_portal',
+                    'remove' => 'remove_landing_screenshot_patient_portal',
+                    'config_key' => 'landing.screenshot_patient_portal',
+                ],
+            ];
+
+            foreach ($screenshots as $screenshot) {
+                $oldPath = sysconfig($screenshot['config_key']);
+
+                if ($request->hasFile($screenshot['input'])) {
+                    $newPath = $request->file($screenshot['input'])->store('platform/landing-screenshots', 'public');
+                    set_sysconfig($screenshot['config_key'], $newPath);
+
+                    if ($oldPath && $oldPath !== $newPath && Storage::disk('public')->exists($oldPath)) {
+                        Storage::disk('public')->delete($oldPath);
+                    }
+
+                    continue;
+                }
+
+                if ($request->input($screenshot['remove']) == '1') {
+                    if ($oldPath && Storage::disk('public')->exists($oldPath)) {
+                        Storage::disk('public')->delete($oldPath);
+                    }
+                    set_sysconfig($screenshot['config_key'], null);
+                }
+            }
+
+            Cache::flush();
+            Artisan::call('view:clear');
+
+            return redirect()
+                ->route('Platform.settings.index', ['tab' => 'landing-page'])
+                ->with('success', 'Screenshots da Landing Page atualizados com sucesso.');
+        } catch (\Throwable $e) {
+            Log::error('Erro ao atualizar screenshots da landing page', [
+                'error' => $e->getMessage(),
+            ]);
+
+            return redirect()
+                ->route('Platform.settings.index', ['tab' => 'landing-page'])
+                ->with('error', 'Não foi possível atualizar as screenshots da Landing Page. Tente novamente.');
         }
     }
 

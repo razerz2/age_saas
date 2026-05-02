@@ -34,6 +34,7 @@
             <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#whatsapp" role="tab">WhatsApp</a>
             </li>
             <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#logos" role="tab">Logos e Favicons</a></li>
+            <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#landing-page" role="tab">Landing Page</a></li>
             <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#email" role="tab">E-mail</a></li>
             <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#pagamentos" role="tab">Pagamentos</a></li>
             <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#notificacoes" role="tab">Notificações</a></li>
@@ -635,6 +636,155 @@
                     <div class="d-flex gap-2 mt-4">
                         <button type="submit" class="btn btn-primary">
                             <i class="fas fa-save me-1"></i> Salvar Logos e Favicons
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            {{-- Aba Landing Page --}}
+            <div class="tab-pane fade" id="landing-page" role="tabpanel">
+                <form method="POST" action="{{ route('Platform.settings.update.landing') }}" enctype="multipart/form-data">
+                    @csrf
+
+                    @php
+                        $landingScreenshotMedicalAttendance = $settings['landing.screenshot_medical_attendance'] ?? null;
+                        $landingScreenshotOnlineScheduling = $settings['landing.screenshot_online_scheduling'] ?? null;
+                        $landingScreenshotPatientPortal = $settings['landing.screenshot_patient_portal'] ?? null;
+                    @endphp
+
+                    <h5 class="mt-2">Landing Page</h5>
+                    <p class="text-muted mb-4">
+                        Recomendado: PNG/JPG/WebP, imagem horizontal, largura mínima 1200px. O sistema padroniza a exibição automaticamente na landing.
+                    </p>
+
+                    <div class="row g-4">
+                        <div class="col-lg-4 col-md-6">
+                            <div class="card h-100">
+                                <div class="card-body">
+                                    <h6 class="mb-3">Módulo de Atendimento Médico</h6>
+                                    <div class="w-100 rounded border border-light-subtle bg-light overflow-hidden mb-3" style="height: 240px;">
+                                        <img
+                                            id="landing-screenshot-medical-attendance-preview-image"
+                                            src="{{ $landingScreenshotMedicalAttendance ? asset('storage/' . $landingScreenshotMedicalAttendance) : '' }}"
+                                            alt="Screenshot do módulo de atendimento médico"
+                                            class="w-100 h-100 {{ $landingScreenshotMedicalAttendance ? '' : 'd-none' }}"
+                                            style="object-fit: cover; object-position: top;"
+                                        >
+                                        <div
+                                            id="landing-screenshot-medical-attendance-placeholder"
+                                            class="w-100 h-100 d-flex align-items-center justify-content-center px-3 {{ $landingScreenshotMedicalAttendance ? 'd-none' : '' }}"
+                                        >
+                                            <span class="text-muted text-center">Screenshot do módulo de atendimento médico</span>
+                                        </div>
+                                    </div>
+
+                                    <input
+                                        type="file"
+                                        class="form-control"
+                                        name="landing_screenshot_medical_attendance"
+                                        id="landing-screenshot-medical-attendance-input"
+                                        accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp"
+                                        onchange="previewImage(this, 'landing-screenshot-medical-attendance-preview-image')"
+                                    >
+
+                                    @if($landingScreenshotMedicalAttendance)
+                                        <div class="mt-3">
+                                            <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeLandingScreenshot('medical-attendance')">
+                                                <i class="fas fa-trash me-1"></i> Remover imagem
+                                            </button>
+                                            <input type="hidden" name="remove_landing_screenshot_medical_attendance" id="remove-landing-screenshot-medical-attendance" value="0">
+                                        </div>
+                                    @endif
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-lg-4 col-md-6">
+                            <div class="card h-100">
+                                <div class="card-body">
+                                    <h6 class="mb-3">Agendamentos Online</h6>
+                                    <div class="w-100 rounded border border-light-subtle bg-light overflow-hidden mb-3" style="height: 240px;">
+                                        <img
+                                            id="landing-screenshot-online-scheduling-preview-image"
+                                            src="{{ $landingScreenshotOnlineScheduling ? asset('storage/' . $landingScreenshotOnlineScheduling) : '' }}"
+                                            alt="Screenshot de agendamento online"
+                                            class="w-100 h-100 {{ $landingScreenshotOnlineScheduling ? '' : 'd-none' }}"
+                                            style="object-fit: cover; object-position: top;"
+                                        >
+                                        <div
+                                            id="landing-screenshot-online-scheduling-placeholder"
+                                            class="w-100 h-100 d-flex align-items-center justify-content-center px-3 {{ $landingScreenshotOnlineScheduling ? 'd-none' : '' }}"
+                                        >
+                                            <span class="text-muted text-center">Screenshot de agendamento online</span>
+                                        </div>
+                                    </div>
+
+                                    <input
+                                        type="file"
+                                        class="form-control"
+                                        name="landing_screenshot_online_scheduling"
+                                        id="landing-screenshot-online-scheduling-input"
+                                        accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp"
+                                        onchange="previewImage(this, 'landing-screenshot-online-scheduling-preview-image')"
+                                    >
+
+                                    @if($landingScreenshotOnlineScheduling)
+                                        <div class="mt-3">
+                                            <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeLandingScreenshot('online-scheduling')">
+                                                <i class="fas fa-trash me-1"></i> Remover imagem
+                                            </button>
+                                            <input type="hidden" name="remove_landing_screenshot_online_scheduling" id="remove-landing-screenshot-online-scheduling" value="0">
+                                        </div>
+                                    @endif
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-lg-4 col-md-12">
+                            <div class="card h-100">
+                                <div class="card-body">
+                                    <h6 class="mb-3">Portal do Paciente</h6>
+                                    <div class="w-100 rounded border border-light-subtle bg-light overflow-hidden mb-3" style="height: 240px;">
+                                        <img
+                                            id="landing-screenshot-patient-portal-preview-image"
+                                            src="{{ $landingScreenshotPatientPortal ? asset('storage/' . $landingScreenshotPatientPortal) : '' }}"
+                                            alt="Screenshot do portal do paciente"
+                                            class="w-100 h-100 {{ $landingScreenshotPatientPortal ? '' : 'd-none' }}"
+                                            style="object-fit: cover; object-position: top;"
+                                        >
+                                        <div
+                                            id="landing-screenshot-patient-portal-placeholder"
+                                            class="w-100 h-100 d-flex align-items-center justify-content-center px-3 {{ $landingScreenshotPatientPortal ? 'd-none' : '' }}"
+                                        >
+                                            <span class="text-muted text-center">Screenshot do portal do paciente</span>
+                                        </div>
+                                    </div>
+
+                                    <input
+                                        type="file"
+                                        class="form-control"
+                                        name="landing_screenshot_patient_portal"
+                                        id="landing-screenshot-patient-portal-input"
+                                        accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp"
+                                        onchange="previewImage(this, 'landing-screenshot-patient-portal-preview-image')"
+                                    >
+
+                                    @if($landingScreenshotPatientPortal)
+                                        <div class="mt-3">
+                                            <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeLandingScreenshot('patient-portal')">
+                                                <i class="fas fa-trash me-1"></i> Remover imagem
+                                            </button>
+                                            <input type="hidden" name="remove_landing_screenshot_patient_portal" id="remove-landing-screenshot-patient-portal" value="0">
+                                        </div>
+                                    @endif
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-flex gap-2 mt-4">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-1"></i> Salvar Landing Page
                         </button>
                     </div>
                 </form>
@@ -1488,12 +1638,43 @@
             const preview = document.getElementById(previewId);
             const file = input.files[0];
             
-            if (file) {
+            if (file && preview) {
                 const reader = new FileReader();
                 reader.onload = function(e) {
                     preview.src = e.target.result;
+                    preview.classList.remove('d-none');
+                    if (previewId.indexOf('-preview-image') !== -1) {
+                        const placeholder = document.getElementById(previewId.replace('-preview-image', '-placeholder'));
+                        if (placeholder) {
+                            placeholder.classList.add('d-none');
+                        }
+                    }
                 };
                 reader.readAsDataURL(file);
+            }
+        }
+
+        function removeLandingScreenshot(type) {
+            const removeInput = document.getElementById('remove-landing-screenshot-' + type);
+            const fileInput = document.getElementById('landing-screenshot-' + type + '-input');
+            const preview = document.getElementById('landing-screenshot-' + type + '-preview-image');
+            const placeholder = document.getElementById('landing-screenshot-' + type + '-placeholder');
+
+            if (removeInput) {
+                removeInput.value = '1';
+            }
+
+            if (fileInput) {
+                fileInput.value = '';
+            }
+
+            if (preview) {
+                preview.src = '';
+                preview.classList.add('d-none');
+            }
+
+            if (placeholder) {
+                placeholder.classList.remove('d-none');
             }
         }
 
