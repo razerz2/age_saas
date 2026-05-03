@@ -19,6 +19,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
+use Illuminate\Support\Collection;
 
 class TenantController extends Controller
 {
@@ -137,11 +138,11 @@ class TenantController extends Controller
 
         $localizacao = $tenant->localizacao;
 
-        $estados = $localizacao
-            ? Estado::where('pais_id', self::BRAZIL_COUNTRY_ID)->orderBy('nome_estado')->get()
-            : collect();
+        $estados = Estado::where('pais_id', self::BRAZIL_COUNTRY_ID)
+            ->orderBy('nome_estado')
+            ->get();
 
-        $cidades = $localizacao
+        $cidades = ($localizacao && $localizacao->estado_id)
             ? Cidade::where('estado_id', $localizacao->estado_id)->orderBy('nome_cidade')->get()
             : collect();
 
@@ -163,22 +164,72 @@ class TenantController extends Controller
                 $validated['db_password']
             );
 
+            $status = (string) ($validated['status'] ?? $tenant->status);
+            if (in_array($status, ['active', 'trial'], true)) {
+                $validated['suspended_at'] = null;
+                $validated['canceled_at'] = null;
+            } elseif ($status === 'suspended') {
+                if (empty($tenant->suspended_at)) {
+                    $validated['suspended_at'] = now();
+                }
+            } elseif (in_array($status, ['canceled', 'cancelled'], true)) {
+                if (empty($tenant->canceled_at)) {
+                    $validated['canceled_at'] = now();
+                }
+            }
+
             $tenant->update($validated);
 
-            $tenant->localizacao()->updateOrCreate(
-                ['tenant_id' => $tenant->id],
-                [
-                    'tenant_id' => $tenant->id,
-                    'endereco' => $request->endereco,
-                    'n_endereco' => $request->n_endereco,
-                    'complemento' => $request->complemento,
-                    'bairro' => $request->bairro,
-                    'cep' => $request->cep,
-                    'pais_id' => self::BRAZIL_COUNTRY_ID,
-                    'estado_id' => $request->estado_id,
-                    'cidade_id' => $request->cidade_id,
-                ]
-            );
+            $locationInput = collect([
+                'endereco' => $request->endereco,
+                'n_endereco' => $request->n_endereco,
+                'complemento' => $request->complemento,
+                'bairro' => $request->bairro,
+                'cep' => $request->cep,
+                'estado_id' => $request->estado_id,
+                'cidade_id' => $request->cidade_id,
+            ]);
+
+            $hasLocationData = $locationInput
+                ->filter(fn ($value) => filled($value))
+                ->isNotEmpty();
+
+            if ($hasLocationData) {
+                $existingLocation = $tenant->localizacao()->first();
+
+                if (! $existingLocation && ! filled($request->endereco)) {
+                    DB::rollBack();
+
+                    return back()
+                        ->withInput()
+                        ->withErrors([
+                            'endereco' => 'Informe o endereço para cadastrar a localização da empresa.',
+                        ]);
+                }
+
+                $locationPayload = $this->buildLocationPayloadForUpdate(
+                    $locationInput,
+                    $existingLocation ? collect($existingLocation->only([
+                        'endereco',
+                        'n_endereco',
+                        'complemento',
+                        'bairro',
+                        'cep',
+                        'estado_id',
+                        'cidade_id',
+                    ])) : collect()
+                );
+
+                if ($existingLocation) {
+                    $existingLocation->update($locationPayload);
+                } else {
+                    $tenant->localizacao()->create([
+                        ...$locationPayload,
+                        'tenant_id' => $tenant->id,
+                        'pais_id' => self::BRAZIL_COUNTRY_ID,
+                    ]);
+                }
+            }
 
             DB::commit();
 
@@ -196,6 +247,29 @@ class TenantController extends Controller
 
             return back()->withErrors(['general' => 'Erro ao atualizar tenant. Consulte o log para mais detalhes.']);
         }
+    }
+
+    private function buildLocationPayloadForUpdate(Collection $incoming, Collection $existing): array
+    {
+        $fields = ['endereco', 'n_endereco', 'complemento', 'bairro', 'cep', 'estado_id', 'cidade_id'];
+        $payload = [
+            'pais_id' => self::BRAZIL_COUNTRY_ID,
+        ];
+
+        foreach ($fields as $field) {
+            $value = $incoming->get($field);
+
+            if (filled($value)) {
+                $payload[$field] = $value;
+                continue;
+            }
+
+            if ($existing->has($field)) {
+                $payload[$field] = $existing->get($field);
+            }
+        }
+
+        return $payload;
     }
 
     public function destroy(Tenant $tenant, AsaasService $asaas)

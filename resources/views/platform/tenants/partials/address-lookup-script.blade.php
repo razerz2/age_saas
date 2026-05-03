@@ -45,6 +45,8 @@
             const citiesUrlTemplate = config.citiesUrlTemplate || '';
             const zipcodeUrlTemplate = config.zipcodeUrlTemplate || '';
             const loadStatesOnInit = Boolean(config.loadStatesOnInit);
+            const initialStateId = String(config.initialStateId || '').trim();
+            const initialCityId = String(config.initialCityId || '').trim();
 
             let statesLoadPromise = null;
             let lastLookupCep = '';
@@ -269,7 +271,12 @@
             });
 
             if (loadStatesOnInit) {
-                ensureStatesLoaded();
+                ensureStatesLoaded(initialStateId).then(() => {
+                    const stateToLoadCities = initialStateId || stateSelect.value || '';
+                    if (stateToLoadCities) {
+                        loadCities(stateToLoadCities, initialCityId);
+                    }
+                });
             }
         };
     })();

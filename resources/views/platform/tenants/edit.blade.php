@@ -1,4 +1,4 @@
-@extends('layouts.freedash.app')
+﻿@extends('layouts.freedash.app')
 
 @section('content')
     <div class="container-fluid">
@@ -23,7 +23,7 @@
                     </div>
 
                     <div class="card-body">
-                        {{-- ✅ Alertas de sucesso --}}
+                        {{-- âœ… Alertas de sucesso --}}
                         @if (session('success'))
                             <div class="alert alert-success alert-dismissible fade show" role="alert">
                                 <i class="fas fa-check-circle me-1"></i> {{ session('success') }}
@@ -32,7 +32,7 @@
                             </div>
                         @endif
 
-                        {{-- ⚠️ Alertas de aviso --}}
+                        {{-- âš ï¸ Alertas de aviso --}}
                         @if (session('warning'))
                             <div class="alert alert-warning alert-dismissible fade show" role="alert">
                                 <i class="fas fa-exclamation-triangle me-1"></i> {{ session('warning') }}
@@ -41,7 +41,7 @@
                             </div>
                         @endif
 
-                        {{-- 🔹 Exibição de erros de validação --}}
+                        {{-- Exibição de erros de validação --}}
                         @if ($errors->any())
                             <div class="alert alert-danger alert-dismissible fade show shadow-sm" role="alert">
                                 <strong>Ops!</strong> Verifique os erros abaixo:
@@ -150,6 +150,9 @@
                                     <h5 class="text-primary fw-bold mb-2">
                                         <i class="fas fa-map-marker-alt me-2"></i> Localização da Empresa
                                     </h5>
+                                    <p class="text-muted mb-1">
+                                        Campos opcionais. Você pode salvar o status e os dados básicos sem preencher localização.
+                                    </p>
                                 </div>
 
                                 @php
@@ -160,8 +163,9 @@
                                     <label class="form-label">Estado</label>
                                     <select id="estado" name="estado_id" class="form-select">
                                         @if ($estados->isNotEmpty())
+                                            <option value="">Selecione...</option>
                                             @foreach ($estados as $estado)
-                                                <option value="{{ $estado->id_estado }}" @selected($loc && $loc->estado_id == $estado->id_estado)>
+                                                <option value="{{ $estado->id_estado }}" @selected(old('estado_id', $loc->estado_id ?? '') == $estado->id_estado)>
                                                     {{ $estado->nome_estado }}
                                                 </option>
                                             @endforeach
@@ -175,8 +179,9 @@
                                     <label class="form-label">Cidade</label>
                                     <select id="cidade" name="cidade_id" class="form-select">
                                         @if ($cidades->isNotEmpty())
+                                            <option value="">Selecione...</option>
                                             @foreach ($cidades as $cidade)
-                                                <option value="{{ $cidade->id_cidade }}" @selected($loc && $loc->cidade_id == $cidade->id_cidade)>
+                                                <option value="{{ $cidade->id_cidade }}" @selected(old('cidade_id', $loc->cidade_id ?? '') == $cidade->id_cidade)>
                                                     {{ $cidade->nome_cidade }}
                                                 </option>
                                             @endforeach
@@ -245,7 +250,9 @@
                 statesUrl: "{{ route('Platform.api.estados') }}",
                 citiesUrlTemplate: "{{ route('Platform.api.cidades', ['estado' => '__ID__']) }}",
                 zipcodeUrlTemplate: "{{ route('api.zipcode', ['zipcode' => '__CEP__']) }}",
-                loadStatesOnInit: false
+                loadStatesOnInit: true,
+                initialStateId: "{{ old('estado_id', $loc->estado_id ?? '') }}",
+                initialCityId: "{{ old('cidade_id', $loc->cidade_id ?? '') }}"
             });
         </script>
     @endpush
