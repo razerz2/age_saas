@@ -205,3 +205,21 @@ test('tenant comercial status marks subscription without plan when relation is m
         ->and($tenant->commercialAccessStatusLabel())->toBe('Assinatura sem plano')
         ->and($tenant->commercialAccessSummaryLabel())->toBe('Bloqueada comercialmente');
 });
+
+test('tenant eligible commercially but suspended operationally shows divergence status in summary label', function () {
+    $tenant = Tenant::factory()->create([
+        'status' => 'suspended',
+    ]);
+    $plan = Plan::factory()->create();
+
+    Subscription::factory()->create([
+        'tenant_id' => $tenant->id,
+        'plan_id' => $plan->id,
+        'status' => 'active',
+        'starts_at' => now()->subDay(),
+        'ends_at' => now()->addDay(),
+    ]);
+
+    expect($tenant->isEligibleForAccess())->toBeTrue()
+        ->and($tenant->commercialAccessSummaryLabel())->toBe('Apta comercialmente, mas bloqueada operacionalmente');
+});

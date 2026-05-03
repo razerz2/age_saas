@@ -841,11 +841,11 @@
                             <div class="row">
                                 <div class="col-md-6">
                                     <div class="form-check mb-2">
-                                        <input class="form-check-input" type="checkbox" id="billing_payment_methods_pix_enabled" name="billing_payment_methods_pix_enabled" value="1" {{ ($settings['billing.payment_methods.pix_enabled'] ?? true) ? 'checked' : '' }}>
+                                        <input class="form-check-input" type="checkbox" id="billing_payment_methods_pix_enabled" name="billing_payment_methods_pix_enabled" value="1" {{ ($settings['billing.payment_methods.pix_enabled'] ?? false) ? 'checked' : '' }}>
                                         <label class="form-check-label" for="billing_payment_methods_pix_enabled">PIX</label>
                                     </div>
                                     <div class="form-check mb-2">
-                                        <input class="form-check-input" type="checkbox" id="billing_payment_methods_pix_recurrent_enabled" name="billing_payment_methods_pix_recurrent_enabled" value="1" {{ ($settings['billing.payment_methods.pix_recurrent_enabled'] ?? false) ? 'checked' : '' }}>
+                                        <input class="form-check-input" type="checkbox" id="billing_payment_methods_pix_recurrent_enabled" name="billing_payment_methods_pix_recurrent_enabled" value="1" {{ ($settings['billing.payment_methods.pix_recurrent_enabled'] ?? true) ? 'checked' : '' }}>
                                         <label class="form-check-label" for="billing_payment_methods_pix_recurrent_enabled">PIX recorrente</label>
                                     </div>
                                     <div class="form-check mb-2">

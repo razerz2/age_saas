@@ -129,6 +129,14 @@ class SubscriptionController extends Controller
             }
 
             $this->applyAccessRulesToTenant($subscription);
+            $subscription->loadMissing(['tenant', 'plan']);
+            if ($subscription->tenant) {
+                $subscription->tenant->restoreOperationalAccessIfEligible(
+                    'platform.subscription.store',
+                    $subscription,
+                    true
+                );
+            }
 
             $result = $this->syncWithAsaas($subscription, true);
 
@@ -230,6 +238,15 @@ class SubscriptionController extends Controller
 
             if (isset($data['plan_id']) && $previousPlanId != $data['plan_id']) {
                 $this->applyAccessRulesToTenant($subscription->fresh());
+            }
+
+            $subscription = $subscription->fresh(['tenant', 'plan']);
+            if ($subscription->tenant) {
+                $subscription->tenant->restoreOperationalAccessIfEligible(
+                    'platform.subscription.update',
+                    $subscription,
+                    true
+                );
             }
 
             if ($hasCriticalChange) {

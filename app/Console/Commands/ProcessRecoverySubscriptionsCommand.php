@@ -215,6 +215,25 @@ class ProcessRecoverySubscriptionsCommand extends Command
                     continue;
                 }
 
+                $activeSubscription = $tenant->activeSubscription();
+                if ($activeSubscription) {
+                    $activeSubscription->loadMissing('plan');
+                    $activePlan = $activeSubscription->plan;
+                    $activeIsEligible = in_array($activeSubscription->status, ['active', 'trialing'], true)
+                        && $activePlan !== null;
+
+                    if ($activeIsEligible) {
+                        Log::info('Cancelamento de tenant ignorado: tenant ja possui assinatura ativa vigente.', [
+                            'tenant_id' => $tenant->id,
+                            'expired_recovery_subscription_id' => $expiredSub->id,
+                            'active_subscription_id' => $activeSubscription->id,
+                            'active_plan_id' => $activePlan?->id,
+                        ]);
+                        $skipped++;
+                        continue;
+                    }
+                }
+
                 $expiredSub->update(['status' => 'canceled']);
 
                 $tenant->update([

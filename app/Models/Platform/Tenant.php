@@ -3,6 +3,7 @@
 namespace App\Models\Platform;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Spatie\Multitenancy\Models\Tenant as BaseTenant;
 
@@ -337,14 +338,22 @@ class Tenant extends BaseTenant
 
     public function commercialAccessSummaryLabel(): string
     {
-        return $this->isEligibleForAccess()
-            ? 'Apta para acesso'
-            : 'Bloqueada comercialmente';
+        if (! $this->isEligibleForAccess()) {
+            return 'Bloqueada comercialmente';
+        }
+
+        return $this->hasOperationalAccessBlock()
+            ? 'Apta comercialmente, mas bloqueada operacionalmente'
+            : 'Apta para acesso';
     }
 
     public function commercialAccessSummaryBadgeClass(): string
     {
-        return $this->isEligibleForAccess() ? 'bg-success' : 'bg-danger';
+        if (! $this->isEligibleForAccess()) {
+            return 'bg-danger';
+        }
+
+        return $this->hasOperationalAccessBlock() ? 'bg-warning text-dark' : 'bg-success';
     }
 
     public function subscriptionGrantsAccess(?Subscription $subscription): bool
@@ -360,6 +369,59 @@ class Tenant extends BaseTenant
         }
 
         return $this->isEligibleForAccess();
+    }
+
+    public function hasOperationalAccessBlock(): bool
+    {
+        return in_array($this->status, ['suspended', 'canceled'], true);
+    }
+
+    public function restoreOperationalAccessIfEligible(string $reason, ?Subscription $subscription = null, bool $clearCanceledAt = false): bool
+    {
+        $subscription = $subscription ?: $this->resolvedActiveSubscription();
+
+        if (! $subscription) {
+            return false;
+        }
+
+        $subscription->loadMissing('plan');
+        $plan = $subscription->plan;
+
+        if (! $plan) {
+            return false;
+        }
+
+        if (! in_array($subscription->status, ['active', 'trialing'], true)) {
+            return false;
+        }
+
+        $isCommerciallyEligible = $this->subscriptionGrantsAccess($subscription);
+        $isTestOrSandbox = $plan->isTest() || $plan->category === Plan::CATEGORY_SANDBOX;
+
+        if (! $isCommerciallyEligible && ! $isTestOrSandbox) {
+            return false;
+        }
+
+        $update = [
+            'status' => 'active',
+            'suspended_at' => null,
+        ];
+
+        if ($clearCanceledAt) {
+            $update['canceled_at'] = null;
+        }
+
+        $this->update($update);
+
+        Log::info('Tenant reativada operacionalmente por assinatura elegivel.', [
+            'tenant_id' => $this->id,
+            'subscription_id' => $subscription->id,
+            'plan_id' => $plan->id,
+            'reason' => $reason,
+            'clear_canceled_at' => $clearCanceledAt,
+        ]);
+
+        return true;
     }
 
     public function initializeTenant(array $attributes)

@@ -13,8 +13,8 @@ class PaymentMethodAvailabilityService
     ];
 
     private const DEFAULTS = [
-        'PIX' => true,
-        'PIX_RECURRENT' => false,
+        'PIX' => false,
+        'PIX_RECURRENT' => true,
         'BOLETO' => true,
         'CREDIT_CARD' => true,
         'DEBIT_CARD' => false,
@@ -70,4 +70,3 @@ class PaymentMethodAvailabilityService
         ];
     }
 }
-

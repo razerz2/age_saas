@@ -40,7 +40,10 @@ class DetectTenantFromPath
                     // 🔒 Validação de Status do Tenant e da Rede
                     if ($tenant->status !== 'active' && $tenant->status !== 'trial') {
                         \Log::warning("🚫 Acesso bloqueado: Tenant '{$tenant->subdomain}' está com status '{$tenant->status}'");
-                        abort(403, 'O acesso a esta clínica está suspenso ou inativo. Entre em contato com o administrador.');
+                        return response()->view('tenant.errors.tenant-access-blocked', [
+                            'message' => 'O acesso a esta clínica está suspenso ou inativo. Entre em contato com o administrador.',
+                            'tenant' => $tenant,
+                        ], 403);
                     }
 
                     if ($tenant->network_id) {

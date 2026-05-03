@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Models\Platform\Invoices;
+use App\Models\Platform\Plan;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Console\Command;
 use App\Services\Platform\WhatsAppOfficialMessageService;
@@ -63,12 +64,56 @@ class CheckOverdueInvoices extends Command
 
         // 🔹 2. Suspende imediatamente todos os tenants com faturas overdue
         $overdueInvoices = Invoices::where('status', 'overdue')
-            ->with('tenant')
+            ->with(['tenant', 'subscription.plan'])
             ->get();
 
         foreach ($overdueInvoices as $invoice) {
             $tenant = $invoice->tenant;
-            
+
+            if (! $tenant) {
+                continue;
+            }
+
+            $currentSubscription = $tenant->activeSubscription();
+
+            if (
+                $currentSubscription
+                && $currentSubscription->id !== $invoice->subscription_id
+            ) {
+                Log::info('Suspensao ignorada: invoice overdue de assinatura nao vigente.', [
+                    'tenant_id' => $tenant->id,
+                    'invoice_id' => $invoice->id,
+                    'invoice_subscription_id' => $invoice->subscription_id,
+                    'current_subscription_id' => $currentSubscription->id,
+                ]);
+                continue;
+            }
+
+            $invoicePlan = $invoice->subscription?->plan;
+            if ($invoicePlan && ($invoicePlan->isTest() || $invoicePlan->category === Plan::CATEGORY_SANDBOX)) {
+                Log::info('Suspensao ignorada: invoice overdue associada a plano de teste/sandbox.', [
+                    'tenant_id' => $tenant->id,
+                    'invoice_id' => $invoice->id,
+                    'plan_id' => $invoicePlan->id,
+                ]);
+                continue;
+            }
+
+            if ($currentSubscription) {
+                $currentSubscription->loadMissing('plan');
+                $currentPlan = $currentSubscription->plan;
+
+                if ($currentPlan && ($currentPlan->isTest() || $currentPlan->category === Plan::CATEGORY_SANDBOX)) {
+                    Log::info('Suspensao ignorada: tenant com assinatura atual ativa em plano de teste/sandbox.', [
+                        'tenant_id' => $tenant->id,
+                        'invoice_id' => $invoice->id,
+                        'current_subscription_id' => $currentSubscription->id,
+                        'current_plan_id' => $currentPlan->id,
+                    ]);
+                    continue;
+                }
+            }
+
             if ($tenant && $tenant->status !== 'suspended') {
                 $tenant->update([
                     'status' => 'suspended',
