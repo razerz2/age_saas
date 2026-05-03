@@ -595,6 +595,21 @@ class PreTenantProcessorService
                 return;
             }
 
+            if (! app(PaymentMethodAvailabilityService::class)->isEnabled((string) $subscription->payment_method)) {
+                $message = "Metodo de pagamento {$subscription->payment_method} desativado para novas cobrancas.";
+                Log::warning($message, [
+                    'subscription_id' => $subscription->id,
+                    'tenant_id' => $tenant->id ?? null,
+                ]);
+                $subscription->update([
+                    'asaas_synced' => false,
+                    'asaas_sync_status' => 'failed',
+                    'asaas_last_error' => $message,
+                    'asaas_last_sync_at' => now(),
+                ]);
+                return;
+            }
+
             // 🔹 Status inicial — aguardando sincronização
             $subscription->update([
                 'asaas_synced' => false,

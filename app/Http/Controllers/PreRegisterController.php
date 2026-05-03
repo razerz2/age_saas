@@ -12,6 +12,7 @@ use App\Models\Platform\Tenant;
 use App\Models\Platform\Plan;
 use App\Models\Platform\Subscription;
 use App\Services\AsaasService;
+use App\Services\Platform\PaymentMethodAvailabilityService;
 use App\Services\Platform\PreTenantProcessorService;
 use App\Services\Platform\TenantPlanService;
 
@@ -125,6 +126,14 @@ class PreRegisterController extends Controller
 
             if ($request->boolean('trial')) {
                 return $this->handleCommercialTrial($request, $plan, $subdomain);
+            }
+
+            $paymentMethodService = app(PaymentMethodAvailabilityService::class);
+            $enabledPaymentMethods = $paymentMethodService->enabledMethods();
+            if ($enabledPaymentMethods === []) {
+                return response()->json([
+                    'error' => 'Pagamento temporariamente indisponível. Tente novamente mais tarde.',
+                ], 422);
             }
 
             // Criar pré-tenant dentro de transação para garantir rollback em caso de erro
@@ -292,6 +301,7 @@ class PreRegisterController extends Controller
                 'value' => $paymentValue,
                 'dueDateLimitDays' => 5,
                 'externalReference' => $preTenant->id,
+                'enabled_payment_methods' => $enabledPaymentMethods,
             ];
 
             Log::info('Criando Payment Link no Asaas', [

@@ -7,6 +7,7 @@ use App\Http\Requests\Platform\TenantRequest;
 use App\Mail\TenantAdminCredentialsMail;
 use App\Models\Platform\Cidade;
 use App\Models\Platform\Estado;
+use App\Models\Platform\Invoices;
 use App\Models\Platform\Plan;
 use App\Models\Platform\Tenant;
 use App\Services\AsaasService;
@@ -21,7 +22,7 @@ use Illuminate\Support\Str;
 
 class TenantController extends Controller
 {
-    public const CREATED_PENDING_COMMERCIAL_MESSAGE = 'Tenant criada com sucesso, porém o acesso está bloqueado até que um plano e uma assinatura válidos sejam definidos.';
+    public const CREATED_PENDING_COMMERCIAL_MESSAGE = 'Tenant criada com sucesso. As credenciais foram retidas e serão liberadas após confirmação de pagamento/regularização comercial.';
     public const CREATED_ELIGIBLE_MESSAGE = 'Tenant criada com sucesso e apta para acesso.';
     private const BRAZIL_COUNTRY_ID = 31;
 
@@ -316,6 +317,12 @@ class TenantController extends Controller
     public function sendCredentials(Tenant $tenant)
     {
         try {
+            if (! $this->canManuallyResendCredentials($tenant)) {
+                return back()->withErrors([
+                    'general' => 'Reenvio bloqueado: tenant comercial real sem assinatura ativa/paga. Regularize o plano antes de enviar credenciais.',
+                ]);
+            }
+
             $tenantAdmin = $tenant->admin;
 
             if (! $tenantAdmin) {
@@ -376,5 +383,35 @@ class TenantController extends Controller
 
             return back()->withErrors(['general' => 'Erro ao enviar credenciais. Consulte o log para mais detalhes.']);
         }
+    }
+
+    private function canManuallyResendCredentials(Tenant $tenant): bool
+    {
+        $subscription = $tenant->activeSubscription();
+
+        if (! $subscription) {
+            return false;
+        }
+
+        $subscription->loadMissing('plan');
+        $plan = $subscription->plan;
+
+        if (! $plan) {
+            return false;
+        }
+
+        if ($plan->isTest() || (bool) $subscription->is_trial) {
+            return true;
+        }
+
+        if (! $plan->isReal()) {
+            return false;
+        }
+
+        return Invoices::query()
+            ->where('tenant_id', $tenant->id)
+            ->where('subscription_id', $subscription->id)
+            ->whereIn('status', ['paid', 'received', 'confirmed'])
+            ->exists();
     }
 }

@@ -86,8 +86,28 @@ class TenantCreatorService
                 ]
             );
 
-            // 6. Enviar e-mail de credenciais
-            $this->sendCredentials($tenant, $loginUrl, $adminEmail, $adminPassword);
+            $plan = null;
+            if ($planId) {
+                $plan = Plan::query()->find($planId);
+            }
+
+            // 6. Enviar credenciais automaticamente apenas para plano de teste/trial.
+            if ($this->shouldAutoSendCredentials($data, $plan)) {
+                $this->sendCredentials($tenant, $loginUrl, $adminEmail, $adminPassword);
+                Log::info('Credenciais enviadas automaticamente no cadastro manual do tenant.', [
+                    'tenant_id' => $tenant->id,
+                    'plan_id' => $plan?->id,
+                    'plan_type' => $plan?->plan_type,
+                    'is_trial' => $this->isManualTrialContext($data),
+                ]);
+            } else {
+                Log::info('Credenciais retidas no cadastro manual do tenant por pendencia comercial.', [
+                    'tenant_id' => $tenant->id,
+                    'plan_id' => $plan?->id,
+                    'plan_type' => $plan?->plan_type,
+                    'reason' => $planId ? 'commercial_real_or_unknown_manual_context' : 'missing_plan_id',
+                ]);
+            }
 
             // 7. Configuração de Plano / Acesso
             if ($planId) {
@@ -164,6 +184,27 @@ class TenantCreatorService
         } catch (\Throwable $e) {
             Log::error('Erro ao criar assinatura automática: ' . $e->getMessage());
         }
+    }
+
+    private function shouldAutoSendCredentials(array $data, ?Plan $plan): bool
+    {
+        if ($this->isManualTrialContext($data)) {
+            return true;
+        }
+
+        if (! $plan) {
+            return false;
+        }
+
+        return $plan->isTest();
+    }
+
+    private function isManualTrialContext(array $data): bool
+    {
+        return (bool) ($data['is_trial'] ?? false)
+            || (bool) ($data['trial'] ?? false)
+            || ! empty($data['trial_ends_at'])
+            || (($data['status'] ?? null) === 'trial');
     }
 
     private function sendCredentials(Tenant $tenant, string $loginUrl, string $adminEmail, string $adminPassword): void

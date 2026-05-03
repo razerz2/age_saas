@@ -406,6 +406,21 @@ class AsaasService
     public function createPaymentLink(array $data)
     {
         try {
+            $enabledMethods = array_map('strtoupper', (array) ($data['enabled_payment_methods'] ?? []));
+            if ($enabledMethods !== []) {
+                $allowPix = in_array('PIX', $enabledMethods, true) || in_array('PIX_RECURRENT', $enabledMethods, true);
+                $allowBoleto = in_array('BOLETO', $enabledMethods, true);
+                $allowCreditCard = in_array('CREDIT_CARD', $enabledMethods, true) || in_array('DEBIT_CARD', $enabledMethods, true);
+
+                if (! $allowPix && ! $allowBoleto && ! $allowCreditCard) {
+                    return ['error' => 'Nenhum método de pagamento habilitado.'];
+                }
+            } else {
+                $allowPix = true;
+                $allowBoleto = true;
+                $allowCreditCard = true;
+            }
+
             $payload = [
                 'name'              => $data['name'] ?? 'Pagamento de Plano',
                 'description'      => $data['description'] ?? 'Pagamento de plano SaaS',
@@ -413,6 +428,9 @@ class AsaasService
                 'chargeType'        => 'DETACHED', // Pagamento único (não recorrente)
                 'value'             => $data['value'] ?? 0,
                 'dueDateLimitDays'  => $data['dueDateLimitDays'] ?? 5,
+                'enablePix' => $allowPix,
+                'enableBankSlip' => $allowBoleto,
+                'enableCreditCard' => $allowCreditCard,
             ];
 
             // Se tiver customer, vincula ao cliente

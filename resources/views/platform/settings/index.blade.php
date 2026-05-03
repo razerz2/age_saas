@@ -831,6 +831,46 @@
                     <p class="text-muted mb-4">Configure os parâmetros automáticos de geração e notificação de faturas.</p>
 
                     <div class="card mb-4">
+                        <div class="card-header bg-secondary text-white">
+                            <h6 class="mb-0"><i class="fas fa-credit-card me-2"></i> Métodos de pagamento disponíveis</h6>
+                        </div>
+                        <div class="card-body">
+                            <p class="text-muted mb-3">
+                                Escolha quais métodos poderão ser usados em novas assinaturas e contratações públicas.
+                            </p>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-check mb-2">
+                                        <input class="form-check-input" type="checkbox" id="billing_payment_methods_pix_enabled" name="billing_payment_methods_pix_enabled" value="1" {{ ($settings['billing.payment_methods.pix_enabled'] ?? true) ? 'checked' : '' }}>
+                                        <label class="form-check-label" for="billing_payment_methods_pix_enabled">PIX</label>
+                                    </div>
+                                    <div class="form-check mb-2">
+                                        <input class="form-check-input" type="checkbox" id="billing_payment_methods_pix_recurrent_enabled" name="billing_payment_methods_pix_recurrent_enabled" value="1" {{ ($settings['billing.payment_methods.pix_recurrent_enabled'] ?? false) ? 'checked' : '' }}>
+                                        <label class="form-check-label" for="billing_payment_methods_pix_recurrent_enabled">PIX recorrente</label>
+                                    </div>
+                                    <div class="form-check mb-2">
+                                        <input class="form-check-input" type="checkbox" id="billing_payment_methods_boleto_enabled" name="billing_payment_methods_boleto_enabled" value="1" {{ ($settings['billing.payment_methods.boleto_enabled'] ?? true) ? 'checked' : '' }}>
+                                        <label class="form-check-label" for="billing_payment_methods_boleto_enabled">Boleto</label>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-check mb-2">
+                                        <input class="form-check-input" type="checkbox" id="billing_payment_methods_credit_card_enabled" name="billing_payment_methods_credit_card_enabled" value="1" {{ ($settings['billing.payment_methods.credit_card_enabled'] ?? true) ? 'checked' : '' }}>
+                                        <label class="form-check-label" for="billing_payment_methods_credit_card_enabled">Cartão de crédito</label>
+                                    </div>
+                                    <div class="form-check mb-2">
+                                        <input class="form-check-input" type="checkbox" id="billing_payment_methods_debit_card_enabled" name="billing_payment_methods_debit_card_enabled" value="1" {{ ($settings['billing.payment_methods.debit_card_enabled'] ?? false) ? 'checked' : '' }}>
+                                        <label class="form-check-label" for="billing_payment_methods_debit_card_enabled">Cartão de débito</label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="alert alert-warning mt-3 mb-0 py-2 px-3">
+                                Métodos desativados não aparecerão em novas assinaturas. Assinaturas existentes podem manter o método antigo.
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card mb-4">
                         <div class="card-header bg-primary text-white">
                             <h6 class="mb-0"><i class="fas fa-file-invoice me-2"></i> Geração Automática de Faturas</h6>
                         </div>

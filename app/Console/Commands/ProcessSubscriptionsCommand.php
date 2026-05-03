@@ -8,7 +8,7 @@ use App\Models\Platform\Subscription;
 use App\Models\Platform\Tenant;
 use App\Services\AsaasService;
 use App\Services\Platform\InvoiceAsaasSyncService;
-use App\Services\Platform\WhatsAppOfficialMessageService;
+use App\Services\Platform\InvoicePaymentNotificationService;
 use App\Services\SystemNotificationService;
 use Carbon\Carbon;
 use Illuminate\Console\Command;
@@ -17,8 +17,8 @@ use Illuminate\Support\Facades\Log;
 class ProcessSubscriptionsCommand extends Command
 {
     public function __construct(
-        private readonly WhatsAppOfficialMessageService $officialWhatsApp,
-        private readonly InvoiceAsaasSyncService $invoiceAsaasSyncService
+        private readonly InvoiceAsaasSyncService $invoiceAsaasSyncService,
+        private readonly InvoicePaymentNotificationService $invoicePaymentNotificationService
     ) {
         parent::__construct();
     }
@@ -235,25 +235,7 @@ class ProcessSubscriptionsCommand extends Command
                     continue;
                 }
 
-                if ($tenant->phone && $this->hasRealPaymentLink($invoice->payment_link)) {
-                    $this->officialWhatsApp->sendByKey(
-                        'invoice.created',
-                        $tenant->phone,
-                        [
-                            'customer_name' => $tenant->trade_name,
-                            'tenant_name' => $tenant->trade_name,
-                            'invoice_amount' => 'R$ ' . number_format($invoice->amount_cents / 100, 2, ',', '.'),
-                            'due_date' => Carbon::parse($invoice->due_date)->format('d/m/Y'),
-                            'payment_link' => trim((string) $invoice->payment_link),
-                        ],
-                        [
-                            'command' => static::class,
-                            'invoice_id' => (string) $invoice->id,
-                            'tenant_id' => (string) $tenant->id,
-                            'event' => 'invoice.created',
-                        ]
-                    );
-                }
+                $this->invoicePaymentNotificationService->notifyInvoiceCreated($invoice);
 
                 // IMPORTANTE: nao renova starts_at/ends_at/status aqui.
                 // Renovacao ocorre apenas no webhook PAYMENT_RECEIVED/PAYMENT_CONFIRMED
@@ -290,25 +272,7 @@ class ProcessSubscriptionsCommand extends Command
                     continue;
                 }
 
-                if ($tenant->phone && $this->hasRealPaymentLink($invoice->payment_link)) {
-                    $this->officialWhatsApp->sendByKey(
-                        'invoice.created',
-                        $tenant->phone,
-                        [
-                            'customer_name' => $tenant->trade_name,
-                            'tenant_name' => $tenant->trade_name,
-                            'invoice_amount' => 'R$ ' . number_format($invoice->amount_cents / 100, 2, ',', '.'),
-                            'due_date' => Carbon::parse($invoice->due_date)->format('d/m/Y'),
-                            'payment_link' => trim((string) $invoice->payment_link),
-                        ],
-                        [
-                            'command' => static::class,
-                            'invoice_id' => (string) $invoice->id,
-                            'tenant_id' => (string) $tenant->id,
-                            'event' => 'invoice.created',
-                        ]
-                    );
-                }
+                $this->invoicePaymentNotificationService->notifyInvoiceCreated($invoice);
 
                 Log::info("Cobranca BOLETO gerada para tenant {$tenant->trade_name} sem renovacao antecipada da assinatura.");
                 $createdInvoices++;
@@ -327,26 +291,7 @@ class ProcessSubscriptionsCommand extends Command
             Subscription::where('id', $inv->subscription_id)->update(['status' => 'past_due']);
             $blockedTenants++;
 
-            $tenant = Tenant::query()->find($inv->tenant_id);
-            if ($tenant && $tenant->phone) {
-                $this->officialWhatsApp->sendByKey(
-                    'invoice.overdue',
-                    $tenant->phone,
-                    [
-                        'customer_name' => $tenant->trade_name,
-                        'tenant_name' => $tenant->trade_name,
-                        'invoice_amount' => 'R$ ' . number_format($inv->amount_cents / 100, 2, ',', '.'),
-                        'due_date' => Carbon::parse($inv->due_date)->format('d/m/Y'),
-                        'payment_link' => trim((string) ($inv->payment_link ?: 'https://app.allsync.com.br/faturas')),
-                    ],
-                    [
-                        'command' => static::class,
-                        'invoice_id' => (string) $inv->id,
-                        'tenant_id' => (string) $tenant->id,
-                        'event' => 'invoice.overdue',
-                    ]
-                );
-            }
+            $this->invoicePaymentNotificationService->notifyInvoiceOverdue($inv);
         }
 
         SystemNotificationService::notify(
@@ -368,14 +313,4 @@ class ProcessSubscriptionsCommand extends Command
         return Command::SUCCESS;
     }
 
-    private function hasRealPaymentLink(?string $link): bool
-    {
-        $value = trim((string) $link);
-
-        if ($value === '') {
-            return false;
-        }
-
-        return filter_var($value, FILTER_VALIDATE_URL) !== false;
-    }
 }

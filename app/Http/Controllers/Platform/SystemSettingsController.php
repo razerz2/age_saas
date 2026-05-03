@@ -86,6 +86,11 @@ class SystemSettingsController extends Controller
             'billing.notify_days_before_due' => sysconfig('billing.notify_days_before_due', 5),
             'billing.recovery_days_after_suspension' => sysconfig('billing.recovery_days_after_suspension', 5),
             'billing.purge_days_after_cancellation' => sysconfig('billing.purge_days_after_cancellation', 90),
+            'billing.payment_methods.pix_enabled' => sysconfig('billing.payment_methods.pix_enabled', '1') === '1',
+            'billing.payment_methods.pix_recurrent_enabled' => sysconfig('billing.payment_methods.pix_recurrent_enabled', '0') === '1',
+            'billing.payment_methods.boleto_enabled' => sysconfig('billing.payment_methods.boleto_enabled', '1') === '1',
+            'billing.payment_methods.credit_card_enabled' => sysconfig('billing.payment_methods.credit_card_enabled', '1') === '1',
+            'billing.payment_methods.debit_card_enabled' => sysconfig('billing.payment_methods.debit_card_enabled', '0') === '1',
             // Configurações de Notificações
             'notifications.enabled' => sysconfig('notifications.enabled', '1') === '1',
             'notifications.update_interval' => (int) sysconfig('notifications.update_interval', 5),
@@ -557,6 +562,11 @@ class SystemSettingsController extends Controller
             'billing_notify_days_before_due' => 'nullable|integer|min:1|max:30',
             'billing_recovery_days_after_suspension' => 'nullable|integer|min:1|max:30',
             'billing_purge_days_after_cancellation' => 'nullable|integer|min:30|max:365',
+            'billing_payment_methods_pix_enabled' => 'nullable|boolean',
+            'billing_payment_methods_pix_recurrent_enabled' => 'nullable|boolean',
+            'billing_payment_methods_boleto_enabled' => 'nullable|boolean',
+            'billing_payment_methods_credit_card_enabled' => 'nullable|boolean',
+            'billing_payment_methods_debit_card_enabled' => 'nullable|boolean',
         ]);
 
         // Atualiza configurações de billing
@@ -572,6 +582,11 @@ class SystemSettingsController extends Controller
         if ($request->filled('billing_purge_days_after_cancellation')) {
             set_sysconfig('billing.purge_days_after_cancellation', $request->input('billing_purge_days_after_cancellation'));
         }
+        set_sysconfig('billing.payment_methods.pix_enabled', $request->has('billing_payment_methods_pix_enabled') ? '1' : '0');
+        set_sysconfig('billing.payment_methods.pix_recurrent_enabled', $request->has('billing_payment_methods_pix_recurrent_enabled') ? '1' : '0');
+        set_sysconfig('billing.payment_methods.boleto_enabled', $request->has('billing_payment_methods_boleto_enabled') ? '1' : '0');
+        set_sysconfig('billing.payment_methods.credit_card_enabled', $request->has('billing_payment_methods_credit_card_enabled') ? '1' : '0');
+        set_sysconfig('billing.payment_methods.debit_card_enabled', $request->has('billing_payment_methods_debit_card_enabled') ? '1' : '0');
 
         return back()->with('success', 'Configurações de billing atualizadas com sucesso.');
     }

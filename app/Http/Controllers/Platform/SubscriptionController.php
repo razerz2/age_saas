@@ -10,6 +10,8 @@ use App\Models\Platform\Invoices;
 use App\Models\Platform\PlanAccessRule;
 use App\Models\Tenant\TenantPlanLimit;
 use App\Services\AsaasService;
+use App\Services\Platform\InvoicePaymentNotificationService;
+use App\Services\Platform\PaymentMethodAvailabilityService;
 use App\Services\Platform\WhatsAppOfficialMessageService;
 use App\Http\Requests\Platform\SubscriptionRequest;
 use Illuminate\Support\Facades\Log;
@@ -42,6 +44,8 @@ class SubscriptionController extends Controller
                 ->where('is_active', true);
         }
         $plans = $plansQuery->get();
+        $paymentMethodService = app(PaymentMethodAvailabilityService::class);
+        $paymentMethodOptions = $paymentMethodService->options();
 
         $regularizationTenant = null;
         if (!empty($preselectedTenantId)) {
@@ -57,7 +61,8 @@ class SubscriptionController extends Controller
             'preselectedTenantId',
             'preselectedPlanId',
             'regularizationTenant',
-            'conversionFromTrial'
+            'conversionFromTrial',
+            'paymentMethodOptions'
         ));
     }
 
@@ -168,8 +173,11 @@ class SubscriptionController extends Controller
 
         $tenants = Tenant::orderBy('trade_name')->get();
         $plans = Plan::orderBy('name')->get();
+        $paymentMethodService = app(PaymentMethodAvailabilityService::class);
+        $paymentMethodOptions = $paymentMethodService->options();
+        $currentPaymentMethodIsDisabled = ! $paymentMethodService->isEnabled((string) $subscription->payment_method);
 
-        return view('platform.subscriptions.edit', compact('subscription', 'tenants', 'plans'));
+        return view('platform.subscriptions.edit', compact('subscription', 'tenants', 'plans', 'paymentMethodOptions', 'currentPaymentMethodIsDisabled'));
     }
 
 
@@ -369,6 +377,27 @@ class SubscriptionController extends Controller
                 'asaas_last_sync_at' => now(),
             ]);
 
+            if ($subscription->auto_renew && ! app(PaymentMethodAvailabilityService::class)->isEnabled((string) $subscription->payment_method)) {
+                $message = "Método de pagamento {$subscription->payment_method} está desativado para novas cobranças.";
+                Log::warning($message, [
+                    'subscription_id' => $subscription->id,
+                    'tenant_id' => $tenant->id,
+                ]);
+
+                $subscription->update([
+                    'asaas_synced' => false,
+                    'asaas_sync_status' => 'failed',
+                    'asaas_last_error' => $message,
+                    'asaas_last_sync_at' => now(),
+                ]);
+
+                if ($silent) {
+                    return false;
+                }
+
+                return back()->withErrors(['general' => $message]);
+            }
+
             if (! $tenant->asaas_customer_id) {
                 $search = $asaas->searchCustomer($tenant->email);
 
@@ -467,26 +496,7 @@ class SubscriptionController extends Controller
                             'asaas_last_sync_at' => now(),
                         ]);
 
-                        if ($tenant->phone && $this->hasRealPaymentLink($invoice->payment_link)) {
-                            app(WhatsAppOfficialMessageService::class)->sendByKey(
-                                'invoice.created',
-                                $tenant->phone,
-                                [
-                                    'customer_name' => $tenant->trade_name,
-                                    'tenant_name' => $tenant->trade_name,
-                                    'invoice_amount' => 'R$ ' . number_format($invoice->amount_cents / 100, 2, ',', '.'),
-                                    'due_date' => optional($invoice->due_date)->format('d/m/Y') ?? now()->format('d/m/Y'),
-                                    'payment_link' => trim((string) $invoice->payment_link),
-                                ],
-                                [
-                                    'controller' => static::class,
-                                    'subscription_id' => (string) $subscription->id,
-                                    'invoice_id' => (string) $invoice->id,
-                                    'tenant_id' => (string) $tenant->id,
-                                    'event' => 'invoice.created',
-                                ]
-                            );
-                        }
+                        app(InvoicePaymentNotificationService::class)->notifyInvoiceCreated($invoice);
                     } elseif (empty($paymentId)) {
                         Log::info("Assinatura {$subscription->id}: assinatura criada sem payment id imediato. Aguardando webhook PAYMENT_CREATED.");
                     }
@@ -541,26 +551,7 @@ class SubscriptionController extends Controller
                     'asaas_last_sync_at' => now(),
                 ]);
 
-                if ($tenant->phone && $this->hasRealPaymentLink($invoice->payment_link)) {
-                    app(WhatsAppOfficialMessageService::class)->sendByKey(
-                        'invoice.created',
-                        $tenant->phone,
-                        [
-                            'customer_name' => $tenant->trade_name,
-                            'tenant_name' => $tenant->trade_name,
-                            'invoice_amount' => 'R$ ' . number_format($invoice->amount_cents / 100, 2, ',', '.'),
-                            'due_date' => optional($invoice->due_date)->format('d/m/Y') ?? now()->format('d/m/Y'),
-                            'payment_link' => trim((string) $invoice->payment_link),
-                        ],
-                        [
-                            'controller' => static::class,
-                            'subscription_id' => (string) $subscription->id,
-                            'invoice_id' => (string) $invoice->id,
-                            'tenant_id' => (string) $tenant->id,
-                            'event' => 'invoice.created',
-                        ]
-                    );
-                }
+                app(InvoicePaymentNotificationService::class)->notifyInvoiceCreated($invoice);
 
                 $subscription->update([
                     'asaas_synced' => true,
@@ -611,26 +602,7 @@ class SubscriptionController extends Controller
                     'asaas_last_sync_at' => now(),
                 ]);
 
-                if ($tenant->phone && $this->hasRealPaymentLink($invoice->payment_link)) {
-                    app(WhatsAppOfficialMessageService::class)->sendByKey(
-                        'invoice.created',
-                        $tenant->phone,
-                        [
-                            'customer_name' => $tenant->trade_name,
-                            'tenant_name' => $tenant->trade_name,
-                            'invoice_amount' => 'R$ ' . number_format($invoice->amount_cents / 100, 2, ',', '.'),
-                            'due_date' => optional($invoice->due_date)->format('d/m/Y') ?? now()->format('d/m/Y'),
-                            'payment_link' => trim((string) $invoice->payment_link),
-                        ],
-                        [
-                            'controller' => static::class,
-                            'subscription_id' => (string) $subscription->id,
-                            'invoice_id' => (string) $invoice->id,
-                            'tenant_id' => (string) $tenant->id,
-                            'event' => 'invoice.created',
-                        ]
-                    );
-                }
+                app(InvoicePaymentNotificationService::class)->notifyInvoiceCreated($invoice);
 
                 $subscription->update([
                     'asaas_synced' => true,

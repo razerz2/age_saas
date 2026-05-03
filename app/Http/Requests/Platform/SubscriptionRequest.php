@@ -5,6 +5,7 @@ namespace App\Http\Requests\Platform;
 use App\Models\Platform\Plan;
 use App\Models\Platform\Subscription;
 use App\Models\Platform\Tenant;
+use App\Services\Platform\PaymentMethodAvailabilityService;
 use Illuminate\Foundation\Http\FormRequest;
 
 class SubscriptionRequest extends FormRequest
@@ -32,7 +33,7 @@ class SubscriptionRequest extends FormRequest
             'due_day' => [$isTestPlan ? 'nullable' : 'required', 'integer', 'min:1', 'max:31'],
             'status' => [$isTestPlan ? 'nullable' : 'required', 'in:active,past_due,canceled,trialing,pending'],
             'auto_renew' => ['boolean'],
-            'payment_method' => [$isTestPlan ? 'nullable' : 'required', 'in:PIX,PIX_RECURRENT,BOLETO,CREDIT_CARD,DEBIT_CARD'],
+            'payment_method' => [$isTestPlan ? 'nullable' : 'required', 'string', 'max:50'],
         ];
     }
 
@@ -72,6 +73,7 @@ class SubscriptionRequest extends FormRequest
             $selectedPlan = $this->filled('plan_id')
                 ? Plan::query()->find($this->plan_id)
                 : null;
+            $paymentMethodService = app(PaymentMethodAvailabilityService::class);
 
             if ($conversionFromTrial && $selectedPlan?->isTest()) {
                 $validator->errors()->add(
@@ -80,6 +82,27 @@ class SubscriptionRequest extends FormRequest
                 );
 
                 return;
+            }
+
+            $paymentMethod = strtoupper((string) $this->input('payment_method', ''));
+            $currentMethod = strtoupper((string) ($currentSubscription instanceof Subscription ? $currentSubscription->payment_method : ''));
+
+            if (! $selectedPlan?->isTest()) {
+                if ($paymentMethod === '') {
+                    $validator->errors()->add('payment_method', 'Selecione o método de pagamento.');
+                    return;
+                }
+
+                if (! $paymentMethodService->isEnabled($paymentMethod)) {
+                    $isEditKeepingSame = $currentMethod !== '' && $currentMethod === $paymentMethod;
+                    if (! $isEditKeepingSame) {
+                        $validator->errors()->add(
+                            'payment_method',
+                            'Método de pagamento desativado no momento.'
+                        );
+                        return;
+                    }
+                }
             }
 
             if ($tenantId) {

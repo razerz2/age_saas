@@ -204,3 +204,30 @@ test('platform continua com acesso administrativo a todos os tipos de plano', fu
     expect($allPlans)->toContain($testPlan->id);
     expect($allPlans)->toContain($hiddenPlan->id);
 });
+
+test('pre-cadastro publico retorna indisponibilidade quando todos metodos estao desativados', function () {
+    set_sysconfig('billing.payment_methods.pix_enabled', '0');
+    set_sysconfig('billing.payment_methods.pix_recurrent_enabled', '0');
+    set_sysconfig('billing.payment_methods.boleto_enabled', '0');
+    set_sysconfig('billing.payment_methods.credit_card_enabled', '0');
+    set_sysconfig('billing.payment_methods.debit_card_enabled', '0');
+
+    $plan = Plan::factory()->create([
+        'category' => Plan::CATEGORY_COMMERCIAL,
+        'is_active' => true,
+        'plan_type' => Plan::TYPE_REAL,
+        'show_on_landing_page' => true,
+    ]);
+
+    $payload = landingPayload([
+        'plan_id' => $plan->id,
+        'email' => 'no-methods@example.com',
+    ]);
+
+    $response = $this->postJson('/pre-cadastro', $payload);
+
+    $response->assertStatus(422)
+        ->assertJson([
+            'error' => 'Pagamento temporariamente indisponível. Tente novamente mais tarde.',
+        ]);
+});
