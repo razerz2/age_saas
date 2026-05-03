@@ -29,6 +29,7 @@
             
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                 @foreach($plans as $plan)
+                @php($isContractualPlan = $plan->category === \App\Models\Platform\Plan::CATEGORY_CONTRACTUAL)
                 <div class="bg-white rounded-xl shadow-lg border-2 {{ $loop->index === 1 && $plans->count() >= 3 ? 'border-blue-600 transform scale-105' : 'border-gray-200' }} hover:shadow-2xl transition-all duration-300">
                     @if($loop->index === 1 && $plans->count() >= 3)
                     <div class="bg-blue-600 text-white text-center py-2 rounded-t-xl">
@@ -39,6 +40,12 @@
                     <div class="p-8">
                         <div class="text-center mb-6">
                             <h3 class="text-2xl font-bold text-gray-900 mb-2">{{ $plan->name }}</h3>
+                            @if($isContractualPlan)
+                            <div class="mb-2">
+                                <span class="text-5xl font-bold text-blue-600">Sob consulta</span>
+                            </div>
+                            <p class="text-sm text-gray-500">Contrato personalizado</p>
+                            @else
                             <div class="mb-2">
                                 <span class="text-5xl font-bold text-blue-600">{{ $plan->formatted_price }}</span>
                                 <span class="text-gray-600">/mês</span>
@@ -48,6 +55,7 @@
                             @else
                             <p class="text-sm text-gray-500">Faturamento mensal</p>
                             @endif
+                            @endif
                         </div>
                         
                         @if($plan->description)
@@ -56,7 +64,7 @@
                         </div>
                         @endif
 
-                        @if($plan->hasCommercialTrial())
+                        @if(!$isContractualPlan && $plan->hasCommercialTrial())
                         <div class="mb-4 rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-center">
                             <p class="text-sm font-semibold text-blue-700">Teste gratis por {{ $plan->trial_days }} dias</p>
                             <p class="text-xs text-blue-600">Sem cartao de credito • Cancele quando quiser</p>
@@ -86,6 +94,12 @@
                         </ul>
                         
                         <div class="mt-8 space-y-2">
+                            @if($isContractualPlan)
+                            <a href="{{ route('landing.contact', ['subject' => 'commercial', 'plan' => $plan->name]) }}"
+                                class="block w-full text-center {{ $loop->index === 1 && $plans->count() >= 3 ? 'bg-gray-900 hover:bg-gray-800' : 'bg-gray-800 hover:bg-gray-700' }} text-white px-6 py-3 rounded-lg font-semibold transition-colors shadow-lg">
+                                Solicitar Proposta
+                            </a>
+                            @else
                             @if($plan->hasCommercialTrial())
                             <button onclick="openPreRegisterModal('{{ $plan->id }}', '{{ addslashes($plan->name) }}', '{{ $plan->formatted_price }}', true, {{ (int) $plan->trial_days }})" 
                                 class="w-full bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors shadow-lg">
@@ -96,6 +110,7 @@
                                 class="w-full {{ $loop->index === 1 && $plans->count() >= 3 ? 'bg-gray-900 hover:bg-gray-800' : 'bg-gray-800 hover:bg-gray-700' }} text-white px-6 py-3 rounded-lg font-semibold transition-colors shadow-lg">
                                 Contratar Plano
                             </button>
+                            @endif
                         </div>
                     </div>
                 </div>
@@ -458,7 +473,7 @@
                 <div class="text-center mb-6">
                     <div class="mb-2">
                         <span class="text-4xl font-bold text-blue-600" id="planModalPrice"></span>
-                        <span class="text-gray-600">/mês</span>
+                        <span class="text-gray-600" id="planModalPriceSuffix">/mês</span>
                     </div>
                     <p class="text-sm text-gray-500" id="planModalPeriodicity"></p>
                 </div>
@@ -477,7 +492,7 @@
                         class="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors">
                         Fechar
                     </button>
-                    <button onclick="selectPlanFromModal()" 
+                    <button id="planModalActionButton" onclick="selectPlanFromModal()" 
                         class="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold transition-colors">
                         Escolher Este Plano
                     </button>
@@ -507,6 +522,7 @@
     let currentPlanPrice = null;
     let currentPlanTrialEnabled = false;
     let currentPlanTrialDays = 0;
+    let currentPlanCategory = null;
 
     async function openPlanModal(planId) {
         try {
@@ -518,9 +534,25 @@
             }
             
             // Preencher dados do modal
+            const isContractualPlan = plan.category === 'contractual';
+            const planModalPrice = document.getElementById('planModalPrice');
+            const planModalPriceSuffix = document.getElementById('planModalPriceSuffix');
+            const planModalPeriodicity = document.getElementById('planModalPeriodicity');
+            const planModalActionButton = document.getElementById('planModalActionButton');
+
             document.getElementById('planModalTitle').textContent = plan.name;
-            document.getElementById('planModalPrice').textContent = plan.formatted_price;
-            document.getElementById('planModalPeriodicity').textContent = plan.periodicity;
+
+            if (isContractualPlan) {
+                planModalPrice.textContent = 'Sob consulta';
+                planModalPriceSuffix.textContent = '';
+                planModalPeriodicity.textContent = 'Contrato personalizado';
+                planModalActionButton.textContent = 'Solicitar Proposta';
+            } else {
+                planModalPrice.textContent = plan.formatted_price;
+                planModalPriceSuffix.textContent = '/mês';
+                planModalPeriodicity.textContent = plan.periodicity;
+                planModalActionButton.textContent = 'Escolher Este Plano';
+            }
             
             // Descrição
             const descriptionDiv = document.getElementById('planModalDescription');
@@ -556,6 +588,7 @@
             currentPlanPrice = plan.formatted_price;
             currentPlanTrialEnabled = Boolean(plan.trial_enabled);
             currentPlanTrialDays = Number(plan.trial_days || 0);
+            currentPlanCategory = plan.category;
             
             // Mostrar modal
             document.getElementById('planModal').classList.remove('hidden');
@@ -576,11 +609,18 @@
         currentPlanPrice = null;
         currentPlanTrialEnabled = false;
         currentPlanTrialDays = 0;
+        currentPlanCategory = null;
     }
     
     function selectPlanFromModal() {
         if (currentPlanId) {
             closePlanModal();
+
+            if (currentPlanCategory === 'contractual') {
+                window.location.href = '{{ route("landing.contact") }}?subject=commercial&plan=' + encodeURIComponent(currentPlanName || '');
+                return;
+            }
+
             openPreRegisterModal(currentPlanId, currentPlanName, currentPlanPrice, currentPlanTrialEnabled, currentPlanTrialDays);
         }
     }
@@ -940,6 +980,10 @@
             }
 
             const plan = await response.json();
+            if (plan.category === 'contractual') {
+                window.location.href = '{{ route("landing.contact") }}?subject=commercial&plan=' + encodeURIComponent(plan.name || '');
+                return;
+            }
             const canTrial = wantsTrial && Boolean(plan.trial_enabled);
 
             openPreRegisterModal(

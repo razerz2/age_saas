@@ -3,6 +3,19 @@
 @section('title', 'Contato - Sistema de Agendamentos')
 @section('description', 'Entre em contato conosco para tirar dúvidas, solicitar demonstração ou falar com nossa equipe comercial.')
 
+@php
+    $requestedSubject = (string) request()->query('subject', '');
+    $requestedPlan = trim((string) request()->query('plan', ''));
+    $prefilledSubject = $requestedSubject === 'commercial' ? 'commercial' : '';
+    $prefilledMessage = old('message');
+
+    if (($prefilledMessage === null || $prefilledMessage === '') && $requestedPlan !== '') {
+        $prefilledMessage = "Olá, tenho interesse no {$requestedPlan} para uma rede de clínicas. Gostaria de receber mais informações sobre implantação, hospedagem dedicada, funcionalidades disponíveis e condições comerciais.";
+    }
+
+    $selectedSubject = old('subject', $prefilledSubject);
+@endphp
+
 @section('content')
     <!-- Hero Section -->
     <section class="bg-gradient-to-br from-blue-50 via-white to-blue-50 py-20 lg:py-32">
@@ -51,18 +64,18 @@
                             <select id="contact_subject" name="subject" required 
                                 class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                                 <option value="">Selecione um assunto</option>
-                                <option value="demo">Solicitar Demonstração</option>
-                                <option value="pricing">Dúvidas sobre Planos</option>
-                                <option value="support">Suporte Técnico</option>
-                                <option value="commercial">Falar com Comercial</option>
-                                <option value="other">Outro</option>
+                                <option value="demo" @selected($selectedSubject === 'demo')>Solicitar Demonstração</option>
+                                <option value="pricing" @selected($selectedSubject === 'pricing')>Dúvidas sobre Planos</option>
+                                <option value="support" @selected($selectedSubject === 'support')>Suporte Técnico</option>
+                                <option value="commercial" @selected($selectedSubject === 'commercial')>Falar com Comercial</option>
+                                <option value="other" @selected($selectedSubject === 'other')>Outro</option>
                             </select>
                         </div>
                         
                         <div>
                             <label for="contact_message" class="block text-sm font-medium text-gray-700 mb-1">Mensagem *</label>
                             <textarea id="contact_message" name="message" rows="6" required 
-                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"></textarea>
+                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">{{ $prefilledMessage ?? '' }}</textarea>
                         </div>
                         
                         <div id="contactError" class="hidden p-4 bg-red-50 border border-red-200 rounded-lg text-red-700"></div>

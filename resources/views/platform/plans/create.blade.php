@@ -86,16 +86,16 @@
                     <div class="row mb-3">
                         <div class="col-md-4">
                             <label class="form-label">Categoria *</label>
-                            <select name="category" class="form-select" required>
+                            <select name="category" id="category" class="form-select" required>
                                 <option value="commercial" @selected(old('category') == 'commercial')>Comercial (B2C/B2B Leve)</option>
                                 <option value="contractual" @selected(old('category') == 'contractual')>Contratual (Exclusivo para Redes)</option>
                                 <option value="sandbox" @selected(old('category') == 'sandbox')>Sandbox (Testes Internos)</option>
                             </select>
                         </div>
 
-                        <div class="col-md-4">
+                        <div class="col-md-4" id="price-wrapper">
                             <label class="form-label">Preço (R$)</label>
-                            <input type="number" step="0.01" name="price_cents" value="{{ old('price_cents') }}"
+                            <input type="number" step="0.01" id="price_cents" name="price_cents" value="{{ old('price_cents') }}"
                                 class="form-control" required>
                         </div>
 
@@ -127,6 +127,10 @@
 
                     <div id="trial-disabled-info" class="alert alert-warning d-none">
                         Planos de teste não podem oferecer trial comercial na landing.
+                    </div>
+
+                    <div id="contractual-info" class="alert alert-info d-none">
+                        Planos contratuais não possuem valor fixo. A negociação é feita pelo contato comercial.
                     </div>
 
                     <div class="row mb-3" id="trial-settings-wrapper">
@@ -170,30 +174,54 @@
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             const planType = document.getElementById('plan_type');
+            const category = document.getElementById('category');
+            const priceWrapper = document.getElementById('price-wrapper');
+            const priceInput = document.getElementById('price_cents');
             const trialEnabled = document.getElementById('trial_enabled');
             const trialDays = document.getElementById('trial_days');
             const trialInfo = document.getElementById('trial-disabled-info');
+            const contractualInfo = document.getElementById('contractual-info');
             const trialWrapper = document.getElementById('trial-settings-wrapper');
+            let lastCommercialPrice = priceInput.value;
 
             function syncTrialFields() {
                 const isTestPlan = planType.value === 'test';
+                const isContractualPlan = category.value === 'contractual';
                 const isTrialEnabled = trialEnabled.checked;
+                const canUseTrial = !isTestPlan && !isContractualPlan;
+                const shouldDisableTrialControls = isTestPlan || isContractualPlan;
 
                 trialInfo.classList.toggle('d-none', !isTestPlan);
-                trialEnabled.disabled = isTestPlan;
-                trialDays.disabled = isTestPlan || !isTrialEnabled;
-                trialDays.required = !isTestPlan && isTrialEnabled;
-                trialWrapper.classList.toggle('opacity-50', isTestPlan);
+                contractualInfo.classList.toggle('d-none', !isContractualPlan);
+                priceWrapper.classList.toggle('d-none', isContractualPlan);
+                priceInput.disabled = isContractualPlan;
+                priceInput.required = !isContractualPlan;
 
-                if (isTestPlan) {
+                if (isContractualPlan) {
+                    if (priceInput.value !== '') {
+                        lastCommercialPrice = priceInput.value;
+                    }
+                    priceInput.value = '';
+                } else if (priceInput.value === '' && lastCommercialPrice) {
+                    priceInput.value = lastCommercialPrice;
+                }
+
+                trialEnabled.disabled = shouldDisableTrialControls;
+                trialDays.disabled = shouldDisableTrialControls || !isTrialEnabled;
+                trialDays.required = canUseTrial && isTrialEnabled;
+                trialWrapper.classList.toggle('opacity-50', shouldDisableTrialControls);
+
+                if (shouldDisableTrialControls) {
                     trialEnabled.checked = false;
                     trialDays.value = '';
                 }
             }
 
             planType.addEventListener('change', syncTrialFields);
+            category.addEventListener('change', syncTrialFields);
             trialEnabled.addEventListener('change', syncTrialFields);
             syncTrialFields();
         });
     </script>
 @endpush
+

@@ -167,7 +167,7 @@ class Plan extends Model
     public function scopePubliclyAvailable(Builder $query): Builder
     {
         return $query
-            ->where('category', self::CATEGORY_COMMERCIAL)
+            ->whereIn('category', [self::CATEGORY_COMMERCIAL, self::CATEGORY_CONTRACTUAL])
             ->where('is_active', true)
             ->where('plan_type', self::TYPE_REAL)
             ->where('show_on_landing_page', true);
@@ -175,7 +175,7 @@ class Plan extends Model
 
     public function isPubliclyAvailable(): bool
     {
-        return $this->category === self::CATEGORY_COMMERCIAL
+        return in_array($this->category, [self::CATEGORY_COMMERCIAL, self::CATEGORY_CONTRACTUAL], true)
             && (bool) $this->is_active
             && $this->isReal()
             && $this->isVisibleOnLanding();

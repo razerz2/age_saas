@@ -3,7 +3,6 @@
 namespace App\Http\Requests\Platform;
 
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rule;
 use App\Models\Platform\Plan;
 
@@ -16,14 +15,18 @@ class PlanRequest extends FormRequest
 
     protected function prepareForValidation(): void
     {
+        $category = $this->input('category', Plan::CATEGORY_COMMERCIAL);
+        $isContractualPlan = $category === Plan::CATEGORY_CONTRACTUAL;
         $isTrialEnabled = $this->boolean('trial_enabled');
         $planType = $this->input('plan_type', Plan::TYPE_REAL);
 
-        if ($planType === Plan::TYPE_TEST) {
+        if ($planType === Plan::TYPE_TEST || $isContractualPlan) {
             $isTrialEnabled = false;
         }
 
-        if ($this->filled('price_cents')) {
+        if ($isContractualPlan) {
+            $this->merge(['price_cents' => 0]);
+        } elseif ($this->filled('price_cents')) {
             $valor = $this->price_cents;
             
             // Converte para string para análise
@@ -55,6 +58,8 @@ class PlanRequest extends FormRequest
 
     public function rules(): array
     {
+        $isContractualPlan = $this->input('category') === Plan::CATEGORY_CONTRACTUAL;
+
         // Pega o ID do plano (pode ser um modelo ou ID direto)
         $plan = $this->route('plan');
         $planId = $plan ? (is_object($plan) ? $plan->id : $plan) : null;
@@ -70,7 +75,7 @@ class PlanRequest extends FormRequest
             'description' => ['nullable', 'string', 'max:500'],
             'periodicity' => ['required', 'in:monthly,yearly,custom'],
             'period_months' => ['required', 'integer', 'min:1'],
-            'price_cents' => ['required', 'integer', 'min:0'],
+            'price_cents' => [$isContractualPlan ? 'nullable' : 'required', 'integer', 'min:0'],
             'category' => ['required', 'in:commercial,contractual,sandbox'],
             'plan_type' => ['required', 'in:real,test'],
             'features' => ['nullable', 'array'],

@@ -602,13 +602,21 @@
             
             <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
                 @foreach($plans->take(3) as $plan)
+                @php($isContractualPlan = $plan->category === \App\Models\Platform\Plan::CATEGORY_CONTRACTUAL)
                 <div class="bg-white rounded-lg shadow-lg p-8 {{ $loop->index === 1 ? 'ring-2 ring-blue-600 transform scale-105' : '' }}">
                     <div class="text-center mb-6">
                         <h3 class="text-2xl font-bold text-gray-900 mb-2">{{ $plan->name }}</h3>
+                        @if($isContractualPlan)
+                        <div class="text-4xl font-bold text-blue-600 mb-2">
+                            Sob consulta
+                        </div>
+                        <p class="text-gray-600">Contrato personalizado</p>
+                        @else
                         <div class="text-4xl font-bold text-blue-600 mb-2">
                             {{ $plan->formatted_price }}
                         </div>
                         <p class="text-gray-600">por mês</p>
+                        @endif
                     </div>
                     
                     @if($plan->description)
@@ -637,9 +645,15 @@
                         @endif
                     </ul>
                     
+                    @if($isContractualPlan)
+                    <a href="{{ route('landing.contact', ['subject' => 'commercial', 'plan' => $plan->name]) }}" class="block w-full text-center bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors">
+                        Solicitar Proposta
+                    </a>
+                    @else
                     <a href="{{ route('landing.plans') }}" class="block w-full text-center bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors">
                         Escolher Plano
                     </a>
+                    @endif
                 </div>
                 @endforeach
             </div>
@@ -762,7 +776,7 @@
                 <div class="text-center mb-6">
                     <div class="mb-2">
                         <span class="text-4xl font-bold text-blue-600" id="planModalPrice"></span>
-                        <span class="text-gray-600">/mês</span>
+                        <span class="text-gray-600" id="planModalPriceSuffix">/mês</span>
                     </div>
                     <p class="text-sm text-gray-500" id="planModalPeriodicity"></p>
                 </div>
@@ -781,7 +795,7 @@
                         class="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors">
                         Fechar
                     </button>
-                    <button onclick="selectPlanFromModal()" 
+                    <button id="planModalActionButton" onclick="selectPlanFromModal()" 
                         class="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold transition-colors">
                         Escolher Este Plano
                     </button>
@@ -814,6 +828,7 @@
     let currentPlanId = null;
     let currentPlanName = null;
     let currentPlanPrice = null;
+    let currentPlanCategory = null;
 
     async function openPlanModal(planId) {
         try {
@@ -825,9 +840,25 @@
             }
             
             // Preencher dados do modal
+            const isContractualPlan = plan.category === 'contractual';
+            const planModalPrice = document.getElementById('planModalPrice');
+            const planModalPriceSuffix = document.getElementById('planModalPriceSuffix');
+            const planModalPeriodicity = document.getElementById('planModalPeriodicity');
+            const planModalActionButton = document.getElementById('planModalActionButton');
+
             document.getElementById('planModalTitle').textContent = plan.name;
-            document.getElementById('planModalPrice').textContent = plan.formatted_price;
-            document.getElementById('planModalPeriodicity').textContent = plan.periodicity;
+
+            if (isContractualPlan) {
+                planModalPrice.textContent = 'Sob consulta';
+                planModalPriceSuffix.textContent = '';
+                planModalPeriodicity.textContent = 'Contrato personalizado';
+                planModalActionButton.textContent = 'Solicitar Proposta';
+            } else {
+                planModalPrice.textContent = plan.formatted_price;
+                planModalPriceSuffix.textContent = '/mês';
+                planModalPeriodicity.textContent = plan.periodicity;
+                planModalActionButton.textContent = 'Escolher Este Plano';
+            }
             
             // Descrição
             const descriptionDiv = document.getElementById('planModalDescription');
@@ -861,6 +892,7 @@
             currentPlanId = plan.id;
             currentPlanName = plan.name;
             currentPlanPrice = plan.formatted_price;
+            currentPlanCategory = plan.category;
             
             // Mostrar modal
             document.getElementById('planModal').classList.remove('hidden');
@@ -879,11 +911,18 @@
         currentPlanId = null;
         currentPlanName = null;
         currentPlanPrice = null;
+        currentPlanCategory = null;
     }
     
     function selectPlanFromModal() {
         if (currentPlanId) {
             closePlanModal();
+
+            if (currentPlanCategory === 'contractual') {
+                window.location.href = '{{ route("landing.contact") }}?subject=commercial&plan=' + encodeURIComponent(currentPlanName || '');
+                return;
+            }
+
             window.location.href = '{{ route("landing.plans") }}';
         }
     }
