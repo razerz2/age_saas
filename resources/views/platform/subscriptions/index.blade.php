@@ -79,6 +79,9 @@
                                         <th>Início</th>
                                         <th>Vencimento</th>
                                         <th>Renovação</th>
+                                        <th>Metodo de Pagamento</th>
+                                        <th>Asaas Sub ID</th>
+                                        <th>Status Sync Asaas</th>
                                         <th class="text-center">Ações</th>
                                     </tr>
                                 </thead>
@@ -131,6 +134,9 @@
                                             <td>{{ $subscription->ends_at ? $subscription->ends_at->format('d/m/Y') : '-' }}
                                             </td>
                                             <td>{{ $subscription->auto_renew ? 'Sim' : 'Não' }}</td>
+                                            <td>{{ $subscription->payment_method_label ?? '-' }}</td>
+                                            <td>{{ $subscription->asaas_subscription_id ?? '-' }}</td>
+                                            <td>{{ strtoupper($subscription->asaas_sync_status ?? '-') }}</td>
                                             <td class="text-center">
                                                 <a title="Visualizar"
                                                     href="{{ route('Platform.subscriptions.show', $subscription->id) }}"

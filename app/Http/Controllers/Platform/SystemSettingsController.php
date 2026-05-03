@@ -218,6 +218,28 @@ class SystemSettingsController extends Controller
         // Atualiza configurações no banco
         foreach ($fields as $field) {
             if ($request->exists($field)) {
+                if ($field === 'ASAAS_API_URL') {
+                    set_sysconfig($field, trim((string) $request->input($field)));
+                    continue;
+                }
+
+                if ($field === 'ASAAS_API_KEY') {
+                    $apiKey = trim((string) $request->input($field));
+                    if ($apiKey !== '') {
+                        set_sysconfig($field, $apiKey);
+                    }
+                    continue;
+                }
+
+                if ($field === 'ASAAS_WEBHOOK_SECRET') {
+                    $secret = trim((string) $request->input($field));
+                    $isMasked = $secret !== '' && preg_match('/^[\*\x{2022}]+$/u', $secret) === 1;
+                    if ($secret !== '' && ! $isMasked) {
+                        set_sysconfig($field, $secret);
+                    }
+                    continue;
+                }
+
                 set_sysconfig($field, $request->input($field));
             }
         }

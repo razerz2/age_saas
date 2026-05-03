@@ -671,41 +671,52 @@ class PreTenantProcessorService
                 // Sucesso — registra ID e fatura local
                 $subscription->update(['asaas_subscription_id' => $response['subscription']['id']]);
 
-                if (!empty($response['payment_link'])) {
+                $payment = is_array($response['payment'] ?? null) ? $response['payment'] : [];
+                $paymentId = $payment['id'] ?? null;
+                $paymentLink = $response['payment_link']
+                    ?? $payment['invoiceUrl']
+                    ?? $payment['bankSlipUrl']
+                    ?? null;
+
+                if (!empty($paymentId)) {
                     $invoice = Invoices::create([
                         'subscription_id' => $subscription->id,
                         'tenant_id' => $tenant->id,
                         'amount_cents' => $plan->price_cents,
-                        'due_date' => $response['payment']['dueDate'] ?? $nextDueDate,
+                        'due_date' => $payment['dueDate'] ?? $nextDueDate,
                         'status' => 'pending',
-                        'payment_link' => $response['payment_link'],
+                        'payment_link' => $paymentLink,
                         'payment_method' => 'CREDIT_CARD',
                         'provider' => 'asaas',
-                        'provider_id' => $response['subscription']['id'],
-                        'asaas_payment_id' => $response['payment']['id'] ?? null,
+                        'provider_id' => $paymentId,
+                        'asaas_payment_id' => $paymentId,
                         'asaas_synced' => true,
                         'asaas_sync_status' => 'success',
                         'asaas_last_sync_at' => now(),
                     ]);
 
-                    $this->officialWhatsApp->sendByKey(
-                        'invoice.created',
-                        $tenant->phone,
-                        [
-                            'customer_name' => $tenant->trade_name,
-                            'tenant_name' => $tenant->trade_name,
-                            'invoice_amount' => 'R$ ' . number_format($invoice->amount_cents / 100, 2, ',', '.'),
-                            'due_date' => optional($invoice->due_date)->format('d/m/Y') ?? now()->format('d/m/Y'),
-                            'payment_link' => trim((string) ($invoice->payment_link ?: 'https://app.allsync.com.br/faturas')),
-                        ],
-                        [
-                            'service' => static::class,
-                            'subscription_id' => (string) $subscription->id,
-                            'invoice_id' => (string) $invoice->id,
-                            'tenant_id' => (string) $tenant->id,
-                            'event' => 'invoice.created',
-                        ]
-                    );
+                    if ($tenant->phone && $this->hasRealPaymentLink($invoice->payment_link)) {
+                        $this->officialWhatsApp->sendByKey(
+                            'invoice.created',
+                            $tenant->phone,
+                            [
+                                'customer_name' => $tenant->trade_name,
+                                'tenant_name' => $tenant->trade_name,
+                                'invoice_amount' => 'R$ ' . number_format($invoice->amount_cents / 100, 2, ',', '.'),
+                                'due_date' => optional($invoice->due_date)->format('d/m/Y') ?? now()->format('d/m/Y'),
+                                'payment_link' => trim((string) $invoice->payment_link),
+                            ],
+                            [
+                                'service' => static::class,
+                                'subscription_id' => (string) $subscription->id,
+                                'invoice_id' => (string) $invoice->id,
+                                'tenant_id' => (string) $tenant->id,
+                                'event' => 'invoice.created',
+                            ]
+                        );
+                    }
+                } else {
+                    Log::info("Subscription {$subscription->id}: assinatura criada sem payment id imediato. Aguardando webhook PAYMENT_CREATED.");
                 }
 
                 $subscription->update([
@@ -756,24 +767,26 @@ class PreTenantProcessorService
                     'asaas_last_sync_at' => now(),
                 ]);
 
-                $this->officialWhatsApp->sendByKey(
-                    'invoice.created',
-                    $tenant->phone,
-                    [
-                        'customer_name' => $tenant->trade_name,
-                        'tenant_name' => $tenant->trade_name,
-                        'invoice_amount' => 'R$ ' . number_format($invoice->amount_cents / 100, 2, ',', '.'),
-                        'due_date' => optional($invoice->due_date)->format('d/m/Y') ?? now()->format('d/m/Y'),
-                        'payment_link' => trim((string) ($invoice->payment_link ?: 'https://app.allsync.com.br/faturas')),
-                    ],
-                    [
-                        'service' => static::class,
-                        'subscription_id' => (string) $subscription->id,
-                        'invoice_id' => (string) $invoice->id,
-                        'tenant_id' => (string) $tenant->id,
-                        'event' => 'invoice.created',
-                    ]
-                );
+                if ($tenant->phone && $this->hasRealPaymentLink($invoice->payment_link)) {
+                    $this->officialWhatsApp->sendByKey(
+                        'invoice.created',
+                        $tenant->phone,
+                        [
+                            'customer_name' => $tenant->trade_name,
+                            'tenant_name' => $tenant->trade_name,
+                            'invoice_amount' => 'R$ ' . number_format($invoice->amount_cents / 100, 2, ',', '.'),
+                            'due_date' => optional($invoice->due_date)->format('d/m/Y') ?? now()->format('d/m/Y'),
+                            'payment_link' => trim((string) $invoice->payment_link),
+                        ],
+                        [
+                            'service' => static::class,
+                            'subscription_id' => (string) $subscription->id,
+                            'invoice_id' => (string) $invoice->id,
+                            'tenant_id' => (string) $tenant->id,
+                            'event' => 'invoice.created',
+                        ]
+                    );
+                }
 
                 $subscription->update([
                     'asaas_synced' => true,
@@ -994,6 +1007,17 @@ class PreTenantProcessorService
                 'trace' => $e->getTraceAsString(),
             ]);
         }
+    }
+
+    private function hasRealPaymentLink(?string $link): bool
+    {
+        $value = trim((string) $link);
+
+        if ($value === '') {
+            return false;
+        }
+
+        return filter_var($value, FILTER_VALIDATE_URL) !== false;
     }
 }
 

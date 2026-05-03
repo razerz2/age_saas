@@ -817,7 +817,7 @@ O serviço `PreTenantProcessorService` executa as seguintes etapas ao processar 
 **Configuração:**
 - Variáveis de ambiente (`.env`):
   ```env
-  ASAAS_API_URL=https://sandbox.asaas.com/api/v3/
+  ASAAS_API_URL=https://api-sandbox.asaas.com/v3
   ASAAS_API_KEY=sua_chave_api
   ASAAS_WEBHOOK_SECRET=seu_secret_webhook
   ASAAS_ENV=sandbox
@@ -1024,4 +1024,3 @@ php artisan migrate
 - **NOVO:** Suporte a mudança de forma de pagamento (PIX, Cartão de Crédito, etc.)
 - **NOVO:** Geração automática de links de pagamento ao mudar forma de pagamento
 - Lista completa e atualizada de módulos disponíveis
-

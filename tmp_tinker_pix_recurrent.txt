@@ -1,0 +1,25 @@
+$tenantId = "45340052-01ec-4a19-b46c-b04cc5ad7914";
+$planId = "a15575ad-0cc5-4138-a4fa-c649d2b4cf75";
+$sub = App\Models\Platform\Subscription::create([
+  "tenant_id" => $tenantId,
+  "plan_id" => $planId,
+  "starts_at" => now(),
+  "ends_at" => now()->addMonth(),
+  "due_day" => 5,
+  "payment_method" => "PIX_RECURRENT",
+  "status" => "pending",
+  "auto_renew" => true,
+]);
+$inv = App\Models\Platform\Invoices::create([
+  "subscription_id" => $sub->id,
+  "tenant_id" => $tenantId,
+  "amount_cents" => 1000,
+  "due_date" => now()->toDateString(),
+  "status" => "pending",
+  "payment_method" => "PIX_RECURRENT",
+]);
+echo "sub={$sub->id}\n";
+echo "invoice={$inv->id}\n";
+$sid = $sub->id;
+$sub->delete();
+echo "cleanup_sub_deleted={$sid}\n";

@@ -7,17 +7,18 @@ use App\Models\Platform\Plan;
 use App\Models\Platform\Subscription;
 use App\Models\Platform\Tenant;
 use App\Services\AsaasService;
+use App\Services\Platform\InvoiceAsaasSyncService;
 use App\Services\Platform\WhatsAppOfficialMessageService;
 use App\Services\SystemNotificationService;
 use Carbon\Carbon;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Str;
 
 class ProcessSubscriptionsCommand extends Command
 {
     public function __construct(
-        private readonly WhatsAppOfficialMessageService $officialWhatsApp
+        private readonly WhatsAppOfficialMessageService $officialWhatsApp,
+        private readonly InvoiceAsaasSyncService $invoiceAsaasSyncService
     ) {
         parent::__construct();
     }
@@ -109,7 +110,10 @@ class ProcessSubscriptionsCommand extends Command
                 continue;
             }
 
-            if (! empty($sub->asaas_subscription_id)) {
+            $usesAsaasSubscriptionFlow = $sub->auto_renew
+                && in_array($sub->payment_method, ['CREDIT_CARD', 'DEBIT_CARD', 'PIX_RECURRENT'], true);
+
+            if ($usesAsaasSubscriptionFlow && ! empty($sub->asaas_subscription_id)) {
                 Log::info("Assinatura {$sub->id} ja possui assinatura automatica Asaas ({$sub->asaas_subscription_id}), ignorando.");
                 continue;
             }
@@ -150,20 +154,53 @@ class ProcessSubscriptionsCommand extends Command
                 }
             }
 
-            if ($sub->payment_method === 'CREDIT_CARD' && $sub->auto_renew) {
+            if ($usesAsaasSubscriptionFlow) {
+                $billingType = $sub->payment_method === 'PIX_RECURRENT'
+                    ? 'PIX'
+                    : 'CREDIT_CARD';
+
                 $response = $asaas->createSubscription([
                     'customer' => $tenant->asaas_customer_id,
+                    'billingType' => $billingType,
                     'value' => $plan->price_cents / 100,
                     'cycle' => 'MONTHLY',
                     'nextDueDate' => now()->toDateString(),
                     'description' => "Assinatura automatica do plano {$plan->name}",
+                    'externalReference' => (string) $sub->id,
                 ]);
 
-                if (! empty($response['id'])) {
-                    $sub->update(['asaas_subscription_id' => $response['id']]);
-                    Log::info("Assinatura automatica criada no Asaas ({$response['id']}) para tenant {$tenant->trade_name}");
+                $asaasSubscriptionId = $response['subscription']['id'] ?? null;
+                $paymentLink = $response['payment_link'] ?? ($response['payment']['url'] ?? null);
+
+                if (! empty($asaasSubscriptionId)) {
+                    $sub->update([
+                        'asaas_subscription_id' => $asaasSubscriptionId,
+                        'asaas_synced' => true,
+                        'asaas_sync_status' => 'success',
+                        'asaas_last_sync_at' => now(),
+                        'asaas_last_error' => null,
+                        'status' => 'pending',
+                    ]);
+
+                    Log::info("Assinatura automatica criada no Asaas ({$asaasSubscriptionId}) para tenant {$tenant->trade_name}", [
+                        'payment_method' => $sub->payment_method,
+                        'billing_type' => $billingType,
+                        'payment_link' => $paymentLink,
+                    ]);
                     $createdInvoices++;
                 } else {
+                    $errorMessage = $response['errors'][0]['description']
+                        ?? $response['message']
+                        ?? $response['error']
+                        ?? json_encode($response);
+
+                    $sub->update([
+                        'asaas_synced' => false,
+                        'asaas_sync_status' => 'failed',
+                        'asaas_last_sync_at' => now(),
+                        'asaas_last_error' => $errorMessage,
+                    ]);
+
                     Log::error('Falha ao criar assinatura automatica Asaas: ' . json_encode($response));
                     $errors++;
                 }
@@ -172,29 +209,33 @@ class ProcessSubscriptionsCommand extends Command
             }
 
             if ($sub->payment_method === 'PIX' && $sub->auto_renew) {
-                $payload = [
-                    'customer' => $tenant->asaas_customer_id,
-                    'billingType' => 'PIX',
-                    'value' => $plan->price_cents / 100,
-                    'dueDate' => now()->addDays(5)->toDateString(),
-                    'description' => "Renovacao de plano {$plan->name}",
-                    'externalReference' => (string) Str::uuid(),
-                ];
+                $invoice = Invoices::create([
+                    'subscription_id' => $sub->id,
+                    'tenant_id' => $tenant->id,
+                    'amount_cents' => $plan->price_cents,
+                    'due_date' => now()->addDays(5)->toDateString(),
+                    'status' => 'pending',
+                    'provider' => 'asaas',
+                    'payment_method' => 'PIX',
+                ]);
 
-                $payment = $asaas->createPayment($payload);
-
-                if (! empty($payment['id'])) {
-                    $invoice = Invoices::create([
-                        'subscription_id' => $sub->id,
-                        'tenant_id' => $tenant->id,
-                        'amount_cents' => $plan->price_cents,
-                        'due_date' => $payload['dueDate'],
-                        'status' => 'pending',
-                        'provider' => 'asaas',
-                        'provider_id' => $payment['id'],
-                        'payment_link' => $payment['invoiceUrl'] ?? ($payment['bankSlipUrl'] ?? null),
+                try {
+                    $invoice = $this->invoiceAsaasSyncService->syncInvoice($invoice);
+                    $invoice->refresh();
+                } catch (\Throwable $syncError) {
+                    $invoice->update([
+                        'asaas_synced' => false,
+                        'asaas_sync_status' => 'failed',
+                        'asaas_last_sync_at' => now(),
+                        'asaas_last_error' => $syncError->getMessage(),
                     ]);
 
+                    Log::error('Falha ao criar/sincronizar cobranca PIX: ' . $syncError->getMessage());
+                    $errors++;
+                    continue;
+                }
+
+                if ($tenant->phone && $this->hasRealPaymentLink($invoice->payment_link)) {
                     $this->officialWhatsApp->sendByKey(
                         'invoice.created',
                         $tenant->phone,
@@ -203,7 +244,7 @@ class ProcessSubscriptionsCommand extends Command
                             'tenant_name' => $tenant->trade_name,
                             'invoice_amount' => 'R$ ' . number_format($invoice->amount_cents / 100, 2, ',', '.'),
                             'due_date' => Carbon::parse($invoice->due_date)->format('d/m/Y'),
-                            'payment_link' => trim((string) ($invoice->payment_link ?: 'https://app.allsync.com.br/faturas')),
+                            'payment_link' => trim((string) $invoice->payment_link),
                         ],
                         [
                             'command' => static::class,
@@ -212,19 +253,65 @@ class ProcessSubscriptionsCommand extends Command
                             'event' => 'invoice.created',
                         ]
                     );
+                }
 
-                    $sub->update([
-                        'starts_at' => now(),
-                        'ends_at' => now()->addMonths($plan->period_months),
-                        'status' => 'active',
+                // IMPORTANTE: nao renova starts_at/ends_at/status aqui.
+                // Renovacao ocorre apenas no webhook PAYMENT_RECEIVED/PAYMENT_CONFIRMED
+                // (ou por rotina de conciliacao equivalente).
+                Log::info("Cobranca PIX gerada para tenant {$tenant->trade_name} sem renovacao antecipada da assinatura.");
+                $createdInvoices++;
+                continue;
+            }
+
+            if ($sub->payment_method === 'BOLETO' && $sub->auto_renew) {
+                $invoice = Invoices::create([
+                    'subscription_id' => $sub->id,
+                    'tenant_id' => $tenant->id,
+                    'amount_cents' => $plan->price_cents,
+                    'due_date' => now()->addDays(5)->toDateString(),
+                    'status' => 'pending',
+                    'provider' => 'asaas',
+                    'payment_method' => 'BOLETO',
+                ]);
+
+                try {
+                    $invoice = $this->invoiceAsaasSyncService->syncInvoice($invoice);
+                    $invoice->refresh();
+                } catch (\Throwable $syncError) {
+                    $invoice->update([
+                        'asaas_synced' => false,
+                        'asaas_sync_status' => 'failed',
+                        'asaas_last_sync_at' => now(),
+                        'asaas_last_error' => $syncError->getMessage(),
                     ]);
 
-                    Log::info("Cobranca PIX gerada para tenant {$tenant->trade_name}");
-                    $createdInvoices++;
-                } else {
-                    Log::error('Falha ao criar cobranca PIX: ' . json_encode($payment));
+                    Log::error('Falha ao criar/sincronizar cobranca BOLETO: ' . $syncError->getMessage());
                     $errors++;
+                    continue;
                 }
+
+                if ($tenant->phone && $this->hasRealPaymentLink($invoice->payment_link)) {
+                    $this->officialWhatsApp->sendByKey(
+                        'invoice.created',
+                        $tenant->phone,
+                        [
+                            'customer_name' => $tenant->trade_name,
+                            'tenant_name' => $tenant->trade_name,
+                            'invoice_amount' => 'R$ ' . number_format($invoice->amount_cents / 100, 2, ',', '.'),
+                            'due_date' => Carbon::parse($invoice->due_date)->format('d/m/Y'),
+                            'payment_link' => trim((string) $invoice->payment_link),
+                        ],
+                        [
+                            'command' => static::class,
+                            'invoice_id' => (string) $invoice->id,
+                            'tenant_id' => (string) $tenant->id,
+                            'event' => 'invoice.created',
+                        ]
+                    );
+                }
+
+                Log::info("Cobranca BOLETO gerada para tenant {$tenant->trade_name} sem renovacao antecipada da assinatura.");
+                $createdInvoices++;
             }
         }
 
@@ -279,5 +366,16 @@ class ProcessSubscriptionsCommand extends Command
         $this->info('Processamento concluido com sucesso.');
 
         return Command::SUCCESS;
+    }
+
+    private function hasRealPaymentLink(?string $link): bool
+    {
+        $value = trim((string) $link);
+
+        if ($value === '') {
+            return false;
+        }
+
+        return filter_var($value, FILTER_VALIDATE_URL) !== false;
     }
 }

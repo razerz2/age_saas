@@ -39,9 +39,9 @@ O sistema de pagamentos utiliza a **API do Asaas** como gateway de pagamento par
 
 ```env
 # URL base da API do Asaas
-ASAAS_API_URL=https://sandbox.asaas.com/api/v3/
+ASAAS_API_URL=https://api-sandbox.asaas.com/v3
 # ou para produção:
-# ASAAS_API_URL=https://www.asaas.com/api/v3/
+# ASAAS_API_URL=https://api.asaas.com/v3
 
 # Chave de API do Asaas
 ASAAS_API_KEY=sua_chave_api_aqui
@@ -1050,3 +1050,39 @@ O sistema possui os seguintes comandos agendados para gestão automática de fat
 - ✅ **Purga com proteções:** Verifica assinaturas ativas/pendentes e invoices pendentes antes de purgar
 - ✅ **Purga com --dry-run:** Opção para simular purga sem fazer alterações
 - ✅ **Campos de auditoria:** `suspended_at`, `canceled_at` (tenants), `recovery_started_at` (subscriptions) para rastreamento completo
+
+
+---
+
+## Atualizacao 2026-05-02 - PIX_RECURRENT
+
+### Matriz de autoridade por metodo de pagamento
+
+| Metodo | Autoridade | Comportamento |
+|---|---|---|
+| PIX | Platform | Cobranca avulsa/manual por ciclo |
+| BOLETO | Platform | Cobranca avulsa/manual por ciclo |
+| CREDIT_CARD | Asaas | Assinatura recorrente gerenciada no Asaas |
+| PIX_RECURRENT | Asaas | Assinatura recorrente PIX gerenciada no Asaas |
+
+### Regras de produto
+
+- PIX continua sendo PIX manual (nao recorrente no Asaas).
+- PIX_RECURRENT e uma opcao nova e separada.
+- CREDIT_CARD e PIX_RECURRENT usam assinatura no Asaas (`subscriptions`).
+- PIX e BOLETO usam cobranca avulsa por ciclo (`payments`).
+
+### Regras operacionais
+
+- `invoices:generate` processa apenas `PIX` e `BOLETO`.
+- `invoices:generate` ignora `CREDIT_CARD` e `PIX_RECURRENT`.
+- Para `PIX_RECURRENT`, a fatura local e criada/vinculada pelo webhook `PAYMENT_CREATED`.
+- Em `PAYMENT_CREATED`, `invoices.provider_id` e `invoices.asaas_payment_id` devem usar `pay_...`.
+- `subscriptions.asaas_subscription_id` deve usar `sub_...`.
+- Nunca usar `sub_...` como `provider_id` de invoice.
+
+### Webhook para PIX_RECURRENT
+
+- `PAYMENT_CREATED`: cria ou vincula invoice local com idempotencia por `payment.id`.
+- `PAYMENT_RECEIVED`/`PAYMENT_CONFIRMED`: marca invoice como paga e libera/renova acesso da assinatura.
+- `PAYMENT_OVERDUE`: marca invoice como vencida, assinatura `past_due`, tenant suspenso.

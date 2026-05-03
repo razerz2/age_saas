@@ -33,8 +33,8 @@ return [
 
     'asaas' => [
         'api_key' => env('ASAAS_API_KEY'),
-        'api_url' => env('ASAAS_API_URL', 'https://sandbox.asaas.com/api/v3/'),
-        'url' => env('ASAAS_API_URL', 'https://sandbox.asaas.com/api/v3/'),
+        'api_url' => env('ASAAS_API_URL', 'https://api-sandbox.asaas.com/v3'),
+        'url' => env('ASAAS_API_URL', 'https://api-sandbox.asaas.com/v3'),
         'webhook_secret' => env('ASAAS_WEBHOOK_SECRET'),
     ],
 

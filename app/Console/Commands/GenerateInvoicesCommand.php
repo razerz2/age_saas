@@ -5,6 +5,7 @@ namespace App\Console\Commands;
 use App\Models\Platform\Invoices;
 use App\Models\Platform\Plan;
 use App\Models\Platform\Subscription;
+use App\Services\Platform\InvoiceAsaasSyncService;
 use App\Services\Platform\WhatsAppOfficialMessageService;
 use App\Services\SystemNotificationService;
 use Carbon\Carbon;
@@ -14,7 +15,8 @@ use Illuminate\Support\Facades\Log;
 class GenerateInvoicesCommand extends Command
 {
     public function __construct(
-        private readonly WhatsAppOfficialMessageService $officialWhatsApp
+        private readonly WhatsAppOfficialMessageService $officialWhatsApp,
+        private readonly InvoiceAsaasSyncService $invoiceAsaasSyncService
     ) {
         parent::__construct();
     }
@@ -50,6 +52,7 @@ class GenerateInvoicesCommand extends Command
                 $query->where('plan_type', Plan::TYPE_REAL);
             })
             ->whereIn('payment_method', ['PIX', 'BOLETO'])
+            ->whereNotIn('payment_method', ['CREDIT_CARD', 'DEBIT_CARD', 'PIX_RECURRENT'])
             ->get();
 
         if ($subscriptions->isEmpty()) {
@@ -117,23 +120,46 @@ class GenerateInvoicesCommand extends Command
                     'provider' => 'asaas',
                 ]);
 
-                $this->officialWhatsApp->sendByKey(
-                    'invoice.created',
-                    $tenant->phone,
-                    [
-                        'customer_name' => $tenant->trade_name,
-                        'tenant_name' => $tenant->trade_name,
-                        'invoice_amount' => 'R$ ' . number_format($invoice->amount_cents / 100, 2, ',', '.'),
-                        'due_date' => Carbon::parse($invoice->due_date)->format('d/m/Y'),
-                        'payment_link' => trim((string) ($invoice->payment_link ?: 'https://app.allsync.com.br/faturas')),
-                    ],
-                    [
-                        'command' => static::class,
-                        'invoice_id' => (string) $invoice->id,
-                        'tenant_id' => (string) $tenant->id,
-                        'event' => 'invoice.created',
-                    ]
-                );
+                try {
+                    $invoice = $this->invoiceAsaasSyncService->syncInvoice($invoice);
+                    $invoice->refresh();
+                } catch (\Throwable $syncError) {
+                    $invoice->update([
+                        'asaas_synced' => false,
+                        'asaas_sync_status' => 'failed',
+                        'asaas_last_sync_at' => now(),
+                        'asaas_last_error' => $syncError->getMessage(),
+                    ]);
+
+                    SystemNotificationService::notify(
+                        'Falha ao sincronizar fatura automatica no Asaas',
+                        "Invoice {$invoice->id} (tenant {$tenant->trade_name}) nao sincronizou: {$syncError->getMessage()}",
+                        'invoice',
+                        'warning'
+                    );
+
+                    Log::error("Falha no sync Asaas da invoice {$invoice->id}: {$syncError->getMessage()}");
+                }
+
+                if ($tenant->phone && $this->hasRealPaymentLink($invoice->payment_link)) {
+                    $this->officialWhatsApp->sendByKey(
+                        'invoice.created',
+                        $tenant->phone,
+                        [
+                            'customer_name' => $tenant->trade_name,
+                            'tenant_name' => $tenant->trade_name,
+                            'invoice_amount' => 'R$ ' . number_format($invoice->amount_cents / 100, 2, ',', '.'),
+                            'due_date' => Carbon::parse($invoice->due_date)->format('d/m/Y'),
+                            'payment_link' => trim((string) $invoice->payment_link),
+                        ],
+                        [
+                            'command' => static::class,
+                            'invoice_id' => (string) $invoice->id,
+                            'tenant_id' => (string) $tenant->id,
+                            'event' => 'invoice.created',
+                        ]
+                    );
+                }
 
                 $generated++;
                 Log::info("Fatura gerada para assinatura {$subscription->id} (vencimento: {$nextDueDate->toDateString()})");
@@ -160,5 +186,16 @@ class GenerateInvoicesCommand extends Command
         }
 
         return Command::SUCCESS;
+    }
+
+    private function hasRealPaymentLink(?string $link): bool
+    {
+        $value = trim((string) $link);
+
+        if ($value === '') {
+            return false;
+        }
+
+        return filter_var($value, FILTER_VALIDATE_URL) !== false;
     }
 }

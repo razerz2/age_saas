@@ -32,7 +32,7 @@ class SubscriptionRequest extends FormRequest
             'due_day' => [$isTestPlan ? 'nullable' : 'required', 'integer', 'min:1', 'max:31'],
             'status' => [$isTestPlan ? 'nullable' : 'required', 'in:active,past_due,canceled,trialing,pending'],
             'auto_renew' => ['boolean'],
-            'payment_method' => [$isTestPlan ? 'nullable' : 'required', 'in:PIX,BOLETO,CREDIT_CARD,DEBIT_CARD'],
+            'payment_method' => [$isTestPlan ? 'nullable' : 'required', 'in:PIX,PIX_RECURRENT,BOLETO,CREDIT_CARD,DEBIT_CARD'],
         ];
     }
 

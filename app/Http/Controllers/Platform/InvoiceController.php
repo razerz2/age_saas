@@ -3,16 +3,23 @@
 namespace App\Http\Controllers\Platform;
 
 use App\Http\Controllers\Controller;
-use App\Http\Controllers\Platform\WhatsAppController;
 use App\Http\Requests\Platform\InvoiceRequest;
 use App\Models\Platform\Invoices;
 use App\Models\Platform\Subscription;
 use App\Models\Platform\Tenant;
 use App\Services\AsaasService;
+use App\Services\Platform\InvoiceAsaasSyncService;
+use App\Services\Platform\WhatsAppOfficialMessageService;
 use Illuminate\Support\Facades\Log;
 
 class InvoiceController extends Controller
 {
+    public function __construct(
+        private readonly InvoiceAsaasSyncService $invoiceAsaasSyncService,
+        private readonly WhatsAppOfficialMessageService $officialWhatsApp
+    ) {
+    }
+
     public function index()
     {
         $invoices = Invoices::with(['tenant', 'subscription'])
@@ -39,15 +46,21 @@ class InvoiceController extends Controller
             $subscription = Subscription::with('plan')->find($data['subscription_id']);
         }
 
-        if ($subscription?->plan?->isTest()) {
+        if ($subscription?->plan?->isTest() || (bool) $subscription?->is_trial) {
             return back()
                 ->withInput()
-                ->withErrors(['general' => 'Plano de teste não gera fatura nem cobrança.']);
+                ->withErrors(['general' => 'Plano de teste/trial nao gera fatura nem cobranca.']);
         }
 
         $invoice = Invoices::create($data);
-        app(WhatsAppController::class)->sendInvoiceNotification($invoice);
-        $this->syncWithAsaas($invoice, silent: true);
+
+        try {
+            $invoice = $this->invoiceAsaasSyncService->syncInvoice($invoice);
+        } catch (\Throwable $e) {
+            Log::error("Erro ao sincronizar fatura {$invoice->id} no store: {$e->getMessage()}");
+        }
+
+        $this->sendInvoiceNotificationIfPossible($invoice->fresh(['tenant']));
 
         return redirect()
             ->route('Platform.invoices.index')
@@ -65,7 +78,11 @@ class InvoiceController extends Controller
         $data = $request->validated();
         $invoice->update($data);
 
-        $this->syncWithAsaas($invoice, silent: true);
+        try {
+            $invoice = $this->invoiceAsaasSyncService->syncInvoice($invoice->fresh(['tenant', 'subscription.plan']));
+        } catch (\Throwable $e) {
+            Log::error("Erro ao sincronizar fatura {$invoice->id} no update: {$e->getMessage()}");
+        }
 
         return redirect()
             ->route('Platform.invoices.index')
@@ -74,6 +91,7 @@ class InvoiceController extends Controller
 
     public function show(Invoices $invoice)
     {
+        $invoice->load(['tenant', 'subscription.plan']);
         return view('platform.invoices.show', compact('invoice'));
     }
 
@@ -124,162 +142,107 @@ class InvoiceController extends Controller
     public function syncWithAsaas(Invoices $invoice, bool $silent = false)
     {
         try {
-            $invoice->loadMissing(['subscription.plan', 'tenant']);
+            $invoice = $this->invoiceAsaasSyncService->syncInvoice($invoice);
 
-            if ($invoice->subscription?->plan?->isTest()) {
-                $invoice->update([
-                    'asaas_synced' => false,
-                    'asaas_sync_status' => 'skipped',
-                    'asaas_last_error' => null,
-                    'asaas_last_sync_at' => now(),
-                ]);
-
-                Log::info("Fatura {$invoice->id} ignorada: plano de teste não participa de cobrança.");
-
-                if ($silent) {
-                    return;
-                }
-
-                return redirect()->back()->with('warning', 'Plano de teste: esta fatura não é sincronizada com o Asaas.');
+            if ($silent) {
+                return $invoice;
             }
 
-            $asaas = new AsaasService();
-            $tenant = $invoice->tenant;
-
-            $invoice->update([
-                'asaas_synced' => false,
-                'asaas_sync_status' => 'pending',
-                'asaas_last_error' => null,
-                'asaas_last_sync_at' => now(),
-            ]);
-
-            if ($invoice->payment_link && str_contains($invoice->payment_link, '/c/')) {
-                Log::info("Fatura {$invoice->id} não sincronizada: checkout hospedado Asaas (/c/).");
-
-                if (! $silent) {
-                    return redirect()
-                        ->back()
-                        ->withErrors([
-                            'general' => 'Esta fatura é um checkout hospedado do Asaas e não pode ser sincronizada diretamente. Aguarde o pagamento para sincronizar automaticamente via webhook.',
-                        ]);
-                }
-
-                return;
-            }
-
-            if (in_array($invoice->status, ['paid', 'received', 'confirmed', 'canceled'], true)) {
-                Log::info("Fatura {$invoice->id} não sincronizada: status '{$invoice->status}' não permite atualização no Asaas.");
-
-                if (! $silent) {
-                    return redirect()
-                        ->back()
-                        ->withErrors([
-                            'general' => 'Esta fatura já está finalizada (paga ou cancelada) e não pode ser sincronizada com o Asaas.',
-                        ]);
-                }
-
-                return;
-            }
-
-            if (! $tenant->asaas_customer_id) {
-                $searchResponse = $asaas->searchCustomer($tenant->email);
-
-                if (! empty($searchResponse['data'][0]['id'])) {
-                    $tenant->update(['asaas_customer_id' => $searchResponse['data'][0]['id']]);
-                } else {
-                    $createResponse = $asaas->createCustomer($tenant->toArray());
-
-                    if (empty($createResponse) || ! isset($createResponse['id'])) {
-                        $invoice->update([
-                            'asaas_synced' => false,
-                            'asaas_sync_status' => 'pending',
-                            'asaas_last_error' => 'Falha ao criar cliente no Asaas (resposta vazia ou invalida).',
-                            'asaas_last_sync_at' => now(),
-                        ]);
-
-                        Log::warning("Fatura {$invoice->id}: resposta invalida ao criar cliente no Asaas.");
-                        if (! $silent) {
-                            return redirect()->back()->withErrors([
-                                'general' => 'Não foi possível sincronizar com o Asaas no momento. Tente novamente mais tarde.',
-                            ]);
-                        }
-                        return;
-                    }
-
-                    $tenant->update(['asaas_customer_id' => $createResponse['id']]);
-                }
-            }
-
-            if ($invoice->provider_id) {
-                $response = $asaas->updatePayment($invoice->provider_id, [
-                    'value' => $invoice->amount_cents / 100,
-                    'dueDate' => $invoice->due_date->format('Y-m-d'),
-                    'description' => "Atualizacao da fatura {$invoice->id}",
-                ]);
-            } else {
-                $response = $asaas->createPayment([
-                    'customer' => $tenant->asaas_customer_id,
-                    'dueDate' => $invoice->due_date->format('Y-m-d'),
-                    'value' => $invoice->amount_cents / 100,
-                    'description' => "Fatura {$invoice->id}",
-                    'externalReference' => $invoice->id,
-                ]);
-            }
-
-            if (! empty($response) && isset($response['id'])) {
-                $invoice->update([
-                    'provider' => 'asaas',
-                    'provider_id' => $response['id'],
-                    'payment_link' => $response['invoiceUrl'] ?? null,
-                    'asaas_synced' => true,
-                    'asaas_sync_status' => 'success',
-                    'asaas_last_sync_at' => now(),
-                    'asaas_last_error' => null,
-                ]);
-
-                Log::info("Fatura {$invoice->id} sincronizada com sucesso no Asaas.");
-            } else {
-                $invoice->update([
-                    'asaas_synced' => false,
-                    'asaas_sync_status' => 'pending',
-                    'asaas_last_sync_at' => now(),
-                    'asaas_last_error' => 'Falha ao sincronizar: resposta vazia ou invalida do Asaas.',
-                ]);
-
-                Log::warning("Fatura {$invoice->id}: resposta invalida do Asaas.", [
-                    'response' => $response ?? 'empty',
-                ]);
-
-                if (! $silent) {
-                    return redirect()->back()->withErrors([
-                        'general' => $response['errors'][0]['description']
-                            ?? 'Não foi possível confirmar a sincronização da fatura no Asaas.',
-                    ]);
-                }
-
-                return;
-            }
-
-            if (! $silent) {
-                return redirect()->back()->with('success', 'Fatura sincronizada com sucesso!');
-            }
+            return redirect()->back()->with('success', 'Fatura sincronizada com sucesso no Asaas.');
         } catch (\Throwable $e) {
-            Log::error("Erro ao sincronizar fatura {$invoice->id}: {$e->getMessage()}", [
-                'trace' => $e->getTraceAsString(),
-            ]);
-
-            $invoice->update([
-                'asaas_synced' => false,
-                'asaas_sync_status' => 'failed',
-                'asaas_last_sync_at' => now(),
-                'asaas_last_error' => $e->getMessage(),
-            ]);
-
-            if (! $silent) {
-                return redirect()->back()->withErrors([
-                    'general' => 'Erro ao sincronizar com o Asaas: ' . $e->getMessage(),
-                ]);
+            if ($silent) {
+                return $invoice;
             }
+
+            return redirect()->back()->withErrors([
+                'general' => 'Erro na sincronizacao com Asaas: ' . $e->getMessage(),
+            ]);
         }
     }
+
+    public function refreshAsaasStatus(Invoices $invoice)
+    {
+        try {
+            $this->invoiceAsaasSyncService->refreshStatus($invoice);
+
+            return redirect()->back()->with('success', 'Status da fatura atualizado no Asaas.');
+        } catch (\Throwable $e) {
+            return redirect()->back()->withErrors([
+                'general' => 'Falha ao consultar status no Asaas: ' . $e->getMessage(),
+            ]);
+        }
+    }
+
+    public function recreateAsaasPayment(Invoices $invoice)
+    {
+        try {
+            $invoice = $this->invoiceAsaasSyncService->recreatePayment($invoice);
+
+            return redirect()->back()->with('success', 'Cobranca recriada com sucesso no Asaas.');
+        } catch (\Throwable $e) {
+            return redirect()->back()->withErrors([
+                'general' => 'Falha ao recriar cobranca no Asaas: ' . $e->getMessage(),
+            ]);
+        }
+    }
+
+    public function resendPaymentLink(Invoices $invoice)
+    {
+        $invoice->loadMissing(['tenant']);
+
+        if (! $this->hasRealPaymentLink($invoice->payment_link)) {
+            return redirect()->back()->withErrors([
+                'general' => 'Fatura sem link de pagamento valido para reenvio.',
+            ]);
+        }
+
+        $sent = $this->sendInvoiceNotificationIfPossible($invoice);
+
+        if (! $sent) {
+            return redirect()->back()->withErrors([
+                'general' => 'Falha ao reenviar link de pagamento (template ausente/inapto ou telefone invalido).',
+            ]);
+        }
+
+        return redirect()->back()->with('success', 'Link de pagamento reenviado com sucesso.');
+    }
+
+    private function sendInvoiceNotificationIfPossible(Invoices $invoice): bool
+    {
+        $tenant = $invoice->tenant;
+
+        if (! $tenant || empty($tenant->phone) || ! $this->hasRealPaymentLink($invoice->payment_link)) {
+            return false;
+        }
+
+        return (bool) $this->officialWhatsApp->sendByKey(
+            'invoice.created',
+            $tenant->phone,
+            [
+                'customer_name' => $tenant->trade_name,
+                'tenant_name' => $tenant->trade_name,
+                'invoice_amount' => 'R$ ' . number_format($invoice->amount_cents / 100, 2, ',', '.'),
+                'due_date' => $invoice->due_date?->format('d/m/Y') ?? now()->format('d/m/Y'),
+                'payment_link' => trim((string) $invoice->payment_link),
+            ],
+            [
+                'controller' => static::class,
+                'invoice_id' => (string) $invoice->id,
+                'tenant_id' => (string) $tenant->id,
+                'event' => 'invoice.created',
+            ]
+        );
+    }
+
+    private function hasRealPaymentLink(?string $link): bool
+    {
+        $value = trim((string) $link);
+
+        if ($value === '') {
+            return false;
+        }
+
+        return filter_var($value, FILTER_VALIDATE_URL) !== false;
+    }
 }
+

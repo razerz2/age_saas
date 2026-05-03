@@ -91,9 +91,9 @@
                     <div class="mb-3">
                         <label>Webhook Secret</label>
                         <input type="password" class="form-control" name="ASAAS_WEBHOOK_SECRET"
-                            value="{{ old('ASAAS_WEBHOOK_SECRET', $settings['ASAAS_WEBHOOK_SECRET'] ?? '') }}"
+                            value="{{ old('ASAAS_WEBHOOK_SECRET', '') }}"
                             placeholder="Token do header asaas-access-token">
-                        <small class="text-muted">Usado na validação de webhook do Asaas.</small>
+                        <small class="text-muted">Usado na validação de webhook do Asaas. Deixe em branco para manter o segredo atual.</small>
                     </div>
 
                     <div class="d-flex align-items-center flex-wrap gap-2 mb-4">

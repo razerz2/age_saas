@@ -116,9 +116,10 @@ class Subscription extends Model
     public function getPaymentMethodLabelAttribute(): string
     {
         return match ($this->payment_method) {
-            'PIX' => 'PIX',
+            'PIX' => 'PIX manual',
+            'PIX_RECURRENT' => 'PIX recorrente',
             'BOLETO' => 'Boleto Bancario',
-            'CREDIT_CARD' => 'Cartao de Credito',
+            'CREDIT_CARD' => 'Cartao de Credito recorrente',
             'DEBIT_CARD' => 'Cartao de Debito',
             null => 'Nao aplicavel',
             default => 'Desconhecido',

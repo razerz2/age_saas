@@ -23,7 +23,7 @@ class AsaasService
         if ($this->environment === 'production') {
             $this->baseUrl = 'https://api.asaas.com/v3/';
         } else {
-            $this->baseUrl = 'https://sandbox.asaas.com/api/v3/';
+            $this->baseUrl = 'https://api-sandbox.asaas.com/v3/';
         }
 
         if (empty($this->apiKey)) {
@@ -339,4 +339,3 @@ class AsaasService
         };
     }
 }
-

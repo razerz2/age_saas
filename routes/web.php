@@ -189,6 +189,9 @@ Route::middleware(['auth'])->prefix('Platform')->name('Platform.')->group(functi
     Route::middleware('module.access:invoices')->group(function () {
         Route::resource('invoices', InvoiceController::class);
         Route::post('/invoices/{invoice}/sync', [InvoiceController::class, 'syncManual'])->name('invoices.sync');
+        Route::post('/invoices/{invoice}/refresh-asaas-status', [InvoiceController::class, 'refreshAsaasStatus'])->name('invoices.refresh-asaas-status');
+        Route::post('/invoices/{invoice}/recreate-asaas-payment', [InvoiceController::class, 'recreateAsaasPayment'])->name('invoices.recreate-asaas-payment');
+        Route::post('/invoices/{invoice}/resend-payment-link', [InvoiceController::class, 'resendPaymentLink'])->name('invoices.resend-payment-link');
     });
 
     // 🔸 Módulo: Pré-Cadastros

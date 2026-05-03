@@ -201,7 +201,7 @@ DB_TENANT_PORT=5432
 #### Integração Asaas (Gateway de Pagamento)
 
 ```env
-ASAAS_API_URL=https://sandbox.asaas.com/api/v3/
+ASAAS_API_URL=https://api-sandbox.asaas.com/v3
 ASAAS_API_KEY=sua_chave_api
 ASAAS_WEBHOOK_SECRET=seu_secret_webhook
 ASAAS_ENV=sandbox

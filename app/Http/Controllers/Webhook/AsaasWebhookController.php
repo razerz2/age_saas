@@ -14,11 +14,17 @@ use App\Services\SystemNotificationService;
 use App\Services\Platform\PreTenantProcessorService;
 use App\Services\AsaasService;
 use Carbon\Carbon;
+use Illuminate\Support\Str;
 
 class AsaasWebhookController extends Controller
 {
     public function handle(Request $request)
     {
+        $startedAt = microtime(true);
+        $invoice = null;
+        $event = 'UNKNOWN';
+        $paymentId = null;
+
         try {
             $payload = $request->all();
             $event = $payload['event'] ?? 'UNKNOWN';
@@ -27,29 +33,60 @@ class AsaasWebhookController extends Controller
             $customerId     = $payload['customer']['id'] ?? null;
             $subscriptionId = $payload['subscription']['id'] ?? ($payload['payment']['subscription'] ?? null);
             $referenceId    = $paymentId ?? $subscriptionId ?? $customerId;
+            $externalReference = $payload['payment']['externalReference'] ?? null;
+            $paymentLinkId = $payload['payment']['paymentLink'] ?? null;
 
-            Log::info("📩 Webhook recebido do Asaas: {$event} ({$referenceId})", [
-                'payload' => $payload,
+            Log::info("Webhook recebido do Asaas: {$event}", [
+                'reference' => $this->maskIdentifier($referenceId),
+                'payment_id' => $this->maskIdentifier($paymentId),
+                'customer_id' => $this->maskIdentifier($customerId),
+                'subscription_id' => $this->maskIdentifier($subscriptionId),
+                'external_reference' => $this->maskIdentifier($externalReference),
+                'payment_link_id' => $this->maskIdentifier($paymentLinkId),
             ]);
 
             // 🔹 1. Registrar log de auditoria
             WebhookLog::create([
                 'event' => $event,
-                'payload' => json_encode($payload, JSON_UNESCAPED_UNICODE),
+                'payment_id' => $paymentId,
+                'payload' => json_encode([
+                    'event' => $event,
+                    'payment' => [
+                        'id' => $paymentId,
+                        'externalReference' => $externalReference,
+                        'subscription' => $subscriptionId,
+                    ],
+                    'customer' => [
+                        'id' => $customerId,
+                    ],
+                ], JSON_UNESCAPED_UNICODE),
             ]);
 
             if (!$paymentId && !$customerId && !$subscriptionId) {
-                Log::warning("⚠️ Webhook sem ID relevante", ['payload' => $payload]);
-                return response()->json(['message' => 'Missing resource ID'], 400);
+                Log::warning('Webhook sem ID relevante');
+                return $this->finalizeWebhookResponse(
+                    $event,
+                    $paymentId,
+                    $invoice?->id,
+                    $startedAt,
+                    200,
+                    ['received' => true],
+                    'ignored_missing_resource_id',
+                    'warning'
+                );
             }
 
             // 🔹 2. VERIFICAR SE É PRÉ-CADASTRO ANTES DE PROCESSAR COMO FATURA NORMAL
             // O Asaas pode enviar webhooks de pré-cadastro para /webhook/asaas
-            $externalReference = $payload['payment']['externalReference'] ?? null;
-            $paymentLinkId = $payload['payment']['paymentLink'] ?? null;
-            
             if ($externalReference || $paymentLinkId) {
                 $preTenant = null;
+
+                if ($externalReference && !Str::isUuid((string) $externalReference)) {
+                    Log::debug('ExternalReference nao e UUID de pre-tenant. Seguindo fluxo normal.', [
+                        'external_reference' => $this->maskIdentifier($externalReference),
+                    ]);
+                    $externalReference = null;
+                }
                 
                 // Buscar pré-tenant pelo externalReference (ID do pré-tenant)
                 if ($externalReference) {
@@ -57,11 +94,11 @@ class AsaasWebhookController extends Controller
                     if ($preTenant) {
                         Log::info("🔍 Pré-tenant encontrado pelo externalReference no webhook principal", [
                             'pre_tenant_id' => $preTenant->id,
-                            'external_reference' => $externalReference,
+                            'external_reference' => $this->maskIdentifier($externalReference),
                         ]);
                     } else {
                         Log::debug("🔍 Pré-tenant não encontrado pelo externalReference", [
-                            'external_reference' => $externalReference,
+                            'external_reference' => $this->maskIdentifier($externalReference),
                         ]);
                     }
                 }
@@ -122,7 +159,15 @@ class AsaasWebhookController extends Controller
                                             'subscription_id' => $subscription->id,
                                         ]);
                                     }
-                                    return response()->json(['message' => 'OK'], 200);
+                                    return $this->finalizeWebhookResponse(
+                                        $event,
+                                        $paymentId,
+                                        $invoice?->id,
+                                        $startedAt,
+                                        200,
+                                        ['received' => true],
+                                        'pre_tenant_idempotent'
+                                    );
                                 }
                             }
                         }
@@ -135,19 +180,36 @@ class AsaasWebhookController extends Controller
                             ]);
                         }
                         
-                        return response()->json(['message' => 'OK'], 200);
+                        return $this->finalizeWebhookResponse(
+                            $event,
+                            $paymentId,
+                            $invoice?->id,
+                            $startedAt,
+                            200,
+                            ['received' => true],
+                            'pre_tenant_processed'
+                        );
                     } catch (\Throwable $e) {
                         Log::error("❌ Erro ao processar pré-cadastro via webhook principal", [
                             'pre_tenant_id' => $preTenant->id,
                             'error' => $e->getMessage(),
                             'trace' => $e->getTraceAsString(),
                         ]);
-                        return response()->json(['error' => 'Internal Server Error'], 500);
+                        return $this->finalizeWebhookResponse(
+                            $event,
+                            $paymentId,
+                            $invoice?->id,
+                            $startedAt,
+                            500,
+                            ['error' => 'Internal Server Error'],
+                            'pre_tenant_failed',
+                            'error'
+                        );
                     }
                 } else {
                     // Não é pré-cadastro ou pré-tenant não encontrado - continua fluxo normal
                     Log::debug("ℹ️ Não é pré-cadastro ou pré-tenant não encontrado. Continuando fluxo normal...", [
-                        'external_reference' => $externalReference,
+                        'external_reference' => $this->maskIdentifier($externalReference),
                         'payment_link_id' => $paymentLinkId,
                     ]);
                 }
@@ -161,9 +223,20 @@ class AsaasWebhookController extends Controller
                     ->first();
             }
 
+            if (!$invoice && $externalReference && Str::isUuid((string) $externalReference)) {
+                $invoice = Invoices::find($externalReference);
+
+                if ($invoice) {
+                    Log::info("🔍 Invoice encontrada por externalReference (invoice UUID)", [
+                        'external_reference' => $this->maskIdentifier($externalReference),
+                        'invoice_id' => $invoice->id,
+                    ]);
+                }
+            }
+
             // 🔹 Busca invoice por externalReference (para recovery)
             // externalReference deve ser o ID da subscription recovery_pending
-            if (!$invoice && $externalReference) {
+            if (!$invoice && $externalReference && Str::isUuid((string) $externalReference)) {
                 // Busca invoice recovery vinculada à subscription pelo externalReference
                 $invoice = Invoices::where('recovery_target_subscription_id', $externalReference)
                     ->where(function ($query) use ($paymentId) {
@@ -176,7 +249,7 @@ class AsaasWebhookController extends Controller
                 
                 if ($invoice) {
                     Log::info("🔍 Invoice de recovery encontrada por externalReference", [
-                        'external_reference' => $externalReference,
+                        'external_reference' => $this->maskIdentifier($externalReference),
                         'invoice_id' => $invoice->id,
                         'payment_id' => $paymentId,
                     ]);
@@ -197,6 +270,72 @@ class AsaasWebhookController extends Controller
             // Fallback: subscription da invoice
             if (!$subscription && $invoice) {
                 $subscription = $invoice->subscription;
+            }
+            if (!$subscription && $externalReference && Str::isUuid((string) $externalReference)) {
+                $subscription = Subscription::find($externalReference);
+            }
+
+            if (in_array($event, ['PAYMENT_RECEIVED', 'PAYMENT_CONFIRMED', 'PAYMENT_OVERDUE'], true) && !$invoice) {
+                if ($subscription && $paymentId) {
+                    $invoice = Invoices::query()
+                        ->where('subscription_id', $subscription->id)
+                        ->where(function ($query) use ($paymentId) {
+                            $query->where('asaas_payment_id', $paymentId)
+                                ->orWhere('provider_id', $paymentId);
+                        })
+                        ->latest('due_date')
+                        ->first();
+                }
+
+                if (!$invoice) {
+                    if ($subscription) {
+                        Log::warning('Webhook de pagamento sem invoice local, mas com subscription vinculada. Seguindo para fallback no switch.', [
+                            'event' => $event,
+                            'payment_id' => $this->maskIdentifier($paymentId),
+                            'subscription_id' => $this->maskIdentifier($subscription->asaas_subscription_id ?? $subscription->id),
+                        ]);
+                        // Continua para permitir criacao/vinculo tardio no switch.
+                    } else {
+                        Log::warning('Webhook de pagamento sem invoice local', [
+                            'event' => $event,
+                            'payment_id' => $this->maskIdentifier($paymentId),
+                            'external_reference' => $this->maskIdentifier($externalReference),
+                        ]);
+
+                        return $this->finalizeWebhookResponse(
+                            $event,
+                            $paymentId,
+                            null,
+                            $startedAt,
+                            200,
+                            ['received' => true],
+                            'ignored_invoice_not_found',
+                            'warning'
+                        );
+                    }
+                }
+            }
+
+            if ($invoice && !$subscription) {
+                $subscription = $invoice->subscription;
+            }
+
+            if ($invoice && !$tenant) {
+                $tenant = $invoice->tenant;
+            }
+
+            if (in_array($event, ['PAYMENT_RECEIVED', 'PAYMENT_CONFIRMED'], true) && $invoice && $invoice->status === 'paid' && $invoice->paid_at) {
+                Log::info("Evento {$event} ignorado: fatura {$invoice->id} ja estava paga (idempotencia).");
+
+                return $this->finalizeWebhookResponse(
+                    $event,
+                    $paymentId,
+                    $invoice->id,
+                    $startedAt,
+                    200,
+                    ['received' => true],
+                    'idempotent_already_paid'
+                );
             }
 
             // 🔹 Marca entidades como "em sincronização"
@@ -320,39 +459,116 @@ class AsaasWebhookController extends Controller
                     $subscriptionIdFromAsaas = $payload['payment']['subscription'] ?? null;
                     Log::info("🧾 Pagamento criado no Asaas: {$paymentId}");
 
-                    if ($subscriptionIdFromAsaas) {
-                        $subscription = Subscription::where('asaas_subscription_id', $subscriptionIdFromAsaas)->first();
-
-                        if ($subscription && !Invoices::where('asaas_payment_id', $paymentId)->exists()) {
-                            Invoices::create([
-                                'subscription_id'   => $subscription->id,
-                                'tenant_id'         => $subscription->tenant_id,
-                                'amount_cents'      => (int) (($payload['payment']['value'] ?? 0) * 100),
-                                'due_date'          => $payload['payment']['dueDate'] ?? now(),
-                                'status'            => 'pending',
-                                'provider'          => 'asaas',
-                                'provider_id'       => $subscriptionIdFromAsaas,
-                                'asaas_payment_id'  => $paymentId,
-                                'payment_link'      => $payload['payment']['invoiceUrl'] ?? null,
-                                'asaas_synced'      => true,
-                                'asaas_sync_status' => 'success',
-                                'asaas_last_sync_at' => now(),
-                                'asaas_last_error'  => null,
-                            ]);
-
-                            Log::info("✅ Fatura local criada para pagamento {$paymentId} (assinatura {$subscription->id})");
-                            SystemNotificationService::notify(
-                                'Fatura automática criada',
-                                "Nova fatura gerada automaticamente pela assinatura #{$subscription->id} do tenant {$subscription->tenant?->trade_name}.",
-                                'invoice',
-                                'info'
-                            );
-                        }
+                    if (empty($paymentId)) {
+                        Log::warning('PAYMENT_CREATED sem payment.id. Evento ignorado.');
+                        break;
                     }
+
+                    if ($paymentId && Invoices::query()
+                        ->where('asaas_payment_id', $paymentId)
+                        ->orWhere('provider_id', $paymentId)
+                        ->exists()) {
+                        Log::info("Evento PAYMENT_CREATED idempotente para payment {$paymentId}.");
+                        break;
+                    }
+
+                    if ($externalReference && Str::isUuid((string) $externalReference)) {
+                        $invoice = Invoices::find($externalReference);
+                    }
+
+                    if (!$subscription && $subscriptionIdFromAsaas) {
+                        $subscription = Subscription::where('asaas_subscription_id', $subscriptionIdFromAsaas)->first();
+                    }
+                    if (!$subscription && $externalReference && Str::isUuid((string) $externalReference)) {
+                        $subscription = Subscription::find($externalReference);
+                    }
+
+                    if (!$subscription) {
+                        Log::warning('PAYMENT_CREATED sem assinatura local vinculada.', [
+                            'payment_id' => $this->maskIdentifier($paymentId),
+                            'subscription_id' => $this->maskIdentifier($subscriptionIdFromAsaas),
+                            'external_reference' => $this->maskIdentifier($externalReference),
+                        ]);
+                        break;
+                    }
+
+                    $paymentStatus = strtoupper((string) ($payload['payment']['status'] ?? 'PENDING'));
+                    $localStatus = $paymentStatus === 'OVERDUE' ? 'overdue' : 'pending';
+                    $paymentLink = $payload['payment']['invoiceUrl']
+                        ?? $payload['payment']['bankSlipUrl']
+                        ?? null;
+
+                    if ($invoice) {
+                        $invoice->update([
+                            'subscription_id'   => $subscription->id,
+                            'tenant_id'         => $subscription->tenant_id,
+                            'amount_cents'      => (int) round(((float) ($payload['payment']['value'] ?? 0)) * 100),
+                            'due_date'          => $payload['payment']['dueDate'] ?? now(),
+                            'status'            => $localStatus,
+                            'provider'          => 'asaas',
+                            'provider_id'       => $paymentId,
+                            'asaas_payment_id'  => $paymentId,
+                            'payment_method'    => $subscription->payment_method,
+                            'payment_link'      => $paymentLink,
+                            'asaas_synced'      => true,
+                            'asaas_sync_status' => 'success',
+                            'asaas_last_sync_at' => now(),
+                            'asaas_last_error'  => null,
+                        ]);
+
+                        Log::info("✅ Invoice {$invoice->id} vinculada ao pagamento {$paymentId} via PAYMENT_CREATED.");
+                        break;
+                    }
+
+                    $invoice = Invoices::create([
+                        'subscription_id'   => $subscription->id,
+                        'tenant_id'         => $subscription->tenant_id,
+                        'amount_cents'      => (int) round(((float) ($payload['payment']['value'] ?? 0)) * 100),
+                        'due_date'          => $payload['payment']['dueDate'] ?? now(),
+                        'status'            => $localStatus,
+                        'provider'          => 'asaas',
+                        'provider_id'       => $paymentId,
+                        'asaas_payment_id'  => $paymentId,
+                        'payment_method'    => $subscription->payment_method,
+                        'payment_link'      => $paymentLink,
+                        'asaas_synced'      => true,
+                        'asaas_sync_status' => 'success',
+                        'asaas_last_sync_at' => now(),
+                        'asaas_last_error'  => null,
+                    ]);
+
+                    Log::info("✅ Fatura local criada para pagamento {$paymentId} (assinatura {$subscription->id})");
+                    SystemNotificationService::notify(
+                        'Fatura automática criada',
+                        "Nova fatura gerada automaticamente pela assinatura #{$subscription->id} do tenant {$subscription->tenant?->trade_name}.",
+                        'invoice',
+                        'info'
+                    );
                     break;
 
                 case 'PAYMENT_RECEIVED':
                 case 'PAYMENT_CONFIRMED':
+                    if (!$invoice && $subscription && $paymentId) {
+                        $invoice = Invoices::create([
+                            'subscription_id' => $subscription->id,
+                            'tenant_id' => $subscription->tenant_id,
+                            'amount_cents' => (int) round(((float) ($payload['payment']['value'] ?? 0)) * 100),
+                            'due_date' => $payload['payment']['dueDate'] ?? now(),
+                            'status' => 'pending',
+                            'provider' => 'asaas',
+                            'provider_id' => $paymentId,
+                            'asaas_payment_id' => $paymentId,
+                            'payment_method' => $subscription->payment_method,
+                            'payment_link' => $payload['payment']['invoiceUrl'] ?? ($payload['payment']['bankSlipUrl'] ?? null),
+                            'asaas_synced' => true,
+                            'asaas_sync_status' => 'success',
+                            'asaas_last_sync_at' => now(),
+                            'asaas_last_error' => null,
+                        ]);
+
+                        Log::info("🧾 Invoice criada tardiamente no {$event} para pagamento {$paymentId}.");
+                    }
+
                     if (!$invoice) {
                         Log::warning("⚠️ Fatura {$paymentId} não encontrada para evento {$event}");
                         break;
@@ -366,6 +582,10 @@ class AsaasWebhookController extends Controller
                     $invoice->update([
                         'status'             => 'paid',
                         'paid_at'            => $paidAt,
+                        'provider'           => 'asaas',
+                        'provider_id'        => $paymentId ?? $invoice->provider_id,
+                        'asaas_payment_id'   => $paymentId ?? $invoice->asaas_payment_id ?? $invoice->provider_id,
+                        'payment_link'       => $payload['payment']['invoiceUrl'] ?? ($payload['payment']['bankSlipUrl'] ?? $invoice->payment_link),
                         'asaas_synced'       => true,
                         'asaas_sync_status'  => 'success',
                         'asaas_last_sync_at' => now(),
@@ -374,6 +594,7 @@ class AsaasWebhookController extends Controller
 
                     // 🔹 Ativa assinatura se estava pendente ou recovery_pending
                     $subscription = $invoice->subscription;
+                    $tenant = $tenant ?? $invoice->tenant ?? $subscription?->tenant;
                     if ($subscription && in_array($subscription->status, ['pending', 'recovery_pending'])) {
                         $months = $subscription->plan->period_months ?? 1;
                         
@@ -390,10 +611,12 @@ class AsaasWebhookController extends Controller
                             $asaas = new AsaasService();
                             $asaasResponse = $asaas->createSubscription([
                                 'customer' => $tenant->asaas_customer_id,
+                                'billingType' => 'CREDIT_CARD',
                                 'value' => $plan->price_cents / 100,
                                 'cycle' => 'MONTHLY',
                                 'nextDueDate' => $nextDueDate, // Baseado na data do pagamento
                                 'description' => "Assinatura do plano {$plan->name}",
+                                'externalReference' => (string) $subscription->id,
                             ]);
                             
                             if (!empty($asaasResponse['subscription']['id'])) {
@@ -430,10 +653,12 @@ class AsaasWebhookController extends Controller
                             }
                         } else {
                             // Assinatura normal pendente
+                            $paidAtDate = $paidAt->copy()->startOfDay();
                             $subscription->update([
                                 'status'              => 'active',
-                                'starts_at'           => now(),
-                                'ends_at'             => now()->addMonths($months),
+                                'starts_at'           => $paidAtDate,
+                                'ends_at'             => $paidAtDate->copy()->addMonths($months),
+                                'billing_anchor_date' => $paidAtDate->toDateString(),
                                 'asaas_last_sync_at'  => now(),
                                 'asaas_synced'        => true,
                                 'asaas_sync_status'   => 'success',
@@ -442,12 +667,43 @@ class AsaasWebhookController extends Controller
                         }
                     }
 
-                    // 🔹 REGRA CRÍTICA: Só recalcula ciclo se paid_at > due_date E apenas para PIX/Boleto
-                    // Cartão: Asaas é autoridade total (não recalcula ciclo localmente)
+                    // 🔹 REGRA CRÍTICA: PIX_RECURRENT reativa e garante cobertura do ciclo pago.
+                    // PIX/BOLETO mantém comportamento atual (só recalcula se pago após vencimento).
+                    // Cartão: Asaas é autoridade total (não recalcula ciclo localmente).
                     $subscription = $invoice->subscription;
                     $paymentMethod = $invoice->payment_method ?? $subscription?->payment_method;
                     
-                    if ($subscription && in_array($paymentMethod, ['PIX', 'BOLETO'])) {
+                    if ($subscription && $paymentMethod === 'PIX_RECURRENT') {
+                        $months = $subscription->plan->period_months ?? 1;
+                        $dueDate = Carbon::parse($invoice->due_date)->startOfDay();
+                        $currentEndsAt = $subscription->ends_at ? Carbon::parse($subscription->ends_at)->startOfDay() : null;
+                        $targetEndsAt = $dueDate->copy()->addMonths($months);
+                        $shouldAdvanceEndsAt = !$currentEndsAt || $currentEndsAt->lt($targetEndsAt);
+
+                        $previousStatus = $subscription->status;
+                        $previousEndsAt = $subscription->ends_at ? Carbon::parse($subscription->ends_at)->toDateString() : null;
+
+                        $subscription->update([
+                            'status' => 'active',
+                            'recovery_started_at' => null,
+                            'ends_at' => $shouldAdvanceEndsAt ? $targetEndsAt : $subscription->ends_at,
+                            'billing_anchor_date' => $dueDate->toDateString(),
+                            'asaas_synced' => true,
+                            'asaas_sync_status' => 'success',
+                            'asaas_last_sync_at' => now(),
+                            'asaas_last_error' => null,
+                        ]);
+
+                        Log::info('PIX_RECURRENT reativado apos pagamento confirmado', [
+                            'subscription_id' => $this->maskIdentifier($subscription->id),
+                            'invoice_id' => $this->maskIdentifier($invoice->id),
+                            'payment_id' => $this->maskIdentifier($paymentId),
+                            'status_from' => $previousStatus,
+                            'status_to' => 'active',
+                            'ends_at_from' => $previousEndsAt,
+                            'ends_at_to' => $subscription->fresh()->ends_at?->toDateString(),
+                        ]);
+                    } elseif ($subscription && in_array($paymentMethod, ['PIX', 'BOLETO'], true)) {
                         $dueDate = Carbon::parse($invoice->due_date);
                         
                         // Só recalcula se pagamento foi após o vencimento
@@ -491,7 +747,7 @@ class AsaasWebhookController extends Controller
 
                     // 🔹 Reativação automática (apenas após recovery ou pagamento normal)
                     // Se é recovery, já foi reativado acima. Se não, reativa normalmente.
-                    if ($tenant && $tenant->status === 'suspended' && $subscription?->status !== 'recovery_pending') {
+                    if ($tenant && in_array($tenant->status, ['suspended', 'past_due'], true) && $subscription?->status !== 'recovery_pending') {
                         $tenant->update([
                             'status' => 'active',
                             'suspended_at' => null, // Limpa suspended_at
@@ -515,7 +771,28 @@ class AsaasWebhookController extends Controller
                     break;
 
                 case 'PAYMENT_OVERDUE':
+                    if (!$invoice && $subscription && $paymentId) {
+                        $invoice = Invoices::create([
+                            'subscription_id' => $subscription->id,
+                            'tenant_id' => $subscription->tenant_id,
+                            'amount_cents' => (int) round(((float) ($payload['payment']['value'] ?? 0)) * 100),
+                            'due_date' => $payload['payment']['dueDate'] ?? now(),
+                            'status' => 'overdue',
+                            'provider' => 'asaas',
+                            'provider_id' => $paymentId,
+                            'asaas_payment_id' => $paymentId,
+                            'payment_method' => $subscription->payment_method,
+                            'payment_link' => $payload['payment']['invoiceUrl'] ?? ($payload['payment']['bankSlipUrl'] ?? null),
+                            'asaas_synced' => true,
+                            'asaas_sync_status' => 'success',
+                            'asaas_last_sync_at' => now(),
+                            'asaas_last_error' => null,
+                        ]);
+                    }
+
                     if (!$invoice) break;
+                    $tenant = $tenant ?? $invoice->tenant;
+                    $subscription = $subscription ?? $invoice->subscription;
 
                     $invoice->update([
                         'status'             => 'overdue',
@@ -527,16 +804,41 @@ class AsaasWebhookController extends Controller
 
                     Log::warning("⚠️ Fatura {$invoice->id} marcada como vencida.");
 
-                    // 🔹 Suspensão imediata (sem período de carência)
-                    if ($tenant && $tenant->status !== 'suspended') {
-                        $tenant->update(['status' => 'suspended']);
-                        Log::warning("⛔ Tenant {$tenant->trade_name} suspenso imediatamente por fatura vencida (sem período de carência).");
+                    if ($subscription) {
+                        $subscription->update([
+                            'status' => 'past_due',
+                            'asaas_synced' => true,
+                            'asaas_sync_status' => 'success',
+                            'asaas_last_sync_at' => now(),
+                            'asaas_last_error' => null,
+                        ]);
                     }
 
-                    // Atualiza status da assinatura
-                    if ($invoice->subscription) {
-                        $invoice->subscription->update(['status' => 'past_due']);
+                    // 🔹 Suspensão imediata (sem período de carência), preservando suspended_at em reenvio
+                    if ($tenant) {
+                        $alreadySuspended = $tenant->status === 'suspended';
+                        $suspendedAt = $tenant->suspended_at ?: now();
+
+                        $tenant->update([
+                            'status' => 'suspended',
+                            'suspended_at' => $suspendedAt,
+                            'asaas_synced' => true,
+                            'asaas_sync_status' => 'success',
+                            'asaas_last_sync_at' => now(),
+                            'asaas_last_error' => null,
+                        ]);
+
+                        if (!$alreadySuspended) {
+                            Log::warning("⛔ Tenant {$tenant->trade_name} suspenso imediatamente por fatura vencida (sem período de carência).");
+                        }
                     }
+
+                    Log::info('PAYMENT_OVERDUE sincronizado com sucesso para invoice/subscription/tenant', [
+                        'payment_id' => $this->maskIdentifier($paymentId),
+                        'invoice_id' => $this->maskIdentifier($invoice->id),
+                        'subscription_id' => $this->maskIdentifier($subscription?->id),
+                        'tenant_id' => $this->maskIdentifier($tenant?->id),
+                    ]);
 
                     SystemNotificationService::notify(
                         'Fatura vencida',
@@ -615,11 +917,20 @@ class AsaasWebhookController extends Controller
                     break;
             }
 
-            return response()->json(['message' => 'OK'], 200);
+            return $this->finalizeWebhookResponse(
+                $event,
+                $paymentId,
+                $invoice?->id,
+                $startedAt,
+                200,
+                ['received' => true],
+                'processed'
+            );
         } catch (\Throwable $e) {
             Log::error("❌ Erro no Webhook Asaas: {$e->getMessage()}", [
                 'trace' => $e->getTraceAsString(),
-                'payload' => $request->all(),
+                'event' => $event,
+                'payment_id' => $this->maskIdentifier($paymentId),
             ]);
 
             // 🔹 Marca as entidades com erro de sincronização
@@ -633,8 +944,60 @@ class AsaasWebhookController extends Controller
                 }
             }
 
-            return response()->json(['error' => 'Internal Server Error'], 500);
+            return $this->finalizeWebhookResponse(
+                $event,
+                $paymentId,
+                $invoice?->id,
+                $startedAt,
+                500,
+                ['error' => 'Internal Server Error'],
+                'failed',
+                'error'
+            );
         }
+    }
+
+    private function finalizeWebhookResponse(
+        string $event,
+        ?string $paymentId,
+        ?string $invoiceId,
+        float $startedAt,
+        int $statusCode,
+        array $body,
+        string $result,
+        string $level = 'info'
+    ) {
+        Log::log($level, 'Asaas webhook finalizado', [
+            'event' => $event,
+            'payment_id' => $this->maskIdentifier($paymentId),
+            'invoice_id' => $this->maskIdentifier($invoiceId),
+            'duration_ms' => $this->durationMs($startedAt),
+            'result' => $result,
+            'status_code' => $statusCode,
+        ]);
+
+        return response()->json($body, $statusCode);
+    }
+
+    private function durationMs(float $startedAt): int
+    {
+        return (int) round((microtime(true) - $startedAt) * 1000);
+    }
+
+    private function maskIdentifier($value): ?string
+    {
+        if ($value === null) {
+            return null;
+        }
+
+        $text = (string) $value;
+        $length = strlen($text);
+
+        if ($length <= 8) {
+            return str_repeat('*', $length);
+        }
+
+        return substr($text, 0, 4) . '***' . substr($text, -4);
     }
 
     /**

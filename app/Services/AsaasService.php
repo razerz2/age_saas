@@ -18,7 +18,7 @@ class AsaasService
         $resolved = function_exists('asaas_config')
             ? asaas_config()
             : [
-                'api_url' => (string) config('services.asaas.api_url', config('services.asaas.url', env('ASAAS_BASE_URL', env('ASAAS_API_URL', '')))),
+                'api_url' => (string) config('services.asaas.api_url', config('services.asaas.url', env('ASAAS_BASE_URL', env('ASAAS_API_URL', 'https://api-sandbox.asaas.com/v3')))),
                 'api_key' => (string) config('services.asaas.api_key', env('ASAAS_API_KEY', '')),
                 'webhook_secret' => (string) config('services.asaas.webhook_secret', env('ASAAS_WEBHOOK_SECRET', '')),
             ];
@@ -28,7 +28,7 @@ class AsaasService
 
         // fallback: usa config() e env()
         // OBS: em config/services.php a chave é "services.asaas.url" (não "base_url")
-        $rawBaseUrl = (string) ($resolved['api_url'] ?? '');
+        $rawBaseUrl = (string) ($resolved['api_url'] ?? 'https://api-sandbox.asaas.com/v3');
 
         $this->baseUrl = rtrim((string) $rawBaseUrl, '/') . '/';
 
@@ -144,6 +144,69 @@ class AsaasService
     }
 
     /**
+     * Busca cliente existente por documento (cpfCnpj).
+     */
+    public function searchCustomerByDocument(string $document)
+    {
+        try {
+            $sanitized = preg_replace('/\D/', '', $document);
+
+            if (empty($sanitized)) {
+                return ['data' => []];
+            }
+
+            $response = Http::withHeaders([
+                'accept' => 'application/json',
+                'access_token' => $this->apiKey,
+            ])
+                ->get($this->baseUrl . 'customers', ['cpfCnpj' => $sanitized])
+                ->json();
+
+            Log::info('📡 Asaas searchCustomerByDocument resposta:', $response);
+            return $response;
+        } catch (\Exception $e) {
+            Log::error('❌ Erro ao buscar cliente Asaas por documento: ' . $e->getMessage());
+            return ['error' => $e->getMessage()];
+        }
+    }
+
+    /**
+     * Busca cliente por documento e/ou e-mail.
+     */
+    public function searchCustomerByEmailOrDocument(?string $email = null, ?string $document = null)
+    {
+        try {
+            $params = [];
+            $sanitized = preg_replace('/\D/', '', (string) $document);
+
+            if (!empty($email)) {
+                $params['email'] = $email;
+            }
+
+            if (!empty($sanitized)) {
+                $params['cpfCnpj'] = $sanitized;
+            }
+
+            if (empty($params)) {
+                return ['data' => []];
+            }
+
+            $response = Http::withHeaders([
+                'accept' => 'application/json',
+                'access_token' => $this->apiKey,
+            ])
+                ->get($this->baseUrl . 'customers', $params)
+                ->json();
+
+            Log::info('📡 Asaas searchCustomerByEmailOrDocument resposta:', $response);
+            return $response;
+        } catch (\Exception $e) {
+            Log::error('❌ Erro ao buscar cliente Asaas por email/documento: ' . $e->getMessage());
+            return ['error' => $e->getMessage()];
+        }
+    }
+
+    /**
      * Lista clientes (paginação simples).
      */
     public function listCustomers(int $page = 1, int $limit = 100)
@@ -217,32 +280,45 @@ class AsaasService
     }
 
     /**
-     * Cria uma assinatura recorrente no Asaas (para cartão de crédito).
+     * Cria uma assinatura recorrente no Asaas.
      */
     public function createSubscription(array $data)
     {
         try {
-            /**
-             * 1️⃣ Cria a assinatura no Asaas
-             */
+            $billingType = strtoupper((string) ($data['billingType'] ?? 'CREDIT_CARD'));
+            if (! in_array($billingType, ['CREDIT_CARD', 'PIX', 'BOLETO', 'DEBIT_CARD', 'UNDEFINED'], true)) {
+                $billingType = 'CREDIT_CARD';
+            }
+
             $subscriptionPayload = [
                 'customer'     => $data['customer'],
-                'billingType'  => 'CREDIT_CARD',
+                'billingType'  => $billingType,
                 'value'        => $data['value'],
                 'cycle'        => $data['cycle'] ?? 'MONTHLY',
                 'nextDueDate'  => $data['nextDueDate'] ?? now()->addDay()->toDateString(),
                 'description'  => $data['description'] ?? 'Assinatura SaaS',
             ];
 
-            $subscriptionResponse = Http::withHeaders([
+            if (! empty($data['externalReference'])) {
+                $subscriptionPayload['externalReference'] = $data['externalReference'];
+            }
+
+            $subscriptionHttpResponse = Http::withHeaders([
                 'accept'       => 'application/json',
                 'content-type' => 'application/json',
                 'access_token' => $this->apiKey,
-            ])->post($this->baseUrl . 'subscriptions', $subscriptionPayload)->json();
+            ])->post($this->baseUrl . 'subscriptions', $subscriptionPayload);
 
-            Log::info('📡 Asaas createSubscription resposta:', is_array($subscriptionResponse) ? $subscriptionResponse : ['response' => $subscriptionResponse]);
+            $statusCode = $subscriptionHttpResponse->status();
+            $subscriptionResponse = $subscriptionHttpResponse->json();
 
-            if (empty($subscriptionResponse['id'])) {
+            Log::info('📡 Asaas createSubscription resposta:', [
+                'status' => $statusCode,
+                'response' => is_array($subscriptionResponse) ? $subscriptionResponse : ['response' => $subscriptionResponse],
+                'billing_type' => $billingType,
+            ]);
+
+            if ($statusCode < 200 || $statusCode >= 300 || empty($subscriptionResponse['id'])) {
                 return [
                     'error'    => true,
                     'message'  => 'Falha ao criar assinatura no Asaas.',
@@ -250,37 +326,23 @@ class AsaasService
                 ];
             }
 
-            $subscriptionId = $subscriptionResponse['id'];
+            $paymentData = [];
+            if (isset($subscriptionResponse['payment']) && is_array($subscriptionResponse['payment'])) {
+                $paymentData = $subscriptionResponse['payment'];
+            } elseif (isset($subscriptionResponse['firstPayment']) && is_array($subscriptionResponse['firstPayment'])) {
+                $paymentData = $subscriptionResponse['firstPayment'];
+            }
 
-            /**
-             * 2️⃣ Cria um Payment Link (checkout hospedado no Asaas)
-             */
-            $paymentLinkPayload = [
-                'name'           => 'Assinatura SaaS - ' . ($data['description'] ?? 'Plano'),
-                'description'    => 'Pagamento inicial da assinatura SaaS.',
-                'billingType'    => 'CREDIT_CARD',
-                'chargeType'     => 'RECURRENT', // 👈 recorrente
-                'endDate'        => now()->addYears(1)->toDateString(),
-                'value'          => $data['value'],
-                'subscription'   => $subscriptionId,
-                'dueDateLimitDays' => 5,
-            ];
+            $paymentLink = $paymentData['invoiceUrl']
+                ?? $paymentData['bankSlipUrl']
+                ?? $paymentData['url']
+                ?? $subscriptionResponse['invoiceUrl']
+                ?? null;
 
-            $paymentLinkResponse = Http::withHeaders([
-                'accept'       => 'application/json',
-                'content-type' => 'application/json',
-                'access_token' => $this->apiKey,
-            ])->post($this->baseUrl . 'paymentLinks', $paymentLinkPayload)->json();
-
-            Log::info('💳 Asaas createPaymentLink resposta:', is_array($paymentLinkResponse) ? $paymentLinkResponse : ['response' => $paymentLinkResponse]);
-
-            /**
-             * 3️⃣ Retorna os dados estruturados
-             */
             return [
                 'subscription' => $subscriptionResponse,
-                'payment'      => $paymentLinkResponse ?? [],
-                'payment_link' => $paymentLinkResponse['url'] ?? null,
+                'payment'      => $paymentData,
+                'payment_link' => $paymentLink,
             ];
         } catch (\Throwable $e) {
             Log::error('❌ Erro ao criar assinatura Asaas: ' . $e->getMessage(), [
@@ -496,7 +558,7 @@ class AsaasService
     {
         $response = Http::withHeaders([
             'access_token' => $this->apiKey,
-        ])->get("{$this->baseUrl}/payments/{$paymentId}");
+        ])->get("{$this->baseUrl}payments/{$paymentId}");
 
         return $response->json();
     }
