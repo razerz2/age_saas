@@ -40,7 +40,7 @@
                     Entre em <span class="text-blue-600">Contato</span>
                 </h1>
                 <p class="text-xl text-gray-600 mb-8 max-w-3xl mx-auto">
-                    Estamos aqui para ajudar. Entre em contato conosco para tirar dÃºvidas, solicitar demonstraÃ§Ã£o 
+                    Estamos aqui para ajudar. Entre em contato conosco para tirar dúidas, solicitar demonstração
                     ou falar com nossa equipe comercial.
                 </p>
             </div>
@@ -58,25 +58,25 @@
                         @csrf
                         <div>
                             <label for="contact_name" class="block text-sm font-medium text-gray-700 mb-1">Nome *</label>
-                            <input type="text" id="contact_name" name="name" required 
+                            <input type="text" id="contact_name" name="name" required
                                 class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                         </div>
-                        
+
                         <div>
                             <label for="contact_email" class="block text-sm font-medium text-gray-700 mb-1">Email *</label>
-                            <input type="email" id="contact_email" name="email" required 
+                            <input type="email" id="contact_email" name="email" required
                                 class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                         </div>
-                        
+
                         <div>
                             <label for="contact_phone" class="block text-sm font-medium text-gray-700 mb-1">Telefone</label>
-                            <input type="text" id="contact_phone" name="phone" 
+                            <input type="text" id="contact_phone" name="phone"
                                 class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                         </div>
-                        
+
                         <div>
                             <label for="contact_subject" class="block text-sm font-medium text-gray-700 mb-1">Assunto *</label>
-                            <select id="contact_subject" name="subject" required 
+                            <select id="contact_subject" name="subject" required
                                 class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                                 <option value="">Selecione um assunto</option>
                                 <option value="demo" @selected($selectedSubject === 'demo')>Solicitar DemonstraÃ§Ã£o</option>
@@ -86,27 +86,27 @@
                                 <option value="other" @selected($selectedSubject === 'other')>Outro</option>
                             </select>
                         </div>
-                        
+
                         <div>
                             <label for="contact_message" class="block text-sm font-medium text-gray-700 mb-1">Mensagem *</label>
-                            <textarea id="contact_message" name="message" rows="6" required 
+                            <textarea id="contact_message" name="message" rows="6" required
                                 class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">{{ $prefilledMessage ?? '' }}</textarea>
                         </div>
-                        
+
                         <div id="contactError" class="hidden p-4 bg-red-50 border border-red-200 rounded-lg text-red-700"></div>
                         <div id="contactSuccess" class="hidden p-4 bg-green-50 border border-green-200 rounded-lg text-green-700"></div>
-                        
-                        <button type="submit" 
+
+                        <button type="submit"
                             class="w-full bg-blue-600 hover:bg-blue-700 text-white px-6 py-4 rounded-lg font-semibold text-lg transition-colors shadow-lg">
                             Enviar Mensagem
                         </button>
                     </form>
                 </div>
-                
+
                 <!-- Contact Info -->
                 <div>
-                    <h2 class="text-3xl font-bold text-gray-900 mb-6">InformaÃ§Ãµes de Contato</h2>
-                    
+                    <h2 class="text-3xl font-bold text-gray-900 mb-6">Informações de Contato</h2>
+
                     <div class="space-y-8">
                         <div class="flex items-start">
                             <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
@@ -124,7 +124,7 @@
                                 @endif
                             </div>
                         </div>
-                        
+
                         <div class="flex items-start">
                             <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
                                 <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -141,7 +141,7 @@
                                 @endif
                             </div>
                         </div>
-                        
+
                         <div class="flex items-start">
                             <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
                                 <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -159,7 +159,7 @@
                                 @endif
                             </div>
                         </div>
-                        
+
                         <div class="flex items-start">
                             <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
                                 <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -177,7 +177,7 @@
                             </div>
                         </div>
                     </div>
-                    
+
                     <!-- Social Media -->
                     @if($hasSocialLinks)
                     <div class="mt-8 pt-8 border-t border-gray-200">
@@ -226,7 +226,7 @@
                 <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-4">Perguntas Frequentes</h2>
                 <p class="text-xl text-gray-600">Encontre respostas rÃ¡pidas para suas dÃºvidas</p>
             </div>
-            
+
             <div class="space-y-4">
                 <details class="group bg-white rounded-lg p-6 shadow-sm">
                     <summary class="font-semibold text-gray-900 cursor-pointer list-none">
@@ -238,12 +238,12 @@
                         </span>
                     </summary>
                     <p class="mt-4 text-gray-600">
-                        O prÃ©-cadastro Ã© simples: preencha os dados da sua clÃ­nica, escolha um plano e realize o pagamento. 
-                        ApÃ³s a confirmaÃ§Ã£o do pagamento, o sistema cria automaticamente seu ambiente completo e isolado 
+                        O prÃ©-cadastro Ã© simples: preencha os dados da sua clÃ­nica, escolha um plano e realize o pagamento.
+                        ApÃ³s a confirmaÃ§Ã£o do pagamento, o sistema cria automaticamente seu ambiente completo e isolado
                         com usuÃ¡rio administrador jÃ¡ configurado. VocÃª receberÃ¡ as credenciais por email.
                     </p>
                 </details>
-                
+
                 <details class="group bg-white rounded-lg p-6 shadow-sm">
                     <summary class="font-semibold text-gray-900 cursor-pointer list-none">
                         <span class="flex items-center justify-between">
@@ -254,11 +254,11 @@
                         </span>
                     </summary>
                     <p class="mt-4 text-gray-600">
-                        Sim! VocÃª pode fazer upgrade ou downgrade do seu plano a qualquer momento. Entre em contato com nossa 
+                        Sim! VocÃª pode fazer upgrade ou downgrade do seu plano a qualquer momento. Entre em contato com nossa
                         equipe comercial para fazer a alteraÃ§Ã£o.
                     </p>
                 </details>
-                
+
                 <details class="group bg-white rounded-lg p-6 shadow-sm">
                     <summary class="font-semibold text-gray-900 cursor-pointer list-none">
                         <span class="flex items-center justify-between">
@@ -269,7 +269,7 @@
                         </span>
                     </summary>
                     <p class="mt-4 text-gray-600">
-                        O sistema foi desenvolvido para ser intuitivo e fÃ¡cil de usar. Oferecemos documentaÃ§Ã£o completa, 
+                        O sistema foi desenvolvido para ser intuitivo e fÃ¡cil de usar. Oferecemos documentaÃ§Ã£o completa,
                         vÃ­deos tutoriais e suporte tÃ©cnico. Para planos Enterprise, oferecemos treinamento personalizado.
                     </p>
                 </details>
@@ -282,14 +282,14 @@
 <script>
     document.getElementById('contactForm').addEventListener('submit', async function(e) {
         e.preventDefault();
-        
+
         const formData = new FormData(this);
         const errorDiv = document.getElementById('contactError');
         const successDiv = document.getElementById('contactSuccess');
-        
+
         errorDiv.classList.add('hidden');
         successDiv.classList.add('hidden');
-        
+
         // Aqui vocÃª pode integrar com um serviÃ§o de email ou API
         // Por enquanto, apenas simula o envio
         setTimeout(() => {
