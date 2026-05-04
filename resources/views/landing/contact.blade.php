@@ -40,7 +40,7 @@
                     Entre em <span class="text-blue-600">Contato</span>
                 </h1>
                 <p class="text-xl text-gray-600 mb-8 max-w-3xl mx-auto">
-                    Estamos aqui para ajudar. Entre em contato conosco para tirar dúidas, solicitar demonstração
+                    Estamos aqui para ajudar. Entre em contato conosco para tirar dúvidas, solicitar demonstração
                     ou falar com nossa equipe comercial.
                 </p>
             </div>
