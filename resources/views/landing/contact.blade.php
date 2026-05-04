@@ -1,7 +1,7 @@
 ﻿@extends('landing.layout')
 
 @section('title', 'Contato - Sistema de Agendamentos')
-@section('description', 'Entre em contato conosco para tirar dÃºvidas, solicitar demonstraÃ§Ã£o ou falar com nossa equipe comercial.')
+@section('description', 'Entre em contato conosco para tirar dúvidas, solicitar demonstração ou falar com nossa equipe comercial.')
 
 @php
     $requestedSubject = (string) request()->query('subject', '');
@@ -10,7 +10,7 @@
     $prefilledMessage = old('message');
 
     if (($prefilledMessage === null || $prefilledMessage === '') && $requestedPlan !== '') {
-        $prefilledMessage = "OlÃ¡, tenho interesse no {$requestedPlan} para uma rede de clÃ­nicas. Gostaria de receber mais informaÃ§Ãµes sobre implantaÃ§Ã£o, hospedagem dedicada, funcionalidades disponÃ­veis e condiÃ§Ãµes comerciais.";
+        $prefilledMessage = "Olá, tenho interesse no {$requestedPlan} para uma rede de clínicas. Gostaria de receber mais informações sobre implantação, hospedagem dedicada, funcionalidades disponíveis e condições comerciais.";
     }
 
     $selectedSubject = old('subject', $prefilledSubject);
@@ -19,9 +19,9 @@
     $contactPhonePrimary = trim((string) sysconfig('landing.contact.phone_primary', '(11) 1234-5678'));
     $contactPhoneSecondary = trim((string) sysconfig('landing.contact.phone_secondary', '(11) 98765-4321'));
     $contactAddressLine1 = trim((string) sysconfig('landing.contact.address_line_1', 'Av. Exemplo, 123'));
-    $contactAddressLine2 = trim((string) sysconfig('landing.contact.address_line_2', 'SÃ£o Paulo - SP, 01234-567'));
-    $contactBusinessHoursWeekdays = trim((string) sysconfig('landing.contact.business_hours_weekdays', 'Segunda a Sexta: 9h Ã s 18h'));
-    $contactBusinessHoursSaturday = trim((string) sysconfig('landing.contact.business_hours_saturday', 'SÃ¡bado: 9h Ã s 13h'));
+    $contactAddressLine2 = trim((string) sysconfig('landing.contact.address_line_2', 'São Paulo - SP, 01234-567'));
+    $contactBusinessHoursWeekdays = trim((string) sysconfig('landing.contact.business_hours_weekdays', 'Segunda a Sexta: 9h às 18h'));
+    $contactBusinessHoursSaturday = trim((string) sysconfig('landing.contact.business_hours_saturday', 'Sábado: 9h às 13h'));
     $socialLinks = [
         'facebook' => trim((string) sysconfig('landing.contact.facebook_url')),
         'instagram' => trim((string) sysconfig('landing.contact.instagram_url')),
@@ -300,6 +300,5 @@
     });
 </script>
 @endpush
-
 
 
