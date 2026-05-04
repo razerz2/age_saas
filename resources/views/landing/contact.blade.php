@@ -224,23 +224,23 @@
         <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="text-center mb-12">
                 <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-4">Perguntas Frequentes</h2>
-                <p class="text-xl text-gray-600">Encontre respostas rÃ¡pidas para suas dÃºvidas</p>
+                <p class="text-xl text-gray-600">Encontre respostas rápidas para suas dúvidas</p>
             </div>
 
             <div class="space-y-4">
                 <details class="group bg-white rounded-lg p-6 shadow-sm">
                     <summary class="font-semibold text-gray-900 cursor-pointer list-none">
                         <span class="flex items-center justify-between">
-                            Como funciona o prÃ©-cadastro?
+                            Como funciona o pré-cadastro?
                             <svg class="w-5 h-5 text-gray-500 group-open:rotate-180 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
                             </svg>
                         </span>
                     </summary>
                     <p class="mt-4 text-gray-600">
-                        O prÃ©-cadastro Ã© simples: preencha os dados da sua clÃ­nica, escolha um plano e realize o pagamento.
-                        ApÃ³s a confirmaÃ§Ã£o do pagamento, o sistema cria automaticamente seu ambiente completo e isolado
-                        com usuÃ¡rio administrador jÃ¡ configurado. VocÃª receberÃ¡ as credenciais por email.
+                        O pré-cadastro é simples: preencha os dados da sua clínica, escolha um plano e realize o pagamento.
+                        Após a confirmação do pagamento, o sistema cria automaticamente seu ambiente completo e isolado
+                        com usuário administrador já configurado. Você receberá as credenciais por email.
                     </p>
                 </details>
 
@@ -254,8 +254,8 @@
                         </span>
                     </summary>
                     <p class="mt-4 text-gray-600">
-                        Sim! VocÃª pode fazer upgrade ou downgrade do seu plano a qualquer momento. Entre em contato com nossa
-                        equipe comercial para fazer a alteraÃ§Ã£o.
+                        Sim! Você pode fazer upgrade ou downgrade do seu plano a qualquer momento. Entre em contato com nossa
+                        equipe comercial para fazer a alteração.
                     </p>
                 </details>
 
@@ -269,8 +269,8 @@
                         </span>
                     </summary>
                     <p class="mt-4 text-gray-600">
-                        O sistema foi desenvolvido para ser intuitivo e fÃ¡cil de usar. Oferecemos documentaÃ§Ã£o completa,
-                        vÃ­deos tutoriais e suporte tÃ©cnico. Para planos Enterprise, oferecemos treinamento personalizado.
+                        O sistema foi desenvolvido para ser intuitivo e fácil de usar. Oferecemos documentação completa,
+                        vídeos tutoriais e suporte técnico. Para planos Enterprise, oferecemos treinamento personalizado.
                     </p>
                 </details>
             </div>
@@ -290,7 +290,7 @@
         errorDiv.classList.add('hidden');
         successDiv.classList.add('hidden');
 
-        // Aqui vocÃª pode integrar com um serviÃ§o de email ou API
+        // Aqui você pode integrar com um serviço de email ou API
         // Por enquanto, apenas simula o envio
         setTimeout(() => {
             successDiv.textContent = 'Mensagem enviada com sucesso! Entraremos em contato em breve.';
