@@ -79,9 +79,9 @@
                             <select id="contact_subject" name="subject" required
                                 class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                                 <option value="">Selecione um assunto</option>
-                                <option value="demo" @selected($selectedSubject === 'demo')>Solicitar DemonstraÃ§Ã£o</option>
-                                <option value="pricing" @selected($selectedSubject === 'pricing')>DÃºvidas sobre Planos</option>
-                                <option value="support" @selected($selectedSubject === 'support')>Suporte TÃ©cnico</option>
+                                <option value="demo" @selected($selectedSubject === 'demo')>Solicitar Demonstração</option>
+                                <option value="pricing" @selected($selectedSubject === 'pricing')>Dúvidas sobre Planos</option>
+                                <option value="support" @selected($selectedSubject === 'support')>Suporte Técnico</option>
                                 <option value="commercial" @selected($selectedSubject === 'commercial')>Falar com Comercial</option>
                                 <option value="other" @selected($selectedSubject === 'other')>Outro</option>
                             </select>
