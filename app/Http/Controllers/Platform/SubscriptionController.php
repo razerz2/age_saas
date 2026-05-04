@@ -442,10 +442,109 @@ class SubscriptionController extends Controller
                 }
             }
 
+            $usesPixAutomaticFlow = $subscription->auto_renew
+                && $subscription->payment_method === 'PIX_AUTOMATIC';
+
             $usesAsaasSubscriptionFlow = $subscription->auto_renew
                 && in_array($subscription->payment_method, ['CREDIT_CARD', 'DEBIT_CARD', 'PIX_RECURRENT'], true);
 
-            if ($usesAsaasSubscriptionFlow) {
+            if ($usesPixAutomaticFlow) {
+                if ($subscription->asaas_subscription_id) {
+                    try {
+                        $asaas->deleteSubscription($subscription->asaas_subscription_id);
+                    } catch (\Throwable $e) {
+                        Log::warning('Falha ao cancelar assinatura Asaas antiga antes de ativar PIX_AUTOMATIC.', [
+                            'subscription_id' => $subscription->id,
+                            'asaas_subscription_id' => $subscription->asaas_subscription_id,
+                            'error' => $e->getMessage(),
+                        ]);
+                    }
+
+                    $subscription->update([
+                        'asaas_subscription_id' => null,
+                    ]);
+                }
+
+                $dueDate = now()->addDays(5)->toDateString();
+                $response = $asaas->createPixAutomaticAuthorization([
+                    'customer' => $tenant->asaas_customer_id,
+                    'value' => $plan->price_cents / 100,
+                    'cycle' => 'MONTHLY',
+                    'nextDueDate' => $dueDate,
+                    'description' => "Assinatura do plano {$plan->name}",
+                    'externalReference' => (string) $subscription->id,
+                ]);
+
+                $authorizationId = $response['id']
+                    ?? ($response['authorization']['id'] ?? null);
+
+                if (empty($authorizationId) || ! empty($response['error'])) {
+                    $errorMessage = (string) ($response['message'] ?? 'Falha ao criar autorizacao Pix Automatico no Asaas.');
+
+                    $subscription->update([
+                        'asaas_synced' => false,
+                        'asaas_sync_status' => 'failed',
+                        'asaas_last_error' => $errorMessage,
+                        'asaas_last_sync_at' => now(),
+                    ]);
+
+                    Log::warning("Subscription {$subscription->id}: resposta invalida ao criar autorizacao Pix Automatico.", [
+                        'response' => $response,
+                    ]);
+
+                    if ($silent) {
+                        return false;
+                    }
+
+                    return back()->withErrors(['general' => 'Nao foi possivel criar autorizacao Pix Automatico no Asaas.']);
+                }
+
+                $authorizationStatus = strtolower((string) (
+                    $response['status']
+                    ?? ($response['authorization']['status'] ?? 'created')
+                ));
+                if ($authorizationStatus === 'pending') {
+                    $authorizationStatus = 'created';
+                }
+
+                $authorizationLink = (string) (
+                    $response['authorizationUrl']
+                    ?? $response['authorizationLink']
+                    ?? ($response['url'] ?? '')
+                );
+
+                $subscription->update([
+                    'asaas_pix_automatic_authorization_id' => (string) $authorizationId,
+                    'asaas_pix_automatic_authorization_status' => $authorizationStatus !== '' ? $authorizationStatus : 'created',
+                    'asaas_pix_automatic_last_event_at' => now(),
+                    'asaas_pix_automatic_payload' => $response,
+                    'asaas_synced' => true,
+                    'asaas_sync_status' => 'success',
+                    'asaas_last_error' => null,
+                    'asaas_last_sync_at' => now(),
+                    'status' => 'pending',
+                ]);
+
+                if ($this->hasRealPaymentLink($authorizationLink)) {
+                    $invoice = Invoices::create([
+                        'subscription_id' => $subscription->id,
+                        'tenant_id' => $tenant->id,
+                        'amount_cents' => $plan->price_cents,
+                        'due_date' => $dueDate,
+                        'status' => 'pending',
+                        'payment_link' => $authorizationLink,
+                        'payment_method' => 'PIX_AUTOMATIC',
+                        'provider' => 'asaas',
+                        'provider_id' => (string) $authorizationId,
+                        'asaas_payment_id' => null,
+                        'asaas_synced' => true,
+                        'asaas_sync_status' => 'success',
+                        'asaas_last_sync_at' => now(),
+                    ]);
+
+                    app(InvoicePaymentNotificationService::class)->notifyInvoiceCreated($invoice);
+                }
+            } elseif ($usesAsaasSubscriptionFlow) {
                 $billingType = $subscription->payment_method === 'PIX_RECURRENT'
                     ? 'PIX'
                     : 'CREDIT_CARD';

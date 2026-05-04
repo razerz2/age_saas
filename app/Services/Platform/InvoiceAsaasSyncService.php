@@ -292,6 +292,7 @@ class InvoiceAsaasSyncService
         return match ($method) {
             'PIX' => 'PIX',
             'PIX_RECURRENT' => 'PIX',
+            'PIX_AUTOMATIC' => 'PIX',
             'BOLETO' => 'BOLETO',
             'CREDIT_CARD' => 'CREDIT_CARD',
             default => 'PIX',

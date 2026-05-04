@@ -28,12 +28,23 @@ class Subscription extends Model
         'payment_method',
         'is_trial',
         'trial_ends_at',
+        'cancel_requested_at',
+        'cancel_at_period_end',
+        'cancellation_reason',
+        'cancellation_requested_by',
+        'cancellation_processed_at',
+        'cancellation_status',
 
         'asaas_subscription_id',
         'asaas_synced',
         'asaas_sync_status',
         'asaas_last_sync_at',
         'asaas_last_error',
+        'asaas_pix_automatic_authorization_id',
+        'asaas_pix_automatic_authorization_status',
+        'asaas_pix_automatic_last_instruction_id',
+        'asaas_pix_automatic_last_event_at',
+        'asaas_pix_automatic_payload',
     ];
 
     protected $casts = [
@@ -44,7 +55,12 @@ class Subscription extends Model
         'auto_renew' => 'boolean',
         'is_trial' => 'boolean',
         'trial_ends_at' => 'datetime',
+        'cancel_requested_at' => 'datetime',
+        'cancel_at_period_end' => 'boolean',
+        'cancellation_processed_at' => 'datetime',
         'asaas_last_sync_at' => 'datetime',
+        'asaas_pix_automatic_last_event_at' => 'datetime',
+        'asaas_pix_automatic_payload' => 'array',
     ];
 
     protected static function booted(): void
@@ -118,6 +134,7 @@ class Subscription extends Model
         return match ($this->payment_method) {
             'PIX' => 'PIX manual',
             'PIX_RECURRENT' => 'PIX recorrente',
+            'PIX_AUTOMATIC' => 'Pix Automático',
             'BOLETO' => 'Boleto Bancario',
             'CREDIT_CARD' => 'Cartao de Credito recorrente',
             'DEBIT_CARD' => 'Cartao de Debito',

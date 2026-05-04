@@ -130,18 +130,32 @@
                         <div class="col-md-4" id="payment-method-wrapper">
                             <label class="form-label">Método de Pagamento</label>
                             <select name="payment_method" class="form-select @error('payment_method') is-invalid @enderror" required>
-                                <option value="PIX" {{ old('payment_method', $subscription->payment_method) == 'PIX' ? 'selected' : '' }}>PIX manual</option>
-                                <option value="PIX_RECURRENT" {{ old('payment_method', $subscription->payment_method) == 'PIX_RECURRENT' ? 'selected' : '' }}>PIX recorrente</option>
-                                <option value="BOLETO" {{ old('payment_method', $subscription->payment_method) == 'BOLETO' ? 'selected' : '' }}>Boleto</option>
-                                <option value="CREDIT_CARD" {{ old('payment_method', $subscription->payment_method) == 'CREDIT_CARD' ? 'selected' : '' }}>Cartao de credito recorrente</option>
-                                <option value="DEBIT_CARD" {{ old('payment_method', $subscription->payment_method) == 'DEBIT_CARD' ? 'selected' : '' }}>Cartao de debito</option>
+                                @foreach ($paymentMethodOptions as $option)
+                                    @php
+                                        $method = (string) ($option['method'] ?? '');
+                                        $isCurrentMethod = $method === (string) $subscription->payment_method;
+                                        $canRender = ($option['enabled'] ?? false) || $isCurrentMethod;
+                                    @endphp
+                                    @if ($canRender)
+                                        <option
+                                            value="{{ $method }}"
+                                            data-description="{{ $option['description'] ?? '' }}"
+                                            @selected(old('payment_method', $subscription->payment_method) === $method)
+                                        >
+                                            {{ $option['label'] }}
+                                        </option>
+                                    @endif
+                                @endforeach
                             </select>
                             @error('payment_method')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
-                            <small id="payment-method-help" class="form-text text-muted mt-2 d-none">
-                                O Asaas gerenciara as cobrancas recorrentes por PIX. O acesso sera liberado/renovado apos confirmacao de pagamento.
-                            </small>
+                            @if (!empty($currentPaymentMethodIsDisabled))
+                                <small class="text-warning d-block mt-2">
+                                    Metodo atualmente desativado para novas assinaturas.
+                                </small>
+                            @endif
+                            <small id="payment-method-help" class="form-text text-muted mt-2 d-none">-</small>
                         </div>
 
                         <div class="col-md-4" id="auto-renew-wrapper">
@@ -242,8 +256,17 @@
                     return;
                 }
 
-                const isPixRecurrent = paymentMethodInput.value === 'PIX_RECURRENT';
-                paymentMethodHelp.classList.toggle('d-none', !isPixRecurrent);
+                const selectedOption = paymentMethodInput.options[paymentMethodInput.selectedIndex];
+                const description = selectedOption?.dataset?.description?.trim() ?? '';
+
+                if (!description) {
+                    paymentMethodHelp.classList.add('d-none');
+                    paymentMethodHelp.textContent = '';
+                    return;
+                }
+
+                paymentMethodHelp.textContent = description;
+                paymentMethodHelp.classList.remove('d-none');
             }
 
             planSelect.addEventListener('change', function() {

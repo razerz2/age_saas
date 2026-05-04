@@ -782,6 +782,70 @@
                         </div>
                     </div>
 
+                    <div class="card mt-4">
+                        <div class="card-body">
+                            <h6 class="mb-3">Informações de contato</h6>
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label">E-mail principal</label>
+                                    <input type="email" class="form-control" name="landing_contact_email_primary" value="{{ old('landing_contact_email_primary', $settings['landing.contact.email_primary'] ?? '') }}" maxlength="255">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">E-mail secundário</label>
+                                    <input type="email" class="form-control" name="landing_contact_email_secondary" value="{{ old('landing_contact_email_secondary', $settings['landing.contact.email_secondary'] ?? '') }}" maxlength="255">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Telefone principal</label>
+                                    <input type="text" class="form-control" name="landing_contact_phone_primary" value="{{ old('landing_contact_phone_primary', $settings['landing.contact.phone_primary'] ?? '') }}" maxlength="30">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Telefone secundário</label>
+                                    <input type="text" class="form-control" name="landing_contact_phone_secondary" value="{{ old('landing_contact_phone_secondary', $settings['landing.contact.phone_secondary'] ?? '') }}" maxlength="30">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Endereço - linha 1</label>
+                                    <input type="text" class="form-control" name="landing_contact_address_line_1" value="{{ old('landing_contact_address_line_1', $settings['landing.contact.address_line_1'] ?? '') }}" maxlength="255">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Endereço - linha 2</label>
+                                    <input type="text" class="form-control" name="landing_contact_address_line_2" value="{{ old('landing_contact_address_line_2', $settings['landing.contact.address_line_2'] ?? '') }}" maxlength="255">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Horário de atendimento - dias úteis</label>
+                                    <input type="text" class="form-control" name="landing_contact_business_hours_weekdays" value="{{ old('landing_contact_business_hours_weekdays', $settings['landing.contact.business_hours_weekdays'] ?? '') }}" maxlength="255">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Horário de atendimento - sábado</label>
+                                    <input type="text" class="form-control" name="landing_contact_business_hours_saturday" value="{{ old('landing_contact_business_hours_saturday', $settings['landing.contact.business_hours_saturday'] ?? '') }}" maxlength="255">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card mt-4">
+                        <div class="card-body">
+                            <h6 class="mb-3">Redes sociais</h6>
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label">Facebook</label>
+                                    <input type="url" class="form-control" name="landing_contact_facebook_url" value="{{ old('landing_contact_facebook_url', $settings['landing.contact.facebook_url'] ?? '') }}" maxlength="500" placeholder="https://facebook.com/sua-pagina">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Instagram</label>
+                                    <input type="url" class="form-control" name="landing_contact_instagram_url" value="{{ old('landing_contact_instagram_url', $settings['landing.contact.instagram_url'] ?? '') }}" maxlength="500" placeholder="https://instagram.com/seu-perfil">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">LinkedIn</label>
+                                    <input type="url" class="form-control" name="landing_contact_linkedin_url" value="{{ old('landing_contact_linkedin_url', $settings['landing.contact.linkedin_url'] ?? '') }}" maxlength="500" placeholder="https://linkedin.com/company/sua-empresa">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">WhatsApp</label>
+                                    <input type="url" class="form-control" name="landing_contact_whatsapp_url" value="{{ old('landing_contact_whatsapp_url', $settings['landing.contact.whatsapp_url'] ?? '') }}" maxlength="500" placeholder="https://wa.me/5567999999999">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="d-flex gap-2 mt-4">
                         <button type="submit" class="btn btn-primary">
                             <i class="fas fa-save me-1"></i> Salvar Landing Page
@@ -847,6 +911,11 @@
                                     <div class="form-check mb-2">
                                         <input class="form-check-input" type="checkbox" id="billing_payment_methods_pix_recurrent_enabled" name="billing_payment_methods_pix_recurrent_enabled" value="1" {{ ($settings['billing.payment_methods.pix_recurrent_enabled'] ?? true) ? 'checked' : '' }}>
                                         <label class="form-check-label" for="billing_payment_methods_pix_recurrent_enabled">PIX recorrente</label>
+                                    </div>
+                                    <div class="form-check mb-2">
+                                        <input class="form-check-input" type="checkbox" id="billing_payment_methods_pix_automatic_enabled" name="billing_payment_methods_pix_automatic_enabled" value="1" {{ ($settings['billing.payment_methods.pix_automatic_enabled'] ?? false) ? 'checked' : '' }}>
+                                        <label class="form-check-label" for="billing_payment_methods_pix_automatic_enabled">Pix autom&aacute;tico</label>
+                                        <div class="small text-muted">Exige autoriza&ccedil;&atilde;o do cliente no banco para cobran&ccedil;as autom&aacute;ticas via Pix.</div>
                                     </div>
                                     <div class="form-check mb-2">
                                         <input class="form-check-input" type="checkbox" id="billing_payment_methods_boleto_enabled" name="billing_payment_methods_boleto_enabled" value="1" {{ ($settings['billing.payment_methods.boleto_enabled'] ?? true) ? 'checked' : '' }}>

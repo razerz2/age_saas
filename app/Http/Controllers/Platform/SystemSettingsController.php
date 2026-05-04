@@ -74,6 +74,18 @@ class SystemSettingsController extends Controller
             'landing.screenshot_medical_attendance' => sysconfig('landing.screenshot_medical_attendance'),
             'landing.screenshot_online_scheduling' => sysconfig('landing.screenshot_online_scheduling'),
             'landing.screenshot_patient_portal' => sysconfig('landing.screenshot_patient_portal'),
+            'landing.contact.email_primary' => sysconfig('landing.contact.email_primary'),
+            'landing.contact.email_secondary' => sysconfig('landing.contact.email_secondary'),
+            'landing.contact.phone_primary' => sysconfig('landing.contact.phone_primary'),
+            'landing.contact.phone_secondary' => sysconfig('landing.contact.phone_secondary'),
+            'landing.contact.address_line_1' => sysconfig('landing.contact.address_line_1'),
+            'landing.contact.address_line_2' => sysconfig('landing.contact.address_line_2'),
+            'landing.contact.business_hours_weekdays' => sysconfig('landing.contact.business_hours_weekdays'),
+            'landing.contact.business_hours_saturday' => sysconfig('landing.contact.business_hours_saturday'),
+            'landing.contact.facebook_url' => sysconfig('landing.contact.facebook_url'),
+            'landing.contact.instagram_url' => sysconfig('landing.contact.instagram_url'),
+            'landing.contact.linkedin_url' => sysconfig('landing.contact.linkedin_url'),
+            'landing.contact.whatsapp_url' => sysconfig('landing.contact.whatsapp_url'),
             'tenant.default_logo' => sysconfig('tenant.default_logo'),
             'tenant.default_logo_light' => sysconfig('tenant.default_logo_light'),
             'tenant.default_logo_dark' => sysconfig('tenant.default_logo_dark'),
@@ -88,6 +100,7 @@ class SystemSettingsController extends Controller
             'billing.purge_days_after_cancellation' => sysconfig('billing.purge_days_after_cancellation', 90),
             'billing.payment_methods.pix_enabled' => sysconfig('billing.payment_methods.pix_enabled', '0') === '1',
             'billing.payment_methods.pix_recurrent_enabled' => sysconfig('billing.payment_methods.pix_recurrent_enabled', '1') === '1',
+            'billing.payment_methods.pix_automatic_enabled' => sysconfig('billing.payment_methods.pix_automatic_enabled', '0') === '1',
             'billing.payment_methods.boleto_enabled' => sysconfig('billing.payment_methods.boleto_enabled', '1') === '1',
             'billing.payment_methods.credit_card_enabled' => sysconfig('billing.payment_methods.credit_card_enabled', '1') === '1',
             'billing.payment_methods.debit_card_enabled' => sysconfig('billing.payment_methods.debit_card_enabled', '0') === '1',
@@ -492,6 +505,18 @@ class SystemSettingsController extends Controller
             'remove_landing_screenshot_medical_attendance' => 'nullable|boolean',
             'remove_landing_screenshot_online_scheduling' => 'nullable|boolean',
             'remove_landing_screenshot_patient_portal' => 'nullable|boolean',
+            'landing_contact_email_primary' => 'nullable|email|max:255',
+            'landing_contact_email_secondary' => 'nullable|email|max:255',
+            'landing_contact_phone_primary' => 'nullable|string|max:30',
+            'landing_contact_phone_secondary' => 'nullable|string|max:30',
+            'landing_contact_address_line_1' => 'nullable|string|max:255',
+            'landing_contact_address_line_2' => 'nullable|string|max:255',
+            'landing_contact_business_hours_weekdays' => 'nullable|string|max:255',
+            'landing_contact_business_hours_saturday' => 'nullable|string|max:255',
+            'landing_contact_facebook_url' => 'nullable|url|max:500',
+            'landing_contact_instagram_url' => 'nullable|url|max:500',
+            'landing_contact_linkedin_url' => 'nullable|url|max:500',
+            'landing_contact_whatsapp_url' => 'nullable|url|max:500',
         ]);
 
         try {
@@ -535,6 +560,26 @@ class SystemSettingsController extends Controller
                 }
             }
 
+            $contactFieldsMap = [
+                'landing_contact_email_primary' => 'landing.contact.email_primary',
+                'landing_contact_email_secondary' => 'landing.contact.email_secondary',
+                'landing_contact_phone_primary' => 'landing.contact.phone_primary',
+                'landing_contact_phone_secondary' => 'landing.contact.phone_secondary',
+                'landing_contact_address_line_1' => 'landing.contact.address_line_1',
+                'landing_contact_address_line_2' => 'landing.contact.address_line_2',
+                'landing_contact_business_hours_weekdays' => 'landing.contact.business_hours_weekdays',
+                'landing_contact_business_hours_saturday' => 'landing.contact.business_hours_saturday',
+                'landing_contact_facebook_url' => 'landing.contact.facebook_url',
+                'landing_contact_instagram_url' => 'landing.contact.instagram_url',
+                'landing_contact_linkedin_url' => 'landing.contact.linkedin_url',
+                'landing_contact_whatsapp_url' => 'landing.contact.whatsapp_url',
+            ];
+
+            foreach ($contactFieldsMap as $input => $configKey) {
+                $value = $request->input($input);
+                set_sysconfig($configKey, is_string($value) ? trim($value) : $value);
+            }
+
             Cache::flush();
             Artisan::call('view:clear');
 
@@ -564,6 +609,7 @@ class SystemSettingsController extends Controller
             'billing_purge_days_after_cancellation' => 'nullable|integer|min:30|max:365',
             'billing_payment_methods_pix_enabled' => 'nullable|boolean',
             'billing_payment_methods_pix_recurrent_enabled' => 'nullable|boolean',
+            'billing_payment_methods_pix_automatic_enabled' => 'nullable|boolean',
             'billing_payment_methods_boleto_enabled' => 'nullable|boolean',
             'billing_payment_methods_credit_card_enabled' => 'nullable|boolean',
             'billing_payment_methods_debit_card_enabled' => 'nullable|boolean',
@@ -584,6 +630,7 @@ class SystemSettingsController extends Controller
         }
         set_sysconfig('billing.payment_methods.pix_enabled', $request->has('billing_payment_methods_pix_enabled') ? '1' : '0');
         set_sysconfig('billing.payment_methods.pix_recurrent_enabled', $request->has('billing_payment_methods_pix_recurrent_enabled') ? '1' : '0');
+        set_sysconfig('billing.payment_methods.pix_automatic_enabled', $request->has('billing_payment_methods_pix_automatic_enabled') ? '1' : '0');
         set_sysconfig('billing.payment_methods.boleto_enabled', $request->has('billing_payment_methods_boleto_enabled') ? '1' : '0');
         set_sysconfig('billing.payment_methods.credit_card_enabled', $request->has('billing_payment_methods_credit_card_enabled') ? '1' : '0');
         set_sysconfig('billing.payment_methods.debit_card_enabled', $request->has('billing_payment_methods_debit_card_enabled') ? '1' : '0');

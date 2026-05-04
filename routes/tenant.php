@@ -185,6 +185,10 @@ Route::prefix('workspace/{slug}')
 
         // Subscription
         Route::get('/subscription', [\App\Http\Controllers\Tenant\SubscriptionController::class, 'show'])->name('subscription.show');
+        Route::post('/subscription/cancel', [\App\Http\Controllers\Tenant\SubscriptionController::class, 'requestCancellation'])
+            ->name('subscription.cancel.request');
+        Route::post('/subscription/invoices/{invoice}/refresh-status', [\App\Http\Controllers\Tenant\SubscriptionController::class, 'refreshInvoiceStatus'])
+            ->name('subscription.invoices.refresh-status');
 
         // Plan Change Request
         Route::get('/plan-change-request/create', [\App\Http\Controllers\Tenant\PlanChangeRequestController::class, 'create'])->name('plan-change-request.create');

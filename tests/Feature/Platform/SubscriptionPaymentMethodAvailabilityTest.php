@@ -43,6 +43,7 @@ test('active payment methods appear on subscription create form', function () {
     set_sysconfig('billing.payment_methods.boleto_enabled', '1');
     set_sysconfig('billing.payment_methods.credit_card_enabled', '0');
     set_sysconfig('billing.payment_methods.pix_recurrent_enabled', '0');
+    set_sysconfig('billing.payment_methods.pix_automatic_enabled', '0');
     set_sysconfig('billing.payment_methods.debit_card_enabled', '0');
 
     $response = $this->withoutMiddleware()->get(route('Platform.subscriptions.create'));
@@ -52,7 +53,23 @@ test('active payment methods appear on subscription create form', function () {
         ->assertSee('Boleto')
         ->assertDontSee('Cartao de credito recorrente')
         ->assertDontSee('PIX recorrente')
+        ->assertDontSee('Pix Automático')
         ->assertDontSee('Cartao de debito');
+});
+
+test('pix automatic appears on create form when enabled', function () {
+    set_sysconfig('billing.payment_methods.pix_enabled', '0');
+    set_sysconfig('billing.payment_methods.boleto_enabled', '0');
+    set_sysconfig('billing.payment_methods.credit_card_enabled', '0');
+    set_sysconfig('billing.payment_methods.pix_recurrent_enabled', '0');
+    set_sysconfig('billing.payment_methods.pix_automatic_enabled', '1');
+    set_sysconfig('billing.payment_methods.debit_card_enabled', '0');
+
+    $response = $this->withoutMiddleware()->get(route('Platform.subscriptions.create'));
+
+    $response->assertOk()
+        ->assertSee('Pix Automático')
+        ->assertDontSee('PIX recorrente');
 });
 
 test('disabled payment method does not appear for new subscription and is blocked by request', function () {
@@ -104,4 +121,3 @@ test('edit form preserves current disabled payment method with warning', functio
         ->assertSee('Metodo atualmente desativado para novas assinaturas.')
         ->assertSee('Cartao de debito');
 });
-

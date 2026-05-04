@@ -35,7 +35,10 @@ class ProcessSubscriptionsCommand extends Command
         $createdCustomers = 0;
         $createdInvoices = 0;
         $blockedTenants = 0;
+        $processedScheduledCancellations = 0;
         $errors = 0;
+
+        $processedScheduledCancellations = $this->processScheduledCancellations();
 
         $expiredTrials = Subscription::with(['tenant', 'plan'])
             ->where('is_trial', true)
@@ -68,7 +71,7 @@ class ProcessSubscriptionsCommand extends Command
             ->whereDate('ends_at', '<=', Carbon::today())
             ->get();
 
-        if ($subs->isEmpty()) {
+        if ($subs->isEmpty() && $processedScheduledCancellations === 0) {
             $this->info('Nenhuma assinatura para processar hoje.');
 
             SystemNotificationService::notify(
@@ -296,7 +299,7 @@ class ProcessSubscriptionsCommand extends Command
 
         SystemNotificationService::notify(
             'Processamento de assinaturas concluido',
-            "Clientes criados: {$createdCustomers}, Faturas geradas: {$createdInvoices}, Tenants suspensos: {$blockedTenants}, Falhas: {$errors}.",
+            "Clientes criados: {$createdCustomers}, Faturas geradas: {$createdInvoices}, Tenants suspensos: {$blockedTenants}, Cancelamentos programados processados: {$processedScheduledCancellations}, Falhas: {$errors}.",
             'subscription',
             $errors > 0 ? 'warning' : 'info'
         );
@@ -306,6 +309,7 @@ class ProcessSubscriptionsCommand extends Command
         $this->line("- Clientes criados: {$createdCustomers}");
         $this->line("- Faturas geradas: {$createdInvoices}");
         $this->line("- Tenants suspensos: {$blockedTenants}");
+        $this->line("- Cancelamentos programados processados: {$processedScheduledCancellations}");
         $this->line("- Falhas: {$errors}");
         $this->newLine();
         $this->info('Processamento concluido com sucesso.');
@@ -313,4 +317,45 @@ class ProcessSubscriptionsCommand extends Command
         return Command::SUCCESS;
     }
 
+    private function processScheduledCancellations(): int
+    {
+        $processed = 0;
+
+        $subscriptions = Subscription::query()
+            ->where('cancel_at_period_end', true)
+            ->where('cancellation_status', 'pending_period_end')
+            ->whereNull('cancellation_processed_at')
+            ->whereNotNull('ends_at')
+            ->where('ends_at', '<=', now())
+            ->get();
+
+        foreach ($subscriptions as $subscription) {
+            $subscription->update([
+                'status' => 'canceled',
+                'cancellation_status' => 'processed',
+                'cancellation_processed_at' => now(),
+                'auto_renew' => false,
+            ]);
+
+            if (! empty($subscription->asaas_subscription_id)) {
+                Log::warning('Scheduled cancellation processed without Asaas cancellation call', [
+                    'subscription_id' => $subscription->id,
+                    'tenant_id' => $subscription->tenant_id,
+                    'ends_at' => optional($subscription->ends_at)->toDateTimeString(),
+                    'cancellation_processed_at' => optional($subscription->cancellation_processed_at)->toDateTimeString(),
+                ]);
+            }
+
+            Log::info('Scheduled cancellation processed', [
+                'subscription_id' => $subscription->id,
+                'tenant_id' => $subscription->tenant_id,
+                'ends_at' => optional($subscription->ends_at)->toDateTimeString(),
+                'cancellation_processed_at' => optional($subscription->cancellation_processed_at)->toDateTimeString(),
+            ]);
+
+            $processed++;
+        }
+
+        return $processed;
+    }
 }

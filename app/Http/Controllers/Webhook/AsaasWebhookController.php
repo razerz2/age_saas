@@ -32,8 +32,13 @@ class AsaasWebhookController extends Controller
             $paymentId      = $payload['payment']['id'] ?? null;
             $customerId     = $payload['customer']['id'] ?? null;
             $subscriptionId = $payload['subscription']['id'] ?? ($payload['payment']['subscription'] ?? null);
+            $pixAutomaticAuthorizationId = $this->extractPixAutomaticAuthorizationId($payload);
+            $pixAutomaticInstructionId = $this->extractPixAutomaticInstructionId($payload);
             $referenceId    = $paymentId ?? $subscriptionId ?? $customerId;
             $externalReference = $payload['payment']['externalReference'] ?? null;
+            if (empty($externalReference)) {
+                $externalReference = $this->extractPixAutomaticExternalReference($payload);
+            }
             $paymentLinkId = $payload['payment']['paymentLink'] ?? null;
 
             Log::info("Webhook recebido do Asaas: {$event}", [
@@ -43,6 +48,8 @@ class AsaasWebhookController extends Controller
                 'subscription_id' => $this->maskIdentifier($subscriptionId),
                 'external_reference' => $this->maskIdentifier($externalReference),
                 'payment_link_id' => $this->maskIdentifier($paymentLinkId),
+                'pix_automatic_authorization_id' => $this->maskIdentifier($pixAutomaticAuthorizationId),
+                'pix_automatic_instruction_id' => $this->maskIdentifier($pixAutomaticInstructionId),
             ]);
 
             // 🔹 1. Registrar log de auditoria
@@ -62,7 +69,7 @@ class AsaasWebhookController extends Controller
                 ], JSON_UNESCAPED_UNICODE),
             ]);
 
-            if (!$paymentId && !$customerId && !$subscriptionId) {
+            if (!$paymentId && !$customerId && !$subscriptionId && !$pixAutomaticAuthorizationId && !$pixAutomaticInstructionId) {
                 Log::warning('Webhook sem ID relevante');
                 return $this->finalizeWebhookResponse(
                     $event,
@@ -274,6 +281,24 @@ class AsaasWebhookController extends Controller
             if (!$subscription && $externalReference && Str::isUuid((string) $externalReference)) {
                 $subscription = Subscription::find($externalReference);
             }
+            if (!$subscription && $pixAutomaticAuthorizationId) {
+                $subscription = Subscription::query()
+                    ->where('asaas_pix_automatic_authorization_id', $pixAutomaticAuthorizationId)
+                    ->first();
+            }
+            if (!$subscription && $pixAutomaticInstructionId) {
+                $subscription = Subscription::query()
+                    ->where('asaas_pix_automatic_last_instruction_id', $pixAutomaticInstructionId)
+                    ->first();
+            }
+            if (!$subscription && $customerId) {
+                $subscription = Subscription::query()
+                    ->whereHas('tenant', function ($query) use ($customerId) {
+                        $query->where('asaas_customer_id', $customerId);
+                    })
+                    ->latest('created_at')
+                    ->first();
+            }
 
             if (in_array($event, ['PAYMENT_RECEIVED', 'PAYMENT_CONFIRMED', 'PAYMENT_OVERDUE'], true) && !$invoice) {
                 if ($subscription && $paymentId) {
@@ -349,6 +374,17 @@ class AsaasWebhookController extends Controller
             }
 
             // 🔹 3. Processar eventos
+            // Para PIX_AUTOMATIC, habilitar no painel do Asaas todos os eventos:
+            // PIX_AUTOMATIC_RECURRING_AUTHORIZATION_CREATED
+            // PIX_AUTOMATIC_RECURRING_AUTHORIZATION_ACTIVATED
+            // PIX_AUTOMATIC_RECURRING_AUTHORIZATION_REFUSED
+            // PIX_AUTOMATIC_RECURRING_AUTHORIZATION_CANCELLED
+            // PIX_AUTOMATIC_RECURRING_AUTHORIZATION_EXPIRED
+            // PIX_AUTOMATIC_RECURRING_PAYMENT_INSTRUCTION_CREATED
+            // PIX_AUTOMATIC_RECURRING_PAYMENT_INSTRUCTION_SCHEDULED
+            // PIX_AUTOMATIC_RECURRING_PAYMENT_INSTRUCTION_REFUSED
+            // PIX_AUTOMATIC_RECURRING_PAYMENT_INSTRUCTION_CANCELLED
+            // PIX_AUTOMATIC_RECURRING_ELIGIBILITY_UPDATED
             switch ($event) {
 
                 /**
@@ -455,6 +491,200 @@ class AsaasWebhookController extends Controller
                 /**
                      * 💳 PAGAMENTOS
                      */
+                case 'PIX_AUTOMATIC_RECURRING_AUTHORIZATION_CREATED':
+                    if (!$subscription) {
+                        Log::warning('PIX_AUTOMATIC_RECURRING_AUTHORIZATION_CREATED sem assinatura vinculada.', [
+                            'authorization_id' => $this->maskIdentifier($pixAutomaticAuthorizationId),
+                            'external_reference' => $this->maskIdentifier($externalReference),
+                        ]);
+                        break;
+                    }
+
+                    $subscription->update([
+                        'asaas_pix_automatic_authorization_id' => $pixAutomaticAuthorizationId ?: $subscription->asaas_pix_automatic_authorization_id,
+                        'asaas_pix_automatic_authorization_status' => $this->extractPixAutomaticAuthorizationStatus($payload, 'created'),
+                        'asaas_pix_automatic_payload' => $payload,
+                        'asaas_pix_automatic_last_event_at' => now(),
+                        'status' => 'pending',
+                        'asaas_synced' => true,
+                        'asaas_sync_status' => 'success',
+                        'asaas_last_sync_at' => now(),
+                        'asaas_last_error' => null,
+                    ]);
+                    break;
+
+                case 'PIX_AUTOMATIC_RECURRING_AUTHORIZATION_ACTIVATED':
+                    if (!$subscription) {
+                        Log::warning('PIX_AUTOMATIC_RECURRING_AUTHORIZATION_ACTIVATED sem assinatura vinculada.', [
+                            'authorization_id' => $this->maskIdentifier($pixAutomaticAuthorizationId),
+                            'external_reference' => $this->maskIdentifier($externalReference),
+                        ]);
+                        break;
+                    }
+
+                    $subscription->update([
+                        'asaas_pix_automatic_authorization_id' => $pixAutomaticAuthorizationId ?: $subscription->asaas_pix_automatic_authorization_id,
+                        'asaas_pix_automatic_authorization_status' => $this->extractPixAutomaticAuthorizationStatus($payload, 'active'),
+                        'asaas_pix_automatic_payload' => $payload,
+                        'asaas_pix_automatic_last_event_at' => now(),
+                        'status' => $this->isPixAutomaticPaymentConfirmed($payload) ? 'active' : 'pending',
+                        'asaas_synced' => true,
+                        'asaas_sync_status' => 'success',
+                        'asaas_last_sync_at' => now(),
+                        'asaas_last_error' => null,
+                    ]);
+                    break;
+
+                case 'PIX_AUTOMATIC_RECURRING_AUTHORIZATION_REFUSED':
+                case 'PIX_AUTOMATIC_RECURRING_AUTHORIZATION_CANCELLED':
+                case 'PIX_AUTOMATIC_RECURRING_AUTHORIZATION_EXPIRED':
+                    if (!$subscription) {
+                        Log::warning("{$event} sem assinatura vinculada.", [
+                            'authorization_id' => $this->maskIdentifier($pixAutomaticAuthorizationId),
+                            'external_reference' => $this->maskIdentifier($externalReference),
+                        ]);
+                        break;
+                    }
+
+                    $authorizationStatus = match ($event) {
+                        'PIX_AUTOMATIC_RECURRING_AUTHORIZATION_CANCELLED' => 'cancelled',
+                        'PIX_AUTOMATIC_RECURRING_AUTHORIZATION_EXPIRED' => 'expired',
+                        default => 'refused',
+                    };
+
+                    $subscription->update([
+                        'asaas_pix_automatic_authorization_id' => $pixAutomaticAuthorizationId ?: $subscription->asaas_pix_automatic_authorization_id,
+                        'asaas_pix_automatic_authorization_status' => $authorizationStatus,
+                        'asaas_pix_automatic_payload' => $payload,
+                        'asaas_pix_automatic_last_event_at' => now(),
+                        'status' => $authorizationStatus === 'cancelled' ? 'canceled' : 'pending',
+                        'asaas_synced' => true,
+                        'asaas_sync_status' => 'success',
+                        'asaas_last_sync_at' => now(),
+                        'asaas_last_error' => null,
+                    ]);
+
+                    SystemNotificationService::notify(
+                        'Pix Automatico: autorizacao atualizada',
+                        "Assinatura #{$subscription->id} teve autorizacao Pix Automatico marcada como {$authorizationStatus}.",
+                        'subscription',
+                        'warning'
+                    );
+                    break;
+
+                case 'PIX_AUTOMATIC_RECURRING_PAYMENT_INSTRUCTION_CREATED':
+                case 'PIX_AUTOMATIC_RECURRING_PAYMENT_INSTRUCTION_SCHEDULED':
+                    if (!$subscription) {
+                        Log::warning("{$event} sem assinatura vinculada.", [
+                            'instruction_id' => $this->maskIdentifier($pixAutomaticInstructionId),
+                            'authorization_id' => $this->maskIdentifier($pixAutomaticAuthorizationId),
+                        ]);
+                        break;
+                    }
+
+                    if (!empty($pixAutomaticInstructionId)) {
+                        $subscription->update([
+                            'asaas_pix_automatic_last_instruction_id' => $pixAutomaticInstructionId,
+                            'asaas_pix_automatic_payload' => $payload,
+                            'asaas_pix_automatic_last_event_at' => now(),
+                            'asaas_synced' => true,
+                            'asaas_sync_status' => 'success',
+                            'asaas_last_sync_at' => now(),
+                            'asaas_last_error' => null,
+                        ]);
+                    }
+
+                    $instructionAmountCents = $this->extractPixAutomaticAmountCents($payload);
+                    $instructionDueDate = $this->extractPixAutomaticDueDate($payload);
+
+                    if (!empty($pixAutomaticInstructionId) && $instructionAmountCents > 0 && !empty($instructionDueDate)) {
+                        $invoice = Invoices::query()
+                            ->where(function ($query) use ($pixAutomaticInstructionId) {
+                                $query->where('provider_id', $pixAutomaticInstructionId)
+                                    ->orWhere('asaas_payment_id', $pixAutomaticInstructionId);
+                            })
+                            ->first();
+
+                        $invoicePayload = [
+                            'subscription_id' => $subscription->id,
+                            'tenant_id' => $subscription->tenant_id,
+                            'amount_cents' => $instructionAmountCents,
+                            'due_date' => $instructionDueDate,
+                            'status' => 'pending',
+                            'payment_method' => 'PIX_AUTOMATIC',
+                            'provider' => 'asaas',
+                            'provider_id' => $pixAutomaticInstructionId,
+                            'asaas_payment_id' => $pixAutomaticInstructionId,
+                            'payment_link' => $this->extractPixAutomaticLink($payload),
+                            'asaas_synced' => true,
+                            'asaas_sync_status' => 'success',
+                            'asaas_last_sync_at' => now(),
+                            'asaas_last_error' => null,
+                        ];
+
+                        if ($invoice) {
+                            $invoice->update($invoicePayload);
+                        } else {
+                            $invoice = Invoices::create($invoicePayload);
+                        }
+                    }
+                    break;
+
+                case 'PIX_AUTOMATIC_RECURRING_PAYMENT_INSTRUCTION_REFUSED':
+                case 'PIX_AUTOMATIC_RECURRING_PAYMENT_INSTRUCTION_CANCELLED':
+                    if ($subscription) {
+                        $subscription->update([
+                            'asaas_pix_automatic_last_instruction_id' => $pixAutomaticInstructionId ?: $subscription->asaas_pix_automatic_last_instruction_id,
+                            'asaas_pix_automatic_payload' => $payload,
+                            'asaas_pix_automatic_last_event_at' => now(),
+                            'asaas_synced' => true,
+                            'asaas_sync_status' => 'success',
+                            'asaas_last_sync_at' => now(),
+                            'asaas_last_error' => null,
+                        ]);
+                    }
+
+                    $instructionInvoice = null;
+                    if (!empty($pixAutomaticInstructionId)) {
+                        $instructionInvoice = Invoices::query()
+                            ->where(function ($query) use ($pixAutomaticInstructionId) {
+                                $query->where('provider_id', $pixAutomaticInstructionId)
+                                    ->orWhere('asaas_payment_id', $pixAutomaticInstructionId);
+                            })
+                            ->first();
+                    }
+
+                    if (!empty($instructionInvoice)) {
+                        $instructionInvoice->update([
+                            'status' => 'canceled',
+                            'asaas_synced' => true,
+                            'asaas_sync_status' => 'success',
+                            'asaas_last_sync_at' => now(),
+                            'asaas_last_error' => null,
+                        ]);
+                    }
+
+                    SystemNotificationService::notify(
+                        'Pix Automatico: instrucao recusada/cancelada',
+                        "Instrucao Pix Automatico {$this->maskIdentifier($pixAutomaticInstructionId)} foi recusada ou cancelada.",
+                        'invoice',
+                        'warning'
+                    );
+                    break;
+
+                case 'PIX_AUTOMATIC_RECURRING_ELIGIBILITY_UPDATED':
+                    if ($subscription) {
+                        $subscription->update([
+                            'asaas_pix_automatic_payload' => $payload,
+                            'asaas_pix_automatic_last_event_at' => now(),
+                            'asaas_synced' => true,
+                            'asaas_sync_status' => 'success',
+                            'asaas_last_sync_at' => now(),
+                            'asaas_last_error' => null,
+                        ]);
+                    }
+                    break;
+
                 case 'PAYMENT_CREATED':
                     $subscriptionIdFromAsaas = $payload['payment']['subscription'] ?? null;
                     Log::info("🧾 Pagamento criado no Asaas: {$paymentId}");
@@ -955,6 +1185,122 @@ class AsaasWebhookController extends Controller
                 'error'
             );
         }
+    }
+
+    private function extractPixAutomaticAuthorizationId(array $payload): ?string
+    {
+        return $this->firstNonEmptyString([
+            data_get($payload, 'pixAutomaticRecurringAuthorization.id'),
+            data_get($payload, 'authorization.id'),
+            data_get($payload, 'pixAutomatic.authorization.id'),
+            data_get($payload, 'data.authorization.id'),
+        ]);
+    }
+
+    private function extractPixAutomaticInstructionId(array $payload): ?string
+    {
+        return $this->firstNonEmptyString([
+            data_get($payload, 'pixAutomaticRecurringPaymentInstruction.id'),
+            data_get($payload, 'paymentInstruction.id'),
+            data_get($payload, 'instruction.id'),
+            data_get($payload, 'data.paymentInstruction.id'),
+        ]);
+    }
+
+    private function extractPixAutomaticExternalReference(array $payload): ?string
+    {
+        return $this->firstNonEmptyString([
+            data_get($payload, 'pixAutomaticRecurringAuthorization.externalReference'),
+            data_get($payload, 'authorization.externalReference'),
+            data_get($payload, 'pixAutomaticRecurringPaymentInstruction.externalReference'),
+            data_get($payload, 'paymentInstruction.externalReference'),
+            data_get($payload, 'data.authorization.externalReference'),
+            data_get($payload, 'data.paymentInstruction.externalReference'),
+        ]);
+    }
+
+    private function extractPixAutomaticAuthorizationStatus(array $payload, string $fallback): string
+    {
+        $status = $this->firstNonEmptyString([
+            data_get($payload, 'pixAutomaticRecurringAuthorization.status'),
+            data_get($payload, 'authorization.status'),
+            data_get($payload, 'status'),
+        ]);
+
+        return strtolower($status ?: $fallback);
+    }
+
+    private function isPixAutomaticPaymentConfirmed(array $payload): bool
+    {
+        $paymentStatus = strtoupper((string) (
+            data_get($payload, 'payment.status')
+            ?? data_get($payload, 'pixAutomaticRecurringPaymentInstruction.paymentStatus')
+            ?? data_get($payload, 'paymentInstruction.paymentStatus')
+            ?? ''
+        ));
+
+        return in_array($paymentStatus, ['RECEIVED', 'CONFIRMED', 'PAID'], true);
+    }
+
+    private function extractPixAutomaticAmountCents(array $payload): int
+    {
+        $value = data_get($payload, 'pixAutomaticRecurringPaymentInstruction.value')
+            ?? data_get($payload, 'paymentInstruction.value')
+            ?? data_get($payload, 'payment.value');
+
+        if ($value === null || $value === '') {
+            return 0;
+        }
+
+        return (int) round(((float) $value) * 100);
+    }
+
+    private function extractPixAutomaticDueDate(array $payload): ?string
+    {
+        $dueDate = $this->firstNonEmptyString([
+            data_get($payload, 'pixAutomaticRecurringPaymentInstruction.dueDate'),
+            data_get($payload, 'paymentInstruction.dueDate'),
+            data_get($payload, 'payment.dueDate'),
+            data_get($payload, 'pixAutomaticRecurringPaymentInstruction.scheduledDate'),
+            data_get($payload, 'paymentInstruction.scheduledDate'),
+        ]);
+
+        if (!$dueDate) {
+            return null;
+        }
+
+        try {
+            return Carbon::parse($dueDate)->toDateString();
+        } catch (\Throwable $e) {
+            return null;
+        }
+    }
+
+    private function extractPixAutomaticLink(array $payload): ?string
+    {
+        return $this->firstNonEmptyString([
+            data_get($payload, 'pixAutomaticRecurringAuthorization.authorizationUrl'),
+            data_get($payload, 'authorization.authorizationUrl'),
+            data_get($payload, 'pixAutomaticRecurringPaymentInstruction.invoiceUrl'),
+            data_get($payload, 'paymentInstruction.invoiceUrl'),
+            data_get($payload, 'payment.invoiceUrl'),
+        ]);
+    }
+
+    private function firstNonEmptyString(array $values): ?string
+    {
+        foreach ($values as $value) {
+            if ($value === null) {
+                continue;
+            }
+
+            $text = trim((string) $value);
+            if ($text !== '') {
+                return $text;
+            }
+        }
+
+        return null;
     }
 
     private function finalizeWebhookResponse(

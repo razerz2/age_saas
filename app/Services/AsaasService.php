@@ -4,11 +4,14 @@ namespace App\Services;
 
 use App\Models\Platform\Subscription;
 use App\Models\Platform\Invoices;
+use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
 class AsaasService
 {
+    private const PIX_AUTOMATIC_AUTHORIZATIONS_ENDPOINT = 'pixAutomaticRecurring/authorizations';
+    private const PIX_AUTOMATIC_INSTRUCTIONS_ENDPOINT = 'pixAutomaticRecurring/paymentInstructions';
 
     protected string $baseUrl;
     protected string $apiKey;
@@ -408,7 +411,9 @@ class AsaasService
         try {
             $enabledMethods = array_map('strtoupper', (array) ($data['enabled_payment_methods'] ?? []));
             if ($enabledMethods !== []) {
-                $allowPix = in_array('PIX', $enabledMethods, true) || in_array('PIX_RECURRENT', $enabledMethods, true);
+                $allowPix = in_array('PIX', $enabledMethods, true)
+                    || in_array('PIX_RECURRENT', $enabledMethods, true)
+                    || in_array('PIX_AUTOMATIC', $enabledMethods, true);
                 $allowBoleto = in_array('BOLETO', $enabledMethods, true);
                 $allowCreditCard = in_array('CREDIT_CARD', $enabledMethods, true) || in_array('DEBIT_CARD', $enabledMethods, true);
 
@@ -725,6 +730,84 @@ class AsaasService
             ]);
 
             return ['error' => $e->getMessage()];
+        }
+    }
+
+    public function createPixAutomaticAuthorization(array $data): array
+    {
+        return $this->requestPixAutomatic('POST', self::PIX_AUTOMATIC_AUTHORIZATIONS_ENDPOINT, $data);
+    }
+
+    public function getPixAutomaticAuthorization(string $authorizationId): array
+    {
+        return $this->requestPixAutomatic('GET', self::PIX_AUTOMATIC_AUTHORIZATIONS_ENDPOINT . '/' . $authorizationId);
+    }
+
+    public function cancelPixAutomaticAuthorization(string $authorizationId): array
+    {
+        return $this->requestPixAutomatic('DELETE', self::PIX_AUTOMATIC_AUTHORIZATIONS_ENDPOINT . '/' . $authorizationId);
+    }
+
+    public function createPixAutomaticPaymentInstruction(array $data): array
+    {
+        return $this->requestPixAutomatic('POST', self::PIX_AUTOMATIC_INSTRUCTIONS_ENDPOINT, $data);
+    }
+
+    public function cancelPixAutomaticPaymentInstruction(string $instructionId): array
+    {
+        return $this->requestPixAutomatic('DELETE', self::PIX_AUTOMATIC_INSTRUCTIONS_ENDPOINT . '/' . $instructionId);
+    }
+
+    private function requestPixAutomatic(string $method, string $path, ?array $payload = null): array
+    {
+        try {
+            $request = Http::withHeaders([
+                'accept' => 'application/json',
+                'content-type' => 'application/json',
+                'access_token' => $this->apiKey,
+            ]);
+
+            $url = $this->baseUrl . ltrim($path, '/');
+            /** @var Response $response */
+            $response = $payload === null
+                ? $request->send(strtoupper($method), $url)
+                : $request->send(strtoupper($method), $url, ['json' => $payload]);
+
+            $statusCode = $response->status();
+            $responseData = $response->json();
+
+            Log::info('Asaas Pix Automatic request', [
+                'method' => strtoupper($method),
+                'path' => $path,
+                'payload' => $payload,
+                'status' => $statusCode,
+                'response' => $responseData,
+            ]);
+
+            if ($statusCode >= 200 && $statusCode < 300) {
+                return is_array($responseData) ? $responseData : ['data' => $responseData];
+            }
+
+            $errorMessage = (string) ($responseData['errors'][0]['description']
+                ?? $responseData['message']
+                ?? 'Erro ao processar requisicao Pix Automatico no Asaas.');
+
+            return [
+                'error' => true,
+                'message' => $errorMessage,
+                'status' => $statusCode,
+                'response' => is_array($responseData) ? $responseData : ['data' => $responseData],
+            ];
+        } catch (\Throwable $e) {
+            Log::error('Erro na requisicao Pix Automatico Asaas: ' . $e->getMessage(), [
+                'method' => strtoupper($method),
+                'path' => $path,
+            ]);
+
+            return [
+                'error' => true,
+                'message' => $e->getMessage(),
+            ];
         }
     }
 }

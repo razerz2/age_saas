@@ -1,7 +1,7 @@
-@extends('landing.layout')
+﻿@extends('landing.layout')
 
 @section('title', 'Contato - Sistema de Agendamentos')
-@section('description', 'Entre em contato conosco para tirar dúvidas, solicitar demonstração ou falar com nossa equipe comercial.')
+@section('description', 'Entre em contato conosco para tirar dÃºvidas, solicitar demonstraÃ§Ã£o ou falar com nossa equipe comercial.')
 
 @php
     $requestedSubject = (string) request()->query('subject', '');
@@ -10,10 +10,25 @@
     $prefilledMessage = old('message');
 
     if (($prefilledMessage === null || $prefilledMessage === '') && $requestedPlan !== '') {
-        $prefilledMessage = "Olá, tenho interesse no {$requestedPlan} para uma rede de clínicas. Gostaria de receber mais informações sobre implantação, hospedagem dedicada, funcionalidades disponíveis e condições comerciais.";
+        $prefilledMessage = "OlÃ¡, tenho interesse no {$requestedPlan} para uma rede de clÃ­nicas. Gostaria de receber mais informaÃ§Ãµes sobre implantaÃ§Ã£o, hospedagem dedicada, funcionalidades disponÃ­veis e condiÃ§Ãµes comerciais.";
     }
 
     $selectedSubject = old('subject', $prefilledSubject);
+    $contactEmailPrimary = trim((string) sysconfig('landing.contact.email_primary', 'contato@saas-saude.com.br'));
+    $contactEmailSecondary = trim((string) sysconfig('landing.contact.email_secondary', 'comercial@saas-saude.com.br'));
+    $contactPhonePrimary = trim((string) sysconfig('landing.contact.phone_primary', '(11) 1234-5678'));
+    $contactPhoneSecondary = trim((string) sysconfig('landing.contact.phone_secondary', '(11) 98765-4321'));
+    $contactAddressLine1 = trim((string) sysconfig('landing.contact.address_line_1', 'Av. Exemplo, 123'));
+    $contactAddressLine2 = trim((string) sysconfig('landing.contact.address_line_2', 'SÃ£o Paulo - SP, 01234-567'));
+    $contactBusinessHoursWeekdays = trim((string) sysconfig('landing.contact.business_hours_weekdays', 'Segunda a Sexta: 9h Ã s 18h'));
+    $contactBusinessHoursSaturday = trim((string) sysconfig('landing.contact.business_hours_saturday', 'SÃ¡bado: 9h Ã s 13h'));
+    $socialLinks = [
+        'facebook' => trim((string) sysconfig('landing.contact.facebook_url')),
+        'instagram' => trim((string) sysconfig('landing.contact.instagram_url')),
+        'linkedin' => trim((string) sysconfig('landing.contact.linkedin_url')),
+        'whatsapp' => trim((string) sysconfig('landing.contact.whatsapp_url')),
+    ];
+    $hasSocialLinks = collect($socialLinks)->contains(fn ($url) => $url !== '');
 @endphp
 
 @section('content')
@@ -25,7 +40,7 @@
                     Entre em <span class="text-blue-600">Contato</span>
                 </h1>
                 <p class="text-xl text-gray-600 mb-8 max-w-3xl mx-auto">
-                    Estamos aqui para ajudar. Entre em contato conosco para tirar dúvidas, solicitar demonstração 
+                    Estamos aqui para ajudar. Entre em contato conosco para tirar dÃºvidas, solicitar demonstraÃ§Ã£o 
                     ou falar com nossa equipe comercial.
                 </p>
             </div>
@@ -64,9 +79,9 @@
                             <select id="contact_subject" name="subject" required 
                                 class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                                 <option value="">Selecione um assunto</option>
-                                <option value="demo" @selected($selectedSubject === 'demo')>Solicitar Demonstração</option>
-                                <option value="pricing" @selected($selectedSubject === 'pricing')>Dúvidas sobre Planos</option>
-                                <option value="support" @selected($selectedSubject === 'support')>Suporte Técnico</option>
+                                <option value="demo" @selected($selectedSubject === 'demo')>Solicitar DemonstraÃ§Ã£o</option>
+                                <option value="pricing" @selected($selectedSubject === 'pricing')>DÃºvidas sobre Planos</option>
+                                <option value="support" @selected($selectedSubject === 'support')>Suporte TÃ©cnico</option>
                                 <option value="commercial" @selected($selectedSubject === 'commercial')>Falar com Comercial</option>
                                 <option value="other" @selected($selectedSubject === 'other')>Outro</option>
                             </select>
@@ -90,7 +105,7 @@
                 
                 <!-- Contact Info -->
                 <div>
-                    <h2 class="text-3xl font-bold text-gray-900 mb-6">Informações de Contato</h2>
+                    <h2 class="text-3xl font-bold text-gray-900 mb-6">InformaÃ§Ãµes de Contato</h2>
                     
                     <div class="space-y-8">
                         <div class="flex items-start">
@@ -101,8 +116,12 @@
                             </div>
                             <div class="ml-4">
                                 <h3 class="text-lg font-semibold text-gray-900 mb-1">Email</h3>
-                                <p class="text-gray-600">contato@saas-saude.com.br</p>
-                                <p class="text-gray-600">comercial@saas-saude.com.br</p>
+                                @if($contactEmailPrimary !== '')
+                                    <p class="text-gray-600">{{ $contactEmailPrimary }}</p>
+                                @endif
+                                @if($contactEmailSecondary !== '')
+                                    <p class="text-gray-600">{{ $contactEmailSecondary }}</p>
+                                @endif
                             </div>
                         </div>
                         
@@ -114,8 +133,12 @@
                             </div>
                             <div class="ml-4">
                                 <h3 class="text-lg font-semibold text-gray-900 mb-1">Telefone</h3>
-                                <p class="text-gray-600">(11) 1234-5678</p>
-                                <p class="text-gray-600">(11) 98765-4321</p>
+                                @if($contactPhonePrimary !== '')
+                                    <p class="text-gray-600">{{ $contactPhonePrimary }}</p>
+                                @endif
+                                @if($contactPhoneSecondary !== '')
+                                    <p class="text-gray-600">{{ $contactPhoneSecondary }}</p>
+                                @endif
                             </div>
                         </div>
                         
@@ -128,8 +151,12 @@
                             </div>
                             <div class="ml-4">
                                 <h3 class="text-lg font-semibold text-gray-900 mb-1">Endereço</h3>
-                                <p class="text-gray-600">Av. Exemplo, 123</p>
-                                <p class="text-gray-600">São Paulo - SP, 01234-567</p>
+                                @if($contactAddressLine1 !== '')
+                                    <p class="text-gray-600">{{ $contactAddressLine1 }}</p>
+                                @endif
+                                @if($contactAddressLine2 !== '')
+                                    <p class="text-gray-600">{{ $contactAddressLine2 }}</p>
+                                @endif
                             </div>
                         </div>
                         
@@ -141,33 +168,52 @@
                             </div>
                             <div class="ml-4">
                                 <h3 class="text-lg font-semibold text-gray-900 mb-1">Horário de Atendimento</h3>
-                                <p class="text-gray-600">Segunda a Sexta: 9h às 18h</p>
-                                <p class="text-gray-600">Sábado: 9h às 13h</p>
+                                @if($contactBusinessHoursWeekdays !== '')
+                                    <p class="text-gray-600">{{ $contactBusinessHoursWeekdays }}</p>
+                                @endif
+                                @if($contactBusinessHoursSaturday !== '')
+                                    <p class="text-gray-600">{{ $contactBusinessHoursSaturday }}</p>
+                                @endif
                             </div>
                         </div>
                     </div>
                     
                     <!-- Social Media -->
+                    @if($hasSocialLinks)
                     <div class="mt-8 pt-8 border-t border-gray-200">
                         <h3 class="text-lg font-semibold text-gray-900 mb-4">Redes Sociais</h3>
                         <div class="flex space-x-4">
-                            <a href="#" class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center text-blue-600 hover:bg-blue-200 transition-colors">
+                            @if($socialLinks['facebook'] !== '')
+                            <a href="{{ $socialLinks['facebook'] }}" target="_blank" rel="noopener noreferrer" class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center text-blue-600 hover:bg-blue-200 transition-colors">
                                 <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
                                     <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
                                 </svg>
                             </a>
-                            <a href="#" class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center text-blue-600 hover:bg-blue-200 transition-colors">
+                            @endif
+                            @if($socialLinks['instagram'] !== '')
+                            <a href="{{ $socialLinks['instagram'] }}" target="_blank" rel="noopener noreferrer" class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center text-blue-600 hover:bg-blue-200 transition-colors">
                                 <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
                                     <path d="M12.315 2c2.43 0 2.784.013 3.808.06 1.064.049 1.791.218 2.427.465a4.902 4.902 0 011.772 1.153 4.902 4.902 0 011.153 1.772c.247.636.416 1.363.465 2.427.048 1.067.06 1.407.06 4.123v.08c0 2.643-.012 2.987-.06 4.043-.049 1.064-.218 1.791-.465 2.427a4.902 4.902 0 01-1.153 1.772 4.902 4.902 0 01-1.772 1.153c-.636.247-1.363.416-2.427.465-1.067.048-1.407.06-4.123.06h-.08c-2.643 0-2.987-.012-4.043-.06-1.064-.049-1.791-.218-2.427-.465a4.902 4.902 0 01-1.772-1.153 4.902 4.902 0 01-1.153-1.772c-.247-.636-.416-1.363-.465-2.427-.047-1.024-.06-1.379-.06-3.808v-.63c0-2.43.013-2.784.06-3.808.049-1.064.218-1.791.465-2.427a4.902 4.902 0 011.153-1.772A4.902 4.902 0 015.45 2.525c.636-.247 1.363-.416 2.427-.465C8.901 2.013 9.256 2 11.685 2h.63zm-.081 1.802h-.468c-2.456 0-2.784.011-3.807.058-.975.045-1.504.207-1.857.344-.467.182-.8.398-1.15.748-.35.35-.566.683-.748 1.15-.137.353-.3.882-.344 1.857-.047 1.023-.058 1.351-.058 3.807v.468c0 2.456.011 2.784.058 3.807.045.975.207 1.504.344 1.857.182.466.399.8.748 1.15.35.35.683.566 1.15.748.353.137.882.3 1.857.344 1.054.048 1.37.058 4.041.058h.08c2.597 0 2.917-.01 3.96-.058.976-.045 1.505-.207 1.858-.344.466-.182.8-.398 1.15-.748.35-.35.566-.683.748-1.15.137-.353.3-.882.344-1.857.048-1.055.058-1.37.058-4.041v-.08c0-2.597-.01-2.917-.058-3.96-.045-.976-.207-1.505-.344-1.858a3.097 3.097 0 00-.748-1.15 3.098 3.098 0 00-1.15-.748c-.353-.137-.882-.3-1.857-.344-1.023-.047-1.351-.058-3.807-.058zM12 6.865a5.135 5.135 0 110 10.27 5.135 5.135 0 010-10.27zm0 1.802a3.333 3.333 0 100 6.666 3.333 3.333 0 000-6.666zm5.338-3.205a1.2 1.2 0 110 2.4 1.2 1.2 0 010-2.4z"/>
                                 </svg>
                             </a>
-                            <a href="#" class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center text-blue-600 hover:bg-blue-200 transition-colors">
+                            @endif
+                            @if($socialLinks['linkedin'] !== '')
+                            <a href="{{ $socialLinks['linkedin'] }}" target="_blank" rel="noopener noreferrer" class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center text-blue-600 hover:bg-blue-200 transition-colors">
                                 <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
                                     <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
                                 </svg>
                             </a>
+                            @endif
+                            @if($socialLinks['whatsapp'] !== '')
+                            <a href="{{ $socialLinks['whatsapp'] }}" target="_blank" rel="noopener noreferrer" class="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center text-green-600 hover:bg-green-200 transition-colors">
+                                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M20.52 3.48A11.94 11.94 0 0012.04 0C5.5 0 .18 5.32.18 11.86c0 2.09.55 4.12 1.6 5.91L0 24l6.4-1.68a11.8 11.8 0 005.64 1.44h.01c6.54 0 11.86-5.32 11.86-11.86 0-3.17-1.23-6.15-3.39-8.42zM12.05 21.74h-.01a9.8 9.8 0 01-4.99-1.36l-.36-.21-3.8 1 1.02-3.7-.24-.38a9.8 9.8 0 01-1.5-5.23c0-5.42 4.41-9.83 9.84-9.83 2.62 0 5.08 1.02 6.93 2.87a9.74 9.74 0 012.88 6.95c0 5.42-4.41 9.84-9.83 9.84zm5.39-7.35c-.29-.14-1.72-.85-1.99-.95-.27-.1-.46-.14-.66.14-.19.29-.76.95-.93 1.15-.17.19-.34.22-.63.07-.29-.14-1.2-.44-2.29-1.4-.84-.75-1.41-1.67-1.58-1.95-.17-.29-.02-.44.13-.58.13-.12.29-.32.44-.48.14-.17.19-.29.29-.48.1-.19.05-.36-.02-.51-.07-.14-.66-1.58-.9-2.17-.24-.57-.49-.49-.66-.5h-.56c-.19 0-.48.07-.73.36-.24.29-.95.93-.95 2.28 0 1.34.98 2.64 1.12 2.82.14.19 1.92 2.93 4.66 4.11.65.28 1.15.44 1.55.56.65.21 1.24.18 1.71.11.52-.08 1.72-.7 1.96-1.38.24-.68.24-1.25.17-1.38-.07-.12-.26-.19-.55-.33z"/>
+                                </svg>
+                            </a>
+                            @endif
                         </div>
                     </div>
+                    @endif
                 </div>
             </div>
         </div>
@@ -178,23 +224,23 @@
         <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="text-center mb-12">
                 <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-4">Perguntas Frequentes</h2>
-                <p class="text-xl text-gray-600">Encontre respostas rápidas para suas dúvidas</p>
+                <p class="text-xl text-gray-600">Encontre respostas rÃ¡pidas para suas dÃºvidas</p>
             </div>
             
             <div class="space-y-4">
                 <details class="group bg-white rounded-lg p-6 shadow-sm">
                     <summary class="font-semibold text-gray-900 cursor-pointer list-none">
                         <span class="flex items-center justify-between">
-                            Como funciona o pré-cadastro?
+                            Como funciona o prÃ©-cadastro?
                             <svg class="w-5 h-5 text-gray-500 group-open:rotate-180 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
                             </svg>
                         </span>
                     </summary>
                     <p class="mt-4 text-gray-600">
-                        O pré-cadastro é simples: preencha os dados da sua clínica, escolha um plano e realize o pagamento. 
-                        Após a confirmação do pagamento, o sistema cria automaticamente seu ambiente completo e isolado 
-                        com usuário administrador já configurado. Você receberá as credenciais por email.
+                        O prÃ©-cadastro Ã© simples: preencha os dados da sua clÃ­nica, escolha um plano e realize o pagamento. 
+                        ApÃ³s a confirmaÃ§Ã£o do pagamento, o sistema cria automaticamente seu ambiente completo e isolado 
+                        com usuÃ¡rio administrador jÃ¡ configurado. VocÃª receberÃ¡ as credenciais por email.
                     </p>
                 </details>
                 
@@ -208,8 +254,8 @@
                         </span>
                     </summary>
                     <p class="mt-4 text-gray-600">
-                        Sim! Você pode fazer upgrade ou downgrade do seu plano a qualquer momento. Entre em contato com nossa 
-                        equipe comercial para fazer a alteração.
+                        Sim! VocÃª pode fazer upgrade ou downgrade do seu plano a qualquer momento. Entre em contato com nossa 
+                        equipe comercial para fazer a alteraÃ§Ã£o.
                     </p>
                 </details>
                 
@@ -223,8 +269,8 @@
                         </span>
                     </summary>
                     <p class="mt-4 text-gray-600">
-                        O sistema foi desenvolvido para ser intuitivo e fácil de usar. Oferecemos documentação completa, 
-                        vídeos tutoriais e suporte técnico. Para planos Enterprise, oferecemos treinamento personalizado.
+                        O sistema foi desenvolvido para ser intuitivo e fÃ¡cil de usar. Oferecemos documentaÃ§Ã£o completa, 
+                        vÃ­deos tutoriais e suporte tÃ©cnico. Para planos Enterprise, oferecemos treinamento personalizado.
                     </p>
                 </details>
             </div>
@@ -244,7 +290,7 @@
         errorDiv.classList.add('hidden');
         successDiv.classList.add('hidden');
         
-        // Aqui você pode integrar com um serviço de email ou API
+        // Aqui vocÃª pode integrar com um serviÃ§o de email ou API
         // Por enquanto, apenas simula o envio
         setTimeout(() => {
             successDiv.textContent = 'Mensagem enviada com sucesso! Entraremos em contato em breve.';
@@ -254,3 +300,6 @@
     });
 </script>
 @endpush
+
+
+

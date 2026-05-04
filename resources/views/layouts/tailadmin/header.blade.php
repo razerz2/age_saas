@@ -78,6 +78,7 @@
                         $hasSettingsAccess = in_array('settings', $userModules);
                     }
                 }
+                $isTenantAdmin = $user && $user->role === 'admin';
             @endphp
 
             <div class="relative" x-data="{ dropdownOpen: false }" @click.outside="dropdownOpen = false">
@@ -105,6 +106,16 @@
                                 Meu perfil
                             </a>
                         </li>
+                        @if($isTenantAdmin)
+                        <li>
+                            <a href="{{ workspace_route('tenant.subscription.show') }}" class="group flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-white/5">
+                                <svg class="text-gray-500 group-hover:text-gray-700 dark:text-gray-400 dark:group-hover:text-gray-300" width="20" height="20" viewBox="0 0 24 24" fill="none">
+                                    <path fill-rule="evenodd" clip-rule="evenodd" d="M3.5 6.75C3.5 5.50736 4.50736 4.5 5.75 4.5H18.25C19.4926 4.5 20.5 5.50736 20.5 6.75V17.25C20.5 18.4926 19.4926 19.5 18.25 19.5H5.75C4.50736 19.5 3.5 18.4926 3.5 17.25V6.75ZM5.75 6C5.33579 6 5 6.33579 5 6.75V8.5H19V6.75C19 6.33579 18.6642 6 18.25 6H5.75ZM19 10H5V17.25C5 17.6642 5.33579 18 5.75 18H18.25C18.6642 18 19 17.6642 19 17.25V10ZM7 13.25C7 12.8358 7.33579 12.5 7.75 12.5H10.25C10.6642 12.5 11 12.8358 11 13.25C11 13.6642 10.6642 14 10.25 14H7.75C7.33579 14 7 13.6642 7 13.25Z" fill="currentColor"/>
+                                </svg>
+                                Minha assinatura
+                            </a>
+                        </li>
+                        @endif
                         @if($hasSettingsAccess)
                         <li>
                             <a href="{{ workspace_route('tenant.settings.index') }}" class="group flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-white/5">

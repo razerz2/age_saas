@@ -7,7 +7,9 @@ use App\Models\Platform\Plan;
 use App\Models\Platform\PlanChangeRequest;
 use App\Models\Platform\Subscription;
 use App\Models\Platform\Tenant;
+use App\Services\Platform\PaymentMethodAvailabilityService;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Log;
 
 class PlanChangeRequestController extends Controller
@@ -55,7 +57,38 @@ class PlanChangeRequestController extends Controller
             ->orderBy('price_cents', 'asc')
             ->get();
 
-        return view('tenant.plan-change-request.create', compact('subscription', 'plans', 'isTrialConversionContext'));
+        $paymentMethodService = app(PaymentMethodAvailabilityService::class);
+        $enabledMethods = $paymentMethodService->enabledMethods();
+        $optionsByMethod = collect($paymentMethodService->options())
+            ->keyBy(fn (array $option): string => (string) ($option['method'] ?? ''));
+
+        $paymentLabels = [
+            'PIX' => 'Pix manual',
+            'PIX_RECURRENT' => 'Pix recorrente',
+            'BOLETO' => 'Boleto bancário',
+            'CREDIT_CARD' => 'Cartão de crédito',
+            'DEBIT_CARD' => 'Cartão de débito',
+            'PIX_AUTOMATIC' => 'Pix Automático',
+        ];
+
+        $paymentMethodOptions = collect($enabledMethods)
+            ->map(function (string $method) use ($optionsByMethod, $paymentLabels): array {
+                $option = $optionsByMethod->get($method, []);
+
+                return [
+                    'value' => $method,
+                    'label' => $paymentLabels[$method] ?? ($option['label'] ?? $method),
+                ];
+            })
+            ->values()
+            ->all();
+
+        return view('tenant.plan-change-request.create', compact(
+            'subscription',
+            'plans',
+            'isTrialConversionContext',
+            'paymentMethodOptions'
+        ));
     }
 
     public function store(Request $request)
@@ -72,19 +105,21 @@ class PlanChangeRequestController extends Controller
         }
 
         $isTestPlan = (bool) $requestedPlan?->isTest();
+        $paymentMethodService = app(PaymentMethodAvailabilityService::class);
+        $enabledMethods = $paymentMethodService->enabledMethods();
 
         $validated = $request->validate([
             'requested_plan_id' => 'required|uuid|exists:plans,id',
             'requested_payment_method' => [
                 $isTestPlan ? 'nullable' : 'required',
-                'in:PIX,BOLETO,CREDIT_CARD,DEBIT_CARD',
+                Rule::in($enabledMethods),
             ],
             'reason' => 'nullable|string|max:1000',
         ], [
             'requested_plan_id.required' => 'Selecione um plano.',
             'requested_plan_id.exists' => 'O plano selecionado nao existe.',
             'requested_payment_method.required' => 'Selecione uma forma de pagamento.',
-            'requested_payment_method.in' => 'Forma de pagamento invalida.',
+            'requested_payment_method.in' => 'Forma de pagamento indisponível no momento.',
             'reason.max' => 'O motivo nao pode ter mais de 1000 caracteres.',
         ]);
 
@@ -113,6 +148,10 @@ class PlanChangeRequestController extends Controller
 
         if ($isTrialConversionContext && $requestedPlan?->isTest()) {
             return back()->withErrors(['requested_plan_id' => 'Nao e permitido converter trial para plano de teste.']);
+        }
+
+        if (! $isTestPlan && ! in_array($validated['requested_payment_method'], $enabledMethods, true)) {
+            return back()->withErrors(['requested_payment_method' => 'Forma de pagamento indisponível no momento.'])->withInput();
         }
 
         try {

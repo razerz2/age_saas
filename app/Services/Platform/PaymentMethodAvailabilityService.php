@@ -7,6 +7,7 @@ class PaymentMethodAvailabilityService
     private const CONFIG_MAP = [
         'PIX' => 'billing.payment_methods.pix_enabled',
         'PIX_RECURRENT' => 'billing.payment_methods.pix_recurrent_enabled',
+        'PIX_AUTOMATIC' => 'billing.payment_methods.pix_automatic_enabled',
         'BOLETO' => 'billing.payment_methods.boleto_enabled',
         'CREDIT_CARD' => 'billing.payment_methods.credit_card_enabled',
         'DEBIT_CARD' => 'billing.payment_methods.debit_card_enabled',
@@ -15,6 +16,7 @@ class PaymentMethodAvailabilityService
     private const DEFAULTS = [
         'PIX' => false,
         'PIX_RECURRENT' => true,
+        'PIX_AUTOMATIC' => false,
         'BOLETO' => true,
         'CREDIT_CARD' => true,
         'DEBIT_CARD' => false,
@@ -50,7 +52,14 @@ class PaymentMethodAvailabilityService
             [
                 'method' => 'PIX_RECURRENT',
                 'label' => 'PIX recorrente',
+                'description' => 'Gera cobrancas Pix recorrentes.',
                 'enabled' => $this->isEnabled('PIX_RECURRENT'),
+            ],
+            [
+                'method' => 'PIX_AUTOMATIC',
+                'label' => 'Pix Automático',
+                'description' => 'Cliente autoriza uma vez no banco para cobranças automáticas via Pix.',
+                'enabled' => $this->isEnabled('PIX_AUTOMATIC'),
             ],
             [
                 'method' => 'BOLETO',
