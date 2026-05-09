@@ -97,6 +97,7 @@ Route::prefix('customer/{slug}')
         // Agendamento
         Route::get('/agendamento/criar', [PublicAppointmentController::class, 'create'])->name('appointment.create');
         Route::post('/agendamento/criar', [PublicAppointmentController::class, 'store'])->name('appointment.store');
+        Route::get('/agendamento/meus-agendamentos', [PublicAppointmentController::class, 'myAppointments'])->name('appointment.my');
         Route::get('/agendamento/sucesso/{appointment_id?}', [PublicAppointmentController::class, 'success'])->name('appointment.success');
         Route::get('/agendamento/{appointment_id}', [PublicAppointmentController::class, 'show'])
             ->whereUuid('appointment_id')

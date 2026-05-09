@@ -10,6 +10,7 @@ use App\Models\Tenant\Calendar;
 use App\Models\Tenant\Doctor;
 use App\Models\Tenant\BusinessHour;
 use App\Models\Tenant\AppointmentType;
+use App\Models\Tenant\Patient;
 use App\Services\Tenant\NotificationDispatcher;
 use App\Services\Tenant\WaitlistService;
 use Illuminate\Support\Facades\DB;
@@ -29,7 +30,7 @@ class PublicAppointmentController extends Controller
     }
 
     /**
-     * Exibe o formulário de criação de agendamento público
+     * Exibe o formulÃ¡rio de criaÃ§Ã£o de agendamento pÃºblico
      */
     public function create(Request $request, $tenant)
     {
@@ -37,7 +38,7 @@ class PublicAppointmentController extends Controller
         $tenantModel = Tenant::where('subdomain', $tenantSlug)->first();
 
         if (!$tenantModel) {
-            abort(404, 'Clínica não encontrada.');
+            abort(404, 'ClÃ­nica nÃ£o encontrada.');
         }
 
         // Garante que estamos no contexto do tenant
@@ -50,7 +51,7 @@ class PublicAppointmentController extends Controller
                 ->with('error', 'Por favor, identifique-se primeiro para realizar o agendamento.');
         }
 
-        // Busca os médicos ativos
+        // Busca os mÃ©dicos ativos
         $allDoctors = Doctor::with('user')
             ->whereHas('user', function($query) {
                 $query->where('status', 'active');
@@ -58,18 +59,18 @@ class PublicAppointmentController extends Controller
             ->orderBy('id')
             ->get();
         
-        // Filtrar apenas médicos com configurações completas
+        // Filtrar apenas mÃ©dicos com configuraÃ§Ãµes completas
         $doctors = $allDoctors->filter(function($doctor) {
             return $doctor->hasCompleteCalendarConfiguration();
         });
         
-        // Se não houver médicos com configurações completas, retornar erro
+        // Se nÃ£o houver mÃ©dicos com configuraÃ§Ãµes completas, retornar erro
         if ($doctors->isEmpty()) {
             return redirect()->route('public.patient.identify', ['slug' => $tenant])
-                ->with('error', 'Não há médicos disponíveis para agendamento no momento. Por favor, entre em contato com a clínica.');
+                ->with('error', 'NÃ£o hÃ¡ mÃ©dicos disponÃ­veis para agendamento no momento. Por favor, entre em contato com a clÃ­nica.');
         }
 
-        // Busca o nome do paciente da sessão ou do banco
+        // Busca o nome do paciente da sessÃ£o ou do banco
         $patientName = Session::get('public_patient_name');
         if (!$patientName) {
             $patient = \App\Models\Tenant\Patient::find($patientId);
@@ -80,12 +81,70 @@ class PublicAppointmentController extends Controller
             'tenant' => $tenantModel,
             'doctors' => $doctors,
             'patientId' => $patientId,
-            'patientName' => $patientName
+            'patientName' => $patientName,
+            'rescheduleFrom' => $request->query('reschedule_from')
         ]);
     }
+    public function myAppointments(Request $request, $tenant)
+    {
+        $tenantModel = Tenant::where('subdomain', $tenant)->first();
 
+        if (!$tenantModel) {
+            abort(404, 'Clínica não encontrada.');
+        }
+
+        $tenantModel->makeCurrent();
+
+        $patientId = Session::get('public_patient_id');
+        if (!$patientId) {
+            return redirect()->route('public.patient.identify', ['slug' => $tenant])
+                ->with('error', 'Por favor, identifique-se primeiro para visualizar seus agendamentos.');
+        }
+
+        $patient = Patient::query()
+            ->where('id', $patientId)
+            ->where('is_active', true)
+            ->first();
+
+        if (!$patient) {
+            Session::forget('public_patient_id');
+            Session::forget('public_patient_name');
+
+            return redirect()->route('public.patient.identify', ['slug' => $tenant])
+                ->with('error', 'Por favor, identifique-se primeiro para visualizar seus agendamentos.');
+        }
+
+        $allowedSorts = ['starts_at', 'created_at', 'status'];
+        $allowedDirections = ['asc', 'desc'];
+
+        $sort = $request->query('sort', 'created_at');
+        $direction = $request->query('direction', 'desc');
+
+        if (!in_array($sort, $allowedSorts, true)) {
+            $sort = 'created_at';
+        }
+
+        if (!in_array($direction, $allowedDirections, true)) {
+            $direction = 'desc';
+        }
+
+        $appointments = Appointment::query()
+            ->with(['calendar.doctor.user', 'type', 'specialty'])
+            ->where('patient_id', $patient->id)
+            ->orderBy($sort, $direction)
+            ->paginate(5)
+            ->withQueryString();
+
+        return view('tenant.public.appointment-my', [
+            'tenant' => $tenantModel,
+            'patient' => $patient,
+            'appointments' => $appointments,
+            'sort' => $sort,
+            'direction' => $direction,
+        ]);
+    }
     /**
-     * Armazena o agendamento público
+     * Armazena o agendamento pÃºblico
      */
     public function store(StorePublicAppointmentRequest $request, $tenant)
     {
@@ -93,7 +152,7 @@ class PublicAppointmentController extends Controller
         $tenantModel = Tenant::where('subdomain', $tenantSlug)->first();
 
         if (!$tenantModel) {
-            abort(404, 'Clínica não encontrada.');
+            abort(404, 'ClÃ­nica nÃ£o encontrada.');
         }
 
         // Garante que estamos no contexto do tenant
@@ -108,11 +167,11 @@ class PublicAppointmentController extends Controller
 
         $data = $request->validated();
         
-        // Validação adicional: garante que o calendário existe e é válido
+        // ValidaÃ§Ã£o adicional: garante que o calendÃ¡rio existe e Ã© vÃ¡lido
         $calendar = Calendar::find($data['calendar_id']);
         if (!$calendar) {
             return back()
-                ->withErrors(['calendar_id' => 'Calendário não encontrado.'])
+                ->withErrors(['calendar_id' => 'CalendÃ¡rio nÃ£o encontrado.'])
                 ->withInput();
         }
 
@@ -126,7 +185,7 @@ class PublicAppointmentController extends Controller
                     'ends_at' => $data['ends_at'],
                 ]);
             } catch (ValidationException $e) {
-                $firstError = collect($e->errors())->flatten()->first() ?? 'Não foi possível entrar na fila de espera.';
+                $firstError = collect($e->errors())->flatten()->first() ?? 'NÃ£o foi possÃ­vel entrar na fila de espera.';
 
                 return redirect()->back()
                     ->withInput()
@@ -135,20 +194,20 @@ class PublicAppointmentController extends Controller
             }
 
             $message = $result['created']
-                ? 'Você entrou na fila de espera desse horário. Quando a vaga ficar disponível, enviaremos um link para confirmar.'
-                : 'Você já está na fila de espera desse horário. Quando a vaga ficar disponível, enviaremos um link para confirmar.';
+                ? 'VocÃª entrou na fila de espera desse horÃ¡rio. Quando a vaga ficar disponÃ­vel, enviaremos um link para confirmar.'
+                : 'VocÃª jÃ¡ estÃ¡ na fila de espera desse horÃ¡rio. Quando a vaga ficar disponÃ­vel, enviaremos um link para confirmar.';
 
             return redirect()->route('public.appointment.create', ['slug' => $tenant])
                 ->with('success', $message);
         }
         
         $data['id'] = Str::uuid();
-        $data['patient_id'] = $patientId; // Usa o paciente da sessão
-        $data['doctor_id'] = $calendar->doctor_id; // Garantir que doctor_id está definido
-        $data['status'] = 'scheduled'; // Status padrão para agendamentos públicos
-        $data['origin'] = Appointment::ORIGIN_PUBLIC; // Identificar origem como público
+        $data['patient_id'] = $patientId; // Usa o paciente da sessÃ£o
+        $data['doctor_id'] = $calendar->doctor_id; // Garantir que doctor_id estÃ¡ definido
+        $data['status'] = 'scheduled'; // Status padrÃ£o para agendamentos pÃºblicos
+        $data['origin'] = Appointment::ORIGIN_PUBLIC; // Identificar origem como pÃºblico
 
-        // Aplicar lógica de appointment_mode baseado na configuração
+        // Aplicar lÃ³gica de appointment_mode baseado na configuraÃ§Ã£o
         $data['confirmation_token'] = $this->generateUniqueConfirmationToken();
 
         $confirmationEnabled = tenant_setting_bool('appointments.confirmation.enabled', false);
@@ -197,11 +256,11 @@ class PublicAppointmentController extends Controller
             );
         }
 
-        // Salva o ID do agendamento na sessão para permitir visualização
+        // Salva o ID do agendamento na sessÃ£o para permitir visualizaÃ§Ã£o
         Session::put('last_appointment_id', $appointment->id);
         Session::put('last_appointment_patient_id', $patientId);
 
-        // Limpa a sessão do paciente após criar o agendamento
+        // Limpa a sessÃ£o do paciente apÃ³s criar o agendamento
         Session::forget('public_patient_id');
         Session::forget('public_patient_name');
 
@@ -217,7 +276,7 @@ class PublicAppointmentController extends Controller
             }
         }
 
-        // Redireciona para a página de detalhes do agendamento
+        // Redireciona para a pÃ¡gina de detalhes do agendamento
         return redirect()->route('public.appointment.show', [
             'slug' => $tenant,
             'appointment_id' => $appointment->id
@@ -225,7 +284,7 @@ class PublicAppointmentController extends Controller
     }
 
     /**
-     * Página de sucesso após criar agendamento
+     * PÃ¡gina de sucesso apÃ³s criar agendamento
      */
     public function success(Request $request, $tenant, $appointmentId = null)
     {
@@ -233,10 +292,10 @@ class PublicAppointmentController extends Controller
         $tenantModel = Tenant::where('subdomain', $tenantSlug)->first();
 
         if (!$tenantModel) {
-            abort(404, 'Clínica não encontrada.');
+            abort(404, 'ClÃ­nica nÃ£o encontrada.');
         }
 
-        // Usa o appointment_id da URL ou da sessão
+        // Usa o appointment_id da URL ou da sessÃ£o
         $appointmentId = $appointmentId ?? Session::get('last_appointment_id');
 
         return view('tenant.public.appointment-success', [
@@ -246,7 +305,7 @@ class PublicAppointmentController extends Controller
     }
 
     /**
-     * Exibe detalhes do agendamento público (somente leitura)
+     * Exibe detalhes do agendamento pÃºblico (somente leitura)
      */
     public function show(Request $request, $tenant, $appointmentId)
     {
@@ -254,7 +313,7 @@ class PublicAppointmentController extends Controller
         $tenantModel = Tenant::where('subdomain', $tenantSlug)->first();
 
         if (!$tenantModel) {
-            abort(404, 'Clínica não encontrada.');
+            abort(404, 'ClÃ­nica nÃ£o encontrada.');
         }
 
         // Garante que estamos no contexto do tenant
@@ -264,9 +323,9 @@ class PublicAppointmentController extends Controller
         $appointment = Appointment::with(['calendar.doctor.user', 'patient', 'type', 'specialty'])
             ->findOrFail($appointmentId);
 
-        // Fluxo público controlado:
-        // 1) sessão do paciente (fluxo identificar/agendar)
-        // 2) token público do próprio agendamento (link de notificação)
+        // Fluxo pÃºblico controlado:
+        // 1) sessÃ£o do paciente (fluxo identificar/agendar)
+        // 2) token pÃºblico do prÃ³prio agendamento (link de notificaÃ§Ã£o)
         $patientIdFromSession = Session::get('last_appointment_patient_id') ?? Session::get('public_patient_id');
         $hasSessionAccess = $patientIdFromSession && (string) $appointment->patient_id === (string) $patientIdFromSession;
 
@@ -277,7 +336,7 @@ class PublicAppointmentController extends Controller
 
         if (!$hasSessionAccess && !$hasTokenAccess) {
             // Compatibilidade com links antigos sem token:
-            // gera (se necessário) e redireciona para URL tokenizada.
+            // gera (se necessÃ¡rio) e redireciona para URL tokenizada.
             if ($accessToken === '') {
                 if (empty($appointment->confirmation_token)) {
                     $appointment->confirmation_token = $this->generateUniqueConfirmationToken();
@@ -291,7 +350,7 @@ class PublicAppointmentController extends Controller
                 ]);
             }
 
-            abort(403, 'Você não tem permissão para visualizar este agendamento. Por favor, identifique-se novamente.');
+            abort(403, 'VocÃª nÃ£o tem permissÃ£o para visualizar este agendamento. Por favor, identifique-se novamente.');
         }
 
         Session::put('last_appointment_id', $appointment->id);
@@ -304,7 +363,7 @@ class PublicAppointmentController extends Controller
     }
 
     /**
-     * API Pública: Buscar calendários por médico
+     * API PÃºblica: Buscar calendÃ¡rios por mÃ©dico
      */
     public function confirmByToken(Request $request, $tenant, $token)
     {
@@ -448,7 +507,7 @@ class PublicAppointmentController extends Controller
     }
 
     /**
-     * API Pública: Buscar tipos de consulta por médico
+     * API PÃºblica: Buscar tipos de consulta por mÃ©dico
      */
     public function getAppointmentTypesByDoctor($tenant, $doctorId)
     {
@@ -490,7 +549,7 @@ class PublicAppointmentController extends Controller
     }
 
     /**
-     * API Pública: Buscar especialidades por médico
+     * API PÃºblica: Buscar especialidades por mÃ©dico
      */
     public function getSpecialtiesByDoctor($tenant, $doctorId)
     {
@@ -517,7 +576,7 @@ class PublicAppointmentController extends Controller
     }
 
     /**
-     * API Pública: Buscar horários disponíveis
+     * API PÃºblica: Buscar horÃ¡rios disponÃ­veis
      */
     public function getAvailableSlots(Request $request, $tenant, $doctorId)
     {
@@ -657,13 +716,13 @@ class PublicAppointmentController extends Controller
     }
 
     /**
-     * API Pública: Buscar dias trabalhados (business hours) do médico
+     * API PÃºblica: Buscar dias trabalhados (business hours) do mÃ©dico
      */
     public function getBusinessHoursByDoctor($tenant, $doctorId)
     {
         $tenantModel = Tenant::where('subdomain', $tenant)->first();
         if (!$tenantModel) {
-            return response()->json(['error' => 'Clínica não encontrada'], 404);
+            return response()->json(['error' => 'ClÃ­nica nÃ£o encontrada'], 404);
         }
 
         $tenantModel->makeCurrent();
@@ -680,17 +739,17 @@ class PublicAppointmentController extends Controller
             $weekdayNames = [
                 0 => 'Domingo',
                 1 => 'Segunda-feira',
-                2 => 'Terça-feira',
+                2 => 'TerÃ§a-feira',
                 3 => 'Quarta-feira',
                 4 => 'Quinta-feira',
                 5 => 'Sexta-feira',
-                6 => 'Sábado',
+                6 => 'SÃ¡bado',
             ];
 
             // Agrupar por weekday
             $grouped = $businessHours->groupBy('weekday');
             
-            // Criar array com todos os dias da semana (mesmo que não tenham horários)
+            // Criar array com todos os dias da semana (mesmo que nÃ£o tenham horÃ¡rios)
             $result = [
                 'doctor' => [
                     'id' => $doctor->id,
@@ -722,13 +781,13 @@ class PublicAppointmentController extends Controller
 
             return response()->json($result);
         } catch (\Exception $e) {
-            \Log::error('Erro ao buscar dias trabalhados do médico (público)', [
+            \Log::error('Erro ao buscar dias trabalhados do mÃ©dico (pÃºblico)', [
                 'doctor_id' => $doctorId,
                 'error' => $e->getMessage(),
             ]);
             
             return response()->json([
-                'error' => 'Erro ao buscar dias trabalhados do médico',
+                'error' => 'Erro ao buscar dias trabalhados do mÃ©dico',
                 'doctor' => null,
                 'business_hours' => []
             ], 500);

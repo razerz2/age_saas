@@ -52,6 +52,28 @@
                     </div>
                 @endif
 
+                @if (session('error'))
+                    <div class="border-b border-slate-200 px-6 py-4">
+                        <div class="rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-900">
+                            <div class="flex items-start gap-2">
+                                <i class="mdi mdi-alert-circle text-base text-red-600"></i>
+                                <p>{{ session('error') }}</p>
+                            </div>
+                        </div>
+                    </div>
+                @endif
+
+                @if (session('info'))
+                    <div class="border-b border-slate-200 px-6 py-4">
+                        <div class="rounded-xl border border-blue-100 bg-blue-50 px-4 py-3 text-sm text-blue-900">
+                            <div class="flex items-start gap-2">
+                                <i class="mdi mdi-information text-base text-blue-600"></i>
+                                <p>{{ session('info') }}</p>
+                            </div>
+                        </div>
+                    </div>
+                @endif
+
                 @if ($errors->any())
                     <div class="border-b border-slate-200 px-6 py-4">
                         <div class="rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-900">

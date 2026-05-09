@@ -51,6 +51,30 @@
                     </div>
                 @endif
 
+                @if (!empty($rescheduleFrom))
+                    <div class="flex items-start gap-3 rounded-xl border border-amber-100 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+                        <span class="mt-0.5 inline-flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-amber-100 text-amber-600">
+                            <i class="mdi mdi-information text-base"></i>
+                        </span>
+                        <div class="flex-1">
+                            <p class="font-semibold">Reagendamento</p>
+                            <p class="mt-0.5">Você está reagendando um atendimento. Escolha uma nova data e horário.</p>
+                        </div>
+                    </div>
+                @endif
+
+                @if (session('info'))
+                    <div class="flex items-start gap-3 rounded-xl border border-blue-100 bg-blue-50 px-4 py-3 text-sm text-blue-800">
+                        <span class="mt-0.5 inline-flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-blue-100 text-blue-600">
+                            <i class="mdi mdi-information text-base"></i>
+                        </span>
+                        <div class="flex-1">
+                            <p class="font-semibold">Informação</p>
+                            <p class="mt-0.5">{{ session('info') }}</p>
+                        </div>
+                    </div>
+                @endif
+
                 @if (session('error'))
                     <div class="flex items-start gap-3 rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-800">
                         <span class="mt-0.5 inline-flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-red-100 text-red-600">

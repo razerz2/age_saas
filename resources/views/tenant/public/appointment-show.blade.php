@@ -96,10 +96,22 @@
                     </div>
                 </div>
 
-                @if($appointment->confirmation_token && in_array($appointment->status, ['pending_confirmation', 'scheduled', 'rescheduled'], true))
+                @php
+                    $form = \App\Models\Tenant\Form::getFormForAppointment($appointment);
+                    $canAnswerForm = $form && in_array($appointment->status, [
+                        'scheduled',
+                        'rescheduled',
+                        'pending_confirmation',
+                        'confirmed',
+                    ], true);
+                    $canCancelAppointment = $appointment->confirmation_token && in_array($appointment->status, ['pending_confirmation', 'scheduled', 'rescheduled', 'confirmed'], true);
+                    $canConfirmAppointment = $appointment->confirmation_token && $appointment->status === 'pending_confirmation';
+                @endphp
+
+                @if($canCancelAppointment || $canConfirmAppointment || $canAnswerForm)
                     <div class="border-t border-slate-200 px-6 py-5">
                         <div class="rounded-xl border border-slate-200 bg-slate-50 px-4 py-4">
-                            @if($appointment->status === 'pending_confirmation')
+                            @if($canConfirmAppointment)
                                 <p class="text-sm text-slate-700">
                                     Este agendamento está aguardando confirmação.
                                     @if($appointment->confirmation_expires_at)
@@ -108,21 +120,31 @@
                                 </p>
                             @endif
 
-                            <div class="mt-3 flex flex-col gap-3 sm:flex-row">
-                                @if($appointment->status === 'pending_confirmation')
+                            <div class="mt-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-center">
+                                @if($canConfirmAppointment)
                                     <a href="{{ route('public.appointment.confirm', ['slug' => $tenant->subdomain, 'token' => $appointment->confirmation_token]) }}" class="btn btn-primary">
                                         <i class="mdi mdi-check text-lg text-white"></i>
                                         Confirmar agendamento
                                     </a>
                                 @endif
 
-                                <form method="POST" action="{{ route('public.appointment.cancel', ['slug' => $tenant->subdomain, 'token' => $appointment->confirmation_token]) }}">
-                                    @csrf
-                                    <button type="submit" class="btn btn-outline">
-                                        <i class="mdi mdi-close-circle-outline text-lg text-slate-900"></i>
-                                        Cancelar agendamento
-                                    </button>
-                                </form>
+                                @if($canAnswerForm)
+                                    <a href="{{ tenant_route($tenant, 'public.form.response.create', ['form' => $form->id, 'appointment' => $appointment->id]) }}" class="btn btn-primary">
+                                        <i class="mdi mdi-file-document-edit text-lg text-white"></i>
+                                        Responder Formulário
+                                    </a>
+                                @endif
+
+                                @if($canCancelAppointment)
+                                    <form id="public-cancel-appointment-form-{{ $appointment->id }}" method="POST" action="{{ route('public.appointment.cancel', ['slug' => $tenant->subdomain, 'token' => $appointment->confirmation_token]) }}">
+                                        @csrf
+                                        <button type="button" class="btn btn-outline js-open-cancel-confirm" data-cancel-form-id="public-cancel-appointment-form-{{ $appointment->id }}">
+                                            <i class="mdi mdi-close-circle-outline text-lg text-slate-900"></i>
+                                            Cancelar agendamento
+                                        </button>
+                                    </form>
+                                @endif
+
                             </div>
                         </div>
                     </div>
@@ -136,28 +158,23 @@
                 @endif
 
                 @php
-                    $form = \App\Models\Tenant\Form::getFormForAppointment($appointment);
+                    $hasPublicPatientSession = (bool) session('public_patient_id');
+                    $backUrl = $hasPublicPatientSession
+                        ? route('public.appointment.my', ['slug' => $tenant->subdomain])
+                        : route('public.patient.identify', ['slug' => $tenant->subdomain]);
+                    $newAppointmentUrl = $hasPublicPatientSession
+                        ? route('public.appointment.create', ['slug' => $tenant->subdomain])
+                        : route('public.patient.identify', ['slug' => $tenant->subdomain]);
                 @endphp
-
-                @if($form)
-                    <div class="border-t border-slate-200 px-6 py-5">
-                        <div class="flex justify-center">
-                            <a href="{{ tenant_route($tenant, 'public.form.response.create', ['form' => $form->id, 'appointment' => $appointment->id]) }}" class="btn btn-primary">
-                                <i class="mdi mdi-file-document-edit text-lg text-white"></i>
-                                Responder Formulário
-                            </a>
-                        </div>
-                    </div>
-                @endif
 
                 <div class="border-t border-slate-200 px-6 py-5">
                     <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                        <a href="{{ route('public.patient.identify', ['slug' => $tenant->subdomain]) }}" class="btn btn-outline">
+                        <a href="{{ $backUrl }}" class="btn btn-outline">
                             <i class="mdi mdi-arrow-left text-lg text-slate-900"></i>
                             Voltar
                         </a>
 
-                        <a href="{{ route('public.patient.identify', ['slug' => $tenant->subdomain]) }}" class="btn btn-primary">
+                        <a href="{{ $newAppointmentUrl }}" class="btn btn-primary">
                             <i class="mdi mdi-calendar-plus text-lg text-white"></i>
                             Novo Agendamento
                         </a>
@@ -167,3 +184,36 @@
         </div>
     </div>
 @endsection
+
+@push('scripts')
+    <script>
+        document.addEventListener('click', function (event) {
+            var cancelButton = event.target.closest('.js-open-cancel-confirm');
+            if (!cancelButton) {
+                return;
+            }
+
+            var formId = cancelButton.getAttribute('data-cancel-form-id');
+            var form = formId ? document.getElementById(formId) : null;
+
+            if (!form || typeof window.confirmAction !== 'function') {
+                if (form) {
+                    form.submit();
+                }
+                return;
+            }
+
+            window.confirmAction({
+                type: 'error',
+                title: 'Cancelar agendamento',
+                message: 'Tem certeza que deseja cancelar este agendamento? Esta ação liberará o horário na agenda.',
+                confirmText: 'Sim, cancelar',
+                cancelText: 'Voltar',
+                allowOutsideClose: true,
+                onConfirm: function () {
+                    form.submit();
+                }
+            });
+        });
+    </script>
+@endpush

@@ -34,6 +34,7 @@
         'public.patient.identify',
         'public.patient.register',
         'public.appointment.create',
+        'public.appointment.my',
         'public.appointment.show',
         'public.appointment.success'
     ))
