@@ -642,7 +642,7 @@ class AppointmentController extends Controller
 
     public function cancel(Request $request, $slug, $appointment)
     {
-        $appointment = Appointment::findOrFail($appointment);
+        $appointment = $this->resolveAppointment($appointment);
         $validated = $request->validate([
             'reason' => ['nullable', 'string', 'max:2000'],
         ]);
@@ -658,6 +658,28 @@ class AppointmentController extends Controller
             'confirmation_expires_at' => null,
             'expired_at' => null,
         ]);
+
+        if ($appointment->google_event_id) {
+            try {
+                $this->googleCalendarService->deleteEvent($appointment);
+            } catch (\Exception $e) {
+                \Log::error('Erro ao remover agendamento cancelado do Google Calendar', [
+                    'appointment_id' => $appointment->id,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+        }
+
+        if ($appointment->apple_event_id) {
+            try {
+                $this->appleCalendarService->deleteEvent($appointment);
+            } catch (\Exception $e) {
+                \Log::error('Erro ao remover agendamento cancelado do Apple Calendar', [
+                    'appointment_id' => $appointment->id,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+        }
 
         $this->notificationDispatcher->dispatchAppointment(
             $appointment,
@@ -1553,6 +1575,25 @@ class AppointmentController extends Controller
         } while (Appointment::where('confirmation_token', $token)->exists());
 
         return $token;
+    }
+
+    private function resolveAppointment(mixed $appointment): Appointment
+    {
+        if ($appointment instanceof Appointment) {
+            return $appointment;
+        }
+
+        if (is_array($appointment) || is_object($appointment) || $appointment === null) {
+            abort(404);
+        }
+
+        $appointmentId = (string) $appointment;
+
+        if (!Str::isUuid($appointmentId)) {
+            abort(404);
+        }
+
+        return Appointment::findOrFail($appointmentId);
     }
 
     private function findAccessibleDoctor(string $doctorId): ?Doctor
