@@ -432,7 +432,7 @@
                             class="mt-1 mr-2 w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
                         <span class="text-sm text-gray-700">
                             Eu aceito os 
-                            <a href="https://www.allsync.com.br/termos-de-servico" target="_blank" 
+                            <a href="https://www.allsync.com.br/termos-de-uso" target="_blank"
                                 class="text-blue-600 hover:text-blue-700 underline">Termos de Uso</a> 
                             e a 
                             <a href="https://www.allsync.com.br/politica-de-privacidade" target="_blank" 

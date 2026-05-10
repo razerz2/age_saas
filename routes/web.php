@@ -102,9 +102,10 @@ Route::prefix('t/{slug}')->middleware(['tenant-web'])->group(function () {
 // Callback global do Google Calendar (não fica no grupo /t/{tenant})
 Route::get('/google/callback', [GoogleCalendarController::class, 'callback'])->name('google.callback');
 
-// Rotas públicas para Google OAuth (Política de Privacidade e Termos de Serviço)
+// Rotas públicas para Google OAuth (Política de Privacidade e Termos de Uso)
 Route::view('/politica-de-privacidade', 'public.privacy')->name('public.privacy');
 Route::view('/termos-de-servico', 'public.terms')->name('public.terms');
+Route::view('/termos-de-uso', 'public.terms')->name('public.terms-of-use');
 
 // Rotas públicas de localização para pré-cadastro
 Route::get('/api/location/estados', [\App\Http\Controllers\Platform\LocationController::class, 'getEstados'])->name('api.public.estados');

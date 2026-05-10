@@ -73,13 +73,12 @@
                     <a href="{{ route('public.privacy') }}" class="text-gray-400 hover:text-white transition-colors text-sm">
                         Política de Privacidade
                     </a>
-                    <a href="{{ route('public.terms') }}" class="text-gray-400 hover:text-white transition-colors text-sm">
-                        Termos de Serviço
+                    <a href="{{ route('public.terms-of-use') }}" class="text-gray-400 hover:text-white transition-colors text-sm">
+                        Termos de Uso
                     </a>
                 </div>
             </div>
         </div>
-    </footer>
+</footer>
 </body>
 </html>
-

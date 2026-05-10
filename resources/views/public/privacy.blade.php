@@ -58,17 +58,18 @@
         <section>
             <h2 class="text-2xl font-semibold text-gray-900 mt-8 mb-4">4. Integração com Google Calendar</h2>
             <p class="mb-4">
-                O AllSync oferece integração com o Google Calendar para sincronização automática de agendamentos. 
-                Esta integração utiliza o protocolo OAuth 2.0 do Google, que é um padrão de segurança amplamente reconhecido.
+                O AllSync oferece integração opcional com o Google Calendar para sincronização de agendamentos.
+                A integração somente é ativada quando o profissional autoriza expressamente o acesso por meio do OAuth 2.0 do Google.
             </p>
             <p class="mb-4">
                 <strong>Como funciona:</strong>
             </p>
             <ul class="list-disc pl-6 space-y-2 mb-4">
-                <li>Quando você autoriza a integração, o Google solicita permissão para acessar seu calendário</li>
-                <li>O AllSync utiliza apenas as permissões necessárias para criar, editar e excluir eventos no seu calendário</li>
+                <li>O acesso é usado somente para criar, consultar, atualizar e remover eventos relacionados aos agendamentos da plataforma</li>
+                <li>O AllSync não acessa Gmail, Google Drive, contatos ou outros serviços da Conta Google</li>
                 <li>Os dados de acesso (tokens OAuth) são armazenados de forma segura e criptografada</li>
                 <li>A sincronização ocorre automaticamente quando há alterações nos agendamentos</li>
+                <li>O profissional pode desconectar a integração quando desejar</li>
             </ul>
             <p class="mb-4">
                 <strong>Como revogar o acesso:</strong>

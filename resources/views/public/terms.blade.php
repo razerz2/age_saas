@@ -1,11 +1,11 @@
 @extends('layouts.public')
 
-@section('title', 'Termos de Serviço')
-@section('description', 'Termos de Serviço do AllSync - Sistema de agendamentos para clínicas e profissionais de saúde')
+@section('title', 'Termos de Uso')
+@section('description', 'Termos de Uso do AllSync - Sistema de agendamentos para clínicas e profissionais de saúde')
 
 @section('content')
 <div class="prose prose-lg max-w-none">
-    <h1 class="text-4xl font-bold text-gray-900 mb-6">Termos de Serviço</h1>
+    <h1 class="text-4xl font-bold text-gray-900 mb-6">Termos de Uso</h1>
     
     <p class="text-gray-600 mb-6">
         <strong>Última atualização:</strong> {{ sysconfig('legal.terms_updated_at', '10/05/2026') }}
@@ -93,7 +93,7 @@
                 <strong>Encerramento pelo Provedor:</strong>
             </p>
             <ul class="list-disc pl-6 space-y-2 mb-4">
-                <li>O AllSync reserva-se o direito de encerrar contas que violem estes Termos de Serviço, realizem atividades ilegais ou não efetuem o pagamento das mensalidades.</li>
+                <li>O AllSync reserva-se o direito de encerrar contas que violem estes Termos de Uso, realizem atividades ilegais ou não efetuem o pagamento das mensalidades.</li>
                 <li>Em caso de encerramento por violação dos termos, não haverá direito a reembolso.</li>
                 <li>O AllSync também pode encerrar o serviço com aviso prévio de 90 dias em caso de descontinuação da plataforma, oferecendo alternativas de migração de dados.</li>
             </ul>
@@ -144,9 +144,24 @@
                 <li>Notificações no Sistema: Avisos importantes são exibidos diretamente no painel administrativo</li>
             </ul>
         </section>
+
+        <section>
+            <h2 class="text-2xl font-semibold text-gray-900 mt-8 mb-4">8. Integração com Google Calendar</h2>
+            <p class="mb-4">
+                A integração com o Google Calendar é opcional e depende de autorização expressa do profissional pela sua Conta Google.
+            </p>
+            <p class="mb-4">
+                Quando ativada, o AllSync utiliza o acesso exclusivamente para criar, consultar, atualizar e remover eventos relacionados aos agendamentos realizados na plataforma.
+            </p>
+            <ul class="list-disc pl-6 space-y-2 mb-4">
+                <li>O AllSync não acessa Gmail, Google Drive, contatos ou outros serviços da Conta Google</li>
+                <li>O profissional pode desconectar a integração a qualquer momento nas configurações do sistema ou diretamente na Conta Google</li>
+                <li>A desconexão interrompe a sincronização automática com o Google Calendar, sem impedir o uso das demais funcionalidades do AllSync</li>
+            </ul>
+        </section>
         
         <section>
-            <h2 class="text-2xl font-semibold text-gray-900 mt-8 mb-4">8. Limitação de Responsabilidade</h2>
+            <h2 class="text-2xl font-semibold text-gray-900 mt-8 mb-4">9. Limitação de Responsabilidade</h2>
             <p class="mb-4">
                 O AllSync não se responsabiliza por:
             </p>
@@ -162,7 +177,7 @@
         </section>
         
         <section>
-            <h2 class="text-2xl font-semibold text-gray-900 mt-8 mb-4">9. Propriedade Intelectual</h2>
+            <h2 class="text-2xl font-semibold text-gray-900 mt-8 mb-4">10. Propriedade Intelectual</h2>
             <p>
                 Todo o conteúdo do AllSync, incluindo software, design, textos, gráficos, logos e funcionalidades, é de propriedade exclusiva do AllSync ou de seus licenciadores. 
                 O uso do sistema não concede qualquer direito de propriedade sobre estes elementos. 
@@ -171,9 +186,9 @@
         </section>
         
         <section>
-            <h2 class="text-2xl font-semibold text-gray-900 mt-8 mb-4">10. Alterações nos Termos</h2>
+            <h2 class="text-2xl font-semibold text-gray-900 mt-8 mb-4">11. Alterações nos Termos</h2>
             <p class="mb-4">
-                O AllSync reserva-se o direito de modificar estes Termos de Serviço periodicamente. 
+                O AllSync reserva-se o direito de modificar estes Termos de Uso periodicamente.
                 Alterações significativas serão comunicadas aos usuários com pelo menos 30 dias de antecedência através de:
             </p>
             <ul class="list-disc pl-6 space-y-2 mb-4">
@@ -187,18 +202,18 @@
         </section>
         
         <section>
-            <h2 class="text-2xl font-semibold text-gray-900 mt-8 mb-4">11. Lei Aplicável e Foro</h2>
+            <h2 class="text-2xl font-semibold text-gray-900 mt-8 mb-4">12. Lei Aplicável e Foro</h2>
             <p>
-                Estes Termos de Serviço são regidos pela legislação brasileira. 
+                Estes Termos de Uso são regidos pela legislação brasileira.
                 Qualquer disputa relacionada a estes termos será resolvida no foro da comarca onde está sediada a empresa AllSync, 
                 renunciando as partes a qualquer outro foro, por mais privilegiado que seja.
             </p>
         </section>
         
         <section>
-            <h2 class="text-2xl font-semibold text-gray-900 mt-8 mb-4">12. Contato</h2>
+            <h2 class="text-2xl font-semibold text-gray-900 mt-8 mb-4">13. Contato</h2>
             <p class="mb-4">
-                Para questões relacionadas a estes Termos de Serviço, entre em contato:
+                Para questões relacionadas a estes Termos de Uso, entre em contato:
             </p>
             <div class="bg-gray-50 border border-gray-200 rounded-lg p-6">
                 <p class="mb-2"><strong>AllSync</strong></p>

@@ -187,7 +187,7 @@
                 <p>&copy; {{ date('Y') }} {{ config('app.name', 'SaaS Saúde') }}. Todos os direitos reservados.</p>
                 <div class="mt-2 flex flex-wrap justify-center gap-x-6 gap-y-2">
                     <a href="{{ route('public.privacy') }}" class="text-gray-400 hover:text-white transition-colors underline">Política de Privacidade</a>
-                    <a href="{{ route('public.terms') }}" class="text-gray-400 hover:text-white transition-colors underline">Termos de Serviço</a>
+                    <a href="{{ route('public.terms-of-use') }}" class="text-gray-400 hover:text-white transition-colors underline">Termos de Uso</a>
                 </div>
             </div>
         </div>
