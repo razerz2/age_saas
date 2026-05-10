@@ -158,6 +158,38 @@ if (!function_exists('has_google_oauth_credentials')) {
     }
 }
 
+if (!function_exists('google_calendar_scopes')) {
+    function google_calendar_scopes(): array
+    {
+        $googleConfig = (array) config('services.google', []);
+        $calendarConfig = (array) ($googleConfig['calendar'] ?? []);
+        $scopesConfig = (array) ($calendarConfig['scopes'] ?? []);
+
+        $eventsScope = trim((string) ($scopesConfig['events'] ?? 'https://www.googleapis.com/auth/calendar.events'));
+        if ($eventsScope === '') {
+            $eventsScope = 'https://www.googleapis.com/auth/calendar.events';
+        }
+
+        $fullScope = trim((string) ($scopesConfig['full'] ?? 'https://www.googleapis.com/auth/calendar'));
+        if ($fullScope === '') {
+            $fullScope = 'https://www.googleapis.com/auth/calendar';
+        }
+
+        $useLegacyRaw = $calendarConfig['use_legacy_full_scope'] ?? false;
+        if (is_string($useLegacyRaw)) {
+            $useLegacyRaw = filter_var($useLegacyRaw, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE) ?? false;
+        }
+        $useLegacyFullScope = (bool) $useLegacyRaw;
+
+        $scopes = [$eventsScope];
+        if ($useLegacyFullScope) {
+            $scopes[] = $fullScope;
+        }
+
+        return array_values(array_unique(array_filter($scopes)));
+    }
+}
+
 /**
  * 🔧 Atualiza variáveis do arquivo .env com segurança.
  */

@@ -96,10 +96,7 @@ class GoogleCalendarController extends Controller
             $client->setRedirectUri($redirectUri);
             $client->setAccessType('offline');
             $client->setPrompt('consent');
-            $client->addScope([
-                'https://www.googleapis.com/auth/calendar',
-                'https://www.googleapis.com/auth/calendar.events',
-            ]);
+            $client->addScope(google_calendar_scopes());
             $client->setState((string) $state);
 
             $authUrl = $client->createAuthUrl();

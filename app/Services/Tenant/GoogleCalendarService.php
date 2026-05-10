@@ -33,10 +33,7 @@ class GoogleCalendarService
         $this->client->setRedirectUri((string) ($oauthConfig['redirect_uri'] ?? route('google.callback')));
         $this->client->setAccessType('offline');
         $this->client->setPrompt('consent');
-        $this->client->addScope([
-            'https://www.googleapis.com/auth/calendar',
-            'https://www.googleapis.com/auth/calendar.events'
-        ]);
+        $this->client->addScope(google_calendar_scopes());
 
         // Se o token estÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡ expirado, renova
         if ($token->isExpired() && $token->refresh_token) {
