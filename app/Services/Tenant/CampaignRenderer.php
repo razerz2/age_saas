@@ -162,13 +162,13 @@ class CampaignRenderer
 
         if ($templateId === null) {
             $resolutionStatus = 'missing_template_id';
-            $renderError = 'Template nÃ£o oficial da campanha nÃ£o foi selecionado.';
+            $renderError = 'Template não oficial da campanha não foi selecionado.';
         } elseif (!$template) {
             $resolutionStatus = 'template_not_found';
-            $renderError = 'Template nÃ£o oficial da campanha nÃ£o estÃ¡ disponÃ­vel.';
+            $renderError = 'Template não oficial da campanha não está disponível.';
         } elseif ($template->is_active !== true) {
             $resolutionStatus = 'template_inactive';
-            $renderError = 'Template nÃ£o oficial da campanha estÃ¡ inativo.';
+            $renderError = 'Template não oficial da campanha está inativo.';
         }
 
         $renderedContent = $template
@@ -177,7 +177,7 @@ class CampaignRenderer
 
         if ($renderError === null && trim($renderedContent) === '') {
             $resolutionStatus = 'template_render_empty';
-            $renderError = 'ConteÃºdo do template nÃ£o oficial nÃ£o pÃ´de ser renderizado.';
+            $renderError = 'Conteúdo do template não oficial não pôde ser renderizado.';
         }
 
         return [
@@ -219,16 +219,16 @@ class CampaignRenderer
 
         if ($officialTemplateId === '') {
             $resolutionStatus = 'missing_template_id';
-            $renderError = 'Template oficial da campanha nÃ£o foi selecionado.';
+            $renderError = 'Template oficial da campanha não foi selecionado.';
         } elseif ($tenantId === '') {
             $resolutionStatus = 'missing_tenant';
-            $renderError = 'NÃ£o foi possÃ­vel validar o template oficial para o tenant atual.';
+            $renderError = 'Não foi possível validar o template oficial para o tenant atual.';
         } elseif (!$template) {
             $resolutionStatus = 'template_not_found';
-            $renderError = 'Template oficial da campanha nÃ£o estÃ¡ disponÃ­vel para este tenant.';
+            $renderError = 'Template oficial da campanha não está disponível para este tenant.';
         } elseif (strtolower((string) $template->status) !== WhatsAppOfficialTemplate::STATUS_APPROVED) {
             $resolutionStatus = 'template_not_approved';
-            $renderError = 'Template oficial da campanha nÃ£o estÃ¡ aprovado no momento.';
+            $renderError = 'Template oficial da campanha não está aprovado no momento.';
         }
 
         return [

@@ -15,7 +15,7 @@ class StoreCampaignRequest extends FormRequest
 {
     /** @var array<string,mixed> */
     private array $rawWhatsAppInput = [];
-    private const CHANNEL_UNAVAILABLE_MESSAGE = 'Canal indisponÃ­vel para campanhas. Ajuste os canais na aba Campanhas.';
+    private const CHANNEL_UNAVAILABLE_MESSAGE = 'Canal indisponível para campanhas. Ajuste os canais na aba Campanhas.';
     private const OFFICIAL_TEMPLATE_REQUIRED_MESSAGE = 'Campanhas com WhatsApp Oficial exigem template oficial aprovado pela Meta.';
 
     public function authorize()
@@ -247,7 +247,7 @@ class StoreCampaignRequest extends FormRequest
             if (in_array('email', $requestedChannels, true)) {
                 $emailContent = $this->input('content_json.email');
                 if (!is_array($emailContent)) {
-                    $validator->errors()->add('content_json.email', 'O conteÃºdo de email Ã© obrigatÃ³rio.');
+                    $validator->errors()->add('content_json.email', 'O conteúdo de email é obrigatório.');
                 } else {
                     $hasBodyHtml = $this->isFilled($emailContent['body_html'] ?? null);
                     $hasBodyText = $this->isFilled($emailContent['body_text'] ?? null);
@@ -267,7 +267,7 @@ class StoreCampaignRequest extends FormRequest
                             if ($source === 'upload' && !$this->isFilled($attachment['asset_id'] ?? null)) {
                                 $validator->errors()->add(
                                     'content_json.email.attachments.' . $index . '.asset_id',
-                                    'Anexo invÃ¡lido: asset_id Ã© obrigatÃ³rio.'
+                                    'Anexo inválido: asset_id é obrigatório.'
                                 );
                             }
                         }
@@ -291,50 +291,50 @@ class StoreCampaignRequest extends FormRequest
     public function messages()
     {
         return [
-            'name.required' => 'O nome da campanha Ã© obrigatÃ³rio.',
-            'name.max' => 'O nome da campanha deve ter no mÃ¡ximo 150 caracteres.',
-            'type.required' => 'O tipo da campanha Ã© obrigatÃ³rio.',
+            'name.required' => 'O nome da campanha é obrigatório.',
+            'name.max' => 'O nome da campanha deve ter no máximo 150 caracteres.',
+            'type.required' => 'O tipo da campanha é obrigatório.',
             'type.in' => 'O tipo da campanha deve ser manual ou automated.',
             'channels.required' => 'Selecione ao menos um canal.',
             'channels.array' => 'Os canais devem ser enviados em formato de lista.',
             'channels.min' => 'Selecione ao menos um canal.',
-            'channels.*.in' => 'Canal invÃ¡lido. Use email e/ou whatsapp.',
-            'content_json.required' => 'O conteÃºdo da campanha Ã© obrigatÃ³rio.',
-            'content_json.array' => 'content_json deve ser um objeto vÃ¡lido.',
-            'content_json.version.required' => 'content_json.version Ã© obrigatÃ³rio.',
+            'channels.*.in' => 'Canal inválido. Use email e/ou whatsapp.',
+            'content_json.required' => 'O conteúdo da campanha é obrigatório.',
+            'content_json.array' => 'content_json deve ser um objeto válido.',
+            'content_json.version.required' => 'content_json.version é obrigatório.',
             'content_json.version.in' => 'content_json.version deve ser 1.',
-            'audience_json.required' => 'A audiÃªncia da campanha Ã© obrigatÃ³ria.',
-            'audience_json.array' => 'audience_json deve ser um objeto vÃ¡lido.',
-            'audience_json.version.required' => 'audience_json.version Ã© obrigatÃ³rio.',
+            'audience_json.required' => 'A audiência da campanha é obrigatória.',
+            'audience_json.array' => 'audience_json deve ser um objeto válido.',
+            'audience_json.version.required' => 'audience_json.version é obrigatório.',
             'audience_json.version.in' => 'audience_json.version deve ser 1.',
             'rules_json.array' => 'Regras devem ser enviadas em formato de objeto.',
-            'rules_json.logic.in' => 'A lÃ³gica das regras deve ser AND ou OR.',
-            'rules_json.conditions.array' => 'As condiÃ§Ãµes devem ser enviadas em lista.',
-            'rules_json.conditions.*.field.in' => 'Campo de regra nÃ£o permitido.',
-            'rules_json.conditions.*.op.in' => 'Operador de regra nÃ£o permitido.',
-            'schedule_mode.required' => 'O modo da programaÃ§Ã£o Ã© obrigatÃ³rio para campanhas agendadas.',
-            'schedule_mode.in' => 'O modo da programaÃ§Ã£o deve ser period ou indefinite.',
-            'starts_at.required' => 'A data de inÃ­cio Ã© obrigatÃ³ria para campanhas agendadas.',
-            'starts_at.date' => 'A data de inÃ­cio Ã© invÃ¡lida.',
-            'ends_at.required' => 'A data de fim Ã© obrigatÃ³ria quando o modo for perÃ­odo.',
-            'ends_at.date' => 'A data de fim Ã© invÃ¡lida.',
-            'ends_at.after_or_equal' => 'A data de fim deve ser maior ou igual Ã  data de inÃ­cio.',
+            'rules_json.logic.in' => 'A lógica das regras deve ser AND ou OR.',
+            'rules_json.conditions.array' => 'As condições devem ser enviadas em lista.',
+            'rules_json.conditions.*.field.in' => 'Campo de regra não permitido.',
+            'rules_json.conditions.*.op.in' => 'Operador de regra não permitido.',
+            'schedule_mode.required' => 'O modo da programação é obrigatório para campanhas agendadas.',
+            'schedule_mode.in' => 'O modo da programação deve ser period ou indefinite.',
+            'starts_at.required' => 'A data de início é obrigatória para campanhas agendadas.',
+            'starts_at.date' => 'A data de início é inválida.',
+            'ends_at.required' => 'A data de fim é obrigatória quando o modo for período.',
+            'ends_at.date' => 'A data de fim é inválida.',
+            'ends_at.after_or_equal' => 'A data de fim deve ser maior ou igual à data de início.',
             'weekdays.required' => 'Selecione pelo menos um dia da semana.',
             'weekdays.array' => 'Os dias da semana devem estar em formato de lista.',
             'weekdays.min' => 'Selecione pelo menos um dia da semana.',
-            'weekdays.*.integer' => 'Dia da semana invÃ¡lido.',
-            'weekdays.*.between' => 'Dia da semana invÃ¡lido. Use valores de 0 a 6.',
-            'times.required' => 'Adicione pelo menos um horÃ¡rio.',
-            'times.array' => 'Os horÃ¡rios devem estar em formato de lista.',
-            'times.min' => 'Adicione pelo menos um horÃ¡rio.',
-            'times.*.date_format' => 'Cada horÃ¡rio deve estar no formato HH:MM.',
-            'times.*.distinct' => 'NÃ£o repita horÃ¡rios.',
-            'timezone.required' => 'O timezone da campanha Ã© obrigatÃ³rio.',
-            'timezone.timezone' => 'O timezone informado Ã© invÃ¡lido.',
-            'content_json.email.attachments.*.asset_id.integer' => 'Anexo invÃ¡lido: asset_id deve ser numÃ©rico.',
-            'content_json.email.attachments.*.source.in' => 'Anexo invÃ¡lido: source deve ser upload.',
-            'content_json.whatsapp.media.asset_id.integer' => 'O asset_id deve ser numÃ©rico quando source for upload.',
-            'content_json.whatsapp.composition_mode.in' => 'A composiÃ§Ã£o da mensagem deve ser manual ou template.',
+            'weekdays.*.integer' => 'Dia da semana inválido.',
+            'weekdays.*.between' => 'Dia da semana inválido. Use valores de 0 a 6.',
+            'times.required' => 'Adicione pelo menos um horário.',
+            'times.array' => 'Os horários devem estar em formato de lista.',
+            'times.min' => 'Adicione pelo menos um horário.',
+            'times.*.date_format' => 'Cada horário deve estar no formato HH:MM.',
+            'times.*.distinct' => 'Não repita horários.',
+            'timezone.required' => 'O timezone da campanha é obrigatório.',
+            'timezone.timezone' => 'O timezone informado é inválido.',
+            'content_json.email.attachments.*.asset_id.integer' => 'Anexo inválido: asset_id deve ser numérico.',
+            'content_json.email.attachments.*.source.in' => 'Anexo inválido: source deve ser upload.',
+            'content_json.whatsapp.media.asset_id.integer' => 'O asset_id deve ser numérico quando source for upload.',
+            'content_json.whatsapp.composition_mode.in' => 'A composição da mensagem deve ser manual ou template.',
         ];
     }
 
@@ -544,14 +544,14 @@ class StoreCampaignRequest extends FormRequest
     {
         $whatsapp = $this->input('content_json.whatsapp');
         if (!is_array($whatsapp)) {
-            $validator->errors()->add('content_json.whatsapp', 'O conteÃºdo de WhatsApp Ã© obrigatÃ³rio.');
+            $validator->errors()->add('content_json.whatsapp', 'O conteúdo de WhatsApp é obrigatório.');
             return;
         }
 
         $provider = strtolower(trim((string) ($whatsapp['provider'] ?? '')));
         $effectiveProvider = $this->effectiveWhatsAppProvider();
         if ($provider !== $effectiveProvider) {
-            $validator->errors()->add('content_json.whatsapp.provider', 'O provider efetivo de campanhas Ã© diferente do provider informado.');
+            $validator->errors()->add('content_json.whatsapp.provider', 'O provider efetivo de campanhas é diferente do provider informado.');
         }
 
         $compositionMode = $this->resolveWhatsappCompositionMode();
@@ -573,7 +573,7 @@ class StoreCampaignRequest extends FormRequest
             }
 
             if (!$this->resolveApprovedOfficialTemplate($officialTemplateId)) {
-                $validator->errors()->add('content_json.whatsapp.official_template_id', 'O template oficial selecionado Ã© invÃ¡lido ou nÃ£o estÃ¡ aprovado.');
+                $validator->errors()->add('content_json.whatsapp.official_template_id', 'O template oficial selecionado é inválido ou não está aprovado.');
             }
             $this->assertNoManualFieldsForOfficialProvider($validator);
             $this->assertNoUnofficialTemplateFieldsForOfficialProvider($validator);
@@ -583,17 +583,17 @@ class StoreCampaignRequest extends FormRequest
 
         if ($compositionMode === 'template') {
             if ($templateType !== 'unofficial') {
-                $validator->errors()->add('content_json.whatsapp.template_type', 'Selecione um template nÃ£o oficial para o modo template.');
+                $validator->errors()->add('content_json.whatsapp.template_type', 'Selecione um template não oficial para o modo template.');
             }
 
             $templateId = $this->normalizeNullableInt($whatsapp['template_id'] ?? null);
             if (!$templateId) {
-                $validator->errors()->add('content_json.whatsapp.template_id', 'Selecione um template nÃ£o oficial ativo.');
+                $validator->errors()->add('content_json.whatsapp.template_id', 'Selecione um template não oficial ativo.');
                 return;
             }
 
             if (!$this->resolveActiveCampaignTemplate($templateId)) {
-                $validator->errors()->add('content_json.whatsapp.template_id', 'O template nÃ£o oficial selecionado Ã© invÃ¡lido ou estÃ¡ inativo.');
+                $validator->errors()->add('content_json.whatsapp.template_id', 'O template não oficial selecionado é inválido ou está inativo.');
             }
             $this->assertNoOfficialTemplateFieldsForUnofficialProvider($validator);
             $this->assertNoManualFieldsForUnofficialTemplateMode($validator);
@@ -605,23 +605,23 @@ class StoreCampaignRequest extends FormRequest
 
         $messageType = strtolower(trim((string) ($whatsapp['message_type'] ?? '')));
         if ($messageType === 'text' && !$this->isFilled($whatsapp['text'] ?? null)) {
-            $validator->errors()->add('content_json.whatsapp.text', 'O texto Ã© obrigatÃ³rio quando message_type for text.');
+            $validator->errors()->add('content_json.whatsapp.text', 'O texto é obrigatório quando message_type for text.');
         }
 
         if ($messageType === 'media') {
             $media = $whatsapp['media'] ?? null;
             if (!is_array($media)) {
-                $validator->errors()->add('content_json.whatsapp.media', 'O bloco media Ã© obrigatÃ³rio quando message_type for media.');
+                $validator->errors()->add('content_json.whatsapp.media', 'O bloco media é obrigatório quando message_type for media.');
                 return;
             }
 
             $source = strtolower(trim((string) ($media['source'] ?? '')));
             if ($source === 'url' && !$this->isFilled($media['url'] ?? null)) {
-                $validator->errors()->add('content_json.whatsapp.media.url', 'A URL Ã© obrigatÃ³ria quando source for url.');
+                $validator->errors()->add('content_json.whatsapp.media.url', 'A URL é obrigatória quando source for url.');
             }
 
             if ($source === 'upload' && !$this->isFilled($media['asset_id'] ?? null)) {
-                $validator->errors()->add('content_json.whatsapp.media.asset_id', 'O asset_id Ã© obrigatÃ³rio quando source for upload.');
+                $validator->errors()->add('content_json.whatsapp.media.asset_id', 'O asset_id é obrigatório quando source for upload.');
             }
         }
     }

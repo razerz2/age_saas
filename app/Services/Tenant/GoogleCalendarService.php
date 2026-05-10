@@ -21,7 +21,7 @@ class GoogleCalendarService
     protected Google_Service_Calendar $service;
 
     /**
-     * Cria uma instÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ncia do cliente Google Calendar para um token especÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â­fico
+     * Cria uma instância do cliente Google Calendar para um token específico
      */
     public function client(GoogleCalendarToken $token): Google_Client
     {
@@ -35,7 +35,7 @@ class GoogleCalendarService
         $this->client->setPrompt('consent');
         $this->client->addScope(google_calendar_scopes());
 
-        // Se o token estÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡ expirado, renova
+        // Se o token está expirado, renova
         if ($token->isExpired() && $token->refresh_token) {
             $this->refreshAccessToken($token);
         }
@@ -54,7 +54,7 @@ class GoogleCalendarService
     public function syncEvent(Appointment $appointment): bool
     {
         try {
-            // Buscar o mÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©dico atravÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©s do calendÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡rio
+            // Buscar o médico através do calendário
             $calendar = $appointment->calendar;
             if (!$calendar || !$calendar->doctor) {
                 return false;
@@ -63,7 +63,7 @@ class GoogleCalendarService
             $doctor = $calendar->doctor;
             $token = $doctor->googleCalendarToken;
 
-            // Se o mÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©dico nÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o tem token Google, nÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o sincroniza
+            // Se o médico não tem token Google, não sincroniza
             if (!$token) {
                 return false;
             }
@@ -71,8 +71,8 @@ class GoogleCalendarService
             // Inicializa o cliente
             $this->client($token);
 
-            // ESTRATÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â°GIA: Para ediÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o, deletar e criar novo (mais simples e confiÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡vel)
-            // Se jÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡ existe google_event_id, deletar e criar novo ao invÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©s de atualizar
+            // ESTRATÉGIA: Para edição, deletar e criar novo (mais simples e confiável)
+            // Se já existe google_event_id, deletar e criar novo ao invés de atualizar
             if ($appointment->google_event_id) {
                 // Deletar evento antigo primeiro
                 $this->deleteEventFromGoogle($appointment->google_event_id, $calendar->doctor);
@@ -82,7 +82,7 @@ class GoogleCalendarService
                 });
             }
             
-            // Criar novo evento com informaÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Âµes atualizadas
+            // Criar novo evento com informações atualizadas
             return $this->createEvent($appointment);
         } catch (\Exception $e) {
             Log::error('Erro ao sincronizar evento com Google Calendar', [
@@ -99,7 +99,7 @@ class GoogleCalendarService
     public function createEvent(Appointment $appointment): bool
     {
         try {
-            // Carregar relacionamentos necessÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡rios para construir o evento
+            // Carregar relacionamentos necessários para construir o evento
             $appointment->load([
                 'patient',
                 'calendar.doctor.user',
@@ -107,16 +107,16 @@ class GoogleCalendarService
                 'specialty'
             ]);
 
-            // IMPORTANTE: Verificar se jÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡ existe google_event_id antes de criar
-            // Isso evita duplicaÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o se o Observer for disparado mÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Âºltiplas vezes
-            // ESTRATÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â°GIA: Se jÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡ existe, deletar e criar novo (mais simples e confiÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡vel)
+            // IMPORTANTE: Verificar se já existe google_event_id antes de criar
+            // Isso evita duplicação se o Observer for disparado múltiplas vezes
+            // ESTRATÉGIA: Se já existe, deletar e criar novo (mais simples e confiável)
             if ($appointment->google_event_id) {
                 // Verificar se o evento ainda existe no Google Calendar
                 try {
                     $calendarId = 'primary';
                     $existingEvent = $this->service->events->get($calendarId, $appointment->google_event_id);
                     
-                    Log::info('Evento jÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡ existe no Google Calendar, deletando para recriar', [
+                    Log::info('Evento já existe no Google Calendar, deletando para recriar', [
                         'appointment_id' => $appointment->id,
                         'google_event_id' => $appointment->google_event_id,
                     ]);
@@ -132,14 +132,14 @@ class GoogleCalendarService
                         $appointment->update(['google_event_id' => null]);
                     });
                 } catch (\Exception $e) {
-                    // Evento nÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o existe mais no Google Calendar, continuar para criar novo
-                    Log::info('Evento nÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o encontrado no Google Calendar, criando novo', [
+                    // Evento não existe mais no Google Calendar, continuar para criar novo
+                    Log::info('Evento não encontrado no Google Calendar, criando novo', [
                         'appointment_id' => $appointment->id,
                         'google_event_id' => $appointment->google_event_id,
                         'error' => $e->getMessage(),
                     ]);
                     
-                    // Limpar ID invÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡lido - SEM DISPARAR EVENTOS para evitar loop infinito
+                    // Limpar ID inválido - SEM DISPARAR EVENTOS para evitar loop infinito
                     $appointment->withoutEvents(function () use ($appointment) {
                         $appointment->update(['google_event_id' => null]);
                     });
@@ -148,7 +148,7 @@ class GoogleCalendarService
 
             $event = $this->buildEvent($appointment);
             
-            // Adicionar ID do agendamento como propriedade estendida para identificaÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o
+            // Adicionar ID do agendamento como propriedade estendida para identificação
             $extendedProperties = new \Google_Service_Calendar_EventExtendedProperties();
             $extendedProperties->setPrivate([
                 'appointment_id' => $appointment->id,
@@ -191,19 +191,19 @@ class GoogleCalendarService
             }
 
             // IMPORTANTE: Verificar se o evento ainda existe no Google Calendar
-            // Se nÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o existir, criar novo ao invÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©s de tentar atualizar
+            // Se não existir, criar novo ao invés de tentar atualizar
             try {
                 $calendarId = 'primary';
                 $existingEvent = $this->service->events->get($calendarId, $appointment->google_event_id);
             } catch (\Exception $e) {
-                // Evento nÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o existe mais, criar novo
-                Log::warning('Evento nÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o encontrado no Google Calendar, criando novo ao invÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©s de atualizar', [
+                // Evento não existe mais, criar novo
+                Log::warning('Evento não encontrado no Google Calendar, criando novo ao invés de atualizar', [
                     'appointment_id' => $appointment->id,
                     'google_event_id' => $appointment->google_event_id,
                     'error' => $e->getMessage(),
                 ]);
                 
-                // Limpar ID invÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡lido e criar novo - SEM DISPARAR EVENTOS para evitar loop infinito
+                // Limpar ID inválido e criar novo - SEM DISPARAR EVENTOS para evitar loop infinito
                 $appointment->withoutEvents(function () use ($appointment) {
                     $appointment->update(['google_event_id' => null]);
                 });
@@ -212,7 +212,7 @@ class GoogleCalendarService
 
             $event = $this->buildEvent($appointment);
             
-            // Garantir que as propriedades estendidas estÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o presentes
+            // Garantir que as propriedades estendidas estão presentes
             $extendedProperties = new \Google_Service_Calendar_EventExtendedProperties();
             $extendedProperties->setPrivate([
                 'appointment_id' => $appointment->id,
@@ -244,10 +244,10 @@ class GoogleCalendarService
     {
         try {
             if (!$appointment->google_event_id) {
-                return true; // JÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡ nÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o existe no Google
+                return true; // Já não existe no Google
             }
 
-            // Buscar o mÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©dico atravÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©s do calendÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡rio
+            // Buscar o médico através do calendário
             $calendar = $appointment->calendar;
             if (!$calendar || !$calendar->doctor) {
                 return false;
@@ -284,7 +284,7 @@ class GoogleCalendarService
     }
 
     /**
-     * Cria evento com conferencia Google Meet.
+     * Cria evento com conferência Google Meet.
      *
      * @return array{
      *   event_id:?string,
@@ -310,7 +310,7 @@ class GoogleCalendarService
 
         $doctor = $appointment->calendar?->doctor;
         if (!$doctor || !$doctor->googleCalendarToken) {
-            throw new \RuntimeException('Medico sem token Google Calendar conectado.');
+            throw new \RuntimeException('Médico sem token Google Calendar conectado.');
         }
 
         $this->client($doctor->googleCalendarToken);
@@ -345,7 +345,7 @@ class GoogleCalendarService
     }
 
     /**
-     * Atualiza evento com conferencia Google Meet.
+     * Atualiza evento com conferência Google Meet.
      *
      * @return array{
      *   event_id:?string,
@@ -371,7 +371,7 @@ class GoogleCalendarService
 
         $doctor = $appointment->calendar?->doctor;
         if (!$doctor || !$doctor->googleCalendarToken) {
-            throw new \RuntimeException('Medico sem token Google Calendar conectado.');
+            throw new \RuntimeException('Médico sem token Google Calendar conectado.');
         }
 
         $this->client($doctor->googleCalendarToken);
@@ -483,9 +483,9 @@ class GoogleCalendarService
 
             return true;
         } catch (\Exception $e) {
-            // Se evento nÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o existe mais, considerar sucesso
+            // Se evento não existe mais, considerar sucesso
             if (str_contains($e->getMessage(), '404') || str_contains($e->getMessage(), 'Not Found')) {
-                Log::info('Evento jÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡ nÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o existe no Google Calendar', [
+                Log::info('Evento já não existe no Google Calendar', [
                     'google_event_id' => $googleEventId,
                 ]);
                 return true;
@@ -554,7 +554,7 @@ class GoogleCalendarService
     }
 
     /**
-     * Lista eventos do Google Calendar para um medico
+     * Lista eventos do Google Calendar para um médico
      */
     public function listEvents($doctorId, $startDate = null, $endDate = null): array
     {
@@ -586,7 +586,7 @@ class GoogleCalendarService
 
                 $result[] = [
                     'id' => $event->getId(),
-                    'title' => $event->getSummary() ?? 'Sem tÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â­tulo',
+                    'title' => $event->getSummary() ?? 'Sem título',
                     'start' => $start,
                     'end' => $end,
                     'description' => $event->getDescription(),
@@ -649,11 +649,11 @@ class GoogleCalendarService
     }
 
     /**
-     * ConstrÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â³i um objeto Google_Service_Calendar_Event a partir de um Appointment
+     * Constrói um objeto Google_Service_Calendar_Event a partir de um Appointment
      */
     protected function buildEvent(Appointment $appointment): Google_Service_Calendar_Event
     {
-        // Garantir que os relacionamentos estÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o carregados
+        // Garantir que os relacionamentos estão carregados
         if (!$appointment->relationLoaded('patient')) {
             $appointment->load('patient');
         }
@@ -669,7 +669,7 @@ class GoogleCalendarService
 
         $event = new Google_Service_Calendar_Event();
 
-        // TÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â­tulo do evento - mais informativo
+        // Título do evento - mais informativo
         $titleParts = [];
         if ($appointment->patient) {
             $titleParts[] = $appointment->patient->full_name;
@@ -684,12 +684,12 @@ class GoogleCalendarService
         $title = !empty($titleParts) ? implode(' - ', $titleParts) : 'Consulta';
         $event->setSummary($title);
 
-        // DescriÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o completa e formatada
+        // Descrição completa e formatada
         $description = [];
         
-        // SeÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o: InformaÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Âµes do Paciente
+        // Seção: Informações do Paciente
         if ($appointment->patient) {
-            $description[] = "ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸ÃƒÂ¢Ã¢â€šÂ¬Ã‹Å“Ãƒâ€šÃ‚Â¤ PACIENTE";
+            $description[] = "PACIENTE";
             $description[] = "Nome: {$appointment->patient->full_name}";
             
             if ($appointment->patient->phone) {
@@ -704,17 +704,17 @@ class GoogleCalendarService
             $description[] = ""; // Linha em branco
         }
 
-        // SeÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o: InformaÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Âµes da Consulta
-        $description[] = "ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ CONSULTA";
+        // Seção: Informações da Consulta
+        $description[] = "CONSULTA";
         $description[] = "Data: {$appointment->starts_at->format('d/m/Y')}";
-        $description[] = "HorÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡rio: {$appointment->starts_at->format('H:i')} - {$appointment->ends_at->format('H:i')}";
+        $description[] = "Horário: {$appointment->starts_at->format('H:i')} - {$appointment->ends_at->format('H:i')}";
         
-        // DuraÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o calculada ou do tipo de consulta
+        // Duração calculada ou do tipo de consulta
         if ($appointment->type && $appointment->type->duration_min) {
-            $description[] = "DuraÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o: {$appointment->type->duration_min} minutos";
+            $description[] = "Duração: {$appointment->type->duration_min} minutos";
         } else {
             $durationMinutes = $appointment->starts_at->diffInMinutes($appointment->ends_at);
-            $description[] = "DuraÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o: {$durationMinutes} minutos";
+            $description[] = "Duração: {$durationMinutes} minutos";
         }
         
         if ($appointment->specialty) {
@@ -729,16 +729,16 @@ class GoogleCalendarService
             'rescheduled' => 'Reagendado',
             'canceled' => 'Cancelado',
             'attended' => 'Atendido',
-            'no_show' => 'NÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o Compareceu'
+            'no_show' => 'Não Compareceu'
         ];
         $statusTranslated = $statusMap[$appointment->status] ?? $appointment->status;
         $description[] = "Status: {$statusTranslated}";
         $description[] = ""; // Linha em branco
 
-        // SeÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o: InformaÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Âµes do MÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©dico
+        // Seção: Informações do Médico
         if ($appointment->calendar && $appointment->calendar->doctor) {
             $doctor = $appointment->calendar->doctor;
-            $description[] = "ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸ÃƒÂ¢Ã¢â€šÂ¬Ã‹Å“Ãƒâ€šÃ‚Â¨ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã‚Â¡ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ÃƒÆ’Ã‚Â¯Ãƒâ€šÃ‚Â¸Ãƒâ€šÃ‚Â MÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â°DICO";
+            $description[] = "MÉDICO";
             
             if ($doctor->user) {
                 $description[] = "Nome: " . ($doctor->user->name_full ?? $doctor->user->name);
@@ -752,20 +752,20 @@ class GoogleCalendarService
             $description[] = ""; // Linha em branco
         }
 
-        // SeÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o: ObservaÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Âµes
+        // Seção: Observações
         if ($appointment->notes) {
-            $description[] = "ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒâ€šÃ‚Â OBSERVAÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ES";
+            $description[] = "OBSERVAÇÕES";
             $description[] = $appointment->notes;
             $description[] = ""; // Linha em branco
         }
 
-        // SeÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o: InformaÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Âµes TÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©cnicas (ocultas)
+        // Seção: Informações Técnicas (ocultas)
         $description[] = "---";
         $description[] = "ID do Agendamento: {$appointment->id}";
 
         $event->setDescription(implode("\n", $description));
 
-        // Data e hora de inÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â­cio
+        // Data e hora de início
         $start = new Google_Service_Calendar_EventDateTime();
         $start->setDateTime($appointment->starts_at->setTimezone('America/Sao_Paulo')->toRfc3339String());
         $start->setTimeZone('America/Sao_Paulo');
@@ -781,15 +781,15 @@ class GoogleCalendarService
     }
 
     /**
-     * Sincroniza uma recorrÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Âªncia como evento recorrente no Google Calendar
+     * Sincroniza uma recorrência como evento recorrente no Google Calendar
      * 
-     * IMPORTANTE: Para recorrÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Âªncias sem data fim, usa uma data fim padrÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o de 1 ano
-     * para evitar criaÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o infinita de eventos. O evento pode ser renovado manualmente.
+     * IMPORTANTE: Para recorrências sem data fim, usa uma data fim padrão de 1 ano
+     * para evitar criação infinita de eventos. O evento pode ser renovado manualmente.
      */
     public function syncRecurringEvent(RecurringAppointment $recurring): bool
     {
         try {
-            // Buscar o mÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©dico
+            // Buscar o médico
             $doctor = $recurring->doctor;
             if (!$doctor) {
                 return false;
@@ -803,7 +803,7 @@ class GoogleCalendarService
             // Inicializa o cliente
             $this->client($token);
 
-            // Buscar calendÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡rio do mÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©dico
+            // Buscar calendário do médico
             $calendar = $doctor->calendars()->first();
             if (!$calendar) {
                 return false;
@@ -813,27 +813,27 @@ class GoogleCalendarService
             $recurring->load(['rules', 'patient', 'appointmentType']);
 
             if ($recurring->rules->isEmpty()) {
-                Log::warning('RecorrÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Âªncia sem regras nÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o pode ser sincronizada', [
+                Log::warning('Recorrência sem regras não pode ser sincronizada', [
                     'recurring_id' => $recurring->id,
                 ]);
                 return false;
             }
 
             // Para cada regra, criar um evento recorrente
-            // (Uma recorrÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Âªncia pode ter mÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Âºltiplas regras - ex: segunda e quarta)
-            // ESTRATÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â°GIA: Se jÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡ existe evento, deletar antes de criar novo (mais simples e confiÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡vel)
+            // (Uma recorrência pode ter múltiplas regras - ex: segunda e quarta)
+            // ESTRATÉGIA: Se já existe evento, deletar antes de criar novo (mais simples e confiável)
             foreach ($recurring->rules as $rule) {
-                // IMPORTANTE: Verificar se jÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡ existe evento para esta regra
+                // IMPORTANTE: Verificar se já existe evento para esta regra
                 $existingEventId = $recurring->getGoogleRecurringEventId($rule->id);
                 
                 if ($existingEventId) {
-                    // Se existe, deletar antes de criar novo (estratÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©gia de ediÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o)
+                    // Se existe, deletar antes de criar novo (estratégia de edição)
                     try {
                         $calendarId = 'primary';
                         $existingEvent = $this->service->events->get($calendarId, $existingEventId);
                         
                         // Evento existe, deletar antes de criar novo
-                        Log::info('Evento recorrente jÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡ existe, deletando para recriar', [
+                        Log::info('Evento recorrente já existe, deletando para recriar', [
                             'recurring_id' => $recurring->id,
                             'rule_id' => $rule->id,
                             'google_event_id' => $existingEventId,
@@ -846,28 +846,28 @@ class GoogleCalendarService
                         unset($eventIds[$rule->id]);
                         $recurring->update(['google_recurring_event_ids' => $eventIds]);
                     } catch (\Exception $e) {
-                        // Evento nÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o existe mais no Google Calendar, apenas limpar ID
-                        Log::info('Evento recorrente nÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o encontrado no Google Calendar, criando novo', [
+                        // Evento não existe mais no Google Calendar, apenas limpar ID
+                        Log::info('Evento recorrente não encontrado no Google Calendar, criando novo', [
                             'recurring_id' => $recurring->id,
                             'rule_id' => $rule->id,
                             'google_event_id' => $existingEventId,
                             'error' => $e->getMessage(),
                         ]);
                         
-                        // Limpar ID invÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡lido
+                        // Limpar ID inválido
                         $eventIds = $recurring->google_recurring_event_ids ?? [];
                         unset($eventIds[$rule->id]);
                         $recurring->update(['google_recurring_event_ids' => $eventIds]);
                     }
                 }
                 
-                // Criar novo evento (ou recriar apÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â³s deletar)
+                // Criar novo evento (ou recriar após deletar)
                 $this->createRecurringEventForRule($recurring, $rule, $calendar);
             }
 
             return true;
         } catch (\Exception $e) {
-            Log::error('Erro ao sincronizar recorrÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Âªncia com Google Calendar', [
+            Log::error('Erro ao sincronizar recorrência com Google Calendar', [
                 'recurring_id' => $recurring->id,
                 'error' => $e->getMessage(),
             ]);
@@ -876,7 +876,7 @@ class GoogleCalendarService
     }
 
     /**
-     * Cria um evento recorrente no Google Calendar para uma regra especÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â­fica
+     * Cria um evento recorrente no Google Calendar para uma regra específica
      */
     protected function createRecurringEventForRule(
         RecurringAppointment $recurring,
@@ -886,7 +886,7 @@ class GoogleCalendarService
         try {
             $event = new Google_Service_Calendar_Event();
 
-            // TÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â­tulo do evento
+            // Título do evento
             $title = $recurring->patient 
                 ? "Consulta Recorrente - {$recurring->patient->full_name}"
                 : 'Consulta Recorrente';
@@ -897,18 +897,18 @@ class GoogleCalendarService
 
             $event->setSummary($title);
 
-            // DescriÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o
+            // Descrição
             $description = [];
             if ($recurring->patient) {
                 $description[] = "Paciente: {$recurring->patient->full_name}";
             }
             $description[] = "Agendamento Recorrente";
-            // Adicionar ID da recorrÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Âªncia e regra na descriÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o para identificaÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o
+            // Adicionar ID da recorrência e regra na descrição para identificação
             $description[] = "RecurringAppointment ID: {$recurring->id}";
             $description[] = "Rule ID: {$rule->id}";
             $event->setDescription(implode("\n", $description));
             
-            // Adicionar ID da recorrÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Âªncia como extended property para identificaÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o programÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡tica
+            // Adicionar ID da recorrência como extended property para identificação programática
             $extendedProperties = new \Google_Service_Calendar_EventExtendedProperties();
             $extendedProperties->setPrivate([
                 'recurring_appointment_id' => $recurring->id,
@@ -916,7 +916,7 @@ class GoogleCalendarService
             ]);
             $event->setExtendedProperties($extendedProperties);
 
-            // Data e hora de inÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â­cio (primeira ocorrÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Âªncia)
+            // Data e hora de início (primeira ocorrência)
             $startDate = Carbon::parse($recurring->start_date);
             $startDateTime = Carbon::parse($startDate->format('Y-m-d') . ' ' . $rule->start_time);
             $endDateTime = Carbon::parse($startDate->format('Y-m-d') . ' ' . $rule->end_time);
@@ -931,7 +931,7 @@ class GoogleCalendarService
             $end->setTimeZone('America/Sao_Paulo');
             $event->setEnd($end);
 
-            // Configurar recorrÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Âªncia (RRULE)
+            // Configurar recorrência (RRULE)
             $rrule = $this->buildRRule($recurring, $rule);
             if ($rrule) {
                 // O Google Calendar API aceita RRULE diretamente como array
@@ -944,7 +944,7 @@ class GoogleCalendarService
 
             $googleEventId = $createdEvent->getId();
 
-            // Armazenar o ID do evento recorrente na recorrÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Âªncia
+            // Armazenar o ID do evento recorrente na recorrência
             $recurring->setGoogleRecurringEventId($rule->id, $googleEventId);
 
             Log::info('Evento recorrente criado no Google Calendar', [
@@ -965,10 +965,10 @@ class GoogleCalendarService
     }
 
     /**
-     * ConstrÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â³i a regra RRULE para o Google Calendar
+     * Constrói a regra RRULE para o Google Calendar
      * 
-     * IMPORTANTE: Para recorrÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Âªncias sem data fim, define uma data fim padrÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o de 1 ano
-     * para evitar criaÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o infinita de eventos.
+     * IMPORTANTE: Para recorrências sem data fim, define uma data fim padrão de 1 ano
+     * para evitar criação infinita de eventos.
      */
     protected function buildRRule(RecurringAppointment $recurring, RecurringAppointmentRule $rule): ?string
     {
@@ -992,13 +992,13 @@ class GoogleCalendarService
         if ($recurring->end_type === 'date' && $recurring->end_date) {
             $endDate = Carbon::parse($recurring->end_date);
         } elseif ($recurring->end_type === 'total_sessions' && $recurring->total_sessions) {
-            // Para total de sessÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Âµes, calcular data aproximada
-            // Assumindo 1 sessÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o por semana (pode ser ajustado)
-            $weeks = ceil($recurring->total_sessions / 1); // Ajustar se houver mÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Âºltiplas regras
+            // Para total de sessões, calcular data aproximada
+            // Assumindo 1 sessão por semana (pode ser ajustado)
+            $weeks = ceil($recurring->total_sessions / 1); // Ajustar se houver múltiplas regras
             $endDate = Carbon::parse($recurring->start_date)->addWeeks($weeks);
         } else {
-            // IMPORTANTE: Para recorrÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Âªncias sem data fim, usar data fim padrÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o de 1 ano
-            // Isso evita criaÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o infinita de eventos no Google Calendar
+            // IMPORTANTE: Para recorrências sem data fim, usar data fim padrão de 1 ano
+            // Isso evita criação infinita de eventos no Google Calendar
             $endDate = Carbon::parse($recurring->start_date)->addYear();
         }
 
@@ -1013,13 +1013,13 @@ class GoogleCalendarService
     }
 
     /**
-     * Cancela uma recorrÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Âªncia no Google Calendar
-     * Atualiza a data fim para hoje, mantendo eventos passados como histÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â³rico
+     * Cancela uma recorrência no Google Calendar
+     * Atualiza a data fim para hoje, mantendo eventos passados como histórico
      * e removendo apenas eventos futuros
      * 
-     * Funciona para TODOS os tipos de recorrÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Âªncia:
+     * Funciona para TODOS os tipos de recorrência:
      * - Com data fim (end_type = 'date'): atualiza para terminar hoje
-     * - Com nÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Âºmero de sessÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Âµes (end_type = 'total_sessions'): atualiza para terminar hoje
+     * - Com número de sessões (end_type = 'total_sessions'): atualiza para terminar hoje
      * - Sem data fim (end_type = 'none'): atualiza para terminar hoje
      */
     public function cancelRecurringEvent(RecurringAppointment $recurring): bool
@@ -1042,19 +1042,19 @@ class GoogleCalendarService
             $recurring->load(['rules', 'patient', 'appointmentType']);
 
             // Para cada regra, atualizar o evento recorrente para terminar hoje
-            // IMPORTANTE: Funciona para qualquer tipo de recorrÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Âªncia (com ou sem data fim)
+            // IMPORTANTE: Funciona para qualquer tipo de recorrência (com ou sem data fim)
             foreach ($recurring->rules as $rule) {
                 $googleEventId = $recurring->getGoogleRecurringEventId($rule->id);
                 
                 if (!$googleEventId) {
-                    continue; // NÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o hÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¡ evento para cancelar
+                    continue; // Não há evento para cancelar
                 }
 
                 try {
                     // Buscar evento atual
                     $event = $this->service->events->get($calendarId, $googleEventId);
                     
-                    // Atualizar RRULE para terminar hoje (mantÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©m eventos passados, remove futuros)
+                    // Atualizar RRULE para terminar hoje (mantém eventos passados, remove futuros)
                     // Funciona independente do end_type original (date, total_sessions, ou none)
                     $today = Carbon::now();
                     $rrule = $this->buildRRuleWithEndDate($recurring, $rule, $today);
@@ -1065,7 +1065,7 @@ class GoogleCalendarService
                         // Atualizar evento
                         $updatedEvent = $this->service->events->update($calendarId, $googleEventId, $event);
                         
-                        Log::info('RecorrÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Âªncia cancelada no Google Calendar (eventos futuros removidos, passados mantidos)', [
+                        Log::info('Recorrência cancelada no Google Calendar (eventos futuros removidos, passados mantidos)', [
                             'recurring_id' => $recurring->id,
                             'rule_id' => $rule->id,
                             'google_event_id' => $googleEventId,
@@ -1084,7 +1084,7 @@ class GoogleCalendarService
 
             return true;
         } catch (\Exception $e) {
-            Log::error('Erro ao cancelar recorrÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Âªncia no Google Calendar', [
+            Log::error('Erro ao cancelar recorrência no Google Calendar', [
                 'recurring_id' => $recurring->id,
                 'error' => $e->getMessage(),
             ]);
@@ -1094,7 +1094,7 @@ class GoogleCalendarService
 
     /**
      * Remove evento recorrente do Google Calendar completamente
-     * Usado apenas quando a recorrÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Âªncia ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â© deletada permanentemente
+     * Usado apenas quando a recorrência é deletada permanentemente
      */
     public function deleteRecurringEvent(RecurringAppointment $recurring): bool
     {
@@ -1148,12 +1148,12 @@ class GoogleCalendarService
 
     /**
      * Renova um evento recorrente no Google Calendar estendendo a data fim
-     * Usado para recorrÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Âªncias sem data fim que estÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o prÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â³ximas do fim
+     * Usado para recorrências sem data fim que estão próximas do fim
      */
     public function renewRecurringEvent(RecurringAppointment $recurring): bool
     {
         try {
-            // SÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â³ renova se a recorrÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Âªncia nÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o tiver data fim
+            // Só renova se a recorrência não tiver data fim
             if ($recurring->end_type !== 'none') {
                 return false;
             }
@@ -1179,7 +1179,7 @@ class GoogleCalendarService
                 $googleEventId = $recurring->getGoogleRecurringEventId($rule->id);
                 
                 if (!$googleEventId) {
-                    // Se nÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o existe evento, criar um novo
+                    // Se não existe evento, criar um novo
                     $calendar = $doctor->calendars()->first();
                     if ($calendar) {
                         $this->createRecurringEventForRule($recurring, $rule, $calendar);
@@ -1220,7 +1220,7 @@ class GoogleCalendarService
 
             return true;
         } catch (\Exception $e) {
-            Log::error('Erro ao renovar recorrÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Âªncia no Google Calendar', [
+            Log::error('Erro ao renovar recorrência no Google Calendar', [
                 'recurring_id' => $recurring->id,
                 'error' => $e->getMessage(),
             ]);
@@ -1229,7 +1229,7 @@ class GoogleCalendarService
     }
 
     /**
-     * ConstrÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â³i RRULE com data fim especÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â­fica
+     * Constrói RRULE com data fim específica
      */
     protected function buildRRuleWithEndDate(
         RecurringAppointment $recurring,

@@ -301,7 +301,7 @@ class CampaignDeliveryService
                 return $this->sendWhatsApp($campaign, $destination, $vars, $meta);
             }
 
-            throw new RuntimeException('Canal nÃ£o suportado para envio da campanha.');
+            throw new RuntimeException('Canal não suportado para envio da campanha.');
         } catch (Throwable $e) {
             $this->logError($channel, $meta, $destination, $e, null, '');
 
@@ -329,11 +329,11 @@ class CampaignDeliveryService
         $message = trim((string) ($payload['message'] ?? ''));
 
         if ($subject === '') {
-            throw new RuntimeException('Assunto de email nÃ£o configurado para esta campanha.');
+            throw new RuntimeException('Assunto de email não configurado para esta campanha.');
         }
 
         if ($message === '') {
-            throw new RuntimeException('ConteÃºdo de email nÃ£o configurado para esta campanha.');
+            throw new RuntimeException('Conteúdo de email não configurado para esta campanha.');
         }
 
         $attachments = $this->resolveEmailAttachments($payload['attachments'] ?? []);
@@ -391,14 +391,14 @@ class CampaignDeliveryService
         if ($compositionMode === 'template') {
             if ($templateType === 'official') {
                 if (!$isOfficialProvider) {
-                    throw new RuntimeException('Template oficial sÃ³ pode ser usado quando o provider efetivo de campanhas Ã© WhatsApp Oficial.');
+                    throw new RuntimeException('Template oficial só pode ser usado quando o provider efetivo de campanhas é WhatsApp Oficial.');
                 }
 
                 return $this->sendOfficialWhatsAppTemplate($destination, $payload, $meta);
             }
 
             if ($templateType !== 'unofficial') {
-                throw new RuntimeException('Tipo de template do WhatsApp invÃ¡lido para envio da campanha.');
+                throw new RuntimeException('Tipo de template do WhatsApp inválido para envio da campanha.');
             }
 
             if ($isOfficialProvider) {
@@ -407,17 +407,17 @@ class CampaignDeliveryService
 
             $templateId = $this->normalizeNullableInt($payload['template_id'] ?? null);
             if (!$templateId) {
-                throw new RuntimeException('Template nÃ£o oficial da campanha nÃ£o foi selecionado.');
+                throw new RuntimeException('Template não oficial da campanha não foi selecionado.');
             }
 
             $templateIsActive = (bool) ($payload['template_is_active'] ?? false);
             if (!$templateIsActive) {
-                throw new RuntimeException('Template nÃ£o oficial da campanha estÃ¡ inativo ou indisponÃ­vel.');
+                throw new RuntimeException('Template não oficial da campanha está inativo ou indisponível.');
             }
 
             $text = trim((string) ($payload['text'] ?? ''));
             if ($text === '') {
-                throw new RuntimeException('ConteÃºdo do template nÃ£o oficial nÃ£o pÃ´de ser renderizado.');
+                throw new RuntimeException('Conteúdo do template não oficial não pôde ser renderizado.');
             }
 
             $meta['template_id'] = $templateId;
@@ -433,7 +433,7 @@ class CampaignDeliveryService
 
             return [
                 'success' => $sent,
-                'error_message' => $sent ? null : 'Falha ao enviar template nÃ£o oficial via WhatsApp.',
+                'error_message' => $sent ? null : 'Falha ao enviar template não oficial via WhatsApp.',
             ];
         }
 
@@ -453,7 +453,7 @@ class CampaignDeliveryService
             if ($source === 'url') {
                 $url = trim((string) ($media['url'] ?? ''));
                 if ($url === '') {
-                    throw new RuntimeException('MÃ­dia do WhatsApp sem URL configurada.');
+                    throw new RuntimeException('Mídia do WhatsApp sem URL configurada.');
                 }
 
                 $sent = $this->whatsAppSender->sendMediaFromUrl(
@@ -467,7 +467,7 @@ class CampaignDeliveryService
 
                 return [
                     'success' => $sent,
-                    'error_message' => $sent ? null : 'Falha ao enviar mÃ­dia via WhatsApp.',
+                    'error_message' => $sent ? null : 'Falha ao enviar mídia via WhatsApp.',
                 ];
             }
 
@@ -476,17 +476,17 @@ class CampaignDeliveryService
                 $meta['asset_id'] = $assetId;
 
                 if (!$assetId) {
-                    throw new RuntimeException('Asset de mÃ­dia nÃ£o encontrado para envio via upload.');
+                    throw new RuntimeException('Asset de mídia não encontrado para envio via upload.');
                 }
 
                 $asset = Asset::query()->find($assetId);
                 if (!$asset) {
-                    throw new RuntimeException('Asset de mÃ­dia nÃ£o encontrado para envio via upload.');
+                    throw new RuntimeException('Asset de mídia não encontrado para envio via upload.');
                 }
 
                 $publicUrl = $this->resolvePublicUrl($asset);
                 if ($publicUrl === null) {
-                    throw new RuntimeException('MÃ­dia via upload requer URL pÃºblica do asset para envio no provedor atual.');
+                    throw new RuntimeException('Mídia via upload requer URL pública do asset para envio no provedor atual.');
                 }
 
                 $sent = $this->whatsAppSender->sendMediaFromUrl(
@@ -500,16 +500,16 @@ class CampaignDeliveryService
 
                 return [
                     'success' => $sent,
-                    'error_message' => $sent ? null : 'Falha ao enviar mÃ­dia via WhatsApp.',
+                    'error_message' => $sent ? null : 'Falha ao enviar mídia via WhatsApp.',
                 ];
             }
 
-            throw new RuntimeException('Source de mÃ­dia WhatsApp invÃ¡lido.');
+            throw new RuntimeException('Source de mídia WhatsApp inválido.');
         }
 
         $text = trim((string) ($payload['text'] ?? ''));
         if ($text === '') {
-            throw new RuntimeException('Mensagem de WhatsApp nÃ£o configurada para esta campanha.');
+            throw new RuntimeException('Mensagem de WhatsApp não configurada para esta campanha.');
         }
 
         $sent = $this->whatsAppSender->send(
@@ -545,7 +545,7 @@ class CampaignDeliveryService
         if ($tenantId === '') {
             return [
                 'success' => false,
-                'error_message' => 'Tenant invÃ¡lido para envio de template oficial.',
+                'error_message' => 'Tenant inválido para envio de template oficial.',
             ];
         }
 

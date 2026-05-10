@@ -1,18 +1,18 @@
-﻿# ðŸ”§ Guia de VariÃ¡veis de Ambiente
+# ðŸ”§ Guia de Variáveis de Ambiente
 
-Este documento lista todas as variÃ¡veis de ambiente necessÃ¡rias para o funcionamento do sistema.
+Este documento lista todas as variáveis de ambiente necessárias para o funcionamento do sistema.
 
-## ðŸ“‹ Ãndice
+## ðŸ“‹ Índice
 
-- [AplicaÃ§Ã£o](#-aplicaÃ§Ã£o)
+- [Aplicação](#-aplicação)
 - [Banco de Dados](#-banco-de-dados)
-- [IntegraÃ§Ãµes](#-integraÃ§Ãµes)
+- [Integrações](#-integrações)
 - [Email](#-email)
 - [Multitenancy](#-multitenancy)
-- [Cache e SessÃ£o](#-cache-e-sessÃ£o)
+- [Cache e Sessão](#-cache-e-sessão)
 - [Queue](#-queue)
 
-## ðŸš€ AplicaÃ§Ã£o
+## ðŸš€ Aplicação
 
 ```env
 APP_NAME="Agendamento SaaS"
@@ -23,14 +23,14 @@ APP_URL=http://localhost
 APP_TIMEZONE=America/Sao_Paulo
 ```
 
-| VariÃ¡vel | DescriÃ§Ã£o | ObrigatÃ³rio | PadrÃ£o |
+| Variável | Descrição | Obrigatório | Padrão |
 |----------|-----------|-------------|--------|
-| `APP_NAME` | Nome da aplicaÃ§Ã£o | NÃ£o | Laravel |
+| `APP_NAME` | Nome da aplicação | Não | Laravel |
 | `APP_ENV` | Ambiente (local, staging, production) | Sim | production |
 | `APP_KEY` | Chave de criptografia | Sim | - |
-| `APP_DEBUG` | Modo debug | NÃ£o | false |
-| `APP_URL` | URL base da aplicaÃ§Ã£o | Sim | http://localhost |
-| `APP_TIMEZONE` | Fuso horÃ¡rio | NÃ£o | UTC |
+| `APP_DEBUG` | Modo debug | Não | false |
+| `APP_URL` | URL base da aplicação | Sim | http://localhost |
+| `APP_TIMEZONE` | Fuso horário | Não | UTC |
 
 ## ðŸ—„ï¸ Banco de Dados
 
@@ -45,13 +45,13 @@ DB_USERNAME=postgres
 DB_PASSWORD=sua_senha
 ```
 
-| VariÃ¡vel | DescriÃ§Ã£o | ObrigatÃ³rio | PadrÃ£o |
+| Variável | Descrição | Obrigatório | Padrão |
 |----------|-----------|-------------|--------|
-| `DB_CONNECTION` | Tipo de conexÃ£o (pgsql, mysql, sqlite) | Sim | mysql |
+| `DB_CONNECTION` | Tipo de conexão (pgsql, mysql, sqlite) | Sim | mysql |
 | `DB_HOST` | Host do banco de dados | Sim | 127.0.0.1 |
 | `DB_PORT` | Porta do banco de dados | Sim | 3306 (MySQL) / 5432 (PostgreSQL) |
 | `DB_DATABASE` | Nome do banco de dados | Sim | - |
-| `DB_USERNAME` | UsuÃ¡rio do banco | Sim | - |
+| `DB_USERNAME` | Usuário do banco | Sim | - |
 | `DB_PASSWORD` | Senha do banco | Sim | - |
 
 ### Banco dos Tenants
@@ -61,14 +61,14 @@ DB_TENANT_HOST=127.0.0.1
 DB_TENANT_PORT=5432
 ```
 
-| VariÃ¡vel | DescriÃ§Ã£o | ObrigatÃ³rio | PadrÃ£o |
+| Variável | Descrição | Obrigatório | Padrão |
 |----------|-----------|-------------|--------|
 | `DB_TENANT_HOST` | Host para bancos dos tenants | Sim | 127.0.0.1 |
 | `DB_TENANT_PORT` | Porta para bancos dos tenants | Sim | 5432 |
 
-**Nota**: O nome do banco, usuÃ¡rio e senha de cada tenant sÃ£o gerados automaticamente durante a criaÃ§Ã£o do tenant.
+**Nota**: O nome do banco, usuário e senha de cada tenant são gerados automaticamente durante a criação do tenant.
 
-## ðŸ”Œ IntegraÃ§Ãµes
+## ðŸ”Œ Integrações
 
 ### Asaas (Gateway de Pagamento)
 
@@ -79,17 +79,17 @@ ASAAS_WEBHOOK_SECRET=seu_secret_webhook
 ASAAS_ENV=sandbox
 ```
 
-| VariÃ¡vel | DescriÃ§Ã£o | ObrigatÃ³rio | PadrÃ£o |
+| Variável | Descrição | Obrigatório | Padrão |
 |----------|-----------|-------------|--------|
 | `ASAAS_API_URL` | URL da API do Asaas | Sim | https://api-sandbox.asaas.com/v3 |
 | `ASAAS_API_KEY` | Chave de API do Asaas | Sim | - |
 | `ASAAS_WEBHOOK_SECRET` | Secret para validar webhooks | Sim | - |
-| `ASAAS_ENV` | Ambiente (sandbox, production) | NÃ£o | sandbox |
+| `ASAAS_ENV` | Ambiente (sandbox, production) | Não | sandbox |
 
 **Como obter:**
 1. Acesse [Asaas](https://www.asaas.com/)
 2. Crie uma conta
-3. Acesse ConfiguraÃ§Ãµes â†’ API
+3. Acesse Configurações â†’ API
 4. Copie a chave de API
 5. Configure o webhook conforme o contexto:
    - **Platform**: `https://seu-dominio.com/webhook/asaas`
@@ -101,34 +101,34 @@ ASAAS_ENV=sandbox
 # Escolha o provedor: 'whatsapp_business' (Meta) ou 'zapi'
 WHATSAPP_PROVIDER=whatsapp_business
 
-# OpÃ§Ã£o 1: WhatsApp Business API (Meta)
+# Opção 1: WhatsApp Business API (Meta)
 WHATSAPP_BUSINESS_API_URL=https://graph.facebook.com/v18.0
 WHATSAPP_BUSINESS_TOKEN=seu_token_meta
 WHATSAPP_BUSINESS_PHONE_ID=seu_phone_id_meta
 
-# ConfiguraÃ§Ãµes legadas (mantidas para compatibilidade)
+# Configurações legadas (mantidas para compatibilidade)
 WHATSAPP_API_URL=https://graph.facebook.com/v18.0
 WHATSAPP_TOKEN=seu_token_legacy
 WHATSAPP_PHONE_ID=seu_phone_id_legacy
 
-# OpÃ§Ã£o 2: Z-API
+# Opção 2: Z-API
 ZAPI_API_URL=https://api.z-api.io
 ZAPI_TOKEN=seu_token_zapi
 ZAPI_INSTANCE_ID=seu_instance_id
 ```
 
-| VariÃ¡vel | DescriÃ§Ã£o | ObrigatÃ³rio | PadrÃ£o |
+| Variável | Descrição | Obrigatório | Padrão |
 |----------|-----------|-------------|--------|
 | `WHATSAPP_PROVIDER` | Provedor (whatsapp_business, zapi) | Sim | whatsapp_business |
-| `WHATSAPP_BUSINESS_API_URL` | Base URL da API Meta | NÃ£o | https://graph.facebook.com/v18.0 |
+| `WHATSAPP_BUSINESS_API_URL` | Base URL da API Meta | Não | https://graph.facebook.com/v18.0 |
 | `WHATSAPP_BUSINESS_TOKEN` | Token de acesso (Meta) | Sim (se Meta) | - |
 | `WHATSAPP_BUSINESS_PHONE_ID` | Phone Number ID (Meta) | Sim (se Meta) | - |
-| `ZAPI_API_URL` | Base URL da API Z-API | NÃ£o | https://api.z-api.io |
+| `ZAPI_API_URL` | Base URL da API Z-API | Não | https://api.z-api.io |
 | `ZAPI_TOKEN` | Token (Z-API) | Sim (se Z-API) | - |
 | `ZAPI_INSTANCE_ID` | Instance ID (Z-API) | Sim (se Z-API) | - |
-| `WHATSAPP_API_URL` | Legado: base URL Meta | NÃ£o | https://graph.facebook.com/v18.0 |
-| `WHATSAPP_TOKEN` | Legado: token Meta | NÃ£o | - |
-| `WHATSAPP_PHONE_ID` | Legado: phone id Meta | NÃ£o | - |
+| `WHATSAPP_API_URL` | Legado: base URL Meta | Não | https://graph.facebook.com/v18.0 |
+| `WHATSAPP_TOKEN` | Legado: token Meta | Não | - |
+| `WHATSAPP_PHONE_ID` | Legado: phone id Meta | Não | - |
 
 **Como obter:**
 1. Acesse [Meta for Developers](https://developers.facebook.com/)
@@ -144,7 +144,7 @@ GOOGLE_CLIENT_ID=seu_client_id
 GOOGLE_CLIENT_SECRET=seu_client_secret
 ```
 
-| VariÃ¡vel | DescriÃ§Ã£o | ObrigatÃ³rio | PadrÃ£o |
+| Variável | Descrição | Obrigatório | Padrão |
 |----------|-----------|-------------|--------|
 | `GOOGLE_CLIENT_ID` | Client ID do Google OAuth 2.0 | Sim | - |
 | `GOOGLE_CLIENT_SECRET` | Client Secret do Google OAuth 2.0 | Sim | - |
@@ -156,10 +156,10 @@ GOOGLE_CLIENT_SECRET=seu_client_secret
 4. Crie credenciais OAuth 2.0 (tipo: Aplicativo Web)
 5. Configure a URI de redirecionamento como: `{APP_URL}/google/callback`
    - Exemplo local: `http://localhost:8000/google/callback`
-   - Exemplo produÃ§Ã£o: `https://seudominio.com/google/callback`
+   - Exemplo produção: `https://seudominio.com/google/callback`
 6. Copie o Client ID e Client Secret para o arquivo `.env`
 
-**Nota:** O sistema usa automaticamente a rota `route('google.callback')` que resolve para `/google/callback` baseado no `APP_URL`. Certifique-se de que a URI configurada no Google Cloud Console corresponda exatamente Ã  URL completa (incluindo domÃ­nio e porta). A URI deve ser **sem barra final** e **sem parÃ¢metros**.
+**Nota:** O sistema usa automaticamente a rota `route('google.callback')` que resolve para `/google/callback` baseado no `APP_URL`. Certifique-se de que a URI configurada no Google Cloud Console corresponda exatamente à URL completa (incluindo domínio e porta). A URI deve ser **sem barra final** e **sem parâmetros**.
 
 ## ðŸ“§ Email
 
@@ -174,16 +174,16 @@ MAIL_FROM_ADDRESS=noreply@exemplo.com
 MAIL_FROM_NAME="${APP_NAME}"
 ```
 
-| VariÃ¡vel | DescriÃ§Ã£o | ObrigatÃ³rio | PadrÃ£o |
+| Variável | Descrição | Obrigatório | Padrão |
 |----------|-----------|-------------|--------|
 | `MAIL_MAILER` | Driver de email (smtp, mailgun, ses, postmark) | Sim | smtp |
 | `MAIL_HOST` | Host do servidor SMTP | Sim | - |
 | `MAIL_PORT` | Porta do servidor SMTP | Sim | 587 |
-| `MAIL_USERNAME` | UsuÃ¡rio SMTP | Sim | - |
+| `MAIL_USERNAME` | Usuário SMTP | Sim | - |
 | `MAIL_PASSWORD` | Senha SMTP | Sim | - |
-| `MAIL_ENCRYPTION` | Criptografia (tls, ssl) | NÃ£o | tls |
+| `MAIL_ENCRYPTION` | Criptografia (tls, ssl) | Não | tls |
 | `MAIL_FROM_ADDRESS` | Email remetente | Sim | - |
-| `MAIL_FROM_NAME` | Nome do remetente | NÃ£o | ${APP_NAME} |
+| `MAIL_FROM_NAME` | Nome do remetente | Não | ${APP_NAME} |
 
 ### Mailgun (Opcional)
 
@@ -207,13 +207,13 @@ AWS_DEFAULT_REGION=us-east-1
 APP_DOMAIN=app.exemplo.com
 ```
 
-| VariÃ¡vel | DescriÃ§Ã£o | ObrigatÃ³rio | PadrÃ£o |
+| Variável | Descrição | Obrigatório | Padrão |
 |----------|-----------|-------------|--------|
-| `APP_DOMAIN` | DomÃ­nio central da plataforma | NÃ£o | app.agepro.com |
+| `APP_DOMAIN` | Domínio central da plataforma | Não | app.agepro.com |
 
-**Nota**: Esta variÃ¡vel define o domÃ­nio que serÃ¡ usado para a Ã¡rea administrativa (Platform). Tenants acessam via `/t/{subdomain}/login`.
+**Nota**: Esta variável define o domínio que será usado para a área administrativa (Platform). Tenants acessam via `/t/{subdomain}/login`.
 
-## ðŸ’¾ Cache e SessÃ£o
+## ðŸ’¾ Cache e Sessão
 
 ```env
 CACHE_DRIVER=file
@@ -221,11 +221,11 @@ SESSION_DRIVER=file
 SESSION_LIFETIME=120
 ```
 
-| VariÃ¡vel | DescriÃ§Ã£o | ObrigatÃ³rio | PadrÃ£o |
+| Variável | Descrição | Obrigatório | Padrão |
 |----------|-----------|-------------|--------|
-| `CACHE_DRIVER` | Driver de cache (file, redis, memcached) | NÃ£o | file |
-| `SESSION_DRIVER` | Driver de sessÃ£o (file, redis, database) | NÃ£o | file |
-| `SESSION_LIFETIME` | Tempo de vida da sessÃ£o (minutos) | NÃ£o | 120 |
+| `CACHE_DRIVER` | Driver de cache (file, redis, memcached) | Não | file |
+| `SESSION_DRIVER` | Driver de sessão (file, redis, database) | Não | file |
+| `SESSION_LIFETIME` | Tempo de vida da sessão (minutos) | Não | 120 |
 
 ### Redis (Opcional)
 
@@ -241,27 +241,27 @@ REDIS_PORT=6379
 QUEUE_CONNECTION=sync
 ```
 
-| VariÃ¡vel | DescriÃ§Ã£o | ObrigatÃ³rio | PadrÃ£o |
+| Variável | Descrição | Obrigatório | Padrão |
 |----------|-----------|-------------|--------|
-| `QUEUE_CONNECTION` | Driver de fila (sync, database, redis, sqs) | NÃ£o | sync |
+| `QUEUE_CONNECTION` | Driver de fila (sync, database, redis, sqs) | Não | sync |
 
-**Para produÃ§Ã£o**, recomenda-se usar `database` ou `redis`:
+**Para produção**, recomenda-se usar `database` ou `redis`:
 
 ```env
 QUEUE_CONNECTION=database
 ```
 
-## ðŸ” AutenticaÃ§Ã£o
+## ðŸ” Autenticação
 
 ```env
 BROADCAST_DRIVER=log
 FILESYSTEM_DISK=local
 ```
 
-| VariÃ¡vel | DescriÃ§Ã£o | ObrigatÃ³rio | PadrÃ£o |
+| Variável | Descrição | Obrigatório | Padrão |
 |----------|-----------|-------------|--------|
-| `BROADCAST_DRIVER` | Driver de broadcast (log, pusher, redis) | NÃ£o | log |
-| `FILESYSTEM_DISK` | Disco padrÃ£o para arquivos (local, s3) | NÃ£o | local |
+| `BROADCAST_DRIVER` | Driver de broadcast (log, pusher, redis) | Não | log |
+| `FILESYSTEM_DISK` | Disco padrão para arquivos (local, s3) | Não | local |
 
 ### AWS S3 (Opcional)
 
@@ -328,17 +328,17 @@ BROADCAST_DRIVER=log
 FILESYSTEM_DISK=local
 ```
 
-## âš ï¸ SeguranÃ§a
+## âš ï¸ Segurança
 
-1. **Nunca commite o arquivo `.env`** no repositÃ³rio
-2. Use valores diferentes para desenvolvimento e produÃ§Ã£o
+1. **Nunca commite o arquivo `.env`** no repositório
+2. Use valores diferentes para desenvolvimento e produção
 3. Mantenha as chaves de API seguras
 4. Use senhas fortes para o banco de dados
-5. Em produÃ§Ã£o, defina `APP_DEBUG=false`
+5. Em produção, defina `APP_DEBUG=false`
 
-## ðŸ”„ ConfiguraÃ§Ãµes DinÃ¢micas
+## ðŸ”„ Configurações Dinâmicas
 
-Algumas configuraÃ§Ãµes podem ser alteradas via interface administrativa (Platform â†’ Settings), sendo armazenadas na tabela `system_settings`:
+Algumas configurações podem ser alteradas via interface administrativa (Platform â†’ Settings), sendo armazenadas na tabela `system_settings`:
 
 - `timezone`
 - `country_id` (legado tecnico, fixo em Brasil)
@@ -354,15 +354,15 @@ Algumas configuraÃ§Ãµes podem ser alteradas via interface administrativa (Pl
 - `MAIL_FROM_ADDRESS`
 - `MAIL_FROM_NAME`
 
-Essas configuraÃ§Ãµes tÃªm prioridade sobre as variÃ¡veis de ambiente quando definidas.
+Essas configurações têm prioridade sobre as variáveis de ambiente quando definidas.
 
 ---
 
-**Ãšltima atualizaÃ§Ã£o:** 2025-12-03
+**Última atualização:** 2025-12-03
 
-**Nota:** Esta documentaÃ§Ã£o foi revisada e atualizada para incluir:
-- VariÃ¡veis de ambiente do Google Calendar (GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET)
-- Todas as variÃ¡veis necessÃ¡rias para o funcionamento completo do sistema
+**Nota:** Esta documentação foi revisada e atualizada para incluir:
+- Variáveis de ambiente do Google Calendar (GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET)
+- Todas as variáveis necessárias para o funcionamento completo do sistema
 
 
 

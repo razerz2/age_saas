@@ -192,7 +192,7 @@ class Appointment extends Model
     }
 
     /**
-     * Indica se o agendamento estÃ¡ em hold (aguardando confirmaÃ§Ã£o).
+     * Indica se o agendamento está em hold (aguardando confirmação).
      */
     public function isHold(): bool
     {
@@ -200,7 +200,7 @@ class Appointment extends Model
     }
 
     /**
-     * Indica se o agendamento jÃ¡ foi confirmado (ocupa slot final).
+     * Indica se o agendamento já foi confirmado (ocupa slot final).
      */
     public function isConfirmed(): bool
     {

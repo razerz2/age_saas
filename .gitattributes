@@ -2,8 +2,10 @@
 
 *.blade.php text working-tree-encoding=UTF-8 eol=lf diff=html
 *.css text working-tree-encoding=UTF-8 eol=lf diff=css
+*.scss text working-tree-encoding=UTF-8 eol=lf
 *.js text working-tree-encoding=UTF-8 eol=lf
 *.ts text working-tree-encoding=UTF-8 eol=lf
+*.vue text working-tree-encoding=UTF-8 eol=lf
 *.json text working-tree-encoding=UTF-8 eol=lf
 *.html text working-tree-encoding=UTF-8 eol=lf diff=html
 *.md text working-tree-encoding=UTF-8 eol=lf diff=markdown
@@ -12,6 +14,22 @@
 *.yaml text working-tree-encoding=UTF-8 eol=lf
 *.xml text working-tree-encoding=UTF-8 eol=lf
 *.txt text working-tree-encoding=UTF-8 eol=lf
+
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.webp binary
+*.ico binary
+*.pdf binary
+*.zip binary
+*.gz binary
+*.woff binary
+*.woff2 binary
+*.ttf binary
+*.eot binary
+*.xlsx binary
+*.docx binary
 
 /.github export-ignore
 CHANGELOG.md export-ignore

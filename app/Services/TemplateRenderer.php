@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Schema;
 class TemplateRenderer
 {
     /**
-     * Renderiza um template de notificaÃ§Ã£o substituindo placeholders
+     * Renderiza um template de notificação substituindo placeholders
      */
     public function render(
         string $templateName,
@@ -30,14 +30,14 @@ class TemplateRenderer
         }
 
         if (!$template) {
-            throw new \Exception("Template '{$templateName}' nÃ£o encontrado.");
+            throw new \Exception("Template '{$templateName}' não encontrado.");
         }
 
-        // Se template desabilitado, usar valores padrÃ£o
+        // Se template desabilitado, usar valores padrão
         $subject = $template->enabled ? $template->subject : $template->default_subject;
         $body = $template->enabled ? $template->body : $template->default_body;
 
-        // Se ainda estiver vazio, usar padrÃ£o
+        // Se ainda estiver vazio, usar padrão
         $subject = $subject ?? $template->default_subject;
         $body = $body ?? $template->default_body;
 
@@ -57,13 +57,13 @@ class TemplateRenderer
     }
 
     /**
-     * Aplica o layout de email ao conteÃºdo
+     * Aplica o layout de email ao conteúdo
      */
     protected function applyEmailLayout(string $content, array $data = []): string
     {
         $layout = EmailLayout::getActiveLayout();
         
-        // Adiciona app_name aos dados se nÃ£o existir
+        // Adiciona app_name aos dados se não existir
         if (!isset($data['app_name'])) {
             $data['app_name'] = config('app.name', 'Sistema de Agendamento');
         }
@@ -79,11 +79,11 @@ class TemplateRenderer
             $data['logo_height'] = $layout->logo_height;
         }
 
-        // Processa logo no header ANTES de substituir outras variÃ¡veis
-        // Isso garante que {{app_name}} seja substituÃ­do por logo se houver
+        // Processa logo no header ANTES de substituir outras variáveis
+        // Isso garante que {{app_name}} seja substituído por logo se houver
         $header = $this->processLogoInHeader($layout->header ?? '', $layout, $data);
         
-        // Agora substitui as variÃ¡veis restantes no header e footer
+        // Agora substitui as variáveis restantes no header e footer
         $header = $this->replacePlaceholders($header, $data);
         $footer = $this->replacePlaceholders($layout->footer ?? '', $data);
 
@@ -93,7 +93,7 @@ class TemplateRenderer
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NotificaÃ§Ã£o</title>
+    <title>Notificação</title>
 </head>
 <body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, \'Segoe UI\', Roboto, \'Helvetica Neue\', Arial, sans-serif; background-color: ' . $layout->background_color . ';">
     <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background-color: ' . $layout->background_color . ';">
@@ -138,7 +138,7 @@ class TemplateRenderer
     }
 
     /**
-     * Processa o logo no header, substituindo placeholders ou adicionando se necessÃ¡rio
+     * Processa o logo no header, substituindo placeholders ou adicionando se necessário
      */
     protected function processLogoInHeader(string $header, $layout, array $data): string
     {
@@ -212,8 +212,8 @@ class TemplateRenderer
     {
         $logoHtml = '<img src="' . htmlspecialchars($logoUrl, ENT_QUOTES) . '" alt="' . htmlspecialchars($data['app_name'] ?? 'Logo', ENT_QUOTES) . '" style="max-width: ' . $logoWidth . 'px; height: ' . $logoHeight . '; display: block; margin-left: auto; margin-right: auto; margin-bottom: 10px;" />';
 
-        // Substitui [url_do_logo] dentro de src (jÃ¡ foi processado acima, mas fazemos fallback)
-        // Agora tambÃ©m atualiza o style
+        // Substitui [url_do_logo] dentro de src (já foi processado acima, mas fazemos fallback)
+        // Agora também atualiza o style
         $content = preg_replace_callback('/<img([^>]*)\s+src\s*=\s*["\'](\[url_do_logo\]|\{\{logo_url\}\})["\']([^>]*)>/i', function($matches) use ($logoUrl, $logoWidth, $logoHeight) {
             $beforeSrc = $matches[1];
             $afterSrc = $matches[3];
