@@ -1,4 +1,4 @@
-﻿@extends('landing.layout')
+@extends('landing.layout')
 
 @section('title', 'Contato - Sistema de Agendamentos')
 @section('description', 'Entre em contato conosco para tirar dúvidas, solicitar demonstração ou falar com nossa equipe comercial.')
@@ -28,6 +28,9 @@
         'linkedin' => trim((string) sysconfig('landing.contact.linkedin_url')),
         'whatsapp' => trim((string) sysconfig('landing.contact.whatsapp_url')),
     ];
+    $socialLinks = collect($socialLinks)
+        ->map(fn ($url) => filter_var($url, FILTER_VALIDATE_URL) ? $url : '')
+        ->all();
     $hasSocialLinks = collect($socialLinks)->contains(fn ($url) => $url !== '');
 @endphp
 
@@ -54,23 +57,41 @@
                 <!-- Contact Form -->
                 <div>
                     <h2 class="text-3xl font-bold text-gray-900 mb-6">Envie sua Mensagem</h2>
-                    <form id="contactForm" class="space-y-6">
+                    <form id="contactForm" action="{{ route('landing.contact.submit') }}" method="POST" class="space-y-6">
                         @csrf
+                        @if(session('contact_success'))
+                            <div class="p-4 bg-green-50 border border-green-200 rounded-lg text-green-700">
+                                {{ session('contact_success') }}
+                            </div>
+                        @endif
+                        @if($errors->any())
+                            <div class="p-4 bg-red-50 border border-red-200 rounded-lg text-red-700">
+                                <p class="font-semibold mb-2">Não foi possível enviar sua mensagem.</p>
+                                <ul class="list-disc pl-5 space-y-1">
+                                    @foreach($errors->all() as $error)
+                                        <li>{{ $error }}</li>
+                                    @endforeach
+                                </ul>
+                            </div>
+                        @endif
                         <div>
                             <label for="contact_name" class="block text-sm font-medium text-gray-700 mb-1">Nome *</label>
                             <input type="text" id="contact_name" name="name" required
+                                value="{{ old('name') }}"
                                 class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                         </div>
 
                         <div>
                             <label for="contact_email" class="block text-sm font-medium text-gray-700 mb-1">Email *</label>
                             <input type="email" id="contact_email" name="email" required
+                                value="{{ old('email') }}"
                                 class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                         </div>
 
                         <div>
                             <label for="contact_phone" class="block text-sm font-medium text-gray-700 mb-1">Telefone</label>
                             <input type="text" id="contact_phone" name="phone"
+                                value="{{ old('phone') }}"
                                 class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                         </div>
 
@@ -92,9 +113,6 @@
                             <textarea id="contact_message" name="message" rows="6" required
                                 class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">{{ $prefilledMessage ?? '' }}</textarea>
                         </div>
-
-                        <div id="contactError" class="hidden p-4 bg-red-50 border border-red-200 rounded-lg text-red-700"></div>
-                        <div id="contactSuccess" class="hidden p-4 bg-green-50 border border-green-200 rounded-lg text-green-700"></div>
 
                         <button type="submit"
                             class="w-full bg-blue-600 hover:bg-blue-700 text-white px-6 py-4 rounded-lg font-semibold text-lg transition-colors shadow-lg">
@@ -277,28 +295,4 @@
         </div>
     </section>
 @endsection
-
-@push('scripts')
-<script>
-    document.getElementById('contactForm').addEventListener('submit', async function(e) {
-        e.preventDefault();
-
-        const formData = new FormData(this);
-        const errorDiv = document.getElementById('contactError');
-        const successDiv = document.getElementById('contactSuccess');
-
-        errorDiv.classList.add('hidden');
-        successDiv.classList.add('hidden');
-
-        // Aqui você pode integrar com um serviço de email ou API
-        // Por enquanto, apenas simula o envio
-        setTimeout(() => {
-            successDiv.textContent = 'Mensagem enviada com sucesso! Entraremos em contato em breve.';
-            successDiv.classList.remove('hidden');
-            this.reset();
-        }, 1000);
-    });
-</script>
-@endpush
-
 

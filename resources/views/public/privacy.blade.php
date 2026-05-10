@@ -8,7 +8,7 @@
     <h1 class="text-4xl font-bold text-gray-900 mb-6">Política de Privacidade</h1>
     
     <p class="text-gray-600 mb-6">
-        <strong>Última atualização:</strong> {{ date('d/m/Y') }}
+        <strong>Última atualização:</strong> {{ sysconfig('legal.privacy_updated_at', '10/05/2026') }}
     </p>
     
     <div class="space-y-6 text-gray-700">
@@ -142,4 +142,3 @@
     </div>
 </div>
 @endsection
-

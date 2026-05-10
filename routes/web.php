@@ -59,6 +59,8 @@ Route::get('/funcionalidades', [LandingController::class, 'features'])->name('la
 Route::get('/planos', [LandingController::class, 'plans'])->name('landing.plans');
 Route::get('/planos/json/{id}', [LandingController::class, 'getPlan'])->name('landing.plan.json');
 Route::get('/contato', [LandingController::class, 'contact'])->name('landing.contact');
+Route::post('/contato', [LandingController::class, 'submitContact'])->name('landing.contact.submit')
+    ->middleware('throttle:5,1');
 Route::get('/manual', [LandingController::class, 'manual'])->name('landing.manual');
 Route::post('/pre-cadastro', [LandingController::class, 'storePreRegister'])->name('landing.pre-register')
     ->middleware('throttle:10,1'); // Rate limit: 10 requisições por minuto
