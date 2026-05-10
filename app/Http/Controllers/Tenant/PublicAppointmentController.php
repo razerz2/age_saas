@@ -13,6 +13,7 @@ use App\Models\Tenant\AppointmentType;
 use App\Models\Tenant\Patient;
 use App\Services\Tenant\NotificationDispatcher;
 use App\Services\Tenant\WaitlistService;
+use App\Support\Tenant\OnlineMeeting;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Session;
@@ -277,10 +278,19 @@ class PublicAppointmentController extends Controller
         }
 
         // Redireciona para a pÃ¡gina de detalhes do agendamento
+        $successMessage = 'Agendamento realizado com sucesso!';
+        if ($appointment->appointment_mode === 'online') {
+            $appointment->refresh()->load('onlineInstructions');
+
+            if (($appointment->onlineInstructions->meeting_status ?? null) === OnlineMeeting::STATUS_MANUAL_REQUIRED) {
+                $successMessage = 'Seu agendamento online foi criado com sucesso, mas o link da reunião ainda não está disponível. A clínica enviará as instruções antes do atendimento.';
+            }
+        }
+
         return redirect()->route('public.appointment.show', [
             'slug' => $tenant,
             'appointment_id' => $appointment->id
-        ])->with('success', 'Agendamento realizado com sucesso!');
+        ])->with('success', $successMessage);
     }
 
     /**

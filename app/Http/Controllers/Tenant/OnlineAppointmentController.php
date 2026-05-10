@@ -8,14 +8,14 @@ use App\Http\Controllers\Tenant\Concerns\HasDoctorFilter;
 use App\Models\Tenant\Appointment;
 use App\Models\Tenant\OnlineAppointmentInstruction;
 use App\Models\Tenant\TenantSetting;
-use App\Services\Tenant\NotificationDispatcher;
 use App\Services\MailTenantService;
+use App\Services\Tenant\NotificationDispatcher;
+use App\Services\Tenant\OnlineMeetings\OnlineMeetingManager;
 use App\Services\WhatsappTenantService;
-use App\Mail\FormToFillMail;
-use Illuminate\Support\Str;
+use App\Support\Tenant\OnlineMeeting;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
-use Carbon\Carbon;
+use Illuminate\Support\Str;
 
 class OnlineAppointmentController extends Controller
 {
@@ -25,21 +25,59 @@ class OnlineAppointmentController extends Controller
     public function __construct(private readonly NotificationDispatcher $notificationDispatcher)
     {
     }
-    /**
-     * Lista apenas agendamentos online
-     */
-    public function index()
+
+    private function abortIfOnlineModuleDisabled(): void
     {
-        // Verificar se o modo permite acesso ao módulo
         $mode = TenantSetting::get('appointments.default_appointment_mode', 'user_choice');
         if ($mode === 'presencial') {
             abort(404);
         }
+    }
+
+    private function ensureOnlineAppointment(Appointment $appointment): void
+    {
+        if ($appointment->appointment_mode !== 'online') {
+            abort(403, 'Esta consulta não é online.');
+        }
+    }
+
+    private function resolveNotificationChannels(): array
+    {
+        $settings = TenantSetting::getAll();
+
+        $canSendEmail = ($settings['notifications.send_email_to_patients'] ?? false) === 'true'
+            || ($settings['notifications.send_email_to_patients'] ?? false) === true;
+        $canSendWhatsapp = ($settings['notifications.send_whatsapp_to_patients'] ?? false) === 'true'
+            || ($settings['notifications.send_whatsapp_to_patients'] ?? false) === true;
+
+        return [$canSendEmail, $canSendWhatsapp];
+    }
+
+    private function ensureOnlineInstructions(Appointment $appointment): void
+    {
+        if ($appointment->onlineInstructions) {
+            return;
+        }
+
+        OnlineAppointmentInstruction::create([
+            'id' => Str::uuid(),
+            'appointment_id' => $appointment->id,
+        ]);
+
+        $appointment->refresh();
+        $appointment->load('onlineInstructions');
+    }
+
+    /**
+     * Lista apenas agendamentos online.
+     */
+    public function index()
+    {
+        $this->abortIfOnlineModuleDisabled();
 
         $query = Appointment::where('appointment_mode', 'online')
             ->with(['patient', 'calendar.doctor.user', 'type', 'specialty', 'onlineInstructions']);
-        
-        // Aplicar filtro de médico
+
         $this->applyDoctorFilterWhereHas($query, 'calendar', 'doctor_id');
 
         $appointments = $query->latest('starts_at')->paginate(20);
@@ -48,57 +86,41 @@ class OnlineAppointmentController extends Controller
     }
 
     /**
-     * Exibe formulário para configurar instruções
+     * Exibe detalhes em modo leitura.
      */
     public function show($slug, Appointment $appointment)
     {
-        // Verificar se o modo permite acesso ao módulo
-        $mode = TenantSetting::get('appointments.default_appointment_mode', 'user_choice');
-        if ($mode === 'presencial') {
-            abort(404);
-        }
+        $this->abortIfOnlineModuleDisabled();
 
         $appointment->load(['patient', 'calendar.doctor.user', 'type', 'specialty', 'onlineInstructions']);
+        $this->ensureOnlineAppointment($appointment);
 
-        // Verificar se é agendamento online
-        if ($appointment->appointment_mode !== 'online') {
-            abort(403, 'Esta consulta não é online.');
-        }
-
-        // Criar instruções vazias se não existir
-        if (!$appointment->onlineInstructions) {
-            OnlineAppointmentInstruction::create([
-                'id' => Str::uuid(),
-                'appointment_id' => $appointment->id,
-            ]);
-            $appointment->refresh();
-            $appointment->load('onlineInstructions');
-        }
-
-        // Verificar configurações de notificação
-        $settings = TenantSetting::getAll();
-        $canSendEmail = ($settings['notifications.send_email_to_patients'] ?? false) === 'true' || 
-                        ($settings['notifications.send_email_to_patients'] ?? false) === true;
-        $canSendWhatsapp = ($settings['notifications.send_whatsapp_to_patients'] ?? false) === 'true' || 
-                           ($settings['notifications.send_whatsapp_to_patients'] ?? false) === true;
+        [$canSendEmail, $canSendWhatsapp] = $this->resolveNotificationChannels();
 
         return view('tenant.online_appointments.show', compact('appointment', 'canSendEmail', 'canSendWhatsapp'));
     }
 
     /**
-     * Salva as instruções
+     * Exibe formulário editável de instruções.
+     */
+    public function edit($slug, Appointment $appointment)
+    {
+        $this->abortIfOnlineModuleDisabled();
+
+        $appointment->load(['patient', 'calendar.doctor.user', 'type', 'specialty', 'onlineInstructions']);
+        $this->ensureOnlineAppointment($appointment);
+        $this->ensureOnlineInstructions($appointment);
+
+        return view('tenant.online_appointments.edit', compact('appointment'));
+    }
+
+    /**
+     * Salva as instruções.
      */
     public function save(Request $request, $slug, Appointment $appointment)
     {
-        // Verificar se o modo permite acesso ao módulo
-        $mode = TenantSetting::get('appointments.default_appointment_mode', 'user_choice');
-        if ($mode === 'presencial') {
-            abort(404);
-        }
-
-        if ($appointment->appointment_mode !== 'online') {
-            abort(403, 'Esta consulta não é online.');
-        }
+        $this->abortIfOnlineModuleDisabled();
+        $this->ensureOnlineAppointment($appointment);
 
         $request->validate([
             'meeting_link' => 'nullable|url',
@@ -108,7 +130,7 @@ class OnlineAppointmentController extends Controller
         ]);
 
         $instructions = $appointment->onlineInstructions;
-        
+
         if (!$instructions) {
             $instructions = OnlineAppointmentInstruction::create([
                 'id' => Str::uuid(),
@@ -139,20 +161,67 @@ class OnlineAppointmentController extends Controller
     }
 
     /**
-     * Envia instruções por email
+     * Gera ou tenta gerar a reunião online manualmente.
+     */
+    public function generateMeeting(Request $request, $slug, Appointment $appointment)
+    {
+        $this->abortIfOnlineModuleDisabled();
+
+        $appointment->load([
+            'onlineInstructions',
+            'calendar.doctor.googleCalendarToken',
+            'calendar.doctor.user',
+            'patient',
+            'type',
+            'specialty',
+        ]);
+
+        $this->ensureOnlineAppointment($appointment);
+
+        try {
+            $result = app(OnlineMeetingManager::class)->provisionFor($appointment, [
+                'force' => true,
+                'ignore_auto_generate_disabled' => true,
+            ]);
+
+            if ($result->status === OnlineMeeting::STATUS_GENERATED && $result->success) {
+                return redirect()->route('tenant.online-appointments.show', ['slug' => $slug, 'appointment' => $appointment->id])
+                    ->with('success', 'Reunião online gerada com sucesso.');
+            }
+
+            if ($result->status === OnlineMeeting::STATUS_MANUAL_REQUIRED) {
+                return redirect()->route('tenant.online-appointments.show', ['slug' => $slug, 'appointment' => $appointment->id])
+                    ->with('warning', $result->errorMessage ?: 'Não foi possível gerar o link automaticamente porque o profissional responsável ainda não conectou o Google Calendar. Conecte a conta Google do profissional ou informe o link manualmente.');
+            }
+
+            if ($result->status === OnlineMeeting::STATUS_SKIPPED) {
+                return redirect()->route('tenant.online-appointments.show', ['slug' => $slug, 'appointment' => $appointment->id])
+                    ->with('info', $result->errorMessage ?: 'A reunião online foi ignorada pelas regras atuais.');
+            }
+
+            return redirect()->route('tenant.online-appointments.show', ['slug' => $slug, 'appointment' => $appointment->id])
+                ->with('error', $result->errorMessage ?: 'Não foi possível gerar a reunião online agora.');
+        } catch (\Throwable $e) {
+            Log::error('Erro ao gerar reunião online manualmente', [
+                'appointment_id' => $appointment->id,
+                'error' => $e->getMessage(),
+            ]);
+
+            return redirect()->route('tenant.online-appointments.show', ['slug' => $slug, 'appointment' => $appointment->id])
+                ->with('error', 'Erro ao tentar gerar reunião online. Tente novamente.');
+        }
+    }
+
+    /**
+     * Envia instruções por email.
      */
     public function sendEmail(Request $request, $slug, Appointment $appointment)
     {
+        $this->abortIfOnlineModuleDisabled();
         $appointment->load(['patient', 'onlineInstructions']);
+        $this->ensureOnlineAppointment($appointment);
 
-        if ($appointment->appointment_mode !== 'online') {
-            abort(403, 'Esta consulta não é online.');
-        }
-
-        // Verificar configuração
-        $settings = TenantSetting::getAll();
-        $canSendEmail = ($settings['notifications.send_email_to_patients'] ?? false) === 'true' || 
-                        ($settings['notifications.send_email_to_patients'] ?? false) === true;
+        [$canSendEmail] = $this->resolveNotificationChannels();
 
         if (!$canSendEmail) {
             return redirect()->back()
@@ -170,7 +239,6 @@ class OnlineAppointmentController extends Controller
         }
 
         try {
-            // Criar email com instruções
             $instructions = $appointment->onlineInstructions;
             $data = [
                 'patient_name' => $appointment->patient->full_name,
@@ -189,7 +257,6 @@ class OnlineAppointmentController extends Controller
                 $data
             );
 
-            // Atualizar timestamp
             $instructions->update([
                 'sent_by_email_at' => now(),
             ]);
@@ -217,26 +284,16 @@ class OnlineAppointmentController extends Controller
     }
 
     /**
-     * Envia instruções por WhatsApp
+     * Envia instruções por WhatsApp.
      */
     public function sendWhatsapp(Request $request, $slug, Appointment $appointment)
     {
-        // Verificar se o modo permite acesso ao módulo
-        $mode = TenantSetting::get('appointments.default_appointment_mode', 'user_choice');
-        if ($mode === 'presencial') {
-            abort(404);
-        }
+        $this->abortIfOnlineModuleDisabled();
 
         $appointment->load(['patient', 'onlineInstructions']);
+        $this->ensureOnlineAppointment($appointment);
 
-        if ($appointment->appointment_mode !== 'online') {
-            abort(403, 'Esta consulta não é online.');
-        }
-
-        // Verificar configuração
-        $settings = TenantSetting::getAll();
-        $canSendWhatsapp = ($settings['notifications.send_whatsapp_to_patients'] ?? false) === 'true' || 
-                           ($settings['notifications.send_whatsapp_to_patients'] ?? false) === true;
+        [, $canSendWhatsapp] = $this->resolveNotificationChannels();
 
         if (!$canSendWhatsapp) {
             return redirect()->back()
@@ -255,23 +312,22 @@ class OnlineAppointmentController extends Controller
 
         try {
             $instructions = $appointment->onlineInstructions;
-            
-            // Montar mensagem
+
             $message = "Olá {$appointment->patient->full_name},\n\n";
             $message .= "Sua consulta ONLINE foi agendada para {$appointment->starts_at->format('d/m/Y')} às {$appointment->starts_at->format('H:i')}.\n\n";
-            
+
             if ($instructions->meeting_link) {
                 $message .= "Link da reunião:\n{$instructions->meeting_link}\n\n";
             }
-            
+
             if ($instructions->meeting_app) {
                 $message .= "Aplicativo:\n{$instructions->meeting_app}\n\n";
             }
-            
+
             if ($instructions->general_instructions) {
                 $message .= "Instruções:\n{$instructions->general_instructions}\n\n";
             }
-            
+
             if ($instructions->patient_instructions) {
                 $message .= "Observações:\n{$instructions->patient_instructions}\n";
             }
@@ -279,7 +335,6 @@ class OnlineAppointmentController extends Controller
             $sent = WhatsappTenantService::send($appointment->patient->phone, $message);
 
             if ($sent) {
-                // Atualizar timestamp
                 $instructions->update([
                     'sent_by_whatsapp_at' => now(),
                 ]);
@@ -295,10 +350,10 @@ class OnlineAppointmentController extends Controller
 
                 return redirect()->route('tenant.online-appointments.show', ['slug' => $slug, 'appointment' => $appointment->id])
                     ->with('success', 'Instruções enviadas por WhatsApp com sucesso.');
-            } else {
-                return redirect()->back()
-                    ->with('error', 'Erro ao enviar WhatsApp. Verifique as configurações.');
             }
+
+            return redirect()->back()
+                ->with('error', 'Erro ao enviar WhatsApp. Verifique as configurações.');
         } catch (\Exception $e) {
             Log::error('Erro ao enviar instruções por WhatsApp', [
                 'appointment_id' => $appointment->id,
@@ -312,6 +367,8 @@ class OnlineAppointmentController extends Controller
 
     public function gridData(Request $request, $slug)
     {
+        $this->abortIfOnlineModuleDisabled();
+
         $query = Appointment::where('appointment_mode', 'online')
             ->with([
                 'patient',
@@ -326,7 +383,6 @@ class OnlineAppointmentController extends Controller
         $page = $this->gridPage($request);
         $perPage = $this->gridPerPage($request);
 
-        // 🔎 Busca global
         $search = $this->gridSearch($request);
 
         if ($search !== '') {
@@ -342,15 +398,14 @@ class OnlineAppointmentController extends Controller
             });
         }
 
-        // 📊 Ordenação whitelist
         $sortable = [
-            'patient'     => 'patient_id',
-            'doctor'      => 'doctor_id',
-            'starts_at'   => 'starts_at',
-            'datetime'    => 'starts_at',
-            'status'      => 'status',
+            'patient' => 'patient_id',
+            'doctor' => 'doctor_id',
+            'starts_at' => 'starts_at',
+            'datetime' => 'starts_at',
+            'status' => 'status',
             'status_badge' => 'status',
-            'created_at'  => 'created_at',
+            'created_at' => 'created_at',
         ];
 
         $sort = $this->gridSort($request, $sortable, 'starts_at', 'desc');
@@ -360,19 +415,25 @@ class OnlineAppointmentController extends Controller
         }
 
         $paginator = $query->paginate($perPage, ['*'], 'page', $page);
+        [$canSendEmail, $canSendWhatsapp] = $this->resolveNotificationChannels();
 
-        $data = $paginator->getCollection()->map(function (Appointment $appointment) {
+        $data = $paginator->getCollection()->map(function (Appointment $appointment) use ($canSendEmail, $canSendWhatsapp) {
             $sentByEmail = (bool) optional($appointment->onlineInstructions)->sent_by_email_at;
             $sentByWhatsapp = (bool) optional($appointment->onlineInstructions)->sent_by_whatsapp_at;
             $instructionsStatus = ($sentByEmail || $sentByWhatsapp) ? 'Enviadas' : 'Pendente';
 
             return [
-                'patient'        => e($appointment->patient->full_name ?? 'N/A'),
-                'doctor'         => e(optional(optional($appointment->calendar)->doctor)->user->name_full ?? 'N/A'),
-                'datetime'       => optional($appointment->starts_at)->format('d/m/Y H:i'),
-                'status_badge'   => view('tenant.online_appointments.partials.status', compact('appointment'))->render(),
-                'instructions'   => $instructionsStatus,
-                'actions'        => view('tenant.online_appointments.partials.actions', compact('appointment'))->render(),
+                'patient' => e($appointment->patient->full_name ?? 'N/A'),
+                'doctor' => e(optional(optional($appointment->calendar)->doctor)->user->name_full ?? 'N/A'),
+                'datetime' => optional($appointment->starts_at)->format('d/m/Y H:i'),
+                'status_badge' => view('tenant.online_appointments.partials.status', compact('appointment'))->render(),
+                'meeting' => view('tenant.online_appointments.partials.meeting-status', compact('appointment'))->render(),
+                'instructions' => $instructionsStatus,
+                'actions' => view('tenant.online_appointments.partials.actions', [
+                    'appointment' => $appointment,
+                    'canSendEmail' => $canSendEmail,
+                    'canSendWhatsapp' => $canSendWhatsapp,
+                ])->render(),
             ];
         })->all();
 
@@ -382,4 +443,3 @@ class OnlineAppointmentController extends Controller
         ]);
     }
 }
-

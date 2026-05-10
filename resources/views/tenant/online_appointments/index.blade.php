@@ -50,6 +50,7 @@
                     ['name' => 'doctor', 'label' => 'Médico'],
                     ['name' => 'datetime', 'label' => 'Data/Hora'],
                     ['name' => 'status_badge', 'label' => 'Status'],
+                    ['name' => 'meeting', 'label' => 'Reunião'],
                     ['name' => 'instructions', 'label' => 'Instruções Enviadas'],
                     ['name' => 'actions', 'label' => 'Ações'],
                 ]"

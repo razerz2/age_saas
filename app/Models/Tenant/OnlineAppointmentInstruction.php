@@ -20,6 +20,13 @@ class OnlineAppointmentInstruction extends Model
         'appointment_id',
         'meeting_link',
         'meeting_app',
+        'meeting_provider',
+        'meeting_status',
+        'external_event_id',
+        'external_meeting_id',
+        'meeting_generated_at',
+        'meeting_generation_error',
+        'meeting_meta',
         'general_instructions',
         'patient_instructions',
         'sent_by_email_at',
@@ -27,6 +34,8 @@ class OnlineAppointmentInstruction extends Model
     ];
 
     protected $casts = [
+        'meeting_generated_at' => 'datetime',
+        'meeting_meta' => 'array',
         'sent_by_email_at' => 'datetime',
         'sent_by_whatsapp_at' => 'datetime',
     ];
@@ -38,4 +47,3 @@ class OnlineAppointmentInstruction extends Model
         return $this->belongsTo(Appointment::class);
     }
 }
-

@@ -11,11 +11,15 @@ use App\Models\Tenant\TenantSetting;
 use App\Services\Tenant\AppleCalendarService;
 use App\Services\Tenant\GoogleCalendarService;
 use App\Services\Tenant\NotificationDispatcher;
+use App\Services\Tenant\OnlineMeetings\OnlineMeetingManager;
+use App\Support\Tenant\OnlineMeeting;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
 class AppointmentObserver
 {
+    private static bool $handlingOnlineMeeting = false;
+
     protected GoogleCalendarService $googleCalendarService;
     protected AppleCalendarService $appleCalendarService;
     protected NotificationDispatcher $notificationDispatcher;
@@ -50,6 +54,8 @@ class AppointmentObserver
                 ]);
             }
         }
+
+        $this->handleOnlineMeetingCreated($appointment);
 
         $metadata = [
             'origin' => (string) ($appointment->origin ?? ''),
@@ -120,6 +126,9 @@ class AppointmentObserver
     public function updated(Appointment $appointment): void
     {
         $appointment->load(['patient', 'calendar.doctor.user']);
+        $changedFields = array_keys($appointment->getChanges());
+
+        $this->handleOnlineMeetingUpdated($appointment, $changedFields);
 
         if ($appointment->wasChanged('status')) {
             $oldStatus = $appointment->getOriginal('status');
@@ -187,7 +196,6 @@ class AppointmentObserver
             return;
         }
 
-        $changedFields = array_keys($appointment->getChanges());
         $relevantFields = ['starts_at', 'ends_at', 'status', 'notes', 'patient_id', 'calendar_id'];
 
         $hasRelevantChange = false;
@@ -321,5 +329,123 @@ class AppointmentObserver
     {
         return TenantSetting::isEnabled('integrations.apple_calendar.enabled')
             && TenantSetting::isEnabled('integrations.apple_calendar.auto_sync');
+    }
+
+    private function handleOnlineMeetingCreated(Appointment $appointment): void
+    {
+        if (self::$handlingOnlineMeeting) {
+            return;
+        }
+
+        self::$handlingOnlineMeeting = true;
+        try {
+            $manager = app(OnlineMeetingManager::class);
+            if (!$manager->shouldHandle($appointment)) {
+                return;
+            }
+
+            $manager->provisionFor($appointment);
+        } catch (\Throwable $e) {
+            Log::error('Erro ao processar reuniao online no created do AppointmentObserver', [
+                'appointment_id' => $appointment->id,
+                'status' => $appointment->status,
+                'appointment_mode' => $appointment->appointment_mode,
+                'error' => $e->getMessage(),
+            ]);
+        } finally {
+            self::$handlingOnlineMeeting = false;
+        }
+    }
+
+    /**
+     * @param array<int, string> $changedFields
+     */
+    private function handleOnlineMeetingUpdated(Appointment $appointment, array $changedFields): void
+    {
+        if (self::$handlingOnlineMeeting) {
+            return;
+        }
+
+        if ($this->hasOnlyIrrelevantOnlineMeetingChanges($changedFields)) {
+            return;
+        }
+
+        self::$handlingOnlineMeeting = true;
+        try {
+            $manager = app(OnlineMeetingManager::class);
+
+            if ($manager->shouldCancel($appointment, $changedFields)) {
+                $manager->cancelFor($appointment);
+                return;
+            }
+
+            if (!$manager->shouldHandle($appointment)) {
+                return;
+            }
+
+            if (in_array('appointment_mode', $changedFields, true) && $appointment->appointment_mode === 'online') {
+                $manager->provisionFor($appointment);
+                return;
+            }
+
+            if (!$manager->shouldUpdate($appointment, $changedFields)) {
+                return;
+            }
+
+            $statusNow = strtolower(trim((string) $appointment->status));
+            if (in_array('status', $changedFields, true) && in_array($statusNow, ['scheduled', 'rescheduled'], true)) {
+                $manager->provisionFor($appointment);
+                return;
+            }
+
+            $appointment->loadMissing('onlineInstructions');
+            $instruction = $appointment->onlineInstructions;
+
+            if (
+                $instruction
+                && $instruction->meeting_status === OnlineMeeting::STATUS_GENERATED
+                && filled($instruction->meeting_link)
+            ) {
+                $manager->updateFor($appointment);
+                return;
+            }
+
+            $manager->provisionFor($appointment);
+        } catch (\Throwable $e) {
+            Log::error('Erro ao processar reuniao online no updated do AppointmentObserver', [
+                'appointment_id' => $appointment->id,
+                'status' => $appointment->status,
+                'appointment_mode' => $appointment->appointment_mode,
+                'changed_fields' => $changedFields,
+                'error' => $e->getMessage(),
+            ]);
+        } finally {
+            self::$handlingOnlineMeeting = false;
+        }
+    }
+
+    /**
+     * @param array<int, string> $changedFields
+     */
+    private function hasOnlyIrrelevantOnlineMeetingChanges(array $changedFields): bool
+    {
+        if ($changedFields === []) {
+            return true;
+        }
+
+        $irrelevant = [
+            'google_event_id',
+            'apple_event_id',
+            'updated_at',
+            'created_at',
+        ];
+
+        foreach ($changedFields as $field) {
+            if (!in_array($field, $irrelevant, true)) {
+                return false;
+            }
+        }
+
+        return true;
     }
 }

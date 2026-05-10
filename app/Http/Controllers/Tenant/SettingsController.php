@@ -25,6 +25,7 @@ use App\Services\WhatsApp\TenantEvolutionGlobalInstanceService;
 use App\Services\WhatsApp\TenantEvolutionGlobalOperationsService;
 use App\Services\WhatsApp\TenantWahaGlobalInstanceService;
 use App\Services\WhatsApp\TenantWahaGlobalOperationsService;
+use App\Support\Tenant\OnlineMeeting;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Schema;
@@ -73,6 +74,19 @@ class SettingsController extends Controller
             'appointments.waitlist.offer_ttl_minutes' => tenant_setting_int('appointments.waitlist.offer_ttl_minutes', 15),
             'appointments.waitlist.allow_when_confirmed' => tenant_setting_bool('appointments.waitlist.allow_when_confirmed', true),
             'appointments.waitlist.max_per_slot' => tenant_setting_nullable_int('appointments.waitlist.max_per_slot', null),
+            'online_meetings.auto_generate_enabled' => tenant_setting_bool('online_meetings.auto_generate_enabled', false),
+            'online_meetings.default_provider' => TenantSetting::get(
+                'online_meetings.default_provider',
+                OnlineMeeting::PROVIDER_GOOGLE_MEET
+            ),
+            'online_meetings.generation_timing' => TenantSetting::get(
+                'online_meetings.generation_timing',
+                OnlineMeeting::GENERATION_ON_CONFIRMED
+            ),
+            'online_meetings.failure_policy' => TenantSetting::get(
+                'online_meetings.failure_policy',
+                OnlineMeeting::FAILURE_KEEP_APPOINTMENT_PENDING_MEETING
+            ),
             
             // Calendário
             'calendar.default_start_time' => TenantSetting::get('calendar.default_start_time', '08:00'),
@@ -644,6 +658,10 @@ class SettingsController extends Controller
             'appointments_waitlist_offer_ttl_minutes' => 'nullable|integer|min:1|max:1440',
             'appointments_waitlist_allow_when_confirmed' => 'boolean',
             'appointments_waitlist_max_per_slot' => 'nullable|integer|min:1',
+            'online_meetings_auto_generate_enabled' => 'boolean',
+            'online_meetings_default_provider' => 'required|in:google_meet,manual',
+            'online_meetings_generation_timing' => 'required|in:on_created,on_confirmed',
+            'online_meetings_failure_policy' => 'required|in:keep_appointment_pending_meeting',
         ]);
 
         TenantSetting::set('appointments.default_duration', $request->appointments_default_duration);
@@ -689,6 +707,22 @@ class SettingsController extends Controller
         TenantSetting::set(
             'appointments.waitlist.max_per_slot',
             ($maxPerSlot === null || $maxPerSlot === '') ? null : (string) $maxPerSlot
+        );
+        TenantSetting::set(
+            'online_meetings.auto_generate_enabled',
+            $request->has('online_meetings_auto_generate_enabled') ? 'true' : 'false'
+        );
+        TenantSetting::set(
+            'online_meetings.default_provider',
+            OnlineMeeting::normalizeProvider($request->online_meetings_default_provider)
+        );
+        TenantSetting::set(
+            'online_meetings.generation_timing',
+            OnlineMeeting::normalizeGenerationTiming($request->online_meetings_generation_timing)
+        );
+        TenantSetting::set(
+            'online_meetings.failure_policy',
+            OnlineMeeting::FAILURE_KEEP_APPOINTMENT_PENDING_MEETING
         );
 
         return redirect()->route('tenant.settings.index', ['slug' => tenant()->subdomain])

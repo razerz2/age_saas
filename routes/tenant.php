@@ -494,6 +494,10 @@ Route::prefix('workspace/{slug}')
                 // grid-data DEVE vir antes das rotas com {appointment} para evitar conflito de matching
                 Route::get('consultas-online/grid-data', [\App\Http\Controllers\Tenant\OnlineAppointmentController::class, 'gridData'])
                     ->name('grid-data');
+
+                Route::get('/{appointment}/edit', [\App\Http\Controllers\Tenant\OnlineAppointmentController::class, 'edit'])
+                    ->where('appointment', '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}')
+                    ->name('edit');
                 
                 Route::get('/{appointment}', [\App\Http\Controllers\Tenant\OnlineAppointmentController::class, 'show'])
                     ->where('appointment', '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}')
@@ -510,6 +514,10 @@ Route::prefix('workspace/{slug}')
                 Route::post('/{appointment}/send-whatsapp', [\App\Http\Controllers\Tenant\OnlineAppointmentController::class, 'sendWhatsapp'])
                     ->where('appointment', '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}')
                     ->name('send-whatsapp');
+
+                Route::post('/{appointment}/generate-meeting', [\App\Http\Controllers\Tenant\OnlineAppointmentController::class, 'generateMeeting'])
+                    ->where('appointment', '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}')
+                    ->name('generate-meeting');
             });
 
         // API endpoints para agendamentos

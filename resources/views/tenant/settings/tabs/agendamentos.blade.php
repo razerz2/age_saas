@@ -215,6 +215,83 @@
                     </div>
                 </div>
             </div>
+
+            <div class="md:col-span-2">
+                <div class="p-4 border border-gray-200 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700">
+                    <h3 class="text-sm font-semibold text-gray-900 dark:text-white mb-3">
+                        Reuniões Online Automáticas
+                    </h3>
+
+                    <div class="space-y-4">
+                        <label class="flex items-start cursor-pointer">
+                            <input type="checkbox"
+                                   id="online_meetings_auto_generate_enabled"
+                                   name="online_meetings_auto_generate_enabled"
+                                   value="1"
+                                   {{ ($settings['online_meetings.auto_generate_enabled'] ?? false) ? 'checked' : '' }}
+                                   class="mt-1 w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
+                            <div class="ml-3">
+                                <span class="block text-sm font-medium text-gray-900 dark:text-white">Gerar reunião automaticamente para consultas online</span>
+                            </div>
+                        </label>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                    Provedor padrão das reuniões
+                                </label>
+                                <select name="online_meetings_default_provider"
+                                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white">
+                                    <option value="google_meet" {{ ($settings['online_meetings.default_provider'] ?? 'google_meet') === 'google_meet' ? 'selected' : '' }}>
+                                        Google Meet
+                                    </option>
+                                    <option value="manual" {{ ($settings['online_meetings.default_provider'] ?? 'google_meet') === 'manual' ? 'selected' : '' }}>
+                                        Manual
+                                    </option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                    Quando gerar a reunião
+                                </label>
+                                <select name="online_meetings_generation_timing"
+                                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white">
+                                    <option value="on_confirmed" {{ ($settings['online_meetings.generation_timing'] ?? 'on_confirmed') === 'on_confirmed' ? 'selected' : '' }}>
+                                        Ao confirmar o agendamento
+                                    </option>
+                                    <option value="on_created" {{ ($settings['online_meetings.generation_timing'] ?? 'on_confirmed') === 'on_created' ? 'selected' : '' }}>
+                                        Ao criar o agendamento
+                                    </option>
+                                </select>
+                            </div>
+
+                            <div class="md:col-span-2">
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                    Política em caso de falha
+                                </label>
+                                <select name="online_meetings_failure_policy"
+                                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white">
+                                    <option value="keep_appointment_pending_meeting" selected>
+                                        Manter agendamento e marcar reunião pendente
+                                    </option>
+                                    <option value="block_online_appointment" disabled>
+                                        Bloquear agendamento online (em breve)
+                                    </option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="rounded-lg border border-blue-200 bg-blue-50 p-3 text-xs text-blue-800 dark:border-blue-800 dark:bg-blue-900/20 dark:text-blue-300 space-y-1">
+                            <p>Para Google Meet, o profissional precisa conectar o Google Calendar.</p>
+                            <p>Para gerar links do Google Meet automaticamente, cada profissional precisa conectar o Google Calendar na área de sincronização da agenda.</p>
+                            <p>A reunião será criada no calendário do profissional responsável pelo agendamento.</p>
+                            <p>Se o agendamento estiver com confirmação pendente e a opção for "Ao confirmar", a reunião só será criada após confirmação.</p>
+                            <p>Se a geração falhar, o agendamento será mantido e a reunião poderá ser inserida manualmente.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <div class="flex justify-end">

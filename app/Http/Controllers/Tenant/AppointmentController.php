@@ -21,6 +21,7 @@ use App\Services\Tenant\AppleCalendarService;
 use App\Services\Tenant\NotificationDispatcher;
 use App\Services\Tenant\ProfessionalLabelService;
 use App\Services\Tenant\WaitlistService;
+use App\Support\Tenant\OnlineMeeting;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
@@ -396,8 +397,21 @@ class AppointmentController extends Controller
             }
         }
 
-        return redirect()->route('tenant.appointments.index', ['slug' => $routeSlug])
+        $redirect = redirect()->route('tenant.appointments.index', ['slug' => $routeSlug])
             ->with('success', 'Agendamento criado com sucesso.');
+
+        if ($appointment->appointment_mode === 'online') {
+            $appointment->refresh()->load('onlineInstructions');
+
+            if (($appointment->onlineInstructions->meeting_status ?? null) === OnlineMeeting::STATUS_MANUAL_REQUIRED) {
+                $redirect->with(
+                    'warning',
+                    'O agendamento online foi criado, mas o link da reunião não foi gerado porque o profissional responsável ainda não conectou o Google Calendar. Conecte a conta Google ou informe o link manualmente em Consultas Online.'
+                );
+            }
+        }
+
+        return $redirect;
     }
 
     public function show($slug, $id)

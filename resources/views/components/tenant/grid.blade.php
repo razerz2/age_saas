@@ -182,12 +182,13 @@
             const columns = rawColumns.map((col) => {
                 const isStatus = col.id === 'status_badge';
                 const isActions = col.id === 'actions';
+                const isMeeting = col.id === 'meeting' || col.id === 'meeting_status';
 
                 return {
                     id: col.id,
                     name: col.name,
                     formatter: (cell) => {
-                        if (isStatus || isActions) {
+                        if (isStatus || isActions || isMeeting) {
                             return gridjs.html(cell ?? '');
                         }
 
