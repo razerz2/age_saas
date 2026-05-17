@@ -161,18 +161,25 @@ if (!function_exists('has_google_oauth_credentials')) {
 if (!function_exists('google_calendar_scopes')) {
     function google_calendar_scopes(): array
     {
+        $defaultEventsScope = 'https://www.googleapis.com/auth/calendar.events';
+        $defaultFullScope = 'https://www.googleapis.com/auth/calendar';
+
+        if (app()->environment('production')) {
+            return [$defaultEventsScope];
+        }
+
         $googleConfig = (array) config('services.google', []);
         $calendarConfig = (array) ($googleConfig['calendar'] ?? []);
         $scopesConfig = (array) ($calendarConfig['scopes'] ?? []);
 
-        $eventsScope = trim((string) ($scopesConfig['events'] ?? 'https://www.googleapis.com/auth/calendar.events'));
+        $eventsScope = trim((string) ($scopesConfig['events'] ?? $defaultEventsScope));
         if ($eventsScope === '') {
-            $eventsScope = 'https://www.googleapis.com/auth/calendar.events';
+            $eventsScope = $defaultEventsScope;
         }
 
-        $fullScope = trim((string) ($scopesConfig['full'] ?? 'https://www.googleapis.com/auth/calendar'));
+        $fullScope = trim((string) ($scopesConfig['full'] ?? $defaultFullScope));
         if ($fullScope === '') {
-            $fullScope = 'https://www.googleapis.com/auth/calendar';
+            $fullScope = $defaultFullScope;
         }
 
         $useLegacyRaw = $calendarConfig['use_legacy_full_scope'] ?? false;

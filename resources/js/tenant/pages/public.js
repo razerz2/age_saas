@@ -43,6 +43,7 @@ function bindAppointmentCreate() {
         availableSlots: config.dataset.availableSlotsUrlTemplate || '',
         businessHours: config.dataset.businessHoursUrlTemplate || '',
     };
+    const csrfRefreshUrl = config.dataset.csrfRefreshUrl || '';
 
     function formatLocalISODate(d) {
         const y = d.getFullYear();
@@ -520,23 +521,93 @@ function bindAppointmentCreate() {
         syncSelectedSlotState();
     });
 
-    const form = document.querySelector('form.forms-sample');
-    form?.addEventListener('submit', (event) => {
+    const form = document.getElementById('public-appointment-create-form');
+    const submitButton = form?.querySelector('button[type="submit"]') || null;
+
+    const setSubmitDisabled = (disabled) => {
+        if (submitButton) {
+            submitButton.disabled = disabled;
+        }
+    };
+
+    const validateAppointmentSelection = () => {
         if (!calendarIdInput.value) {
-            event.preventDefault();
             showAlert({
                 type: 'error',
                 title: 'Erro',
                 message: 'Calendário não foi selecionado. Por favor, selecione um médico novamente.',
             });
-            return;
+            return false;
         }
+
         if (!startsAtInput.value || !endsAtInput.value) {
-            event.preventDefault();
             showAlert({
                 type: 'warning',
                 title: 'Atenção',
                 message: 'Por favor, selecione um horário disponível.',
+            });
+            return false;
+        }
+
+        return true;
+    };
+
+    form?.addEventListener('submit', async (event) => {
+        if (!validateAppointmentSelection()) {
+            event.preventDefault();
+            return;
+        }
+
+        if (form.dataset.csrfRefreshed === '1') {
+            setSubmitDisabled(true);
+            return;
+        }
+
+        event.preventDefault();
+        setSubmitDisabled(true);
+
+        try {
+            if (!csrfRefreshUrl) {
+                throw new Error('CSRF refresh URL not configured.');
+            }
+
+            const response = await fetch(csrfRefreshUrl, {
+                method: 'GET',
+                credentials: 'same-origin',
+                headers: {
+                    Accept: 'application/json',
+                },
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const data = await response.json();
+            if (!data?.csrf_token) {
+                throw new Error('CSRF token missing from response.');
+            }
+
+            const tokenInput = form.querySelector('input[name="_token"]');
+            if (!tokenInput) {
+                throw new Error('CSRF token input not found.');
+            }
+
+            tokenInput.value = data.csrf_token;
+            form.dataset.csrfRefreshed = '1';
+
+            if (typeof form.requestSubmit === 'function') {
+                form.requestSubmit();
+            } else {
+                form.submit();
+            }
+        } catch (error) {
+            form.dataset.csrfRefreshed = '0';
+            setSubmitDisabled(false);
+            showAlert({
+                type: 'warning',
+                title: 'Sessão atualizada',
+                message: 'Sua sessão foi atualizada. Recarregue a página e tente novamente.',
             });
         }
     });

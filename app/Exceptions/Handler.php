@@ -43,6 +43,13 @@ class Handler extends ExceptionHandler
     {
         // Tratamento específico para erro 419 (Token CSRF expirado)
         if ($e instanceof TokenMismatchException) {
+            if ($request->is('customer/*/agendamento/*')) {
+                return redirect()
+                    ->back()
+                    ->with('error', 'Sua sessão expirou. Recarregue a página e tente novamente.')
+                    ->withInput($request->except(['_token']));
+            }
+
             // Se for uma rota de login do tenant, redirecionar de volta com mensagem
             if ($request->routeIs('tenant.login.submit') || $request->is('customer/*/login')) {
                 $slug = $request->route('slug');

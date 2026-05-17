@@ -33,6 +33,21 @@ class PublicAppointmentController extends Controller
     /**
      * Exibe o formulário de criação de agendamento público
      */
+    public function csrfToken(Request $request, $tenant)
+    {
+        $tenantModel = Tenant::where('subdomain', $tenant)->first();
+
+        if (!$tenantModel) {
+            abort(404, 'Clínica não encontrada.');
+        }
+
+        $tenantModel->makeCurrent();
+
+        return response()->json([
+            'csrf_token' => csrf_token(),
+        ]);
+    }
+
     public function create(Request $request, $tenant)
     {
         $tenantSlug = $tenant;

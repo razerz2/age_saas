@@ -12,6 +12,7 @@
          data-specialties-url-template="/customer/{{ $tenant->subdomain }}/agendamento/api/doctors/__ID__/specialties"
          data-available-slots-url-template="/customer/{{ $tenant->subdomain }}/agendamento/api/doctors/__ID__/available-slots?date=__DATE__"
          data-business-hours-url-template="/customer/{{ $tenant->subdomain }}/agendamento/api/doctors/__ID__/business-hours"
+         data-csrf-refresh-url="/customer/{{ $tenant->subdomain }}/agendamento/csrf-token"
          data-old-doctor-id="{{ old('doctor_id') }}"
          data-old-date="{{ old('appointment_date') }}"
          data-old-appointment-type="{{ old('appointment_type') }}"
@@ -105,7 +106,7 @@
                 @endif
             </div>
 
-            <form action="{{ route('public.appointment.store', ['slug' => $tenant->subdomain]) }}" method="POST">
+            <form id="public-appointment-create-form" action="{{ route('public.appointment.store', ['slug' => $tenant->subdomain]) }}" method="POST">
                 @csrf
 
                 <div class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">

@@ -95,6 +95,7 @@ Route::prefix('customer/{slug}')
         Route::post('/agendamento/cadastro', [PublicPatientRegisterController::class, 'register'])->name('patient.register.submit');
 
         // Agendamento
+        Route::get('/agendamento/csrf-token', [PublicAppointmentController::class, 'csrfToken'])->name('appointment.csrf-token');
         Route::get('/agendamento/criar', [PublicAppointmentController::class, 'create'])->name('appointment.create');
         Route::post('/agendamento/criar', [PublicAppointmentController::class, 'store'])->name('appointment.store');
         Route::get('/agendamento/meus-agendamentos', [PublicAppointmentController::class, 'myAppointments'])->name('appointment.my');
